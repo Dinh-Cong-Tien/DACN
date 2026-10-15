@@ -1,0 +1,17 @@
+{
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "baseUrl": "."
+  },
+  "references": [
+    {
+      "path": "./frontend"
+    },
+    {
+      "path": "./backend"
+    },
+    {
+      "path": "./packages/shared"
+    }
+  ]
+}

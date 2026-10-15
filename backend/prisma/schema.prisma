@@ -1,0 +1,629 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// ==========================================
+// 1. ENUMS
+// ==========================================
+enum Role {
+  STUDENT
+  TEACHER
+  ADMIN
+}
+
+enum ExamType {
+  TOEIC
+  VSTEP
+}
+
+enum SkillType {
+  LISTENING
+  READING
+  WRITING
+  SPEAKING
+  VOCABULARY
+  GRAMMAR
+}
+
+enum QuestionType {
+  SINGLE_CHOICE
+  MULTIPLE_CHOICE
+  TRUE_FALSE
+  FILL_IN_BLANK
+  MATCHING
+  ESSAY
+  SPEAKING_AUDIO
+}
+
+enum AttemptStatus {
+  IN_PROGRESS
+  SUBMITTED
+  GRADING
+  COMPLETED
+  EXPIRED
+}
+
+enum MistakePrimaryCause {
+  GRAMMAR_MISUNDERSTANDING
+  VOCABULARY_DEFICIT
+  LISTENING_MISHEARD
+  READING_MISINTERPRETATION
+  TIME_PRESSURE
+  CARELESS_MISTAKE
+  UNCLASSIFIED
+}
+
+enum ReviewStatus {
+  LEARNING
+  REVIEWING
+  MASTERED
+}
+
+// ==========================================
+// 2. TÀI KHOẢN & PHÂN QUYỀN
+// ==========================================
+model User {
+  id              String        @id @default(uuid())
+  email           String        @unique
+  passwordHash    String
+  role            Role          @default(STUDENT)
+  isEmailVerified Boolean       @default(false)
+  streakCount     Int           @default(0)
+  lastStudyAt     DateTime?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  profile         UserProfile?
+  refreshTokens   RefreshToken[]
+  learningGoal    LearningGoal?
+  learningSchedule LearningSchedule?
+  learningPath    LearningPath?
+
+  enrollments     Enrollment[]
+  lessonProgress  LessonProgress[]
+  userVocabularies UserVocabulary[]
+  examAttempts    ExamAttempt[]
+  mistakes        MistakeNotebook[]
+  reviewSchedules ReviewSchedule[]
+
+  // Quan hệ cho vai trò Teacher / Lớp học
+  taughtClasses   Class[]       @relation("TeacherClasses")
+  classMemberships ClassMember[]
+  submissions     AssignmentSubmission[]
+  gradedSubmissions AssignmentSubmission[] @relation("GraderSubmissions")
+
+  auditLogs       AuditLog[]
+
+  @@index([email])
+  @@index([role])
+}
+
+model UserProfile {
+  id          String    @id @default(uuid())
+  userId      String    @unique
+  fullName    String
+  avatarUrl   String?
+  phoneNumber String?
+  dateOfBirth DateTime?
+  bio         String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  tokenHash String   @unique
+  userId    String
+  expiresAt DateTime
+  isRevoked Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+// ==========================================
+// 3. ONBOARDING & MỤC TIÊU HỌC TẬP
+// ==========================================
+model LearningGoal {
+  id            String    @id @default(uuid())
+  userId        String    @unique
+  targetExam    ExamType
+  currentLevel  String    // Ví dụ TOEIC 450 hoặc VSTEP B1
+  targetScore   Int?      // Điểm số TOEIC (ví dụ 750)
+  targetLevel   String?   // Bậc VSTEP (ví dụ B2)
+  targetDate    DateTime?
+  purpose       String?   // Graduation, Career, Personal
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model LearningSchedule {
+  id                String   @id @default(uuid())
+  userId            String   @unique
+  studyDaysPerWeek  Int      @default(5)
+  minutesPerDay     Int      @default(60)
+  preferredTimeSlot String?  // MORNING, AFTERNOON, EVENING
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model LearningPath {
+  id           String             @id @default(uuid())
+  userId       String             @unique
+  currentStage String             @default("FOUNDATION")
+  stages       Json               // Danh sách milestone và các phase
+  isActive     Boolean            @default(true)
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
+
+  items        LearningPathItem[]
+  user         User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model LearningPathItem {
+  id             String       @id @default(uuid())
+  learningPathId String
+  title          String
+  skillType      SkillType
+  referenceType  String       // LESSON, PRACTICE, TEST
+  referenceId    String
+  orderIndex     Int
+  isCompleted    Boolean      @default(false)
+  completedAt    DateTime?
+
+  learningPath   LearningPath @relation(fields: [learningPathId], references: [id], onDelete: Cascade)
+
+  @@index([learningPathId, orderIndex])
+}
+
+// ==========================================
+// 4. KHÓA HỌC & BÀI HỌC
+// ==========================================
+model Course {
+  id          String          @id @default(uuid())
+  title       String
+  slug        String          @unique
+  description String
+  examType    ExamType
+  targetLevel String
+  thumbnailUrl String?
+  isPublished Boolean         @default(false)
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  sections    CourseSection[]
+  enrollments Enrollment[]
+
+  @@index([examType, isPublished])
+}
+
+model CourseSection {
+  id         String   @id @default(uuid())
+  courseId   String
+  title      String
+  orderIndex Int
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  course     Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  lessons    Lesson[]
+
+  @@index([courseId, orderIndex])
+}
+
+model Lesson {
+  id           String           @id @default(uuid())
+  sectionId    String
+  title        String
+  description  String?
+  skillType    SkillType
+  contentMd    String           // Markdown nội dung lý thuyết
+  videoUrl     String?
+  audioUrl     String?
+  durationMins Int              @default(15)
+  orderIndex   Int
+  isPublished  Boolean          @default(true)
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+
+  section      CourseSection    @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+  progressList LessonProgress[]
+
+  @@index([sectionId, orderIndex])
+}
+
+model Enrollment {
+  id          String   @id @default(uuid())
+  userId      String
+  courseId    String
+  progressPct Float    @default(0.0)
+  enrolledAt  DateTime @default(now())
+  completedAt DateTime?
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course      Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, courseId])
+  @@index([userId])
+}
+
+model LessonProgress {
+  id          String    @id @default(uuid())
+  userId      String
+  lessonId    String
+  isCompleted Boolean   @default(false)
+  timeSpentSec Int      @default(0)
+  completedAt DateTime?
+  updatedAt   DateTime  @updatedAt
+
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lesson      Lesson    @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, lessonId])
+  @@index([userId])
+}
+
+// ==========================================
+// 5. TỪ VỰNG & NGỮ PHÁP (SPACED REPETITION)
+// ==========================================
+model VocabularyTopic {
+  id          String            @id @default(uuid())
+  title       String
+  examType    ExamType
+  level       String
+  description String?
+  createdAt   DateTime          @default(now())
+
+  entries     VocabularyEntry[]
+}
+
+model VocabularyEntry {
+  id           String            @id @default(uuid())
+  topicId      String
+  word         String
+  phonetic     String?           // Phiên âm IPA (ví dụ: /əˈbɪləti/)
+  partOfSpeech String?           // n, v, adj, adv
+  definitionVi String            // Định nghĩa tiếng Việt
+  definitionEn String?           // Định nghĩa tiếng Anh
+  exampleVi    String?
+  exampleEn    String
+  audioUrl     String?
+  imageUrl     String?
+  createdAt    DateTime          @default(now())
+
+  topic        VocabularyTopic   @relation(fields: [topicId], references: [id], onDelete: Cascade)
+  userVocabs   UserVocabulary[]
+  reviewLogs   VocabularyReviewLog[]
+
+  @@index([word])
+  @@index([topicId])
+}
+
+model UserVocabulary {
+  id           String          @id @default(uuid())
+  userId       String
+  vocabId      String
+  status       ReviewStatus    @default(LEARNING)
+  easeFactor   Float           @default(2.5)   // SM-2 Ease Factor
+  intervalDays Int             @default(1)     // Khoảng cách ngày ôn
+  repetitions  Int             @default(0)     // Số lần nhớ liên tiếp
+  nextReviewAt DateTime        @default(now())
+  lastReviewAt DateTime?
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+
+  user         User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  vocab        VocabularyEntry @relation(fields: [vocabId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, vocabId])
+  @@index([userId, nextReviewAt])
+}
+
+model VocabularyReviewLog {
+  id         String          @id @default(uuid())
+  userId     String
+  vocabId    String
+  quality    Int             // 0-5 SuperMemo rating
+  timeSpentMs Int            @default(0)
+  reviewedAt DateTime        @default(now())
+
+  vocab      VocabularyEntry @relation(fields: [vocabId], references: [id], onDelete: Cascade)
+
+  @@index([userId, reviewedAt])
+}
+
+model GrammarTopic {
+  id          String          @id @default(uuid())
+  title       String
+  category    String          // Tenses, Clauses, Modals, Passive...
+  level       String
+  description String
+  createdAt   DateTime        @default(now())
+
+  lessons     GrammarLesson[]
+}
+
+model GrammarLesson {
+  id          String       @id @default(uuid())
+  topicId     String
+  title       String
+  ruleContent String       // Markdown công thức & cách dùng
+  commonErrors Json        // JSON: các lỗi bẫy học viên hay mắc
+  examples    Json         // JSON: các ví dụ chuẩn
+  orderIndex  Int          @default(1)
+  createdAt   DateTime     @default(now())
+
+  topic       GrammarTopic @relation(fields: [topicId], references: [id], onDelete: Cascade)
+
+  @@index([topicId])
+}
+
+// ==========================================
+// 6. NGÂN HÀNG CÂU HỎI & CÂU HỎI CHÙM (PASSAGES)
+// ==========================================
+model Passage {
+  id          String     @id @default(uuid())
+  examType    ExamType
+  partOrSkill String     // TOEIC_PART_3, TOEIC_PART_7, VSTEP_READING
+  title       String?
+  content     String     // Đoạn văn đọc hoặc transcript
+  audioUrl    String?    // Audio cho Listening part 3/4
+  imageUrl    String?    // Hình ảnh đi kèm Part 1 hoặc bảng biểu
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  questions   Question[]
+}
+
+model Question {
+  id            String             @id @default(uuid())
+  examType      ExamType
+  type          QuestionType       @default(SINGLE_CHOICE)
+  skillType     SkillType
+  partOrSkill   String             // PART_1..PART_7 hoặc VSTEP_P1..P3
+  level         String             // A2, B1, B2, C1, 500+, 750+
+  stem          String             // Đề bài / Câu hỏi
+  options       Json               // Array các phương án [{ key: 'A', text: '...' }]
+  correctAnswer Json               // Đáp án chuẩn { key: 'A' } hoặc string
+  explanation   String?            // Lời giải thích chi tiết
+  difficulty    Int                @default(1) // 1-5
+  tags          String[]           // ['verb_tense', 'passive_voice', 'business_collocation']
+  passageId     String?            // Tham chiếu đoạn văn / audio nếu là câu hỏi chùm
+  orderInPassage Int?              @default(1)
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+
+  passage       Passage?           @relation(fields: [passageId], references: [id], onDelete: SetNull)
+  mockQuestions MockTestQuestion[]
+  mistakes      MistakeNotebook[]
+
+  @@index([examType, skillType, partOrSkill])
+  @@index([difficulty])
+  @@index([passageId])
+}
+
+// ==========================================
+// 7. ĐỀ THI & PHIÊN BẢN ĐỀ (MOCK TESTS)
+// ==========================================
+model MockTest {
+  id              String             @id @default(uuid())
+  title           String
+  slug            String             @unique
+  examType        ExamType
+  targetLevel     String?
+  durationMinutes Int
+  totalQuestions  Int
+  version         Int                @default(1)
+  isPublished     Boolean            @default(false)
+  description     String?
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+
+  sections        MockTestSection[]
+  attempts        ExamAttempt[]
+
+  @@index([examType, isPublished])
+}
+
+model MockTestSection {
+  id          String             @id @default(uuid())
+  testId      String
+  name        String             // "Listening Section", "Reading Section"
+  skillType   SkillType
+  durationMins Int?
+  orderIndex  Int
+  instructions String?
+
+  test        MockTest           @relation(fields: [testId], references: [id], onDelete: Cascade)
+  questions   MockTestQuestion[]
+
+  @@index([testId, orderIndex])
+}
+
+model MockTestQuestion {
+  id         String          @id @default(uuid())
+  sectionId  String
+  questionId String
+  orderIndex Int
+  points     Float           @default(1.0)
+
+  section    MockTestSection @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+  question   Question        @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@unique([sectionId, questionId])
+  @@index([sectionId, orderIndex])
+}
+
+// ==========================================
+// 8. ATTEMPT - QUẢN LÝ LẦN LÀM BÀI & KẾT QUẢ
+// ==========================================
+model ExamAttempt {
+  id           String        @id @default(uuid())
+  userId       String
+  testId       String
+  status       AttemptStatus @default(IN_PROGRESS)
+  answers      Json          // Map questionId -> { selectedKey, answeredAt, isFlagged }
+  score        Float?        // Scaled score tổng
+  listeningScore Float?      // Điểm kỹ năng nghe (nếu có)
+  readingScore   Float?      // Điểm kỹ năng đọc (nếu có)
+  writingScore   Float?      // Điểm viết (nếu có)
+  speakingScore  Float?      // Điểm nói (nếu có)
+  correctCount Int?          @default(0)
+  totalCount   Int           @default(0)
+  timeSpentSec Int           @default(0)
+  startedAt    DateTime      @default(now())
+  submittedAt  DateTime?
+  weakSkills   Json?         // JSON: phân tích kỹ năng yếu { "Part 5 Tenses": 40%, "Part 7 Main Idea": 50% }
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  test         MockTest      @relation(fields: [testId], references: [id], onDelete: Cascade)
+
+  @@index([userId, testId])
+  @@index([status])
+}
+
+// ==========================================
+// 9. ERROR INTELLIGENCE & SPACED REPETITION
+// ==========================================
+model MistakeNotebook {
+  id                  String              @id @default(uuid())
+  userId              String
+  questionId          String
+  userWrongAnswer     Json                // Giá trị học viên đã chọn sai
+  mistakeCount        Int                 @default(1)
+  sourceContext       String              // MOCK_TEST, PRACTICE, PLACEMENT
+  primaryCause        MistakePrimaryCause @default(UNCLASSIFIED)
+  grammarTopicTag     String?
+  notes               String?
+  isResolved          Boolean             @default(false)
+  createdAt           DateTime            @default(now())
+  updatedAt           DateTime            @updatedAt
+
+  reviewSchedule      ReviewSchedule?
+  user                User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  question            Question            @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, questionId])
+  @@index([userId, isResolved])
+  @@index([primaryCause])
+}
+
+model ReviewSchedule {
+  id             String           @id @default(uuid())
+  userId         String
+  mistakeId      String           @unique
+  easeFactor     Float            @default(2.5)   // SM-2 Ease Factor
+  intervalDays   Int              @default(1)
+  repetitions    Int              @default(0)
+  nextReviewAt   DateTime         @default(now())
+  lastReviewedAt DateTime?
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+
+  user           User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  mistake        MistakeNotebook  @relation(fields: [mistakeId], references: [id], onDelete: Cascade)
+
+  @@index([userId, nextReviewAt])
+}
+
+// ==========================================
+// 10. GIÁO VIÊN, LỚP HỌC & CHẤM TỰ LUẬN
+// ==========================================
+model Class {
+  id          String        @id @default(uuid())
+  teacherId   String
+  name        String
+  code        String        @unique // Mã lớp tham gia (ví dụ: ORBI-990)
+  description String?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  teacher     User          @relation("TeacherClasses", fields: [teacherId], references: [id], onDelete: Cascade)
+  members     ClassMember[]
+  assignments Assignment[]
+
+  @@index([teacherId])
+}
+
+model ClassMember {
+  id        String   @id @default(uuid())
+  classId   String
+  userId    String
+  joinedAt  DateTime @default(now())
+
+  class     Class    @relation(fields: [classId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([classId, userId])
+}
+
+model Assignment {
+  id          String                 @id @default(uuid())
+  classId     String
+  title       String
+  instructions String?
+  examType    ExamType
+  skillType   SkillType
+  dueDate     DateTime?
+  createdAt   DateTime               @default(now())
+  updatedAt   DateTime               @updatedAt
+
+  class       Class                  @relation(fields: [classId], references: [id], onDelete: Cascade)
+  submissions AssignmentSubmission[]
+
+  @@index([classId])
+}
+
+model AssignmentSubmission {
+  id          String    @id @default(uuid())
+  assignmentId String
+  studentId   String
+  graderId    String?
+  content     String?   // Bài viết (Essay)
+  audioUrl    String?   // File ghi âm Speaking
+  score       Float?    // Điểm số cuối cùng
+  feedback    String?   // Nhận xét của giáo viên hoặc AI
+  rubricScores Json?    // Điểm chi tiết theo từng tiêu chí
+  submittedAt DateTime  @default(now())
+  gradedAt    DateTime?
+
+  assignment  Assignment @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+  student     User       @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  grader      User?      @relation("GraderSubmissions", fields: [graderId], references: [id], onDelete: SetNull)
+
+  @@index([assignmentId, studentId])
+}
+
+// ==========================================
+// 11. HỆ THỐNG & AUDIT LOGS
+// ==========================================
+model AuditLog {
+  id         String   @id @default(uuid())
+  userId     String?
+  action     String   // CREATE_QUESTION, UPDATE_SCORE, BAN_USER...
+  resource   String   // QUESTION, USER, TEST
+  resourceId String?
+  ipAddress  String?
+  details    Json?
+  createdAt  DateTime @default(now())
+
+  user       User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([action, createdAt])
+}
