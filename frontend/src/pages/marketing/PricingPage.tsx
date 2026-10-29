@@ -1,152 +1,90 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { CheckCircle2, Sparkles, Zap, ShieldCheck, ArrowRight } from 'lucide-react';
+import { Check, X, Sparkles, ArrowRight, ShieldCheck } from 'lucide-react';
+import { Accordion, Badge, Button, Card, SectionTitle, Segmented } from '@/shared/components/ui';
+import { Reveal, Stagger } from '@/shared/components/motion';
+import { PRICING_PLANS, FAQS } from '@/shared/mocks';
+import { useDocumentTitle } from '@/shared/hooks';
+import { cn, formatCurrency } from '@/shared/utils';
 
 export const PricingPage: React.FC = () => {
-  const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('yearly');
-
-  const plans = [
-    {
-      name: 'Free Starter',
-      price: '0đ',
-      period: 'trọn đời',
-      desc: 'Dành cho người mới bắt đầu làm quen với dạng đề và kiểm tra năng lực.',
-      features: [
-        'Bài test đánh giá năng lực đầu vào',
-        'Luyện tập 15 câu/ngày miễn phí',
-        'Xem giải thích đáp án cơ bản',
-        '2 Đề thi thử ETS cơ bản',
-      ],
-      popular: false,
-      cta: 'Bắt đầu miễn phí',
-      link: '/auth/register',
-    },
-    {
-      name: 'Pro Learner',
-      price: billingCycle === 'yearly' ? '89.000đ' : '129.000đ',
-      period: '/tháng (thanh toán năm)',
-      desc: 'Mở khóa toàn bộ tính năng thích ứng, phân tích lỗi và đề thi chuẩn.',
-      features: [
-        'Mở khóa 10,000+ câu hỏi luyện tập không giới hạn',
-        'Sổ tay ghi nhận lỗi sai thông minh',
-        'Thuật toán ôn tập ngắt quãng Spaced Repetition (SM-2)',
-        'Thư viện 50+ đề thi ETS & VSTEP cập nhật 2026',
-        'Biểu đồ phân tích năng lực chi tiết từng kỹ năng',
-      ],
-      popular: true,
-      cta: 'Dùng thử 7 ngày miễn phí',
-      link: '/auth/register',
-    },
-    {
-      name: 'Intensive AI Mentor',
-      price: billingCycle === 'yearly' ? '189.000đ' : '249.000đ',
-      period: '/tháng (thanh toán năm)',
-      desc: 'Dành cho học viên thi VSTEP hoặc cần chấm chữa Writing/Speaking cấp tốc.',
-      features: [
-        'Toàn bộ quyền lợi gói Pro Learner',
-        'Chấm chữa Writing & Speaking AI không giới hạn',
-        'Nhận xét từ giáo viên chuyên môn mỗi tuần',
-        'Lộ trình cá nhân hóa cam kết tăng điểm theo tuần',
-        'Ưu tiên hỗ trợ giải đáp 24/7',
-      ],
-      popular: false,
-      cta: 'Trở thành VIP Mentor',
-      link: '/auth/register',
-    },
-  ];
+  useDocumentTitle('Bảng giá');
+  const [cycle, setCycle] = useState('month');
+  const yearly = cycle === 'year';
+  const faqs = FAQS.filter((f) => f.category === 'Thanh toán').concat(FAQS.filter((f) => f.id === 'f-2')).slice(0, 3);
 
   return (
-    <div className="py-12 bg-slate-50 min-h-screen">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
-        <div className="text-center max-w-2xl mx-auto space-y-3">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-50 border border-indigo-100 text-indigo-700 text-xs font-bold">
-            <Sparkles className="w-3.5 h-3.5" />
-            <span>Đầu tư thông minh cho tương lai</span>
-          </div>
-          <h1 className="text-3xl font-black text-slate-900 tracking-tight">Bảng giá gói học OrbiLingo</h1>
-          <p className="text-slate-600 text-sm">
-            Học thông minh hơn, tiết kiệm đến 80% chi phí so với các trung tâm truyền thống.
-          </p>
-
-          {/* Billing Switcher */}
-          <div className="inline-flex items-center p-1 bg-white border border-slate-200 rounded-2xl shadow-sm mt-4">
-            <button
-              onClick={() => setBillingCycle('monthly')}
-              className={`px-4 py-2 rounded-xl text-xs font-bold transition ${
-                billingCycle === 'monthly' ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              Thanh toán theo tháng
-            </button>
-            <button
-              onClick={() => setBillingCycle('yearly')}
-              className={`px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 ${
-                billingCycle === 'yearly' ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              <span>Thanh toán theo năm</span>
-              <span className="text-[10px] font-black bg-emerald-500 text-white px-1.5 py-0.5 rounded-full">
-                Tiết kiệm 30%
-              </span>
-            </button>
-          </div>
-        </div>
-
-        {/* Pricing Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-stretch">
-          {plans.map((p) => (
-            <div
-              key={p.name}
-              className={`bg-white rounded-3xl p-6 sm:p-8 flex flex-col justify-between border-2 transition relative ${
-                p.popular
-                  ? 'border-indigo-600 shadow-xl shadow-indigo-100 ring-4 ring-indigo-500/10'
-                  : 'border-slate-200 shadow-sm hover:border-slate-300'
-              }`}
-            >
-              {p.popular && (
-                <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-gradient-to-r from-indigo-600 to-violet-600 text-white text-[10px] font-black uppercase tracking-wider py-1 px-3.5 rounded-full shadow-md">
-                  Gói được chọn nhiều nhất
-                </div>
-              )}
-
-              <div className="space-y-4">
-                <div>
-                  <h3 className="text-lg font-black text-slate-900">{p.name}</h3>
-                  <p className="text-xs text-slate-500 mt-1">{p.desc}</p>
-                </div>
-
-                <div className="flex items-baseline gap-1">
-                  <span className="text-3xl font-black text-slate-900">{p.price}</span>
-                  <span className="text-xs text-slate-500 font-medium">{p.period}</span>
-                </div>
-
-                <div className="pt-4 border-t border-slate-100 space-y-2.5">
-                  {p.features.map((feat, fIdx) => (
-                    <div key={fIdx} className="flex items-start gap-2.5 text-xs text-slate-600">
-                      <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
-                      <span>{feat}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div className="pt-6">
-                <Link
-                  to={p.link}
-                  className={`w-full py-3 px-4 rounded-2xl font-bold text-xs flex items-center justify-center gap-2 transition ${
-                    p.popular
-                      ? 'bg-gradient-to-r from-indigo-600 to-violet-600 text-white shadow-md shadow-indigo-200 hover:shadow-lg'
-                      : 'bg-slate-100 hover:bg-slate-200 text-slate-800'
-                  }`}
-                >
-                  <span>{p.cta}</span>
-                  <ArrowRight className="w-4 h-4" />
-                </Link>
-              </div>
-            </div>
-          ))}
-        </div>
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 pb-24 space-y-12">
+      <Reveal>
+        <SectionTitle eyebrow="Bảng giá" title="Bắt đầu miễn phí, nâng cấp khi cần" description="Mọi tính năng cốt lõi đều miễn phí. Gói VIP mở khoá kho đề mới nhất và giáo viên chấm bài." />
+      </Reveal>
+      <div className="flex flex-col items-center gap-2 animate-fade-up">
+        <Segmented
+          value={cycle}
+          onChange={setCycle}
+          options={[
+            { value: 'month', label: 'Theo gói' },
+            { value: 'year', label: 'Theo năm · -20%' },
+          ]}
+        />
+        {yearly && <Badge tone="emerald">Tiết kiệm 20% khi thanh toán theo năm</Badge>}
       </div>
+
+      <Stagger className="grid md:grid-cols-3 gap-6 items-stretch" step={120}>
+        {PRICING_PLANS.map((p) => {
+          const price = yearly && p.price > 0 ? Math.round((p.price * 12 * 0.8) / 1000) * 1000 : p.price;
+          return (
+            <Card key={p.id} padding="lg" className={cn('relative flex flex-col transition-all duration-300', p.highlight && 'md:scale-105 border-indigo-400 shadow-lift ring-4 ring-indigo-100 z-10')}>
+              {p.badge && (
+                <span className="absolute -top-3 left-1/2 -translate-x-1/2">
+                  <Badge tone="indigo" solid icon={<Sparkles className="w-3 h-3" />}>
+                    {p.badge}
+                  </Badge>
+                </span>
+              )}
+              <div className="space-y-2">
+                <h3 className="text-lg font-black text-slate-900">{p.name}</h3>
+                <p className="text-sm text-slate-500">{p.description}</p>
+                <div className="pt-2">
+                  <span className={cn('text-3xl md:text-4xl font-black', p.highlight ? 'text-gradient' : 'text-slate-900')}>{formatCurrency(price)}</span>
+                  {p.price > 0 && <span className="text-sm text-slate-400 ml-1">{yearly ? '/ năm' : p.period}</span>}
+                </div>
+              </div>
+              <ul className="space-y-2.5 mt-6 flex-1">
+                {p.features.map((f) => (
+                  <li key={f.text} className={cn('flex items-start gap-2 text-sm', f.included ? 'text-slate-700' : 'text-slate-400 line-through')}>
+                    {f.included ? <Check className="w-4 h-4 text-emerald-500 mt-0.5 shrink-0" /> : <X className="w-4 h-4 text-slate-300 mt-0.5 shrink-0" />}
+                    {f.text}
+                  </li>
+                ))}
+              </ul>
+              <Button to="/auth/register" variant={p.highlight ? 'gradient' : 'outline'} fullWidth size="lg" className={cn('mt-8', p.highlight && 'shine')} rightIcon={<ArrowRight className="w-4 h-4" />}>
+                {p.price === 0 ? 'Bắt đầu miễn phí' : 'Chọn gói này'}
+              </Button>
+            </Card>
+          );
+        })}
+      </Stagger>
+
+      <Reveal>
+        <div className="flex items-center justify-center gap-6 text-xs text-slate-500 flex-wrap">
+          <span className="flex items-center gap-1.5">
+            <ShieldCheck className="w-4 h-4 text-emerald-500" /> Không tự động gia hạn
+          </span>
+          <span className="flex items-center gap-1.5">
+            <ShieldCheck className="w-4 h-4 text-emerald-500" /> Hoàn tiền trong 7 ngày
+          </span>
+          <span className="flex items-center gap-1.5">
+            <ShieldCheck className="w-4 h-4 text-emerald-500" /> Chuyển khoản / Ví điện tử
+          </span>
+        </div>
+      </Reveal>
+
+      <Reveal>
+        <div className="max-w-3xl mx-auto space-y-5">
+          <h2 className="text-xl font-black text-slate-900 text-center">Câu hỏi về thanh toán</h2>
+          <Accordion items={faqs.map((f) => ({ id: f.id, title: f.question, content: f.answer }))} defaultOpen={faqs[0]?.id} />
+        </div>
+      </Reveal>
     </div>
   );
 };

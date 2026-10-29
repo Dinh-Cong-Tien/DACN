@@ -1,174 +1,117 @@
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { FileText, Clock, Award, CheckCircle2, Play, Filter } from 'lucide-react';
+import React, { useMemo, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { FileText, Clock, Users, Lock, ArrowRight, History, Trophy } from 'lucide-react';
+import { useDocumentTitle } from '@/shared/hooks';
+import { Badge, Button, Card, CardHeader, Chip, Column, DataTable, PageHeader, Tabs } from '@/shared/components/ui';
+import { MOCK_TESTS, MOCK_ATTEMPTS } from '@/shared/mocks';
+import type { AttemptSummary } from '@/shared/types';
+import { cn, formatDate, formatDuration, formatNumber } from '@/shared/utils';
 
-interface IMockTestItem {
-  id: string;
-  title: string;
-  examType: 'TOEIC' | 'VSTEP';
-  durationMinutes: number;
-  totalQuestions: number;
-  attemptsCount: number;
-  bestScore?: string;
-  isCompleted?: boolean;
-}
-
-const mockTestsList: IMockTestItem[] = [
-  {
-    id: 'toeic-ets-2024-test-1',
-    title: 'ETS TOEIC 2024 Actual Test 01 (Full 200 câu LC + RC)',
-    examType: 'TOEIC',
-    durationMinutes: 120,
-    totalQuestions: 200,
-    attemptsCount: 2,
-    bestScore: '685 / 990',
-    isCompleted: true,
-  },
-  {
-    id: 'toeic-ets-2024-test-2',
-    title: 'ETS TOEIC 2024 Actual Test 02 (Full 200 câu LC + RC)',
-    examType: 'TOEIC',
-    durationMinutes: 120,
-    totalQuestions: 200,
-    attemptsCount: 0,
-    isCompleted: false,
-  },
-  {
-    id: 'toeic-mini-test-1',
-    title: 'TOEIC Rút Gọn Mini-Test (50 câu • 30 phút)',
-    examType: 'TOEIC',
-    durationMinutes: 30,
-    totalQuestions: 50,
-    attemptsCount: 1,
-    bestScore: '215 / 250',
-    isCompleted: true,
-  },
-  {
-    id: 'vstep-b2-test-1',
-    title: 'Đề thi thử VSTEP B1-B2 Chuẩn Bộ GD&ĐT (Đề số 01)',
-    examType: 'VSTEP',
-    durationMinutes: 135,
-    totalQuestions: 75,
-    attemptsCount: 0,
-    isCompleted: false,
-  },
-  {
-    id: 'vstep-b2-test-2',
-    title: 'Đề thi thử VSTEP B1-B2 Chuẩn Bộ GD&ĐT (Đề số 02)',
-    examType: 'VSTEP',
-    durationMinutes: 135,
-    totalQuestions: 75,
-    attemptsCount: 1,
-    bestScore: 'B2 (6.5/10)',
-    isCompleted: true,
-  },
-];
+type Filter = 'ALL' | 'FULL' | 'MINI' | 'FREE';
 
 export const StudentMockTestsPage: React.FC = () => {
-  const [filterType, setFilterType] = useState<'ALL' | 'TOEIC' | 'VSTEP'>('ALL');
+  useDocumentTitle('Thi thử');
+  const navigate = useNavigate();
+  const [tab, setTab] = useState('TOEIC');
+  const [filter, setFilter] = useState<Filter>('ALL');
 
-  const filtered = mockTestsList.filter(
-    (item) => filterType === 'ALL' || item.examType === filterType
+  const tests = useMemo(
+    () =>
+      MOCK_TESTS.filter((t) => t.examType === tab).filter((t) => {
+        if (filter === 'FULL') return t.totalQuestions >= 150 || t.parts.length >= 4;
+        if (filter === 'MINI') return t.totalQuestions < 150 && t.parts.length < 4;
+        if (filter === 'FREE') return t.isFree;
+        return true;
+      }),
+    [tab, filter]
   );
 
-  return (
-    <div className="max-w-6xl mx-auto space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-black text-slate-900 flex items-center gap-2.5">
-            <FileText className="w-6 h-6 text-indigo-600" />
-            <span>Kho đề thi thử chuẩn format (Mock Tests)</span>
-          </h1>
-          <p className="text-sm text-slate-500 mt-1">
-            Rèn luyện tâm lý phòng thi với bộ đếm giờ chuẩn, tự động lưu bài làm và chấm điểm quy đổi tức thì.
-          </p>
-        </div>
+  const columns: Column<AttemptSummary>[] = [
+    { key: 'testTitle', header: 'Đề thi', render: (r) => <span className="font-semibold text-slate-800">{r.testTitle}</span> },
+    { key: 'examType', header: 'Loại', render: (r) => <Badge tone={r.examType === 'TOEIC' ? 'indigo' : 'emerald'} size="xs">{r.examType}</Badge> },
+    {
+      key: 'score',
+      header: 'Điểm',
+      align: 'center',
+      render: (r) => (
+        <span className={cn('font-black', r.score / r.maxScore >= 0.7 ? 'text-emerald-600' : 'text-amber-600')}>
+          {r.score}
+          <span className="text-slate-400 font-semibold">/{r.maxScore}</span>
+        </span>
+      ),
+    },
+    { key: 'correct', header: 'Đúng', align: 'center', render: (r) => `${r.correct}/${r.total}` },
+    { key: 'durationSec', header: 'Thời gian', align: 'center', render: (r) => formatDuration(r.durationSec) },
+    { key: 'date', header: 'Ngày', render: (r) => <span className="text-slate-500">{formatDate(r.date)}</span> },
+    { key: 'act', header: '', align: 'right', render: (r) => <Link to={`/app/mock-tests/${r.testId}/result`} className="text-xs font-bold text-indigo-600 hover:underline" onClick={(e) => e.stopPropagation()}>Xem kết quả</Link> },
+  ];
 
-        <div className="flex items-center gap-2 bg-white p-1.5 rounded-xl border border-slate-200">
-          <button
-            onClick={() => setFilterType('ALL')}
-            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition ${
-              filterType === 'ALL' ? 'bg-indigo-600 text-white' : 'text-slate-600 hover:bg-slate-100'
-            }`}
-          >
-            Tất cả đề
-          </button>
-          <button
-            onClick={() => setFilterType('TOEIC')}
-            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition ${
-              filterType === 'TOEIC' ? 'bg-indigo-600 text-white' : 'text-slate-600 hover:bg-slate-100'
-            }`}
-          >
-            TOEIC
-          </button>
-          <button
-            onClick={() => setFilterType('VSTEP')}
-            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition ${
-              filterType === 'VSTEP' ? 'bg-indigo-600 text-white' : 'text-slate-600 hover:bg-slate-100'
-            }`}
-          >
-            VSTEP
-          </button>
-        </div>
+  return (
+    <div>
+      <PageHeader icon={<FileText />} title="Kho đề thi thử" description="Đề chuẩn format ETS / Bộ GD&ĐT, bấm giờ thật, audio phát một lần. Kết quả tự động phân tích và lưu lỗi sai." actions={<Tabs variant="pill" value={tab} onChange={setTab} items={[{ key: 'TOEIC', label: 'TOEIC', count: MOCK_TESTS.filter((t) => t.examType === 'TOEIC').length }, { key: 'VSTEP', label: 'VSTEP', count: MOCK_TESTS.filter((t) => t.examType === 'VSTEP').length }]} />} />
+
+      <div className="flex gap-2 flex-wrap mb-5 animate-fade-down">
+        {(
+          [
+            ['ALL', 'Tất cả'],
+            ['FULL', 'Full Test'],
+            ['MINI', 'Mini / Part'],
+            ['FREE', 'Miễn phí'],
+          ] as [Filter, string][]
+        ).map(([k, l]) => (
+          <Chip key={k} active={filter === k} onClick={() => setFilter(k)}>
+            {l}
+          </Chip>
+        ))}
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-        {filtered.map((test) => (
-          <div
-            key={test.id}
-            className="bg-white rounded-3xl p-6 border border-slate-200/90 shadow-sm hover:shadow-md transition-all flex flex-col justify-between space-y-4"
-          >
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <span className={`text-[11px] font-extrabold px-2.5 py-0.5 rounded-full uppercase ${
-                  test.examType === 'TOEIC' ? 'bg-blue-50 text-blue-700 border border-blue-200' : 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                }`}>
-                  {test.examType}
-                </span>
-
-                {test.bestScore && (
-                  <span className="text-xs font-bold text-amber-600 flex items-center gap-1">
-                    <Award className="w-4 h-4 text-amber-500" />
-                    <span>Cao nhất: {test.bestScore}</span>
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 mb-10">
+        {tests.map((t, i) => (
+          <Link key={t.id} to={`/app/mock-tests/${t.id}`} className="group block animate-fade-up" style={{ animationDelay: `${i * 50}ms` }}>
+            <Card hover className="h-full flex flex-col" padding="sm">
+              <div className={cn('h-24 -m-4 mb-3 rounded-t-2xl bg-gradient-to-br relative overflow-hidden', t.examType === 'TOEIC' ? 'from-indigo-500 to-violet-600' : 'from-emerald-500 to-teal-600')}>
+                <div aria-hidden className="absolute inset-0 bg-grid opacity-20" />
+                <div className="absolute inset-0 p-4 flex items-end justify-between">
+                  <span className="text-white font-black text-2xl drop-shadow">{t.examType}</span>
+                  <div className="flex gap-1">
+                    {t.tags?.map((tag) => (
+                      <span key={tag} className="px-1.5 py-0.5 rounded-md bg-white/20 text-white text-[10px] font-bold backdrop-blur">
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+                {!t.isFree && (
+                  <span className="absolute top-2 right-2 w-7 h-7 rounded-full bg-amber-400 text-amber-950 flex items-center justify-center shadow">
+                    <Lock className="w-3.5 h-3.5" />
                   </span>
                 )}
               </div>
-
-              <h3 className="text-base font-bold text-slate-900 leading-snug">{test.title}</h3>
-
-              <div className="flex items-center gap-4 text-xs text-slate-500 mt-3">
+              <p className="font-bold text-slate-900 group-hover:text-indigo-700 transition leading-snug">{t.title}</p>
+              <p className="text-xs text-slate-500 mt-1">
+                {t.level} · {t.parts.join(', ')}
+              </p>
+              <div className="mt-auto pt-3 flex items-center justify-between text-[11px] text-slate-500 font-semibold">
                 <span className="flex items-center gap-1">
-                  <Clock className="w-3.5 h-3.5" />
-                  {test.durationMinutes} phút
+                  <Clock className="w-3.5 h-3.5" /> {t.durationMinutes}'
                 </span>
-                <span>•</span>
-                <span>{test.totalQuestions} câu hỏi</span>
-                <span>•</span>
-                <span>{test.attemptsCount} lượt làm</span>
+                <span>{t.totalQuestions} câu</span>
+                <span className="flex items-center gap-1">
+                  <Users className="w-3.5 h-3.5" /> {formatNumber(t.attempts)}
+                </span>
               </div>
-            </div>
-
-            <div className="pt-4 border-t border-slate-100 flex items-center justify-between">
-              {test.isCompleted ? (
-                <span className="text-xs font-semibold text-emerald-600 flex items-center gap-1">
-                  <CheckCircle2 className="w-4 h-4" />
-                  <span>Đã từng làm</span>
-                </span>
-              ) : (
-                <span className="text-xs font-medium text-slate-400">Chưa làm đề này</span>
-              )}
-
-              <Link
-                to={`/app/mock-tests/${test.id}/exam`}
-                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs shadow-sm transition"
-              >
-                <Play className="w-3.5 h-3.5 fill-white" />
-                <span>{test.isCompleted ? 'Làm lại đề' : 'Bắt đầu làm bài'}</span>
-              </Link>
-            </div>
-          </div>
+              <Button size="sm" variant={t.isFree ? 'soft' : 'outline'} fullWidth className="mt-3" rightIcon={<ArrowRight className="w-4 h-4" />}>
+                {t.isFree ? 'Xem chi tiết' : 'Đề VIP'}
+              </Button>
+            </Card>
+          </Link>
         ))}
       </div>
+
+      <Card className="animate-fade-up">
+        <CardHeader title="Lịch sử làm bài" subtitle={`${MOCK_ATTEMPTS.length} lượt thi gần nhất`} icon={<History />} action={<Badge tone="emerald" icon={<Trophy className="w-3 h-3" />}>Cao nhất: 715</Badge>} />
+        <DataTable columns={columns} rows={MOCK_ATTEMPTS} onRowClick={(r) => navigate(`/app/mock-tests/${r.testId}/result`)} dense />
+      </Card>
     </div>
   );
 };

@@ -1,150 +1,98 @@
 import React, { useState } from 'react';
-import { Mail, Phone, MapPin, Send, CheckCircle2, MessageSquare } from 'lucide-react';
+import { Mail, Phone, MapPin, Send, Clock, MessageCircle } from 'lucide-react';
+import { Button, Card, Input, Select, SectionTitle, Textarea } from '@/shared/components/ui';
+import { Reveal, Stagger } from '@/shared/components/motion';
+import { useDocumentTitle } from '@/shared/hooks';
+import { toast } from '@/shared/stores/uiStore';
+
+const INFO = [
+  { icon: MapPin, title: 'Địa chỉ', lines: ['54 Nguyễn Lương Bằng', 'Liên Chiểu, Đà Nẵng'] },
+  { icon: Phone, title: 'Hotline', lines: ['0236 555 0199', 'T2 – T7, 8:00 – 21:00'] },
+  { icon: Mail, title: 'Email', lines: ['hello@orbilingo.vn', 'support@orbilingo.vn'] },
+  { icon: Clock, title: 'Phản hồi', lines: ['Trong vòng 24 giờ', 'Ưu tiên tài khoản VIP'] },
+];
 
 export const ContactPage: React.FC = () => {
-  const [submitted, setSubmitted] = useState(false);
-  const [formData, setFormData] = useState({ name: '', email: '', subject: '', message: '' });
+  useDocumentTitle('Liên hệ');
+  const [form, setForm] = useState({ name: '', email: '', topic: 'support', message: '' });
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const submit = (e: React.FormEvent) => {
     e.preventDefault();
-    setSubmitted(true);
+    const er: Record<string, string> = {};
+    if (!form.name.trim()) er.name = 'Vui lòng nhập họ tên';
+    if (!/^\S+@\S+\.\S+$/.test(form.email)) er.email = 'Email không hợp lệ';
+    if (form.message.trim().length < 10) er.message = 'Nội dung tối thiểu 10 ký tự';
+    setErrors(er);
+    if (Object.keys(er).length) return;
+    setLoading(true);
+    setTimeout(() => {
+      setLoading(false);
+      setForm({ name: '', email: '', topic: 'support', message: '' });
+      toast.success('Đã gửi liên hệ', 'Chúng tôi sẽ phản hồi qua email trong 24 giờ.');
+    }, 700);
   };
 
   return (
-    <div className="py-12 bg-slate-50 min-h-screen">
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
-        <div className="text-center max-w-2xl mx-auto space-y-3">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-50 border border-indigo-100 text-indigo-700 text-xs font-bold">
-            <MessageSquare className="w-3.5 h-3.5" />
-            <span>Liên hệ hợp tác & Hỗ trợ kỹ thuật</span>
-          </div>
-          <h1 className="text-3xl font-black text-slate-900 tracking-tight">Liên Hệ Với OrbiLingo</h1>
-          <p className="text-slate-600 text-sm">
-            Bạn có câu hỏi, đề xuất hợp tác đào tạo hoặc cần hỗ trợ học tập? Chúng tôi luôn lắng nghe.
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {/* Contact Info Column */}
-          <div className="space-y-4">
-            <div className="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-sm space-y-3">
-              <div className="w-10 h-10 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center">
-                <Mail className="w-5 h-5" />
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 pb-24 space-y-12">
+      <Reveal>
+        <SectionTitle eyebrow="Liên hệ" title="Chúng tôi luôn sẵn sàng hỗ trợ" description="Gửi câu hỏi về lộ trình học, gói dịch vụ hoặc hợp tác giảng dạy." />
+      </Reveal>
+      <div className="grid lg:grid-cols-[1fr_380px] gap-8">
+        <Reveal animation="slide-in-left">
+          <Card padding="lg">
+            <form onSubmit={submit} className="space-y-4">
+              <div className="grid sm:grid-cols-2 gap-4">
+                <Input label="Họ và tên" required value={form.name} onChange={(e) => setForm((s) => ({ ...s, name: e.target.value }))} error={errors.name} placeholder="Nguyễn Văn A" />
+                <Input label="Email" required type="email" value={form.email} onChange={(e) => setForm((s) => ({ ...s, email: e.target.value }))} error={errors.email} placeholder="ban@example.com" />
               </div>
-              <h4 className="text-sm font-black text-slate-900">Hòm thư điện tử</h4>
-              <p className="text-xs text-slate-500">Hỗ trợ học viên: support@orbi-lingo.vn</p>
-              <p className="text-xs text-slate-500">Đối tác đào tạo: partner@orbi-lingo.vn</p>
-            </div>
-
-            <div className="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-sm space-y-3">
-              <div className="w-10 h-10 rounded-2xl bg-violet-50 text-violet-600 flex items-center justify-center">
-                <Phone className="w-5 h-5" />
-              </div>
-              <h4 className="text-sm font-black text-slate-900">Đường dây nóng</h4>
-              <p className="text-xs text-slate-500">Tư vấn tuyển sinh: 1900 888 999</p>
-              <p className="text-xs text-slate-500">Giờ làm việc: 08:00 – 21:00 (Hàng ngày)</p>
-            </div>
-
-            <div className="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-sm space-y-3">
-              <div className="w-10 h-10 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
-                <MapPin className="w-5 h-5" />
-              </div>
-              <h4 className="text-sm font-black text-slate-900">Văn phòng chính</h4>
-              <p className="text-xs text-slate-500">Khu Công Nghệ Cao, TP. Thủ Đức, TP. Hồ Chí Minh, Việt Nam</p>
-            </div>
-          </div>
-
-          {/* Form Column */}
-          <div className="md:col-span-2">
-            <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200/80 shadow-sm">
-              {submitted ? (
-                <div className="text-center py-12 space-y-4 animate-fadeIn">
-                  <div className="w-16 h-16 rounded-full bg-emerald-50 border border-emerald-100 text-emerald-600 flex items-center justify-center mx-auto">
-                    <CheckCircle2 className="w-8 h-8" />
-                  </div>
-                  <h3 className="text-lg font-black text-slate-900">Đã gửi tin nhắn thành công!</h3>
-                  <p className="text-xs text-slate-500 max-w-sm mx-auto">
-                    Cảm ơn bạn đã liên hệ. Cố vấn học tập của OrbiLingo sẽ phản hồi qua email trong vòng 2-4 giờ làm việc.
-                  </p>
-                  <button
-                    onClick={() => setSubmitted(false)}
-                    className="px-6 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition"
-                  >
-                    Gửi tin nhắn khác
-                  </button>
+              <Select
+                label="Chủ đề"
+                value={form.topic}
+                onChange={(e) => setForm((s) => ({ ...s, topic: e.target.value }))}
+                options={[
+                  { value: 'support', label: 'Hỗ trợ kỹ thuật' },
+                  { value: 'billing', label: 'Thanh toán & gói VIP' },
+                  { value: 'teacher', label: 'Hợp tác giảng dạy' },
+                  { value: 'other', label: 'Khác' },
+                ]}
+              />
+              <Textarea label="Nội dung" required value={form.message} onChange={(e) => setForm((s) => ({ ...s, message: e.target.value }))} error={errors.message} placeholder="Mô tả vấn đề hoặc câu hỏi của bạn..." />
+              <Button type="submit" size="lg" loading={loading} leftIcon={<Send className="w-4 h-4" />}>
+                Gửi liên hệ
+              </Button>
+            </form>
+          </Card>
+        </Reveal>
+        <Stagger className="space-y-4" animation="slide-in-right">
+          {INFO.map((i) => {
+            const Icon = i.icon;
+            return (
+              <Card key={i.title} hover className="flex items-start gap-4">
+                <div className="w-11 h-11 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0">
+                  <Icon className="w-5 h-5" />
                 </div>
-              ) : (
-                <form onSubmit={handleSubmit} className="space-y-4">
-                  <h3 className="text-base font-black text-slate-900 mb-2">Gửi lời nhắn cho chúng tôi</h3>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-                        Họ và tên
-                      </label>
-                      <input
-                        type="text"
-                        required
-                        placeholder="Nguyễn Văn A"
-                        value={formData.name}
-                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                        className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-2xl text-xs font-medium focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-                        Email liên lạc
-                      </label>
-                      <input
-                        type="email"
-                        required
-                        placeholder="ban@example.com"
-                        value={formData.email}
-                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                        className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-2xl text-xs font-medium focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-                      Chủ đề
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      placeholder="Cần tư vấn lộ trình TOEIC 650+ / Hỗ trợ kỹ thuật..."
-                      value={formData.subject}
-                      onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
-                      className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-2xl text-xs font-medium focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-                      Nội dung tin nhắn
-                    </label>
-                    <textarea
-                      required
-                      rows={4}
-                      placeholder="Chi tiết câu hỏi hoặc yêu cầu của bạn..."
-                      value={formData.message}
-                      onChange={(e) => setFormData({ ...formData, message: e.target.value })}
-                      className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-2xl text-xs font-medium focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 resize-none"
-                    />
-                  </div>
-
-                  <button
-                    type="submit"
-                    className="w-full py-3.5 px-6 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white font-bold text-xs rounded-2xl shadow-lg shadow-indigo-200 flex items-center justify-center gap-2 transition"
-                  >
-                    <span>Gửi tin nhắn ngay</span>
-                    <Send className="w-4 h-4" />
-                  </button>
-                </form>
-              )}
-            </div>
-          </div>
-        </div>
+                <div>
+                  <p className="font-bold text-slate-900 text-sm">{i.title}</p>
+                  {i.lines.map((l) => (
+                    <p key={l} className="text-xs text-slate-500">
+                      {l}
+                    </p>
+                  ))}
+                </div>
+              </Card>
+            );
+          })}
+          <Card className="bg-indigo-600 text-white border-indigo-600">
+            <MessageCircle className="w-6 h-6 mb-2" />
+            <p className="font-bold">Hỏi nhanh qua FAQ</p>
+            <p className="text-xs text-indigo-100 mt-1">Hầu hết câu hỏi phổ biến đã có câu trả lời.</p>
+            <Button to="/faq" size="sm" variant="secondary" className="mt-3 bg-white text-indigo-700 hover:bg-indigo-50">
+              Xem FAQ
+            </Button>
+          </Card>
+        </Stagger>
       </div>
     </div>
   );

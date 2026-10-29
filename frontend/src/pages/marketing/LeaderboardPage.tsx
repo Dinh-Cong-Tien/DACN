@@ -1,103 +1,93 @@
-import React from 'react';
-import { Trophy, Medal, Flame, Star, Award, ArrowUp } from 'lucide-react';
+import React, { useState } from 'react';
+import { Trophy, Flame, TrendingUp, TrendingDown, Minus, ArrowRight, Crown } from 'lucide-react';
+import { Avatar, Badge, Button, Card, GradientPanel, SectionTitle, Segmented } from '@/shared/components/ui';
+import { CountUp, Reveal, Stagger } from '@/shared/components/motion';
+import { MOCK_LEADERBOARD } from '@/shared/mocks';
+import { useDocumentTitle } from '@/shared/hooks';
+import { cn, formatNumber } from '@/shared/utils';
+
+const PODIUM = [
+  { rank: 2, h: 'h-28', cls: 'from-slate-300 to-slate-400', medal: '🥈' },
+  { rank: 1, h: 'h-36', cls: 'from-amber-300 to-amber-500', medal: '🥇' },
+  { rank: 3, h: 'h-24', cls: 'from-orange-300 to-orange-400', medal: '🥉' },
+];
 
 export const LeaderboardPage: React.FC = () => {
-  const topUsers = [
-    { rank: 1, name: 'Trần Minh Quân', score: 980, streak: 45, xp: 12450, badge: 'Huyền thoại', avatar: 'TQ' },
-    { rank: 2, name: 'Nguyễn Thảo Ly', score: 965, streak: 38, xp: 11200, badge: 'Cao thủ', avatar: 'NL' },
-    { rank: 3, name: 'Lê Hoàng Nam', score: 945, streak: 32, xp: 9850, badge: 'Cao thủ', avatar: 'LN' },
-    { rank: 4, name: 'Phạm Thu Trang', score: 920, streak: 28, xp: 8400, badge: 'Chuyên cần', avatar: 'PT' },
-    { rank: 5, name: 'Vũ Đức Duy', score: 890, streak: 21, xp: 7600, badge: 'Chuyên cần', avatar: 'VD' },
-  ];
+  useDocumentTitle('Bảng vinh danh');
+  const [period, setPeriod] = useState('week');
+  const factor = period === 'week' ? 1 : 4.2;
+  const rows = MOCK_LEADERBOARD.map((r) => ({ ...r, points: Math.round(r.points * factor), isMe: false }));
 
   return (
-    <div className="py-12 bg-slate-50 min-h-screen">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
-        <div className="text-center max-w-2xl mx-auto space-y-3">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-50 border border-amber-200 text-amber-700 text-xs font-bold">
-            <Trophy className="w-3.5 h-3.5" />
-            <span>Vinh danh Học viên Xuất sắc tuần này</span>
-          </div>
-          <h1 className="text-3xl font-black text-slate-900 tracking-tight">Bảng Xếp Hạng Toàn Hệ Thống</h1>
-          <p className="text-slate-600 text-sm">
-            Cạnh tranh tích lũy điểm kinh nghiệm (XP) qua mỗi bài luyện tập, bài thi thử và duy trì chuỗi học tập (Streak) liên tục.
-          </p>
-        </div>
-
-        {/* Podium Top 3 */}
-        <div className="grid grid-cols-3 gap-4 pt-4 pb-2 items-end">
-          {/* Rank 2 */}
-          <div className="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-sm text-center space-y-2">
-            <div className="w-12 h-12 rounded-full bg-slate-100 font-black text-slate-700 flex items-center justify-center mx-auto text-sm">
-              {topUsers[1].avatar}
-            </div>
-            <div className="text-xs font-black text-slate-800">{topUsers[1].name}</div>
-            <div className="text-sm font-black text-slate-600">{topUsers[1].score} điểm</div>
-            <span className="inline-block px-2 py-0.5 rounded-md bg-slate-100 text-[10px] font-bold text-slate-600">
-              Hạng 2 🥈
-            </span>
-          </div>
-
-          {/* Rank 1 */}
-          <div className="bg-gradient-to-b from-amber-500/10 to-amber-500/5 p-6 rounded-3xl border-2 border-amber-400 shadow-md text-center space-y-2 transform -translate-y-4">
-            <div className="w-16 h-16 rounded-full bg-gradient-to-tr from-amber-400 to-amber-600 text-white font-black flex items-center justify-center mx-auto text-lg shadow-lg shadow-amber-300/40">
-              {topUsers[0].avatar}
-            </div>
-            <div className="text-sm font-black text-slate-900">{topUsers[0].name}</div>
-            <div className="text-base font-black text-amber-600">{topUsers[0].score} điểm</div>
-            <span className="inline-block px-3 py-1 rounded-full bg-amber-500 text-white text-[10px] font-black uppercase tracking-wider">
-              Quán quân 👑
-            </span>
-          </div>
-
-          {/* Rank 3 */}
-          <div className="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-sm text-center space-y-2">
-            <div className="w-12 h-12 rounded-full bg-amber-50 font-black text-amber-800 flex items-center justify-center mx-auto text-sm">
-              {topUsers[2].avatar}
-            </div>
-            <div className="text-xs font-black text-slate-800">{topUsers[2].name}</div>
-            <div className="text-sm font-black text-slate-600">{topUsers[2].score} điểm</div>
-            <span className="inline-block px-2 py-0.5 rounded-md bg-amber-100 text-[10px] font-bold text-amber-800">
-              Hạng 3 🥉
-            </span>
-          </div>
-        </div>
-
-        {/* Detailed Table */}
-        <div className="bg-white rounded-3xl border border-slate-200/80 shadow-sm divide-y divide-slate-100 overflow-hidden">
-          {topUsers.map((u) => (
-            <div key={u.rank} className="p-4 sm:p-5 flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <span className="w-6 text-center font-black text-sm text-slate-400 font-mono">
-                  #{u.rank}
-                </span>
-                <div className="w-10 h-10 rounded-2xl bg-slate-100 font-black text-slate-700 flex items-center justify-center text-xs">
-                  {u.avatar}
-                </div>
-                <div>
-                  <h4 className="text-xs sm:text-sm font-bold text-slate-900">{u.name}</h4>
-                  <div className="flex items-center gap-2 mt-0.5">
-                    <span className="text-[10px] font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-md">
-                      {u.badge}
-                    </span>
-                    <span className="text-[10px] text-amber-600 font-bold flex items-center gap-0.5">
-                      <Flame className="w-3 h-3 fill-amber-500 text-amber-500" />
-                      {u.streak} ngày streak
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="text-right">
-                <span className="text-sm sm:text-base font-black text-slate-900 font-mono">
-                  {u.score}
-                </span>
-                <p className="text-[10px] text-slate-400 font-medium">{u.xp.toLocaleString()} XP</p>
-              </div>
-            </div>
-          ))}
-        </div>
+    <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-16 pb-24 space-y-10">
+      <Reveal>
+        <SectionTitle eyebrow="Bảng vinh danh" title="Top học viên chuyên cần" description="Điểm nỗ lực tích luỹ từ câu hỏi luyện tập, đề thi thử, ôn tập và chuỗi ngày học liên tục." />
+      </Reveal>
+      <div className="flex justify-center animate-fade-up">
+        <Segmented
+          value={period}
+          onChange={setPeriod}
+          options={[
+            { value: 'week', label: 'Tuần này' },
+            { value: 'month', label: 'Tháng này' },
+          ]}
+        />
       </div>
+
+      <div key={period} className="grid grid-cols-3 gap-3 items-end max-w-2xl mx-auto">
+        {PODIUM.map((p, i) => {
+          const r = rows.find((x) => x.rank === p.rank)!;
+          return (
+            <div key={p.rank} className="flex flex-col items-center gap-2 animate-pop" style={{ animationDelay: `${i * 150}ms` }}>
+              <div className="relative">
+                <Avatar name={r.name} size={p.rank === 1 ? 'xl' : 'lg'} ring />
+                {p.rank === 1 && <Crown className="w-6 h-6 text-amber-400 absolute -top-4 left-1/2 -translate-x-1/2 animate-bounce-soft" />}
+              </div>
+              <p className="text-sm font-bold text-slate-900 text-center leading-tight">{r.name}</p>
+              <p className="text-xs font-black text-indigo-600">
+                <CountUp value={r.points} /> điểm
+              </p>
+              <div className={cn('w-full rounded-t-2xl bg-gradient-to-t flex items-start justify-center pt-3 text-2xl', p.h, p.cls)}>{p.medal}</div>
+            </div>
+          );
+        })}
+      </div>
+
+      <Stagger key={`list-${period}`} className="space-y-2" step={40} whenVisible={false}>
+        {rows.slice(3).map((r) => (
+          <Card key={r.rank} padding="sm" className="flex items-center gap-4 hover:bg-indigo-50/30 transition">
+            <span className="w-8 text-center font-black text-slate-400">#{r.rank}</span>
+            <Avatar name={r.name} size="md" />
+            <div className="flex-1 min-w-0">
+              <p className="font-bold text-slate-900 text-sm truncate">{r.name}</p>
+              <p className="text-xs text-slate-500">Mục tiêu: {r.target}</p>
+            </div>
+            <Badge tone="amber" icon={<Flame className="w-3 h-3" />} className="hidden sm:inline-flex">
+              {r.streak} ngày
+            </Badge>
+            <span className={cn('text-xs font-bold flex items-center gap-0.5 w-10 justify-end', r.delta > 0 ? 'text-emerald-600' : r.delta < 0 ? 'text-rose-600' : 'text-slate-400')}>
+              {r.delta > 0 ? <TrendingUp className="w-3.5 h-3.5" /> : r.delta < 0 ? <TrendingDown className="w-3.5 h-3.5" /> : <Minus className="w-3.5 h-3.5" />}
+              {r.delta !== 0 && Math.abs(r.delta)}
+            </span>
+            <span className="font-black text-indigo-700 text-sm w-20 text-right">{formatNumber(r.points)}</span>
+          </Card>
+        ))}
+      </Stagger>
+
+      <Reveal animation="scale-in">
+        <GradientPanel tone="amber" className="flex flex-col md:flex-row items-center justify-between gap-6">
+          <div className="flex items-center gap-4">
+            <Trophy className="w-12 h-12 shrink-0" />
+            <div>
+              <h3 className="text-xl font-black">Bạn muốn có tên trên bảng này?</h3>
+              <p className="text-amber-50 text-sm">Mỗi câu luyện tập +2 điểm, mỗi ngày học liên tục nhân hệ số streak.</p>
+            </div>
+          </div>
+          <Button to="/auth/register" variant="secondary" className="bg-white text-amber-700 hover:bg-amber-50 shrink-0" rightIcon={<ArrowRight className="w-4 h-4" />}>
+            Tham gia ngay
+          </Button>
+        </GradientPanel>
+      </Reveal>
     </div>
   );
 };

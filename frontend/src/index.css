@@ -3,22 +3,139 @@
 @tailwind utilities;
 
 @layer base {
+  html {
+    scroll-behavior: smooth;
+    -webkit-tap-highlight-color: transparent;
+  }
   body {
     font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+    @apply bg-slate-50 text-slate-800 antialiased;
+  }
+  ::selection {
+    @apply bg-indigo-500 text-white;
+  }
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: rgb(203 213 225) transparent;
+  }
+  *::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  *::-webkit-scrollbar-thumb {
+    @apply bg-slate-300 rounded-full border-2 border-transparent bg-clip-padding;
+  }
+  *::-webkit-scrollbar-thumb:hover {
+    @apply bg-slate-400;
+  }
+  button,
+  a {
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500/60 focus-visible:ring-offset-2;
   }
 }
 
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(6px);
+@layer components {
+  .glass {
+    @apply bg-white/70 backdrop-blur-xl border border-white/60 shadow-soft;
   }
-  to {
-    opacity: 1;
-    transform: translateY(0);
+  .glass-dark {
+    @apply bg-slate-900/70 backdrop-blur-xl border border-white/10;
+  }
+  .card-hover {
+    @apply transition-all duration-300 ease-spring hover:-translate-y-1 hover:shadow-card;
+  }
+  .text-gradient {
+    @apply bg-gradient-to-r from-indigo-600 via-violet-600 to-indigo-700 bg-clip-text text-transparent;
+  }
+  .bg-dots {
+    background-image: radial-gradient(rgba(99, 102, 241, 0.18) 1px, transparent 1px);
+    background-size: 22px 22px;
+  }
+  .bg-grid {
+    background-image: linear-gradient(to right, rgba(148, 163, 184, 0.14) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(148, 163, 184, 0.14) 1px, transparent 1px);
+    background-size: 40px 40px;
+  }
+  .skeleton {
+    @apply bg-slate-200/80 rounded-lg relative overflow-hidden;
+  }
+  .skeleton::after {
+    content: '';
+    @apply absolute inset-0 animate-shimmer;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.7), transparent);
+    background-size: 700px 100%;
+  }
+  .shine {
+    position: relative;
+    overflow: hidden;
+  }
+  .shine::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: linear-gradient(110deg, transparent 30%, rgba(255, 255, 255, 0.35) 50%, transparent 70%);
+    transform: translateX(-120%);
+    transition: transform 0.7s ease;
+  }
+  .shine:hover::after {
+    transform: translateX(120%);
+  }
+  .stripes {
+    background-image: linear-gradient(
+      45deg,
+      rgba(255, 255, 255, 0.18) 25%,
+      transparent 25%,
+      transparent 50%,
+      rgba(255, 255, 255, 0.18) 50%,
+      rgba(255, 255, 255, 0.18) 75%,
+      transparent 75%,
+      transparent
+    );
+    background-size: 1rem 1rem;
+  }
+  .flip-card {
+    perspective: 1400px;
+  }
+  .flip-inner {
+    transform-style: preserve-3d;
+    transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .flip-inner.is-flipped {
+    transform: rotateY(180deg);
+  }
+  .flip-face {
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+  }
+  .flip-back {
+    transform: rotateY(180deg);
   }
 }
 
-.animate-fadeIn {
-  animation: fadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+@layer utilities {
+  .stagger > * {
+    animation-delay: calc(var(--stagger, 70ms) * var(--i, 0));
+  }
+  .delay-75 { animation-delay: 75ms; }
+  .delay-100 { animation-delay: 100ms; }
+  .delay-150 { animation-delay: 150ms; }
+  .delay-200 { animation-delay: 200ms; }
+  .delay-300 { animation-delay: 300ms; }
+  .delay-500 { animation-delay: 500ms; }
+  .delay-700 { animation-delay: 700ms; }
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+  .no-scrollbar { scrollbar-width: none; }
+  .mask-fade-b {
+    -webkit-mask-image: linear-gradient(to bottom, black 70%, transparent);
+    mask-image: linear-gradient(to bottom, black 70%, transparent);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }

@@ -1,221 +1,168 @@
-import React, { useState } from 'react';
-import {
-  AlertTriangle,
-  Filter,
-  CheckCircle2,
-  RotateCcw,
-  BookOpen,
-  HelpCircle,
-  Tag,
-} from 'lucide-react';
-
-interface IMistakeDisplay {
-  id: string;
-  stem: string;
-  userWrongAnswer: string;
-  correctAnswer: string;
-  partOrSkill: string;
-  primaryCause: string;
-  causeLabel: string;
-  explanation: string;
-  tags: string[];
-  mistakeCount: number;
-  isResolved: boolean;
-}
-
-const mockMistakes: IMistakeDisplay[] = [
-  {
-    id: 'm-1',
-    stem: 'The new financial policy has ______ affected small businesses across the region.',
-    userWrongAnswer: 'adversity',
-    correctAnswer: 'adversely',
-    partOrSkill: 'TOEIC Part 5',
-    primaryCause: 'GRAMMAR_MISUNDERSTANDING',
-    causeLabel: 'Ngữ pháp: Từ loại (Adverb bổ nghĩa cho Verb)',
-    explanation:
-      'Chỗ trống đứng giữa trợ động từ "has" và quá khứ phân từ "affected", do đó cần một trạng từ (Adverb) có đuôi -ly để bổ nghĩa cho động từ "affected". "Adversity" là danh từ (nghịch cảnh).',
-    tags: ['adverb', 'part_of_speech', 'part_5'],
-    mistakeCount: 2,
-    isResolved: false,
-  },
-  {
-    id: 'm-2',
-    stem: 'Customers are requested to ______ their reservation at least 24 hours in advance.',
-    userWrongAnswer: 'conform',
-    correctAnswer: 'confirm',
-    partOrSkill: 'TOEIC Part 5',
-    primaryCause: 'VOCABULARY_DEFICIT',
-    causeLabel: 'Từ vựng: Từ đồng âm / Dễ gây nhầm lẫn',
-    explanation:
-      'Ngữ cảnh yêu cầu từ mang nghĩa "xác nhận đặt chỗ" -> "confirm". "Conform" mang nghĩa tuân thủ (thường đi với conform to).',
-    tags: ['confusing_words', 'business_vocab'],
-    mistakeCount: 1,
-    isResolved: false,
-  },
-  {
-    id: 'm-3',
-    stem: 'Where did you leave the meeting agenda documents?',
-    userWrongAnswer: 'Yes, I attended it yesterday.',
-    correctAnswer: 'On the director’s desk.',
-    partOrSkill: 'TOEIC Part 2',
-    primaryCause: 'LISTENING_MISHEARD',
-    causeLabel: 'Nghe: Bẫy câu hỏi Where (Nhầm sang Yes/No)',
-    explanation:
-      'Câu hỏi bắt đầu bằng "Where" hỏi về nơi chốn, không bao giờ trả lời bằng Yes/No. Đáp án chuẩn là chỉ địa điểm: On the director’s desk.',
-    tags: ['listening_part_2', 'wh_question_trap'],
-    mistakeCount: 1,
-    isResolved: true,
-  },
-];
+import React, { useMemo, useState } from 'react';
+import { AlertTriangle, CheckCircle2, ChevronDown, Target, RotateCcw, XCircle, Lightbulb, Flame } from 'lucide-react';
+import { useDocumentTitle } from '@/shared/hooks';
+import { Badge, Button, Card, Chip, EmptyState, PageHeader, StatCard, Tabs, MiniBars } from '@/shared/components/ui';
+import { Stagger } from '@/shared/components/motion';
+import { MOCK_MISTAKES, MISTAKE_CAUSE_LABEL } from '@/shared/mocks';
+import type { Mistake, MistakeCause } from '@/shared/types';
+import { cn, formatDate, timeAgo } from '@/shared/utils';
+import { toast } from '@/shared/stores/uiStore';
 
 export const StudentMistakesPage: React.FC = () => {
-  const [filterCause, setFilterCause] = useState<string>('ALL');
-  const [showResolved, setShowResolved] = useState<boolean>(false);
-  const [mistakes, setMistakes] = useState(mockMistakes);
+  useDocumentTitle('Sổ tay lỗi sai');
+  const [items, setItems] = useState<Mistake[]>(MOCK_MISTAKES);
+  const [tab, setTab] = useState('open');
+  const [cause, setCause] = useState<MistakeCause | 'ALL'>('ALL');
+  const [expanded, setExpanded] = useState<string | null>(null);
+  const now = Date.now();
 
-  const filtered = mistakes.filter((m) => {
-    if (filterCause !== 'ALL' && m.primaryCause !== filterCause) return false;
-    if (!showResolved && m.isResolved) return false;
-    return true;
-  });
+  const list = useMemo(() => items.filter((m) => (tab === 'open' ? !m.isResolved : m.isResolved)).filter((m) => cause === 'ALL' || m.cause === cause), [items, tab, cause]);
+  const dueToday = items.filter((m) => !m.isResolved && new Date(m.nextReviewAt).getTime() <= now).length;
+  const causeStats = (Object.keys(MISTAKE_CAUSE_LABEL) as MistakeCause[]).map((c) => ({ label: MISTAKE_CAUSE_LABEL[c].label, value: items.filter((m) => m.cause === c).length, tone: MISTAKE_CAUSE_LABEL[c].tone })).filter((s) => s.value > 0);
 
-  const toggleResolve = (id: string) => {
-    setMistakes((prev) =>
-      prev.map((item) => (item.id === id ? { ...item, isResolved: !item.isResolved } : item))
-    );
+  const resolve = (id: string) => {
+    setItems((s) => s.map((m) => (m.id === id ? { ...m, isResolved: true } : m)));
+    toast.success('Đã đánh dấu đã hiểu', 'Câu này sẽ được ôn lại sau 14 ngày để kiểm tra.');
   };
 
   return (
-    <div className="max-w-6xl mx-auto space-y-6">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-black text-slate-900 flex items-center gap-2.5">
-            <AlertTriangle className="w-6 h-6 text-rose-600" />
-            <span>Sổ tay phân tích lỗi sai (Error Intelligence)</span>
-          </h1>
-          <p className="text-sm text-slate-500 mt-1">
-            Hệ thống tự động gom các câu bạn trả lời sai, phân loại nguyên nhân và đưa vào chu kỳ ôn tập ngắt quãng.
-          </p>
-        </div>
+    <div>
+      <PageHeader icon={<AlertTriangle />} title="Sổ tay lỗi sai" description="Mọi câu sai từ luyện tập và thi thử được tự động lưu kèm đáp án đúng, lời giải và phân loại nguyên nhân." actions={<Button to="/app/drills" leftIcon={<Target className="w-4 h-4" />} variant="gradient">Luyện lại các câu này</Button>} />
 
-        <div className="flex items-center gap-2 text-xs font-semibold">
-          <span className="px-3 py-1.5 rounded-full bg-rose-50 text-rose-700 border border-rose-200">
-            {mistakes.filter((m) => !m.isResolved).length} Lỗi cần sửa
-          </span>
-          <span className="px-3 py-1.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
-            {mistakes.filter((m) => m.isResolved).length} Đã khắc phục
-          </span>
-        </div>
-      </div>
+      <Stagger className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6" step={70}>
+        <StatCard label="Tổng lỗi sai" value={items.length} icon={<AlertTriangle />} tone="rose" />
+        <StatCard label="Đã giải quyết" value={items.filter((m) => m.isResolved).length} icon={<CheckCircle2 />} tone="emerald" />
+        <StatCard label="Cần ôn hôm nay" value={dueToday} icon={<RotateCcw />} tone="amber" hint="Theo lịch SM-2" />
+        <StatCard label="Sai lặp lại" value={items.filter((m) => m.count > 1).length} icon={<Flame />} tone="orange" hint="Sai ≥ 2 lần" />
+      </Stagger>
 
-      {/* Filter Bar */}
-      <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-wrap items-center justify-between gap-4">
-        <div className="flex items-center gap-2">
-          <Filter className="w-4 h-4 text-slate-400" />
-          <span className="text-xs font-bold text-slate-700">Phân loại lỗi:</span>
-          <select
-            value={filterCause}
-            onChange={(e) => setFilterCause(e.target.value)}
-            className="text-xs bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-          >
-            <option value="ALL">Tất cả nguyên nhân</option>
-            <option value="GRAMMAR_MISUNDERSTANDING">Ngữ pháp / Cấu trúc</option>
-            <option value="VOCABULARY_DEFICIT">Thiếu từ vựng / Bẫy từ</option>
-            <option value="LISTENING_MISHEARD">Nghe nhầm / Bẫy âm thanh</option>
-          </select>
-        </div>
-
-        <label className="flex items-center gap-2 text-xs font-medium text-slate-600 cursor-pointer select-none">
-          <input
-            type="checkbox"
-            checked={showResolved}
-            onChange={(e) => setShowResolved(e.target.checked)}
-            className="rounded text-indigo-600 focus:ring-indigo-500 w-4 h-4"
-          />
-          <span>Hiện cả những câu đã khắc phục</span>
-        </label>
-      </div>
-
-      {/* Mistake Items List */}
-      <div className="space-y-4">
-        {filtered.map((item) => (
-          <div
-            key={item.id}
-            className={`bg-white rounded-2xl border p-6 shadow-sm transition-all ${
-              item.isResolved
-                ? 'border-emerald-200 bg-emerald-50/20 opacity-75'
-                : 'border-slate-200 hover:border-slate-300'
-            }`}
-          >
-            <div className="flex items-start justify-between gap-4 mb-3">
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-bold px-2 py-0.5 rounded bg-indigo-50 text-indigo-700 border border-indigo-200">
-                  {item.partOrSkill}
-                </span>
-                <span className="text-xs font-semibold px-2 py-0.5 rounded bg-amber-50 text-amber-800 border border-amber-200">
-                  {item.causeLabel}
-                </span>
-                {item.mistakeCount > 1 && (
-                  <span className="text-xs font-bold px-2 py-0.5 rounded bg-rose-100 text-rose-800">
-                    Sai {item.mistakeCount} lần
-                  </span>
-                )}
-              </div>
-
-              <button
-                onClick={() => toggleResolve(item.id)}
-                className={`flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-bold transition ${
-                  item.isResolved
-                    ? 'bg-emerald-600 text-white'
-                    : 'bg-slate-100 hover:bg-emerald-50 text-slate-600 hover:text-emerald-700'
-                }`}
-              >
-                <CheckCircle2 className="w-3.5 h-3.5" />
-                <span>{item.isResolved ? 'Đã khắc phục' : 'Đánh dấu đã hiểu'}</span>
-              </button>
-            </div>
-
-            {/* Question Stem */}
-            <h3 className="text-base font-semibold text-slate-900 mb-3">{item.stem}</h3>
-
-            {/* Answers Comparison */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
-              <div className="p-3 rounded-xl bg-rose-50 border border-rose-200/80 text-xs">
-                <span className="font-bold text-rose-800 block mb-0.5">Đáp án bạn đã chọn (Sai):</span>
-                <span className="text-rose-950 font-semibold">{item.userWrongAnswer}</span>
-              </div>
-              <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-200/80 text-xs">
-                <span className="font-bold text-emerald-800 block mb-0.5">Đáp án chính xác:</span>
-                <span className="text-emerald-950 font-semibold">{item.correctAnswer}</span>
-              </div>
-            </div>
-
-            {/* Explanation */}
-            <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 text-xs leading-relaxed text-slate-700">
-              <strong className="text-slate-900 block mb-1">💡 Lời giải chi tiết:</strong>
-              <p>{item.explanation}</p>
-            </div>
-
-            {/* Tags */}
-            <div className="flex items-center gap-1.5 mt-3 pt-3 border-t border-slate-100">
-              <Tag className="w-3.5 h-3.5 text-slate-400" />
-              {item.tags.map((tag) => (
-                <span key={tag} className="text-[11px] text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md">
-                  #{tag}
-                </span>
-              ))}
+      <div className="grid grid-cols-1 xl:grid-cols-[1fr_300px] gap-5">
+        <div className="space-y-4">
+          <div className="flex flex-col gap-3 animate-fade-down">
+            <Tabs
+              variant="pill"
+              value={tab}
+              onChange={setTab}
+              items={[
+                { key: 'open', label: 'Chưa giải quyết', count: items.filter((m) => !m.isResolved).length },
+                { key: 'done', label: 'Đã giải quyết', count: items.filter((m) => m.isResolved).length },
+              ]}
+            />
+            <div className="flex gap-1.5 flex-wrap">
+              <Chip active={cause === 'ALL'} onClick={() => setCause('ALL')}>
+                Tất cả
+              </Chip>
+              {causeStats.map((c) => {
+                const key = (Object.keys(MISTAKE_CAUSE_LABEL) as MistakeCause[]).find((k) => MISTAKE_CAUSE_LABEL[k].label === c.label)!;
+                return (
+                  <Chip key={key} active={cause === key} onClick={() => setCause(key)} tone={c.tone}>
+                    {c.label}
+                  </Chip>
+                );
+              })}
             </div>
           </div>
-        ))}
 
-        {filtered.length === 0 && (
-          <div className="bg-white rounded-2xl border border-slate-200 p-12 text-center text-slate-500 space-y-2">
-            <CheckCircle2 className="w-12 h-12 text-emerald-500 mx-auto" />
-            <h3 className="font-bold text-slate-800 text-base">Tuyệt vời! Không có lỗi nào thỏa mãn bộ lọc.</h3>
-            <p className="text-xs">Bạn đã khắc phục tốt các lỗi sai được hệ thống ghi nhận.</p>
-          </div>
-        )}
+          {list.length === 0 ? (
+            <Card>
+              <EmptyState icon={<CheckCircle2 />} title="Không có lỗi sai nào" description="Tuyệt vời! Hãy tiếp tục luyện tập để giữ phong độ." />
+            </Card>
+          ) : (
+            list.map((m, i) => {
+              const meta = MISTAKE_CAUSE_LABEL[m.cause];
+              const open = expanded === m.id;
+              const due = new Date(m.nextReviewAt).getTime() <= now;
+              return (
+                <Card key={m.id} padding="none" className={cn('overflow-hidden animate-fade-up transition-all', open && 'border-indigo-200 shadow-card')} style={{ animationDelay: `${i * 50}ms` }}>
+                  <div className="p-4 md:p-5">
+                    <div className="flex items-start gap-3">
+                      <span className={cn('w-10 h-10 rounded-xl flex items-center justify-center shrink-0 font-black text-sm', m.isResolved ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600')}>{m.isResolved ? <CheckCircle2 className="w-5 h-5" /> : <XCircle className="w-5 h-5" />}</span>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap mb-1.5">
+                          <Badge tone={meta.tone} size="xs">
+                            {meta.label}
+                          </Badge>
+                          <Badge tone="slate" size="xs">
+                            {m.question.partOrSkill.replace('_', ' ')}
+                          </Badge>
+                          {m.count > 1 && (
+                            <Badge tone="orange" size="xs" icon={<Flame className="w-3 h-3" />}>
+                              Sai {m.count} lần
+                            </Badge>
+                          )}
+                          {due && !m.isResolved && (
+                            <Badge tone="amber" size="xs" dot>
+                              Cần ôn hôm nay
+                            </Badge>
+                          )}
+                        </div>
+                        <p className="text-sm font-bold text-slate-900 leading-snug">{m.question.stem}</p>
+                        <div className="flex flex-wrap items-center gap-2 mt-2 text-xs">
+                          <span className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-rose-50 text-rose-700 font-semibold line-through">
+                            {m.userAnswer}. {m.question.options.find((o) => o.key === m.userAnswer)?.text}
+                          </span>
+                          <span className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-emerald-50 text-emerald-700 font-bold">
+                            <CheckCircle2 className="w-3 h-3" /> {m.correctAnswer}. {m.question.options.find((o) => o.key === m.correctAnswer)?.text}
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-slate-400 mt-2">
+                          Nguồn: {m.source} · {formatDate(m.date)} · Ôn lại: {due ? 'hôm nay' : timeAgo(m.nextReviewAt).replace('trước', 'tới')}
+                        </p>
+                      </div>
+                      <button onClick={() => setExpanded(open ? null : m.id)} className="p-2 rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition shrink-0">
+                        <ChevronDown className={cn('w-5 h-5 transition-transform duration-300', open && 'rotate-180')} />
+                      </button>
+                    </div>
+                  </div>
+                  <div className={cn('grid transition-[grid-template-rows] duration-300 ease-spring', open ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]')}>
+                    <div className="overflow-hidden">
+                      <div className="px-4 md:px-5 pb-5 space-y-3">
+                        <div className="p-4 rounded-2xl bg-amber-50/70 border border-amber-200 text-sm text-slate-700 leading-relaxed">
+                          <p className="font-bold text-amber-800 flex items-center gap-2 mb-1">
+                            <Lightbulb className="w-4 h-4" /> Giải thích
+                          </p>
+                          {m.question.explanation}
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                          {m.question.tags.map((t) => (
+                            <Badge key={t} tone="slate" size="xs">
+                              #{t}
+                            </Badge>
+                          ))}
+                        </div>
+                        {!m.isResolved && (
+                          <div className="flex gap-2 justify-end">
+                            <Button size="sm" variant="outline" to="/app/drills" leftIcon={<Target className="w-4 h-4" />}>
+                              Luyện câu tương tự
+                            </Button>
+                            <Button size="sm" variant="success" leftIcon={<CheckCircle2 className="w-4 h-4" />} onClick={() => resolve(m.id)}>
+                              Đánh dấu đã hiểu
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </Card>
+              );
+            })
+          )}
+        </div>
+
+        <div className="space-y-4">
+          <Card className="animate-slide-in-right">
+            <p className="font-bold text-slate-900 text-sm mb-1">Phân bố nguyên nhân</p>
+            <p className="text-[11px] text-slate-500 mb-4">Hiểu vì sao sai quan trọng hơn sai câu nào</p>
+            <MiniBars data={causeStats} height={100} />
+          </Card>
+          <Card className="animate-slide-in-right bg-gradient-to-br from-indigo-50 to-violet-50 border-indigo-100" style={{ animationDelay: '100ms' }}>
+            <p className="font-bold text-indigo-900 text-sm">Gợi ý từ hệ thống</p>
+            <p className="text-xs text-indigo-800/80 mt-1 leading-relaxed">Bạn sai nhiều nhất ở nhóm <b>Nghe nhầm</b> và <b>Từ vựng</b>. Hãy luyện Part 2 mỗi ngày 10 câu và ôn flashcard chủ đề Business.</p>
+            <Button size="sm" variant="gradient" fullWidth className="mt-3" to="/app/review">
+              Ôn theo lịch SM-2
+            </Button>
+          </Card>
+        </div>
       </div>
     </div>
   );

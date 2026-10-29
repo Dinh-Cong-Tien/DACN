@@ -1,5 +1,5 @@
 import { RouteObject } from 'react-router-dom';
-import { GuestLayout } from '../../layouts/guest/GuestLayout';
+import { GuestLayout } from '@/layouts/guest/GuestLayout';
 import { HomePage } from '@/pages/marketing/HomePage';
 import { ToeicPage } from '@/pages/marketing/ToeicPage';
 import { VstepPage } from '@/pages/marketing/VstepPage';
@@ -17,13 +17,16 @@ import { FAQPage } from '@/pages/marketing/FAQPage';
 import { AboutPage } from '@/pages/marketing/AboutPage';
 import { ContactPage } from '@/pages/marketing/ContactPage';
 import { HelpPage } from '@/pages/marketing/HelpPage';
+import { ScoreConverterPage } from '@/pages/marketing/ScoreConverterPage';
+import { ResourcesPage } from '@/pages/marketing/ResourcesPage';
+import { NotFoundPage } from '@/pages/marketing/NotFoundPage';
 
 export const publicRoutes: RouteObject[] = [
   {
     path: '/',
     element: <GuestLayout />,
     children: [
-      { path: '', element: <HomePage /> },
+      { index: true, element: <HomePage /> },
       { path: 'toeic', element: <ToeicPage /> },
       { path: 'vstep', element: <VstepPage /> },
       { path: 'courses', element: <CoursesPage /> },
@@ -32,6 +35,8 @@ export const publicRoutes: RouteObject[] = [
       { path: 'mock-tests', element: <MockTestsPage /> },
       { path: 'question-bank', element: <QuestionBankPage /> },
       { path: 'leaderboard', element: <LeaderboardPage /> },
+      { path: 'score-converter', element: <ScoreConverterPage /> },
+      { path: 'resources', element: <ResourcesPage /> },
       { path: 'pricing', element: <PricingPage /> },
       { path: 'blog', element: <BlogPage /> },
       { path: 'blog/category/:slug', element: <BlogCategoryPage /> },
@@ -40,6 +45,7 @@ export const publicRoutes: RouteObject[] = [
       { path: 'about', element: <AboutPage /> },
       { path: 'contact', element: <ContactPage /> },
       { path: 'help', element: <HelpPage /> },
+      { path: '*', element: <NotFoundPage /> },
     ],
   },
 ];

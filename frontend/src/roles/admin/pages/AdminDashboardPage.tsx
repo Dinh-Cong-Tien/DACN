@@ -1,105 +1,126 @@
 import React from 'react';
-import {
-  Users,
-  FileQuestion,
-  FileText,
-  Activity,
-  ShieldCheck,
-  Server,
-  Database,
-  AlertTriangle,
-} from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Users, Activity, FileQuestion, Server, ArrowRight, ShieldAlert, Info, AlertTriangle } from 'lucide-react';
+import { MOCK_USERS, MOCK_SERVICES, MOCK_AUDIT_LOGS, ADMIN_TRAFFIC, ADMIN_SIGNUPS } from '@/shared/mocks';
+import type { AppRole } from '@/shared/types';
+import { cn, formatDate, timeAgo, ROLE_LABEL } from '@/shared/utils';
+import { useDocumentTitle } from '@/shared/hooks';
+import { Avatar, Badge, Button, Card, CardHeader, MiniBars, PageHeader, ProgressBar, Sparkline, StatCard, Timeline, Tone } from '@/shared/components/ui';
+
+const ROLE_TONE: Record<AppRole, Tone> = { GUEST: 'slate', STUDENT: 'indigo', TEACHER: 'emerald', HEAD_TEACHER: 'amber', ADMIN: 'rose' };
+const SEVERITY_TONE: Record<string, Tone> = { INFO: 'slate', WARN: 'amber', CRITICAL: 'rose' };
+const SEVERITY_ICON: Record<string, React.ReactNode> = { INFO: <Info />, WARN: <AlertTriangle />, CRITICAL: <ShieldAlert /> };
 
 export const AdminDashboardPage: React.FC = () => {
+  useDocumentTitle('Tổng quan hệ thống');
+  const traffic = ADMIN_TRAFFIC.reduce((a, b) => a + b.value, 0);
+  const upCount = MOCK_SERVICES.filter((s) => s.status === 'UP').length;
+  const roles: AppRole[] = ['STUDENT', 'TEACHER', 'HEAD_TEACHER', 'ADMIN'];
+  const newest = [...MOCK_USERS].sort((a, b) => new Date(b.joinedAt).getTime() - new Date(a.joinedAt).getTime()).slice(0, 5);
+  const logs = [...MOCK_AUDIT_LOGS].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).slice(0, 5);
+
   return (
-    <div className="max-w-6xl mx-auto space-y-6">
-      {/* Title */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-black text-white">Quản trị Hệ thống OrbiLingo (Admin Console)</h1>
-          <p className="text-sm text-slate-400 mt-1">
-            Tổng quan người dùng, ngân hàng câu hỏi, đề thi, khóa học và giám sát tình trạng hệ thống.
-          </p>
-        </div>
-        <span className="px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-mono font-bold flex items-center gap-1.5">
-          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
-          SYSTEM HEALTH: 100%
-        </span>
+    <div className="space-y-6">
+      <PageHeader title="Tổng quan hệ thống" description="Tình trạng vận hành, người dùng và hoạt động quản trị trong 7 ngày gần nhất." eyebrow="Admin Console" />
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+        <StatCard label="Người dùng" value={MOCK_USERS.length} icon={<Users />} tone="indigo" delta={12} deltaLabel="so với tuần trước" />
+        <StatCard label="Lượt truy cập tuần" value={traffic} icon={<Activity />} tone="sky" delta={8} deltaLabel="so với tuần trước" />
+        <StatCard label="Câu hỏi trong kho" value={12600} icon={<FileQuestion />} tone="violet" hint="TOEIC & VSTEP" />
+        <StatCard label="Dịch vụ hoạt động" value={`${upCount}/${MOCK_SERVICES.length}`} icon={<Server />} tone={upCount === MOCK_SERVICES.length ? 'emerald' : 'amber'} hint={upCount === MOCK_SERVICES.length ? 'Tất cả ổn định' : 'Có dịch vụ suy giảm'} />
       </div>
 
-      {/* KPI Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-        <div className="bg-slate-950 p-5 rounded-2xl border border-slate-800 shadow-sm flex items-center justify-between">
-          <div className="space-y-1">
-            <span className="text-xs font-semibold text-slate-400">Tổng người dùng</span>
-            <div className="text-2xl font-black text-white">1,420</div>
-            <span className="text-[11px] font-medium text-emerald-400">+12% tháng này</span>
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
+        <Card className="xl:col-span-2 animate-fade-up">
+          <CardHeader title="Lượt truy cập theo ngày" subtitle="7 ngày gần nhất" action={<Badge tone="sky">{traffic.toLocaleString('vi-VN')} lượt</Badge>} />
+          <MiniBars data={ADMIN_TRAFFIC.map((d) => ({ ...d, tone: 'sky' as Tone }))} height={160} />
+        </Card>
+        <Card className="animate-fade-up" style={{ animationDelay: '80ms' }}>
+          <CardHeader title="Đăng ký mới" subtitle="12 tháng gần nhất" />
+          <div className="flex items-end justify-between gap-3">
+            <div>
+              <p className="text-3xl font-black text-slate-900">{ADMIN_SIGNUPS[ADMIN_SIGNUPS.length - 1]}</p>
+              <p className="text-xs text-slate-500">tài khoản tháng này</p>
+            </div>
+            <Sparkline data={ADMIN_SIGNUPS} width={160} height={60} tone="indigo" />
           </div>
-          <div className="w-12 h-12 rounded-2xl bg-rose-500/10 text-rose-500 flex items-center justify-center">
-            <Users className="w-6 h-6" />
+          <div className="mt-5 pt-4 border-t border-slate-100 space-y-3">
+            <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Phân bố vai trò</p>
+            {roles.map((r) => {
+              const n = MOCK_USERS.filter((u) => u.role === r).length;
+              return (
+                <div key={r} className="space-y-1">
+                  <div className="flex items-center justify-between text-xs">
+                    <Badge tone={ROLE_TONE[r]} size="xs">
+                      {ROLE_LABEL[r]}
+                    </Badge>
+                    <span className="font-bold text-slate-700">{n}</span>
+                  </div>
+                  <ProgressBar value={(n / MOCK_USERS.length) * 100} size="xs" tone={ROLE_TONE[r]} />
+                </div>
+              );
+            })}
           </div>
-        </div>
-
-        <div className="bg-slate-950 p-5 rounded-2xl border border-slate-800 shadow-sm flex items-center justify-between">
-          <div className="space-y-1">
-            <span className="text-xs font-semibold text-slate-400">Ngân hàng câu hỏi</span>
-            <div className="text-2xl font-black text-white">3,850</div>
-            <span className="text-[11px] font-medium text-slate-400">TOEIC & VSTEP</span>
-          </div>
-          <div className="w-12 h-12 rounded-2xl bg-indigo-500/10 text-indigo-400 flex items-center justify-center">
-            <FileQuestion className="w-6 h-6" />
-          </div>
-        </div>
-
-        <div className="bg-slate-950 p-5 rounded-2xl border border-slate-800 shadow-sm flex items-center justify-between">
-          <div className="space-y-1">
-            <span className="text-xs font-semibold text-slate-400">Đề thi đang phát hành</span>
-            <div className="text-2xl font-black text-white">24 Đề</div>
-            <span className="text-[11px] font-medium text-slate-400">Active Test Versions</span>
-          </div>
-          <div className="w-12 h-12 rounded-2xl bg-blue-500/10 text-blue-400 flex items-center justify-center">
-            <FileText className="w-6 h-6" />
-          </div>
-        </div>
-
-        <div className="bg-slate-950 p-5 rounded-2xl border border-slate-800 shadow-sm flex items-center justify-between">
-          <div className="space-y-1">
-            <span className="text-xs font-semibold text-slate-400">Lượt thi thử (Attempts)</span>
-            <div className="text-2xl font-black text-emerald-400">8,910</div>
-            <span className="text-[11px] font-medium text-slate-400">Tự động chấm điểm</span>
-          </div>
-          <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center">
-            <Activity className="w-6 h-6" />
-          </div>
-        </div>
+        </Card>
       </div>
 
-      {/* System Audit & Recent Activities */}
-      <div className="bg-slate-950 rounded-3xl p-6 border border-slate-800 shadow-sm space-y-4">
-        <h3 className="text-base font-bold text-white">Nhật ký hoạt động hệ thống gần nhất (Audit Logs)</h3>
-        <div className="divide-y divide-slate-800/80 text-xs">
-          <div className="py-3 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <span className="px-2 py-0.5 rounded bg-blue-500/10 text-blue-400 font-mono">CREATE_QUESTION</span>
-              <span className="text-slate-300">Thêm mới câu hỏi chùm Part 7 (Passage ID: ps-901)</span>
-            </div>
-            <span className="text-slate-500">10 phút trước • Admin</span>
-          </div>
-          <div className="py-3 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <span className="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 font-mono">PUBLISH_TEST</span>
-              <span className="text-slate-300">Xuất bản đề thi ETS TOEIC 2024 Actual Test 02</span>
-            </div>
-            <span className="text-slate-500">1 giờ trước • Admin</span>
-          </div>
-          <div className="py-3 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <span className="px-2 py-0.5 rounded bg-purple-500/10 text-purple-400 font-mono">SRS_TRIGGER</span>
-              <span className="text-slate-300">Tính toán 124 mục ôn tập đến hạn cho học viên</span>
-            </div>
-            <span className="text-slate-500">Hôm nay 00:00 • Cron Job</span>
-          </div>
-        </div>
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
+        <Card className="animate-fade-up" style={{ animationDelay: '120ms' }}>
+          <CardHeader title="Trạng thái dịch vụ" subtitle="Cập nhật theo thời gian thực" action={<Link to="/admin/system" className="text-xs font-bold text-indigo-600 hover:underline">Chi tiết</Link>} />
+          <ul className="space-y-2.5">
+            {MOCK_SERVICES.map((s) => (
+              <li key={s.name} className="flex items-center justify-between text-sm">
+                <span className="flex items-center gap-2.5">
+                  <span className={cn('w-2.5 h-2.5 rounded-full', s.status === 'UP' ? 'bg-emerald-500 animate-pulse' : s.status === 'DEGRADED' ? 'bg-amber-500' : 'bg-rose-500')} />
+                  <span className="font-semibold text-slate-700">{s.name}</span>
+                </span>
+                <span className="text-xs font-mono text-slate-500">{s.latencyMs} ms</span>
+              </li>
+            ))}
+          </ul>
+        </Card>
+
+        <Card className="animate-fade-up" style={{ animationDelay: '160ms' }}>
+          <CardHeader title="Nhật ký gần nhất" subtitle="Thao tác nhạy cảm" action={<Link to="/admin/audit-logs" className="text-xs font-bold text-indigo-600 hover:underline">Xem tất cả</Link>} />
+          <Timeline
+            items={logs.map((l) => ({
+              id: l.id,
+              title: (
+                <span className="flex items-center gap-2 flex-wrap">
+                  <span className="font-mono text-xs">{l.action}</span>
+                  <Badge tone={SEVERITY_TONE[l.severity]} size="xs">
+                    {l.severity}
+                  </Badge>
+                </span>
+              ),
+              description: `${l.actor} · ${l.target}`,
+              time: timeAgo(l.createdAt),
+              tone: SEVERITY_TONE[l.severity],
+              icon: SEVERITY_ICON[l.severity],
+            }))}
+          />
+        </Card>
+
+        <Card className="animate-fade-up" style={{ animationDelay: '200ms' }}>
+          <CardHeader title="Người dùng mới" subtitle="Tham gia gần đây" action={<Button size="xs" variant="ghost" to="/admin/users" rightIcon={<ArrowRight className="w-3.5 h-3.5" />}>Quản lý</Button>} />
+          <ul className="space-y-3">
+            {newest.map((u, i) => (
+              <li key={u.id} className="flex items-center gap-3 animate-fade-up" style={{ animationDelay: `${i * 60}ms` }}>
+                <Avatar name={u.fullName} size="sm" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-slate-800 truncate">{u.fullName}</p>
+                  <p className="text-[11px] text-slate-400 truncate">{u.email}</p>
+                </div>
+                <div className="text-right">
+                  <Badge tone={ROLE_TONE[u.role]} size="xs">
+                    {ROLE_LABEL[u.role]}
+                  </Badge>
+                  <p className="text-[10px] text-slate-400 mt-1">{formatDate(u.joinedAt)}</p>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </Card>
       </div>
     </div>
   );

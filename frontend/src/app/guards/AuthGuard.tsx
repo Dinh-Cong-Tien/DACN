@@ -1,13 +1,11 @@
 import React from 'react';
-import { Navigate, Outlet } from 'react-router-dom';
-import { ROUTES } from '../config/routes';
+import { Navigate, Outlet, useLocation } from 'react-router-dom';
+import { useAuthStore } from '@/shared/stores/authStore';
 
+/** Chỉ cho phép người dùng đã đăng nhập */
 export const AuthGuard: React.FC = () => {
-  const isAuthenticated = Boolean(
-    localStorage.getItem('access_token') || localStorage.getItem('token')
-  );
-  if (!isAuthenticated) {
-    return <Navigate to="/auth/login" replace />;
-  }
+  const isAuth = useAuthStore((s) => s.isAuthenticated());
+  const location = useLocation();
+  if (!isAuth) return <Navigate to="/auth/login" replace state={{ from: location.pathname }} />;
   return <Outlet />;
 };

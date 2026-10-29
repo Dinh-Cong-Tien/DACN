@@ -1,184 +1,206 @@
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
-import {
-  BookOpen,
-  Search,
-  Volume2,
-  Sparkles,
-  Plus,
-  RotateCcw,
-  Tag,
-  CheckCircle2,
-} from 'lucide-react';
+import React, { useMemo, useState } from 'react';
+import { BookOpen, CheckCircle2, RotateCcw, Flame, Volume2, Plus, Layers } from 'lucide-react';
+import { MOCK_VOCAB, VOCAB_TOPICS } from '@/shared/mocks';
+import type { VocabWord } from '@/shared/types';
+import { cn, formatDate } from '@/shared/utils';
+import { useDocumentTitle } from '@/shared/hooks';
+import { useAuthStore } from '@/shared/stores/authStore';
+import { toast } from '@/shared/stores/uiStore';
+import { Badge, Button, Card, Chip, Input, Modal, PageHeader, ProgressBar, SearchInput, StatCard, EmptyState, Textarea } from '@/shared/components/ui';
 
-interface IVocabItem {
-  id: string;
-  word: string;
-  phonetic: string;
-  partOfSpeech: string;
-  definitionVi: string;
-  exampleEn: string;
-  level: string;
-  isLearned: boolean;
-}
+const STATUS_META: Record<VocabWord['status'], { label: string; tone: 'amber' | 'sky' | 'emerald' }> = {
+  LEARNING: { label: 'Đang học', tone: 'amber' },
+  REVIEWING: { label: 'Đang ôn', tone: 'sky' },
+  MASTERED: { label: 'Đã thuộc', tone: 'emerald' },
+};
 
-const mockVocabList: IVocabItem[] = [
-  {
-    id: 'v-1',
-    word: 'Negotiate',
-    phonetic: '/nɪˈɡoʊ.ʃi.eɪt/',
-    partOfSpeech: 'verb',
-    definitionVi: 'Đàm phán, thương lượng điều khoản hợp đồng',
-    exampleEn: 'The company is negotiating a multi-million dollar contract with the supplier.',
-    level: 'B2 • TOEIC 650+',
-    isLearned: true,
-  },
-  {
-    id: 'v-2',
-    word: 'Accommodate',
-    phonetic: '/əˈkɑː.mə.deɪt/',
-    partOfSpeech: 'verb',
-    definitionVi: 'Cung cấp chỗ ở; đáp ứng và thỏa mãn nhu cầu',
-    exampleEn: 'The conference room can easily accommodate up to 100 participants.',
-    level: 'B1 • TOEIC 500+',
-    isLearned: true,
-  },
-  {
-    id: 'v-3',
-    word: 'Comprehensive',
-    phonetic: '/ˌkɑːm.prəˈhen.sɪv/',
-    partOfSpeech: 'adjective',
-    definitionVi: 'Toàn diện, bao quát và sâu rộng',
-    exampleEn: 'The workshop provides a comprehensive overview of financial market dynamics.',
-    level: 'B2 • TOEIC 750+',
-    isLearned: false,
-  },
-  {
-    id: 'v-4',
-    word: 'Implement',
-    phonetic: '/ˈɪm.plə.ment/',
-    partOfSpeech: 'verb',
-    definitionVi: 'Triển khai, thi hành một kế hoạch hoặc chính sách',
-    exampleEn: 'The board decided to implement new security protocols across all branches.',
-    level: 'B2 • TOEIC 600+',
-    isLearned: false,
-  },
-];
-
-export const StudentVocabularyPage: React.FC = () => {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [words, setWords] = useState(mockVocabList);
-
-  const filtered = words.filter(
-    (w) =>
-      w.word.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      w.definitionVi.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  const playAudio = (word: string) => {
+const speak = (word: string) => {
+  try {
     const u = new SpeechSynthesisUtterance(word);
     u.lang = 'en-US';
+    window.speechSynthesis.cancel();
     window.speechSynthesis.speak(u);
+  } catch {
+    /* ignore */
+  }
+};
+
+export const StudentVocabularyPage: React.FC = () => {
+  useDocumentTitle('Từ vựng & Flashcard');
+  const user = useAuthStore((s) => s.user);
+  const [words, setWords] = useState<VocabWord[]>(MOCK_VOCAB);
+  const [search, setSearch] = useState('');
+  const [status, setStatus] = useState<string>('ALL');
+  const [addOpen, setAddOpen] = useState(false);
+  const [form, setForm] = useState({ word: '', meaning: '', example: '' });
+
+  const now = Date.now();
+  const due = words.filter((w) => new Date(w.nextReviewAt).getTime() <= now);
+  const mastered = words.filter((w) => w.status === 'MASTERED');
+
+  const list = useMemo(
+    () =>
+      words.filter((w) => {
+        if (status !== 'ALL' && w.status !== status) return false;
+        const s = search.trim().toLowerCase();
+        return !s || w.word.toLowerCase().includes(s) || w.meaningVi.toLowerCase().includes(s);
+      }),
+    [words, status, search]
+  );
+
+  const addWord = () => {
+    if (!form.word.trim() || !form.meaning.trim()) {
+      toast.error('Thiếu thông tin', 'Nhập từ và nghĩa tiếng Việt.');
+      return;
+    }
+    const w: VocabWord = {
+      id: `w-${Date.now()}`,
+      word: form.word.trim(),
+      ipa: '',
+      pos: 'word',
+      meaningVi: form.meaning.trim(),
+      example: form.example.trim(),
+      topic: 'Sổ từ cá nhân',
+      status: 'LEARNING',
+      nextReviewAt: new Date().toISOString(),
+      easeFactor: 2.5,
+      intervalDays: 1,
+      repetitions: 0,
+    };
+    setWords((s) => [w, ...s]);
+    setForm({ word: '', meaning: '', example: '' });
+    setAddOpen(false);
+    toast.success('Đã thêm từ mới', `"${w.word}" sẽ xuất hiện trong lịch ôn hôm nay.`);
   };
 
   return (
-    <div className="max-w-6xl mx-auto space-y-6 animate-fadeIn">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-black text-slate-900 flex items-center gap-2.5">
-            <BookOpen className="w-6 h-6 text-indigo-600" />
-            <span>Kho từ vựng & Flashcard thông minh</span>
-          </h1>
-          <p className="text-sm text-slate-500 mt-1">
-            Gồm các bộ từ vựng trọng tâm TOEIC & VSTEP, hỗ trợ phát âm chuẩn và thuật toán lặp lại ngắt quãng.
-          </p>
+    <div className="space-y-8">
+      <PageHeader
+        title="Từ vựng & Flashcard"
+        icon={<BookOpen />}
+        description="Học từ theo chủ đề, ôn tập bằng flashcard với thuật toán ngắt quãng SM-2."
+        actions={
+          <>
+            <Button variant="outline" leftIcon={<Plus className="w-4 h-4" />} onClick={() => setAddOpen(true)}>
+              Thêm từ
+            </Button>
+            <Button variant="gradient" leftIcon={<RotateCcw className="w-4 h-4" />} to="/app/vocabulary/flashcards" disabled={due.length === 0}>
+              Ôn {due.length} thẻ đến hạn
+            </Button>
+          </>
+        }
+      />
+
+      <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
+        <StatCard label="Tổng số từ" value={words.length} icon={<BookOpen />} tone="indigo" />
+        <StatCard label="Đã thuộc" value={mastered.length} icon={<CheckCircle2 />} tone="emerald" hint={`${Math.round((mastered.length / words.length) * 100)}% kho từ`} />
+        <StatCard label="Cần ôn hôm nay" value={due.length} icon={<RotateCcw />} tone="amber" hint="Theo lịch SM-2" />
+        <StatCard label="Chuỗi ngày" value={user?.streak ?? 0} suffix="ngày" icon={<Flame />} tone="rose" />
+      </div>
+
+      <section className="space-y-3">
+        <div className="flex items-center justify-between">
+          <h2 className="font-bold text-slate-900 flex items-center gap-2">
+            <Layers className="w-4 h-4 text-indigo-600" /> Chủ đề từ vựng
+          </h2>
         </div>
-
-        <Link
-          to="/app/review"
-          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs shadow-md shadow-indigo-200 transition"
-        >
-          <RotateCcw className="w-4 h-4" />
-          <span>Mở phòng ôn tập Flashcard (SRS)</span>
-        </Link>
-      </div>
-
-      {/* Search & Filter Bar */}
-      <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-3">
-        <Search className="w-5 h-5 text-slate-400 shrink-0" />
-        <input
-          type="text"
-          placeholder="Tìm kiếm từ tiếng Anh hoặc nghĩa tiếng Việt..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-full text-sm outline-none text-slate-700 bg-transparent placeholder-slate-400"
-        />
-        {searchTerm && (
-          <button onClick={() => setSearchTerm('')} className="text-xs text-slate-400 hover:text-slate-600 font-bold">
-            Xóa
-          </button>
-        )}
-      </div>
-
-      {/* Words Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {filtered.map((item) => (
-          <div
-            key={item.id}
-            className="bg-white rounded-2xl border border-slate-200/90 p-5 shadow-sm hover:shadow-md transition-all flex flex-col justify-between space-y-3"
-          >
-            <div>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2.5">
-                  <h3 className="text-lg font-extrabold text-slate-900">{item.word}</h3>
-                  <button
-                    onClick={() => playAudio(item.word)}
-                    className="p-1.5 rounded-lg bg-indigo-50 text-indigo-600 hover:bg-indigo-100 transition"
-                  >
-                    <Volume2 className="w-4 h-4" />
-                  </button>
-                  <span className="text-xs text-slate-400 font-mono">{item.phonetic}</span>
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+          {VOCAB_TOPICS.map((t, i) => (
+            <Card key={t.id} padding="sm" className="card-hover animate-fade-up relative overflow-hidden group" style={{ animationDelay: `${i * 60}ms` }}>
+              <div className={cn('absolute -right-8 -top-8 w-28 h-28 rounded-full bg-gradient-to-br opacity-10 group-hover:opacity-20 group-hover:scale-125 transition-all duration-500', t.gradient)} />
+              <div className="relative flex items-start gap-3">
+                <span className={cn('w-12 h-12 rounded-2xl bg-gradient-to-br text-2xl flex items-center justify-center shadow-md shrink-0', t.gradient)}>{t.icon}</span>
+                <div className="flex-1 min-w-0">
+                  <p className="font-bold text-slate-900 text-sm truncate">{t.name}</p>
+                  <p className="text-[11px] text-slate-500">
+                    {t.learned}/{t.total} từ đã học
+                  </p>
+                  <ProgressBar value={(t.learned / t.total) * 100} size="sm" className="mt-2" tone={t.learned === 0 ? 'slate' : 'indigo'} />
                 </div>
-                <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-slate-100 text-slate-600">
-                  {item.level}
-                </span>
               </div>
+              <Button to={`/app/vocabulary/flashcards/${t.id}`} size="sm" variant={t.learned === 0 ? 'outline' : 'soft'} fullWidth className="mt-4 relative">
+                {t.learned === 0 ? 'Bắt đầu học' : 'Ôn flashcard'}
+              </Button>
+            </Card>
+          ))}
+        </div>
+      </section>
 
-              <div className="mt-2 space-y-1">
-                <span className="text-xs font-semibold text-slate-400 italic">[{item.partOfSpeech}]</span>
-                <p className="text-sm font-bold text-indigo-900">{item.definitionVi}</p>
-              </div>
-
-              <div className="mt-3 p-3 rounded-xl bg-slate-50 border border-slate-100 text-xs text-slate-600 italic">
-                &quot;{item.exampleEn}&quot;
-              </div>
+      <section className="space-y-4">
+        <h2 className="font-bold text-slate-900">Sổ từ của tôi</h2>
+        <Card padding="sm">
+          <div className="flex flex-col md:flex-row md:items-center gap-3">
+            <div className="md:w-72">
+              <SearchInput inputSize="sm" placeholder="Tìm từ hoặc nghĩa..." value={search} onChange={(e) => setSearch(e.target.value)} />
             </div>
-
-            <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
-              {item.isLearned ? (
-                <span className="text-emerald-600 font-semibold flex items-center gap-1">
-                  <CheckCircle2 className="w-4 h-4" />
-                  <span>Đã đưa vào lịch ôn SRS</span>
-                </span>
-              ) : (
-                <span className="text-slate-400 font-medium">Chưa học</span>
-              )}
-
-              <button
-                onClick={() => {
-                  setWords((prev) =>
-                    prev.map((w) => (w.id === item.id ? { ...w, isLearned: !w.isLearned } : w))
-                  );
-                }}
-                className="text-indigo-600 hover:underline font-bold"
-              >
-                {item.isLearned ? 'Bỏ theo dõi' : '+ Thêm vào sổ ôn'}
-              </button>
+            <div className="flex gap-2 flex-wrap">
+              <Chip active={status === 'ALL'} onClick={() => setStatus('ALL')}>
+                Tất cả ({words.length})
+              </Chip>
+              {(Object.keys(STATUS_META) as VocabWord['status'][]).map((k) => (
+                <Chip key={k} active={status === k} onClick={() => setStatus(k)} tone={STATUS_META[k].tone}>
+                  {STATUS_META[k].label} ({words.filter((w) => w.status === k).length})
+                </Chip>
+              ))}
             </div>
           </div>
-        ))}
-      </div>
+        </Card>
+        {list.length === 0 ? (
+          <Card>
+            <EmptyState title="Không tìm thấy từ nào" description="Thử từ khoá khác hoặc thêm từ mới vào sổ." />
+          </Card>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {list.map((w, i) => (
+              <Card key={w.id} padding="sm" className="animate-fade-up flex items-start gap-3" style={{ animationDelay: `${i * 40}ms` }}>
+                <button onClick={() => speak(w.word)} className="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0 hover:bg-indigo-600 hover:text-white transition">
+                  <Volume2 className="w-4 h-4" />
+                </button>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <p className="font-black text-slate-900">{w.word}</p>
+                    {w.ipa && <span className="text-[11px] font-mono text-slate-400">{w.ipa}</span>}
+                    <span className="text-[11px] italic text-slate-400">{w.pos}</span>
+                  </div>
+                  <p className="text-sm text-slate-700 font-medium">{w.meaningVi}</p>
+                  {w.example && <p className="text-xs text-slate-500 italic mt-0.5 truncate">"{w.example}"</p>}
+                  <div className="flex items-center gap-2 mt-2">
+                    <Badge tone={STATUS_META[w.status].tone} size="xs" dot>
+                      {STATUS_META[w.status].label}
+                    </Badge>
+                    <Badge tone="slate" size="xs">
+                      {w.topic}
+                    </Badge>
+                    <span className="text-[10px] text-slate-400 ml-auto">Ôn: {new Date(w.nextReviewAt).getTime() <= now ? 'Hôm nay' : formatDate(w.nextReviewAt)}</span>
+                  </div>
+                </div>
+              </Card>
+            ))}
+          </div>
+        )}
+      </section>
+
+      <Modal
+        open={addOpen}
+        onClose={() => setAddOpen(false)}
+        title="Thêm từ mới"
+        description="Từ mới sẽ được đưa vào lịch ôn ngắt quãng ngay hôm nay."
+        icon={<Plus />}
+        footer={
+          <>
+            <Button variant="ghost" onClick={() => setAddOpen(false)}>
+              Huỷ
+            </Button>
+            <Button onClick={addWord}>Lưu từ</Button>
+          </>
+        }
+      >
+        <div className="space-y-4">
+          <Input label="Từ tiếng Anh" required placeholder="ví dụ: negotiate" value={form.word} onChange={(e) => setForm((s) => ({ ...s, word: e.target.value }))} />
+          <Input label="Nghĩa tiếng Việt" required placeholder="đàm phán" value={form.meaning} onChange={(e) => setForm((s) => ({ ...s, meaning: e.target.value }))} />
+          <Textarea label="Câu ví dụ" placeholder="They negotiated a better contract." value={form.example} onChange={(e) => setForm((s) => ({ ...s, example: e.target.value }))} />
+        </div>
+      </Modal>
     </div>
   );
 };

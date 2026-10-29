@@ -1,122 +1,95 @@
-import React from 'react';
-import { Award, Flame, Target, BookOpen, Clock, ShieldCheck, Lock } from 'lucide-react';
+import React, { useState } from 'react';
+import { Award, Lock, Sparkles } from 'lucide-react';
+import { MOCK_ACHIEVEMENTS } from '@/shared/mocks';
+import type { Achievement } from '@/shared/types';
+import { cn, formatDate } from '@/shared/utils';
+import { useDocumentTitle } from '@/shared/hooks';
+import { Badge, Card, PageHeader, ProgressBar, RingProgress, Tabs, EmptyState } from '@/shared/components/ui';
+import { Tone } from '@/shared/components/ui';
 
-interface IAchievement {
-  id: string;
-  title: string;
-  description: string;
-  icon: any;
-  progress: number;
-  maxProgress: number;
-  isUnlocked: boolean;
-  rewardPoints: number;
-}
-
-const mockAchievements: IAchievement[] = [
-  {
-    id: 'ach-1',
-    title: 'Chiến Binh Bền Bỉ (Streak 7 Days)',
-    description: 'Duy trì học liên tục trong 7 ngày không gián đoạn.',
-    icon: Flame,
-    progress: 5,
-    maxProgress: 7,
-    isUnlocked: false,
-    rewardPoints: 100,
-  },
-  {
-    id: 'ach-2',
-    title: 'Khởi Đầu Hoàn Hảo (First Exam)',
-    description: 'Hoàn thành bài thi thử đầu tiên trên nền tảng.',
-    icon: Target,
-    progress: 1,
-    maxProgress: 1,
-    isUnlocked: true,
-    rewardPoints: 50,
-  },
-  {
-    id: 'ach-3',
-    title: 'Chuyên Gia Diệt Lỗi (Mistake Solver)',
-    description: 'Khắc phục thành công 20 câu sai trong Sổ tay lỗi sai.',
-    icon: ShieldCheck,
-    progress: 14,
-    maxProgress: 20,
-    isUnlocked: false,
-    rewardPoints: 150,
-  },
-  {
-    id: 'ach-4',
-    title: 'Bậc Thầy Từ Vựng (Vocab Master 100)',
-    description: 'Ghi nhớ và đạt mức Mastered cho 100 từ vựng Spaced Repetition.',
-    icon: BookOpen,
-    progress: 42,
-    maxProgress: 100,
-    isUnlocked: false,
-    rewardPoints: 200,
-  },
-];
+const RARITY: Record<Achievement['rarity'], { label: string; tone: Tone; glow: string }> = {
+  COMMON: { label: 'Thường', tone: 'slate', glow: 'from-slate-200 to-slate-100' },
+  RARE: { label: 'Hiếm', tone: 'sky', glow: 'from-sky-200 to-cyan-100' },
+  EPIC: { label: 'Sử thi', tone: 'violet', glow: 'from-violet-200 to-fuchsia-100' },
+  LEGENDARY: { label: 'Huyền thoại', tone: 'amber', glow: 'from-amber-200 to-orange-100' },
+};
 
 export const StudentAchievementsPage: React.FC = () => {
+  useDocumentTitle('Huy hiệu thành tích');
+  const [tab, setTab] = useState('all');
+  const earned = MOCK_ACHIEVEMENTS.filter((a) => a.earned);
+  const list = MOCK_ACHIEVEMENTS.filter((a) => (tab === 'all' ? true : tab === 'earned' ? a.earned : !a.earned));
+
   return (
-    <div className="max-w-5xl mx-auto space-y-6 animate-fadeIn">
-      <div>
-        <h1 className="text-2xl font-black text-slate-900 flex items-center gap-2.5">
-          <Award className="w-6 h-6 text-indigo-600" />
-          <span>Huy hiệu thành tích (Badges & Achievements)</span>
-        </h1>
-        <p className="text-sm text-slate-500 mt-1">
-          Mỗi cột mốc hoàn thành đều mở khóa huy hiệu và tích lũy điểm kinh nghiệm học tập.
-        </p>
-      </div>
+    <div className="space-y-6">
+      <PageHeader title="Huy hiệu thành tích" icon={<Award />} description="Ghi nhận cột mốc học tập của bạn. Mỗi huy hiệu đi kèm điểm nỗ lực." />
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-        {mockAchievements.map((item) => {
-          const Icon = item.icon;
-          return (
-            <div
-              key={item.id}
-              className={`bg-white rounded-3xl p-6 border transition-all flex items-start gap-4 ${
-                item.isUnlocked
-                  ? 'border-amber-300 shadow-md bg-gradient-to-tr from-white to-amber-50/30'
-                  : 'border-slate-200/90 shadow-sm opacity-80'
-              }`}
-            >
-              <div
-                className={`w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 ${
-                  item.isUnlocked ? 'bg-amber-100 text-amber-600 shadow-md' : 'bg-slate-100 text-slate-400'
-                }`}
-              >
-                {item.isUnlocked ? <Icon className="w-7 h-7" /> : <Lock className="w-6 h-6" />}
-              </div>
-
-              <div className="flex-1 space-y-2">
-                <div className="flex items-center justify-between">
-                  <h3 className="font-bold text-sm text-slate-900">{item.title}</h3>
-                  <span className="text-[10px] font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full">
-                    +{item.rewardPoints} XP
-                  </span>
-                </div>
-
-                <p className="text-xs text-slate-500 leading-relaxed">{item.description}</p>
-
-                <div className="space-y-1 pt-1">
-                  <div className="flex justify-between text-[11px] font-bold text-slate-600">
-                    <span>Tiến trình:</span>
-                    <span>
-                      {item.progress} / {item.maxProgress}
-                    </span>
-                  </div>
-                  <div className="w-full h-2 rounded-full bg-slate-100 overflow-hidden">
-                    <div
-                      className={`h-full rounded-full ${item.isUnlocked ? 'bg-amber-500' : 'bg-indigo-600'}`}
-                      style={{ width: `${Math.min(100, (item.progress / item.maxProgress) * 100)}%` }}
-                    />
-                  </div>
-                </div>
-              </div>
+      <Card className="relative overflow-hidden animate-fade-up">
+        <div aria-hidden className="absolute -right-10 -top-10 w-48 h-48 rounded-full bg-gradient-to-br from-amber-200 to-orange-100 opacity-50 blur-2xl animate-float-slow" />
+        <div className="relative flex flex-col sm:flex-row items-center gap-6">
+          <RingProgress value={(earned.length / MOCK_ACHIEVEMENTS.length) * 100} size={120} stroke={11} tone="amber">
+            <div className="text-center">
+              <p className="text-2xl font-black text-slate-900">{earned.length}</p>
+              <p className="text-[10px] font-bold text-slate-400 uppercase">/ {MOCK_ACHIEVEMENTS.length}</p>
             </div>
-          );
-        })}
-      </div>
+          </RingProgress>
+          <div className="flex-1 text-center sm:text-left">
+            <h2 className="text-xl font-black text-slate-900">Bạn đã mở khoá {earned.length} huy hiệu</h2>
+            <p className="text-sm text-slate-500 mt-1">Còn {MOCK_ACHIEVEMENTS.length - earned.length} huy hiệu đang chờ. Huy hiệu gần nhất: {earned[earned.length - 1]?.title}.</p>
+            <div className="flex flex-wrap gap-2 mt-3 justify-center sm:justify-start">
+              {(Object.keys(RARITY) as Achievement['rarity'][]).map((r) => (
+                <Badge key={r} tone={RARITY[r].tone} size="xs">
+                  {RARITY[r].label}: {MOCK_ACHIEVEMENTS.filter((a) => a.rarity === r && a.earned).length}/{MOCK_ACHIEVEMENTS.filter((a) => a.rarity === r).length}
+                </Badge>
+              ))}
+            </div>
+          </div>
+        </div>
+      </Card>
+
+      <Tabs
+        variant="pill"
+        value={tab}
+        onChange={setTab}
+        items={[
+          { key: 'all', label: 'Tất cả', count: MOCK_ACHIEVEMENTS.length },
+          { key: 'earned', label: 'Đã đạt', count: earned.length },
+          { key: 'progress', label: 'Đang tiến hành', count: MOCK_ACHIEVEMENTS.length - earned.length },
+        ]}
+      />
+
+      {list.length === 0 ? (
+        <Card>
+          <EmptyState icon={<Award />} title="Chưa có huy hiệu" />
+        </Card>
+      ) : (
+        <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-4">
+          {list.map((a, i) => {
+            const r = RARITY[a.rarity];
+            return (
+              <Card key={a.id} padding="sm" className={cn('relative overflow-hidden text-center flex flex-col items-center transition-all duration-300', a.earned ? 'animate-pop hover:-translate-y-1 hover:shadow-card' : 'animate-fade-up')} style={{ animationDelay: `${i * 50}ms` }}>
+                <div className={cn('absolute inset-x-0 top-0 h-20 bg-gradient-to-b opacity-60', a.earned ? r.glow : 'from-slate-100 to-transparent')} />
+                <div className={cn('relative w-16 h-16 rounded-2xl flex items-center justify-center text-3xl mt-2 shadow-sm', a.earned ? 'bg-white' : 'bg-slate-100 grayscale opacity-60')}>
+                  {a.earned ? a.icon : <Lock className="w-6 h-6 text-slate-400" />}
+                  {a.earned && a.rarity === 'LEGENDARY' && <Sparkles className="absolute -top-1 -right-1 w-4 h-4 text-amber-500 animate-wiggle" />}
+                </div>
+                <p className={cn('relative font-bold text-sm mt-3 leading-tight', a.earned ? 'text-slate-900' : 'text-slate-500')}>{a.title}</p>
+                <p className="relative text-[11px] text-slate-500 mt-1 leading-snug flex-1">{a.description}</p>
+                <Badge tone={r.tone} size="xs" className="relative mt-2">
+                  {r.label}
+                </Badge>
+                <div className="relative w-full mt-3">
+                  {a.earned ? (
+                    <p className="text-[10px] font-semibold text-emerald-600">Đạt ngày {a.earnedAt ? formatDate(a.earnedAt) : ''}</p>
+                  ) : (
+                    <ProgressBar value={(a.progress / a.total) * 100} size="xs" tone="slate" label={`${a.progress}/${a.total}`} />
+                  )}
+                </div>
+              </Card>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 };

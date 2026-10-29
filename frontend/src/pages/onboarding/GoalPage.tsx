@@ -1,103 +1,82 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Award, BookOpen, Target, CheckCircle2, ArrowRight, Sparkles } from 'lucide-react';
+import { ArrowRight, Briefcase, GraduationCap, Sparkles } from 'lucide-react';
+import { useDocumentTitle, useLocalStorage } from '@/shared/hooks';
+import { Badge, Button, Card, RadioCard } from '@/shared/components/ui';
+import type { ExamType } from '@/shared/types';
+
+export interface OnboardingState {
+  examType: ExamType;
+  targetScore: string;
+  examDate: string;
+  minutesPerDay: number;
+  days: string[];
+  skills: Record<string, number>;
+}
+
+export const DEFAULT_ONBOARDING: OnboardingState = {
+  examType: 'TOEIC',
+  targetScore: '',
+  examDate: '',
+  minutesPerDay: 30,
+  days: ['T2', 'T3', 'T4', 'T5', 'T6'],
+  skills: { Listening: 3, Reading: 3, Writing: 2, Speaking: 2 },
+};
 
 export const GoalPage: React.FC = () => {
+  useDocumentTitle('Chọn mục tiêu');
   const navigate = useNavigate();
-  const [selectedGoal, setSelectedGoal] = useState<'TOEIC' | 'VSTEP'>('TOEIC');
-
-  const handleNext = () => {
-    localStorage.setItem('onboarding_goal', selectedGoal);
-    navigate('/onboarding/target');
-  };
+  const [state, setState] = useLocalStorage<OnboardingState>('orbi-onboarding', DEFAULT_ONBOARDING);
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col justify-between py-12 px-4 sm:px-6 lg:px-8 font-sans">
-      <div className="max-w-2xl mx-auto w-full">
-        {/* Stepper Header */}
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-50 border border-indigo-100 text-indigo-700 text-xs font-bold mb-3">
-            <Sparkles className="w-3.5 h-3.5" />
-            <span>Bước 1/6 • Khởi tạo lộ trình học</span>
-          </div>
-          <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
-            Mục tiêu chứng chỉ của bạn là gì?
-          </h1>
-          <p className="text-xs sm:text-sm text-slate-500 mt-2">
-            OrbiLingo sẽ tối ưu hóa cấu trúc đề thi, thuật toán phân loại lỗi và từ vựng theo chuẩn khảo thí tương ứng.
-          </p>
+    <Card padding="lg" className="animate-scale-in">
+      <div className="text-center space-y-2 mb-8">
+        <Badge tone="indigo" icon={<Sparkles className="w-3 h-3" />}>
+          Bước 1 / 6
+        </Badge>
+        <h1 className="text-2xl md:text-3xl font-black text-slate-900 tracking-tight">Bạn đang hướng tới kỳ thi nào?</h1>
+        <p className="text-sm text-slate-500 max-w-lg mx-auto">Lựa chọn này quyết định ngân hàng câu hỏi, đề thi thử và cấu trúc lộ trình cá nhân hoá của bạn. Bạn có thể đổi sau trong Cài đặt.</p>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="animate-fade-up" style={{ animationDelay: '80ms' }}>
+          <RadioCard
+            selected={state.examType === 'TOEIC'}
+            onSelect={() => setState({ ...state, examType: 'TOEIC', targetScore: '' })}
+            icon={<Briefcase />}
+            title="TOEIC Listening & Reading"
+            description="200 câu · 120 phút · thang điểm 10–990. Phù hợp sinh viên tốt nghiệp, đi làm, thăng tiến trong doanh nghiệp."
+            badge={
+              <Badge tone="indigo" size="xs">
+                Phổ biến
+              </Badge>
+            }
+            className="h-full"
+          />
         </div>
-
-        {/* Option Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 my-8">
-          {/* TOEIC Card */}
-          <div
-            onClick={() => setSelectedGoal('TOEIC')}
-            className={`cursor-pointer rounded-3xl p-6 border-2 transition-all duration-300 relative ${
-              selectedGoal === 'TOEIC'
-                ? 'border-indigo-600 bg-white shadow-xl shadow-indigo-100 ring-4 ring-indigo-500/10'
-                : 'border-slate-200 bg-white/70 hover:border-slate-300 hover:bg-white'
-            }`}
-          >
-            {selectedGoal === 'TOEIC' && (
-              <div className="absolute top-4 right-4 text-indigo-600">
-                <CheckCircle2 className="w-6 h-6 fill-indigo-600 text-white" />
-              </div>
-            )}
-            <div className="w-12 h-12 rounded-2xl bg-indigo-50 flex items-center justify-center text-indigo-600 mb-4 font-black text-lg">
-              ETS
-            </div>
-            <h3 className="text-lg font-black text-slate-900">TOEIC® Listening & Reading</h3>
-            <p className="text-xs text-slate-500 mt-1.5 leading-relaxed">
-              Thang điểm 10–990. Chuẩn quốc tế môi trường làm việc doanh nghiệp, tập đoàn đa quốc gia và điều kiện tốt nghiệp đại học.
-            </p>
-            <div className="mt-4 pt-4 border-t border-slate-100 flex flex-wrap gap-1.5">
-              <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-slate-100 text-slate-600">Part 1-4 Nghe</span>
-              <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-slate-100 text-slate-600">Part 5-7 Đọc</span>
-              <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-indigo-50 text-indigo-700">990 Max</span>
-            </div>
-          </div>
-
-          {/* VSTEP Card */}
-          <div
-            onClick={() => setSelectedGoal('VSTEP')}
-            className={`cursor-pointer rounded-3xl p-6 border-2 transition-all duration-300 relative ${
-              selectedGoal === 'VSTEP'
-                ? 'border-indigo-600 bg-white shadow-xl shadow-indigo-100 ring-4 ring-indigo-500/10'
-                : 'border-slate-200 bg-white/70 hover:border-slate-300 hover:bg-white'
-            }`}
-          >
-            {selectedGoal === 'VSTEP' && (
-              <div className="absolute top-4 right-4 text-indigo-600">
-                <CheckCircle2 className="w-6 h-6 fill-indigo-600 text-white" />
-              </div>
-            )}
-            <div className="w-12 h-12 rounded-2xl bg-violet-50 flex items-center justify-center text-violet-600 mb-4 font-black text-lg">
-              VN
-            </div>
-            <h3 className="text-lg font-black text-slate-900">VSTEP (B1 – B2 – C1)</h3>
-            <p className="text-xs text-slate-500 mt-1.5 leading-relaxed">
-              Khung năng lực ngoại ngữ 6 bậc dùng cho Việt Nam. Đầy đủ 4 kỹ năng Nghe - Nói - Đọc - Viết cho công chức, giáo viên & thạc sĩ.
-            </p>
-            <div className="mt-4 pt-4 border-t border-slate-100 flex flex-wrap gap-1.5">
-              <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-slate-100 text-slate-600">4 Kỹ năng trọn gói</span>
-              <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-slate-100 text-slate-600">Chấm AI Writing/Speaking</span>
-              <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-violet-50 text-violet-700">Bậc 3-5 CEFR</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Action Button */}
-        <div className="flex justify-end">
-          <button
-            onClick={handleNext}
-            className="w-full sm:w-auto px-8 py-3.5 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white font-bold text-sm rounded-2xl shadow-lg shadow-indigo-200 flex items-center justify-center gap-2 group transition"
-          >
-            <span>Tiếp tục: Chọn mục tiêu điểm số</span>
-            <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-          </button>
+        <div className="animate-fade-up" style={{ animationDelay: '160ms' }}>
+          <RadioCard
+            selected={state.examType === 'VSTEP'}
+            onSelect={() => setState({ ...state, examType: 'VSTEP', targetScore: '' })}
+            icon={<GraduationCap />}
+            title="VSTEP 4 kỹ năng (B1 – C1)"
+            description="Nghe · Đọc · Viết · Nói theo khung năng lực 6 bậc Việt Nam. Chuẩn đầu ra đại học, sau đại học, giáo viên."
+            badge={
+              <Badge tone="emerald" size="xs">
+                4 kỹ năng
+              </Badge>
+            }
+            className="h-full"
+          />
         </div>
       </div>
-    </div>
+
+      <div className="flex items-center justify-between mt-8">
+        <p className="text-xs text-slate-400">Chưa chắc chắn? Chọn TOEIC — bạn vẫn có thể làm đề VSTEP sau.</p>
+        <Button size="lg" variant="gradient" rightIcon={<ArrowRight className="w-4 h-4" />} onClick={() => navigate('/onboarding/target')}>
+          Tiếp tục
+        </Button>
+      </div>
+    </Card>
   );
 };

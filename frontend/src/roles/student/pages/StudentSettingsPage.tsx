@@ -1,121 +1,208 @@
 import React, { useState } from 'react';
-import { Settings, Lock, Bell, Moon, Shield, Save, CheckCircle2 } from 'lucide-react';
+import { User, Target, Bell, Lock, Save, Camera, Trash2, Users, KeyRound } from 'lucide-react';
+import type { ExamType } from '@/shared/types';
+import { useDocumentTitle } from '@/shared/hooks';
+import { useAuthStore } from '@/shared/stores/authStore';
+import { toast } from '@/shared/stores/uiStore';
+import { ROLE_LABEL, formatDate } from '@/shared/utils';
+import { Avatar, Badge, Button, Card, CardHeader, ConfirmDialog, Input, PageHeader, PasswordInput, Select, Switch, Tabs } from '@/shared/components/ui';
+
+const SCORES: Record<ExamType, string[]> = {
+  TOEIC: ['450', '550', '650', '750', '850', '900+'],
+  VSTEP: ['B1', 'B2', 'C1'],
+};
 
 export const StudentSettingsPage: React.FC = () => {
-  const [emailNotif, setEmailNotif] = useState(true);
-  const [dailyReminder, setDailyReminder] = useState(true);
-  const [soundEffects, setSoundEffects] = useState(true);
-  const [saved, setSaved] = useState(false);
+  useDocumentTitle('Cài đặt');
+  const user = useAuthStore((s) => s.user);
+  const updateUser = useAuthStore((s) => s.updateUser);
+  const logout = useAuthStore((s) => s.logout);
+  const [tab, setTab] = useState('profile');
+  const [fullName, setFullName] = useState(user?.fullName ?? '');
+  const [phone, setPhone] = useState('');
+  const [examType, setExamType] = useState<ExamType>(user?.target?.examType ?? 'TOEIC');
+  const [score, setScore] = useState(user?.target?.score ?? '750');
+  const [examDate, setExamDate] = useState(user?.target?.examDate?.slice(0, 10) ?? '');
+  const [minutes, setMinutes] = useState(45);
+  const [notif, setNotif] = useState({ review: true, assignment: true, streak: true, marketing: false });
+  const [pw, setPw] = useState({ current: '', next: '', confirm: '' });
+  const [code, setCode] = useState('');
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [saving, setSaving] = useState(false);
 
-  const handleSave = (e: React.FormEvent) => {
-    e.preventDefault();
-    setSaved(true);
-    setTimeout(() => setSaved(false), 3000);
+  if (!user) return null;
+
+  const saveProfile = () => {
+    setSaving(true);
+    setTimeout(() => {
+      updateUser({ fullName });
+      setSaving(false);
+      toast.success('Đã lưu hồ sơ');
+    }, 500);
+  };
+
+  const saveTarget = () => {
+    updateUser({ target: { examType, score, examDate: examDate ? new Date(examDate).toISOString() : undefined } });
+    toast.success('Đã cập nhật mục tiêu', `Lộ trình sẽ được điều chỉnh theo ${examType} ${score}.`);
+  };
+
+  const changePw = () => {
+    if (!pw.current || pw.next.length < 8) return toast.error('Mật khẩu không hợp lệ', 'Mật khẩu mới cần tối thiểu 8 ký tự.');
+    if (pw.next !== pw.confirm) return toast.error('Mật khẩu không khớp');
+    setPw({ current: '', next: '', confirm: '' });
+    toast.success('Đã đổi mật khẩu');
+  };
+
+  const joinClass = () => {
+    if (code.trim().length < 6) return toast.error('Mã mời không hợp lệ', 'Mã lớp gồm 8 ký tự, ví dụ ORB-7K2P.');
+    toast.success('Đã gửi yêu cầu tham gia', `Giáo viên lớp ${code.toUpperCase()} sẽ duyệt bạn sớm.`);
+    setCode('');
   };
 
   return (
-    <div className="max-w-3xl mx-auto space-y-6 animate-fadeIn">
-      <div>
-        <h1 className="text-2xl font-black text-slate-900 flex items-center gap-2.5">
-          <Settings className="w-6 h-6 text-indigo-600" />
-          <span>Cài đặt hệ thống (Settings)</span>
-        </h1>
-        <p className="text-sm text-slate-500 mt-1">
-          Tùy chỉnh thông báo nhắc nhở ôn tập Spaced Repetition và bảo mật tài khoản.
-        </p>
-      </div>
+    <div className="max-w-4xl mx-auto space-y-6">
+      <PageHeader title="Cài đặt" description="Hồ sơ, mục tiêu học tập, thông báo và bảo mật tài khoản." />
+      <Tabs
+        variant="pill"
+        value={tab}
+        onChange={setTab}
+        items={[
+          { key: 'profile', label: 'Hồ sơ', icon: <User /> },
+          { key: 'target', label: 'Mục tiêu', icon: <Target /> },
+          { key: 'notifications', label: 'Thông báo', icon: <Bell /> },
+          { key: 'security', label: 'Bảo mật', icon: <Lock /> },
+        ]}
+      />
 
-      <form onSubmit={handleSave} className="space-y-6">
-        {/* Notifications */}
-        <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm space-y-4">
-          <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
-            <Bell className="w-4 h-4 text-indigo-600" />
-            <span>Thông báo & Nhắc nhở</span>
-          </h3>
-
-          <div className="space-y-3 text-xs">
-            <label className="flex items-center justify-between p-3 rounded-2xl bg-slate-50 border border-slate-100 cursor-pointer">
-              <div>
-                <strong className="block text-slate-800">Nhắc nhở ôn tập ngắt quãng (SRS) hàng ngày</strong>
-                <span className="text-slate-400">Gửi thông báo khi có từ vựng hoặc câu sai đến hạn ôn</span>
-              </div>
-              <input
-                type="checkbox"
-                checked={dailyReminder}
-                onChange={(e) => setDailyReminder(e.target.checked)}
-                className="w-4 h-4 text-indigo-600 rounded"
-              />
-            </label>
-
-            <label className="flex items-center justify-between p-3 rounded-2xl bg-slate-50 border border-slate-100 cursor-pointer">
-              <div>
-                <strong className="block text-slate-800">Âm thanh phản hồi khi luyện tập</strong>
-                <span className="text-slate-400">Phát âm thanh khi trả lời đúng / sai</span>
-              </div>
-              <input
-                type="checkbox"
-                checked={soundEffects}
-                onChange={(e) => setSoundEffects(e.target.checked)}
-                className="w-4 h-4 text-indigo-600 rounded"
-              />
-            </label>
-          </div>
-        </div>
-
-        {/* Password update */}
-        <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm space-y-4">
-          <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
-            <Lock className="w-4 h-4 text-indigo-600" />
-            <span>Đổi mật khẩu bảo mật</span>
-          </h3>
-
-          <div className="space-y-3 text-xs">
+      {tab === 'profile' && (
+        <div className="grid grid-cols-1 lg:grid-cols-[260px_1fr] gap-5 animate-fade-up">
+          <Card className="text-center space-y-3">
+            <div className="relative inline-block">
+              <Avatar name={user.fullName} size="xl" ring />
+              <button onClick={() => toast.info('Tính năng tải ảnh sẽ có trong bản tiếp theo')} className="absolute -bottom-1 -right-1 w-8 h-8 rounded-full bg-indigo-600 text-white flex items-center justify-center shadow-md hover:scale-110 transition">
+                <Camera className="w-4 h-4" />
+              </button>
+            </div>
             <div>
-              <label className="block font-bold text-slate-700 mb-1">Mật khẩu hiện tại</label>
-              <input
-                type="password"
-                placeholder="••••••••"
-                className="w-full p-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm font-medium"
-              />
+              <p className="font-bold text-slate-900">{user.fullName}</p>
+              <p className="text-xs text-slate-500">{user.email}</p>
             </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div>
-                <label className="block font-bold text-slate-700 mb-1">Mật khẩu mới</label>
-                <input
-                  type="password"
-                  placeholder="••••••••"
-                  className="w-full p-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm font-medium"
-                />
-              </div>
-              <div>
-                <label className="block font-bold text-slate-700 mb-1">Xác nhận mật khẩu mới</label>
-                <input
-                  type="password"
-                  placeholder="••••••••"
-                  className="w-full p-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm font-medium"
-                />
-              </div>
+            <div className="flex justify-center gap-1.5">
+              <Badge tone="indigo">{ROLE_LABEL[user.role]}</Badge>
+              <Badge tone={user.plan === 'VIP' ? 'amber' : 'slate'}>{user.plan}</Badge>
             </div>
+            <p className="text-[11px] text-slate-400">Tham gia {formatDate(user.joinedAt)}</p>
+          </Card>
+          <div className="space-y-5">
+            <Card>
+              <CardHeader title="Thông tin cá nhân" icon={<User />} />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Input label="Họ và tên" value={fullName} onChange={(e) => setFullName(e.target.value)} />
+                <Input label="Email" value={user.email} disabled hint="Email đăng nhập không thể thay đổi" />
+                <Input label="Số điện thoại" placeholder="0901 234 567" value={phone} onChange={(e) => setPhone(e.target.value)} />
+                <Input label="Trường / Đơn vị" placeholder="Đại học Duy Tân" />
+              </div>
+              <div className="flex justify-end mt-5">
+                <Button leftIcon={<Save className="w-4 h-4" />} onClick={saveProfile} loading={saving}>
+                  Lưu thay đổi
+                </Button>
+              </div>
+            </Card>
+            <Card>
+              <CardHeader title="Tham gia lớp học" subtitle="Nhập mã mời do giáo viên cung cấp" icon={<Users />} />
+              <div className="flex flex-col sm:flex-row gap-2">
+                <div className="flex-1">
+                  <Input placeholder="ORB-XXXX" value={code} onChange={(e) => setCode(e.target.value.toUpperCase())} maxLength={8} leftIcon={<KeyRound />} className="font-mono tracking-widest uppercase" />
+                </div>
+                <Button variant="soft" onClick={joinClass}>
+                  Tham gia
+                </Button>
+              </div>
+            </Card>
           </div>
         </div>
+      )}
 
-        <div className="flex items-center justify-between">
-          {saved && (
-            <span className="text-emerald-600 font-bold text-xs flex items-center gap-1.5 animate-fadeIn">
-              <CheckCircle2 className="w-4 h-4" />
-              Đã lưu cài đặt!
-            </span>
-          )}
-          <button
-            type="submit"
-            className="ml-auto px-6 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs shadow-md transition flex items-center gap-1.5"
-          >
-            <Save className="w-4 h-4" />
-            <span>Lưu tất cả thiết lập</span>
-          </button>
+      {tab === 'target' && (
+        <Card className="animate-fade-up max-w-2xl">
+          <CardHeader title="Mục tiêu học tập" subtitle="Lộ trình cá nhân hoá sẽ tự điều chỉnh theo mục tiêu này" icon={<Target />} />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Select
+              label="Kỳ thi"
+              value={examType}
+              options={[
+                { value: 'TOEIC', label: 'TOEIC Listening & Reading' },
+                { value: 'VSTEP', label: 'VSTEP 4 kỹ năng' },
+              ]}
+              onChange={(e) => {
+                const t = e.target.value as ExamType;
+                setExamType(t);
+                setScore(SCORES[t][Math.floor(SCORES[t].length / 2)]);
+              }}
+            />
+            <Select label="Điểm mục tiêu" value={score} options={SCORES[examType].map((s) => ({ value: s, label: s }))} onChange={(e) => setScore(e.target.value)} />
+            <Input label="Ngày thi dự kiến" type="date" value={examDate} onChange={(e) => setExamDate(e.target.value)} />
+            <Input label="Thời gian học mỗi ngày (phút)" type="number" min={15} max={180} step={15} value={minutes} onChange={(e) => setMinutes(Number(e.target.value))} hint="Khuyến nghị 30–60 phút" />
+          </div>
+          <div className="flex justify-end mt-5">
+            <Button leftIcon={<Save className="w-4 h-4" />} onClick={saveTarget}>
+              Cập nhật mục tiêu
+            </Button>
+          </div>
+        </Card>
+      )}
+
+      {tab === 'notifications' && (
+        <Card className="animate-fade-up max-w-2xl">
+          <CardHeader title="Tuỳ chọn thông báo" icon={<Bell />} />
+          <div className="space-y-5">
+            <Switch checked={notif.review} onChange={(v) => setNotif((s) => ({ ...s, review: v }))} label="Nhắc ôn tập ngắt quãng" description="Thông báo khi có thẻ/câu sai đến hạn ôn theo SM-2." />
+            <Switch checked={notif.assignment} onChange={(v) => setNotif((s) => ({ ...s, assignment: v }))} label="Bài tập từ giáo viên" description="Khi có bài tập mới hoặc sắp tới hạn nộp." />
+            <Switch checked={notif.streak} onChange={(v) => setNotif((s) => ({ ...s, streak: v }))} label="Nhắc giữ chuỗi ngày học" description="Nhắc lúc 20:00 nếu hôm nay chưa học." />
+            <Switch checked={notif.marketing} onChange={(v) => setNotif((s) => ({ ...s, marketing: v }))} label="Ưu đãi & tin tức" description="Email về khoá học mới và khuyến mãi." />
+          </div>
+          <div className="flex justify-end mt-6">
+            <Button leftIcon={<Save className="w-4 h-4" />} onClick={() => toast.success('Đã lưu tuỳ chọn thông báo')}>
+              Lưu
+            </Button>
+          </div>
+        </Card>
+      )}
+
+      {tab === 'security' && (
+        <div className="space-y-5 animate-fade-up max-w-2xl">
+          <Card>
+            <CardHeader title="Đổi mật khẩu" subtitle="Tối thiểu 8 ký tự" icon={<Lock />} />
+            <div className="space-y-4">
+              <PasswordInput label="Mật khẩu hiện tại" value={pw.current} onChange={(e) => setPw((s) => ({ ...s, current: e.target.value }))} />
+              <PasswordInput label="Mật khẩu mới" value={pw.next} onChange={(e) => setPw((s) => ({ ...s, next: e.target.value }))} />
+              <PasswordInput label="Xác nhận mật khẩu mới" value={pw.confirm} onChange={(e) => setPw((s) => ({ ...s, confirm: e.target.value }))} />
+              <Button onClick={changePw}>Cập nhật mật khẩu</Button>
+            </div>
+          </Card>
+          <Card className="border-rose-200 bg-rose-50/40">
+            <CardHeader title="Khu vực nguy hiểm" subtitle="Hành động không thể hoàn tác" icon={<Trash2 className="text-rose-600" />} />
+            <p className="text-sm text-slate-600 mb-4">Xoá tài khoản sẽ xoá toàn bộ lịch sử học tập, sổ tay lỗi sai và từ vựng đã lưu.</p>
+            <Button variant="danger" leftIcon={<Trash2 className="w-4 h-4" />} onClick={() => setDeleteOpen(true)}>
+              Xoá tài khoản
+            </Button>
+          </Card>
         </div>
-      </form>
+      )}
+
+      <ConfirmDialog
+        open={deleteOpen}
+        onClose={() => setDeleteOpen(false)}
+        danger
+        title="Xoá tài khoản vĩnh viễn?"
+        message={`Toàn bộ dữ liệu của ${user.email} sẽ bị xoá và không thể khôi phục.`}
+        confirmText="Xoá tài khoản"
+        onConfirm={() => {
+          setDeleteOpen(false);
+          toast.info('Đã gửi yêu cầu xoá tài khoản', 'Tài khoản sẽ bị xoá sau 7 ngày nếu bạn không đăng nhập lại.');
+          logout();
+        }}
+      />
     </div>
   );
 };

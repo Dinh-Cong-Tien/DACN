@@ -1,126 +1,131 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Trophy, CheckCircle2, AlertTriangle, ArrowRight, Sparkles, BookOpen, Repeat, Compass } from 'lucide-react';
+import { ArrowRight, Trophy, Compass, CheckCircle2, Lock, Play } from 'lucide-react';
+import { useDocumentTitle, useLocalStorage } from '@/shared/hooks';
+import { Badge, Button, Card, RingProgress, RadarChart, ProgressBar, GradientPanel } from '@/shared/components/ui';
+import { CountUp } from '@/shared/components/motion';
+import { LEARNING_PATH, RADAR_SKILLS } from '@/shared/mocks';
+import { useAuthStore } from '@/shared/stores/authStore';
+import { toast } from '@/shared/stores/uiStore';
+import { cn } from '@/shared/utils';
+import { DEFAULT_ONBOARDING, OnboardingState } from './GoalPage';
+
+const CONFETTI = ['bg-indigo-500', 'bg-amber-400', 'bg-emerald-500', 'bg-rose-500', 'bg-sky-500', 'bg-violet-500', 'bg-orange-400', 'bg-pink-400'];
 
 export const PlacementResultPage: React.FC = () => {
+  useDocumentTitle('Kết quả xếp lớp');
   const navigate = useNavigate();
-  const goalType = localStorage.getItem('onboarding_goal') || 'TOEIC';
-  const score = Number(localStorage.getItem('placement_score') || '580');
-  const correctCount = Number(localStorage.getItem('placement_correct_count') || '4');
+  const [state] = useLocalStorage<OnboardingState>('orbi-onboarding', DEFAULT_ONBOARDING);
+  const completeOnboarding = useAuthStore((s) => s.completeOnboarding);
+  const updateUser = useAuthStore((s) => s.updateUser);
 
-  const handleStartLearning = () => {
-    navigate('/app/learning-path');
+  const result = useMemo(() => {
+    try {
+      const raw = localStorage.getItem('orbi-placement');
+      if (raw) return JSON.parse(raw) as { correct: number; total: number };
+    } catch {
+      /* ignore */
+    }
+    return { correct: 6, total: 10 };
+  }, []);
+
+  const pct = Math.round((result.correct / result.total) * 100);
+  const isVstep = state.examType === 'VSTEP';
+  const estimated = isVstep ? Math.round((3 + pct * 0.06) * 2) / 2 : Math.round((300 + pct * 6) / 5) * 5;
+  const level = isVstep ? (estimated >= 8.5 ? 'C1' : estimated >= 6 ? 'B2' : estimated >= 4 ? 'B1' : 'A2') : estimated >= 785 ? 'B2' : estimated >= 550 ? 'B1' : 'A2';
+  const target = state.targetScore || (isVstep ? 'B2' : '750');
+
+  const start = () => {
+    completeOnboarding();
+    updateUser({ target: { examType: state.examType, score: target, examDate: state.examDate || undefined } });
+    toast.success('Lộ trình đã sẵn sàng!', 'Chúc bạn học tập hiệu quả cùng OrbiLingo.');
+    navigate('/app/dashboard');
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col justify-between py-12 px-4 sm:px-6 lg:px-8 font-sans">
-      <div className="max-w-2xl mx-auto w-full">
-        {/* Success Banner */}
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-100 text-emerald-700 text-xs font-bold mb-3">
-            <CheckCircle2 className="w-3.5 h-3.5" />
-            <span>Hoàn tất khảo sát đầu vào thành công!</span>
-          </div>
-          <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
-            Báo cáo chẩn đoán năng lực ban đầu
-          </h1>
-          <p className="text-xs sm:text-sm text-slate-500 mt-2">
-            Dựa trên kết quả bài kiểm tra và mục tiêu đã đặt, AI đã tổng hợp hồ sơ năng lực của bạn.
-          </p>
-        </div>
+    <div className="space-y-5 relative">
+      <div aria-hidden className="pointer-events-none absolute -top-10 inset-x-0 h-40 overflow-hidden">
+        {CONFETTI.map((c, i) => (
+          <span key={i} className={cn('absolute w-2.5 h-2.5 rounded-sm animate-float', c)} style={{ left: `${8 + i * 12}%`, top: `${(i % 3) * 20}px`, animationDelay: `${i * 150}ms`, transform: `rotate(${i * 37}deg)` }} />
+        ))}
+      </div>
 
-        {/* Score Card */}
-        <div className="bg-gradient-to-br from-indigo-900 via-indigo-800 to-violet-900 rounded-3xl p-8 text-white shadow-xl shadow-indigo-900/20 mb-6 relative overflow-hidden">
-          <div className="absolute -right-8 -bottom-8 w-48 h-48 bg-white/5 rounded-full blur-2xl pointer-events-none" />
-          <div className="relative z-10 flex flex-col sm:flex-row items-center justify-between gap-6">
-            <div>
-              <span className="text-xs font-extrabold uppercase tracking-widest text-indigo-300">
-                Ước lượng năng lực hiện tại
-              </span>
-              <div className="flex items-baseline gap-2 mt-1">
-                <span className="text-5xl font-black tracking-tight text-white">{score}</span>
-                <span className="text-lg font-bold text-indigo-200">
-                  {goalType === 'TOEIC' ? '/ 990 ETS' : 'CEFR B1+'}
-                </span>
+      <Card padding="lg" className="animate-scale-in relative">
+        <div className="grid grid-cols-1 md:grid-cols-[auto_1fr] gap-8 items-center">
+          <div className="flex flex-col items-center">
+            <RingProgress value={pct} size={170} stroke={14} tone={pct >= 70 ? 'emerald' : pct >= 40 ? 'indigo' : 'amber'}>
+              <div className="text-center">
+                <p className="text-3xl font-black text-slate-900">
+                  {result.correct}/{result.total}
+                </p>
+                <p className="text-[10px] font-bold uppercase text-slate-400">câu đúng</p>
               </div>
-              <p className="text-xs text-indigo-200 mt-2">
-                Đúng {correctCount}/5 câu test sàng lọc • Trình độ Trung cấp
+            </RingProgress>
+            <Trophy className="w-8 h-8 text-amber-400 -mt-3 animate-bounce-soft" />
+          </div>
+          <div className="space-y-3">
+            <Badge tone="indigo">Bước 6 / 6 · Hoàn thành</Badge>
+            <h1 className="text-2xl md:text-3xl font-black text-slate-900 tracking-tight">Năng lực ước lượng của bạn</h1>
+            <div className="flex items-end gap-3">
+              <p className="text-5xl font-black text-gradient leading-none">
+                <CountUp value={isVstep ? Math.round(estimated * 10) : estimated} format={(n) => (isVstep ? (n / 10).toFixed(1) : String(n))} />
               </p>
+              <div className="pb-1">
+                <p className="text-sm font-bold text-slate-700">{isVstep ? 'điểm VSTEP' : 'điểm TOEIC'}</p>
+                <Badge tone="emerald" size="xs">
+                  Tương đương CEFR {level}
+                </Badge>
+              </div>
             </div>
-
-            <div className="w-24 h-24 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 flex flex-col items-center justify-center text-center p-2">
-              <Trophy className="w-8 h-8 text-amber-300 mb-1" />
-              <span className="text-[10px] font-bold text-indigo-100 uppercase tracking-wider">
-                Mục tiêu
-              </span>
-              <span className="text-sm font-black text-white">650+</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Diagnostic breakdown */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
-          <div className="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-sm space-y-3">
-            <div className="flex items-center gap-2 text-emerald-600 font-black text-xs uppercase tracking-wider">
-              <CheckCircle2 className="w-4 h-4" />
-              <span>Điểm mạnh đã xác nhận</span>
-            </div>
-            <ul className="space-y-2 text-xs text-slate-600">
-              <li className="flex items-start gap-2">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 mt-1.5 shrink-0" />
-                <span>Nắm chắc cấu trúc ngữ pháp thì quá khứ đơn và mệnh đề cơ bản.</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 mt-1.5 shrink-0" />
-                <span>Khả năng đọc quét thông tin thông báo văn phòng ngắn (Part 7).</span>
-              </li>
-            </ul>
-          </div>
-
-          <div className="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-sm space-y-3">
-            <div className="flex items-center gap-2 text-rose-600 font-black text-xs uppercase tracking-wider">
-              <AlertTriangle className="w-4 h-4" />
-              <span>Lỗ hổng kiến thức cần bù đắp</span>
-            </div>
-            <ul className="space-y-2 text-xs text-slate-600">
-              <li className="flex items-start gap-2">
-                <span className="w-1.5 h-1.5 rounded-full bg-rose-500 mt-1.5 shrink-0" />
-                <span>Hòa hợp chủ vị với liên từ tương quan <em>(Neither... nor...)</em>.</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="w-1.5 h-1.5 rounded-full bg-rose-500 mt-1.5 shrink-0" />
-                <span>Phản xạ bẫy đồng âm và câu trả lời gián tiếp Part 2 Listening.</span>
-              </li>
-            </ul>
-          </div>
-        </div>
-
-        {/* Next step recommendation */}
-        <div className="bg-indigo-50 border border-indigo-100 rounded-3xl p-5 mb-8 flex items-start gap-3.5">
-          <div className="w-9 h-9 rounded-2xl bg-indigo-600 text-white flex items-center justify-center shrink-0">
-            <Compass className="w-5 h-5" />
-          </div>
-          <div>
-            <h4 className="text-xs font-black text-indigo-900 uppercase tracking-wider">
-              Hệ thống đã tự động kích hoạt Lộ trình học 4 Chặng
-            </h4>
-            <p className="text-xs text-indigo-700/90 mt-1 leading-relaxed">
-              Các câu sai trong bài test đã được lưu tự động vào <strong>Sổ tay lỗi cá nhân</strong> và lên lịch ôn ngắt quãng sau 24h.
+            <p className="text-sm text-slate-500 leading-relaxed">
+              Mục tiêu của bạn: <b className="text-slate-800">{isVstep ? `VSTEP ${target}` : `TOEIC ${target}`}</b>. Khoảng cách này hoàn toàn khả thi với {state.minutesPerDay} phút/ngày, {state.days.length} ngày/tuần. Lộ trình 3 chặng bên dưới đã được điều chỉnh theo kết quả của bạn.
             </p>
           </div>
         </div>
+      </Card>
 
-        {/* Call to action */}
-        <div className="flex justify-end">
-          <button
-            onClick={handleStartLearning}
-            className="w-full sm:w-auto px-8 py-4 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white font-bold text-sm rounded-2xl shadow-xl shadow-indigo-200 flex items-center justify-center gap-2 group transition"
-          >
-            <span>Bắt đầu Lộ trình học cá nhân hóa ngay</span>
-            <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-          </button>
-        </div>
+      <div className="grid grid-cols-1 lg:grid-cols-[auto_1fr] gap-5">
+        <Card className="flex flex-col items-center animate-fade-up" style={{ animationDelay: '120ms' }}>
+          <p className="font-bold text-slate-900 text-sm self-start mb-1">Bản đồ năng lực</p>
+          <RadarChart data={RADAR_SKILLS} size={230} />
+          <p className="text-[11px] text-slate-400 -mt-2">Điểm yếu lớn nhất: Tốc độ & Từ vựng</p>
+        </Card>
+        <Card className="animate-fade-up" style={{ animationDelay: '200ms' }}>
+          <div className="flex items-center gap-2 mb-4">
+            <Compass className="w-5 h-5 text-indigo-600" />
+            <p className="font-bold text-slate-900">Lộ trình đề xuất 3 chặng</p>
+          </div>
+          <div className="space-y-3">
+            {LEARNING_PATH.map((m, i) => (
+              <div key={m.id} className="flex items-start gap-3 p-3 rounded-2xl border border-slate-200 hover:border-indigo-200 transition animate-fade-up" style={{ animationDelay: `${250 + i * 80}ms` }}>
+                <span className={cn('w-9 h-9 rounded-xl flex items-center justify-center shrink-0 font-black text-sm', i === 0 ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-500')}>{i === 0 ? <Play className="w-4 h-4" /> : i === 2 ? <Lock className="w-4 h-4" /> : m.phase}</span>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="text-sm font-bold text-slate-900">{m.title}</p>
+                    <span className="text-[11px] text-slate-400">{m.weeks}</span>
+                  </div>
+                  <p className="text-xs text-slate-500 mt-0.5">{m.description}</p>
+                  <ProgressBar value={i === 0 ? 8 : 0} size="xs" className="mt-2" animate={false} />
+                </div>
+              </div>
+            ))}
+          </div>
+        </Card>
       </div>
+
+      <GradientPanel className="animate-fade-up" style={{ animationDelay: '300ms' }}>
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <p className="text-lg font-black flex items-center gap-2">
+              <CheckCircle2 className="w-5 h-5" /> Mọi thứ đã sẵn sàng
+            </p>
+            <p className="text-sm text-indigo-100 mt-1">Bài học đầu tiên chỉ mất 12 phút. Bắt đầu ngay hôm nay để giữ chuỗi chuyên cần!</p>
+          </div>
+          <Button size="xl" variant="secondary" className="!bg-white !text-indigo-700 hover:!bg-indigo-50 shine" rightIcon={<ArrowRight className="w-5 h-5" />} onClick={start}>
+            Bắt đầu học
+          </Button>
+        </div>
+      </GradientPanel>
     </div>
   );
 };

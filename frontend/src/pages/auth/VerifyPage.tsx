@@ -1,126 +1,119 @@
-import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { BookOpen, ShieldCheck, ArrowRight, RotateCw, CheckCircle2 } from 'lucide-react';
+import React, { useEffect, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { MailCheck, ArrowRight, RefreshCw } from 'lucide-react';
+import { Button, Card } from '@/shared/components/ui';
+import { toast } from '@/shared/stores/uiStore';
+import { useDocumentTitle } from '@/shared/hooks';
+import { useAuthStore } from '@/shared/stores/authStore';
+import { cn } from '@/shared/utils';
 
 export const VerifyPage: React.FC = () => {
+  useDocumentTitle('Xác thực email');
   const navigate = useNavigate();
-  const [digits, setDigits] = useState(['', '', '', '', '', '']);
-  const [isVerifying, setIsVerifying] = useState(false);
-  const [errorMsg, setErrorMsg] = useState('');
+  const user = useAuthStore((s) => s.user);
+  const [digits, setDigits] = useState<string[]>(Array(6).fill(''));
+  const [countdown, setCountdown] = useState(60);
+  const [loading, setLoading] = useState(false);
+  const [shake, setShake] = useState(false);
+  const refs = useRef<(HTMLInputElement | null)[]>([]);
 
-  const handleChange = (index: number, val: string) => {
-    if (val.length > 1) val = val.slice(-1);
-    const updated = [...digits];
-    updated[index] = val;
-    setDigits(updated);
-    setErrorMsg('');
+  useEffect(() => {
+    if (countdown <= 0) return;
+    const id = setInterval(() => setCountdown((c) => c - 1), 1000);
+    return () => clearInterval(id);
+  }, [countdown]);
 
-    // Auto focus next input
-    if (val && index < 5) {
-      const nextInput = document.getElementById(`digit-${index + 1}`);
-      nextInput?.focus();
-    }
-  };
-
-  const handleKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Backspace' && !digits[index] && index > 0) {
-      const prevInput = document.getElementById(`digit-${index - 1}`);
-      prevInput?.focus();
-    }
-  };
-
-  const handleVerify = (e: React.FormEvent) => {
-    e.preventDefault();
-    const code = digits.join('');
-    if (code.length < 6) {
-      setErrorMsg('Vui lòng nhập đủ 6 chữ số mã xác thực');
+  const setAt = (i: number, v: string) => {
+    const clean = v.replace(/\D/g, '');
+    if (!clean) {
+      setDigits((d) => d.map((x, k) => (k === i ? '' : x)));
       return;
     }
+    const chars = clean.split('');
+    setDigits((d) => {
+      const next = [...d];
+      chars.forEach((c, k) => {
+        if (i + k < 6) next[i + k] = c;
+      });
+      return next;
+    });
+    refs.current[Math.min(5, i + chars.length)]?.focus();
+  };
 
-    setIsVerifying(true);
+  const onKey = (i: number, e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Backspace' && !digits[i] && i > 0) refs.current[i - 1]?.focus();
+    if (e.key === 'ArrowLeft' && i > 0) refs.current[i - 1]?.focus();
+    if (e.key === 'ArrowRight' && i < 5) refs.current[i + 1]?.focus();
+  };
+
+  const submit = () => {
+    const code = digits.join('');
+    if (code.length < 6) {
+      setShake(true);
+      setTimeout(() => setShake(false), 400);
+      return;
+    }
+    setLoading(true);
     setTimeout(() => {
-      setIsVerifying(false);
+      setLoading(false);
+      toast.success('Xác thực thành công', 'Email của bạn đã được kích hoạt.');
       navigate('/onboarding/goal');
-    }, 1200);
+    }, 600);
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8 font-sans">
-      <div className="sm:mx-auto sm:w-full sm:max-w-md text-center space-y-2">
-        <Link to="/" className="inline-flex items-center gap-2.5">
-          <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-indigo-600 to-violet-600 flex items-center justify-center text-white shadow-md shadow-indigo-200">
-            <BookOpen className="w-5 h-5" />
-          </div>
-          <span className="font-extrabold text-2xl tracking-tight bg-gradient-to-r from-indigo-600 to-violet-600 bg-clip-text text-transparent">
-            OrbiLingo
-          </span>
-        </Link>
-        <h2 className="text-2xl font-black text-slate-900 tracking-tight">Xác thực tài khoản</h2>
-        <p className="text-xs text-slate-500">
-          Nhập mã 6 chữ số OTP được gửi về hòm thư của bạn để kích hoạt quyền truy cập.
+    <div className="space-y-6">
+      <div className="text-center space-y-2 animate-fade-down">
+        <div className="w-16 h-16 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center mx-auto animate-float">
+          <MailCheck className="w-8 h-8" />
+        </div>
+        <h1 className="text-2xl font-black text-slate-900 tracking-tight">Xác thực email</h1>
+        <p className="text-sm text-slate-500">
+          Nhập mã 6 số đã gửi tới <b className="text-slate-800">{user?.email || 'email của bạn'}</b>
         </p>
       </div>
-
-      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="bg-white py-8 px-6 shadow-xl shadow-slate-200/50 rounded-3xl border border-slate-200/80 sm:px-10 space-y-6">
-          <div className="w-14 h-14 rounded-2xl bg-indigo-50 border border-indigo-100 flex items-center justify-center mx-auto text-indigo-600">
-            <ShieldCheck className="w-7 h-7" />
-          </div>
-
-          {errorMsg && (
-            <div className="p-3.5 rounded-2xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-semibold animate-pulse text-center">
-              {errorMsg}
-            </div>
-          )}
-
-          <form onSubmit={handleVerify} className="space-y-6">
-            <div className="flex justify-center gap-2 sm:gap-3">
-              {digits.map((digit, i) => (
-                <input
-                  key={i}
-                  id={`digit-${i}`}
-                  type="text"
-                  inputMode="numeric"
-                  maxLength={1}
-                  value={digit}
-                  onChange={(e) => handleChange(i, e.target.value)}
-                  onKeyDown={(e) => handleKeyDown(i, e)}
-                  className="w-11 h-13 sm:w-12 sm:h-14 text-center text-xl font-black text-indigo-600 bg-slate-50 border-2 border-slate-200 rounded-2xl focus:border-indigo-600 focus:bg-white focus:outline-none focus:ring-4 focus:ring-indigo-500/15 transition-all shadow-sm"
-                />
-              ))}
-            </div>
-
-            <button
-              type="submit"
-              disabled={isVerifying}
-              className="w-full py-3 px-4 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white text-sm font-bold rounded-2xl shadow-lg shadow-indigo-200 flex items-center justify-center gap-2 group transition disabled:opacity-50"
-            >
-              {isVerifying ? (
-                <>
-                  <RotateCw className="w-4 h-4 animate-spin" />
-                  <span>Đang xác thực mã...</span>
-                </>
-              ) : (
-                <>
-                  <span>Xác nhận & Tiến vào lộ trình</span>
-                  <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
-                </>
+      <Card padding="lg" className="animate-fade-up space-y-5">
+        <div className={cn('flex justify-between gap-2', shake && 'animate-shake')}>
+          {digits.map((d, i) => (
+            <input
+              key={i}
+              ref={(el) => (refs.current[i] = el)}
+              value={d}
+              inputMode="numeric"
+              maxLength={6}
+              onChange={(e) => setAt(i, e.target.value)}
+              onKeyDown={(e) => onKey(i, e)}
+              onFocus={(e) => e.target.select()}
+              className={cn(
+                'w-12 h-14 text-center text-xl font-black rounded-xl border-2 transition-all duration-200 focus:outline-none focus:ring-4 focus:ring-indigo-500/10',
+                d ? 'border-indigo-500 bg-indigo-50 text-indigo-900 scale-105' : 'border-slate-200 text-slate-800 focus:border-indigo-400'
               )}
-            </button>
-
-            <div className="flex items-center justify-center gap-1.5 text-xs text-slate-500">
-              <span>Chưa nhận được mã?</span>
-              <button
-                type="button"
-                onClick={() => alert('Đã gửi lại mã OTP mới!')}
-                className="font-bold text-indigo-600 hover:underline inline-flex items-center gap-1"
-              >
-                Gửi lại mã
-              </button>
-            </div>
-          </form>
+            />
+          ))}
         </div>
-      </div>
+        <Button fullWidth size="lg" variant="gradient" loading={loading} onClick={submit} rightIcon={<ArrowRight className="w-4 h-4" />}>
+          Xác nhận
+        </Button>
+        <div className="text-center text-xs text-slate-500">
+          {countdown > 0 ? (
+            <span>
+              Gửi lại mã sau <b className="text-slate-800 font-mono">{countdown}s</b>
+            </span>
+          ) : (
+            <button
+              type="button"
+              onClick={() => {
+                setCountdown(60);
+                toast.info('Đã gửi lại mã', 'Kiểm tra hộp thư (kể cả mục Spam).');
+              }}
+              className="inline-flex items-center gap-1 font-bold text-indigo-600 hover:underline"
+            >
+              <RefreshCw className="w-3.5 h-3.5" /> Gửi lại mã xác thực
+            </button>
+          )}
+        </div>
+        <p className="text-[11px] text-slate-400 text-center">Demo: nhập bất kỳ 6 chữ số để tiếp tục.</p>
+      </Card>
     </div>
   );
 };

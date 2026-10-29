@@ -1,129 +1,141 @@
 import React from 'react';
-import {
-  Users,
-  CheckSquare,
-  FileCheck,
-  TrendingUp,
-  AlertCircle,
-  Clock,
-  ArrowRight,
-} from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Users, GraduationCap, PenTool, CheckCircle2, ArrowRight, Clock, AlertTriangle, ClipboardList } from 'lucide-react';
+import { useDocumentTitle } from '@/shared/hooks';
+import { useAuthStore } from '@/shared/stores/authStore';
+import { MOCK_CLASSES, MOCK_SUBMISSIONS, MOCK_ASSIGNMENTS, MOCK_CLASS_STUDENTS, CLASS_WEEKLY_PROGRESS } from '@/shared/mocks';
+import { cn, formatDate, timeAgo } from '@/shared/utils';
+import { Avatar, Badge, Button, Card, CardHeader, MiniBars, PageHeader, ProgressBar, StatCard } from '@/shared/components/ui';
+import { GradientPanel } from '@/shared/components/ui';
+
+const greeting = () => {
+  const h = new Date().getHours();
+  return h < 12 ? 'Chào buổi sáng' : h < 18 ? 'Chào buổi chiều' : 'Chào buổi tối';
+};
 
 export const TeacherDashboardPage: React.FC = () => {
+  useDocumentTitle('Tổng quan giáo viên');
+  const user = useAuthStore((s) => s.user);
+  const totalStudents = MOCK_CLASSES.reduce((a, c) => a + c.studentsCount, 0);
+  const pending = MOCK_SUBMISSIONS.filter((s) => s.status === 'PENDING');
+  const avgCompletion = Math.round(MOCK_CLASSES.reduce((a, c) => a + c.completionRate, 0) / MOCK_CLASSES.length);
+  const upcoming = [...MOCK_ASSIGNMENTS].filter((a) => a.status === 'OPEN').sort((a, b) => a.dueDate.localeCompare(b.dueDate)).slice(0, 4);
+  const attention = MOCK_CLASS_STUDENTS.filter((s) => s.status !== 'GOOD');
+
   return (
-    <div className="max-w-6xl mx-auto space-y-6">
-      {/* Title */}
-      <div>
-        <h1 className="text-2xl font-black text-slate-900">Bảng điều khiển Giảng viên (Teacher Dashboard)</h1>
-        <p className="text-sm text-slate-500 mt-1">
-          Theo dõi tiến độ học tập các lớp, quản lý bài tập và chấm bài tự luận Writing & Speaking theo Rubric.
-        </p>
+    <div className="space-y-6">
+      <PageHeader
+        title={`${greeting()}, ${user?.fullName.split(' ').slice(-1)[0] ?? 'thầy cô'} 👋`}
+        description="Tổng quan lớp học, bài nộp cần chấm và tiến độ học viên trong tuần này."
+        actions={
+          <>
+            <Button variant="outline" to="/teacher/assignments" leftIcon={<ClipboardList className="w-4 h-4" />}>
+              Giao bài mới
+            </Button>
+            <Button to="/teacher/grading" leftIcon={<PenTool className="w-4 h-4" />}>
+              Chấm bài ({pending.length})
+            </Button>
+          </>
+        }
+      />
+
+      <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
+        <StatCard label="Lớp đang dạy" value={MOCK_CLASSES.length} icon={<Users />} tone="emerald" hint="Học kỳ này" />
+        <StatCard label="Tổng học viên" value={totalStudents} icon={<GraduationCap />} tone="indigo" delta={8} deltaLabel="so với tháng trước" />
+        <StatCard label="Bài chờ chấm" value={pending.length} icon={<PenTool />} tone="amber" hint="Tự luận Speaking/Writing" />
+        <StatCard label="Hoàn thành TB" value={avgCompletion} suffix="%" icon={<CheckCircle2 />} tone="sky" delta={4} deltaLabel="tuần này" />
       </div>
 
-      {/* KPI Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-        <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
-          <div className="space-y-1">
-            <span className="text-xs font-semibold text-slate-400">Lớp phụ trách</span>
-            <div className="text-2xl font-black text-slate-800">4 Lớp</div>
-            <span className="text-[11px] font-medium text-slate-500">128 Học viên</span>
-          </div>
-          <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
-            <Users className="w-6 h-6" />
-          </div>
-        </div>
-
-        <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
-          <div className="space-y-1">
-            <span className="text-xs font-semibold text-slate-400">Bài nộp chờ chấm</span>
-            <div className="text-2xl font-black text-amber-600">9 Bài</div>
-            <span className="text-[11px] font-medium text-amber-600">Writing Task 2 & Audio</span>
-          </div>
-          <div className="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center">
-            <CheckSquare className="w-6 h-6" />
-          </div>
-        </div>
-
-        <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
-          <div className="space-y-1">
-            <span className="text-xs font-semibold text-slate-400">Bài tập đang giao</span>
-            <div className="text-2xl font-black text-slate-800">6 Bài</div>
-            <span className="text-[11px] font-medium text-slate-500">Hạn nộp tuần này</span>
-          </div>
-          <div className="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center">
-            <FileCheck className="w-6 h-6" />
-          </div>
-        </div>
-
-        <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
-          <div className="space-y-1">
-            <span className="text-xs font-semibold text-slate-400">Tỷ lệ nộp đúng hạn</span>
-            <div className="text-2xl font-black text-emerald-600">88%</div>
-            <span className="text-[11px] font-medium text-emerald-600">+5% so với tuần trước</span>
-          </div>
-          <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
-            <TrendingUp className="w-6 h-6" />
-          </div>
-        </div>
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-5">
+        <Card className="xl:col-span-2 animate-fade-up">
+          <CardHeader title="Tỷ lệ hoàn thành bài tập theo tuần" subtitle="Trung bình tất cả các lớp (%)" />
+          <MiniBars data={CLASS_WEEKLY_PROGRESS.map((d) => ({ ...d, tone: 'emerald' as const }))} max={100} height={150} />
+        </Card>
+        <GradientPanel tone="emerald" className="animate-fade-up" style={{ animationDelay: '80ms' }}>
+          <p className="text-xs font-bold uppercase tracking-wider text-emerald-100">Cần chấm sớm</p>
+          <h3 className="text-3xl font-black mt-1">{pending.length} bài nộp</h3>
+          <p className="text-sm text-emerald-100 mt-2 leading-relaxed">Học viên đang chờ phản hồi của bạn. Chấm sớm giúp duy trì động lực học tập của lớp.</p>
+          <Button to="/teacher/grading" variant="secondary" size="sm" className="mt-5 !bg-white !text-emerald-700 hover:!bg-emerald-50" rightIcon={<ArrowRight className="w-4 h-4" />}>
+            Vào bàn chấm bài
+          </Button>
+        </GradientPanel>
       </div>
 
-      {/* Grading Queue Table */}
-      <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm space-y-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <h3 className="text-base font-bold text-slate-900">Danh sách bài nộp đang chờ chấm (Grading Queue)</h3>
-            <p className="text-xs text-slate-400">Ưu tiên chấm các bài nộp sớm hoặc sắp đến hạn phản hồi</p>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+        <Card className="animate-fade-up" style={{ animationDelay: '120ms' }}>
+          <CardHeader title="Lớp học của tôi" subtitle={`${MOCK_CLASSES.length} lớp đang hoạt động`} action={<Button size="xs" variant="ghost" to="/teacher/classes">Tất cả</Button>} />
+          <div className="space-y-2.5">
+            {MOCK_CLASSES.map((c, i) => (
+              <Link key={c.id} to={`/teacher/classes/${c.id}`} className="flex items-center gap-3 p-3 rounded-2xl border border-slate-200 hover:border-emerald-300 hover:bg-emerald-50/30 transition-all hover:translate-x-0.5 animate-fade-up" style={{ animationDelay: `${i * 50}ms` }}>
+                <div className={cn('w-11 h-11 rounded-xl bg-gradient-to-br text-white font-black flex items-center justify-center shrink-0', c.gradient)}>{c.examType === 'TOEIC' ? 'T' : 'V'}</div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-bold text-sm text-slate-900 truncate">{c.name}</p>
+                  <p className="text-[11px] text-slate-500">{c.studentsCount} HV · {c.schedule}</p>
+                </div>
+                <div className="text-right shrink-0">
+                  <p className="text-sm font-black text-slate-900">{c.avgScore}</p>
+                  <p className="text-[10px] text-slate-400">điểm TB</p>
+                </div>
+              </Link>
+            ))}
           </div>
-          <span className="text-xs px-2.5 py-1 rounded-full bg-amber-50 text-amber-800 font-bold">
-            9 Chờ duyệt
-          </span>
-        </div>
+        </Card>
 
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs">
-            <thead className="bg-slate-50 text-slate-500 uppercase font-bold border-y border-slate-200">
-              <tr>
-                <th className="py-3 px-4">Học viên</th>
-                <th className="py-3 px-4">Lớp học</th>
-                <th className="py-3 px-4">Kỹ năng / Bài tập</th>
-                <th className="py-3 px-4">Thời gian nộp</th>
-                <th className="py-3 px-4 text-right">Thao tác</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              <tr className="hover:bg-slate-50/80 transition">
-                <td className="py-3.5 px-4 font-bold text-slate-800">Nguyễn Văn An</td>
-                <td className="py-3.5 px-4 text-slate-600">TOEIC Mục tiêu 750 (K28)</td>
-                <td className="py-3.5 px-4">
-                  <span className="px-2 py-0.5 rounded bg-blue-50 text-blue-700 font-semibold">
-                    Writing Task 1
-                  </span>
-                </td>
-                <td className="py-3.5 px-4 text-slate-500">2 giờ trước</td>
-                <td className="py-3.5 px-4 text-right">
-                  <button className="px-3 py-1.5 rounded-lg bg-emerald-600 text-white font-bold hover:bg-emerald-700 transition">
-                    Mở Rubric Chấm
-                  </button>
-                </td>
-              </tr>
-              <tr className="hover:bg-slate-50/80 transition">
-                <td className="py-3.5 px-4 font-bold text-slate-800">Trần Thị Bích</td>
-                <td className="py-3.5 px-4 text-slate-600">VSTEP B2 Cấp Tốc</td>
-                <td className="py-3.5 px-4">
-                  <span className="px-2 py-0.5 rounded bg-purple-50 text-purple-700 font-semibold">
-                    Speaking Part 2 (Audio)
-                  </span>
-                </td>
-                <td className="py-3.5 px-4 text-slate-500">5 giờ trước</td>
-                <td className="py-3.5 px-4 text-right">
-                  <button className="px-3 py-1.5 rounded-lg bg-emerald-600 text-white font-bold hover:bg-emerald-700 transition">
-                    Mở Rubric Chấm
-                  </button>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
+        <Card className="animate-fade-up" style={{ animationDelay: '160ms' }}>
+          <CardHeader title="Bài nộp mới cần chấm" subtitle="Tự luận Writing & Speaking" action={<Button size="xs" variant="ghost" to="/teacher/grading">Tất cả</Button>} />
+          <div className="space-y-2.5">
+            {pending.map((s, i) => (
+              <Link key={s.id} to={`/teacher/grading/${s.id}`} className="flex items-center gap-3 p-3 rounded-2xl border border-slate-200 hover:border-amber-300 hover:bg-amber-50/30 transition-all animate-fade-up" style={{ animationDelay: `${i * 50}ms` }}>
+                <Avatar name={s.studentName} size="sm" />
+                <div className="flex-1 min-w-0">
+                  <p className="font-bold text-sm text-slate-900 truncate">{s.studentName}</p>
+                  <p className="text-[11px] text-slate-500 truncate">{s.assignmentTitle}</p>
+                </div>
+                <div className="text-right shrink-0">
+                  <Badge tone={s.type === 'ESSAY' ? 'violet' : 'sky'} size="xs">{s.type}</Badge>
+                  <p className="text-[10px] text-slate-400 mt-1">{timeAgo(s.submittedAt)}</p>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </Card>
+
+        <Card className="animate-fade-up" style={{ animationDelay: '200ms' }}>
+          <CardHeader title="Bài tập sắp hết hạn" subtitle="Theo dõi tỷ lệ nộp bài" icon={<Clock />} />
+          <div className="space-y-4">
+            {upcoming.map((a) => {
+              const overdue = new Date(a.dueDate) < new Date();
+              return (
+                <div key={a.id}>
+                  <div className="flex items-center justify-between gap-2 mb-1.5">
+                    <div className="min-w-0">
+                      <p className="text-sm font-semibold text-slate-800 truncate">{a.title}</p>
+                      <p className="text-[11px] text-slate-500">{a.className} · hạn {formatDate(a.dueDate)}</p>
+                    </div>
+                    <Badge tone={overdue ? 'rose' : 'emerald'} size="xs">{overdue ? 'Quá hạn' : `${a.submitted}/${a.total}`}</Badge>
+                  </div>
+                  <ProgressBar value={(a.submitted / a.total) * 100} size="sm" tone={overdue ? 'rose' : 'emerald'} />
+                </div>
+              );
+            })}
+          </div>
+        </Card>
+
+        <Card className="animate-fade-up" style={{ animationDelay: '240ms' }}>
+          <CardHeader title="Học viên cần chú ý" subtitle="Đứt chuỗi học hoặc hoàn thành thấp" icon={<AlertTriangle />} />
+          <div className="space-y-2.5">
+            {attention.map((s) => (
+              <div key={s.id} className="flex items-center gap-3 p-3 rounded-2xl bg-slate-50 border border-slate-100">
+                <Avatar name={s.name} size="sm" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-bold text-slate-900 truncate">{s.name}</p>
+                  <p className="text-[11px] text-slate-500">Hoàn thành {s.completion}% · chuỗi {s.streak} ngày · {timeAgo(s.lastActive)}</p>
+                </div>
+                <Badge tone={s.status === 'RISK' ? 'rose' : 'amber'} dot size="xs">{s.status === 'RISK' ? 'Nguy cơ' : 'Cảnh báo'}</Badge>
+              </div>
+            ))}
+          </div>
+        </Card>
       </div>
     </div>
   );

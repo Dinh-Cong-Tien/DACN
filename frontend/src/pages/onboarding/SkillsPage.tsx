@@ -1,141 +1,72 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Headphones, BookOpen, Mic, PenTool, ArrowRight, ArrowLeft, Sparkles, CheckCircle2 } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Headphones, BookOpen, PenTool, Mic } from 'lucide-react';
+import { useDocumentTitle, useLocalStorage } from '@/shared/hooks';
+import { Badge, Button, Card, RadarChart } from '@/shared/components/ui';
+import { DEFAULT_ONBOARDING, OnboardingState } from './GoalPage';
+
+const SKILLS = [
+  { key: 'Listening', label: 'Nghe', icon: Headphones },
+  { key: 'Reading', label: 'Đọc', icon: BookOpen },
+  { key: 'Writing', label: 'Viết', icon: PenTool },
+  { key: 'Speaking', label: 'Nói', icon: Mic },
+];
+const LEVEL_LABEL = ['', 'Mới bắt đầu', 'Cơ bản', 'Trung bình', 'Khá', 'Tốt'];
 
 export const SkillsPage: React.FC = () => {
+  useDocumentTitle('Tự đánh giá kỹ năng');
   const navigate = useNavigate();
-  const goalType = localStorage.getItem('onboarding_goal') || 'TOEIC';
-
-  const [ratings, setRatings] = useState<Record<string, number>>({
-    listening: 2,
-    reading: 3,
-    speaking: 2,
-    writing: 2,
-  });
-
-  const skills = [
-    {
-      id: 'listening',
-      name: 'Listening (Nghe hiểu)',
-      icon: Headphones,
-      desc: 'Nghe hội thoại, thông báo, nhận diện từ vựng nối âm và ngữ điệu tự nhiên.',
-    },
-    {
-      id: 'reading',
-      name: 'Reading (Đọc hiểu & Ngữ pháp)',
-      icon: BookOpen,
-      desc: 'Nắm vững ngữ pháp cơ bản, từ vựng theo chủ đề và tốc độ đọc quét thông tin.',
-    },
-    ...(goalType === 'VSTEP'
-      ? [
-          {
-            id: 'speaking',
-            name: 'Speaking (Nói & Thuyết trình)',
-            icon: Mic,
-            desc: 'Phát âm chuẩn, độ lưu loát, mở rộng ý kiến và tương tác xã hội.',
-          },
-          {
-            id: 'writing',
-            name: 'Writing (Viết thư & Luận)',
-            icon: PenTool,
-            desc: 'Cấu trúc bài viết mạch lạc, liên kết câu và sử dụng ngữ pháp học thuật.',
-          },
-        ]
-      : []),
-  ];
-
-  const levelLabels = ['Mất gốc', 'Mới bắt đầu', 'Tạm ổn', 'Tự tin', 'Thành thạo'];
-
-  const setSkillRating = (id: string, val: number) => {
-    setRatings((prev) => ({ ...prev, [id]: val }));
-  };
-
-  const handleNext = () => {
-    localStorage.setItem('onboarding_self_assessment', JSON.stringify(ratings));
-    navigate('/onboarding/placement-test');
-  };
+  const [state, setState] = useLocalStorage<OnboardingState>('orbi-onboarding', DEFAULT_ONBOARDING);
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col justify-between py-12 px-4 sm:px-6 lg:px-8 font-sans">
-      <div className="max-w-2xl mx-auto w-full">
-        {/* Stepper Header */}
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-50 border border-indigo-100 text-indigo-700 text-xs font-bold mb-3">
-            <Sparkles className="w-3.5 h-3.5" />
-            <span>Bước 4/6 • Tự đánh giá năng lực</span>
-          </div>
-          <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
-            Bạn cảm thấy thế nào về các kỹ năng hiện tại?
-          </h1>
-          <p className="text-xs sm:text-sm text-slate-500 mt-2">
-            Đừng lo lắng nếu điểm tự đánh giá thấp. Hệ thống sẽ kết hợp với bài test đầu vào để gợi ý bài học phù hợp nhất.
-          </p>
-        </div>
+    <Card padding="lg" className="animate-scale-in">
+      <div className="text-center space-y-2 mb-8">
+        <Badge tone="indigo">Bước 4 / 6</Badge>
+        <h1 className="text-2xl md:text-3xl font-black text-slate-900 tracking-tight">Tự đánh giá 4 kỹ năng</h1>
+        <p className="text-sm text-slate-500 max-w-lg mx-auto">Đánh giá cảm tính của bạn sẽ được đối chiếu với bài test xếp lớp ở bước tiếp theo.</p>
+      </div>
 
-        {/* Skills Cards */}
-        <div className="space-y-4 mb-8">
-          {skills.map((skill) => {
-            const Icon = skill.icon;
-            const currentVal = ratings[skill.id] || 2;
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto] gap-8 items-center">
+        <div className="space-y-5">
+          {SKILLS.map((s, i) => {
+            const Icon = s.icon;
+            const v = state.skills[s.key] ?? 3;
             return (
-              <div
-                key={skill.id}
-                className="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-sm space-y-3"
-              >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center">
-                      <Icon className="w-5 h-5" />
-                    </div>
-                    <div>
-                      <h4 className="text-sm font-black text-slate-900">{skill.name}</h4>
-                      <p className="text-xs text-slate-500">{skill.desc}</p>
-                    </div>
-                  </div>
-                  <span className="text-xs font-extrabold text-indigo-600 px-3 py-1 rounded-full bg-indigo-50 shrink-0">
-                    {levelLabels[currentVal]}
+              <div key={s.key} className="animate-fade-up" style={{ animationDelay: `${i * 70}ms` }}>
+                <div className="flex items-center justify-between mb-2">
+                  <span className="flex items-center gap-2 text-sm font-bold text-slate-800">
+                    <span className="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center">
+                      <Icon className="w-4 h-4" />
+                    </span>
+                    {s.label}
                   </span>
+                  <Badge tone={v >= 4 ? 'emerald' : v >= 3 ? 'indigo' : 'amber'}>
+                    {v}/5 · {LEVEL_LABEL[v]}
+                  </Badge>
                 </div>
-
-                <div className="flex justify-between gap-1.5 pt-2">
-                  {[0, 1, 2, 3, 4].map((star) => (
-                    <button
-                      key={star}
-                      type="button"
-                      onClick={() => setSkillRating(skill.id, star)}
-                      className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all ${
-                        currentVal >= star
-                          ? 'bg-indigo-600 text-white shadow-sm'
-                          : 'bg-slate-100 text-slate-400 hover:bg-slate-200'
-                      }`}
-                    >
-                      Bậc {star + 1}
-                    </button>
-                  ))}
+                <input type="range" min={1} max={5} step={1} value={v} onChange={(e) => setState({ ...state, skills: { ...state.skills, [s.key]: Number(e.target.value) } })} className="w-full h-2 rounded-full cursor-pointer" />
+                <div className="flex justify-between text-[10px] text-slate-400 mt-1 font-semibold">
+                  <span>Mới bắt đầu</span>
+                  <span>Tốt</span>
                 </div>
               </div>
             );
           })}
         </div>
-
-        {/* Buttons */}
-        <div className="flex items-center justify-between">
-          <button
-            onClick={() => navigate('/onboarding/schedule')}
-            className="px-5 py-3 border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-bold text-xs rounded-2xl flex items-center gap-1.5 transition"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            <span>Quay lại</span>
-          </button>
-          <button
-            onClick={handleNext}
-            className="px-8 py-3.5 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white font-bold text-sm rounded-2xl shadow-lg shadow-indigo-200 flex items-center gap-2 group transition"
-          >
-            <span>Tiếp tục: Làm bài Test đầu vào</span>
-            <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-          </button>
+        <div className="flex flex-col items-center animate-scale-in" style={{ animationDelay: '200ms' }}>
+          <RadarChart data={SKILLS.map((s) => ({ label: s.label, value: ((state.skills[s.key] ?? 3) / 5) * 100 }))} size={240} />
+          <p className="text-[11px] text-slate-400 font-semibold -mt-2">Biểu đồ năng lực tự đánh giá</p>
         </div>
       </div>
-    </div>
+
+      <div className="flex items-center justify-between mt-8">
+        <Button variant="ghost" leftIcon={<ArrowLeft className="w-4 h-4" />} onClick={() => navigate('/onboarding/schedule')}>
+          Quay lại
+        </Button>
+        <Button size="lg" variant="gradient" rightIcon={<ArrowRight className="w-4 h-4" />} onClick={() => navigate('/onboarding/placement-test')}>
+          Làm bài xếp lớp
+        </Button>
+      </div>
+    </Card>
   );
 };

@@ -6,6 +6,8 @@ export const ROUTES = {
   PRACTICE: '/practice',
   MOCK_TESTS: '/mock-tests',
   PRICING: '/pricing',
+  SCORE_CONVERTER: '/score-converter',
+  RESOURCES: '/resources',
   AUTH: {
     LOGIN: '/auth/login',
     REGISTER: '/auth/register',
@@ -22,12 +24,16 @@ export const ROUTES = {
     PLACEMENT_RESULT: '/onboarding/placement-result',
   },
   STUDENT: {
-    DASHBOARD: '/student/dashboard',
+    DASHBOARD: '/app/dashboard',
+    LEARNING_PATH: '/app/learning-path',
+    COURSES: '/app/courses',
+    PRACTICE: '/app/practice',
+    MOCK_TESTS: '/app/mock-tests',
+    MISTAKES: '/app/mistakes',
+    REVIEW: '/app/review',
+    VOCABULARY: '/app/vocabulary',
   },
-  TEACHER: {
-    DASHBOARD: '/teacher/dashboard',
-  },
-  ADMIN: {
-    DASHBOARD: '/admin/dashboard',
-  },
+  TEACHER: { DASHBOARD: '/teacher/dashboard' },
+  HEAD: { DASHBOARD: '/head/dashboard' },
+  ADMIN: { DASHBOARD: '/admin/dashboard' },
 } as const;

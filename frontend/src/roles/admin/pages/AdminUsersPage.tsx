@@ -1,130 +1,165 @@
-import React, { useState } from 'react';
-import { Users, Search, Shield, Ban, CheckCircle2, MoreVertical, Edit2 } from 'lucide-react';
+import React from 'react';
+import { Users, Lock, Unlock, KeyRound, UserCheck, Mail } from 'lucide-react';
+import { MOCK_USERS } from '@/shared/mocks';
+import type { AppRole, AppUser } from '@/shared/types';
+import { formatDate, timeAgo, ROLE_LABEL } from '@/shared/utils';
+import { useDocumentTitle } from '@/shared/hooks';
+import { Avatar, Badge, Button, Column, PageHeader, StatCard, Tone } from '@/shared/components/ui';
+import { CrudEditor, CrudField } from '@/engines';
+import { toast } from '@/shared/stores/uiStore';
 
-interface IUserItem {
-  id: string;
-  name: string;
-  email: string;
-  role: 'STUDENT' | 'TEACHER' | 'ADMIN';
-  isEmailVerified: boolean;
-  streakCount: number;
-  createdAt: string;
-}
+const ROLE_TONE: Record<AppRole, Tone> = { GUEST: 'slate', STUDENT: 'indigo', TEACHER: 'emerald', HEAD_TEACHER: 'amber', ADMIN: 'rose' };
+const STATUS_META: Record<AppUser['status'], { tone: Tone; label: string }> = {
+  ACTIVE: { tone: 'emerald', label: 'Hoạt động' },
+  LOCKED: { tone: 'rose', label: 'Đã khoá' },
+  PENDING: { tone: 'amber', label: 'Chờ kích hoạt' },
+};
 
-const mockUsers: IUserItem[] = [
-  { id: 'u-1', name: 'Lê Minh Anh', email: 'student@orbi.edu.vn', role: 'STUDENT', isEmailVerified: true, streakCount: 5, createdAt: '10/10/2026' },
-  { id: 'u-2', name: 'ThS. Nguyễn Hoàng Nam', email: 'teacher@orbi.edu.vn', role: 'TEACHER', isEmailVerified: true, streakCount: 18, createdAt: '01/09/2026' },
-  { id: 'u-3', name: 'Hệ thống Quản trị Viên', email: 'admin@orbi.edu.vn', role: 'ADMIN', isEmailVerified: true, streakCount: 60, createdAt: '01/01/2026' },
-  { id: 'u-4', name: 'Vũ Quốc Bảo', email: 'bao.vu@gmail.com', role: 'STUDENT', isEmailVerified: false, streakCount: 0, createdAt: '14/10/2026' },
+const columns: Column<AppUser>[] = [
+  {
+    key: 'fullName',
+    header: 'Người dùng',
+    render: (u) => (
+      <div className="flex items-center gap-3">
+        <Avatar name={u.fullName} size="sm" />
+        <div className="min-w-0">
+          <p className="font-semibold text-slate-900 truncate">{u.fullName}</p>
+          <p className="text-[11px] text-slate-400 truncate">{u.email}</p>
+        </div>
+      </div>
+    ),
+  },
+  { key: 'role', header: 'Vai trò', render: (u) => <Badge tone={ROLE_TONE[u.role]}>{ROLE_LABEL[u.role]}</Badge> },
+  {
+    key: 'status',
+    header: 'Trạng thái',
+    render: (u) => (
+      <Badge tone={STATUS_META[u.status].tone} dot={u.status === 'ACTIVE'}>
+        {STATUS_META[u.status].label}
+      </Badge>
+    ),
+  },
+  { key: 'plan', header: 'Gói', render: (u) => <Badge tone={u.plan === 'VIP' ? 'amber' : 'slate'} solid={u.plan === 'VIP'} size="xs">{u.plan}</Badge> },
+  { key: 'joinedAt', header: 'Tham gia', render: (u) => <span className="text-xs text-slate-600">{formatDate(u.joinedAt)}</span> },
+  { key: 'lastActiveAt', header: 'Hoạt động cuối', render: (u) => <span className="text-xs text-slate-500">{timeAgo(u.lastActiveAt)}</span> },
+];
+
+const fields: CrudField<AppUser>[] = [
+  { key: 'fullName', label: 'Họ và tên', type: 'text', required: true, placeholder: 'Nguyễn Văn A' },
+  { key: 'email', label: 'Email', type: 'email', required: true, placeholder: 'name@orbi.edu.vn' },
+  {
+    key: 'role',
+    label: 'Vai trò',
+    type: 'select',
+    required: true,
+    options: [
+      { value: 'STUDENT', label: 'Học viên' },
+      { value: 'TEACHER', label: 'Giáo viên' },
+      { value: 'HEAD_TEACHER', label: 'Trưởng bộ môn' },
+      { value: 'ADMIN', label: 'Quản trị viên' },
+    ],
+  },
+  {
+    key: 'status',
+    label: 'Trạng thái',
+    type: 'select',
+    options: [
+      { value: 'ACTIVE', label: 'Hoạt động' },
+      { value: 'PENDING', label: 'Chờ kích hoạt' },
+      { value: 'LOCKED', label: 'Đã khoá' },
+    ],
+  },
+  {
+    key: 'plan',
+    label: 'Gói thành viên',
+    type: 'select',
+    options: [
+      { value: 'FREE', label: 'Free' },
+      { value: 'VIP', label: 'VIP' },
+    ],
+  },
 ];
 
 export const AdminUsersPage: React.FC = () => {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [roleFilter, setRoleFilter] = useState<string>('ALL');
-  const [users, setUsers] = useState(mockUsers);
-
-  const filtered = users.filter((u) => {
-    if (roleFilter !== 'ALL' && u.role !== roleFilter) return false;
-    if (searchTerm && !u.email.toLowerCase().includes(searchTerm.toLowerCase()) && !u.name.toLowerCase().includes(searchTerm.toLowerCase())) return false;
-    return true;
-  });
+  useDocumentTitle('Quản lý người dùng');
+  const count = (s: AppUser['status']) => MOCK_USERS.filter((u) => u.status === s).length;
 
   return (
-    <div className="max-w-6xl mx-auto space-y-6 animate-fadeIn text-slate-100">
-      <div>
-        <h1 className="text-2xl font-black text-white flex items-center gap-2.5">
-          <Users className="w-6 h-6 text-rose-500" />
-          <span>Quản lý người dùng & Phân quyền (User Management)</span>
-        </h1>
-        <p className="text-sm text-slate-400 mt-1">
-          Danh sách tài khoản, điều chỉnh vai trò phân quyền Role (Student, Teacher, Admin) và trạng thái tài khoản.
-        </p>
+    <div className="space-y-6">
+      <PageHeader title="Người dùng & Phân quyền" icon={<Users />} description="Khởi tạo, kích hoạt, khoá/mở khoá tài khoản và cấp phát vai trò cho người dùng hệ thống." />
+
+      <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
+        <StatCard label="Tổng tài khoản" value={MOCK_USERS.length} tone="indigo" icon={<Users />} />
+        <StatCard label="Đang hoạt động" value={count('ACTIVE')} tone="emerald" icon={<UserCheck />} />
+        <StatCard label="Chờ kích hoạt" value={count('PENDING')} tone="amber" icon={<Mail />} />
+        <StatCard label="Đã khoá" value={count('LOCKED')} tone="rose" icon={<Lock />} />
       </div>
 
-      {/* Search & Filter Bar */}
-      <div className="bg-slate-950 p-4 rounded-3xl border border-slate-800 shadow-sm flex flex-wrap items-center justify-between gap-4">
-        <div className="flex items-center gap-3 bg-slate-900 px-3.5 py-2 rounded-2xl border border-slate-800 flex-1 max-w-md">
-          <Search className="w-4 h-4 text-slate-400" />
-          <input
-            type="text"
-            placeholder="Tìm theo email hoặc họ tên..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="bg-transparent text-xs text-white outline-none w-full placeholder-slate-500"
-          />
-        </div>
-
-        <div className="flex items-center gap-2">
-          <span className="text-xs text-slate-400 font-bold">Lọc vai trò:</span>
-          <select
-            value={roleFilter}
-            onChange={(e) => setRoleFilter(e.target.value)}
-            className="bg-slate-900 border border-slate-800 text-xs text-white rounded-xl px-3 py-1.5 outline-none font-medium"
-          >
-            <option value="ALL">Tất cả vai trò</option>
-            <option value="STUDENT">Học viên (Student)</option>
-            <option value="TEACHER">Giáo viên (Teacher)</option>
-            <option value="ADMIN">Quản trị viên (Admin)</option>
-          </select>
-        </div>
-      </div>
-
-      {/* Users Table */}
-      <div className="bg-slate-950 rounded-3xl border border-slate-800 shadow-sm overflow-hidden">
-        <table className="w-full text-left text-xs text-slate-300">
-          <thead className="bg-slate-900 text-slate-400 uppercase font-bold border-b border-slate-800">
-            <tr>
-              <th className="py-3.5 px-5">Người dùng</th>
-              <th className="py-3.5 px-4">Email</th>
-              <th className="py-3.5 px-4">Vai trò</th>
-              <th className="py-3.5 px-4">Xác thực</th>
-              <th className="py-3.5 px-4">Ngày tạo</th>
-              <th className="py-3.5 px-5 text-right">Thao tác</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-900">
-            {filtered.map((u) => (
-              <tr key={u.id} className="hover:bg-slate-900/60 transition">
-                <td className="py-4 px-5 font-bold text-white flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-full bg-slate-800 text-rose-400 font-black flex items-center justify-center text-xs">
-                    {u.name.slice(0, 2).toUpperCase()}
-                  </div>
-                  <span>{u.name}</span>
-                </td>
-                <td className="py-4 px-4 font-mono text-slate-400">{u.email}</td>
-                <td className="py-4 px-4">
-                  <span
-                    className={`px-2 py-0.5 rounded font-bold text-[10px] uppercase ${
-                      u.role === 'ADMIN'
-                        ? 'bg-rose-500/10 text-rose-400 border border-rose-500/20'
-                        : u.role === 'TEACHER'
-                        ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
-                        : 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20'
-                    }`}
-                  >
-                    {u.role}
-                  </span>
-                </td>
-                <td className="py-4 px-4">
-                  {u.isEmailVerified ? (
-                    <span className="text-emerald-400 flex items-center gap-1 font-semibold text-[11px]">
-                      <CheckCircle2 className="w-3.5 h-3.5" /> Đã xác thực
-                    </span>
-                  ) : (
-                    <span className="text-amber-400 text-[11px]">Chưa xác thực</span>
-                  )}
-                </td>
-                <td className="py-4 px-4 text-slate-500">{u.createdAt}</td>
-                <td className="py-4 px-5 text-right">
-                  <button className="px-3 py-1 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold transition text-[11px]">
-                    Sửa quyền
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+      <CrudEditor<AppUser>
+        rows={MOCK_USERS}
+        columns={columns}
+        fields={fields}
+        entityName="tài khoản"
+        createLabel="Tạo tài khoản"
+        idPrefix="u"
+        searchKeys={['fullName', 'email']}
+        filters={[
+          {
+            key: 'role',
+            label: 'Vai trò',
+            options: [
+              { value: 'STUDENT', label: 'Học viên' },
+              { value: 'TEACHER', label: 'Giáo viên' },
+              { value: 'HEAD_TEACHER', label: 'Trưởng bộ môn' },
+              { value: 'ADMIN', label: 'Quản trị viên' },
+            ],
+          },
+          {
+            key: 'status',
+            label: 'Trạng thái',
+            options: [
+              { value: 'ACTIVE', label: 'Hoạt động' },
+              { value: 'PENDING', label: 'Chờ kích hoạt' },
+              { value: 'LOCKED', label: 'Đã khoá' },
+            ],
+          },
+        ]}
+        defaultValues={{ role: 'STUDENT', status: 'PENDING', plan: 'FREE', streak: 0, effortPoints: 0, joinedAt: new Date().toISOString(), lastActiveAt: new Date().toISOString() }}
+        selectable
+        bulkActions={(ids, clear) => (
+          <>
+            <Button
+              size="xs"
+              variant="danger"
+              leftIcon={<Lock className="w-3.5 h-3.5" />}
+              onClick={() => {
+                toast.success(`Đã khoá ${ids.length} tài khoản`);
+                clear();
+              }}
+            >
+              Khoá tất cả
+            </Button>
+            <Button
+              size="xs"
+              variant="outline"
+              leftIcon={<Mail className="w-3.5 h-3.5" />}
+              onClick={() => {
+                toast.info('Đang gửi email', `Gửi thông báo tới ${ids.length} người dùng.`);
+                clear();
+              }}
+            >
+              Gửi email
+            </Button>
+          </>
+        )}
+        rowActions={(u) => [
+          ...(u.status === 'PENDING' ? [{ label: 'Kích hoạt tài khoản', icon: <UserCheck />, onClick: () => toast.success('Đã kích hoạt', `${u.fullName} có thể đăng nhập ngay.`) }] : []),
+          u.status === 'LOCKED'
+            ? { label: 'Mở khoá', icon: <Unlock />, onClick: () => toast.success('Đã mở khoá', `${u.fullName} đã được khôi phục quyền truy cập.`) }
+            : { label: 'Khoá tài khoản', icon: <Lock />, onClick: () => toast.warning('Đã khoá tài khoản', `${u.fullName} không thể đăng nhập cho tới khi mở khoá.`) },
+          { label: 'Đặt lại mật khẩu', icon: <KeyRound />, onClick: () => toast.info('Đã gửi email đặt lại mật khẩu', `Tới ${u.email}`) },
+        ]}
+      />
     </div>
   );
 };

@@ -1,156 +1,167 @@
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
-import {
-  GraduationCap,
-  CheckCircle2,
-  XCircle,
-  AlertTriangle,
-  Play,
-  BookOpen,
-  ChevronDown,
-  ChevronUp,
-} from 'lucide-react';
+import React, { useMemo, useState } from 'react';
+import { Link, useParams } from 'react-router-dom';
+import { GraduationCap, ChevronLeft, ChevronRight, Lightbulb, Target, CheckCircle2, BookOpen } from 'lucide-react';
+import { GRAMMAR_TOPICS } from '@/shared/mocks';
+import type { GrammarTopic } from '@/shared/types';
+import { cn } from '@/shared/utils';
+import { useDocumentTitle } from '@/shared/hooks';
+import { Badge, Button, Card, Chip, PageHeader, ProgressBar, SearchInput, EmptyState, Breadcrumb, RingProgress } from '@/shared/components/ui';
 
-interface IGrammarTopic {
-  id: string;
-  title: string;
-  category: string;
-  level: string;
-  ruleSummary: string;
-  correctExample: string;
-  incorrectExample: string;
-  commonTrap: string;
-}
+const LEVELS = ['Tất cả', 'A2–B1', 'B1', 'A2–B2', 'B1–B2'];
 
-const mockGrammarList: IGrammarTopic[] = [
-  {
-    id: 'g-1',
-    title: 'Phân biệt Quá khứ đơn (Past Simple) & Hiện tại hoàn thành (Present Perfect)',
-    category: 'Các thì động từ (Tenses)',
-    level: 'A2-B1',
-    ruleSummary:
-      'Dùng Quá khứ đơn khi có mốc thời gian xác định kết thúc trong quá khứ (yesterday, last month, ago, in 2021). Dùng Hiện tại hoàn thành khi hành động xảy ra không rõ thời điểm hoặc kéo dài từ quá khứ đến hiện tại (since, for, already, yet).',
-    correctExample: 'The revenue has increased by 15% since last quarter.',
-    incorrectExample: 'The revenue increased by 15% since last quarter.',
-    commonTrap: 'Đề thi TOEIC Part 5 thường cho từ "since" hoặc "for" để gài bẫy người học chọn thì quá khứ đơn.',
-  },
-  {
-    id: 'g-2',
-    title: 'Trật tự từ loại: Trạng từ bổ nghĩa cho Động từ / Tính từ',
-    category: 'Từ loại (Part of Speech)',
-    level: 'B1-B2',
-    ruleSummary:
-      'Trạng từ (Adverb) thường đứng giữa Trợ động từ và Động từ chính (has + adv + V_pp), hoặc đứng sau Ngoại động từ và Tân ngữ để bổ nghĩa cho hành động.',
-    correctExample: 'The executive committee has unanimously approved the merger proposal.',
-    incorrectExample: 'The executive committee has unanimous approved the merger proposal.',
-    commonTrap: 'Chọn nhầm tính từ (unanimous) thay vì trạng từ (unanimously) khi đứng trước phân từ hai.',
-  },
-  {
-    id: 'g-3',
-    title: 'Mệnh đề quan hệ rút gọn (Reduced Relative Clauses)',
-    category: 'Mệnh đề (Clauses)',
-    level: 'B2',
-    ruleSummary:
-      'Rút gọn thành V-ing nếu chủ động, và rút gọn thành V-ed/P2 nếu mang nghĩa bị động.',
-    correctExample: 'Candidates interested in the position should submit their resume.',
-    incorrectExample: 'Candidates who interested in the position should submit their resume.',
-    commonTrap: 'Nhầm lẫn thể chủ động và bị động khi rút gọn đại từ quan hệ.',
-  },
-];
-
-export const StudentGrammarPage: React.FC = () => {
-  const [expandedId, setExpandedId] = useState<string | null>('g-1');
-
+const TopicDetail: React.FC<{ topic: GrammarTopic }> = ({ topic }) => {
+  const idx = GRAMMAR_TOPICS.findIndex((t) => t.id === topic.id);
+  const prev = GRAMMAR_TOPICS[idx - 1];
+  const next = GRAMMAR_TOPICS[idx + 1];
   return (
-    <div className="max-w-5xl mx-auto space-y-6 animate-fadeIn">
-      <div>
-        <h1 className="text-2xl font-black text-slate-900 flex items-center gap-2.5">
-          <GraduationCap className="w-6 h-6 text-indigo-600" />
-          <span>Chủ điểm ngữ pháp trọng tâm (Grammar Hub)</span>
-        </h1>
-        <p className="text-sm text-slate-500 mt-1">
-          Hệ thống hóa toàn bộ kiến thức ngữ pháp cốt lõi xuất hiện trong bài thi TOEIC & VSTEP, nhận diện bẫy đề thi.
-        </p>
-      </div>
-
-      <div className="space-y-4">
-        {mockGrammarList.map((item) => {
-          const isExpanded = expandedId === item.id;
-          return (
-            <div
-              key={item.id}
-              className="bg-white rounded-3xl border border-slate-200/90 shadow-sm overflow-hidden transition-all"
-            >
-              <div
-                onClick={() => setExpandedId(isExpanded ? null : item.id)}
-                className="p-6 cursor-pointer flex items-center justify-between hover:bg-slate-50/60 transition select-none"
-              >
-                <div className="space-y-1">
-                  <div className="flex items-center gap-2">
-                    <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-indigo-50 text-indigo-700">
-                      {item.category}
-                    </span>
-                    <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-slate-100 text-slate-600">
-                      {item.level}
+    <div className="space-y-6">
+      <Breadcrumb items={[{ label: 'Ngữ pháp', to: '/app/grammar' }, { label: topic.category }, { label: topic.title }]} />
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-6">
+        <div className="space-y-5">
+          <Card className="animate-fade-up">
+            <div className="flex items-center gap-2 mb-3">
+              <Badge tone="violet">{topic.category}</Badge>
+              <Badge tone="slate">{topic.level}</Badge>
+            </div>
+            <h1 className="text-2xl md:text-3xl font-black text-slate-900">{topic.title}</h1>
+            <p className="text-slate-600 leading-relaxed mt-3">{topic.summary}</p>
+          </Card>
+          {topic.rules.map((r, i) => (
+            <Card key={r.title} className="animate-fade-up" style={{ animationDelay: `${(i + 1) * 80}ms` }}>
+              <div className="flex items-start gap-3">
+                <span className="w-9 h-9 rounded-xl bg-indigo-600 text-white font-black text-sm flex items-center justify-center shrink-0">{i + 1}</span>
+                <div className="flex-1">
+                  <h3 className="font-bold text-slate-900">{r.title}</h3>
+                  <p className="text-sm text-slate-600 mt-1 leading-relaxed">{r.detail}</p>
+                  <div className="mt-3 rounded-xl bg-amber-50 border border-amber-200 p-3 text-sm text-amber-900 flex items-start gap-2">
+                    <Lightbulb className="w-4 h-4 mt-0.5 shrink-0 text-amber-600" />
+                    <span>
+                      <b>Ví dụ:</b> <i>{r.example}</i>
                     </span>
                   </div>
-                  <h3 className="text-base font-bold text-slate-900">{item.title}</h3>
-                </div>
-
-                <div className="flex items-center gap-3">
-                  <Link
-                    to="/app/practice"
-                    onClick={(e) => e.stopPropagation()}
-                    className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-indigo-50 text-indigo-700 font-bold text-xs hover:bg-indigo-100 transition"
-                  >
-                    <Play className="w-3.5 h-3.5 fill-indigo-700" />
-                    <span>Luyện 15 câu</span>
-                  </Link>
-
-                  <button className="p-1.5 text-slate-400">
-                    {isExpanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
-                  </button>
                 </div>
               </div>
-
-              {isExpanded && (
-                <div className="px-6 pb-6 pt-2 border-t border-slate-100 space-y-4 animate-fadeIn text-xs leading-relaxed text-slate-700">
-                  <div className="p-4 rounded-2xl bg-indigo-50/50 border border-indigo-100 space-y-1">
-                    <strong className="text-indigo-950 font-bold block mb-1">📖 Quy tắc & Cách dùng:</strong>
-                    <p>{item.ruleSummary}</p>
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div className="p-3.5 rounded-2xl bg-emerald-50 border border-emerald-200/70">
-                      <div className="flex items-center gap-1.5 text-emerald-800 font-bold mb-1">
-                        <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                        <span>Ví dụ đúng chuẩn:</span>
-                      </div>
-                      <p className="text-emerald-950 font-medium italic">&quot;{item.correctExample}&quot;</p>
-                    </div>
-
-                    <div className="p-3.5 rounded-2xl bg-rose-50 border border-rose-200/70">
-                      <div className="flex items-center gap-1.5 text-rose-800 font-bold mb-1">
-                        <XCircle className="w-4 h-4 text-rose-600" />
-                        <span>Lỗi sai hay mắc:</span>
-                      </div>
-                      <p className="text-rose-950 font-medium italic line-through">&quot;{item.incorrectExample}&quot;</p>
-                    </div>
-                  </div>
-
-                  <div className="p-3.5 rounded-2xl bg-amber-50 border border-amber-200/70 flex items-start gap-2.5 text-amber-900">
-                    <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
-                    <div>
-                      <strong className="block font-bold mb-0.5">⚠️ Bẫy đề thi cần lưu ý:</strong>
-                      <p>{item.commonTrap}</p>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-          );
-        })}
+            </Card>
+          ))}
+          <div className="flex items-center justify-between gap-3">
+            {prev ? (
+              <Button to={`/app/grammar/${prev.slug}`} variant="outline" size="sm" leftIcon={<ChevronLeft className="w-4 h-4" />}>
+                <span className="hidden sm:inline">{prev.title}</span>
+                <span className="sm:hidden">Trước</span>
+              </Button>
+            ) : (
+              <span />
+            )}
+            {next && (
+              <Button to={`/app/grammar/${next.slug}`} variant="outline" size="sm" rightIcon={<ChevronRight className="w-4 h-4" />}>
+                <span className="hidden sm:inline">{next.title}</span>
+                <span className="sm:hidden">Tiếp</span>
+              </Button>
+            )}
+          </div>
+        </div>
+        <aside className="space-y-4">
+          <Card className="text-center animate-slide-in-right">
+            <RingProgress value={topic.progress} size={110} tone={topic.progress === 100 ? 'emerald' : 'indigo'} />
+            <p className="text-sm font-bold text-slate-900 mt-3">Tiến độ chủ điểm</p>
+            <p className="text-xs text-slate-500">{topic.questionsCount} câu luyện tập</p>
+            <Button to="/app/practice/session/PART_5" fullWidth className="mt-4" leftIcon={<Target className="w-4 h-4" />}>
+              Luyện 10 câu
+            </Button>
+          </Card>
+          <Card padding="sm" className="animate-slide-in-right" style={{ animationDelay: '100ms' }}>
+            <p className="text-xs font-extrabold uppercase tracking-wider text-slate-400 mb-2">Cùng nhóm</p>
+            <ul className="space-y-1">
+              {GRAMMAR_TOPICS.filter((t) => t.category === topic.category).map((t) => (
+                <li key={t.id}>
+                  <Link to={`/app/grammar/${t.slug}`} className={cn('flex items-center gap-2 px-3 py-2 rounded-xl text-sm transition', t.id === topic.id ? 'bg-indigo-50 text-indigo-700 font-bold' : 'text-slate-600 hover:bg-slate-50')}>
+                    {t.progress === 100 ? <CheckCircle2 className="w-4 h-4 text-emerald-500" /> : <BookOpen className="w-4 h-4 text-slate-400" />}
+                    <span className="truncate">{t.title}</span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </Card>
+        </aside>
       </div>
+    </div>
+  );
+};
+
+export const StudentGrammarPage: React.FC = () => {
+  const { slug } = useParams<{ slug: string }>();
+  const topic = slug ? GRAMMAR_TOPICS.find((t) => t.slug === slug) : undefined;
+  useDocumentTitle(topic ? topic.title : 'Chủ điểm ngữ pháp');
+  const [search, setSearch] = useState('');
+  const [level, setLevel] = useState('Tất cả');
+
+  const grouped = useMemo(() => {
+    const s = search.trim().toLowerCase();
+    const list = GRAMMAR_TOPICS.filter((t) => (level === 'Tất cả' || t.level === level) && (!s || t.title.toLowerCase().includes(s) || t.summary.toLowerCase().includes(s)));
+    return list.reduce<Record<string, GrammarTopic[]>>((acc, t) => {
+      (acc[t.category] ??= []).push(t);
+      return acc;
+    }, {});
+  }, [search, level]);
+
+  if (topic) return <TopicDetail topic={topic} />;
+
+  const done = GRAMMAR_TOPICS.filter((t) => t.progress === 100).length;
+  const cats = Object.keys(grouped);
+
+  return (
+    <div className="space-y-6">
+      <PageHeader title="Chủ điểm ngữ pháp" icon={<GraduationCap />} description={`Đã hoàn thành ${done}/${GRAMMAR_TOPICS.length} chủ điểm cốt lõi cho TOEIC & VSTEP.`} />
+      <Card padding="sm" className="animate-fade-down">
+        <div className="flex flex-col md:flex-row md:items-center gap-3">
+          <div className="md:w-72">
+            <SearchInput inputSize="sm" placeholder="Tìm chủ điểm..." value={search} onChange={(e) => setSearch(e.target.value)} />
+          </div>
+          <div className="flex gap-2 flex-wrap">
+            {LEVELS.map((l) => (
+              <Chip key={l} active={level === l} onClick={() => setLevel(l)}>
+                {l}
+              </Chip>
+            ))}
+          </div>
+        </div>
+      </Card>
+      {cats.length === 0 ? (
+        <Card>
+          <EmptyState icon={<GraduationCap />} title="Không có chủ điểm phù hợp" description="Thử từ khoá khác hoặc bỏ lọc trình độ." />
+        </Card>
+      ) : (
+        cats.map((cat, ci) => (
+          <section key={cat} className="space-y-3">
+            <h2 className="font-bold text-slate-900 flex items-center gap-2">
+              <span className="w-1.5 h-5 rounded-full bg-indigo-600" />
+              {cat}
+              <Badge tone="slate" size="xs">
+                {grouped[cat].length}
+              </Badge>
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {grouped[cat].map((t, i) => (
+                <Link key={t.id} to={`/app/grammar/${t.slug}`} className="block animate-fade-up" style={{ animationDelay: `${ci * 100 + i * 60}ms` }}>
+                  <Card hover className="h-full">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <h3 className="font-bold text-slate-900">{t.title}</h3>
+                        <p className="text-xs text-slate-500 mt-1 line-clamp-2 leading-relaxed">{t.summary}</p>
+                      </div>
+                      {t.progress === 100 ? <CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0" /> : <Badge tone="slate" size="xs">{t.level}</Badge>}
+                    </div>
+                    <div className="flex items-center gap-3 mt-4">
+                      <ProgressBar value={t.progress} size="sm" tone={t.progress === 100 ? 'emerald' : t.progress > 0 ? 'indigo' : 'slate'} className="flex-1" />
+                      <span className="text-[11px] font-bold text-slate-500 w-20 text-right">{t.questionsCount} câu</span>
+                    </div>
+                  </Card>
+                </Link>
+              ))}
+            </div>
+          </section>
+        ))
+      )}
     </div>
   );
 };

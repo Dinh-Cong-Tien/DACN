@@ -1,76 +1,112 @@
 import React, { useState } from 'react';
-import { FileQuestion, Plus, Search, Tag, Filter, CheckCircle2 } from 'lucide-react';
+import { FileQuestion, Eye, Upload } from 'lucide-react';
+import { ALL_QUESTIONS } from '@/shared/mocks';
+import type { IQuestion, SkillType } from '@/shared/types';
+import { useDocumentTitle } from '@/shared/hooks';
+import { Badge, Button, Column, Modal, PageHeader, StatCard, Tone } from '@/shared/components/ui';
+import { CrudEditor, CrudField, QuestionRenderer } from '@/engines';
+import { toast } from '@/shared/stores/uiStore';
 
-interface IAdminQuestion {
-  id: string;
-  stem: string;
-  examType: string;
-  partOrSkill: string;
-  difficulty: number;
-  correctAnswer: string;
-  tags: string[];
-}
+const SKILL_TONE: Record<SkillType, Tone> = { LISTENING: 'sky', READING: 'indigo', WRITING: 'violet', SPEAKING: 'rose', VOCABULARY: 'amber', GRAMMAR: 'emerald' };
+const SKILL_OPTIONS = (Object.keys(SKILL_TONE) as SkillType[]).map((s) => ({ value: s, label: s }));
 
-const mockQuestions: IAdminQuestion[] = [
-  { id: 'q-1', stem: 'Ms. Jenkins was promoted because she has ______ completed projects ahead of schedule.', examType: 'TOEIC', partOrSkill: 'PART_5', difficulty: 2, correctAnswer: 'A', tags: ['adverb', 'part_5'] },
-  { id: 'q-2', stem: 'What are employees requested to do by Friday afternoon?', examType: 'TOEIC', partOrSkill: 'PART_7', difficulty: 2, correctAnswer: 'A', tags: ['reading_detail', 'part_7'] },
-  { id: 'q-3', stem: 'Where did you leave the meeting agenda documents?', examType: 'TOEIC', partOrSkill: 'PART_2', difficulty: 1, correctAnswer: 'B', tags: ['listening_trap', 'part_2'] },
+const columns: Column<IQuestion>[] = [
+  {
+    key: 'stem',
+    header: 'Câu hỏi',
+    render: (q) => (
+      <div className="max-w-md">
+        <p className="font-semibold text-slate-800 truncate">{q.stem.length > 70 ? `${q.stem.slice(0, 70)}…` : q.stem}</p>
+        <p className="text-[11px] text-slate-400 font-mono">{q.id}</p>
+      </div>
+    ),
+  },
+  { key: 'examType', header: 'Kỳ thi', render: (q) => <Badge tone={q.examType === 'TOEIC' ? 'indigo' : 'emerald'} solid size="xs">{q.examType}</Badge> },
+  { key: 'partOrSkill', header: 'Part', render: (q) => <span className="font-mono text-xs text-slate-600">{q.partOrSkill}</span> },
+  { key: 'skillType', header: 'Kỹ năng', render: (q) => <Badge tone={SKILL_TONE[q.skillType]}>{q.skillType}</Badge> },
+  { key: 'difficulty', header: 'Độ khó', render: (q) => <span className="text-amber-500 text-xs tracking-wider">{'★'.repeat(q.difficulty)}<span className="text-slate-200">{'★'.repeat(Math.max(0, 5 - q.difficulty))}</span></span> },
+  {
+    key: 'tags',
+    header: 'Thẻ',
+    render: (q) => (
+      <div className="flex flex-wrap gap-1 max-w-[200px]">
+        {q.tags.slice(0, 2).map((t) => (
+          <Badge key={t} tone="slate" size="xs">
+            #{t}
+          </Badge>
+        ))}
+        {q.tags.length > 2 && <span className="text-[10px] text-slate-400">+{q.tags.length - 2}</span>}
+      </div>
+    ),
+  },
+];
+
+const fields: CrudField<IQuestion>[] = [
+  { key: 'stem', label: 'Nội dung câu hỏi', type: 'textarea', required: true, placeholder: 'Nhập đề bài...' },
+  {
+    key: 'examType',
+    label: 'Kỳ thi',
+    type: 'select',
+    required: true,
+    options: [
+      { value: 'TOEIC', label: 'TOEIC' },
+      { value: 'VSTEP', label: 'VSTEP' },
+    ],
+  },
+  { key: 'partOrSkill', label: 'Part / Kỹ năng', type: 'text', required: true, placeholder: 'PART_5' },
+  { key: 'skillType', label: 'Loại kỹ năng', type: 'select', required: true, options: SKILL_OPTIONS },
+  { key: 'level', label: 'Cấp độ', type: 'text', placeholder: '550+' },
+  { key: 'difficulty', label: 'Độ khó (1–5)', type: 'number', required: true },
+  { key: 'explanation', label: 'Lời giải thích', type: 'textarea', placeholder: 'Giải thích vì sao chọn đáp án đúng...' },
 ];
 
 export const AdminQuestionsPage: React.FC = () => {
+  useDocumentTitle('Ngân hàng câu hỏi');
+  const [preview, setPreview] = useState<IQuestion | null>(null);
+  const toeic = ALL_QUESTIONS.filter((q) => q.examType === 'TOEIC').length;
+
   return (
-    <div className="max-w-6xl mx-auto space-y-6 animate-fadeIn text-slate-100">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-black text-white flex items-center gap-2.5">
-            <FileQuestion className="w-6 h-6 text-indigo-400" />
-            <span>Ngân hàng câu hỏi Studio (Question Bank CMS)</span>
-          </h1>
-          <p className="text-sm text-slate-400 mt-1">
-            Tạo mới câu hỏi đơn, câu hỏi chùm liên kết đoạn văn (Passage), audio nghe, đáp án và nhãn phân loại lỗi.
-          </p>
-        </div>
+    <div className="space-y-6">
+      <PageHeader title="Ngân hàng câu hỏi" icon={<FileQuestion />} description="Quản trị CSDL câu hỏi: tạo, sửa, xoá, phân loại theo kỳ thi, Part và kỹ năng." />
 
-        <button className="px-5 py-2.5 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs shadow-md shadow-indigo-900/40 transition flex items-center gap-2">
-          <Plus className="w-4 h-4" />
-          <span>Thêm câu hỏi mới</span>
-        </button>
+      <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
+        <StatCard label="Tổng câu hỏi (mẫu)" value={ALL_QUESTIONS.length} tone="indigo" />
+        <StatCard label="TOEIC" value={toeic} tone="violet" />
+        <StatCard label="VSTEP" value={ALL_QUESTIONS.length - toeic} tone="emerald" />
+        <StatCard label="Có lời giải" value={ALL_QUESTIONS.filter((q) => q.explanation).length} tone="amber" />
       </div>
 
-      <div className="space-y-3">
-        {mockQuestions.map((q) => (
-          <div
-            key={q.id}
-            className="bg-slate-950 p-5 rounded-3xl border border-slate-800 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4"
-          >
-            <div className="space-y-1.5 flex-1">
-              <div className="flex items-center gap-2">
-                <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
-                  {q.examType}
-                </span>
-                <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-slate-800 text-slate-300">
-                  {q.partOrSkill}
-                </span>
-                <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-amber-500/10 text-amber-400">
-                  Độ khó: {q.difficulty}★
-                </span>
-              </div>
-              <h3 className="text-sm font-bold text-white">{q.stem}</h3>
-              <div className="flex items-center gap-2 text-[11px] text-slate-500">
-                <span>Đáp án chuẩn: <strong className="text-emerald-400 font-bold">{q.correctAnswer}</strong></span>
-                <span>•</span>
-                <span>Tags: {q.tags.join(', ')}</span>
-              </div>
-            </div>
+      <CrudEditor<IQuestion>
+        rows={ALL_QUESTIONS}
+        columns={columns}
+        fields={fields}
+        entityName="câu hỏi"
+        createLabel="Thêm câu hỏi"
+        idPrefix="q"
+        searchKeys={['stem', 'partOrSkill']}
+        filters={[
+          {
+            key: 'examType',
+            label: 'Kỳ thi',
+            options: [
+              { value: 'TOEIC', label: 'TOEIC' },
+              { value: 'VSTEP', label: 'VSTEP' },
+            ],
+          },
+          { key: 'skillType', label: 'Kỹ năng', options: SKILL_OPTIONS },
+        ]}
+        defaultValues={{ examType: 'TOEIC', type: 'SINGLE_CHOICE', skillType: 'READING', partOrSkill: 'PART_5', level: '550+', difficulty: 2, tags: [], options: [{ key: 'A', text: '' }, { key: 'B', text: '' }, { key: 'C', text: '' }, { key: 'D', text: '' }], correctAnswer: { key: 'A' } }}
+        toolbarExtra={
+          <Button size="sm" variant="outline" leftIcon={<Upload className="w-4 h-4" />} onClick={() => toast.info('Import CSV', 'Chọn file .csv theo mẫu để nhập hàng loạt (demo).')}>
+            Import CSV
+          </Button>
+        }
+        rowActions={(q) => [{ label: 'Xem trước', icon: <Eye />, onClick: () => setPreview(q) }]}
+      />
 
-            <div className="flex items-center gap-2">
-              <button className="px-3.5 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-xs font-bold text-slate-300 transition">
-                Chỉnh sửa
-              </button>
-            </div>
-          </div>
-        ))}
-      </div>
+      <Modal open={!!preview} onClose={() => setPreview(null)} title="Xem trước câu hỏi" size="lg">
+        {preview && <QuestionRenderer question={preview} showExplanation isReadOnly onSelectAnswer={() => {}} allowFlagReport={false} />}
+      </Modal>
     </div>
   );
 };

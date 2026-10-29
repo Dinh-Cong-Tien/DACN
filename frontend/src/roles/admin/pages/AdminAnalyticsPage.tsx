@@ -1,103 +1,120 @@
-import React from 'react';
-import { BarChart3, TrendingUp, Users, DollarSign, Activity, Award, ShieldCheck } from 'lucide-react';
+import React, { useState } from 'react';
+import { BarChart3, Activity, Users, FileText, Clock, Monitor, Smartphone, Tablet } from 'lucide-react';
+import { ADMIN_TRAFFIC, ADMIN_SIGNUPS } from '@/shared/mocks';
+import { formatNumber } from '@/shared/utils';
+import { useDocumentTitle } from '@/shared/hooks';
+import { Card, CardHeader, Column, DataTable, MiniBars, PageHeader, ProgressBar, RingProgress, Segmented, Sparkline, StatCard, Tone } from '@/shared/components/ui';
+
+interface PageRow {
+  id: string;
+  path: string;
+  views: number;
+  avgTime: string;
+}
+
+const TOP_PAGES: PageRow[] = [
+  { id: 'p1', path: '/mock-tests', views: 8420, avgTime: '4:12' },
+  { id: 'p2', path: '/app/dashboard', views: 7310, avgTime: '2:48' },
+  { id: 'p3', path: '/app/practice', views: 6105, avgTime: '9:31' },
+  { id: 'p4', path: '/', views: 5890, avgTime: '1:22' },
+  { id: 'p5', path: '/score-converter', views: 3240, avgTime: '1:05' },
+  { id: 'p6', path: '/blog', views: 2715, avgTime: '3:40' },
+];
+
+const columns: Column<PageRow>[] = [
+  { key: 'path', header: 'Trang', render: (r) => <span className="font-mono text-xs text-indigo-700">{r.path}</span> },
+  { key: 'views', header: 'Lượt xem', align: 'right', render: (r) => <span className="font-bold text-slate-800">{formatNumber(r.views)}</span> },
+  { key: 'avgTime', header: 'TG trung bình', align: 'right', render: (r) => <span className="text-xs text-slate-500">{r.avgTime}</span> },
+];
 
 export const AdminAnalyticsPage: React.FC = () => {
+  useDocumentTitle('Thống kê truy cập');
+  const [range, setRange] = useState('7');
+  const mult = range === '30' ? 4.2 : 1;
+  const traffic = Math.round(ADMIN_TRAFFIC.reduce((a, b) => a + b.value, 0) * mult);
+
+  const devices: { label: string; value: number; icon: React.ReactNode; tone: Tone }[] = [
+    { label: 'Desktop', value: 54, icon: <Monitor className="w-4 h-4" />, tone: 'indigo' },
+    { label: 'Mobile', value: 38, icon: <Smartphone className="w-4 h-4" />, tone: 'emerald' },
+    { label: 'Tablet', value: 8, icon: <Tablet className="w-4 h-4" />, tone: 'amber' },
+  ];
+
   return (
-    <div className="space-y-6 animate-fadeIn font-sans pb-12">
-      <div>
-        <h1 className="text-2xl font-black text-slate-100 flex items-center gap-2.5">
-          <BarChart3 className="w-6 h-6 text-indigo-400" />
-          <span>Báo cáo Tổng thể Hệ thống (Platform Analytics)</span>
-        </h1>
-        <p className="text-xs text-slate-400 mt-1">
-          Theo dõi lưu lượng người dùng, tần suất luyện thi, số lượng câu sai được khắc phục và tỷ lệ churn.
-        </p>
+    <div className="space-y-6">
+      <PageHeader
+        title="Thống kê truy cập"
+        icon={<BarChart3 />}
+        description="Lưu lượng, người dùng hoạt động và hành vi học tập trên toàn hệ thống."
+        actions={
+          <Segmented
+            value={range}
+            onChange={setRange}
+            options={[
+              { value: '7', label: '7 ngày' },
+              { value: '30', label: '30 ngày' },
+            ]}
+          />
+        }
+      />
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+        <StatCard label="Lượt truy cập" value={traffic} icon={<Activity />} tone="sky" delta={8} deltaLabel="so với kỳ trước" format={formatNumber} />
+        <StatCard label="Người dùng hoạt động" value={Math.round(1240 * mult)} icon={<Users />} tone="indigo" delta={5} deltaLabel="so với kỳ trước" format={formatNumber} />
+        <StatCard label="Đề thi đã làm" value={Math.round(3860 * mult)} icon={<FileText />} tone="violet" delta={11} deltaLabel="so với kỳ trước" format={formatNumber} />
+        <StatCard label="Thời gian TB / phiên" value="24m" icon={<Clock />} tone="emerald" delta={3} deltaLabel="so với kỳ trước" />
       </div>
 
-      {/* KPI Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-slate-900 p-5 rounded-3xl border border-slate-800 shadow-xl space-y-2">
-          <span className="text-xs font-bold text-slate-400">Người dùng hoạt động (MAU)</span>
-          <div className="text-3xl font-black text-white font-mono">14,280</div>
-          <div className="flex items-center gap-1 text-xs text-emerald-400 font-bold">
-            <TrendingUp className="w-3.5 h-3.5" />
-            <span>+18.4% so với tháng trước</span>
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
+        <Card className="xl:col-span-2 animate-fade-up">
+          <CardHeader title="Lượt truy cập theo ngày" subtitle={range === '7' ? 'Tuần hiện tại' : '30 ngày gần nhất (theo tuần)'} />
+          <MiniBars data={ADMIN_TRAFFIC.map((d) => ({ ...d, value: Math.round(d.value * mult), tone: 'sky' as Tone }))} height={170} />
+        </Card>
+        <Card className="animate-fade-up" style={{ animationDelay: '80ms' }}>
+          <CardHeader title="Đăng ký mới" subtitle="12 tháng gần nhất" />
+          <Sparkline data={ADMIN_SIGNUPS} width={280} height={90} tone="indigo" className="w-full" />
+          <div className="mt-4 pt-4 border-t border-slate-100 space-y-3">
+            <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Thiết bị</p>
+            {devices.map((d) => (
+              <div key={d.label}>
+                <div className="flex items-center justify-between text-xs mb-1">
+                  <span className="flex items-center gap-1.5 font-semibold text-slate-700">
+                    {d.icon} {d.label}
+                  </span>
+                  <span className="font-bold">{d.value}%</span>
+                </div>
+                <ProgressBar value={d.value} size="sm" tone={d.tone} />
+              </div>
+            ))}
           </div>
-        </div>
-
-        <div className="bg-slate-900 p-5 rounded-3xl border border-slate-800 shadow-xl space-y-2">
-          <span className="text-xs font-bold text-slate-400">Lượt nộp bài thi thử</span>
-          <div className="text-3xl font-black text-indigo-400 font-mono">38,910</div>
-          <span className="text-xs text-slate-500 font-medium">Trung bình 3.2 bài/học viên</span>
-        </div>
-
-        <div className="bg-slate-900 p-5 rounded-3xl border border-slate-800 shadow-xl space-y-2">
-          <span className="text-xs font-bold text-slate-400">Câu sai được chuyển hóa SM-2</span>
-          <div className="text-3xl font-black text-emerald-400 font-mono">182,400</div>
-          <span className="text-xs text-slate-500 font-medium">Đã thuộc sau 3 lần ôn: 78.2%</span>
-        </div>
-
-        <div className="bg-slate-900 p-5 rounded-3xl border border-slate-800 shadow-xl space-y-2">
-          <span className="text-xs font-bold text-slate-400">Doanh thu gói Pro (MRR)</span>
-          <div className="text-3xl font-black text-amber-400 font-mono">148.5M ₫</div>
-          <span className="text-xs text-emerald-400 font-bold">+12% so với chu kỳ trước</span>
-        </div>
+        </Card>
       </div>
 
-      {/* Analytics Breakdown Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="bg-slate-900 p-6 rounded-3xl border border-slate-800 shadow-xl space-y-4">
-          <h3 className="text-sm font-black text-slate-200">Phân bố mục tiêu học viên theo chứng chỉ</h3>
-          <div className="space-y-3 text-xs">
-            <div>
-              <div className="flex justify-between text-slate-300 font-semibold mb-1">
-                <span>TOEIC 650+ (Doanh nghiệp & Tốt nghiệp)</span>
-                <span className="font-mono text-indigo-400">54%</span>
-              </div>
-              <div className="w-full bg-slate-800 rounded-full h-2">
-                <div className="bg-indigo-500 h-2 rounded-full" style={{ width: '54%' }} />
-              </div>
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
+        <Card className="xl:col-span-2 animate-fade-up" style={{ animationDelay: '120ms' }}>
+          <CardHeader title="Trang được xem nhiều nhất" subtitle="Theo lượt xem trong kỳ" />
+          <DataTable<PageRow> columns={columns} rows={TOP_PAGES} dense />
+        </Card>
+        <Card className="animate-fade-up" style={{ animationDelay: '160ms' }}>
+          <CardHeader title="Tỷ lệ kỳ thi" subtitle="Theo số lượt làm đề" />
+          <div className="flex items-center justify-around py-4">
+            <div className="text-center">
+              <RingProgress value={68} size={110} tone="indigo">
+                <div>
+                  <p className="text-xl font-black text-slate-900">68%</p>
+                </div>
+              </RingProgress>
+              <p className="text-xs font-bold text-indigo-700 mt-2">TOEIC</p>
             </div>
-
-            <div>
-              <div className="flex justify-between text-slate-300 font-semibold mb-1">
-                <span>VSTEP B1 - B2 (Thạc sĩ & Chuẩn đầu ra ĐH)</span>
-                <span className="font-mono text-violet-400">32%</span>
-              </div>
-              <div className="w-full bg-slate-800 rounded-full h-2">
-                <div className="bg-violet-500 h-2 rounded-full" style={{ width: '32%' }} />
-              </div>
-            </div>
-
-            <div>
-              <div className="flex justify-between text-slate-300 font-semibold mb-1">
-                <span>TOEIC 850+ & VSTEP C1 (Chuyên gia & Sư phạm)</span>
-                <span className="font-mono text-emerald-400">14%</span>
-              </div>
-              <div className="w-full bg-slate-800 rounded-full h-2">
-                <div className="bg-emerald-500 h-2 rounded-full" style={{ width: '14%' }} />
-              </div>
+            <div className="text-center">
+              <RingProgress value={32} size={110} tone="emerald">
+                <div>
+                  <p className="text-xl font-black text-slate-900">32%</p>
+                </div>
+              </RingProgress>
+              <p className="text-xs font-bold text-emerald-700 mt-2">VSTEP</p>
             </div>
           </div>
-        </div>
-
-        <div className="bg-slate-900 p-6 rounded-3xl border border-slate-800 shadow-xl space-y-4">
-          <h3 className="text-sm font-black text-slate-200">Hiệu năng máy chủ & Độ trễ API</h3>
-          <div className="space-y-3 text-xs">
-            <div className="flex items-center justify-between p-3 rounded-xl bg-slate-800/40 border border-slate-800">
-              <span className="text-slate-400">API Response Time (p95)</span>
-              <span className="font-mono font-bold text-emerald-400">38ms</span>
-            </div>
-            <div className="flex items-center justify-between p-3 rounded-xl bg-slate-800/40 border border-slate-800">
-              <span className="text-slate-400">PostgreSQL Connection Pool</span>
-              <span className="font-mono font-bold text-indigo-400">18 / 50 Active</span>
-            </div>
-            <div className="flex items-center justify-between p-3 rounded-xl bg-slate-800/40 border border-slate-800">
-              <span className="text-slate-400">Redis Cache Hit Ratio</span>
-              <span className="font-mono font-bold text-emerald-400">96.4%</span>
-            </div>
-          </div>
-        </div>
+        </Card>
       </div>
     </div>
   );

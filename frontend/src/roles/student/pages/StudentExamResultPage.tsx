@@ -1,148 +1,161 @@
-import React from 'react';
-import { Link, useParams } from 'react-router-dom';
-import {
-  Award,
-  CheckCircle2,
-  XCircle,
-  Clock,
-  ArrowRight,
-  RotateCcw,
-  AlertTriangle,
-  FileText,
-  Share2,
-} from 'lucide-react';
+import React, { useMemo, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { Trophy, Clock, Target, AlertTriangle, RotateCcw, BookmarkPlus, Share2, Flag, CheckCircle2 } from 'lucide-react';
+import { useDocumentTitle } from '@/shared/hooks';
+import { Badge, Button, Card, CardHeader, PageHeader, ProgressBar, RingProgress, StatCard, Tabs, EmptyState } from '@/shared/components/ui';
+import { Stagger } from '@/shared/components/motion';
+import { QuestionRenderer } from '@/engines';
+import { MOCK_TESTS, buildMockTest } from '@/shared/mocks';
+import { toast } from '@/shared/stores/uiStore';
+import { cn, formatDuration, getCorrectKey } from '@/shared/utils';
+
+interface StoredResult {
+  answers: Record<string, string>;
+  flagged: string[];
+  timeSpentSec: number;
+  correctCount: number;
+  total: number;
+  bySection: { name: string; correct: number; total: number }[];
+  testId?: string;
+  title?: string;
+  examType?: 'TOEIC' | 'VSTEP';
+}
 
 export const StudentExamResultPage: React.FC = () => {
-  const { id } = useParams<{ id: string }>();
+  const { id = 'ets-2024-01' } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+  const summary = MOCK_TESTS.find((t) => t.id === id);
+  const test = useMemo(() => buildMockTest(id, summary?.examType ?? 'TOEIC', summary?.title), [id, summary]);
+  const questions = useMemo(() => test.sections.flatMap((s) => s.questions), [test]);
+  useDocumentTitle(`Kết quả · ${test.title}`);
+  const [tab, setTab] = useState('wrong');
+
+  const result = useMemo<StoredResult>(() => {
+    try {
+      const raw = localStorage.getItem('orbi-last-result');
+      if (raw) {
+        const r = JSON.parse(raw) as StoredResult;
+        if (r.testId === id) return r;
+      }
+    } catch {
+      /* ignore */
+    }
+    // Demo fallback: giả lập đúng 11/19, sai các câu còn lại
+    const answers: Record<string, string> = {};
+    questions.forEach((q, i) => {
+      const correct = getCorrectKey(q);
+      answers[q.id] = i % 5 === 2 || i % 7 === 4 ? (q.options.find((o) => o.key !== correct)?.key ?? correct) : correct;
+    });
+    const bySection = test.sections.map((s) => ({ name: s.name, total: s.questions.length, correct: s.questions.filter((q) => answers[q.id] === getCorrectKey(q)).length }));
+    return { answers, flagged: [questions[1]?.id, questions[5]?.id].filter(Boolean) as string[], timeSpentSec: 1140, correctCount: bySection.reduce((a, s) => a + s.correct, 0), total: questions.length, bySection };
+  }, [id, questions, test]);
+
+  const isVstep = test.examType === 'VSTEP';
+  const pct = Math.round((result.correctCount / Math.max(1, result.total)) * 100);
+  const score = isVstep ? Math.round((result.correctCount / result.total) * 10 * 2) / 2 : Math.round(((result.correctCount / result.total) * 990) / 5) * 5;
+  const maxScore = isVstep ? 10 : 990;
+  const wrong = questions.filter((q) => result.answers[q.id] !== getCorrectKey(q));
+  const flaggedQ = questions.filter((q) => result.flagged.includes(q.id));
+  const list = tab === 'all' ? questions : tab === 'wrong' ? wrong : flaggedQ;
+  const tone = pct >= 75 ? 'emerald' : pct >= 50 ? 'amber' : 'rose';
 
   return (
-    <div className="max-w-4xl mx-auto space-y-8 animate-fadeIn">
-      {/* Result Card Hero */}
-      <div className="bg-gradient-to-r from-indigo-900 via-indigo-800 to-violet-900 rounded-3xl p-8 text-white text-center shadow-xl space-y-6 relative overflow-hidden">
-        <div className="space-y-1">
-          <span className="text-xs font-bold text-indigo-300 uppercase tracking-widest">
-            Báo cáo kết quả thi thử chính thức
-          </span>
-          <h1 className="text-2xl font-black">ETS TOEIC 2024 Actual Test 01</h1>
-        </div>
+    <div>
+      <PageHeader
+        crumbs={[{ label: 'Thi thử', to: '/app/mock-tests' }, { label: test.title, to: `/app/mock-tests/${id}` }, { label: 'Kết quả' }]}
+        title="Kết quả bài thi"
+        description={test.title}
+        actions={
+          <>
+            <Button variant="outline" size="sm" leftIcon={<Share2 className="w-4 h-4" />} onClick={() => toast.info('Đã sao chép liên kết kết quả')}>
+              Chia sẻ
+            </Button>
+            <Button size="sm" leftIcon={<RotateCcw className="w-4 h-4" />} onClick={() => navigate(`/app/exam/${id}`)}>
+              Làm lại
+            </Button>
+          </>
+        }
+      />
 
-        {/* Big Score Gauge */}
-        <div className="w-40 h-40 mx-auto rounded-full bg-white/10 backdrop-blur-md border-4 border-amber-400/40 flex flex-col items-center justify-center shadow-inner">
-          <span className="text-xs font-bold text-amber-300">TỔNG ĐIỂM</span>
-          <div className="text-4xl font-black text-white tracking-tight">685</div>
-          <span className="text-[11px] text-slate-300">Thang điểm 990</span>
-        </div>
-
-        {/* 2 Skills Sub-scores */}
-        <div className="grid grid-cols-2 gap-4 max-w-md mx-auto">
-          <div className="bg-white/10 backdrop-blur-md p-4 rounded-2xl border border-white/20">
-            <span className="text-xs text-indigo-200 block">Listening (Nghe hiểu)</span>
-            <div className="text-2xl font-extrabold text-white mt-1">365</div>
-            <span className="text-[11px] text-emerald-300">73 / 100 câu đúng</span>
+      <Card className="mb-6 animate-scale-in" padding="lg">
+        <div className="grid grid-cols-1 md:grid-cols-[auto_1fr] gap-8 items-center">
+          <div className="relative flex justify-center">
+            <RingProgress value={pct} size={180} stroke={14} tone={tone}>
+              <div className="text-center">
+                <p className="text-4xl font-black text-slate-900">{score}</p>
+                <p className="text-[11px] font-bold uppercase text-slate-400">/{maxScore} điểm</p>
+              </div>
+            </RingProgress>
+            <Trophy className={cn('absolute top-0 right-6 w-9 h-9 animate-bounce-soft', pct >= 75 ? 'text-amber-400' : 'text-slate-300')} />
           </div>
-
-          <div className="bg-white/10 backdrop-blur-md p-4 rounded-2xl border border-white/20">
-            <span className="text-xs text-indigo-200 block">Reading (Đọc hiểu)</span>
-            <div className="text-2xl font-extrabold text-white mt-1">320</div>
-            <span className="text-[11px] text-amber-300">64 / 100 câu đúng</span>
-          </div>
-        </div>
-
-        {/* Action Buttons */}
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
-          <Link
-            to="/app/mistakes"
-            className="w-full sm:w-auto px-6 py-3 rounded-2xl bg-amber-400 hover:bg-amber-500 text-amber-950 font-bold text-xs shadow-md transition flex items-center justify-center gap-2"
-          >
-            <AlertTriangle className="w-4 h-4" />
-            <span>Xem 63 câu làm sai trong Sổ lỗi</span>
-          </Link>
-
-          <Link
-            to={`/app/mock-tests/${id || 'test-1'}/analysis`}
-            className="w-full sm:w-auto px-6 py-3 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/20 text-white font-bold text-xs transition flex items-center justify-center gap-2"
-          >
-            <FileText className="w-4 h-4" />
-            <span>Xem lại chi tiết từng câu làm</span>
-          </Link>
-        </div>
-      </div>
-
-      {/* Part Breakdown & Timing */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Timing Stats */}
-        <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm space-y-4">
-          <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
-            <Clock className="w-4 h-4 text-indigo-600" />
-            <span>Thời gian & Tốc độ làm bài</span>
-          </h3>
-
-          <div className="space-y-3 text-xs">
-            <div className="flex justify-between py-2 border-b border-slate-100">
-              <span className="text-slate-500">Thời gian quy định:</span>
-              <strong className="text-slate-800">120 phút</strong>
+          <div className="space-y-4">
+            <div>
+              <h2 className="text-2xl font-black text-slate-900">{pct >= 75 ? 'Tuyệt vời! Bạn đã vượt mục tiêu chặng.' : pct >= 50 ? 'Khá tốt — còn vài điểm cần cải thiện.' : 'Đừng nản, hãy xem lại lỗi sai và luyện thêm.'}</h2>
+              <p className="text-sm text-slate-500 mt-1">
+                Đúng <b className="text-slate-800">{result.correctCount}</b>/{result.total} câu · Sai {wrong.length} câu · {flaggedQ.length} câu đánh dấu · {formatDuration(result.timeSpentSec)}
+              </p>
             </div>
-            <div className="flex justify-between py-2 border-b border-slate-100">
-              <span className="text-slate-500">Thời gian thực tế bạn làm:</span>
-              <strong className="text-emerald-600">108 phút 35 giây</strong>
-            </div>
-            <div className="flex justify-between py-2 border-b border-slate-100">
-              <span className="text-slate-500">Tốc độ trung bình / câu:</span>
-              <strong className="text-slate-800">32.5 giây</strong>
+            <div className="space-y-3">
+              {result.bySection.map((s, i) => (
+                <div key={s.name} className="animate-fade-in" style={{ animationDelay: `${i * 80}ms` }}>
+                  <ProgressBar value={(s.correct / Math.max(1, s.total)) * 100} label={s.name} showValue size="md" tone={s.correct / s.total >= 0.7 ? 'emerald' : 'amber'} />
+                  <p className="text-[11px] text-slate-400 mt-1">
+                    {s.correct}/{s.total} câu đúng
+                  </p>
+                </div>
+              ))}
             </div>
           </div>
         </div>
+      </Card>
 
-        {/* Section Accuracy */}
-        <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm space-y-4">
-          <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
-            <Award className="w-4 h-4 text-indigo-600" />
-            <span>Tỷ lệ chính xác từng phần</span>
-          </h3>
+      <Stagger className="grid grid-cols-3 gap-4 mb-6" step={70}>
+        <StatCard label="Độ chính xác" value={pct} suffix="%" icon={<Target />} tone={tone} />
+        <StatCard label="Thời gian làm" value={formatDuration(result.timeSpentSec)} icon={<Clock />} tone="sky" hint={`Trung bình ${Math.round(result.timeSpentSec / Math.max(1, result.total))}s / câu`} />
+        <StatCard label="Lỗi sai đã lưu" value={wrong.length} suffix="câu" icon={<AlertTriangle />} tone="rose" hint="Sổ tay lỗi sai" />
+      </Stagger>
 
-          <div className="space-y-2.5 text-xs">
-            <div>
-              <div className="flex justify-between font-semibold mb-1">
-                <span>Part 1-2: Photographs & Q-R</span>
-                <span className="text-emerald-600 font-bold">87%</span>
-              </div>
-              <div className="w-full h-2 rounded-full bg-slate-100 overflow-hidden">
-                <div className="h-full bg-emerald-500 rounded-full" style={{ width: '87%' }} />
-              </div>
-            </div>
-
-            <div>
-              <div className="flex justify-between font-semibold mb-1">
-                <span>Part 3-4: Conversations & Talks</span>
-                <span className="text-indigo-600 font-bold">69%</span>
-              </div>
-              <div className="w-full h-2 rounded-full bg-slate-100 overflow-hidden">
-                <div className="h-full bg-indigo-600 rounded-full" style={{ width: '69%' }} />
-              </div>
-            </div>
-
-            <div>
-              <div className="flex justify-between font-semibold mb-1">
-                <span>Part 5-6: Incomplete Sentences & Texts</span>
-                <span className="text-rose-600 font-bold">48% (Yếu nhất)</span>
-              </div>
-              <div className="w-full h-2 rounded-full bg-slate-100 overflow-hidden">
-                <div className="h-full bg-rose-500 rounded-full" style={{ width: '48%' }} />
-              </div>
-            </div>
-
-            <div>
-              <div className="flex justify-between font-semibold mb-1">
-                <span>Part 7: Reading Comprehension</span>
-                <span className="text-amber-600 font-bold">62%</span>
-              </div>
-              <div className="w-full h-2 rounded-full bg-slate-100 overflow-hidden">
-                <div className="h-full bg-amber-500 rounded-full" style={{ width: '62%' }} />
-              </div>
-            </div>
+      <Card className="animate-fade-up" padding="none">
+        <div className="p-5 border-b border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-3">
+          <CardHeader title="Xem lại bài làm" subtitle="Đáp án đúng, giải thích chi tiết và phân loại lỗi" icon={<CheckCircle2 />} className="mb-0" />
+          <div className="flex items-center gap-2 flex-wrap">
+            <Tabs
+              variant="pill"
+              value={tab}
+              onChange={setTab}
+              items={[
+                { key: 'all', label: 'Tất cả', count: questions.length },
+                { key: 'wrong', label: 'Câu sai', count: wrong.length },
+                { key: 'flag', label: 'Đánh dấu', icon: <Flag />, count: flaggedQ.length },
+              ]}
+            />
+            <Button size="sm" variant="soft" leftIcon={<BookmarkPlus className="w-4 h-4" />} onClick={() => toast.success('Đã lưu vào Sổ tay lỗi sai', `${wrong.length} câu được thêm vào lịch ôn SM-2.`)}>
+              Lưu lỗi sai
+            </Button>
           </div>
         </div>
-      </div>
+        <div className="p-5 space-y-5 bg-slate-50/60">
+          {list.length === 0 ? (
+            <EmptyState title="Không có câu nào" description={tab === 'wrong' ? 'Bạn không sai câu nào. Xuất sắc!' : 'Bạn chưa đánh dấu câu nào trong bài thi.'} compact />
+          ) : (
+            list.map((q, i) => (
+              <div key={q.id} className="animate-fade-up" style={{ animationDelay: `${i * 40}ms` }}>
+                <div className="flex items-center gap-2 mb-2">
+                  <Badge tone={result.answers[q.id] === getCorrectKey(q) ? 'emerald' : 'rose'} size="xs">
+                    {result.answers[q.id] ? (result.answers[q.id] === getCorrectKey(q) ? 'Đúng' : `Bạn chọn ${result.answers[q.id]}`) : 'Bỏ trống'}
+                  </Badge>
+                  {result.flagged.includes(q.id) && (
+                    <Badge tone="amber" size="xs" icon={<Flag className="w-3 h-3" />}>
+                      Đã đánh dấu
+                    </Badge>
+                  )}
+                </div>
+                <QuestionRenderer question={q} index={questions.indexOf(q)} selectedAnswer={result.answers[q.id]} onSelectAnswer={() => undefined} showExplanation isReadOnly />
+              </div>
+            ))
+          )}
+        </div>
+      </Card>
     </div>
   );
 };

@@ -1,66 +1,115 @@
-import React from 'react';
-import { History, Shield, Clock } from 'lucide-react';
+import React, { useMemo, useState } from 'react';
+import { History, Download, Info, AlertTriangle, ShieldAlert } from 'lucide-react';
+import { MOCK_AUDIT_LOGS } from '@/shared/mocks';
+import type { AppRole, AuditLog } from '@/shared/types';
+import { formatDateTime, ROLE_LABEL } from '@/shared/utils';
+import { useDocumentTitle } from '@/shared/hooks';
+import { Badge, Button, Card, Chip, Column, DataTable, PageHeader, Pagination, SearchInput, Select, StatCard, Tone } from '@/shared/components/ui';
+import { toast } from '@/shared/stores/uiStore';
 
-interface IAuditItem {
-  id: string;
-  action: string;
-  resource: string;
-  userName: string;
-  details: string;
-  ip: string;
-  timestamp: string;
-}
+const SEVERITY: Record<AuditLog['severity'], { tone: Tone; label: string }> = {
+  INFO: { tone: 'slate', label: 'INFO' },
+  WARN: { tone: 'amber', label: 'WARN' },
+  CRITICAL: { tone: 'rose', label: 'CRITICAL' },
+};
+const ROLE_TONE: Record<AppRole, Tone> = { GUEST: 'slate', STUDENT: 'indigo', TEACHER: 'emerald', HEAD_TEACHER: 'amber', ADMIN: 'rose' };
+const PAGE_SIZE = 8;
 
-const mockAuditLogs: IAuditItem[] = [
-  { id: 'log-1', action: 'CREATE_QUESTION', resource: 'QUESTION', userName: 'Admin', details: 'Thêm mới câu hỏi reading Part 7 (Passage: ps-901)', ip: '127.0.0.1', timestamp: '10 phút trước' },
-  { id: 'log-2', action: 'PUBLISH_TEST', resource: 'MOCK_TEST', userName: 'Admin', details: 'Xuất bản đề thi ETS TOEIC 2024 Actual Test 02', ip: '127.0.0.1', timestamp: '1 giờ trước' },
-  { id: 'log-3', action: 'UPDATE_ROLE', resource: 'USER', userName: 'Admin', details: 'Cập nhật tài khoản teacher@orbi.edu.vn thành TEACHER', ip: '192.168.1.15', timestamp: '3 giờ trước' },
-  { id: 'log-4', action: 'SRS_RECALCULATE', resource: 'CRON_JOB', userName: 'System Daemon', details: 'Quét 124 mục ôn tập đến hạn cho học viên toàn hệ thống', ip: 'localhost', timestamp: 'Hôm nay 00:00' },
+const columns: Column<AuditLog>[] = [
+  { key: 'createdAt', header: 'Thời gian', render: (l) => <span className="text-xs text-slate-600 whitespace-nowrap">{formatDateTime(l.createdAt)}</span> },
+  {
+    key: 'actor',
+    header: 'Người thực hiện',
+    render: (l) => (
+      <div className="flex items-center gap-2">
+        <span className="font-semibold text-slate-800 text-sm">{l.actor}</span>
+        <Badge tone={ROLE_TONE[l.role]} size="xs">
+          {ROLE_LABEL[l.role]}
+        </Badge>
+      </div>
+    ),
+  },
+  { key: 'action', header: 'Hành động', render: (l) => <Badge tone="indigo" size="xs" className="font-mono">{l.action}</Badge> },
+  { key: 'target', header: 'Đối tượng', render: (l) => <span className="text-xs text-slate-600">{l.target}</span> },
+  { key: 'ip', header: 'IP', render: (l) => <span className="font-mono text-[11px] text-slate-500">{l.ip}</span> },
+  { key: 'severity', header: 'Mức độ', render: (l) => <Badge tone={SEVERITY[l.severity].tone} solid={l.severity === 'CRITICAL'} size="xs">{SEVERITY[l.severity].label}</Badge> },
 ];
 
 export const AdminAuditLogsPage: React.FC = () => {
+  useDocumentTitle('Nhật ký hệ thống');
+  const [severity, setSeverity] = useState<string>('');
+  const [role, setRole] = useState('');
+  const [search, setSearch] = useState('');
+  const [page, setPage] = useState(1);
+
+  const filtered = useMemo(() => {
+    const s = search.toLowerCase();
+    return MOCK_AUDIT_LOGS.filter((l) => (!severity || l.severity === severity) && (!role || l.role === role) && (!s || [l.actor, l.target, l.action].some((v) => v.toLowerCase().includes(s))));
+  }, [severity, role, search]);
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const rows = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  const count = (s: AuditLog['severity']) => MOCK_AUDIT_LOGS.filter((l) => l.severity === s).length;
+
   return (
-    <div className="max-w-6xl mx-auto space-y-6 animate-fadeIn text-slate-100">
-      <div>
-        <h1 className="text-2xl font-black text-white flex items-center gap-2.5">
-          <History className="w-6 h-6 text-purple-400" />
-          <span>Nhật ký hệ thống & Kiểm soát bảo mật (Audit Logs)</span>
-        </h1>
-        <p className="text-sm text-slate-400 mt-1">
-          Theo dõi chi tiết các thao tác nhạy cảm trên hệ thống: tạo câu hỏi, sửa điểm, đổi quyền người dùng và tác vụ nền.
-        </p>
+    <div className="space-y-6">
+      <PageHeader
+        title="Nhật ký hệ thống (Audit)"
+        icon={<History />}
+        description="Lưu vết mọi thao tác nhạy cảm: thay đổi phân quyền, khoá tài khoản, sửa cấu hình, xoá dữ liệu."
+        actions={
+          <Button variant="outline" leftIcon={<Download className="w-4 h-4" />} onClick={() => toast.info('Đang xuất CSV', `${filtered.length} bản ghi theo bộ lọc hiện tại.`)}>
+            Xuất CSV
+          </Button>
+        }
+      />
+
+      <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
+        <StatCard label="Tổng bản ghi" value={MOCK_AUDIT_LOGS.length} tone="indigo" icon={<History />} />
+        <StatCard label="Thông tin" value={count('INFO')} tone="slate" icon={<Info />} />
+        <StatCard label="Cảnh báo" value={count('WARN')} tone="amber" icon={<AlertTriangle />} />
+        <StatCard label="Nghiêm trọng" value={count('CRITICAL')} tone="rose" icon={<ShieldAlert />} />
       </div>
 
-      <div className="bg-slate-950 rounded-3xl border border-slate-800 shadow-sm overflow-hidden">
-        <table className="w-full text-left text-xs text-slate-300">
-          <thead className="bg-slate-900 text-slate-400 uppercase font-bold border-b border-slate-800">
-            <tr>
-              <th className="py-3.5 px-5">Hành động</th>
-              <th className="py-3.5 px-4">Tài nguyên</th>
-              <th className="py-3.5 px-4">Người thực hiện</th>
-              <th className="py-3.5 px-4">Chi tiết thao tác</th>
-              <th className="py-3.5 px-4">IP Address</th>
-              <th className="py-3.5 px-5 text-right">Thời gian</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-900">
-            {mockAuditLogs.map((log) => (
-              <tr key={log.id} className="hover:bg-slate-900/60 transition">
-                <td className="py-4 px-5">
-                  <span className="font-mono font-bold text-[11px] px-2 py-0.5 rounded bg-purple-500/10 text-purple-400 border border-purple-500/20">
-                    {log.action}
-                  </span>
-                </td>
-                <td className="py-4 px-4 text-slate-400 font-bold">{log.resource}</td>
-                <td className="py-4 px-4 font-semibold text-white">{log.userName}</td>
-                <td className="py-4 px-4 text-slate-300">{log.details}</td>
-                <td className="py-4 px-4 font-mono text-slate-500 text-[11px]">{log.ip}</td>
-                <td className="py-4 px-5 text-right text-slate-500">{log.timestamp}</td>
-              </tr>
+      <Card padding="sm" className="animate-fade-down">
+        <div className="flex flex-col lg:flex-row lg:items-center gap-3">
+          <div className="lg:w-72">
+            <SearchInput
+              inputSize="sm"
+              placeholder="Tìm theo người dùng, hành động, đối tượng..."
+              value={search}
+              onChange={(e) => {
+                setSearch(e.target.value);
+                setPage(1);
+              }}
+            />
+          </div>
+          <div className="lg:w-48">
+            <Select
+              inputSize="sm"
+              placeholder="Tất cả vai trò"
+              value={role}
+              onChange={(e) => {
+                setRole(e.target.value);
+                setPage(1);
+              }}
+              options={(['ADMIN', 'HEAD_TEACHER', 'TEACHER', 'STUDENT', 'GUEST'] as AppRole[]).map((r) => ({ value: r, label: ROLE_LABEL[r] }))}
+            />
+          </div>
+          <div className="flex items-center gap-2 flex-wrap">
+            <Chip active={severity === ''} onClick={() => { setSeverity(''); setPage(1); }}>
+              Tất cả
+            </Chip>
+            {(Object.keys(SEVERITY) as AuditLog['severity'][]).map((s) => (
+              <Chip key={s} active={severity === s} tone={SEVERITY[s].tone} onClick={() => { setSeverity(s); setPage(1); }}>
+                {SEVERITY[s].label}
+              </Chip>
             ))}
-          </tbody>
-        </table>
-      </div>
+          </div>
+        </div>
+      </Card>
+
+      <DataTable<AuditLog> columns={columns} rows={rows} emptyTitle="Không có bản ghi phù hợp" emptyDescription="Thử thay đổi bộ lọc hoặc từ khoá." className="animate-fade-up" />
+      <Pagination page={page} totalPages={totalPages} onChange={setPage} total={filtered.length} pageSize={PAGE_SIZE} />
     </div>
   );
 };

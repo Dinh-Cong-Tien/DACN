@@ -1,78 +1,145 @@
 import React, { useState } from 'react';
-import { Users, Plus, BookOpen, Key, Calendar, ArrowRight } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Plus, Copy, Users, ClipboardList, Calendar, ArrowRight } from 'lucide-react';
+import { useDocumentTitle } from '@/shared/hooks';
+import { useAuthStore } from '@/shared/stores/authStore';
+import { toast } from '@/shared/stores/uiStore';
+import { MOCK_CLASSES } from '@/shared/mocks';
+import type { ClassRoom, ExamType } from '@/shared/types';
+import { cn } from '@/shared/utils';
+import { Badge, Button, Card, EmptyState, Input, Modal, PageHeader, ProgressBar, SearchInput, Select } from '@/shared/components/ui';
 
-interface IClassItem {
-  id: string;
-  name: string;
-  code: string;
-  targetExam: string;
-  studentCount: number;
-  activeAssignments: number;
-  createdAt: string;
-}
+const GRADIENTS = ['from-indigo-500 to-violet-600', 'from-emerald-500 to-teal-600', 'from-amber-400 to-orange-500', 'from-rose-500 to-pink-600', 'from-sky-500 to-cyan-600'];
 
-const mockClasses: IClassItem[] = [
-  { id: 'c-1', name: 'TOEIC Mục tiêu 750 (Khóa K28)', code: 'ORBI-750-K28', targetExam: 'TOEIC', studentCount: 34, activeAssignments: 2, createdAt: '15/09/2026' },
-  { id: 'c-2', name: 'Luyện thi VSTEP B2 Cấp tốc', code: 'VSTEP-B2-FAST', targetExam: 'VSTEP', studentCount: 28, activeAssignments: 3, createdAt: '01/10/2026' },
-  { id: 'c-3', name: 'Nền tảng Ngữ pháp & Từ vựng TOEIC 500', code: 'TOEIC-FND-500', targetExam: 'TOEIC', studentCount: 42, activeAssignments: 1, createdAt: '20/08/2026' },
-];
+const randomCode = () => {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  const s = Array.from({ length: 4 }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
+  return `ORB-${s}`;
+};
 
 export const TeacherClassesPage: React.FC = () => {
+  useDocumentTitle('Lớp học của tôi');
+  const user = useAuthStore((s) => s.user);
+  const [classes, setClasses] = useState<ClassRoom[]>(MOCK_CLASSES);
+  const [search, setSearch] = useState('');
+  const [open, setOpen] = useState(false);
+  const [form, setForm] = useState({ name: '', examType: 'TOEIC' as ExamType, schedule: '' });
+  const [error, setError] = useState('');
+
+  const list = classes.filter((c) => c.name.toLowerCase().includes(search.toLowerCase()) || c.code.toLowerCase().includes(search.toLowerCase()));
+
+  const copy = (code: string) => {
+    navigator.clipboard?.writeText(code).catch(() => undefined);
+    toast.success('Đã sao chép mã mời', `Gửi mã ${code} cho học viên để tham gia lớp.`);
+  };
+
+  const create = () => {
+    if (!form.name.trim()) return setError('Vui lòng nhập tên lớp');
+    const c: ClassRoom = {
+      id: `cl-${Date.now().toString(36)}`,
+      name: form.name.trim(),
+      code: randomCode(),
+      examType: form.examType,
+      teacherName: user?.fullName ?? 'Giáo viên',
+      studentsCount: 0,
+      assignmentsCount: 0,
+      avgScore: 0,
+      completionRate: 0,
+      attendanceRate: 0,
+      createdAt: new Date().toISOString().slice(0, 10),
+      schedule: form.schedule || 'Chưa thiết lập',
+      gradient: GRADIENTS[classes.length % GRADIENTS.length],
+    };
+    setClasses((s) => [c, ...s]);
+    setOpen(false);
+    setForm({ name: '', examType: 'TOEIC', schedule: '' });
+    setError('');
+    toast.success('Đã tạo lớp mới', `Mã mời: ${c.code}`);
+  };
+
   return (
-    <div className="max-w-6xl mx-auto space-y-6 animate-fadeIn">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-black text-slate-900 flex items-center gap-2.5">
-            <Users className="w-6 h-6 text-emerald-600" />
-            <span>Quản lý lớp học (Class Management)</span>
-          </h1>
-          <p className="text-sm text-slate-500 mt-1">
-            Quản lý danh sách học viên, phân quyền bài tập và chia sẻ mã lớp tham gia.
-          </p>
+    <div className="space-y-6">
+      <PageHeader
+        title="Lớp học của tôi"
+        description="Tạo lớp, cấp mã mời cho học viên, theo dõi tiến độ và giao bài tập."
+        actions={
+          <Button leftIcon={<Plus className="w-4 h-4" />} onClick={() => setOpen(true)}>
+            Tạo lớp mới
+          </Button>
+        }
+      />
+      <div className="max-w-sm">
+        <SearchInput placeholder="Tìm theo tên hoặc mã lớp..." value={search} onChange={(e) => setSearch(e.target.value)} />
+      </div>
+
+      {list.length === 0 ? (
+        <Card>
+          <EmptyState icon={<Users />} title="Chưa có lớp nào" description="Tạo lớp đầu tiên và chia sẻ mã mời cho học viên." action={<Button onClick={() => setOpen(true)}>Tạo lớp</Button>} />
+        </Card>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+          {list.map((c, i) => (
+            <Card key={c.id} padding="none" className="overflow-hidden card-hover animate-fade-up" style={{ animationDelay: `${i * 60}ms` }}>
+              <div className={cn('relative h-28 bg-gradient-to-br text-white p-5 flex flex-col justify-between', c.gradient)}>
+                <div aria-hidden className="absolute inset-0 bg-grid opacity-20" />
+                <div className="relative flex items-start justify-between">
+                  <Badge tone="slate" solid className="!bg-white/20 !text-white backdrop-blur">
+                    {c.examType}
+                  </Badge>
+                  <button onClick={() => copy(c.code)} className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white/20 hover:bg-white/30 text-xs font-mono font-bold backdrop-blur transition" title="Sao chép mã mời">
+                    {c.code} <Copy className="w-3 h-3" />
+                  </button>
+                </div>
+                <h3 className="relative font-black text-lg leading-tight truncate">{c.name}</h3>
+              </div>
+              <div className="p-5 space-y-4">
+                <div className="grid grid-cols-3 gap-2 text-center">
+                  <div className="p-2 rounded-xl bg-slate-50">
+                    <p className="text-lg font-black text-slate-900">{c.studentsCount}</p>
+                    <p className="text-[10px] font-bold uppercase text-slate-400">Học viên</p>
+                  </div>
+                  <div className="p-2 rounded-xl bg-slate-50">
+                    <p className="text-lg font-black text-slate-900">{c.assignmentsCount}</p>
+                    <p className="text-[10px] font-bold uppercase text-slate-400">Bài tập</p>
+                  </div>
+                  <div className="p-2 rounded-xl bg-slate-50">
+                    <p className="text-lg font-black text-slate-900">{c.avgScore || '—'}</p>
+                    <p className="text-[10px] font-bold uppercase text-slate-400">Điểm TB</p>
+                  </div>
+                </div>
+                <ProgressBar value={c.completionRate} label="Hoàn thành bài tập" showValue size="sm" tone="emerald" />
+                <div className="flex items-center justify-between text-[11px] text-slate-500">
+                  <span className="flex items-center gap-1"><Calendar className="w-3.5 h-3.5" /> {c.schedule}</span>
+                  <span className="flex items-center gap-1"><ClipboardList className="w-3.5 h-3.5" /> {c.createdAt}</span>
+                </div>
+                <Link to={`/teacher/classes/${c.id}`} className="flex items-center justify-center gap-1.5 h-10 rounded-xl bg-slate-900 text-white text-sm font-bold hover:bg-emerald-600 transition">
+                  Quản lý lớp <ArrowRight className="w-4 h-4" />
+                </Link>
+              </div>
+            </Card>
+          ))}
         </div>
+      )}
 
-        <button className="px-5 py-2.5 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-md shadow-emerald-200 transition flex items-center gap-2">
-          <Plus className="w-4 h-4" />
-          <span>Tạo lớp học mới</span>
-        </button>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-        {mockClasses.map((cls) => (
-          <div
-            key={cls.id}
-            className="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm hover:shadow-md transition flex flex-col justify-between space-y-4"
-          >
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200">
-                  {cls.targetExam}
-                </span>
-                <span className="text-xs font-mono font-bold text-slate-600 bg-slate-100 px-2 py-0.5 rounded flex items-center gap-1">
-                  <Key className="w-3 h-3 text-slate-400" />
-                  {cls.code}
-                </span>
-              </div>
-
-              <h3 className="text-base font-bold text-slate-900 leading-snug">{cls.name}</h3>
-
-              <div className="flex items-center gap-4 text-xs text-slate-500 mt-4">
-                <span>{cls.studentCount} học viên</span>
-                <span>•</span>
-                <span>{cls.activeAssignments} bài tập đang mở</span>
-              </div>
-            </div>
-
-            <div className="pt-4 border-t border-slate-100 flex items-center justify-between">
-              <span className="text-[11px] text-slate-400">Tạo ngày: {cls.createdAt}</span>
-              <button className="text-xs font-bold text-emerald-600 hover:underline flex items-center gap-1">
-                <span>Xem danh sách</span>
-                <ArrowRight className="w-3.5 h-3.5" />
-              </button>
-            </div>
-          </div>
-        ))}
-      </div>
+      <Modal
+        open={open}
+        onClose={() => setOpen(false)}
+        title="Tạo lớp học mới"
+        description="Hệ thống sẽ tự sinh mã mời 8 ký tự cho học viên."
+        icon={<Users />}
+        footer={
+          <>
+            <Button variant="ghost" onClick={() => setOpen(false)}>Huỷ</Button>
+            <Button onClick={create}>Tạo lớp</Button>
+          </>
+        }
+      >
+        <div className="space-y-4">
+          <Input label="Tên lớp" required placeholder="VD: TOEIC 650+ K13" value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} error={error} />
+          <Select label="Kỳ thi" options={[{ value: 'TOEIC', label: 'TOEIC' }, { value: 'VSTEP', label: 'VSTEP' }]} value={form.examType} onChange={(e) => setForm((f) => ({ ...f, examType: e.target.value as ExamType }))} />
+          <Input label="Lịch học" placeholder="VD: T2 – T4 – T6 · 19:00" value={form.schedule} onChange={(e) => setForm((f) => ({ ...f, schedule: e.target.value }))} />
+        </div>
+      </Modal>
     </div>
   );
 };

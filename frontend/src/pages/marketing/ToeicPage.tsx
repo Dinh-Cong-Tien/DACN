@@ -1,161 +1,186 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Link } from 'react-router-dom';
-import { Headphones, BookOpen, Clock, Award, CheckCircle2, ArrowRight, Sparkles, HelpCircle, Layers } from 'lucide-react';
+import { ArrowRight, Headphones, BookOpen, Clock, ListChecks, Lightbulb, FileText, Users } from 'lucide-react';
+import { Accordion, Badge, Button, Card, GradientPanel, SectionTitle } from '@/shared/components/ui';
+import { CountUp, FloatingBlobs, Reveal, Stagger } from '@/shared/components/motion';
+import { MOCK_TESTS, TOEIC_PARTS_INFO, SCORE_TABLE } from '@/shared/mocks';
+import { useDocumentTitle } from '@/shared/hooks';
+import { formatNumber } from '@/shared/utils';
 
 export const ToeicPage: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'overview' | 'parts' | 'scoring'>('parts');
+  useDocumentTitle('Luyện thi TOEIC');
+  const tests = MOCK_TESTS.filter((t) => t.examType === 'TOEIC').slice(0, 4);
+  const listening = TOEIC_PARTS_INFO.filter((p) => p.skill === 'Listening');
+  const reading = TOEIC_PARTS_INFO.filter((p) => p.skill === 'Reading');
 
-  const parts = [
-    { part: 'Part 1', name: 'Photographs', questions: 6, skill: 'Listening', desc: 'Mô tả hình ảnh: quan sát hành động nhân vật, vị trí đồ vật và ngữ cảnh không gian.' },
-    { part: 'Part 2', name: 'Question-Response', questions: 25, skill: 'Listening', desc: 'Hỏi & Đáp: Nhận diện câu hỏi Wh-, câu hỏi Yes/No, câu hỏi gián tiếp và bẫy đồng âm.' },
-    { part: 'Part 3', name: 'Conversations', questions: 39, skill: 'Listening', desc: 'Hội thoại ngắn: Nghe cuộc trao đổi 2-3 người, kèm bảng biểu hoặc biểu đồ kết hợp.' },
-    { part: 'Part 4', name: 'Short Talks', questions: 30, skill: 'Listening', desc: 'Bài nói độc thoại: Thông báo sân bay, quảng cáo radio, tin nhắn thoại, bản tin thời sự.' },
-    { part: 'Part 5', name: 'Incomplete Sentences', questions: 30, skill: 'Reading', desc: 'Điền vào câu: Kiểm tra ngữ pháp cốt lõi (từ loại, chia thì, mệnh đề quan hệ) và từ vựng.' },
-    { part: 'Part 6', name: 'Text Completion', questions: 16, skill: 'Reading', desc: 'Hoàn thành đoạn văn: Điền từ, cụm từ hoặc cả câu phù hợp với mạch văn toàn bài.' },
-    { part: 'Part 7', name: 'Reading Comprehension', questions: 54, skill: 'Reading', desc: 'Đọc hiểu đoạn văn: Đoạn đơn, đoạn kép và đoạn ba (email, lịch trình, bài báo, tin nhắn chat).' },
-  ];
+  const partItems = (parts: typeof TOEIC_PARTS_INFO) =>
+    parts.map((p) => ({
+      id: p.id,
+      icon: p.skill === 'Listening' ? <Headphones /> : <BookOpen />,
+      title: (
+        <span className="flex items-center gap-2 flex-wrap">
+          {p.name} · {p.nameVi}
+          <Badge tone="slate" size="xs">
+            {p.questions} câu
+          </Badge>
+          {p.minutes && (
+            <Badge tone="amber" size="xs">
+              ~{p.minutes} phút
+            </Badge>
+          )}
+        </span>
+      ),
+      content: (
+        <div className="space-y-3">
+          <p>{p.description}</p>
+          <div className="rounded-xl bg-amber-50 border border-amber-100 p-3">
+            <p className="text-xs font-bold text-amber-800 flex items-center gap-1.5 mb-1.5">
+              <Lightbulb className="w-3.5 h-3.5" /> Mẹo làm bài
+            </p>
+            <ul className="space-y-1 text-xs text-amber-900">
+              {p.tips.map((t) => (
+                <li key={t}>• {t}</li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      ),
+    }));
 
   return (
-    <div className="py-12 bg-slate-50 min-h-screen">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
-        {/* Hero Section */}
-        <div className="text-center max-w-3xl mx-auto space-y-4">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-indigo-50 border border-indigo-100 text-indigo-700 text-xs font-bold">
-            <Award className="w-3.5 h-3.5" />
-            <span>Chương trình luyện thi TOEIC® 2026 Chuẩn Quốc tế</span>
+    <div className="pb-20">
+      <section className="relative overflow-hidden py-16 md:py-24">
+        <FloatingBlobs />
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid lg:grid-cols-2 gap-10 items-center">
+          <div className="space-y-5 animate-fade-up">
+            <Badge tone="indigo" size="md">
+              TOEIC Listening & Reading
+            </Badge>
+            <h1 className="text-4xl md:text-5xl font-black text-slate-900 tracking-tight leading-tight">
+              Chinh phục <span className="text-gradient">TOEIC 450 → 990</span> theo đúng chuẩn ETS
+            </h1>
+            <p className="text-slate-600 leading-relaxed">200 câu hỏi, 120 phút, 7 Part. Hiểu rõ cấu trúc từng Part, nhận diện bẫy và luyện với đề thi thử có bộ đếm giờ thật.</p>
+            <div className="flex flex-wrap gap-3">
+              <Button to="/auth/register" variant="gradient" size="lg" rightIcon={<ArrowRight className="w-4 h-4" />}>
+                Bắt đầu lộ trình TOEIC
+              </Button>
+              <Button to="/mock-tests" variant="outline" size="lg">
+                Thi thử ngay
+              </Button>
+            </div>
           </div>
-          <h1 className="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight">
-            Luyện thi TOEIC Listening & Reading thích ứng năng lực
-          </h1>
-          <p className="text-slate-600 text-sm leading-relaxed">
-            Nắm chắc 7 Parts bài thi, làm chủ 1000+ bẫy câu hỏi thường gặp và tự động lưu lỗi sai để ôn ngắt quãng trước kỳ thi thật.
-          </p>
-          <div className="flex justify-center gap-3 pt-2">
-            <Link
-              to="/auth/register"
-              className="px-6 py-3 bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-bold text-xs rounded-2xl shadow-lg shadow-indigo-200 hover:shadow-xl transition"
-            >
-              Test đầu vào TOEIC miễn phí
-            </Link>
-            <Link
-              to="/mock-tests"
-              className="px-6 py-3 bg-white border border-slate-200 text-slate-700 font-bold text-xs rounded-2xl hover:bg-slate-50 transition"
-            >
-              Kho 50+ đề thi thử có chấm điểm
-            </Link>
-          </div>
+          <Stagger className="grid grid-cols-2 gap-4" animation="scale-in">
+            {[
+              { icon: ListChecks, v: 200, s: ' câu', l: 'Tổng số câu' },
+              { icon: Clock, v: 120, s: ' phút', l: 'Thời gian' },
+              { icon: Headphones, v: 100, s: ' câu', l: 'Listening (45\')' },
+              { icon: BookOpen, v: 100, s: ' câu', l: 'Reading (75\')' },
+            ].map((x) => {
+              const Icon = x.icon;
+              return (
+                <Card key={x.l} padding="sm" className="text-center">
+                  <Icon className="w-6 h-6 text-indigo-600 mx-auto mb-2" />
+                  <p className="text-2xl font-black text-slate-900">
+                    <CountUp value={x.v} suffix={x.s} />
+                  </p>
+                  <p className="text-xs text-slate-500 font-semibold">{x.l}</p>
+                </Card>
+              );
+            })}
+          </Stagger>
         </div>
+      </section>
 
-        {/* Tab switcher */}
-        <div className="flex justify-center border-b border-slate-200">
-          <div className="flex gap-4">
-            <button
-              onClick={() => setActiveTab('parts')}
-              className={`pb-3 text-sm font-bold border-b-2 transition ${
-                activeTab === 'parts'
-                  ? 'border-indigo-600 text-indigo-600'
-                  : 'border-transparent text-slate-500 hover:text-slate-800'
-              }`}
-            >
-              Cấu trúc chi tiết 7 Parts
-            </button>
-            <button
-              onClick={() => setActiveTab('scoring')}
-              className={`pb-3 text-sm font-bold border-b-2 transition ${
-                activeTab === 'scoring'
-                  ? 'border-indigo-600 text-indigo-600'
-                  : 'border-transparent text-slate-500 hover:text-slate-800'
-              }`}
-            >
-              Thang điểm & Bảng quy đổi ETS
-            </button>
-          </div>
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 space-y-10">
+        <Reveal>
+          <SectionTitle eyebrow="Cấu trúc đề thi" title="7 Part của bài thi TOEIC" description="Nhấn vào từng Part để xem mô tả và mẹo làm bài." />
+        </Reveal>
+        <div className="grid lg:grid-cols-2 gap-8">
+          <Reveal animation="slide-in-left">
+            <h3 className="font-black text-slate-900 flex items-center gap-2 mb-4">
+              <Headphones className="w-5 h-5 text-indigo-600" /> Listening — Part 1–4 (45 phút)
+            </h3>
+            <Accordion items={partItems(listening)} defaultOpen="PART_1" />
+          </Reveal>
+          <Reveal animation="slide-in-right">
+            <h3 className="font-black text-slate-900 flex items-center gap-2 mb-4">
+              <BookOpen className="w-5 h-5 text-violet-600" /> Reading — Part 5–7 (75 phút)
+            </h3>
+            <Accordion items={partItems(reading)} defaultOpen="PART_5" />
+          </Reveal>
         </div>
+      </section>
 
-        {/* Parts Grid */}
-        {activeTab === 'parts' && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {parts.map((p) => (
-              <div
-                key={p.part}
-                className="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-sm hover:border-indigo-200 transition space-y-3"
-              >
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 space-y-8">
+        <Reveal>
+          <SectionTitle eyebrow="Thang điểm" title="Điểm TOEIC tương ứng trình độ nào?" />
+        </Reveal>
+        <Reveal>
+          <Card padding="none" className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="bg-slate-50 text-[11px] uppercase tracking-wider text-slate-500 font-extrabold">
+                <tr>
+                  <th className="text-left px-5 py-3">CEFR</th>
+                  <th className="text-left px-5 py-3">TOEIC</th>
+                  <th className="text-left px-5 py-3">VSTEP</th>
+                  <th className="text-left px-5 py-3 hidden md:table-cell">Mô tả</th>
+                </tr>
+              </thead>
+              <tbody>
+                {SCORE_TABLE.map((r) => (
+                  <tr key={r.cefr} className="border-t border-slate-100 hover:bg-indigo-50/40 transition">
+                    <td className="px-5 py-3 font-black text-indigo-700">{r.cefr}</td>
+                    <td className="px-5 py-3 font-bold text-slate-900">{r.toeic}</td>
+                    <td className="px-5 py-3 text-slate-600">{r.vstep}</td>
+                    <td className="px-5 py-3 text-slate-500 hidden md:table-cell">{r.description}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </Card>
+        </Reveal>
+        <div className="text-center">
+          <Button to="/score-converter" variant="soft" rightIcon={<ArrowRight className="w-4 h-4" />}>
+            Mở công cụ quy đổi điểm
+          </Button>
+        </div>
+      </section>
+
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 space-y-8">
+        <Reveal>
+          <SectionTitle eyebrow="Thi thử" title="Đề TOEIC nổi bật" align="left" />
+        </Reveal>
+        <Stagger className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {tests.map((t) => (
+            <Link key={t.id} to="/mock-tests" className="block">
+              <Card hover className="h-full space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-black text-indigo-600 bg-indigo-50 px-3 py-1 rounded-full uppercase tracking-wider">
-                    {p.part} • {p.questions} câu
-                  </span>
-                  <span className="text-xs font-semibold text-slate-500 flex items-center gap-1">
-                    {p.skill === 'Listening' ? <Headphones className="w-3.5 h-3.5" /> : <BookOpen className="w-3.5 h-3.5" />}
-                    {p.skill}
-                  </span>
+                  <FileText className="w-5 h-5 text-indigo-600" />
+                  <Badge tone={t.isFree ? 'emerald' : 'amber'} size="xs">
+                    {t.isFree ? 'Miễn phí' : 'VIP'}
+                  </Badge>
                 </div>
-                <h3 className="text-base font-black text-slate-900">{p.name}</h3>
-                <p className="text-xs text-slate-600 leading-relaxed">{p.desc}</p>
-                <div className="pt-2">
-                  <Link
-                    to={`/practice?part=${p.part}`}
-                    className="inline-flex items-center gap-1.5 text-xs font-bold text-indigo-600 hover:underline"
-                  >
-                    <span>Luyện riêng {p.part}</span>
-                    <ArrowRight className="w-3.5 h-3.5" />
-                  </Link>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {/* Scoring Table */}
-        {activeTab === 'scoring' && (
-          <div className="bg-white rounded-3xl border border-slate-200/80 shadow-sm p-6 sm:p-8 space-y-6">
-            <div>
-              <h3 className="text-lg font-black text-slate-900">Bảng quy đổi thang điểm TOEIC ETS (5 - 495)</h3>
-              <p className="text-xs text-slate-500 mt-1">
-                Điểm bài thi TOEIC không tính theo tỷ lệ tuyến tính đơn giản (1 câu = 5 điểm) mà áp dụng thuật toán chuẩn hóa độ khó (Equating) của viện khảo thí ETS.
-              </p>
-            </div>
-
-            <div className="overflow-x-auto">
-              <table className="w-full text-xs text-left">
-                <thead className="bg-slate-50 text-slate-700 font-bold uppercase tracking-wider">
-                  <tr>
-                    <th className="p-3 rounded-l-xl">Số câu đúng (0-100)</th>
-                    <th className="p-3">Điểm quy đổi Listening</th>
-                    <th className="p-3">Điểm quy đổi Reading</th>
-                    <th className="p-3 rounded-r-xl">Tổng điểm ước tính</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100 font-medium text-slate-600">
-                  <tr>
-                    <td className="p-3 font-bold text-slate-800">95 - 100 câu</td>
-                    <td className="p-3 font-black text-emerald-600">485 - 495</td>
-                    <td className="p-3 font-black text-emerald-600">475 - 495</td>
-                    <td className="p-3 font-black text-indigo-600">960 - 990 (Xuất sắc)</td>
-                  </tr>
-                  <tr>
-                    <td className="p-3 font-bold text-slate-800">80 - 90 câu</td>
-                    <td className="p-3 font-black text-indigo-600">420 - 460</td>
-                    <td className="p-3 font-black text-indigo-600">390 - 440</td>
-                    <td className="p-3 font-black text-indigo-600">810 - 900 (Nâng cao)</td>
-                  </tr>
-                  <tr>
-                    <td className="p-3 font-bold text-slate-800">65 - 75 câu</td>
-                    <td className="p-3 font-black text-slate-800">330 - 380</td>
-                    <td className="p-3 font-black text-slate-800">310 - 360</td>
-                    <td className="p-3 font-black text-indigo-600">640 - 740 (Trung cấp)</td>
-                  </tr>
-                  <tr>
-                    <td className="p-3 font-bold text-slate-800">45 - 55 câu</td>
-                    <td className="p-3 font-black text-slate-800">220 - 275</td>
-                    <td className="p-3 font-black text-slate-800">210 - 265</td>
-                    <td className="p-3 font-black text-indigo-600">430 - 540 (Cơ bản)</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )}
-      </div>
+                <h3 className="font-bold text-slate-900 text-sm">{t.title}</h3>
+                <p className="text-xs text-slate-500">
+                  {t.totalQuestions} câu · {t.durationMinutes} phút · {t.level}
+                </p>
+                <p className="text-[11px] text-slate-400 flex items-center gap-1">
+                  <Users className="w-3 h-3" /> {formatNumber(t.attempts)} lượt làm
+                </p>
+              </Card>
+            </Link>
+          ))}
+        </Stagger>
+        <Reveal animation="scale-in">
+          <GradientPanel tone="indigo" className="text-center">
+            <h3 className="text-2xl font-black">Bắt đầu với bài đánh giá năng lực 15 phút</h3>
+            <p className="text-indigo-100 mt-2">Nhận lộ trình TOEIC cá nhân hoá ngay sau khi hoàn thành.</p>
+            <Button to="/auth/register" variant="secondary" size="lg" className="mt-6 bg-white text-indigo-700 hover:bg-indigo-50" rightIcon={<ArrowRight className="w-4 h-4" />}>
+              Đăng ký miễn phí
+            </Button>
+          </GradientPanel>
+        </Reveal>
+      </section>
     </div>
   );
 };

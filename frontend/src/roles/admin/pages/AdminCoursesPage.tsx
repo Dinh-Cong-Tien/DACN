@@ -1,115 +1,267 @@
-import React, { useState } from 'react';
-import { BookOpen, Plus, Search, Edit2, Trash2, CheckCircle2, Clock, Users } from 'lucide-react';
+import React, { useMemo, useState } from 'react';
+import { FolderTree, BookOpen, Layers, ChevronRight, Plus, Pencil, Trash2, Database } from 'lucide-react';
+import { MOCK_COURSE_TREE } from '@/shared/mocks';
+import type { CourseTreeNode } from '@/shared/types';
+import { cn } from '@/shared/utils';
+import { useDocumentTitle } from '@/shared/hooks';
+import { Badge, Button, Card, CardHeader, ConfirmDialog, EmptyState, Input, Modal, PageHeader, Select, StatCard, Tone } from '@/shared/components/ui';
+import { toast } from '@/shared/stores/uiStore';
+
+const TYPE_META: Record<CourseTreeNode['type'], { icon: React.ElementType; tone: Tone; label: string; child: CourseTreeNode['type'] | null }> = {
+  CATEGORY: { icon: FolderTree, tone: 'amber', label: 'Danh mục', child: 'COURSE' },
+  COURSE: { icon: BookOpen, tone: 'indigo', label: 'Khoá học', child: 'SECTION' },
+  SECTION: { icon: Layers, tone: 'emerald', label: 'Chương', child: null },
+};
+
+type Mode = { kind: 'add' | 'edit'; node: CourseTreeNode } | null;
+
+function updateTree(nodes: CourseTreeNode[], id: string, fn: (n: CourseTreeNode) => CourseTreeNode | null): CourseTreeNode[] {
+  return nodes.flatMap((n) => {
+    if (n.id === id) {
+      const r = fn(n);
+      return r ? [r] : [];
+    }
+    return [{ ...n, children: n.children ? updateTree(n.children, id, fn) : n.children }];
+  });
+}
+
+function countTree(nodes: CourseTreeNode[]): Record<CourseTreeNode['type'], number> {
+  const out = { CATEGORY: 0, COURSE: 0, SECTION: 0 };
+  const walk = (ns: CourseTreeNode[]) =>
+    ns.forEach((n) => {
+      out[n.type]++;
+      if (n.children) walk(n.children);
+    });
+  walk(nodes);
+  return out;
+}
+
+function findNode(nodes: CourseTreeNode[], id: string): CourseTreeNode | null {
+  for (const n of nodes) {
+    if (n.id === id) return n;
+    if (n.children) {
+      const f = findNode(n.children, id);
+      if (f) return f;
+    }
+  }
+  return null;
+}
 
 export const AdminCoursesPage: React.FC = () => {
-  const [courses, setCourses] = useState([
-    { id: 'CRS-01', title: 'Khóa học Nền tảng TOEIC 450+ Cấp tốc', type: 'TOEIC', lessons: 32, students: 1420, status: 'PUBLISHED' },
-    { id: 'CRS-02', title: 'Khóa học Bứt phá TOEIC 750+ Chuyên sâu', type: 'TOEIC', lessons: 48, students: 2150, status: 'PUBLISHED' },
-    { id: 'CRS-03', title: 'Luyện thi VSTEP B1 Đầu ra Đại học', type: 'VSTEP', lessons: 36, students: 980, status: 'PUBLISHED' },
-    { id: 'CRS-04', title: 'Chinh phục VSTEP B2 Toàn diện 4 Kỹ năng', type: 'VSTEP', lessons: 52, students: 1340, status: 'PUBLISHED' },
-    { id: 'CRS-05', title: 'VSTEP C1 Chuyên ngành Sư phạm (Draft)', type: 'VSTEP', lessons: 24, students: 0, status: 'DRAFT' },
-  ]);
+  useDocumentTitle('Cây thư mục khoá học');
+  const [tree, setTree] = useState<CourseTreeNode[]>(MOCK_COURSE_TREE);
+  const [open, setOpen] = useState<Set<string>>(new Set(MOCK_COURSE_TREE.map((n) => n.id)));
+  const [selectedId, setSelectedId] = useState<string | null>(MOCK_COURSE_TREE[0]?.id ?? null);
+  const [mode, setMode] = useState<Mode>(null);
+  const [title, setTitle] = useState('');
+  const [newType, setNewType] = useState<CourseTreeNode['type']>('CATEGORY');
+  const [deleting, setDeleting] = useState<CourseTreeNode | null>(null);
+
+  const counts = useMemo(() => countTree(tree), [tree]);
+  const selected = selectedId ? findNode(tree, selectedId) : null;
+
+  const toggle = (id: string) =>
+    setOpen((prev) => {
+      const n = new Set(prev);
+      if (n.has(id)) n.delete(id);
+      else n.add(id);
+      return n;
+    });
+
+  const openAdd = (node: CourseTreeNode | null) => {
+    setTitle('');
+    if (node) {
+      setNewType(TYPE_META[node.type].child ?? 'SECTION');
+      setMode({ kind: 'add', node });
+    } else {
+      setNewType('CATEGORY');
+      setMode({ kind: 'add', node: { id: '__root', title: 'root', type: 'CATEGORY' } });
+    }
+  };
+  const openEdit = (node: CourseTreeNode) => {
+    setTitle(node.title);
+    setMode({ kind: 'edit', node });
+  };
+
+  const save = () => {
+    if (!mode || !title.trim()) return toast.error('Vui lòng nhập tên');
+    if (mode.kind === 'edit') {
+      setTree((t) => updateTree(t, mode.node.id, (n) => ({ ...n, title: title.trim() })));
+      toast.success('Đã cập nhật', `"${title}" đã được lưu.`);
+    } else {
+      const child: CourseTreeNode = { id: `n-${Date.now().toString(36)}`, title: title.trim(), type: newType, meta: 'Mới tạo', children: newType === 'SECTION' ? undefined : [] };
+      if (mode.node.id === '__root') setTree((t) => [...t, child]);
+      else {
+        setTree((t) => updateTree(t, mode.node.id, (n) => ({ ...n, children: [...(n.children ?? []), child] })));
+        setOpen((o) => new Set(o).add(mode.node.id));
+      }
+      setSelectedId(child.id);
+      toast.success('Đã thêm', `${TYPE_META[newType].label} "${title}" đã được tạo.`);
+    }
+    setMode(null);
+  };
+
+  const confirmDelete = () => {
+    if (!deleting) return;
+    setTree((t) => updateTree(t, deleting.id, () => null));
+    if (selectedId === deleting.id) setSelectedId(null);
+    toast.success('Đã xoá', `"${deleting.title}" và các mục con đã bị xoá.`);
+    setDeleting(null);
+  };
+
+  const renderNode = (node: CourseTreeNode, depth: number, index: number) => {
+    const meta = TYPE_META[node.type];
+    const Icon = meta.icon;
+    const hasChildren = !!node.children?.length;
+    const isOpen = open.has(node.id);
+    const isSel = selectedId === node.id;
+    return (
+      <li key={node.id} className="animate-fade-up" style={{ animationDelay: `${index * 40}ms` }}>
+        <div
+          onClick={() => setSelectedId(node.id)}
+          className={cn('group flex items-center gap-2 pr-2 py-2 rounded-xl cursor-pointer transition-all duration-200 border', isSel ? 'bg-indigo-50 border-indigo-200' : 'border-transparent hover:bg-slate-50')}
+          style={{ paddingLeft: 8 + depth * 22 }}
+        >
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              if (hasChildren || node.type !== 'SECTION') toggle(node.id);
+            }}
+            className={cn('w-5 h-5 rounded flex items-center justify-center text-slate-400 hover:bg-slate-200', !hasChildren && 'opacity-0 pointer-events-none')}
+          >
+            <ChevronRight className={cn('w-3.5 h-3.5 transition-transform duration-300', isOpen && 'rotate-90')} />
+          </button>
+          <span className={cn('w-7 h-7 rounded-lg flex items-center justify-center shrink-0 [&>svg]:w-4 [&>svg]:h-4', `bg-${meta.tone}-50 text-${meta.tone}-600`)}>
+            <Icon />
+          </span>
+          <span className={cn('flex-1 text-sm truncate', isSel ? 'font-bold text-indigo-900' : 'font-medium text-slate-700')}>{node.title}</span>
+          {node.meta && <span className="hidden sm:inline text-[11px] text-slate-400">{node.meta}</span>}
+          <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition" onClick={(e) => e.stopPropagation()}>
+            {meta.child && (
+              <button onClick={() => openAdd(node)} className="w-7 h-7 rounded-lg hover:bg-emerald-50 text-slate-400 hover:text-emerald-600 flex items-center justify-center" title="Thêm mục con">
+                <Plus className="w-3.5 h-3.5" />
+              </button>
+            )}
+            <button onClick={() => openEdit(node)} className="w-7 h-7 rounded-lg hover:bg-indigo-50 text-slate-400 hover:text-indigo-600 flex items-center justify-center" title="Sửa">
+              <Pencil className="w-3.5 h-3.5" />
+            </button>
+            <button onClick={() => setDeleting(node)} className="w-7 h-7 rounded-lg hover:bg-rose-50 text-slate-400 hover:text-rose-600 flex items-center justify-center" title="Xoá">
+              <Trash2 className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        </div>
+        {hasChildren && (
+          <div className={cn('grid transition-[grid-template-rows] duration-300 ease-spring', isOpen ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]')}>
+            <ul className="overflow-hidden">{node.children!.map((c, i) => renderNode(c, depth + 1, i))}</ul>
+          </div>
+        )}
+      </li>
+    );
+  };
 
   return (
-    <div className="space-y-6 animate-fadeIn font-sans pb-12">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-black text-slate-100 flex items-center gap-2.5">
-            <BookOpen className="w-6 h-6 text-indigo-400" />
-            <span>Quản lý Khóa học & Giáo trình (Courses Management)</span>
-          </h1>
-          <p className="text-xs text-slate-400 mt-1">
-            Thiết lập chương trình học, danh mục bài giảng đa phương tiện và điều kiện vượt chặng.
-          </p>
-        </div>
+    <div className="space-y-6">
+      <PageHeader
+        title="Cây thư mục khoá học"
+        icon={<FolderTree />}
+        description="Tổ chức danh mục → khoá học → chương. Nhấn vào mục để xem chi tiết, di chuột để thêm/sửa/xoá."
+        actions={
+          <Button leftIcon={<Plus className="w-4 h-4" />} onClick={() => openAdd(null)}>
+            Thêm danh mục
+          </Button>
+        }
+      />
 
-        <button
-          onClick={() => alert('Mở popup thêm khóa học mới')}
-          className="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-2xl flex items-center gap-2 shadow-lg shadow-indigo-600/20 transition shrink-0"
-        >
-          <Plus className="w-4 h-4" />
-          <span>Tạo khóa học mới</span>
-        </button>
+      <div className="grid grid-cols-3 gap-4">
+        <StatCard label="Danh mục" value={counts.CATEGORY} tone="amber" icon={<FolderTree />} />
+        <StatCard label="Khoá học" value={counts.COURSE} tone="indigo" icon={<BookOpen />} />
+        <StatCard label="Chương" value={counts.SECTION} tone="emerald" icon={<Layers />} />
       </div>
 
-      {/* Courses List */}
-      <div className="bg-slate-900 rounded-3xl border border-slate-800 shadow-xl overflow-hidden">
-        <div className="p-4 border-b border-slate-800 flex items-center justify-between gap-4">
-          <div className="relative flex-1 max-w-sm">
-            <Search className="w-4 h-4 absolute left-3.5 top-3 text-slate-500" />
-            <input
-              type="text"
-              placeholder="Tìm kiếm theo mã khóa học, tên khóa..."
-              className="w-full pl-9 pr-4 py-2 bg-slate-800 border border-slate-700 rounded-xl text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-            />
-          </div>
+      <div className="grid grid-cols-1 xl:grid-cols-[1fr_340px] gap-4">
+        <Card padding="sm" className="animate-fade-up">
+          {tree.length ? <ul className="space-y-0.5">{tree.map((n, i) => renderNode(n, 0, i))}</ul> : <EmptyState icon={<Database />} title="Chưa có danh mục" description="Tạo danh mục đầu tiên để bắt đầu." compact />}
+        </Card>
 
-          <span className="text-xs text-slate-400 font-bold">Tổng cộng: {courses.length} khóa học</span>
-        </div>
-
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs">
-            <thead className="bg-slate-800/60 text-slate-400 uppercase font-bold tracking-wider">
-              <tr>
-                <th className="p-4">Mã & Tên khóa học</th>
-                <th className="p-4">Chứng chỉ</th>
-                <th className="p-4">Số bài giảng</th>
-                <th className="p-4">Số học viên</th>
-                <th className="p-4">Trạng thái</th>
-                <th className="p-4 text-right">Thao tác</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-800 text-slate-300 font-medium">
-              {courses.map((c) => (
-                <tr key={c.id} className="hover:bg-slate-800/30 transition">
-                  <td className="p-4">
-                    <div className="font-bold text-white text-sm">{c.title}</div>
-                    <span className="text-[10px] text-slate-500 font-mono">{c.id}</span>
-                  </td>
-                  <td className="p-4">
-                    <span
-                      className={`text-[10px] font-black uppercase px-2.5 py-0.5 rounded-md ${
-                        c.type === 'TOEIC' ? 'bg-indigo-900/60 text-indigo-300' : 'bg-violet-900/60 text-violet-300'
-                      }`}
-                    >
-                      {c.type}
-                    </span>
-                  </td>
-                  <td className="p-4 font-mono">{c.lessons} bài</td>
-                  <td className="p-4 font-mono">{c.students.toLocaleString()}</td>
-                  <td className="p-4">
-                    {c.status === 'PUBLISHED' ? (
-                      <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-400 bg-emerald-950/60 px-2 py-0.5 rounded-md border border-emerald-800/40">
-                        <CheckCircle2 className="w-3 h-3" /> Công khai
-                      </span>
-                    ) : (
-                      <span className="inline-flex items-center gap-1 text-[10px] font-bold text-amber-400 bg-amber-950/60 px-2 py-0.5 rounded-md border border-amber-800/40">
-                        Bản nháp
-                      </span>
-                    )}
-                  </td>
-                  <td className="p-4 text-right">
-                    <div className="inline-flex items-center gap-2">
-                      <button
-                        onClick={() => alert(`Chỉnh sửa ${c.id}`)}
-                        className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 transition"
-                      >
-                        <Edit2 className="w-3.5 h-3.5" />
-                      </button>
-                      <button
-                        onClick={() => alert(`Xóa ${c.id}`)}
-                        className="p-1.5 rounded-lg bg-rose-950/60 hover:bg-rose-900 text-rose-400 transition"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <Card className="animate-slide-in-right h-fit xl:sticky xl:top-24">
+          {selected ? (
+            <>
+              <CardHeader
+                title={selected.title}
+                subtitle={selected.meta ?? 'Không có mô tả'}
+                icon={React.createElement(TYPE_META[selected.type].icon)}
+                action={
+                  <Badge tone={TYPE_META[selected.type].tone}>
+                    {TYPE_META[selected.type].label}
+                  </Badge>
+                }
+              />
+              <dl className="space-y-2 text-sm">
+                <div className="flex justify-between">
+                  <dt className="text-slate-500">ID</dt>
+                  <dd className="font-mono text-xs text-slate-700">{selected.id}</dd>
+                </div>
+                <div className="flex justify-between">
+                  <dt className="text-slate-500">Mục con</dt>
+                  <dd className="font-bold text-slate-800">{selected.children?.length ?? 0}</dd>
+                </div>
+                <div className="flex justify-between">
+                  <dt className="text-slate-500">Hiển thị</dt>
+                  <dd>
+                    <Badge tone="emerald" dot size="xs">
+                      Công khai
+                    </Badge>
+                  </dd>
+                </div>
+              </dl>
+              <div className="flex flex-col gap-2 mt-5">
+                {TYPE_META[selected.type].child && (
+                  <Button size="sm" variant="soft" leftIcon={<Plus className="w-4 h-4" />} onClick={() => openAdd(selected)}>
+                    Thêm {TYPE_META[TYPE_META[selected.type].child!].label.toLowerCase()}
+                  </Button>
+                )}
+                <Button size="sm" variant="outline" leftIcon={<Pencil className="w-4 h-4" />} onClick={() => openEdit(selected)}>
+                  Đổi tên
+                </Button>
+                <Button size="sm" variant="ghost" className="text-rose-600 hover:bg-rose-50" leftIcon={<Trash2 className="w-4 h-4" />} onClick={() => setDeleting(selected)}>
+                  Xoá mục này
+                </Button>
+              </div>
+            </>
+          ) : (
+            <EmptyState icon={<FolderTree />} title="Chọn một mục" description="Nhấn vào mục trong cây để xem chi tiết." compact />
+          )}
+        </Card>
       </div>
+
+      <Modal
+        open={!!mode}
+        onClose={() => setMode(null)}
+        title={mode?.kind === 'edit' ? 'Đổi tên' : mode?.node.id === '__root' ? 'Thêm danh mục' : `Thêm vào "${mode?.node.title}"`}
+        size="sm"
+        footer={
+          <>
+            <Button variant="ghost" onClick={() => setMode(null)}>
+              Huỷ
+            </Button>
+            <Button onClick={save}>{mode?.kind === 'edit' ? 'Lưu' : 'Tạo'}</Button>
+          </>
+        }
+      >
+        <div className="space-y-4">
+          <Input label="Tên" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Nhập tên..." autoFocus required />
+          {mode?.kind === 'add' && mode.node.id === '__root' && (
+            <Select label="Loại" value={newType} onChange={(e) => setNewType(e.target.value as CourseTreeNode['type'])} options={[{ value: 'CATEGORY', label: 'Danh mục' }]} />
+          )}
+          {mode?.kind === 'add' && mode.node.id !== '__root' && (
+            <p className="text-xs text-slate-500">
+              Sẽ tạo <b>{TYPE_META[newType].label.toLowerCase()}</b> bên trong mục đã chọn.
+            </p>
+          )}
+        </div>
+      </Modal>
+
+      <ConfirmDialog open={!!deleting} onClose={() => setDeleting(null)} onConfirm={confirmDelete} danger title={`Xoá "${deleting?.title}"?`} message="Tất cả mục con bên trong cũng sẽ bị xoá. Hành động không thể hoàn tác." confirmText="Xoá" />
     </div>
   );
 };

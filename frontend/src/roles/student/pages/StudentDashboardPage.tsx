@@ -1,257 +1,207 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import {
-  Flame,
-  Target,
-  RotateCcw,
-  BookOpen,
-  ArrowRight,
-  TrendingUp,
-  AlertTriangle,
-  FileText,
-  Clock,
-  Sparkles,
-} from 'lucide-react';
+import { Flame, Zap, Trophy, RotateCcw, ArrowRight, Play, FileText, Clock, BookOpen, AlertTriangle, Award, CalendarDays } from 'lucide-react';
+import { useDocumentTitle } from '@/shared/hooks';
+import { useAuthStore } from '@/shared/stores/authStore';
+import { Badge, Button, Card, CardHeader, StatCard, ProgressBar, MiniBars, Sparkline, Heatmap, GradientPanel } from '@/shared/components/ui';
+import { Stagger } from '@/shared/components/motion';
+import { LEARNING_PATH, DAILY_ACTIVITY, WEEKDAY_LABELS, SCORE_HISTORY, MOCK_MISTAKES, MOCK_VOCAB, MOCK_TESTS, MOCK_ACHIEVEMENTS, HEATMAP_DATA, MISTAKE_CAUSE_LABEL } from '@/shared/mocks';
+import { cn, formatNumber } from '@/shared/utils';
+
+const greeting = () => {
+  const h = new Date().getHours();
+  if (h < 11) return 'Chào buổi sáng';
+  if (h < 14) return 'Chào buổi trưa';
+  if (h < 18) return 'Chào buổi chiều';
+  return 'Chào buổi tối';
+};
 
 export const StudentDashboardPage: React.FC = () => {
+  useDocumentTitle('Tổng quan');
+  const user = useAuthStore((s) => s.user);
+  const now = Date.now();
+  const dueMistakes = MOCK_MISTAKES.filter((m) => !m.isResolved && new Date(m.nextReviewAt).getTime() <= now);
+  const dueVocab = MOCK_VOCAB.filter((v) => new Date(v.nextReviewAt).getTime() <= now);
+  const currentMilestone = LEARNING_PATH.find((m) => m.status === 'CURRENT') ?? LEARNING_PATH[0];
+  const currentItem = currentMilestone.items.find((i) => i.status === 'CURRENT') ?? currentMilestone.items[0];
+  const earned = MOCK_ACHIEVEMENTS.filter((a) => a.earned).slice(-3);
+  const daysLeft = user?.target?.examDate ? Math.max(0, Math.ceil((new Date(user.target.examDate).getTime() - now) / 86400000)) : null;
+
   return (
-    <div className="space-y-8 max-w-7xl mx-auto">
-      {/* Welcome Banner */}
-      <div className="bg-gradient-to-r from-indigo-600 via-indigo-700 to-violet-800 rounded-3xl p-8 text-white shadow-xl shadow-indigo-100 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 relative overflow-hidden">
-        <div className="space-y-2 z-10">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 backdrop-blur-md text-indigo-100 text-xs font-semibold">
-            <Sparkles className="w-3.5 h-3.5 text-amber-300" />
-            <span>Lộ trình cá nhân hóa được cập nhật hôm nay</span>
-          </div>
-          <h1 className="text-3xl font-extrabold tracking-tight">Chào mừng trở lại, Học viên!</h1>
-          <p className="text-indigo-100 text-sm max-w-xl leading-relaxed">
-            Bạn đang có <strong className="text-white font-bold underline">12 mục kiến thức</strong> đến hạn ôn tập ngắt quãng (SRS). Hãy hoàn thành để duy trì chuỗi ghi nhớ dài hạn!
+    <div className="space-y-6">
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-3 animate-fade-down">
+        <div>
+          <p className="text-sm font-semibold text-indigo-600">{greeting()} 👋</p>
+          <h1 className="text-2xl md:text-3xl font-black text-slate-900 tracking-tight">{user?.fullName ?? 'Học viên'}</h1>
+          <p className="text-sm text-slate-500 mt-1">
+            Mục tiêu <b className="text-slate-800">{user?.target ? `${user.target.examType} ${user.target.score}` : 'TOEIC 750'}</b>
+            {daysLeft !== null && (
+              <>
+                {' '}
+                · còn <b className="text-slate-800">{daysLeft} ngày</b> tới kỳ thi
+              </>
+            )}
           </p>
         </div>
-
-        <div className="flex items-center gap-3 shrink-0 z-10">
-          <Link
-            to="/app/review"
-            className="px-5 py-3 rounded-2xl bg-white text-indigo-700 font-bold text-sm shadow-md hover:bg-indigo-50 transition flex items-center gap-2"
-          >
-            <RotateCcw className="w-4 h-4" />
-            Ôn tập ngay (12 mục)
-          </Link>
-          <Link
-            to="/app/mock-tests"
-            className="px-5 py-3 rounded-2xl bg-indigo-500/40 hover:bg-indigo-500/60 border border-white/20 text-white font-semibold text-sm backdrop-blur-md transition flex items-center gap-2"
-          >
-            <FileText className="w-4 h-4" />
-            Làm đề thi thử
-          </Link>
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm" to="/app/mock-tests" leftIcon={<FileText className="w-4 h-4" />}>
+            Thi thử
+          </Button>
+          <Button size="sm" variant="gradient" to={currentItem.link} leftIcon={<Play className="w-4 h-4" />}>
+            Học tiếp
+          </Button>
         </div>
       </div>
 
-      {/* KPI Stats Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-        {/* Streak */}
-        <div className="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-sm flex items-center justify-between">
-          <div className="space-y-1">
-            <span className="text-xs font-semibold text-slate-400">Chuỗi học tập</span>
-            <div className="text-2xl font-black text-slate-800">5 Ngày</div>
-            <span className="text-[11px] font-medium text-emerald-600">Đang giữ phong độ tốt!</span>
-          </div>
-          <div className="w-12 h-12 rounded-2xl bg-amber-50 text-amber-500 flex items-center justify-center">
-            <Flame className="w-6 h-6 fill-amber-500" />
-          </div>
-        </div>
+      <Stagger className="grid grid-cols-2 xl:grid-cols-4 gap-4" step={80}>
+        <StatCard label="Chuỗi ngày học" value={user?.streak ?? 12} suffix="ngày" icon={<Flame />} tone="amber" delta={8} deltaLabel="so với tuần trước" />
+        <StatCard label="Điểm nỗ lực" value={user?.effortPoints ?? 2480} icon={<Zap />} tone="indigo" delta={12} deltaLabel="tuần này" format={formatNumber} />
+        <StatCard label="Điểm thi gần nhất" value={715} suffix="/990" icon={<Trophy />} tone="emerald" delta={5} deltaLabel="ETS 2024 Test 1" />
+        <StatCard label="Cần ôn hôm nay" value={dueMistakes.length + dueVocab.length} suffix="mục" icon={<RotateCcw />} tone="rose" hint="Lịch SM-2" />
+      </Stagger>
 
-        {/* Target */}
-        <div className="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-sm flex items-center justify-between">
-          <div className="space-y-1">
-            <span className="text-xs font-semibold text-slate-400">Mục tiêu hiện tại</span>
-            <div className="text-2xl font-black text-indigo-600">TOEIC 750</div>
-            <span className="text-[11px] font-medium text-slate-500">Đầu vào: 450 • Còn 60 ngày</span>
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-5">
+        <GradientPanel className="xl:col-span-2 animate-fade-up">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-5">
+            <div className="space-y-3 flex-1">
+              <Badge tone="indigo" className="!bg-white/15 !text-white !border-white/20">
+                {currentMilestone.title} · {currentMilestone.subtitle}
+              </Badge>
+              <h2 className="text-xl md:text-2xl font-black leading-tight">Tiếp tục: {currentItem.title}</h2>
+              <p className="text-sm text-indigo-100">{currentMilestone.description}</p>
+              <div className="flex items-center gap-3 text-xs font-semibold text-indigo-100">
+                <span className="flex items-center gap-1">
+                  <Clock className="w-3.5 h-3.5" /> {currentItem.durationMin} phút
+                </span>
+                <span>· {currentItem.skill}</span>
+              </div>
+              <div>
+                <div className="flex justify-between text-xs font-bold mb-1.5">
+                  <span>Tiến độ chặng</span>
+                  <span>{currentMilestone.progress}%</span>
+                </div>
+                <div className="h-2.5 rounded-full bg-white/20 overflow-hidden">
+                  <div className="h-full rounded-full bg-white transition-[width] duration-1000 ease-spring" style={{ width: `${currentMilestone.progress}%` }} />
+                </div>
+              </div>
+            </div>
+            <Button size="lg" variant="secondary" className="!bg-white !text-indigo-700 hover:!bg-indigo-50 shine shrink-0" to={currentItem.link} rightIcon={<ArrowRight className="w-4 h-4" />}>
+              Học ngay
+            </Button>
           </div>
-          <div className="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center">
-            <Target className="w-6 h-6" />
-          </div>
-        </div>
+        </GradientPanel>
 
-        {/* Learning Path Progress */}
-        <div className="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-sm flex items-center justify-between">
-          <div className="space-y-1">
-            <span className="text-xs font-semibold text-slate-400">Tiến độ Lộ trình</span>
-            <div className="text-2xl font-black text-slate-800">42%</div>
-            <span className="text-[11px] font-medium text-indigo-600">Giai đoạn 2: Bứt phá kỹ năng</span>
+        <Card className="animate-fade-up" style={{ animationDelay: '100ms' }}>
+          <CardHeader title="Điểm thi thử" subtitle="7 lần gần nhất" icon={<Trophy />} action={<Badge tone="emerald">+195</Badge>} />
+          <div className="flex items-end justify-between gap-3">
+            <div>
+              <p className="text-4xl font-black text-slate-900">{SCORE_HISTORY[SCORE_HISTORY.length - 1]}</p>
+              <p className="text-xs text-slate-400 font-semibold">từ {SCORE_HISTORY[0]} điểm</p>
+            </div>
+            <Sparkline data={SCORE_HISTORY} width={150} height={56} tone="emerald" />
           </div>
-          <div className="w-12 h-12 rounded-2xl bg-violet-50 text-violet-600 flex items-center justify-center">
-            <TrendingUp className="w-6 h-6" />
-          </div>
-        </div>
-
-        {/* Mistakes in Notebook */}
-        <div className="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-sm flex items-center justify-between">
-          <div className="space-y-1">
-            <span className="text-xs font-semibold text-slate-400">Sổ tay lỗi sai</span>
-            <div className="text-2xl font-black text-rose-600">8 Lỗi</div>
-            <span className="text-[11px] font-medium text-rose-600">Cần khắc phục Part 5</span>
-          </div>
-          <div className="w-12 h-12 rounded-2xl bg-rose-50 text-rose-500 flex items-center justify-center">
-            <AlertTriangle className="w-6 h-6" />
-          </div>
-        </div>
+          <Link to="/app/progress" className="mt-4 inline-flex items-center gap-1 text-xs font-bold text-indigo-600 hover:underline">
+            Xem phân tích chi tiết <ArrowRight className="w-3.5 h-3.5" />
+          </Link>
+        </Card>
       </div>
 
-      {/* Main 2-Column Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Left Column (2/3): Lộ trình hôm nay & Phân tích điểm yếu */}
-        <div className="lg:col-span-2 space-y-6">
-          {/* Continue Learning Card */}
-          <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm space-y-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="text-base font-bold text-slate-900">Bài học tiếp theo của bạn</h3>
-                <p className="text-xs text-slate-400">Theo phân bổ lộ trình cá nhân hóa</p>
-              </div>
-              <span className="text-xs px-2.5 py-1 rounded-full bg-indigo-50 text-indigo-700 font-semibold">
-                TOEIC Part 5
-              </span>
-            </div>
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-5">
+        <Card className="animate-fade-up" style={{ animationDelay: '150ms' }}>
+          <CardHeader title="Hoạt động tuần này" subtitle="Phút học mỗi ngày" icon={<CalendarDays />} />
+          <MiniBars data={DAILY_ACTIVITY.map((d, i) => ({ label: WEEKDAY_LABELS[i], value: d.minutes, tone: d.minutes === 0 ? 'slate' : 'indigo' }))} height={110} />
+          <p className="text-xs text-slate-500 mt-3">
+            Tổng <b className="text-slate-800">{DAILY_ACTIVITY.reduce((a, d) => a + d.minutes, 0)} phút</b> · {DAILY_ACTIVITY.reduce((a, d) => a + d.questions, 0)} câu hỏi
+          </p>
+        </Card>
 
-            <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 flex items-center justify-between">
-              <div className="flex items-center gap-3.5">
-                <div className="w-10 h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center">
-                  <BookOpen className="w-5 h-5" />
-                </div>
-                <div>
-                  <h4 className="font-bold text-sm text-slate-800">
-                    Chinh phục thì Hiện tại hoàn thành & Quá khứ đơn
-                  </h4>
-                  <p className="text-xs text-slate-500 flex items-center gap-2 mt-0.5">
-                    <Clock className="w-3.5 h-3.5" />
-                    <span>Thời lượng: 20 phút • 15 câu luyện tập</span>
-                  </p>
+        <Card className="animate-fade-up" style={{ animationDelay: '200ms' }}>
+          <CardHeader title="Cần ôn hôm nay" subtitle="Lịch ôn ngắt quãng SM-2" icon={<RotateCcw />} action={<Button size="xs" variant="soft" to="/app/review">Ôn ngay</Button>} />
+          <div className="space-y-2">
+            {dueMistakes.slice(0, 3).map((m) => (
+              <div key={m.id} className="flex items-start gap-2.5 p-2.5 rounded-xl bg-rose-50/60 border border-rose-100">
+                <AlertTriangle className="w-4 h-4 text-rose-500 shrink-0 mt-0.5" />
+                <div className="min-w-0">
+                  <p className="text-xs font-semibold text-slate-800 line-clamp-1">{m.question.stem}</p>
+                  <Badge tone={MISTAKE_CAUSE_LABEL[m.cause].tone} size="xs" className="mt-1">
+                    {MISTAKE_CAUSE_LABEL[m.cause].label}
+                  </Badge>
                 </div>
               </div>
+            ))}
+            {dueVocab.slice(0, 2).map((v) => (
+              <div key={v.id} className="flex items-center gap-2.5 p-2.5 rounded-xl bg-indigo-50/60 border border-indigo-100">
+                <BookOpen className="w-4 h-4 text-indigo-500 shrink-0" />
+                <p className="text-xs font-semibold text-slate-800">
+                  {v.word} <span className="text-slate-400 font-normal">· {v.meaningVi}</span>
+                </p>
+              </div>
+            ))}
+            {dueMistakes.length + dueVocab.length > 5 && <p className="text-[11px] text-slate-400 text-center">+{dueMistakes.length + dueVocab.length - 5} mục khác</p>}
+          </div>
+        </Card>
 
-              <Link
-                to="/app/practice"
-                className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl shadow-sm transition flex items-center gap-1.5"
-              >
-                <span>Học ngay</span>
-                <ArrowRight className="w-3.5 h-3.5" />
+        <Card className="animate-fade-up" style={{ animationDelay: '250ms' }}>
+          <CardHeader title="Huy hiệu mới" subtitle="Thành tích gần đây" icon={<Award />} action={<Link to="/app/achievements" className="text-xs font-bold text-indigo-600 hover:underline">Tất cả</Link>} />
+          <div className="space-y-2">
+            {earned.map((a, i) => (
+              <div key={a.id} className="flex items-center gap-3 p-2.5 rounded-xl border border-slate-100 hover:border-amber-200 hover:bg-amber-50/40 transition animate-pop" style={{ animationDelay: `${300 + i * 80}ms` }}>
+                <span className="text-2xl">{a.icon}</span>
+                <div className="min-w-0">
+                  <p className="text-sm font-bold text-slate-800">{a.title}</p>
+                  <p className="text-[11px] text-slate-500 truncate">{a.description}</p>
+                </div>
+                <Badge tone={a.rarity === 'EPIC' ? 'violet' : a.rarity === 'RARE' ? 'sky' : 'slate'} size="xs" className="ml-auto">
+                  {a.rarity}
+                </Badge>
+              </div>
+            ))}
+          </div>
+        </Card>
+      </div>
+
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-5">
+        <Card className="xl:col-span-2 animate-fade-up" style={{ animationDelay: '300ms' }}>
+          <CardHeader title="Đề thi gợi ý cho bạn" subtitle="Phù hợp mức 650–750" icon={<FileText />} action={<Link to="/app/mock-tests" className="text-xs font-bold text-indigo-600 hover:underline">Kho đề</Link>} />
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            {MOCK_TESTS.slice(0, 3).map((t, i) => (
+              <Link key={t.id} to={`/app/mock-tests/${t.id}`} className="group block p-4 rounded-2xl border border-slate-200 card-hover animate-fade-up" style={{ animationDelay: `${350 + i * 70}ms` }}>
+                <div className="flex items-center justify-between mb-2">
+                  <Badge tone={t.examType === 'TOEIC' ? 'indigo' : 'emerald'} size="xs">
+                    {t.examType}
+                  </Badge>
+                  {t.isFree ? (
+                    <Badge tone="emerald" size="xs">
+                      Free
+                    </Badge>
+                  ) : (
+                    <Badge tone="amber" size="xs">
+                      VIP
+                    </Badge>
+                  )}
+                </div>
+                <p className="text-sm font-bold text-slate-900 group-hover:text-indigo-700 transition line-clamp-2">{t.title}</p>
+                <p className="text-[11px] text-slate-500 mt-1">
+                  {t.totalQuestions} câu · {t.durationMinutes} phút · {formatNumber(t.attempts)} lượt
+                </p>
               </Link>
-            </div>
+            ))}
           </div>
-
-          {/* Weak Skills Radar / Breakdown */}
-          <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm space-y-5">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="text-base font-bold text-slate-900">Phân tích năng lực theo kỹ năng</h3>
-                <p className="text-xs text-slate-400">Dữ liệu từ 3 bài thi thử và 120 câu luyện tập gần nhất</p>
-              </div>
-              <Link to="/app/progress" className="text-xs font-semibold text-indigo-600 hover:underline">
-                Xem chi tiết →
-              </Link>
+        </Card>
+        <Card className="animate-fade-up" style={{ animationDelay: '350ms' }}>
+          <CardHeader title="Chuỗi chuyên cần" subtitle="16 tuần gần nhất" icon={<Flame />} />
+          <Heatmap data={HEATMAP_DATA} weeks={16} />
+          <div className="flex items-center justify-between mt-3 text-[11px] text-slate-400">
+            <span>Ít</span>
+            <div className="flex gap-1">
+              {['bg-slate-100', 'bg-indigo-200', 'bg-indigo-400', 'bg-indigo-600', 'bg-indigo-800'].map((c) => (
+                <span key={c} className={cn('w-3 h-3 rounded-[3px]', c)} />
+              ))}
             </div>
-
-            <div className="space-y-3.5">
-              <div>
-                <div className="flex justify-between text-xs font-semibold mb-1">
-                  <span className="text-slate-700">Part 1: Photographs (Listening)</span>
-                  <span className="text-emerald-600 font-bold">85% (Rất tốt)</span>
-                </div>
-                <div className="w-full h-2.5 rounded-full bg-slate-100 overflow-hidden">
-                  <div className="h-full bg-emerald-500 rounded-full" style={{ width: '85%' }} />
-                </div>
-              </div>
-
-              <div>
-                <div className="flex justify-between text-xs font-semibold mb-1">
-                  <span className="text-slate-700">Part 2: Question-Response (Listening)</span>
-                  <span className="text-indigo-600 font-bold">72% (Khá)</span>
-                </div>
-                <div className="w-full h-2.5 rounded-full bg-slate-100 overflow-hidden">
-                  <div className="h-full bg-indigo-500 rounded-full" style={{ width: '72%' }} />
-                </div>
-              </div>
-
-              <div>
-                <div className="flex justify-between text-xs font-semibold mb-1">
-                  <span className="text-slate-700">Part 5: Incomplete Sentences (Grammar & Vocab)</span>
-                  <span className="text-rose-600 font-bold">45% (Điểm yếu cần ưu tiên)</span>
-                </div>
-                <div className="w-full h-2.5 rounded-full bg-slate-100 overflow-hidden">
-                  <div className="h-full bg-rose-500 rounded-full" style={{ width: '45%' }} />
-                </div>
-              </div>
-
-              <div>
-                <div className="flex justify-between text-xs font-semibold mb-1">
-                  <span className="text-slate-700">Part 7: Reading Comprehension</span>
-                  <span className="text-amber-600 font-bold">58% (Cần tăng tốc độ đọc)</span>
-                </div>
-                <div className="w-full h-2.5 rounded-full bg-slate-100 overflow-hidden">
-                  <div className="h-full bg-amber-500 rounded-full" style={{ width: '58%' }} />
-                </div>
-              </div>
-            </div>
+            <span>Nhiều</span>
           </div>
-        </div>
-
-        {/* Right Column (1/3): Lịch ôn tập & Lịch sử thi thử */}
-        <div className="space-y-6">
-          {/* Due Review Box */}
-          <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm space-y-4">
-            <div className="flex items-center justify-between">
-              <h3 className="text-base font-bold text-slate-900">Mục ôn tập hôm nay</h3>
-              <span className="text-xs px-2 py-0.5 rounded-full bg-rose-50 text-rose-700 font-bold">
-                12 Mục
-              </span>
-            </div>
-            <div className="space-y-2.5">
-              <div className="p-3 rounded-xl bg-slate-50 border border-slate-200/60 flex items-center justify-between text-xs">
-                <div>
-                  <strong className="block text-slate-800">Từ vựng Business: negotiate</strong>
-                  <span className="text-slate-400">Đã ôn 2 lần • Cần củng cố</span>
-                </div>
-                <span className="text-indigo-600 font-bold">Flashcard</span>
-              </div>
-              <div className="p-3 rounded-xl bg-slate-50 border border-slate-200/60 flex items-center justify-between text-xs">
-                <div>
-                  <strong className="block text-slate-800">Câu sai Part 5: Mệnh đề quan hệ</strong>
-                  <span className="text-slate-400">Làm sai hôm qua</span>
-                </div>
-                <span className="text-rose-600 font-bold">Sổ lỗi</span>
-              </div>
-            </div>
-            <Link
-              to="/app/review"
-              className="block w-full text-center py-2.5 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-bold transition"
-            >
-              Mở phòng ôn tập Spaced Repetition →
-            </Link>
-          </div>
-
-          {/* Quick Mock Tests history */}
-          <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm space-y-4">
-            <div className="flex items-center justify-between">
-              <h3 className="text-base font-bold text-slate-900">Kết quả thi thử gần nhất</h3>
-              <Link to="/app/mock-tests" className="text-xs text-indigo-600 font-semibold hover:underline">
-                Tất cả đề
-              </Link>
-            </div>
-            <div className="space-y-3">
-              <div className="p-3.5 rounded-2xl border border-slate-200 flex items-center justify-between">
-                <div>
-                  <h4 className="font-bold text-xs text-slate-800">ETS 2024 Practice Test 01</h4>
-                  <span className="text-[10px] text-slate-400">Hoàn thành: 2 ngày trước</span>
-                </div>
-                <div className="text-right">
-                  <div className="font-extrabold text-sm text-indigo-600">620 / 990</div>
-                  <span className="text-[10px] text-slate-400">LC: 340 • RC: 280</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+          <ProgressBar value={72} label="Chỉ số chuyên cần tháng" showValue tone="amber" size="sm" className="mt-4" />
+        </Card>
       </div>
     </div>
   );
