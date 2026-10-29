@@ -1,3 +1,4 @@
+import { PHOTOS, pravatar, unsplash } from '@/shared/components/media/Img';
 import type { BlogPost, FaqItem, PricingPlan, ResourceDoc, ScoreRow } from '@/shared/types';
 
 export const SCORE_TABLE: ScoreRow[] = [
@@ -90,6 +91,8 @@ export const RESOURCES: ResourceDoc[] = [
 export const BLOG_POSTS: BlogPost[] = [
   {
     id: 'b-1',
+    coverUrl: PHOTOS.headphones,
+    authorAvatar: pravatar(41),
     slug: '7-loi-part-2-thi-sinh-hay-mac',
     title: '7 lỗi TOEIC Part 2 thí sinh hay mắc và cách khắc phục',
     excerpt: 'Part 2 tưởng dễ nhưng là nơi mất điểm oan nhiều nhất. Cùng điểm qua 7 bẫy kinh điển và chiến thuật loại trừ đáp án.',
@@ -111,6 +114,8 @@ export const BLOG_POSTS: BlogPost[] = [
   },
   {
     id: 'b-2',
+    coverUrl: PHOTOS.studying,
+    authorAvatar: pravatar(43),
     slug: 'lo-trinh-tu-hoc-toeic-3-thang',
     title: 'Lộ trình tự học TOEIC từ 450 lên 750 trong 3 tháng',
     excerpt: 'Kế hoạch 12 tuần chia 3 chặng: nền tảng, chuyên sâu, thực chiến — kèm chỉ tiêu cụ thể cho từng tuần.',
@@ -130,6 +135,8 @@ export const BLOG_POSTS: BlogPost[] = [
   },
   {
     id: 'b-3',
+    coverUrl: PHOTOS.writing,
+    authorAvatar: pravatar(42),
     slug: 'vstep-writing-task-2-bo-cuc-4-doan',
     title: 'VSTEP Writing Task 2: Bố cục 4 đoạn ăn điểm',
     excerpt: 'Giám khảo chấm gì ở Task 2? Cách triển khai mở bài – 2 thân bài – kết bài trong 40 phút với dàn ý 3 phút.',
@@ -148,6 +155,8 @@ export const BLOG_POSTS: BlogPost[] = [
   },
   {
     id: 'b-4',
+    coverUrl: PHOTOS.books,
+    authorAvatar: pravatar(44),
     slug: 'spaced-repetition-la-gi',
     title: 'Spaced Repetition là gì và vì sao bạn nên dùng để học từ vựng?',
     excerpt: 'Đường cong quên lãng Ebbinghaus và cách thuật toán SM-2 chọn "thời điểm vàng" để nhắc bạn ôn lại.',
@@ -166,6 +175,8 @@ export const BLOG_POSTS: BlogPost[] = [
   },
   {
     id: 'b-5',
+    coverUrl: PHOTOS.notes,
+    authorAvatar: pravatar(43),
     slug: 'toeic-part-7-doan-kep-doan-ba',
     title: 'Chiến thuật Part 7 đoạn kép & đoạn ba: đọc gì trước, bỏ gì sau',
     excerpt: 'Part 7 chiếm 54/100 câu Reading. Học cách đọc câu hỏi trước, scan đúng đoạn và nhận diện câu hỏi liên kết thông tin.',
@@ -180,6 +191,8 @@ export const BLOG_POSTS: BlogPost[] = [
   },
   {
     id: 'b-6',
+    coverUrl: PHOTOS.discussion,
+    authorAvatar: pravatar(42),
     slug: 'vstep-speaking-part-3-mind-map',
     title: 'VSTEP Speaking Part 3: Dùng sơ đồ tư duy để nói đủ 5 phút',
     excerpt: 'Part 3 cho sẵn sơ đồ gợi ý. Cách biến 3 nhánh thành bài nói mạch lạc, có ví dụ và kết luận.',
@@ -202,9 +215,9 @@ export const BLOG_CATEGORIES = [
 ];
 
 export const TESTIMONIALS = [
-  { name: 'Phạm Hoàng Long', role: 'Sinh viên ĐH Bách Khoa', target: 'TOEIC 900', quote: 'Sổ tay lỗi sai thực sự thay đổi cách mình học. Không còn làm đề xong rồi quên, mỗi câu sai đều quay lại đúng lúc mình sắp quên.', score: '620 → 905' },
-  { name: 'Đỗ Thị Mai', role: 'Giáo viên tiểu học', target: 'VSTEP C1', quote: 'Lộ trình 3 chặng rõ ràng, mỗi ngày chỉ cần 45 phút. Phần Writing được giáo viên chấm chi tiết từng tiêu chí.', score: 'B1 → C1' },
-  { name: 'Trần Gia Huy', role: 'Nhân viên kinh doanh', target: 'TOEIC 750', quote: 'Thích nhất là phòng thi thử: đồng hồ, audio không tua lại, cảm giác y như thi thật nên đi thi không bị khớp.', score: '480 → 760' },
+  { avatar: pravatar(12), name: 'Phạm Hoàng Long', role: 'Sinh viên ĐH Bách Khoa', target: 'TOEIC 900', quote: 'Sổ tay lỗi sai thực sự thay đổi cách mình học. Không còn làm đề xong rồi quên, mỗi câu sai đều quay lại đúng lúc mình sắp quên.', score: '620 → 905' },
+  { avatar: pravatar(16), name: 'Đỗ Thị Mai', role: 'Giáo viên tiểu học', target: 'VSTEP C1', quote: 'Lộ trình 3 chặng rõ ràng, mỗi ngày chỉ cần 45 phút. Phần Writing được giáo viên chấm chi tiết từng tiêu chí.', score: 'B1 → C1' },
+  { avatar: pravatar(18), name: 'Trần Gia Huy', role: 'Nhân viên kinh doanh', target: 'TOEIC 750', quote: 'Thích nhất là phòng thi thử: đồng hồ, audio không tua lại, cảm giác y như thi thật nên đi thi không bị khớp.', score: '480 → 760' },
 ];
 
 export const HOME_STATS = [

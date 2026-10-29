@@ -8,7 +8,7 @@ import { Avatar, Badge, Button, Column, PageHeader, StatCard, Tone } from '@/sha
 import { CrudEditor, CrudField } from '@/engines';
 import { toast } from '@/shared/stores/uiStore';
 
-const ROLE_TONE: Record<AppRole, Tone> = { GUEST: 'slate', STUDENT: 'indigo', TEACHER: 'emerald', HEAD_TEACHER: 'amber', ADMIN: 'rose' };
+const ROLE_TONE: Record<AppRole, Tone> = { GUEST: 'slate', STUDENT: 'indigo', TEACHER: 'emerald', HEAD_TEACHER: 'amber', ADMIN: 'violet' };
 const STATUS_META: Record<AppUser['status'], { tone: Tone; label: string }> = {
   ACTIVE: { tone: 'emerald', label: 'Hoạt động' },
   LOCKED: { tone: 'rose', label: 'Đã khoá' },
@@ -21,10 +21,10 @@ const columns: Column<AppUser>[] = [
     header: 'Người dùng',
     render: (u) => (
       <div className="flex items-center gap-3">
-        <Avatar name={u.fullName} size="sm" />
+        <Avatar name={u.fullName} src={u.avatarUrl} size="md" ring status={u.status === 'ACTIVE' ? 'online' : 'offline'} />
         <div className="min-w-0">
-          <p className="font-semibold text-slate-900 truncate">{u.fullName}</p>
-          <p className="text-[11px] text-slate-400 truncate">{u.email}</p>
+          <p className="font-bold text-slate-900 truncate">{u.fullName}</p>
+          <p className="text-[11px] text-slate-500 truncate font-mono">{u.email}</p>
         </div>
       </div>
     ),
@@ -40,7 +40,7 @@ const columns: Column<AppUser>[] = [
     ),
   },
   { key: 'plan', header: 'Gói', render: (u) => <Badge tone={u.plan === 'VIP' ? 'amber' : 'slate'} solid={u.plan === 'VIP'} size="xs">{u.plan}</Badge> },
-  { key: 'joinedAt', header: 'Tham gia', render: (u) => <span className="text-xs text-slate-600">{formatDate(u.joinedAt)}</span> },
+  { key: 'joinedAt', header: 'Tham gia', render: (u) => <span className="text-xs font-mono text-slate-600">{formatDate(u.joinedAt)}</span> },
   { key: 'lastActiveAt', header: 'Hoạt động cuối', render: (u) => <span className="text-xs text-slate-500">{timeAgo(u.lastActiveAt)}</span> },
 ];
 
@@ -86,13 +86,21 @@ export const AdminUsersPage: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Người dùng & Phân quyền" icon={<Users />} description="Khởi tạo, kích hoạt, khoá/mở khoá tài khoản và cấp phát vai trò cho người dùng hệ thống." />
+      <PageHeader
+        title={
+          <>
+            Người dùng & <span className="mark-teal mark">Phân quyền</span>
+          </>
+        }
+        icon={<Users />}
+        description="Khởi tạo, kích hoạt, khoá/mở khoá tài khoản và cấp phát vai trò STUDENT · TEACHER · HEAD_TEACHER · ADMIN."
+      />
 
       <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
-        <StatCard label="Tổng tài khoản" value={MOCK_USERS.length} tone="indigo" icon={<Users />} />
-        <StatCard label="Đang hoạt động" value={count('ACTIVE')} tone="emerald" icon={<UserCheck />} />
-        <StatCard label="Chờ kích hoạt" value={count('PENDING')} tone="amber" icon={<Mail />} />
-        <StatCard label="Đã khoá" value={count('LOCKED')} tone="rose" icon={<Lock />} />
+        <StatCard label="Tổng tài khoản" value={MOCK_USERS.length} tone="indigo" icon={<Users />} hint="toàn hệ thống" />
+        <StatCard label="Đang hoạt động" value={count('ACTIVE')} tone="emerald" icon={<UserCheck />} hint="đăng nhập 7 ngày qua" />
+        <StatCard label="Chờ kích hoạt" value={count('PENDING')} tone="amber" icon={<Mail />} hint="chưa xác thực email" />
+        <StatCard label="Đã khoá" value={count('LOCKED')} tone="rose" icon={<Lock />} hint="vi phạm / yêu cầu" />
       </div>
 
       <CrudEditor<AppUser>

@@ -61,7 +61,14 @@ export const StudentSettingsPage: React.FC = () => {
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
-      <PageHeader title="Cài đặt" description="Hồ sơ, mục tiêu học tập, thông báo và bảo mật tài khoản." />
+      <PageHeader
+        title={
+          <>
+            <span className="mark">Cài đặt</span> tài khoản
+          </>
+        }
+        description="Hồ sơ, mục tiêu học tập, thông báo và bảo mật tài khoản."
+      />
       <Tabs
         variant="pill"
         value={tab}
@@ -76,25 +83,27 @@ export const StudentSettingsPage: React.FC = () => {
 
       {tab === 'profile' && (
         <div className="grid grid-cols-1 lg:grid-cols-[260px_1fr] gap-5 animate-fade-up">
-          <Card className="text-center space-y-3">
+          <Card hard tone="cream" className="text-center space-y-3">
             <div className="relative inline-block">
-              <Avatar name={user.fullName} size="xl" ring />
-              <button onClick={() => toast.info('Tính năng tải ảnh sẽ có trong bản tiếp theo')} className="absolute -bottom-1 -right-1 w-8 h-8 rounded-full bg-indigo-600 text-white flex items-center justify-center shadow-md hover:scale-110 transition">
+              <div className="rounded-full border-[3px] border-slate-900 bg-white p-1 shadow-hard-sm">
+                <Avatar name={user.fullName} src={user.avatarUrl} size="xl" />
+              </div>
+              <button onClick={() => toast.info('Tính năng tải ảnh sẽ có trong bản tiếp theo')} className="absolute -bottom-1 -right-1 w-9 h-9 rounded-full bg-amber-300 border-2 border-slate-900 text-slate-900 flex items-center justify-center shadow-hard-sm hover:-translate-y-0.5 transition">
                 <Camera className="w-4 h-4" />
               </button>
             </div>
             <div>
-              <p className="font-bold text-slate-900">{user.fullName}</p>
+              <p className="font-display font-bold text-slate-900">{user.fullName}</p>
               <p className="text-xs text-slate-500">{user.email}</p>
             </div>
             <div className="flex justify-center gap-1.5">
               <Badge tone="indigo">{ROLE_LABEL[user.role]}</Badge>
               <Badge tone={user.plan === 'VIP' ? 'amber' : 'slate'}>{user.plan}</Badge>
             </div>
-            <p className="text-[11px] text-slate-400">Tham gia {formatDate(user.joinedAt)}</p>
+            <p className="text-[11px] text-slate-500 font-semibold">Tham gia {formatDate(user.joinedAt)}</p>
           </Card>
           <div className="space-y-5">
-            <Card>
+            <Card hard>
               <CardHeader title="Thông tin cá nhân" icon={<User />} />
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <Input label="Họ và tên" value={fullName} onChange={(e) => setFullName(e.target.value)} />
@@ -108,13 +117,13 @@ export const StudentSettingsPage: React.FC = () => {
                 </Button>
               </div>
             </Card>
-            <Card>
+            <Card hard tone="yellow">
               <CardHeader title="Tham gia lớp học" subtitle="Nhập mã mời do giáo viên cung cấp" icon={<Users />} />
               <div className="flex flex-col sm:flex-row gap-2">
                 <div className="flex-1">
                   <Input placeholder="ORB-XXXX" value={code} onChange={(e) => setCode(e.target.value.toUpperCase())} maxLength={8} leftIcon={<KeyRound />} className="font-mono tracking-widest uppercase" />
                 </div>
-                <Button variant="soft" onClick={joinClass}>
+                <Button variant="secondary" onClick={joinClass}>
                   Tham gia
                 </Button>
               </div>
@@ -124,7 +133,7 @@ export const StudentSettingsPage: React.FC = () => {
       )}
 
       {tab === 'target' && (
-        <Card className="animate-fade-up max-w-2xl">
+        <Card hard className="animate-fade-up max-w-2xl">
           <CardHeader title="Mục tiêu học tập" subtitle="Lộ trình cá nhân hoá sẽ tự điều chỉnh theo mục tiêu này" icon={<Target />} />
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Select
@@ -153,7 +162,7 @@ export const StudentSettingsPage: React.FC = () => {
       )}
 
       {tab === 'notifications' && (
-        <Card className="animate-fade-up max-w-2xl">
+        <Card hard className="animate-fade-up max-w-2xl">
           <CardHeader title="Tuỳ chọn thông báo" icon={<Bell />} />
           <div className="space-y-5">
             <Switch checked={notif.review} onChange={(v) => setNotif((s) => ({ ...s, review: v }))} label="Nhắc ôn tập ngắt quãng" description="Thông báo khi có thẻ/câu sai đến hạn ôn theo SM-2." />
@@ -171,7 +180,7 @@ export const StudentSettingsPage: React.FC = () => {
 
       {tab === 'security' && (
         <div className="space-y-5 animate-fade-up max-w-2xl">
-          <Card>
+          <Card hard>
             <CardHeader title="Đổi mật khẩu" subtitle="Tối thiểu 8 ký tự" icon={<Lock />} />
             <div className="space-y-4">
               <PasswordInput label="Mật khẩu hiện tại" value={pw.current} onChange={(e) => setPw((s) => ({ ...s, current: e.target.value }))} />
@@ -180,9 +189,9 @@ export const StudentSettingsPage: React.FC = () => {
               <Button onClick={changePw}>Cập nhật mật khẩu</Button>
             </div>
           </Card>
-          <Card className="border-rose-200 bg-rose-50/40">
-            <CardHeader title="Khu vực nguy hiểm" subtitle="Hành động không thể hoàn tác" icon={<Trash2 className="text-rose-600" />} />
-            <p className="text-sm text-slate-600 mb-4">Xoá tài khoản sẽ xoá toàn bộ lịch sử học tập, sổ tay lỗi sai và từ vựng đã lưu.</p>
+          <Card hard className="!border-violet-600 !shadow-hard-coral bg-violet-50">
+            <CardHeader title="Khu vực nguy hiểm" subtitle="Hành động không thể hoàn tác" icon={<Trash2 />} />
+            <p className="text-sm text-slate-700 mb-4">Xoá tài khoản sẽ xoá toàn bộ lịch sử học tập, sổ tay lỗi sai và từ vựng đã lưu.</p>
             <Button variant="danger" leftIcon={<Trash2 className="w-4 h-4" />} onClick={() => setDeleteOpen(true)}>
               Xoá tài khoản
             </Button>

@@ -5,6 +5,7 @@ import { cn, formatClock } from '@/shared/utils';
 import { useDocumentTitle } from '@/shared/hooks';
 import { toast } from '@/shared/stores/uiStore';
 import { Alert, Badge, Button, Card, CardHeader, PageHeader, DataTable, Column } from '@/shared/components/ui';
+import { Img, PHOTOS } from '@/shared/components/media/Img';
 
 type Phase = 'IDLE' | 'PREP' | 'RECORDING' | 'DONE';
 
@@ -23,12 +24,15 @@ const HISTORY: HistoryRow[] = [
   { id: 'h-3', part: 'Part 3 — Topic Development', date: '14/10/2026', duration: '04:50', score: 6.5, status: 'GRADED' },
 ];
 
+const PART_PHOTO = [PHOTOS.discussion, PHOTOS.meeting, PHOTOS.lecture];
+const PART_TONE: Array<'teal' | 'coral' | 'yellow'> = ['teal', 'coral', 'yellow'];
 const BAR_COUNT = 28;
 
 export const StudentSpeakingPage: React.FC = () => {
   useDocumentTitle('Luyện Nói VSTEP');
   const [partId, setPartId] = useState<string | null>(null);
   const part = VSTEP_SPEAKING_PARTS.find((p) => p.id === partId);
+  const partIdx = VSTEP_SPEAKING_PARTS.findIndex((p) => p.id === partId);
   const [phase, setPhase] = useState<Phase>('IDLE');
   const [prep, setPrep] = useState(60);
   const [elapsed, setElapsed] = useState(0);
@@ -109,10 +113,10 @@ export const StudentSpeakingPage: React.FC = () => {
   };
 
   const cols: Column<HistoryRow>[] = [
-    { key: 'part', header: 'Phần thi', render: (r) => <span className="font-semibold text-slate-800">{r.part}</span> },
+    { key: 'part', header: 'Phần thi', render: (r) => <span className="font-bold text-slate-900">{r.part}</span> },
     { key: 'date', header: 'Ngày' },
-    { key: 'duration', header: 'Thời lượng', align: 'center' },
-    { key: 'score', header: 'Điểm', align: 'center', render: (r) => (r.score !== undefined ? <span className="font-black text-indigo-700">{r.score.toFixed(1)}</span> : <span className="text-slate-400">—</span>) },
+    { key: 'duration', header: 'Thời lượng', align: 'center', render: (r) => <span className="font-mono">{r.duration}</span> },
+    { key: 'score', header: 'Điểm', align: 'center', render: (r) => (r.score !== undefined ? <span className="font-display font-extrabold text-indigo-700 text-base">{r.score.toFixed(1)}</span> : <span className="text-slate-400">—</span>) },
     {
       key: 'status',
       header: 'Trạng thái',
@@ -127,28 +131,40 @@ export const StudentSpeakingPage: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Luyện Nói VSTEP" icon={<Mic />} description="Ghi âm trả lời 3 phần thi Nói theo format Bộ GD&ĐT, nộp cho giáo viên nhận xét." />
+      <PageHeader
+        title={
+          <>
+            Luyện <span className="mark-coral mark">Nói</span> VSTEP
+          </>
+        }
+        icon={<Mic />}
+        description="Ghi âm trả lời 3 phần thi Nói theo format Bộ GD&ĐT, nộp cho giáo viên nhận xét."
+      />
 
       {!part ? (
         <>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {VSTEP_SPEAKING_PARTS.map((p, i) => (
-              <Card key={p.id} hover className="animate-fade-up flex flex-col" style={{ animationDelay: `${i * 70}ms` }} onClick={() => setPartId(p.id)}>
-                <div className="flex items-center justify-between mb-3">
-                  <span className="w-10 h-10 rounded-xl bg-gradient-to-br from-rose-500 to-pink-500 text-white font-black flex items-center justify-center">{i + 1}</span>
-                  <Badge tone="slate" icon={<Clock className="w-3 h-3" />}>
+              <Card key={p.id} hard hover padding="none" className="animate-fade-up flex flex-col overflow-hidden" style={{ animationDelay: `${i * 70}ms` }} onClick={() => setPartId(p.id)}>
+                <div className="relative h-36">
+                  <Img src={PART_PHOTO[i]} alt={p.part} wrapperClass="absolute inset-0" fallbackClass="bg-indigo-200" />
+                  <div className="absolute inset-0 bg-slate-900/30" />
+                  <span className="absolute top-3 left-3 w-10 h-10 rounded-xl bg-white border-2 border-slate-900 font-display font-extrabold flex items-center justify-center shadow-hard-sm">{i + 1}</span>
+                  <Badge tone="slate" solid size="xs" className="absolute top-3 right-3" icon={<Clock className="w-3 h-3" />}>
                     {p.minutes} phút
                   </Badge>
                 </div>
-                <h3 className="font-bold text-slate-900">{p.part}</h3>
-                <p className="text-xs text-slate-500 mt-1 line-clamp-3 leading-relaxed flex-1">{p.prompt}</p>
-                <Button size="sm" variant="soft" className="mt-4" leftIcon={<Mic className="w-4 h-4" />}>
-                  Luyện phần này
-                </Button>
+                <div className="p-4 border-t-2 border-slate-900 flex-1 flex flex-col">
+                  <h3 className="font-display font-bold text-slate-900">{p.part}</h3>
+                  <p className="text-xs text-slate-600 mt-1 line-clamp-3 leading-relaxed flex-1">{p.prompt}</p>
+                  <Button size="sm" variant="primary" className="mt-4" leftIcon={<Mic className="w-4 h-4" />}>
+                    Luyện phần này
+                  </Button>
+                </div>
               </Card>
             ))}
           </div>
-          <Card className="animate-fade-up" style={{ animationDelay: '250ms' }}>
+          <Card hard className="animate-fade-up" style={{ animationDelay: '250ms' }}>
             <CardHeader title="Lịch sử bài nộp" subtitle="Các bản ghi âm gần đây" icon={<MessageSquare />} />
             <DataTable columns={cols} rows={HISTORY} dense />
           </Card>
@@ -156,36 +172,40 @@ export const StudentSpeakingPage: React.FC = () => {
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-6">
           <div className="space-y-4">
-            <Card className="animate-fade-up">
+            <Card hard tone={PART_TONE[partIdx] ?? 'teal'} className="animate-fade-up">
               <div className="flex items-center justify-between gap-3 mb-3">
-                <Badge tone="rose">{part.part}</Badge>
-                <Button size="xs" variant="ghost" onClick={() => setPartId(null)}>
+                <span className="sticker tilt-1">{part.part}</span>
+                <Button size="xs" variant="white" onClick={() => setPartId(null)}>
                   Đổi phần thi
                 </Button>
               </div>
-              <p className="text-slate-800 font-medium leading-relaxed">{part.prompt}</p>
+              <p className="font-display text-lg font-semibold leading-relaxed">{part.prompt}</p>
             </Card>
 
-            {micError && <Alert type="warning" title="Chưa có quyền micro" onClose={() => setMicError(null)}>{micError}</Alert>}
+            {micError && (
+              <Alert type="warning" title="Chưa có quyền micro" onClose={() => setMicError(null)}>
+                {micError}
+              </Alert>
+            )}
 
-            <Card className="text-center animate-fade-up" style={{ animationDelay: '80ms' }} padding="lg">
+            <div className="rounded-2xl border-2 border-slate-900 shadow-hard bg-paper text-center p-8 md:p-10 animate-fade-up" style={{ animationDelay: '80ms' }}>
               {phase === 'IDLE' && (
                 <div className="space-y-4">
                   <div className="relative inline-flex">
-                    <span className="absolute inset-0 rounded-full bg-rose-400/40 animate-pulse-ring" />
-                    <button onClick={() => setPhase('PREP')} className="relative w-24 h-24 rounded-full bg-gradient-to-br from-rose-500 to-pink-600 text-white flex items-center justify-center shadow-lift hover:scale-105 transition">
-                      <Mic className="w-10 h-10" />
+                    <span className="absolute inset-0 rounded-full bg-violet-400/50 animate-pulse-ring" />
+                    <button onClick={() => setPhase('PREP')} className="relative w-28 h-28 rounded-full bg-violet-500 border-4 border-slate-900 text-white flex items-center justify-center shadow-hard hover:-translate-y-1 transition">
+                      <Mic className="w-12 h-12" />
                     </button>
                   </div>
-                  <p className="font-bold text-slate-900">Nhấn để bắt đầu</p>
-                  <p className="text-xs text-slate-500">Bạn có 60 giây chuẩn bị, sau đó máy tự động ghi âm tối đa {part.minutes} phút.</p>
+                  <p className="font-display font-bold text-slate-900 text-lg">Nhấn để bắt đầu</p>
+                  <p className="text-xs text-slate-600">Bạn có 60 giây chuẩn bị, sau đó máy tự động ghi âm tối đa {part.minutes} phút.</p>
                 </div>
               )}
               {phase === 'PREP' && (
                 <div className="space-y-3 animate-scale-in">
-                  <p className="text-[11px] font-extrabold uppercase tracking-wider text-amber-600">Thời gian chuẩn bị</p>
-                  <p className="text-6xl font-black font-mono text-slate-900">{prep}</p>
-                  <p className="text-xs text-slate-500">Hãy gạch ý chính trong đầu. Ghi âm sẽ tự bắt đầu.</p>
+                  <span className="sticker tilt-2 !bg-amber-300">Thời gian chuẩn bị</span>
+                  <p className="font-display text-7xl font-extrabold text-slate-900 tabular-nums">{prep}</p>
+                  <p className="text-xs text-slate-600">Hãy gạch ý chính trong đầu. Ghi âm sẽ tự bắt đầu.</p>
                   <Button variant="outline" size="sm" onClick={() => void startRecording()}>
                     Bỏ qua, ghi âm ngay
                   </Button>
@@ -193,12 +213,12 @@ export const StudentSpeakingPage: React.FC = () => {
               )}
               {phase === 'RECORDING' && (
                 <div className="space-y-4 animate-scale-in">
-                  <div className="flex items-center justify-center gap-2 text-rose-600 font-bold text-sm">
-                    <span className="w-2.5 h-2.5 rounded-full bg-rose-600 animate-pulse" /> Đang ghi âm · {formatClock(elapsed)} / {formatClock(part.minutes * 60)}
+                  <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-violet-500 border-2 border-slate-900 text-white font-bold text-sm shadow-hard-sm">
+                    <span className="w-2.5 h-2.5 rounded-full bg-white animate-pulse" /> REC · {formatClock(elapsed)} / {formatClock(part.minutes * 60)}
                   </div>
-                  <div className="flex items-end justify-center gap-1 h-20">
+                  <div className="flex items-end justify-center gap-1 h-24">
                     {Array.from({ length: BAR_COUNT }).map((_, i) => (
-                      <span key={i} className="w-1.5 rounded-full bg-gradient-to-t from-rose-500 to-pink-400 animate-bounce-soft" style={{ height: `${20 + ((i * 37) % 60)}%`, animationDelay: `${(i % 7) * 90}ms`, animationDuration: `${0.6 + (i % 4) * 0.15}s` }} />
+                      <span key={i} className={cn('w-2 rounded-full border border-slate-900 animate-bounce-soft', i % 3 === 0 ? 'bg-violet-500' : i % 3 === 1 ? 'bg-amber-300' : 'bg-indigo-500')} style={{ height: `${20 + ((i * 37) % 60)}%`, animationDelay: `${(i % 7) * 90}ms`, animationDuration: `${0.6 + (i % 4) * 0.15}s` }} />
                     ))}
                   </div>
                   <Button variant="danger" size="lg" leftIcon={<Square className="w-4 h-4 fill-current" />} onClick={stopRecording}>
@@ -208,14 +228,14 @@ export const StudentSpeakingPage: React.FC = () => {
               )}
               {phase === 'DONE' && (
                 <div className="space-y-4 animate-scale-in">
-                  <div className="w-16 h-16 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto animate-pop">
+                  <div className="w-16 h-16 rounded-full bg-emerald-400 border-2 border-slate-900 text-slate-900 flex items-center justify-center mx-auto animate-pop shadow-hard-sm">
                     <CheckCircle2 className="w-8 h-8" />
                   </div>
-                  <p className="font-bold text-slate-900">Đã ghi xong · {formatClock(elapsed)}</p>
+                  <p className="font-display font-bold text-slate-900 text-lg">Đã ghi xong · {formatClock(elapsed)}</p>
                   {audioUrl ? (
                     <audio controls src={audioUrl} className="w-full max-w-md mx-auto" />
                   ) : (
-                    <p className="text-xs text-slate-400 flex items-center justify-center gap-1">
+                    <p className="text-xs text-slate-500 flex items-center justify-center gap-1">
                       <Play className="w-3 h-3" /> Đang xử lý bản ghi...
                     </p>
                   )}
@@ -229,23 +249,23 @@ export const StudentSpeakingPage: React.FC = () => {
                   </div>
                 </div>
               )}
-            </Card>
+            </div>
           </div>
           <aside className="space-y-4">
-            <Card padding="sm" className="animate-slide-in-right">
+            <Card hard padding="sm" className="animate-slide-in-right">
               <CardHeader title="Tiêu chí chấm" className="mb-2" />
-              <ul className="space-y-2 text-xs text-slate-600">
+              <ul className="space-y-2 text-xs text-slate-700">
                 {['Pronunciation — phát âm rõ, trọng âm đúng', 'Fluency — trôi chảy, ít ngập ngừng', 'Vocabulary — từ vựng phù hợp chủ đề', 'Grammar — cấu trúc đa dạng, chính xác'].map((t) => (
                   <li key={t} className="flex gap-2">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 mt-0.5 shrink-0" />
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 mt-0.5 shrink-0" />
                     {t}
                   </li>
                 ))}
               </ul>
             </Card>
-            <Card padding="sm" className={cn('animate-slide-in-right bg-indigo-50/60 border-indigo-100')} style={{ animationDelay: '100ms' }}>
-              <p className="text-xs font-bold text-indigo-900 mb-1">Mẹo nhanh</p>
-              <p className="text-xs text-indigo-800 leading-relaxed">Mỗi ý trả lời theo công thức: Nêu ý → Giải thích → Ví dụ cá nhân. Đừng im lặng quá 3 giây; dùng "Well, let me think…" để nối ý.</p>
+            <Card hard tone="yellow" padding="sm" className="animate-slide-in-right" style={{ animationDelay: '100ms' }}>
+              <p className="text-xs font-extrabold uppercase tracking-wide mb-1">Mẹo nhanh</p>
+              <p className="text-xs leading-relaxed">Mỗi ý trả lời theo công thức: Nêu ý → Giải thích → Ví dụ cá nhân. Đừng im lặng quá 3 giây; dùng "Well, let me think…" để nối ý.</p>
             </Card>
           </aside>
         </div>

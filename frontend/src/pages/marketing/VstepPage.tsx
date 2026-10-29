@@ -1,156 +1,172 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, Headphones, BookOpen, PenTool, Mic, Lightbulb, FileText, Users, GraduationCap } from 'lucide-react';
-import { Badge, Button, Card, GradientPanel, SectionTitle } from '@/shared/components/ui';
-import { CountUp, FloatingBlobs, Reveal, Stagger } from '@/shared/components/motion';
-import { MOCK_TESTS, VSTEP_PARTS_INFO, SCORE_TABLE } from '@/shared/mocks';
+import { ArrowRight, Clock, Headphones, BookOpen, PenTool, Mic, Lightbulb, CheckCircle2 } from 'lucide-react';
+import { Button, Card, SectionTitle, Badge, Accordion } from '@/shared/components/ui';
+import { Reveal, Stagger, Doodles } from '@/shared/components/motion';
+import { Img, PHOTOS, pravatar } from '@/shared/components/media/Img';
+import { VSTEP_PARTS_INFO, MOCK_TESTS } from '@/shared/mocks';
 import { useDocumentTitle } from '@/shared/hooks';
-import { formatNumber } from '@/shared/utils';
+import { cn, formatNumber } from '@/shared/utils';
+
+const VSTEP_LEVELS_UI = [
+  { level: 'B1', bac: 3, score: '4.0 – 5.5', who: 'Chuẩn đầu ra tốt nghiệp đại học tại hầu hết trường. Giao tiếp được trong tình huống quen thuộc.', need: ['Nghe hiểu thông báo, hội thoại ngắn', 'Viết email 120 từ đúng bố cục', 'Nói 2–3 phút về chủ đề đời sống'] },
+  { level: 'B2', bac: 4, score: '6.0 – 8.0', who: 'Yêu cầu với cao học, giáo viên tiếng Anh THCS/THPT và nhiều vị trí doanh nghiệp.', need: ['Đọc bài học thuật 600–800 từ', 'Viết luận 250 từ có lập luận', 'Thảo luận giải pháp, phản biện'] },
+  { level: 'C1', bac: 5, score: '8.5 – 10', who: 'Giảng viên, nghiên cứu sinh, chuyên ngành ngôn ngữ Anh. Sử dụng linh hoạt trong học thuật.', need: ['Từ vựng học thuật nâng cao', 'Bài viết mạch lạc, cấu trúc phức', 'Phát triển chủ đề trừu tượng 5 phút'] },
+];
 
 const ICONS: Record<string, React.ElementType> = { Listening: Headphones, Reading: BookOpen, Writing: PenTool, Speaking: Mic };
-const TONES: Record<string, string> = { Listening: 'bg-sky-50 text-sky-600', Reading: 'bg-violet-50 text-violet-600', Writing: 'bg-amber-50 text-amber-600', Speaking: 'bg-rose-50 text-rose-600' };
+const TONES = ['bg-indigo-100 text-indigo-800', 'bg-violet-100 text-violet-800', 'bg-amber-200 text-slate-900', 'bg-sky-100 text-sky-800'];
 
 export const VstepPage: React.FC = () => {
   useDocumentTitle('Luyện thi VSTEP');
   const tests = MOCK_TESTS.filter((t) => t.examType === 'VSTEP');
-  const levels = SCORE_TABLE.filter((r) => ['B1', 'B2', 'C1'].includes(r.cefr));
 
   return (
-    <div className="pb-20">
-      <section className="relative overflow-hidden py-16 md:py-24">
-        <FloatingBlobs tone="emerald" />
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid lg:grid-cols-2 gap-10 items-center">
-          <div className="space-y-5 animate-fade-up">
-            <Badge tone="emerald" size="md">
-              VSTEP · Khung năng lực 6 bậc Việt Nam
-            </Badge>
-            <h1 className="text-4xl md:text-5xl font-black text-slate-900 tracking-tight leading-tight">
-              Đạt chuẩn <span className="bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">VSTEP B1 – B2 – C1</span> với 4 kỹ năng
+    <div>
+      <section className="relative bg-violet-500 text-white overflow-hidden border-b-2 border-slate-900">
+        <Doodles tone="light" />
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24 grid lg:grid-cols-[1fr_1fr] gap-12 items-center">
+          <div className="space-y-6">
+            <span className="sticker tilt-1 !bg-amber-300">VSTEP · Khung năng lực 6 bậc</span>
+            <h1 className="font-display text-5xl md:text-6xl font-extrabold leading-[1.02]">
+              Bốn kỹ năng, <br />
+              một kế hoạch <span className="mark mark-full">rõ ràng</span>.
             </h1>
-            <p className="text-slate-600 leading-relaxed">Format Bộ GD&ĐT: Nghe – Đọc – Viết – Nói. Bài mẫu Writing theo rubric, khung trả lời Speaking và giáo viên chấm bài chi tiết.</p>
-            <div className="flex flex-wrap gap-3">
-              <Button to="/auth/register" variant="success" size="lg" rightIcon={<ArrowRight className="w-4 h-4" />}>
-                Bắt đầu lộ trình VSTEP
+            <p className="text-violet-100 text-lg max-w-xl leading-relaxed">Nghe, Đọc chấm tự động. Viết, Nói ghi lại rồi giáo viên chấm theo rubric 4 tiêu chí của Bộ GD&ĐT. Mục tiêu B1, B2 hay C1 đều có lộ trình riêng.</p>
+            <div className="flex flex-col sm:flex-row gap-3">
+              <Button to="/auth/register" size="lg" variant="ink" rightIcon={<ArrowRight className="w-4 h-4" />}>
+                Thi xếp lớp VSTEP
               </Button>
-              <Button to="/mock-tests" variant="outline" size="lg">
-                Thi thử ngay
+              <Button to="/mock-tests" size="lg" variant="white">
+                Đề mẫu Bộ GD&ĐT
               </Button>
             </div>
           </div>
-          <Stagger className="grid grid-cols-2 gap-4" animation="scale-in">
-            {[
-              { v: 4, s: ' kỹ năng', l: 'Nghe · Đọc · Viết · Nói' },
-              { v: 172, s: ' phút', l: 'Tổng thời gian thi' },
-              { v: 10, s: ' điểm', l: 'Thang điểm tối đa' },
-              { v: 3, s: ' bậc', l: 'B1 · B2 · C1' },
-            ].map((x) => (
-              <Card key={x.l} padding="sm" className="text-center">
-                <GraduationCap className="w-6 h-6 text-emerald-600 mx-auto mb-2" />
-                <p className="text-2xl font-black text-slate-900">
-                  <CountUp value={x.v} suffix={x.s} />
-                </p>
-                <p className="text-xs text-slate-500 font-semibold">{x.l}</p>
-              </Card>
-            ))}
-          </Stagger>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="photo-frame tilt-1 mt-8">
+              <Img src={PHOTOS.writing} alt="Luyện viết VSTEP" ratio="3/4" fallbackClass="bg-violet-300" />
+            </div>
+            <div className="photo-frame tilt-2">
+              <Img src={PHOTOS.discussion} alt="Luyện nói VSTEP" ratio="3/4" fallbackClass="bg-amber-200" />
+            </div>
+          </div>
         </div>
       </section>
 
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 space-y-10">
+      {/* Levels */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24 space-y-10">
         <Reveal>
-          <SectionTitle eyebrow="Cấu trúc đề thi" title="4 kỹ năng của bài thi VSTEP" />
-        </Reveal>
-        <Stagger className="grid md:grid-cols-2 gap-5" step={110}>
-          {VSTEP_PARTS_INFO.map((p) => {
-            const Icon = ICONS[p.skill];
-            return (
-              <Card key={p.id} hover className="space-y-4">
-                <div className="flex items-start justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${TONES[p.skill]}`}>
-                      <Icon className="w-6 h-6" />
-                    </div>
-                    <div>
-                      <h3 className="font-black text-slate-900">{p.nameVi}</h3>
-                      <p className="text-xs text-slate-500">{p.name}</p>
-                    </div>
-                  </div>
-                  <div className="flex gap-1.5">
-                    <Badge tone="slate" size="xs">
-                      {p.questions} {p.skill === 'Writing' || p.skill === 'Speaking' ? 'phần' : 'câu'}
-                    </Badge>
-                    <Badge tone="amber" size="xs">
-                      {p.minutes} phút
-                    </Badge>
-                  </div>
-                </div>
-                <p className="text-sm text-slate-600 leading-relaxed">{p.description}</p>
-                <div className="rounded-xl bg-slate-50 border border-slate-100 p-3">
-                  <p className="text-xs font-bold text-slate-700 flex items-center gap-1.5 mb-1.5">
-                    <Lightbulb className="w-3.5 h-3.5 text-amber-500" /> Mẹo làm bài
-                  </p>
-                  <ul className="space-y-1 text-xs text-slate-600">
-                    {p.tips.map((t) => (
-                      <li key={t}>• {t}</li>
-                    ))}
-                  </ul>
-                </div>
-              </Card>
-            );
-          })}
-        </Stagger>
-      </section>
-
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 space-y-8">
-        <Reveal>
-          <SectionTitle eyebrow="Thang điểm" title="Bậc VSTEP tương đương" />
+          <SectionTitle align="left" eyebrow="Bậc năng lực" title={<>Bạn cần <span className="mark-coral mark">bậc mấy</span>?</>} description="Hầu hết trường đại học yêu cầu B1 để tốt nghiệp; cao học và giáo viên tiếng Anh cần B2 trở lên." />
         </Reveal>
         <Stagger className="grid md:grid-cols-3 gap-5">
-          {levels.map((r, i) => (
-            <Card key={r.cefr} hover className={`space-y-2 border-t-4 ${['border-t-emerald-400', 'border-t-teal-500', 'border-t-cyan-600'][i]}`}>
-              <p className="text-3xl font-black text-slate-900">{r.cefr}</p>
-              <p className="text-sm font-bold text-emerald-700">{r.vstep}</p>
-              <p className="text-xs text-slate-500">
-                TOEIC {r.toeic} · IELTS {r.ielts}
-              </p>
-              <p className="text-sm text-slate-600 leading-relaxed">{r.description}</p>
-            </Card>
+          {VSTEP_LEVELS_UI.map((l, i) => (
+            <div key={l.level} className={cn('rounded-3xl border-2 border-slate-900 shadow-hard p-6 md:p-7', ['bg-white', 'bg-amber-200', 'bg-indigo-600 text-white'][i])}>
+              <p className="font-display text-5xl font-extrabold">{l.level}</p>
+              <p className={cn('text-sm font-bold mt-1', i === 2 ? 'text-indigo-100' : 'text-slate-600')}>Bậc {l.bac} · {l.score} điểm</p>
+              <p className={cn('mt-4 leading-relaxed text-sm', i === 2 ? 'text-indigo-50' : 'text-slate-700')}>{l.who}</p>
+              <ul className="mt-5 space-y-1.5 text-sm">
+                {l.need.map((n) => (
+                  <li key={n} className="flex items-center gap-2">
+                    <CheckCircle2 className={cn('w-4 h-4', i === 2 ? 'text-amber-300' : 'text-emerald-600')} /> {n}
+                  </li>
+                ))}
+              </ul>
+            </div>
           ))}
         </Stagger>
       </section>
 
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 space-y-8">
-        <Reveal>
-          <SectionTitle eyebrow="Thi thử" title="Đề VSTEP mới nhất" align="left" />
-        </Reveal>
-        <Stagger className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {tests.map((t) => (
-            <Link key={t.id} to="/mock-tests" className="block">
-              <Card hover className="h-full space-y-3">
-                <div className="flex items-center justify-between">
-                  <FileText className="w-5 h-5 text-emerald-600" />
-                  <Badge tone={t.isFree ? 'emerald' : 'amber'} size="xs">
-                    {t.isFree ? 'Miễn phí' : 'VIP'}
-                  </Badge>
-                </div>
-                <h3 className="font-bold text-slate-900 text-sm">{t.title}</h3>
-                <p className="text-xs text-slate-500">{t.parts.join(' · ')}</p>
-                <p className="text-[11px] text-slate-400 flex items-center gap-1">
-                  <Users className="w-3 h-3" /> {formatNumber(t.attempts)} lượt làm
+      {/* Skills */}
+      <section className="bg-slate-900 text-white py-16 md:py-24 border-y-2 border-slate-900">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
+          <Reveal>
+            <SectionTitle dark eyebrow="Cấu trúc đề" title="Bốn phần thi, gần 3 giờ." description="Thời gian và số câu theo đề mẫu chính thức. Nhấn vào từng phần để xem mẹo." />
+          </Reveal>
+          <div className="grid lg:grid-cols-[1fr_380px] gap-8 items-start">
+            <Accordion
+              defaultOpen={VSTEP_PARTS_INFO[0].id}
+              items={VSTEP_PARTS_INFO.map((p, i) => {
+                const Icon = ICONS[p.skill] ?? BookOpen;
+                return {
+                  id: p.id,
+                  icon: <Icon />,
+                  title: (
+                    <span className="flex items-center gap-3 flex-wrap">
+                      <span className={cn('px-2 py-0.5 rounded-md text-[11px] font-extrabold uppercase', TONES[i])}>{p.nameVi}</span>
+                      <span className="text-slate-900">
+                        {p.questions} {p.skill === 'Writing' || p.skill === 'Speaking' ? 'phần' : 'câu'} · {p.minutes} phút
+                      </span>
+                    </span>
+                  ),
+                  content: (
+                    <div className="space-y-3">
+                      <p>{p.description}</p>
+                      <div className="rounded-xl bg-amber-100 border-2 border-slate-900 p-4">
+                        <p className="font-bold text-slate-900 flex items-center gap-2 mb-2 text-sm">
+                          <Lightbulb className="w-4 h-4 text-amber-600" /> Mẹo
+                        </p>
+                        <ul className="space-y-1 text-sm text-slate-800">
+                          {p.tips.map((t) => (
+                            <li key={t}>• {t}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    </div>
+                  ),
+                };
+              })}
+            />
+            <div className="space-y-4">
+              <Card hard tone="yellow" padding="md">
+                <p className="text-[10px] font-extrabold uppercase tracking-wider">Tổng thời gian</p>
+                <p className="font-display text-4xl font-extrabold mt-1 flex items-center gap-2">
+                  <Clock className="w-7 h-7" /> 172 phút
                 </p>
+                <p className="text-sm mt-2 text-slate-800">Nghe 40 · Đọc 60 · Viết 60 · Nói 12</p>
               </Card>
+              <Card hard padding="md" className="flex items-center gap-4">
+                <img src={pravatar(42)} alt="" className="w-14 h-14 rounded-full border-2 border-slate-900 object-cover" />
+                <div>
+                  <p className="font-bold text-slate-900">Cô Phạm Ngọc Linh</p>
+                  <p className="text-xs text-slate-500">Giảng viên VSTEP · chấm 1.200+ bài Writing</p>
+                </div>
+              </Card>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Tests */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24 space-y-10">
+        <Reveal className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+          <SectionTitle align="left" eyebrow="Đề mẫu" title="Đề VSTEP theo format chính thức" />
+          <Button to="/mock-tests" variant="outline" rightIcon={<ArrowRight className="w-4 h-4" />}>
+            Xem tất cả
+          </Button>
+        </Reveal>
+        <Stagger className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
+          {tests.map((t) => (
+            <Link key={t.id} to="/auth/login" className="block bg-white rounded-3xl border-2 border-slate-900 shadow-hard overflow-hidden card-hard-hover">
+              <Img src={t.coverUrl} alt="" ratio="video" fallbackClass="bg-violet-200" />
+              <div className="p-4 space-y-2">
+                <div className="flex gap-1.5 flex-wrap">
+                  <Badge tone="violet" size="xs">
+                    {t.level}
+                  </Badge>
+                  {t.tags?.map((tag) => (
+                    <Badge key={tag} tone={tag === 'VIP' ? 'amber' : 'slate'} size="xs">
+                      {tag}
+                    </Badge>
+                  ))}
+                </div>
+                <h3 className="font-display font-bold text-slate-900 leading-snug">{t.title}</h3>
+                <p className="text-xs text-slate-500 font-semibold">
+                  {t.parts.join(' · ')} · {formatNumber(t.attempts)} lượt
+                </p>
+              </div>
             </Link>
           ))}
         </Stagger>
-        <Reveal animation="scale-in">
-          <GradientPanel tone="emerald" className="text-center">
-            <h3 className="text-2xl font-black">Làm bài xếp lớp VSTEP miễn phí</h3>
-            <p className="text-emerald-100 mt-2">Xác định bậc hiện tại và nhận lộ trình học 4 kỹ năng phù hợp.</p>
-            <Button to="/auth/register" variant="secondary" size="lg" className="mt-6 bg-white text-emerald-700 hover:bg-emerald-50" rightIcon={<ArrowRight className="w-4 h-4" />}>
-              Đăng ký miễn phí
-            </Button>
-          </GradientPanel>
-        </Reveal>
       </section>
     </div>
   );

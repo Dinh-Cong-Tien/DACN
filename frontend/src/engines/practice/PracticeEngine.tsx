@@ -175,7 +175,7 @@ export const PracticeEngine: React.FC<PracticeEngineProps> = ({ title = 'Luyện
       )}
 
       {isAnswered && (
-        <div className="flex items-center justify-between bg-white p-3 md:p-4 rounded-2xl border border-slate-200 shadow-soft animate-fade-up sticky bottom-4">
+        <div className="flex items-center justify-between bg-white p-3 md:p-4 rounded-2xl border-2 border-slate-900 shadow-hard animate-fade-up sticky bottom-4">
           <Button
             variant="ghost"
             size="sm"

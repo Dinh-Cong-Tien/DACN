@@ -1,116 +1,117 @@
 import React from 'react';
-import { Target, Heart, Lightbulb, Rocket, Users, ArrowRight, Code2, GraduationCap } from 'lucide-react';
-import { Avatar, Badge, Button, Card, GradientPanel, SectionTitle, Timeline } from '@/shared/components/ui';
-import { CountUp, FloatingBlobs, Reveal, Stagger } from '@/shared/components/motion';
-import { HOME_STATS } from '@/shared/mocks';
+import { ArrowRight, Heart, Target, Users, Lightbulb } from 'lucide-react';
+import { Button, SectionTitle, Timeline, Card } from '@/shared/components/ui';
+import { Reveal, Stagger, CountUp, Doodles } from '@/shared/components/motion';
+import { Img, PHOTOS, pravatar } from '@/shared/components/media/Img';
 import { useDocumentTitle } from '@/shared/hooks';
-
-const VALUES = [
-  { icon: Target, title: 'Đúng mục tiêu', desc: 'Mọi bài học đều gắn với điểm số và ngày thi của bạn, không học lan man.', cls: 'bg-indigo-50 text-indigo-600' },
-  { icon: Lightbulb, title: 'Dựa trên dữ liệu', desc: 'Lộ trình thích ứng theo từng câu trả lời, lỗi sai được phân tích tự động.', cls: 'bg-amber-50 text-amber-600' },
-  { icon: Heart, title: 'Thân thiện', desc: 'Giao diện tập trung, động lực hàng ngày và cộng đồng học viên hỗ trợ.', cls: 'bg-rose-50 text-rose-600' },
-];
+import { cn } from '@/shared/utils';
 
 const TEAM = [
-  { name: 'Lê Quốc Bảo', role: 'Trưởng bộ môn · Học thuật', tag: 'VSTEP C1' },
-  { name: 'Trần Thu Hà', role: 'Giáo viên TOEIC', tag: '8 năm' },
-  { name: 'Phạm Ngọc Linh', role: 'Giáo viên VSTEP', tag: 'Writing & Speaking' },
-  { name: 'Nguyễn Văn Dũng', role: 'Giáo viên Listening', tag: 'ETS Certified' },
+  { name: 'Lê Quốc Bảo', role: 'Trưởng bộ môn · VSTEP C1', img: 44, note: '12 năm giảng dạy, ĐH Ngoại ngữ Đà Nẵng' },
+  { name: 'Trần Thu Hà', role: 'Giáo viên TOEIC · 985', img: 43, note: 'Chuyên Part 3–4, 3.000+ học viên' },
+  { name: 'Phạm Ngọc Linh', role: 'Giáo viên VSTEP Writing', img: 42, note: 'Chấm 1.200+ bài Writing' },
+  { name: 'Nguyễn Văn Dũng', role: 'Giáo viên TOEIC Reading', img: 41, note: 'Tác giả 7 lỗi Part 2' },
+  { name: 'Phạm Quản Trị', role: 'Kỹ thuật & Sản phẩm', img: 45, note: 'Sinh viên năm 3, Khoa CNTT' },
 ];
 
-const MILESTONES = [
-  { id: 'm1', title: 'Khởi động dự án', description: 'Thiết kế vòng lặp học tập 5 bước và kiến trúc Monorepo.', time: '01/2026', tone: 'indigo' as const, icon: <Rocket /> },
-  { id: 'm2', title: 'Ra mắt Engine thi thử', description: 'Phòng thi focus mode, audio một lần, chấm điểm tự động.', time: '04/2026', tone: 'violet' as const, icon: <Code2 /> },
-  { id: 'm3', title: 'Sổ tay lỗi sai & SRS', description: 'Tự động phân loại lỗi, lịch ôn ngắt quãng SM-2.', time: '07/2026', tone: 'emerald' as const, icon: <Lightbulb /> },
-  { id: 'm4', title: 'Mở lớp học & giáo viên', description: 'Giáo viên tạo lớp, giao bài, chấm Writing/Speaking.', time: '10/2026', tone: 'amber' as const, icon: <GraduationCap /> },
+const VALUES = [
+  { icon: Target, t: 'Đúng chỗ yếu', d: 'Không học lại cái đã biết. Dữ liệu bài làm quyết định bạn học gì tiếp.', bg: 'bg-indigo-100' },
+  { icon: Heart, t: 'Thật thà với người học', d: 'Điểm thi thử quy đổi theo ETS, không "bơm" để lấy lòng.', bg: 'bg-amber-200' },
+  { icon: Users, t: 'Giáo viên là trung tâm', d: 'Công nghệ giúp giáo viên chấm nhanh hơn, không thay thế họ.', bg: 'bg-violet-100' },
+  { icon: Lightbulb, t: 'Đơn giản để duy trì', d: 'Một việc rõ ràng mỗi ngày. 45 phút là đủ.', bg: 'bg-sky-100' },
 ];
 
 export const AboutPage: React.FC = () => {
   useDocumentTitle('Giới thiệu');
   return (
-    <div className="pb-24">
-      <section className="relative overflow-hidden py-16 md:py-24 text-center">
-        <FloatingBlobs />
-        <div className="relative max-w-3xl mx-auto px-4 space-y-5 animate-fade-up">
-          <Badge tone="indigo" size="md">
-            Về OrbiLingo
-          </Badge>
-          <h1 className="text-4xl md:text-5xl font-black text-slate-900 tracking-tight">
-            Sứ mệnh: giúp mọi người học <span className="text-gradient">đúng cách</span>, đạt <span className="text-gradient">đúng mục tiêu</span>
-          </h1>
-          <p className="text-slate-600 leading-relaxed">OrbiLingo ra đời từ một đồ án chuyên ngành với niềm tin rằng luyện thi không nên là làm đề vô định. Chúng tôi xây dựng nền tảng thích ứng, nơi mỗi câu sai đều trở thành cơ hội tiến bộ.</p>
+    <div>
+      <section className="relative bg-paper border-b-2 border-slate-900 overflow-hidden">
+        <Doodles />
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24 grid lg:grid-cols-[1fr_1fr] gap-12 items-center">
+          <div className="space-y-6">
+            <SectionTitle align="left" eyebrow="Về OrbiLingo" title={<>Sinh ra từ một lớp luyện thi <span className="mark-coral mark">ở Đà Nẵng</span>.</>} description="Năm 2025, cô Hà có 28 học viên và một cuốn sổ ghi câu sai của từng người. Sổ đó giờ là OrbiLingo." />
+            <Button to="/auth/register" variant="gradient" size="lg" rightIcon={<ArrowRight className="w-4 h-4" />}>
+              Học thử miễn phí
+            </Button>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="photo-frame tilt-1 mt-10">
+              <Img src={PHOTOS.classroom} alt="" ratio="3/4" fallbackClass="bg-indigo-200" />
+            </div>
+            <div className="photo-frame tilt-2">
+              <Img src={PHOTOS.students2} alt="" ratio="3/4" fallbackClass="bg-amber-200" />
+            </div>
+          </div>
         </div>
       </section>
 
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
-        <Stagger className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {HOME_STATS.map((s) => (
-            <Card key={s.label} padding="sm" className="text-center">
-              <p className="text-2xl font-black text-slate-900">
-                <CountUp value={s.value} suffix={s.suffix} />
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14">
+        <Stagger className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          {[
+            [24800, '+', 'học viên'],
+            [38, '', 'giáo viên & cộng tác viên'],
+            [180, '+', 'đề thi thử'],
+            [145, '', 'điểm tăng trung bình'],
+          ].map(([v, s, l], i) => (
+            <div key={l as string} className={cn('rounded-2xl border-2 border-slate-900 p-5', ['bg-white', 'bg-amber-200', 'bg-indigo-100', 'bg-violet-100'][i])}>
+              <p className="font-display text-4xl font-extrabold text-slate-900">
+                <CountUp value={v as number} suffix={s as string} />
               </p>
-              <p className="text-xs text-slate-500 font-semibold">{s.label}</p>
+              <p className="text-sm font-semibold text-slate-600 mt-1">{l as string}</p>
+            </div>
+          ))}
+        </Stagger>
+      </section>
+
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 grid lg:grid-cols-[360px_1fr] gap-12 items-start">
+        <Reveal>
+          <SectionTitle align="left" eyebrow="Hành trình" title="Từ cuốn sổ tới nền tảng" />
+        </Reveal>
+        <Reveal delay={100}>
+          <Timeline
+            items={[
+              { id: '1', title: 'Tháng 3/2025 — Cuốn sổ lỗi sai', description: 'Lớp TOEIC 28 người. Mỗi buổi cô Hà ghi câu sai của từng bạn vào sổ và giao bài ôn riêng.', time: '2025', tone: 'amber' },
+              { id: '2', title: 'Tháng 8/2025 — Bản Google Sheet', description: 'Sổ chuyển sang bảng tính, tự nhắc ôn sau 1-3-7 ngày. Điểm trung bình lớp tăng 62 điểm sau 2 tháng.', time: '2025', tone: 'indigo' },
+              { id: '3', title: 'Tháng 1/2026 — Khởi động dự án', description: 'Đồ án chuyên ngành: xây nền tảng với thi thử, sổ tay lỗi sai, SM-2 và lớp học cho giáo viên.', time: '2026', tone: 'violet' },
+              { id: '4', title: 'Tháng 10/2026 — Phiên bản hiện tại', description: '5 vai trò, 180+ đề, 12.600 câu hỏi được duyệt. Hơn 24.000 học viên.', time: 'Nay', tone: 'emerald' },
+            ]}
+          />
+        </Reveal>
+      </section>
+
+      <section className="bg-slate-900 text-white border-y-2 border-slate-900 py-16 md:py-20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
+          <Reveal>
+            <SectionTitle dark align="left" eyebrow="Giá trị" title="Bốn điều chúng tôi không thoả hiệp" />
+          </Reveal>
+          <Stagger className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {VALUES.map((v) => (
+              <div key={v.t} className={cn('rounded-3xl border-2 border-slate-900 p-6 text-slate-900', v.bg)}>
+                <v.icon className="w-8 h-8" />
+                <h3 className="font-display text-xl font-extrabold mt-5">{v.t}</h3>
+                <p className="text-sm text-slate-700 mt-2 leading-relaxed">{v.d}</p>
+              </div>
+            ))}
+          </Stagger>
+        </div>
+      </section>
+
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-20 space-y-10">
+        <Reveal>
+          <SectionTitle align="left" eyebrow="Đội ngũ" title="Những người đứng sau" description="Giáo viên thật, có lớp thật. Bạn sẽ gặp họ trong khoá học và bàn chấm bài." />
+        </Reveal>
+        <Stagger className="grid sm:grid-cols-2 lg:grid-cols-5 gap-5">
+          {TEAM.map((m, i) => (
+            <Card key={m.name} hard padding="none" className={cn('overflow-hidden', i % 2 ? 'tilt-2' : 'tilt-3')}>
+              <img src={pravatar(m.img)} alt={m.name} className="w-full aspect-square object-cover border-b-2 border-slate-900" />
+              <div className="p-4">
+                <p className="font-display font-extrabold text-slate-900">{m.name}</p>
+                <p className="text-xs font-bold text-violet-600">{m.role}</p>
+                <p className="text-xs text-slate-500 mt-1">{m.note}</p>
+              </div>
             </Card>
           ))}
         </Stagger>
-        <Reveal>
-          <SectionTitle eyebrow="Giá trị cốt lõi" title="Điều chúng tôi tin" />
-        </Reveal>
-        <Stagger className="grid md:grid-cols-3 gap-5">
-          {VALUES.map((v) => {
-            const Icon = v.icon;
-            return (
-              <Card key={v.title} hover className="space-y-3">
-                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${v.cls}`}>
-                  <Icon className="w-6 h-6" />
-                </div>
-                <h3 className="font-bold text-slate-900">{v.title}</h3>
-                <p className="text-sm text-slate-500 leading-relaxed">{v.desc}</p>
-              </Card>
-            );
-          })}
-        </Stagger>
-      </section>
-
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 grid lg:grid-cols-2 gap-12">
-        <Reveal animation="slide-in-left">
-          <SectionTitle eyebrow="Hành trình" title="Các cột mốc phát triển" align="left" className="mb-8" />
-          <Timeline items={MILESTONES} />
-        </Reveal>
-        <Reveal animation="slide-in-right">
-          <SectionTitle eyebrow="Đội ngũ" title="Người đồng hành cùng bạn" align="left" className="mb-8" />
-          <div className="grid sm:grid-cols-2 gap-4">
-            {TEAM.map((t, i) => (
-              <Card key={t.name} hover className="flex items-center gap-3 animate-fade-up" style={{ animationDelay: `${i * 80}ms` }}>
-                <Avatar name={t.name} size="lg" ring />
-                <div className="min-w-0">
-                  <p className="font-bold text-slate-900 text-sm truncate">{t.name}</p>
-                  <p className="text-xs text-slate-500">{t.role}</p>
-                  <Badge tone="indigo" size="xs" className="mt-1">
-                    {t.tag}
-                  </Badge>
-                </div>
-              </Card>
-            ))}
-          </div>
-        </Reveal>
-      </section>
-
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <Reveal animation="scale-in">
-          <GradientPanel tone="indigo" className="flex flex-col md:flex-row items-center justify-between gap-6">
-            <div className="flex items-center gap-4">
-              <Users className="w-12 h-12 shrink-0" />
-              <div>
-                <h3 className="text-2xl font-black">Cùng học với hơn 24.000 học viên</h3>
-                <p className="text-indigo-100 text-sm">Bắt đầu miễn phí hôm nay.</p>
-              </div>
-            </div>
-            <Button to="/auth/register" variant="secondary" size="lg" className="bg-white text-indigo-700 hover:bg-indigo-50 shrink-0" rightIcon={<ArrowRight className="w-4 h-4" />}>
-              Tham gia ngay
-            </Button>
-          </GradientPanel>
-        </Reveal>
       </section>
     </div>
   );

@@ -7,6 +7,7 @@ import { MOCK_COURSES } from '@/shared/mocks';
 import type { Course, LessonType } from '@/shared/types';
 import { cn } from '@/shared/utils';
 import { Accordion, Badge, Button, Card, Input, Modal, PageHeader, Select } from '@/shared/components/ui';
+import { Img } from '@/shared/components/media/Img';
 
 const ICON: Record<LessonType, React.ElementType> = { VIDEO: Video, READING: FileText, QUIZ: HelpCircle };
 
@@ -38,32 +39,64 @@ export const TeacherCoursesPage: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Khoá học & Bài giảng" description="Tải video bài giảng, tài liệu đọc và quiz cho khoá học bạn phụ trách." icon={<PlayCircle />} actions={<Button leftIcon={<Plus className="w-4 h-4" />} onClick={() => { setForm((f) => ({ ...f, sectionId: active.sections[0]?.id ?? '' })); setOpen(true); }}>Thêm bài giảng</Button>} />
+      <PageHeader
+        title={
+          <>
+            Khoá học & <span className="mark">Bài giảng</span>
+          </>
+        }
+        description="Tải video bài giảng, tài liệu đọc và quiz cho khoá học bạn phụ trách."
+        icon={<PlayCircle />}
+        actions={
+          <Button
+            variant="gradient"
+            leftIcon={<Plus className="w-4 h-4" />}
+            onClick={() => {
+              setForm((f) => ({ ...f, sectionId: active.sections[0]?.id ?? '' }));
+              setOpen(true);
+            }}
+          >
+            Thêm bài giảng
+          </Button>
+        }
+      />
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
         {courses.map((c, i) => (
-          <Card key={c.id} padding="none" hover onClick={() => setActive(c)} className={cn('overflow-hidden animate-fade-up', active.id === c.id && 'ring-2 ring-emerald-500')} style={{ animationDelay: `${i * 60}ms` }}>
-            <div className={cn('h-20 bg-gradient-to-br text-white p-4 flex items-end', c.gradient)}>
-              <Badge tone="slate" solid className="!bg-white/20 !text-white">{c.examType} · {c.level}</Badge>
+          <Card key={c.id} hard hover padding="none" onClick={() => setActive(c)} className={cn('overflow-hidden animate-fade-up', active.id === c.id ? '!shadow-hard-coral !border-violet-600' : '')} style={{ animationDelay: `${i * 60}ms` }}>
+            <div className="relative">
+              <Img src={c.coverUrl} alt={c.title} ratio="video" fallbackClass="bg-indigo-200" wrapperClass="border-b-2 border-slate-900" />
+              <Badge tone={c.examType === 'TOEIC' ? 'indigo' : 'emerald'} solid className="absolute top-3 left-3">
+                {c.examType} · {c.level}
+              </Badge>
+              {active.id === c.id && <span className="sticker tilt-2 absolute -bottom-3 right-3 !bg-violet-500 !text-white">Đang chọn</span>}
             </div>
             <div className="p-4 space-y-2">
-              <p className="font-bold text-slate-900 text-sm leading-snug">{c.title}</p>
-              <div className="flex items-center gap-3 text-[11px] text-slate-500">
-                <span className="flex items-center gap-1"><Video className="w-3.5 h-3.5" /> {c.lessonsCount} bài</span>
-                <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5" /> {c.durationHours}h</span>
-                <span className="flex items-center gap-1"><Users className="w-3.5 h-3.5" /> {c.studentsCount.toLocaleString('vi-VN')}</span>
-                <span className="flex items-center gap-1 text-amber-600"><Star className="w-3.5 h-3.5 fill-amber-400" /> {c.rating}</span>
+              <p className="font-display font-bold text-slate-900 text-sm leading-snug">{c.title}</p>
+              <div className="flex items-center gap-3 text-[11px] text-slate-500 font-semibold">
+                <span className="flex items-center gap-1">
+                  <Video className="w-3.5 h-3.5" /> {c.lessonsCount} bài
+                </span>
+                <span className="flex items-center gap-1">
+                  <Clock className="w-3.5 h-3.5" /> {c.durationHours}h
+                </span>
+                <span className="flex items-center gap-1">
+                  <Users className="w-3.5 h-3.5" /> {c.studentsCount.toLocaleString('vi-VN')}
+                </span>
+                <span className="flex items-center gap-1 text-amber-700">
+                  <Star className="w-3.5 h-3.5 fill-amber-400" /> {c.rating}
+                </span>
               </div>
             </div>
           </Card>
         ))}
       </div>
 
-      <Card className="animate-fade-up" key={active.id}>
+      <Card hard className="animate-fade-up" key={active.id}>
         <div className="flex items-start justify-between gap-3 mb-4">
           <div>
-            <h3 className="font-black text-slate-900 text-lg">{active.title}</h3>
-            <p className="text-sm text-slate-500">{active.description}</p>
+            <h3 className="font-display font-extrabold text-slate-900 text-lg">{active.title}</h3>
+            <p className="text-sm text-slate-600">{active.description}</p>
           </div>
         </div>
         <Accordion
@@ -77,13 +110,19 @@ export const TeacherCoursesPage: React.FC = () => {
                   const Icon = ICON[l.type];
                   const pending = pendingIds.includes(l.id);
                   return (
-                    <li key={l.id} className="flex items-center gap-3 p-3 rounded-xl border border-slate-200 hover:bg-slate-50 transition">
-                      <span className={cn('w-9 h-9 rounded-lg flex items-center justify-center', l.type === 'VIDEO' ? 'bg-rose-50 text-rose-600' : l.type === 'QUIZ' ? 'bg-amber-50 text-amber-600' : 'bg-indigo-50 text-indigo-600')}><Icon className="w-4 h-4" /></span>
+                    <li key={l.id} className="flex items-center gap-3 p-3 rounded-xl border-2 border-slate-200 hover:border-slate-900 transition bg-white">
+                      <span className={cn('w-9 h-9 rounded-lg border-2 border-slate-900 flex items-center justify-center', l.type === 'VIDEO' ? 'bg-violet-200 text-violet-800' : l.type === 'QUIZ' ? 'bg-amber-200 text-amber-900' : 'bg-indigo-200 text-indigo-900')}>
+                        <Icon className="w-4 h-4" />
+                      </span>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-semibold text-slate-800 truncate">{l.title}</p>
-                        <p className="text-[11px] text-slate-500">{l.type} · {l.durationMin} phút</p>
+                        <p className="text-sm font-bold text-slate-900 truncate">{l.title}</p>
+                        <p className="text-[11px] text-slate-500">
+                          {l.type} · {l.durationMin} phút
+                        </p>
                       </div>
-                      <Badge tone={pending ? 'amber' : 'emerald'} dot size="xs">{pending ? 'Chờ duyệt' : 'Đã duyệt'}</Badge>
+                      <Badge tone={pending ? 'amber' : 'emerald'} dot size="xs">
+                        {pending ? 'Chờ duyệt' : 'Đã duyệt'}
+                      </Badge>
                     </li>
                   );
                 })}
@@ -93,7 +132,21 @@ export const TeacherCoursesPage: React.FC = () => {
         />
       </Card>
 
-      <Modal open={open} onClose={() => setOpen(false)} title="Thêm bài giảng mới" description={active.title} icon={<Video />} footer={<><Button variant="ghost" onClick={() => setOpen(false)}>Huỷ</Button><Button onClick={add}>Thêm bài giảng</Button></>}>
+      <Modal
+        open={open}
+        onClose={() => setOpen(false)}
+        title="Thêm bài giảng mới"
+        description={active.title}
+        icon={<Video />}
+        footer={
+          <>
+            <Button variant="ghost" onClick={() => setOpen(false)}>
+              Huỷ
+            </Button>
+            <Button onClick={add}>Thêm bài giảng</Button>
+          </>
+        }
+      >
         <div className="space-y-4">
           <Input label="Tiêu đề" required value={form.title} onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))} placeholder="VD: Part 4 — Nhận diện ngữ cảnh" />
           <div className="grid grid-cols-2 gap-4">
@@ -102,8 +155,9 @@ export const TeacherCoursesPage: React.FC = () => {
           </div>
           {form.type === 'VIDEO' && <Input label="URL video (MP4 / YouTube)" placeholder="https://..." value={form.url} onChange={(e) => setForm((f) => ({ ...f, url: e.target.value }))} hint="Hoặc kéo thả file MP4 vào khung bên dưới" />}
           {form.type === 'VIDEO' && (
-            <div className="border-2 border-dashed border-slate-300 rounded-2xl p-6 text-center text-slate-500 hover:border-emerald-400 transition cursor-pointer">
-              <Video className="w-7 h-7 mx-auto mb-1 text-slate-400" /><p className="text-xs font-semibold">Tải lên file MP4 (tối đa 500 MB)</p>
+            <div className="border-2 border-dashed border-slate-400 rounded-2xl p-6 text-center text-slate-600 hover:border-slate-900 hover:bg-amber-50 transition cursor-pointer bg-paper">
+              <Video className="w-7 h-7 mx-auto mb-1 text-slate-500" />
+              <p className="text-xs font-bold">Tải lên file MP4 (tối đa 500 MB)</p>
             </div>
           )}
           <Input label="Thời lượng (phút)" type="number" value={form.minutes} onChange={(e) => setForm((f) => ({ ...f, minutes: Number(e.target.value) }))} />

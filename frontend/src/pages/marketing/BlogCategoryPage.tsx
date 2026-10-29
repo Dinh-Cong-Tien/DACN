@@ -1,57 +1,47 @@
 import React from 'react';
-import { Link, useParams } from 'react-router-dom';
-import { Clock, Tag } from 'lucide-react';
-import { Badge, Breadcrumb, Card, Chip, EmptyState, SectionTitle } from '@/shared/components/ui';
+import { Link, useNavigate, useParams } from 'react-router-dom';
+import { Chip, SectionTitle, Breadcrumb, EmptyState, Avatar, Badge } from '@/shared/components/ui';
 import { Reveal, Stagger } from '@/shared/components/motion';
+import { Img } from '@/shared/components/media/Img';
 import { BLOG_POSTS, BLOG_CATEGORIES } from '@/shared/mocks';
 import { useDocumentTitle } from '@/shared/hooks';
 import { formatDate } from '@/shared/utils';
-import { useNavigate } from 'react-router-dom';
 
 export const BlogCategoryPage: React.FC = () => {
   const { slug } = useParams();
   const navigate = useNavigate();
   const cat = BLOG_CATEGORIES.find((c) => c.slug === slug);
-  const list = BLOG_POSTS.filter((p) => p.categorySlug === slug);
-  useDocumentTitle(cat?.name ?? 'Chuyên mục');
+  const posts = BLOG_POSTS.filter((p) => p.categorySlug === slug);
+  useDocumentTitle(cat?.name ?? 'Chủ đề');
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 pb-24 space-y-8">
-      <Reveal>
-        <Breadcrumb items={[{ label: 'Blog', to: '/blog' }, { label: cat?.name ?? 'Chuyên mục' }]} className="justify-center" />
-        <SectionTitle eyebrow="Chuyên mục" title={cat?.name ?? 'Không tìm thấy chuyên mục'} description={`${list.length} bài viết`} className="mt-3" />
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14 md:py-20 space-y-10">
+      <Reveal className="space-y-5">
+        <Breadcrumb items={[{ label: 'Trang chủ', to: '/' }, { label: 'Kinh nghiệm', to: '/blog' }, { label: cat?.name ?? 'Chủ đề' }]} />
+        <SectionTitle align="left" eyebrow="Chủ đề" title={cat?.name ?? 'Không tìm thấy chủ đề'} description={`${posts.length} bài viết`} />
+        <div className="flex gap-2 flex-wrap">
+          {BLOG_CATEGORIES.map((c) => (
+            <Chip key={c.slug} active={c.slug === slug} onClick={() => navigate(`/blog/category/${c.slug}`)}>
+              {c.name}
+            </Chip>
+          ))}
+        </div>
       </Reveal>
-      <div className="flex flex-wrap justify-center gap-2 animate-fade-up">
-        {BLOG_CATEGORIES.map((c) => (
-          <Chip key={c.slug} active={c.slug === slug} onClick={() => navigate(`/blog/category/${c.slug}`)}>
-            {c.name}
-          </Chip>
-        ))}
-      </div>
-      {list.length === 0 ? (
-        <EmptyState icon={<Tag />} title="Chưa có bài viết trong chuyên mục này" />
+      {posts.length === 0 ? (
+        <EmptyState title="Chưa có bài viết" description="Chủ đề này sẽ sớm có nội dung." />
       ) : (
-        <Stagger key={slug} className="grid md:grid-cols-2 lg:grid-cols-3 gap-5" step={80} whenVisible={false}>
-          {list.map((p) => (
-            <Link key={p.id} to={`/blog/${p.slug}`} className="block group">
-              <Card padding="none" hover className="h-full flex flex-col overflow-hidden">
-                <div className={`h-28 bg-gradient-to-br ${p.gradient} relative`}>
-                  <div aria-hidden className="absolute inset-0 bg-dots opacity-30" />
+        <Stagger key={slug} className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {posts.map((p) => (
+            <Link key={p.id} to={`/blog/${p.slug}`} className="group bg-white rounded-3xl border-2 border-slate-900 shadow-hard overflow-hidden card-hard-hover block">
+              <Img src={p.coverUrl} alt={p.title} ratio="video" fallbackClass="bg-violet-200" />
+              <div className="p-5 space-y-3">
+                <Badge tone="slate">{p.category}</Badge>
+                <h3 className="font-display font-bold text-lg text-slate-900 leading-snug group-hover:underline decoration-4 decoration-amber-300 underline-offset-4">{p.title}</h3>
+                <p className="text-sm text-slate-600 line-clamp-2">{p.excerpt}</p>
+                <div className="flex items-center gap-2 text-xs text-slate-500 font-semibold pt-3 border-t-2 border-slate-100">
+                  <Avatar name={p.author} src={p.authorAvatar} size="xs" /> {p.author} · {formatDate(p.date)}
                 </div>
-                <div className="p-5 space-y-3 flex-1 flex flex-col">
-                  <Badge tone="slate" size="xs" className="w-fit">
-                    {p.category}
-                  </Badge>
-                  <h3 className="font-bold text-slate-900 leading-snug group-hover:text-indigo-700 transition">{p.title}</h3>
-                  <p className="text-xs text-slate-500 leading-relaxed line-clamp-2 flex-1">{p.excerpt}</p>
-                  <div className="flex items-center justify-between text-[11px] text-slate-400 pt-3 border-t border-slate-100">
-                    <span>{formatDate(p.date)}</span>
-                    <span className="flex items-center gap-1">
-                      <Clock className="w-3 h-3" /> {p.readMin} phút
-                    </span>
-                  </div>
-                </div>
-              </Card>
+              </div>
             </Link>
           ))}
         </Stagger>

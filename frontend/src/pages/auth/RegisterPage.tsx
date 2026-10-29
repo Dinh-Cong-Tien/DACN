@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Mail, User, ArrowRight } from 'lucide-react';
+import { Mail, User, ArrowRight, CheckCircle2 } from 'lucide-react';
 import { Button, Card, Checkbox, Input, PasswordInput, ProgressBar, Alert } from '@/shared/components/ui';
 import { useAuthStore, DEMO_USERS } from '@/shared/stores/authStore';
 import { toast } from '@/shared/stores/uiStore';
@@ -50,16 +50,17 @@ export const RegisterPage: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div className="text-center space-y-1 animate-fade-down">
-        <h1 className="text-2xl font-black text-slate-900 tracking-tight">Tạo tài khoản miễn phí</h1>
-        <p className="text-sm text-slate-500">
+      <div className="space-y-2 animate-fade-down">
+        <span className="sticker tilt-1 !bg-emerald-200">Miễn phí · Không cần thẻ</span>
+        <h1 className="font-display text-3xl font-extrabold text-slate-900 tracking-tight">Tạo tài khoản</h1>
+        <p className="text-sm text-slate-600">
           Đã có tài khoản?{' '}
-          <Link to="/auth/login" className="font-bold text-indigo-600 hover:underline">
+          <Link to="/auth/login" className="font-bold text-violet-600 hover:underline underline-offset-2">
             Đăng nhập
           </Link>
         </p>
       </div>
-      <Card padding="lg" className="animate-fade-up">
+      <Card hard padding="lg" className="animate-fade-up">
         {errors.agree && (
           <Alert type="warning" className="mb-4">
             {errors.agree}
@@ -74,7 +75,7 @@ export const RegisterPage: React.FC = () => {
               <div className="animate-fade-down">
                 <ProgressBar value={st.score} tone={st.tone} size="xs" animate={false} />
                 <p className="text-[11px] text-slate-500 mt-1">
-                  Độ mạnh: <b>{st.label}</b> · nên có chữ hoa, số và ký tự đặc biệt
+                  Độ mạnh: <b className="text-slate-900">{st.label}</b> · nên có chữ hoa, số và ký tự đặc biệt
                 </p>
               </div>
             )}
@@ -85,14 +86,21 @@ export const RegisterPage: React.FC = () => {
             onChange={setAgree}
             label={
               <span className="text-xs">
-                Tôi đồng ý với <a className="font-bold text-indigo-600 hover:underline">Điều khoản sử dụng</a> và <a className="font-bold text-indigo-600 hover:underline">Chính sách bảo mật</a>
+                Tôi đồng ý với <a className="font-bold text-violet-600 hover:underline">Điều khoản sử dụng</a> và <a className="font-bold text-violet-600 hover:underline">Chính sách bảo mật</a>
               </span>
             }
           />
-          <Button type="submit" fullWidth size="lg" variant="gradient" loading={loading} rightIcon={<ArrowRight className="w-4 h-4" />} className="shine">
+          <Button type="submit" fullWidth size="lg" variant="gradient" loading={loading} rightIcon={<ArrowRight className="w-4 h-4" />}>
             Đăng ký & thiết lập lộ trình
           </Button>
         </form>
+        <ul className="mt-5 pt-4 border-t-2 border-slate-100 grid grid-cols-1 sm:grid-cols-3 gap-2 text-[11px] font-semibold text-slate-600">
+          {['Thi xếp lớp 15 phút', 'Lộ trình theo ngày thi', '3 đề thi thử / tuần'].map((t) => (
+            <li key={t} className="flex items-center gap-1.5">
+              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" /> {t}
+            </li>
+          ))}
+        </ul>
       </Card>
     </div>
   );

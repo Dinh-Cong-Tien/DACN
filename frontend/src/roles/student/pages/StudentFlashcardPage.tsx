@@ -1,10 +1,11 @@
 import React from 'react';
 import { useParams } from 'react-router-dom';
-import { Layers } from 'lucide-react';
+import { Layers, RotateCcw } from 'lucide-react';
 import { MOCK_VOCAB, VOCAB_TOPICS } from '@/shared/mocks';
 import { useDocumentTitle } from '@/shared/hooks';
 import { toast } from '@/shared/stores/uiStore';
 import { Breadcrumb, Badge } from '@/shared/components/ui';
+import { Doodles } from '@/shared/components/motion';
 import { VocabFlashcardEngine } from '@/engines';
 
 export const StudentFlashcardPage: React.FC = () => {
@@ -18,26 +19,31 @@ export const StudentFlashcardPage: React.FC = () => {
   useDocumentTitle(`Flashcard · ${title}`);
 
   return (
-    <div className="space-y-6">
-      <Breadcrumb items={[{ label: 'Từ vựng', to: '/app/vocabulary' }, { label: 'Flashcard' }, { label: title }]} />
-      <div className="text-center space-y-2 animate-fade-down">
-        <div className="inline-flex items-center gap-2">
-          {topic && <span className="text-2xl">{topic.icon}</span>}
-          <h1 className="text-2xl font-black text-slate-900">{title}</h1>
-        </div>
+    <div className="relative space-y-6">
+      <Doodles className="opacity-50" />
+      <div className="relative">
+        <Breadcrumb items={[{ label: 'Từ vựng', to: '/app/vocabulary' }, { label: 'Flashcard' }, { label: title }]} />
+      </div>
+      <div className="relative text-center space-y-3 animate-fade-down">
+        <span className="sticker tilt-2 !bg-amber-300">
+          <RotateCcw className="w-3.5 h-3.5" /> Phiên ôn SM-2
+        </span>
+        <h1 className="font-display text-3xl font-extrabold text-slate-900">{title}</h1>
         <div className="flex items-center justify-center gap-2">
           <Badge tone="indigo" icon={<Layers className="w-3 h-3" />}>
             {cards.length} thẻ
           </Badge>
-          <Badge tone="slate">SM-2 Spaced Repetition</Badge>
+          <Badge tone="slate">Lật thẻ · đánh giá · lặp lại</Badge>
         </div>
       </div>
-      <VocabFlashcardEngine
-        key={topicId ?? 'due'}
-        cards={cards}
-        exitTo="/app/vocabulary"
-        onCompleteSession={(s) => toast.success('Phiên ôn hoàn tất', `Nhớ tốt ${s.good + s.easy}/${cards.length} thẻ. +${cards.length * 2} điểm nỗ lực.`)}
-      />
+      <div className="relative">
+        <VocabFlashcardEngine
+          key={topicId ?? 'due'}
+          cards={cards}
+          exitTo="/app/vocabulary"
+          onCompleteSession={(s) => toast.success('Phiên ôn hoàn tất', `Nhớ tốt ${s.good + s.easy}/${cards.length} thẻ. +${cards.length * 2} điểm nỗ lực.`)}
+        />
+      </div>
     </div>
   );
 };

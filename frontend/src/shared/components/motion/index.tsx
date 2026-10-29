@@ -3,7 +3,7 @@ import { useLocation } from 'react-router-dom';
 import { useCountUp, useInView } from '@/shared/hooks';
 import { cn } from '@/shared/utils';
 
-type RevealAnim = 'fade-up' | 'fade-in' | 'scale-in' | 'slide-in-left' | 'slide-in-right' | 'fade-down';
+type RevealAnim = 'fade-up' | 'fade-in' | 'scale-in' | 'slide-in-left' | 'slide-in-right' | 'fade-down' | 'tilt-in';
 
 interface RevealProps extends React.HTMLAttributes<HTMLDivElement> {
   animation?: RevealAnim;
@@ -16,12 +16,7 @@ export const Reveal: React.FC<RevealProps> = ({ animation = 'fade-up', delay = 0
   const { ref, inView } = useInView<HTMLDivElement>();
   const Tag = as as unknown as React.ElementType;
   return (
-    <Tag
-      ref={ref}
-      className={cn(inView ? `animate-${animation}` : 'opacity-0', className)}
-      style={{ animationDelay: `${delay}ms`, ...style }}
-      {...rest}
-    >
+    <Tag ref={ref} className={cn(inView ? `animate-${animation}` : 'opacity-0', className)} style={{ animationDelay: `${delay}ms`, ...style }} {...rest}>
       {children}
     </Tag>
   );
@@ -29,9 +24,9 @@ export const Reveal: React.FC<RevealProps> = ({ animation = 'fade-up', delay = 0
 
 interface StaggerProps extends React.HTMLAttributes<HTMLDivElement> {
   animation?: RevealAnim;
-  step?: number; // ms giữa các phần tử
+  step?: number;
   initialDelay?: number;
-  whenVisible?: boolean; // chỉ chạy khi cuộn tới
+  whenVisible?: boolean;
 }
 
 /** Chạy animation lần lượt cho từng phần tử con */
@@ -84,19 +79,43 @@ export const CountUp: React.FC<CountUpProps> = ({ value, duration = 1200, suffix
   );
 };
 
-/** Nền trang trí: các khối gradient mờ chuyển động chậm */
+/** Nền trang trí: khối màu mờ chuyển động chậm (giữ cho tương thích) */
 export const FloatingBlobs: React.FC<{ className?: string; tone?: 'indigo' | 'emerald' | 'rose' | 'amber' }> = ({ className, tone = 'indigo' }) => {
   const tones = {
-    indigo: ['bg-indigo-300/40', 'bg-violet-300/40', 'bg-sky-200/40'],
-    emerald: ['bg-emerald-300/40', 'bg-teal-200/40', 'bg-lime-200/30'],
-    rose: ['bg-rose-300/40', 'bg-orange-200/40', 'bg-pink-200/40'],
-    amber: ['bg-amber-300/40', 'bg-orange-200/40', 'bg-yellow-200/40'],
+    indigo: ['bg-indigo-200/60', 'bg-amber-200/60', 'bg-violet-200/50'],
+    emerald: ['bg-emerald-200/60', 'bg-teal-200/50', 'bg-amber-200/40'],
+    rose: ['bg-violet-200/60', 'bg-amber-200/50', 'bg-rose-200/40'],
+    amber: ['bg-amber-200/60', 'bg-orange-200/50', 'bg-yellow-200/50'],
   }[tone];
   return (
     <div aria-hidden className={cn('pointer-events-none absolute inset-0 overflow-hidden', className)}>
-      <div className={cn('absolute -top-24 -left-24 w-96 h-96 rounded-full blur-3xl animate-blob', tones[0])} />
-      <div className={cn('absolute top-1/3 -right-32 w-[28rem] h-[28rem] rounded-full blur-3xl animate-blob', tones[1])} style={{ animationDelay: '3s' }} />
-      <div className={cn('absolute -bottom-32 left-1/3 w-80 h-80 rounded-full blur-3xl animate-blob', tones[2])} style={{ animationDelay: '6s' }} />
+      <div className={cn('absolute -top-24 -left-24 w-96 h-96 rounded-full blur-3xl animate-float-slow', tones[0])} />
+      <div className={cn('absolute top-1/3 -right-32 w-[28rem] h-[28rem] rounded-full blur-3xl animate-float', tones[1])} style={{ animationDelay: '3s' }} />
+      <div className={cn('absolute -bottom-32 left-1/3 w-80 h-80 rounded-full blur-3xl animate-float-slow', tones[2])} style={{ animationDelay: '6s' }} />
+    </div>
+  );
+};
+
+/** Hoạ tiết vẽ tay: sao, vòng tròn, đường lượn — tạo cảm giác "thật", không AI */
+export const Doodles: React.FC<{ className?: string; tone?: 'dark' | 'light' }> = ({ className, tone = 'dark' }) => {
+  const stroke = tone === 'dark' ? '#141A2B' : '#ffffff';
+  return (
+    <div aria-hidden className={cn('pointer-events-none absolute inset-0 overflow-hidden', className)}>
+      <svg className="absolute top-10 right-10 w-16 h-16 animate-float opacity-70" viewBox="0 0 64 64" fill="none" stroke={stroke} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M32 6l6 18 18 6-18 6-6 18-6-18-18-6 18-6z" fill="#FFD24D" />
+      </svg>
+      <svg className="absolute bottom-24 left-8 w-24 h-24 animate-float-slow opacity-70" viewBox="0 0 100 100" fill="none" stroke={stroke} strokeWidth="3" strokeLinecap="round">
+        <circle cx="50" cy="50" r="38" strokeDasharray="8 10" />
+      </svg>
+      <svg className="absolute top-1/3 left-[12%] w-28 h-10 opacity-60" viewBox="0 0 120 40" fill="none" stroke={tone === 'dark' ? '#FA5330' : '#FFD24D'} strokeWidth="4" strokeLinecap="round">
+        <path d="M4 28c14-20 26-20 40 0s26 20 40 0 24-20 32-10" />
+      </svg>
+      <svg className="absolute bottom-10 right-[18%] w-14 h-14 animate-bounce-soft opacity-70" viewBox="0 0 64 64" fill="none" stroke={stroke} strokeWidth="3">
+        <rect x="10" y="10" width="44" height="44" rx="8" fill={tone === 'dark' ? '#A9E8D4' : 'rgba(255,255,255,0.25)'} transform="rotate(12 32 32)" />
+      </svg>
+      <svg className="absolute top-20 left-1/2 w-10 h-10 opacity-60" viewBox="0 0 40 40" fill="none" stroke={stroke} strokeWidth="3" strokeLinecap="round">
+        <path d="M6 20h28M20 6v28" />
+      </svg>
     </div>
   );
 };

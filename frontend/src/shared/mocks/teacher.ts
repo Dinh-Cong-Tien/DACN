@@ -1,14 +1,16 @@
+import { PHOTOS, pravatar, unsplash } from '@/shared/components/media/Img';
 import type { Assignment, ClassRoom, ClassStudent, Material, Submission } from '@/shared/types';
 
 export const MOCK_CLASSES: ClassRoom[] = [
-  { id: 'cl-1', name: 'TOEIC 650+ K12', code: 'ORB-7K2P', examType: 'TOEIC', teacherName: 'Trần Thu Hà', studentsCount: 28, assignmentsCount: 14, avgScore: 642, completionRate: 86, attendanceRate: 91, createdAt: '2026-08-05', schedule: 'T2 – T4 – T6 · 19:00', gradient: 'from-indigo-500 to-violet-600' },
-  { id: 'cl-2', name: 'VSTEP B2 Khoá 5', code: 'ORB-B2X9', examType: 'VSTEP', teacherName: 'Trần Thu Hà', studentsCount: 22, assignmentsCount: 11, avgScore: 6.8, completionRate: 78, attendanceRate: 84, createdAt: '2026-09-01', schedule: 'T3 – T5 · 18:30', gradient: 'from-emerald-500 to-teal-600' },
-  { id: 'cl-3', name: 'TOEIC Foundation Sáng', code: 'ORB-FD31', examType: 'TOEIC', teacherName: 'Trần Thu Hà', studentsCount: 35, assignmentsCount: 9, avgScore: 512, completionRate: 71, attendanceRate: 76, createdAt: '2026-09-15', schedule: 'T7 – CN · 08:30', gradient: 'from-amber-400 to-orange-500' },
-  { id: 'cl-4', name: 'TOEIC 850 Intensive', code: 'ORB-85IN', examType: 'TOEIC', teacherName: 'Trần Thu Hà', studentsCount: 15, assignmentsCount: 18, avgScore: 790, completionRate: 94, attendanceRate: 97, createdAt: '2026-07-10', schedule: 'T2 – T5 · 20:00', gradient: 'from-rose-500 to-pink-600' },
+  { id: 'cl-1', coverUrl: PHOTOS.classroom, name: 'TOEIC 650+ K12', code: 'ORB-7K2P', examType: 'TOEIC', teacherName: 'Trần Thu Hà', studentsCount: 28, assignmentsCount: 14, avgScore: 642, completionRate: 86, attendanceRate: 91, createdAt: '2026-08-05', schedule: 'T2 – T4 – T6 · 19:00', gradient: 'from-indigo-500 to-violet-600' },
+  { id: 'cl-2', coverUrl: PHOTOS.discussion, name: 'VSTEP B2 Khoá 5', code: 'ORB-B2X9', examType: 'VSTEP', teacherName: 'Trần Thu Hà', studentsCount: 22, assignmentsCount: 11, avgScore: 6.8, completionRate: 78, attendanceRate: 84, createdAt: '2026-09-01', schedule: 'T3 – T5 · 18:30', gradient: 'from-emerald-500 to-teal-600' },
+  { id: 'cl-3', coverUrl: PHOTOS.lecture, name: 'TOEIC Foundation Sáng', code: 'ORB-FD31', examType: 'TOEIC', teacherName: 'Trần Thu Hà', studentsCount: 35, assignmentsCount: 9, avgScore: 512, completionRate: 71, attendanceRate: 76, createdAt: '2026-09-15', schedule: 'T7 – CN · 08:30', gradient: 'from-amber-400 to-orange-500' },
+  { id: 'cl-4', coverUrl: PHOTOS.team, name: 'TOEIC 850 Intensive', code: 'ORB-85IN', examType: 'TOEIC', teacherName: 'Trần Thu Hà', studentsCount: 15, assignmentsCount: 18, avgScore: 790, completionRate: 94, attendanceRate: 97, createdAt: '2026-07-10', schedule: 'T2 – T5 · 20:00', gradient: 'from-rose-500 to-pink-600' },
 ];
 
 const st = (id: string, name: string, email: string, avgScore: number, completion: number, streak: number, lastActive: string, status: ClassStudent['status']): ClassStudent => ({
   id,
+  avatarUrl: pravatar(Number(id.split('-')[1]) + 20),
   name,
   initials: name
     .split(' ')
@@ -49,6 +51,7 @@ export const MOCK_ASSIGNMENTS: Assignment[] = [
 export const MOCK_SUBMISSIONS: Submission[] = [
   {
     id: 'sb-1',
+    avatarUrl: pravatar(31),
     assignmentId: 'as-3',
     assignmentTitle: 'Writing Task 2 — Education & Career',
     studentName: 'Đỗ Thị Mai',
@@ -60,11 +63,16 @@ export const MOCK_SUBMISSIONS: Submission[] = [
     content:
       'In recent years, there has been a heated debate about whether universities should prepare students for specific careers or provide a broad education. While vocational training equips graduates with practical skills that employers value, I believe a balanced approach benefits students most.\n\nOn the one hand, career-focused programmes allow students to enter the workforce quickly. For example, nursing and engineering courses include internships that build job-ready competence. On the other hand, a broad education develops critical thinking and adaptability, which are essential in a rapidly changing economy.\n\nIn conclusion, universities should combine specialised training with general subjects so that graduates are both employable and able to learn throughout their lives.',
   },
-  { id: 'sb-2', assignmentId: 'as-3', assignmentTitle: 'Writing Task 2 — Education & Career', studentName: 'Trần Gia Huy', initials: 'GH', submittedAt: '2026-10-29T07:40:00.000Z', maxScore: 10, status: 'PENDING', type: 'ESSAY', content: 'Nowadays many people argue about the purpose of university education. Some think it should focus on jobs, others on general knowledge. In my opinion both are important...' },
-  { id: 'sb-3', assignmentId: 'as-4', assignmentTitle: 'Speaking Part 2 — Solution Discussion', studentName: 'Nguyễn Minh Anh', initials: 'MA', submittedAt: '2026-10-28T18:00:00.000Z', maxScore: 10, status: 'PENDING', type: 'SPEAKING', content: 'audio-recording-01.webm · 03:42' },
-  { id: 'sb-4', assignmentId: 'as-3', assignmentTitle: 'Writing Task 2 — Education & Career', studentName: 'Phạm Hoàng Long', initials: 'HL', submittedAt: '2026-10-27T22:10:00.000Z', score: 8.5, maxScore: 10, status: 'GRADED', type: 'ESSAY', feedback: 'Lập luận rõ ràng, từ vựng học thuật tốt. Cần đa dạng cấu trúc câu phức hơn ở đoạn 2.' },
-  { id: 'sb-5', assignmentId: 'as-4', assignmentTitle: 'Speaking Part 2 — Solution Discussion', studentName: 'Lý Bảo Ngọc', initials: 'BN', submittedAt: '2026-10-30T01:20:00.000Z', maxScore: 10, status: 'LATE', type: 'SPEAKING', content: 'audio-recording-07.webm · 02:58' },
-  { id: 'sb-6', assignmentId: 'as-1', assignmentTitle: 'ETS 2024 — Test 2 (Full Test)', studentName: 'Vũ Đức Thành', initials: 'ĐT', submittedAt: '2026-10-28T10:00:00.000Z', score: 655, maxScore: 990, status: 'GRADED', type: 'MOCK_TEST', feedback: 'Chấm tự động.' },
+  { id: 'sb-2',
+    avatarUrl: pravatar(32), assignmentId: 'as-3', assignmentTitle: 'Writing Task 2 — Education & Career', studentName: 'Trần Gia Huy', initials: 'GH', submittedAt: '2026-10-29T07:40:00.000Z', maxScore: 10, status: 'PENDING', type: 'ESSAY', content: 'Nowadays many people argue about the purpose of university education. Some think it should focus on jobs, others on general knowledge. In my opinion both are important...' },
+  { id: 'sb-3',
+    avatarUrl: pravatar(11), assignmentId: 'as-4', assignmentTitle: 'Speaking Part 2 — Solution Discussion', studentName: 'Nguyễn Minh Anh', initials: 'MA', submittedAt: '2026-10-28T18:00:00.000Z', maxScore: 10, status: 'PENDING', type: 'SPEAKING', content: 'audio-recording-01.webm · 03:42' },
+  { id: 'sb-4',
+    avatarUrl: pravatar(12), assignmentId: 'as-3', assignmentTitle: 'Writing Task 2 — Education & Career', studentName: 'Phạm Hoàng Long', initials: 'HL', submittedAt: '2026-10-27T22:10:00.000Z', score: 8.5, maxScore: 10, status: 'GRADED', type: 'ESSAY', feedback: 'Lập luận rõ ràng, từ vựng học thuật tốt. Cần đa dạng cấu trúc câu phức hơn ở đoạn 2.' },
+  { id: 'sb-5',
+    avatarUrl: pravatar(33), assignmentId: 'as-4', assignmentTitle: 'Speaking Part 2 — Solution Discussion', studentName: 'Lý Bảo Ngọc', initials: 'BN', submittedAt: '2026-10-30T01:20:00.000Z', maxScore: 10, status: 'LATE', type: 'SPEAKING', content: 'audio-recording-07.webm · 02:58' },
+  { id: 'sb-6',
+    avatarUrl: pravatar(13), assignmentId: 'as-1', assignmentTitle: 'ETS 2024 — Test 2 (Full Test)', studentName: 'Vũ Đức Thành', initials: 'ĐT', submittedAt: '2026-10-28T10:00:00.000Z', score: 655, maxScore: 990, status: 'GRADED', type: 'MOCK_TEST', feedback: 'Chấm tự động.' },
 ];
 
 export const MOCK_MATERIALS: Material[] = [

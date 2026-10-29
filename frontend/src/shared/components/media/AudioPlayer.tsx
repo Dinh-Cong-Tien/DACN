@@ -78,14 +78,14 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({ src, examMode, autoPla
   const locked = examMode && played;
 
   return (
-    <div className={cn('flex items-center gap-3 rounded-2xl border bg-white px-3 py-2.5', locked ? 'border-slate-200 bg-slate-50' : 'border-indigo-100', className)}>
+    <div className={cn('flex items-center gap-3 rounded-2xl border bg-white px-3 py-2.5', locked ? 'border-slate-300 bg-slate-50' : 'border-slate-900', className)}>
       <audio ref={ref} src={src} preload="metadata" />
       <button
         onClick={toggle}
         disabled={locked || error}
         className={cn(
           'w-10 h-10 rounded-xl flex items-center justify-center text-white shrink-0 transition-all active:scale-95 disabled:opacity-50',
-          locked ? 'bg-slate-400' : 'bg-gradient-to-br from-indigo-600 to-violet-600 shadow-md shadow-indigo-200'
+          locked ? 'bg-slate-400 border-2 border-slate-900' : 'bg-violet-500 border-2 border-slate-900 shadow-hard-sm'
         )}
         aria-label={playing ? 'Tạm dừng' : 'Phát'}
       >
@@ -104,7 +104,7 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({ src, examMode, autoPla
           </div>
         )}
         <div onClick={seek} className={cn('h-2 rounded-full bg-slate-100 overflow-hidden', !examMode && 'cursor-pointer')}>
-          <div className="h-full rounded-full bg-gradient-to-r from-indigo-500 to-violet-500 transition-[width] duration-200" style={{ width: `${pct}%` }} />
+          <div className="h-full rounded-full bg-indigo-600 transition-[width] duration-200" style={{ width: `${pct}%` }} />
         </div>
         {error && <p className="text-[10px] text-rose-500 mt-1">Không tải được audio mẫu (cần kết nối mạng).</p>}
       </div>

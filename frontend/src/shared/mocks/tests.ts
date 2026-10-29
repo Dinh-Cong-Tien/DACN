@@ -1,6 +1,8 @@
+import { PHOTOS, pravatar, unsplash } from '@/shared/components/media/Img';
 import type { AttemptSummary, MockTestSummary, SkillScore, TestPartInfo } from '@/shared/types';
 
-export const MOCK_TESTS: MockTestSummary[] = [
+const TEST_COVERS = [PHOTOS.headphones, PHOTOS.notes, PHOTOS.desk, PHOTOS.flatlay, PHOTOS.typing, PHOTOS.classroom];
+export const MOCK_TESTS: MockTestSummary[] = ([
   { id: 'ets-2024-01', slug: 'ets-2024-test-1', title: 'ETS TOEIC 2024 — Test 1', examType: 'TOEIC', level: '550–750', durationMinutes: 120, totalQuestions: 200, parts: ['Part 1–7'], attempts: 12840, isFree: true, year: 2024, tags: ['Full Test', 'Mới'] },
   { id: 'ets-2024-02', slug: 'ets-2024-test-2', title: 'ETS TOEIC 2024 — Test 2', examType: 'TOEIC', level: '550–750', durationMinutes: 120, totalQuestions: 200, parts: ['Part 1–7'], attempts: 9530, isFree: true, year: 2024, tags: ['Full Test'] },
   { id: 'ets-2024-03', slug: 'ets-2024-test-3', title: 'ETS TOEIC 2024 — Test 3', examType: 'TOEIC', level: '650–850', durationMinutes: 120, totalQuestions: 200, parts: ['Part 1–7'], attempts: 7210, isFree: false, year: 2024, tags: ['Full Test', 'VIP'] },
@@ -13,7 +15,7 @@ export const MOCK_TESTS: MockTestSummary[] = [
   { id: 'vstep-c1-01', slug: 'vstep-c1-mock-1', title: 'VSTEP C1 — Đề nâng cao', examType: 'VSTEP', level: 'C1', durationMinutes: 160, totalQuestions: 75, parts: ['Nghe', 'Đọc', 'Viết', 'Nói'], attempts: 980, isFree: false, year: 2025, tags: ['VIP', 'Khó'] },
   { id: 'ets-2025-01', slug: 'ets-2025-test-1', title: 'ETS TOEIC 2025 — Test 1', examType: 'TOEIC', level: '650–900', durationMinutes: 120, totalQuestions: 200, parts: ['Part 1–7'], attempts: 3100, isFree: false, year: 2025, tags: ['Full Test', 'VIP', 'Mới'] },
   { id: 'toeic-part5-drill', slug: 'toeic-part5-drill', title: 'TOEIC Part 5 — 30 câu tốc độ', examType: 'TOEIC', level: '550+', durationMinutes: 15, totalQuestions: 30, parts: ['Part 5'], attempts: 18900, isFree: true, year: 2024, tags: ['Part Test', 'Phổ biến'] },
-];
+] as MockTestSummary[]).map((t, i) => ({ ...t, coverUrl: TEST_COVERS[i % TEST_COVERS.length] }));
 
 export const MOCK_ATTEMPTS: AttemptSummary[] = [
   { id: 'at-01', testId: 'ets-2024-01', testTitle: 'ETS TOEIC 2024 — Test 1', examType: 'TOEIC', score: 715, maxScore: 990, correct: 143, total: 200, date: '2026-10-25T09:30:00.000Z', durationSec: 6840, listening: 380, reading: 335 },

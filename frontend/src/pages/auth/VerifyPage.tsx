@@ -63,16 +63,16 @@ export const VerifyPage: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div className="text-center space-y-2 animate-fade-down">
-        <div className="w-16 h-16 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center mx-auto animate-float">
+      <div className="space-y-3 animate-fade-down">
+        <div className="w-16 h-16 rounded-2xl bg-amber-300 border-2 border-slate-900 shadow-hard-sm text-slate-900 flex items-center justify-center animate-float tilt-2">
           <MailCheck className="w-8 h-8" />
         </div>
-        <h1 className="text-2xl font-black text-slate-900 tracking-tight">Xác thực email</h1>
-        <p className="text-sm text-slate-500">
-          Nhập mã 6 số đã gửi tới <b className="text-slate-800">{user?.email || 'email của bạn'}</b>
+        <h1 className="font-display text-3xl font-extrabold text-slate-900 tracking-tight">Xác thực email</h1>
+        <p className="text-sm text-slate-600">
+          Nhập mã 6 số đã gửi tới <b className="text-slate-900">{user?.email || 'email của bạn'}</b>
         </p>
       </div>
-      <Card padding="lg" className="animate-fade-up space-y-5">
+      <Card hard padding="lg" className="animate-fade-up space-y-5">
         <div className={cn('flex justify-between gap-2', shake && 'animate-shake')}>
           {digits.map((d, i) => (
             <input
@@ -85,8 +85,8 @@ export const VerifyPage: React.FC = () => {
               onKeyDown={(e) => onKey(i, e)}
               onFocus={(e) => e.target.select()}
               className={cn(
-                'w-12 h-14 text-center text-xl font-black rounded-xl border-2 transition-all duration-200 focus:outline-none focus:ring-4 focus:ring-indigo-500/10',
-                d ? 'border-indigo-500 bg-indigo-50 text-indigo-900 scale-105' : 'border-slate-200 text-slate-800 focus:border-indigo-400'
+                'w-12 h-14 text-center font-display text-xl font-extrabold rounded-xl border-2 transition-all duration-200 focus:outline-none',
+                d ? 'border-slate-900 bg-amber-100 text-slate-900 shadow-hard-sm -translate-y-0.5' : 'border-slate-300 text-slate-800 focus:border-slate-900'
               )}
             />
           ))}
@@ -94,10 +94,10 @@ export const VerifyPage: React.FC = () => {
         <Button fullWidth size="lg" variant="gradient" loading={loading} onClick={submit} rightIcon={<ArrowRight className="w-4 h-4" />}>
           Xác nhận
         </Button>
-        <div className="text-center text-xs text-slate-500">
+        <div className="text-center text-xs text-slate-600">
           {countdown > 0 ? (
             <span>
-              Gửi lại mã sau <b className="text-slate-800 font-mono">{countdown}s</b>
+              Gửi lại mã sau <b className="text-slate-900 font-mono">{countdown}s</b>
             </span>
           ) : (
             <button
@@ -106,13 +106,13 @@ export const VerifyPage: React.FC = () => {
                 setCountdown(60);
                 toast.info('Đã gửi lại mã', 'Kiểm tra hộp thư (kể cả mục Spam).');
               }}
-              className="inline-flex items-center gap-1 font-bold text-indigo-600 hover:underline"
+              className="inline-flex items-center gap-1 font-bold text-violet-600 hover:underline"
             >
               <RefreshCw className="w-3.5 h-3.5" /> Gửi lại mã xác thực
             </button>
           )}
         </div>
-        <p className="text-[11px] text-slate-400 text-center">Demo: nhập bất kỳ 6 chữ số để tiếp tục.</p>
+        <p className="text-[11px] text-slate-500 text-center">Demo: nhập bất kỳ 6 chữ số để tiếp tục.</p>
       </Card>
     </div>
   );

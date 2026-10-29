@@ -8,15 +8,22 @@
     -webkit-tap-highlight-color: transparent;
   }
   body {
-    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
-    @apply bg-slate-50 text-slate-800 antialiased;
+    font-family: 'Be Vietnam Pro', system-ui, -apple-system, sans-serif;
+    @apply bg-cream text-slate-800 antialiased;
+  }
+  h1,
+  h2,
+  h3,
+  .font-display {
+    font-family: 'Lexend', 'Be Vietnam Pro', system-ui, sans-serif;
+    letter-spacing: -0.02em;
   }
   ::selection {
-    @apply bg-indigo-500 text-white;
+    @apply bg-amber-300 text-slate-900;
   }
   * {
     scrollbar-width: thin;
-    scrollbar-color: rgb(203 213 225) transparent;
+    scrollbar-color: rgb(209 200 185) transparent;
   }
   *::-webkit-scrollbar {
     width: 8px;
@@ -32,11 +39,40 @@
   a {
     @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500/60 focus-visible:ring-offset-2;
   }
+  img {
+    @apply select-none;
+  }
 }
 
 @layer components {
+  /* Bút dạ highlight dưới chữ (thay cho gradient text) */
+  .text-gradient,
+  .mark {
+    @apply relative inline-block;
+    color: inherit;
+    background: linear-gradient(transparent 58%, #FFD24D 58%, #FFD24D 92%, transparent 92%);
+    background-repeat: no-repeat;
+    padding: 0 0.1em;
+    -webkit-text-fill-color: currentColor;
+    -webkit-background-clip: border-box;
+  }
+  /* Highlight phủ toàn bộ chữ — dùng trên nền tối */
+  .mark-full {
+    background: #FFD24D;
+    color: #141A2B;
+    padding: 0 0.18em;
+    border-radius: 0.2em;
+    box-decoration-break: clone;
+    -webkit-box-decoration-break: clone;
+  }
+  .mark-coral {
+    background-image: linear-gradient(transparent 58%, #FFC8B8 58%, #FFC8B8 92%, transparent 92%);
+  }
+  .mark-teal {
+    background-image: linear-gradient(transparent 58%, #A9E8D4 58%, #A9E8D4 92%, transparent 92%);
+  }
   .glass {
-    @apply bg-white/70 backdrop-blur-xl border border-white/60 shadow-soft;
+    @apply bg-white/80 backdrop-blur-xl border border-slate-900/10 shadow-soft;
   }
   .glass-dark {
     @apply bg-slate-900/70 backdrop-blur-xl border border-white/10;
@@ -44,17 +80,33 @@
   .card-hover {
     @apply transition-all duration-300 ease-spring hover:-translate-y-1 hover:shadow-card;
   }
-  .text-gradient {
-    @apply bg-gradient-to-r from-indigo-600 via-violet-600 to-indigo-700 bg-clip-text text-transparent;
+  /* Card "sticker": viền đậm + bóng lệch */
+  .card-hard {
+    @apply border-2 border-slate-900 shadow-hard;
+  }
+  .card-hard-hover {
+    @apply transition-all duration-200 hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-hard-lg active:translate-x-0 active:translate-y-0 active:shadow-hard-sm;
+  }
+  /* Nút 3D kiểu Duolingo: viền dưới dày, nhấn thì lún xuống */
+  .btn-3d {
+    @apply border-b-4 transition-all duration-150 active:border-b-0 active:translate-y-1;
   }
   .bg-dots {
-    background-image: radial-gradient(rgba(99, 102, 241, 0.18) 1px, transparent 1px);
-    background-size: 22px 22px;
+    background-image: radial-gradient(rgba(20, 26, 43, 0.14) 1.2px, transparent 1.2px);
+    background-size: 20px 20px;
   }
   .bg-grid {
-    background-image: linear-gradient(to right, rgba(148, 163, 184, 0.14) 1px, transparent 1px),
-      linear-gradient(to bottom, rgba(148, 163, 184, 0.14) 1px, transparent 1px);
+    background-image: linear-gradient(to right, rgba(20, 26, 43, 0.08) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(20, 26, 43, 0.08) 1px, transparent 1px);
     background-size: 40px 40px;
+  }
+  .bg-lines {
+    background-image: repeating-linear-gradient(-45deg, rgba(20, 26, 43, 0.06) 0 2px, transparent 2px 12px);
+  }
+  .bg-paper {
+    background-color: #faf7f1;
+    background-image: radial-gradient(rgba(20, 26, 43, 0.06) 1px, transparent 1px);
+    background-size: 18px 18px;
   }
   .skeleton {
     @apply bg-slate-200/80 rounded-lg relative overflow-hidden;
@@ -82,16 +134,7 @@
     transform: translateX(120%);
   }
   .stripes {
-    background-image: linear-gradient(
-      45deg,
-      rgba(255, 255, 255, 0.18) 25%,
-      transparent 25%,
-      transparent 50%,
-      rgba(255, 255, 255, 0.18) 50%,
-      rgba(255, 255, 255, 0.18) 75%,
-      transparent 75%,
-      transparent
-    );
+    background-image: linear-gradient(45deg, rgba(255, 255, 255, 0.18) 25%, transparent 25%, transparent 50%, rgba(255, 255, 255, 0.18) 50%, rgba(255, 255, 255, 0.18) 75%, transparent 75%, transparent);
     background-size: 1rem 1rem;
   }
   .flip-card {
@@ -110,6 +153,14 @@
   }
   .flip-back {
     transform: rotateY(180deg);
+  }
+  /* Nhãn dán xoay nhẹ */
+  .sticker {
+    @apply inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border-2 border-slate-900 bg-white text-xs font-extrabold uppercase tracking-wide shadow-hard-sm;
+    transform: rotate(var(--tilt, -2deg));
+  }
+  .photo-frame {
+    @apply rounded-3xl border-2 border-slate-900 overflow-hidden shadow-hard bg-white;
   }
 }
 
@@ -130,6 +181,10 @@
     -webkit-mask-image: linear-gradient(to bottom, black 70%, transparent);
     mask-image: linear-gradient(to bottom, black 70%, transparent);
   }
+  .tilt-1 { --tilt: -3deg; transform: rotate(-3deg); }
+  .tilt-2 { --tilt: 2deg; transform: rotate(2deg); }
+  .tilt-3 { --tilt: -1deg; transform: rotate(-1deg); }
+  .text-balance { text-wrap: balance; }
 }
 
 @media (prefers-reduced-motion: reduce) {

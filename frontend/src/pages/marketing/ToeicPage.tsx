@@ -1,186 +1,226 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, Headphones, BookOpen, Clock, ListChecks, Lightbulb, FileText, Users } from 'lucide-react';
-import { Accordion, Badge, Button, Card, GradientPanel, SectionTitle } from '@/shared/components/ui';
-import { CountUp, FloatingBlobs, Reveal, Stagger } from '@/shared/components/motion';
-import { MOCK_TESTS, TOEIC_PARTS_INFO, SCORE_TABLE } from '@/shared/mocks';
+import { ArrowRight, Clock, Headphones, BookOpen, Lightbulb, CheckCircle2, Star } from 'lucide-react';
+import { Button, Card, SectionTitle, Badge, Chip } from '@/shared/components/ui';
+import { Reveal, Stagger, CountUp, Doodles } from '@/shared/components/motion';
+import { Img, PHOTOS } from '@/shared/components/media/Img';
+import { TOEIC_PARTS_INFO, MOCK_TESTS, SCORE_TABLE } from '@/shared/mocks';
 import { useDocumentTitle } from '@/shared/hooks';
-import { formatNumber } from '@/shared/utils';
+import { cn, formatNumber } from '@/shared/utils';
 
 export const ToeicPage: React.FC = () => {
   useDocumentTitle('Luyện thi TOEIC');
+  const [active, setActive] = useState(TOEIC_PARTS_INFO[0].id);
+  const part = TOEIC_PARTS_INFO.find((p) => p.id === active)!;
   const tests = MOCK_TESTS.filter((t) => t.examType === 'TOEIC').slice(0, 4);
-  const listening = TOEIC_PARTS_INFO.filter((p) => p.skill === 'Listening');
-  const reading = TOEIC_PARTS_INFO.filter((p) => p.skill === 'Reading');
-
-  const partItems = (parts: typeof TOEIC_PARTS_INFO) =>
-    parts.map((p) => ({
-      id: p.id,
-      icon: p.skill === 'Listening' ? <Headphones /> : <BookOpen />,
-      title: (
-        <span className="flex items-center gap-2 flex-wrap">
-          {p.name} · {p.nameVi}
-          <Badge tone="slate" size="xs">
-            {p.questions} câu
-          </Badge>
-          {p.minutes && (
-            <Badge tone="amber" size="xs">
-              ~{p.minutes} phút
-            </Badge>
-          )}
-        </span>
-      ),
-      content: (
-        <div className="space-y-3">
-          <p>{p.description}</p>
-          <div className="rounded-xl bg-amber-50 border border-amber-100 p-3">
-            <p className="text-xs font-bold text-amber-800 flex items-center gap-1.5 mb-1.5">
-              <Lightbulb className="w-3.5 h-3.5" /> Mẹo làm bài
-            </p>
-            <ul className="space-y-1 text-xs text-amber-900">
-              {p.tips.map((t) => (
-                <li key={t}>• {t}</li>
-              ))}
-            </ul>
-          </div>
-        </div>
-      ),
-    }));
 
   return (
-    <div className="pb-20">
-      <section className="relative overflow-hidden py-16 md:py-24">
-        <FloatingBlobs />
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid lg:grid-cols-2 gap-10 items-center">
-          <div className="space-y-5 animate-fade-up">
-            <Badge tone="indigo" size="md">
-              TOEIC Listening & Reading
-            </Badge>
-            <h1 className="text-4xl md:text-5xl font-black text-slate-900 tracking-tight leading-tight">
-              Chinh phục <span className="text-gradient">TOEIC 450 → 990</span> theo đúng chuẩn ETS
+    <div>
+      {/* Hero */}
+      <section className="relative bg-indigo-600 text-white overflow-hidden border-b-2 border-slate-900">
+        <Doodles tone="light" />
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24 grid lg:grid-cols-[1.1fr_1fr] gap-12 items-center">
+          <div className="space-y-6">
+            <span className="sticker tilt-1 !bg-amber-300">TOEIC Listening & Reading</span>
+            <h1 className="font-display text-5xl md:text-6xl font-extrabold leading-[1.02]">
+              200 câu. 120 phút. <br />
+              Biết rõ mình mất điểm ở <span className="mark mark-full">Part nào</span>.
             </h1>
-            <p className="text-slate-600 leading-relaxed">200 câu hỏi, 120 phút, 7 Part. Hiểu rõ cấu trúc từng Part, nhận diện bẫy và luyện với đề thi thử có bộ đếm giờ thật.</p>
-            <div className="flex flex-wrap gap-3">
-              <Button to="/auth/register" variant="gradient" size="lg" rightIcon={<ArrowRight className="w-4 h-4" />}>
-                Bắt đầu lộ trình TOEIC
+            <p className="text-indigo-100 text-lg max-w-xl leading-relaxed">Luyện từng Part với giải thích ngay sau mỗi câu, rồi thi thử full test chuẩn ETS. Điểm quy đổi 10–990 có ngay sau khi nộp.</p>
+            <div className="flex flex-col sm:flex-row gap-3">
+              <Button to="/auth/register" size="lg" variant="gradient" rightIcon={<ArrowRight className="w-4 h-4" />}>
+                Thi xếp lớp TOEIC
               </Button>
-              <Button to="/mock-tests" variant="outline" size="lg">
-                Thi thử ngay
+              <Button to="/mock-tests" size="lg" variant="white">
+                Kho đề TOEIC
               </Button>
             </div>
-          </div>
-          <Stagger className="grid grid-cols-2 gap-4" animation="scale-in">
-            {[
-              { icon: ListChecks, v: 200, s: ' câu', l: 'Tổng số câu' },
-              { icon: Clock, v: 120, s: ' phút', l: 'Thời gian' },
-              { icon: Headphones, v: 100, s: ' câu', l: 'Listening (45\')' },
-              { icon: BookOpen, v: 100, s: ' câu', l: 'Reading (75\')' },
-            ].map((x) => {
-              const Icon = x.icon;
-              return (
-                <Card key={x.l} padding="sm" className="text-center">
-                  <Icon className="w-6 h-6 text-indigo-600 mx-auto mb-2" />
-                  <p className="text-2xl font-black text-slate-900">
-                    <CountUp value={x.v} suffix={x.s} />
-                  </p>
-                  <p className="text-xs text-slate-500 font-semibold">{x.l}</p>
-                </Card>
-              );
-            })}
-          </Stagger>
-        </div>
-      </section>
-
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 space-y-10">
-        <Reveal>
-          <SectionTitle eyebrow="Cấu trúc đề thi" title="7 Part của bài thi TOEIC" description="Nhấn vào từng Part để xem mô tả và mẹo làm bài." />
-        </Reveal>
-        <div className="grid lg:grid-cols-2 gap-8">
-          <Reveal animation="slide-in-left">
-            <h3 className="font-black text-slate-900 flex items-center gap-2 mb-4">
-              <Headphones className="w-5 h-5 text-indigo-600" /> Listening — Part 1–4 (45 phút)
-            </h3>
-            <Accordion items={partItems(listening)} defaultOpen="PART_1" />
-          </Reveal>
-          <Reveal animation="slide-in-right">
-            <h3 className="font-black text-slate-900 flex items-center gap-2 mb-4">
-              <BookOpen className="w-5 h-5 text-violet-600" /> Reading — Part 5–7 (75 phút)
-            </h3>
-            <Accordion items={partItems(reading)} defaultOpen="PART_5" />
-          </Reveal>
-        </div>
-      </section>
-
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 space-y-8">
-        <Reveal>
-          <SectionTitle eyebrow="Thang điểm" title="Điểm TOEIC tương ứng trình độ nào?" />
-        </Reveal>
-        <Reveal>
-          <Card padding="none" className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead className="bg-slate-50 text-[11px] uppercase tracking-wider text-slate-500 font-extrabold">
-                <tr>
-                  <th className="text-left px-5 py-3">CEFR</th>
-                  <th className="text-left px-5 py-3">TOEIC</th>
-                  <th className="text-left px-5 py-3">VSTEP</th>
-                  <th className="text-left px-5 py-3 hidden md:table-cell">Mô tả</th>
-                </tr>
-              </thead>
-              <tbody>
-                {SCORE_TABLE.map((r) => (
-                  <tr key={r.cefr} className="border-t border-slate-100 hover:bg-indigo-50/40 transition">
-                    <td className="px-5 py-3 font-black text-indigo-700">{r.cefr}</td>
-                    <td className="px-5 py-3 font-bold text-slate-900">{r.toeic}</td>
-                    <td className="px-5 py-3 text-slate-600">{r.vstep}</td>
-                    <td className="px-5 py-3 text-slate-500 hidden md:table-cell">{r.description}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </Card>
-        </Reveal>
-        <div className="text-center">
-          <Button to="/score-converter" variant="soft" rightIcon={<ArrowRight className="w-4 h-4" />}>
-            Mở công cụ quy đổi điểm
-          </Button>
-        </div>
-      </section>
-
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 space-y-8">
-        <Reveal>
-          <SectionTitle eyebrow="Thi thử" title="Đề TOEIC nổi bật" align="left" />
-        </Reveal>
-        <Stagger className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {tests.map((t) => (
-            <Link key={t.id} to="/mock-tests" className="block">
-              <Card hover className="h-full space-y-3">
-                <div className="flex items-center justify-between">
-                  <FileText className="w-5 h-5 text-indigo-600" />
-                  <Badge tone={t.isFree ? 'emerald' : 'amber'} size="xs">
-                    {t.isFree ? 'Miễn phí' : 'VIP'}
-                  </Badge>
+            <div className="flex gap-8 pt-2">
+              {[
+                ['7', 'Part'],
+                ['42', 'đề full test'],
+                ['12.6k', 'câu hỏi'],
+              ].map(([v, l]) => (
+                <div key={l}>
+                  <p className="font-display text-3xl font-extrabold">{v}</p>
+                  <p className="text-xs text-indigo-200 font-semibold uppercase tracking-wider">{l}</p>
                 </div>
-                <h3 className="font-bold text-slate-900 text-sm">{t.title}</h3>
-                <p className="text-xs text-slate-500">
-                  {t.totalQuestions} câu · {t.durationMinutes} phút · {t.level}
+              ))}
+            </div>
+          </div>
+          <div className="relative">
+            <div className="photo-frame tilt-2">
+              <Img src={PHOTOS.headphones} alt="Luyện nghe TOEIC" ratio="4/3" fallbackClass="bg-indigo-400" />
+            </div>
+            <div className="absolute -bottom-5 -left-4 bg-white text-slate-900 rounded-2xl border-2 border-slate-900 shadow-hard px-4 py-3 tilt-1 hidden sm:block">
+              <p className="text-[10px] font-extrabold uppercase text-slate-500">Điểm trung bình học viên</p>
+              <p className="font-display text-2xl font-extrabold">
+                <CountUp value={715} /> <span className="text-sm text-emerald-600">+145</span>
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Parts explorer */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24 space-y-10">
+        <Reveal>
+          <SectionTitle align="left" eyebrow="Cấu trúc đề" title={<>Bảy Part, bảy chiến thuật <span className="mark">khác nhau</span>.</>} description="Chọn một Part để xem số câu, thời gian khuyến nghị và mẹo làm bài từ giáo viên OrbiLingo." />
+        </Reveal>
+        <div className="flex gap-2 flex-wrap">
+          {TOEIC_PARTS_INFO.map((p) => (
+            <Chip key={p.id} active={p.id === active} onClick={() => setActive(p.id)} tone={p.skill === 'Listening' ? 'indigo' : 'violet'}>
+              {p.name} · {p.nameVi}
+            </Chip>
+          ))}
+        </div>
+        <div key={part.id} className="grid lg:grid-cols-[1fr_360px] gap-6 animate-fade-up">
+          <Card hard padding="lg" className="space-y-5">
+            <div className="flex items-center gap-3 flex-wrap">
+              <span className={cn('w-14 h-14 rounded-2xl border-2 border-slate-900 flex items-center justify-center', part.skill === 'Listening' ? 'bg-indigo-100 text-indigo-700' : 'bg-violet-100 text-violet-700')}>
+                {part.skill === 'Listening' ? <Headphones className="w-7 h-7" /> : <BookOpen className="w-7 h-7" />}
+              </span>
+              <div>
+                <h3 className="font-display text-2xl font-extrabold text-slate-900">
+                  {part.name} — {part.nameVi}
+                </h3>
+                <div className="flex gap-2 mt-1">
+                  <Badge tone={part.skill === 'Listening' ? 'indigo' : 'violet'}>{part.skill}</Badge>
+                  <Badge tone="slate">{part.questions} câu</Badge>
+                  {part.minutes && (
+                    <Badge tone="amber" icon={<Clock className="w-3 h-3" />}>
+                      ~{part.minutes} phút
+                    </Badge>
+                  )}
+                </div>
+              </div>
+            </div>
+            <p className="text-slate-700 text-lg leading-relaxed">{part.description}</p>
+            <div className="rounded-2xl bg-amber-100 border-2 border-slate-900 p-5">
+              <p className="font-bold text-slate-900 flex items-center gap-2 mb-3">
+                <Lightbulb className="w-5 h-5 text-amber-600" /> Mẹo từ giáo viên
+              </p>
+              <ol className="space-y-2">
+                {part.tips.map((t, i) => (
+                  <li key={t} className="flex gap-3 text-sm text-slate-800">
+                    <span className="font-display font-extrabold text-violet-600">{i + 1}.</span> {t}
+                  </li>
+                ))}
+              </ol>
+            </div>
+            <Button to="/auth/register" rightIcon={<ArrowRight className="w-4 h-4" />}>
+              Luyện {part.name} ngay
+            </Button>
+          </Card>
+          <div className="space-y-4">
+            <div className="photo-frame tilt-1">
+              <Img src={part.skill === 'Listening' ? PHOTOS.headphones : PHOTOS.notes} alt="" ratio="4/3" fallbackClass="bg-amber-200" />
+            </div>
+            <Card hard tone="ink" padding="md">
+              <p className="text-[10px] font-extrabold uppercase tracking-wider text-amber-300">Phân bổ thời gian Reading</p>
+              <ul className="mt-3 space-y-2 text-sm">
+                {TOEIC_PARTS_INFO.filter((p) => p.minutes).map((p) => (
+                  <li key={p.id} className="flex items-center justify-between">
+                    <span className="text-slate-300">{p.name}</span>
+                    <span className="font-bold">{p.minutes} phút</span>
+                  </li>
+                ))}
+                <li className="flex items-center justify-between border-t border-white/10 pt-2 font-bold">
+                  <span>Tổng Reading</span>
+                  <span className="text-amber-300">75 phút</span>
+                </li>
+              </ul>
+            </Card>
+          </div>
+        </div>
+      </section>
+
+      {/* Score table */}
+      <section className="bg-amber-100 border-y-2 border-slate-900 py-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid lg:grid-cols-[380px_1fr] gap-10 items-start">
+          <Reveal className="space-y-4">
+            <SectionTitle align="left" eyebrow="Thang điểm" title="TOEIC của bạn tương đương bậc mấy?" description="Bảng quy đổi theo CEFR và Khung năng lực 6 bậc Việt Nam." />
+            <Button to="/score-converter" variant="ink" rightIcon={<ArrowRight className="w-4 h-4" />}>
+              Mở công cụ quy đổi
+            </Button>
+          </Reveal>
+          <Reveal delay={100}>
+            <div className="rounded-3xl border-2 border-slate-900 bg-white shadow-hard overflow-hidden">
+              <table className="w-full text-sm">
+                <thead className="bg-slate-900 text-white">
+                  <tr>
+                    {['CEFR', 'TOEIC', 'VSTEP', 'IELTS', 'Ý nghĩa'].map((h) => (
+                      <th key={h} className="px-4 py-3 text-left text-[11px] font-extrabold uppercase tracking-wider">
+                        {h}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {SCORE_TABLE.map((r, i) => (
+                    <tr key={r.cefr} className={cn('border-t-2 border-slate-100', i % 2 ? 'bg-slate-50' : '')}>
+                      <td className="px-4 py-3 font-display font-extrabold text-slate-900">{r.cefr}</td>
+                      <td className="px-4 py-3 font-bold text-indigo-700">{r.toeic}</td>
+                      <td className="px-4 py-3 text-slate-700">{r.vstep}</td>
+                      <td className="px-4 py-3 text-slate-700">{r.ielts}</td>
+                      <td className="px-4 py-3 text-slate-500 text-xs hidden md:table-cell">{r.description}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </Reveal>
+        </div>
+      </section>
+
+      {/* Tests */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24 space-y-10">
+        <Reveal className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+          <SectionTitle align="left" eyebrow="Đề thi thử" title="Đề TOEIC được làm nhiều nhất tuần này" />
+          <Button to="/mock-tests" variant="outline" rightIcon={<ArrowRight className="w-4 h-4" />}>
+            Xem tất cả
+          </Button>
+        </Reveal>
+        <Stagger className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
+          {tests.map((t) => (
+            <Link key={t.id} to="/auth/login" className="block bg-white rounded-3xl border-2 border-slate-900 shadow-hard overflow-hidden card-hard-hover">
+              <Img src={t.coverUrl} alt="" ratio="video" fallbackClass="bg-indigo-200" />
+              <div className="p-4 space-y-2">
+                <div className="flex gap-1.5 flex-wrap">
+                  {t.tags?.map((tag) => (
+                    <Badge key={tag} tone={tag === 'VIP' ? 'amber' : tag === 'Mới' ? 'violet' : 'slate'} size="xs">
+                      {tag}
+                    </Badge>
+                  ))}
+                </div>
+                <h3 className="font-display font-bold text-slate-900 leading-snug">{t.title}</h3>
+                <p className="text-xs text-slate-500 font-semibold">
+                  {t.totalQuestions} câu · {t.durationMinutes} phút · {formatNumber(t.attempts)} lượt
                 </p>
-                <p className="text-[11px] text-slate-400 flex items-center gap-1">
-                  <Users className="w-3 h-3" /> {formatNumber(t.attempts)} lượt làm
-                </p>
-              </Card>
+              </div>
             </Link>
           ))}
         </Stagger>
-        <Reveal animation="scale-in">
-          <GradientPanel tone="indigo" className="text-center">
-            <h3 className="text-2xl font-black">Bắt đầu với bài đánh giá năng lực 15 phút</h3>
-            <p className="text-indigo-100 mt-2">Nhận lộ trình TOEIC cá nhân hoá ngay sau khi hoàn thành.</p>
-            <Button to="/auth/register" variant="secondary" size="lg" className="mt-6 bg-white text-indigo-700 hover:bg-indigo-50" rightIcon={<ArrowRight className="w-4 h-4" />}>
-              Đăng ký miễn phí
+      </section>
+
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-20">
+        <Reveal>
+          <Card hard tone="teal" padding="lg" className="flex flex-col md:flex-row items-center justify-between gap-6">
+            <div>
+              <h3 className="font-display text-3xl font-extrabold">Sẵn sàng biết điểm hiện tại?</h3>
+              <p className="text-indigo-100 mt-2 flex items-center gap-2">
+                <Star className="w-4 h-4 text-amber-300 fill-current" /> 15 phút · 20 câu · miễn phí · không cần thẻ
+              </p>
+            </div>
+            <Button to="/auth/register" size="xl" variant="white" rightIcon={<ArrowRight className="w-5 h-5" />}>
+              Làm bài xếp lớp
             </Button>
-          </GradientPanel>
+          </Card>
         </Reveal>
       </section>
+      <span className="hidden">
+        <CheckCircle2 />
+      </span>
     </div>
   );
 };

@@ -6,10 +6,10 @@ import { useAuthStore } from '@/shared/stores/authStore';
 import { toast } from '@/shared/stores/uiStore';
 import { MOCK_CLASSES } from '@/shared/mocks';
 import type { ClassRoom, ExamType } from '@/shared/types';
-import { cn } from '@/shared/utils';
 import { Badge, Button, Card, EmptyState, Input, Modal, PageHeader, ProgressBar, SearchInput, Select } from '@/shared/components/ui';
+import { Img, PHOTOS } from '@/shared/components/media/Img';
 
-const GRADIENTS = ['from-indigo-500 to-violet-600', 'from-emerald-500 to-teal-600', 'from-amber-400 to-orange-500', 'from-rose-500 to-pink-600', 'from-sky-500 to-cyan-600'];
+const COVERS = [PHOTOS.classroom, PHOTOS.discussion, PHOTOS.lecture, PHOTOS.team, PHOTOS.students2];
 
 const randomCode = () => {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
@@ -48,7 +48,8 @@ export const TeacherClassesPage: React.FC = () => {
       attendanceRate: 0,
       createdAt: new Date().toISOString().slice(0, 10),
       schedule: form.schedule || 'Chưa thiết lập',
-      gradient: GRADIENTS[classes.length % GRADIENTS.length],
+      gradient: '',
+      coverUrl: COVERS[classes.length % COVERS.length],
     };
     setClasses((s) => [c, ...s]);
     setOpen(false);
@@ -60,59 +61,67 @@ export const TeacherClassesPage: React.FC = () => {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Lớp học của tôi"
+        title={
+          <>
+            Lớp học <span className="mark">của tôi</span>
+          </>
+        }
         description="Tạo lớp, cấp mã mời cho học viên, theo dõi tiến độ và giao bài tập."
         actions={
-          <Button leftIcon={<Plus className="w-4 h-4" />} onClick={() => setOpen(true)}>
+          <Button variant="gradient" leftIcon={<Plus className="w-4 h-4" />} onClick={() => setOpen(true)}>
             Tạo lớp mới
           </Button>
         }
       />
-      <div className="max-w-sm">
-        <SearchInput placeholder="Tìm theo tên hoặc mã lớp..." value={search} onChange={(e) => setSearch(e.target.value)} />
+      <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+        <div className="sm:w-80">
+          <SearchInput placeholder="Tìm theo tên hoặc mã lớp..." value={search} onChange={(e) => setSearch(e.target.value)} />
+        </div>
+        <p className="text-xs font-bold text-slate-500">
+          {list.length} lớp · {list.reduce((a, c) => a + c.studentsCount, 0)} học viên
+        </p>
       </div>
 
       {list.length === 0 ? (
-        <Card>
+        <Card hard>
           <EmptyState icon={<Users />} title="Chưa có lớp nào" description="Tạo lớp đầu tiên và chia sẻ mã mời cho học viên." action={<Button onClick={() => setOpen(true)}>Tạo lớp</Button>} />
         </Card>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
           {list.map((c, i) => (
-            <Card key={c.id} padding="none" className="overflow-hidden card-hover animate-fade-up" style={{ animationDelay: `${i * 60}ms` }}>
-              <div className={cn('relative h-28 bg-gradient-to-br text-white p-5 flex flex-col justify-between', c.gradient)}>
-                <div aria-hidden className="absolute inset-0 bg-grid opacity-20" />
-                <div className="relative flex items-start justify-between">
-                  <Badge tone="slate" solid className="!bg-white/20 !text-white backdrop-blur">
+            <Card key={c.id} hard hover padding="none" className="overflow-hidden animate-fade-up" style={{ animationDelay: `${i * 60}ms` }}>
+              <div className="relative">
+                <Img src={c.coverUrl} alt={c.name} ratio="video" fallbackClass="bg-indigo-200" wrapperClass="border-b-2 border-slate-900" />
+                <div className="absolute top-3 left-3 flex gap-2">
+                  <Badge tone={c.examType === 'TOEIC' ? 'indigo' : 'emerald'} solid>
                     {c.examType}
                   </Badge>
-                  <button onClick={() => copy(c.code)} className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white/20 hover:bg-white/30 text-xs font-mono font-bold backdrop-blur transition" title="Sao chép mã mời">
-                    {c.code} <Copy className="w-3 h-3" />
-                  </button>
                 </div>
-                <h3 className="relative font-black text-lg leading-tight truncate">{c.name}</h3>
+                <button onClick={() => copy(c.code)} className="sticker tilt-2 absolute -bottom-3 right-4 !bg-amber-300 hover:!bg-amber-200 font-mono !tracking-wider" title="Sao chép mã mời">
+                  {c.code} <Copy className="w-3 h-3" />
+                </button>
               </div>
               <div className="p-5 space-y-4">
+                <div>
+                  <h3 className="font-display font-extrabold text-lg text-slate-900 leading-tight">{c.name}</h3>
+                  <p className="text-[11px] font-semibold text-slate-500 flex items-center gap-1 mt-1">
+                    <Calendar className="w-3.5 h-3.5" /> {c.schedule} · tạo {c.createdAt}
+                  </p>
+                </div>
                 <div className="grid grid-cols-3 gap-2 text-center">
-                  <div className="p-2 rounded-xl bg-slate-50">
-                    <p className="text-lg font-black text-slate-900">{c.studentsCount}</p>
-                    <p className="text-[10px] font-bold uppercase text-slate-400">Học viên</p>
-                  </div>
-                  <div className="p-2 rounded-xl bg-slate-50">
-                    <p className="text-lg font-black text-slate-900">{c.assignmentsCount}</p>
-                    <p className="text-[10px] font-bold uppercase text-slate-400">Bài tập</p>
-                  </div>
-                  <div className="p-2 rounded-xl bg-slate-50">
-                    <p className="text-lg font-black text-slate-900">{c.avgScore || '—'}</p>
-                    <p className="text-[10px] font-bold uppercase text-slate-400">Điểm TB</p>
-                  </div>
+                  {[
+                    [c.studentsCount, 'Học viên'],
+                    [c.assignmentsCount, 'Bài tập'],
+                    [c.avgScore || '—', 'Điểm TB'],
+                  ].map(([v, l]) => (
+                    <div key={l as string} className="p-2 rounded-xl bg-slate-50 border-2 border-slate-200">
+                      <p className="font-display text-xl font-extrabold text-slate-900 leading-none">{v as React.ReactNode}</p>
+                      <p className="text-[10px] font-bold uppercase text-slate-500 mt-1">{l as string}</p>
+                    </div>
+                  ))}
                 </div>
-                <ProgressBar value={c.completionRate} label="Hoàn thành bài tập" showValue size="sm" tone="emerald" />
-                <div className="flex items-center justify-between text-[11px] text-slate-500">
-                  <span className="flex items-center gap-1"><Calendar className="w-3.5 h-3.5" /> {c.schedule}</span>
-                  <span className="flex items-center gap-1"><ClipboardList className="w-3.5 h-3.5" /> {c.createdAt}</span>
-                </div>
-                <Link to={`/teacher/classes/${c.id}`} className="flex items-center justify-center gap-1.5 h-10 rounded-xl bg-slate-900 text-white text-sm font-bold hover:bg-emerald-600 transition">
+                <ProgressBar value={c.completionRate} label="Hoàn thành bài tập" showValue size="sm" tone="indigo" />
+                <Link to={`/teacher/classes/${c.id}`} className="btn-3d flex items-center justify-center gap-1.5 h-11 rounded-xl bg-slate-900 border-black text-amber-300 text-sm font-bold">
                   Quản lý lớp <ArrowRight className="w-4 h-4" />
                 </Link>
               </div>
@@ -129,7 +138,9 @@ export const TeacherClassesPage: React.FC = () => {
         icon={<Users />}
         footer={
           <>
-            <Button variant="ghost" onClick={() => setOpen(false)}>Huỷ</Button>
+            <Button variant="ghost" onClick={() => setOpen(false)}>
+              Huỷ
+            </Button>
             <Button onClick={create}>Tạo lớp</Button>
           </>
         }

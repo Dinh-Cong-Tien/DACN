@@ -7,19 +7,36 @@ import { Badge, Column, PageHeader, StatCard } from '@/shared/components/ui';
 import { CrudEditor } from '@/engines';
 
 const columns: Column<Subject>[] = [
-  { key: 'name', header: 'Môn học', render: (r) => (<div><p className="font-bold text-slate-900">{r.name}</p><p className="text-[11px] text-slate-500">Phụ trách: {r.lead}</p></div>) },
-  { key: 'code', header: 'Mã', render: (r) => <span className="font-mono text-xs font-bold text-slate-600">{r.code}</span> },
+  {
+    key: 'name',
+    header: 'Môn học',
+    render: (r) => (
+      <div>
+        <p className="font-bold text-slate-900">{r.name}</p>
+        <p className="text-[11px] text-slate-500">Phụ trách: {r.lead}</p>
+      </div>
+    ),
+  },
+  { key: 'code', header: 'Mã', render: (r) => <span className="font-mono text-xs font-bold px-2 py-0.5 rounded-md bg-slate-100 border border-slate-300">{r.code}</span> },
   { key: 'examType', header: 'Kỳ thi', render: (r) => <Badge tone={r.examType === 'TOEIC' ? 'indigo' : 'emerald'}>{r.examType}</Badge> },
   { key: 'teachersCount', header: 'Giáo viên', align: 'center' },
   { key: 'classesCount', header: 'Lớp', align: 'center' },
-  { key: 'questionsCount', header: 'Câu hỏi', align: 'right', render: (r) => <span className="font-bold">{r.questionsCount.toLocaleString('vi-VN')}</span> },
+  { key: 'questionsCount', header: 'Câu hỏi', align: 'right', render: (r) => <span className="font-display font-extrabold">{r.questionsCount.toLocaleString('vi-VN')}</span> },
 ];
 
 export const HeadSubjectsPage: React.FC = () => {
   useDocumentTitle('Danh mục môn học');
   return (
     <div className="space-y-6">
-      <PageHeader title="Danh mục môn học" description="Quản lý các môn học thuộc bộ môn, mã môn và giáo viên phụ trách." icon={<Library />} />
+      <PageHeader
+        title={
+          <>
+            Danh mục <span className="mark">môn học</span>
+          </>
+        }
+        description="Quản lý các môn học thuộc bộ môn, mã môn và giáo viên phụ trách."
+        icon={<Library />}
+      />
       <div className="grid grid-cols-3 gap-4">
         <StatCard label="Môn học" value={MOCK_SUBJECTS.length} tone="amber" />
         <StatCard label="Lớp đang mở" value={MOCK_SUBJECTS.reduce((a, s) => a + s.classesCount, 0)} tone="indigo" />

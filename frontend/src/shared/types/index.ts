@@ -62,6 +62,7 @@ export interface Course {
   level: string;
   description: string;
   gradient: string; // tailwind gradient classes cho thumbnail
+  coverUrl?: string;
   lessonsCount: number;
   durationHours: number;
   studentsCount: number;
@@ -95,6 +96,7 @@ export interface MockTestSummary {
   isFree: boolean;
   year: number;
   tags?: string[];
+  coverUrl?: string;
 }
 
 export interface AttemptSummary {
@@ -223,6 +225,7 @@ export interface LeaderboardEntry {
   rank: number;
   name: string;
   initials: string;
+  avatarUrl?: string;
   points: number;
   streak: number;
   delta: number;
@@ -261,12 +264,14 @@ export interface ClassRoom {
   createdAt: string;
   schedule: string;
   gradient: string;
+  coverUrl?: string;
 }
 
 export interface ClassStudent {
   id: string;
   name: string;
   initials: string;
+  avatarUrl?: string;
   email: string;
   avgScore: number;
   completion: number;
@@ -298,6 +303,7 @@ export interface Submission {
   assignmentTitle: string;
   studentName: string;
   initials: string;
+  avatarUrl?: string;
   submittedAt: string;
   score?: number;
   maxScore: number;
@@ -333,6 +339,7 @@ export interface TeacherSummary {
   id: string;
   name: string;
   initials: string;
+  avatarUrl?: string;
   email: string;
   subject: string;
   classesCount: number;
@@ -431,6 +438,8 @@ export interface BlogPost {
   date: string;
   readMin: number;
   gradient: string;
+  coverUrl?: string;
+  authorAvatar?: string;
   content: string[];
   tags: string[];
 }

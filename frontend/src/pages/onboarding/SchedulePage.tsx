@@ -1,8 +1,8 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, ArrowRight, Clock, CalendarCheck } from 'lucide-react';
+import { ArrowLeft, ArrowRight } from 'lucide-react';
 import { useDocumentTitle, useLocalStorage } from '@/shared/hooks';
-import { Badge, Button, Card } from '@/shared/components/ui';
+import { Button, Card } from '@/shared/components/ui';
 import { cn } from '@/shared/utils';
 import { DEFAULT_ONBOARDING, OnboardingState } from './GoalPage';
 
@@ -22,30 +22,30 @@ export const SchedulePage: React.FC = () => {
   const toggleDay = (d: string) => setState({ ...state, days: state.days.includes(d) ? state.days.filter((x) => x !== d) : [...state.days, d] });
 
   return (
-    <Card padding="lg" className="animate-scale-in">
-      <div className="text-center space-y-2 mb-8">
-        <Badge tone="indigo">Bước 3 / 6</Badge>
-        <h1 className="text-2xl md:text-3xl font-black text-slate-900 tracking-tight">Bạn có thể học bao lâu mỗi ngày?</h1>
-        <p className="text-sm text-slate-500 max-w-lg mx-auto">Lộ trình thực tế quan trọng hơn lộ trình tham vọng. Hãy chọn mức bạn duy trì được đều đặn.</p>
+    <Card hard padding="lg" className="animate-scale-in">
+      <div className="text-center space-y-3 mb-8">
+        <span className="sticker tilt-3">Bước 3 / 6</span>
+        <h1 className="font-display text-3xl md:text-4xl font-extrabold text-slate-900 tracking-tight">
+          Mỗi ngày bạn học được <span className="mark-teal mark">bao lâu</span>?
+        </h1>
+        <p className="text-sm text-slate-600 max-w-lg mx-auto">Lộ trình thực tế quan trọng hơn lộ trình tham vọng. Hãy chọn mức bạn duy trì được đều đặn.</p>
       </div>
 
       <div className="space-y-8">
         <div>
-          <p className="text-xs font-bold text-slate-700 mb-3 flex items-center gap-2">
-            <Clock className="w-4 h-4 text-indigo-600" /> Thời lượng mỗi buổi
-          </p>
-          <div className="grid grid-cols-5 gap-2">
+          <p className="text-xs font-extrabold uppercase tracking-wider text-slate-500 mb-3">Thời lượng mỗi buổi</p>
+          <div className="grid grid-cols-5 gap-2 md:gap-3">
             {MINUTES.map((m, i) => {
               const active = state.minutesPerDay === m;
               return (
                 <button
                   key={m}
                   onClick={() => setState({ ...state, minutesPerDay: m })}
-                  className={cn('rounded-2xl border-2 py-4 text-center transition-all duration-300 ease-spring animate-fade-up', active ? 'border-indigo-500 bg-indigo-50 shadow-glow scale-105' : 'border-slate-200 bg-white hover:border-indigo-200 hover:-translate-y-0.5')}
+                  className={cn('rounded-2xl border-2 py-4 text-center transition-all duration-200 animate-fade-up', active ? 'border-slate-900 bg-indigo-600 text-white shadow-hard -translate-y-1' : 'border-slate-200 bg-white text-slate-900 hover:border-slate-900 hover:-translate-y-0.5')}
                   style={{ animationDelay: `${i * 50}ms` }}
                 >
-                  <p className={cn('text-2xl font-black', active ? 'text-indigo-700' : 'text-slate-800')}>{m}</p>
-                  <p className="text-[10px] font-bold uppercase text-slate-400">phút</p>
+                  <p className="font-display text-2xl md:text-3xl font-extrabold leading-none">{m}</p>
+                  <p className={cn('text-[10px] font-extrabold uppercase mt-1', active ? 'text-indigo-100' : 'text-slate-400')}>phút</p>
                 </button>
               );
             })}
@@ -53,9 +53,7 @@ export const SchedulePage: React.FC = () => {
         </div>
 
         <div>
-          <p className="text-xs font-bold text-slate-700 mb-3 flex items-center gap-2">
-            <CalendarCheck className="w-4 h-4 text-indigo-600" /> Các ngày trong tuần
-          </p>
+          <p className="text-xs font-extrabold uppercase tracking-wider text-slate-500 mb-3">Các ngày trong tuần</p>
           <div className="grid grid-cols-7 gap-2">
             {DAYS.map((d, i) => {
               const active = state.days.includes(d);
@@ -63,7 +61,7 @@ export const SchedulePage: React.FC = () => {
                 <button
                   key={d}
                   onClick={() => toggleDay(d)}
-                  className={cn('h-14 rounded-2xl font-black text-sm transition-all duration-300 ease-spring animate-fade-up active:scale-95', active ? 'bg-indigo-600 text-white shadow-md shadow-indigo-200' : 'bg-slate-100 text-slate-500 hover:bg-slate-200')}
+                  className={cn('h-14 rounded-2xl border-2 font-display font-extrabold text-sm transition-all duration-200 animate-fade-up', active ? 'bg-amber-300 border-slate-900 text-slate-900 shadow-hard-sm' : 'bg-white border-slate-200 text-slate-400 hover:border-slate-900 hover:text-slate-900')}
                   style={{ animationDelay: `${150 + i * 40}ms` }}
                 >
                   {d}
@@ -75,13 +73,13 @@ export const SchedulePage: React.FC = () => {
 
         <div className="grid grid-cols-3 gap-3">
           {[
-            { label: 'Giờ / tuần', value: `${Math.round((intensity / 60) * 10) / 10}h` },
-            { label: 'Tổng tới ngày thi', value: `${totalHours}h` },
-            { label: 'Cường độ', value: intensity >= 300 ? 'Cao' : intensity >= 150 ? 'Vừa' : 'Nhẹ' },
+            { label: 'Giờ / tuần', value: `${Math.round((intensity / 60) * 10) / 10}h`, cls: 'bg-indigo-100' },
+            { label: 'Tổng tới ngày thi', value: `${totalHours}h`, cls: 'bg-amber-100' },
+            { label: 'Cường độ', value: intensity >= 300 ? 'Cao' : intensity >= 150 ? 'Vừa' : 'Nhẹ', cls: 'bg-violet-100' },
           ].map((s, i) => (
-            <div key={s.label} className="rounded-2xl bg-slate-50 border border-slate-200 p-4 text-center animate-pop" style={{ animationDelay: `${i * 80}ms` }}>
-              <p className="text-xl font-black text-slate-900">{s.value}</p>
-              <p className="text-[10px] font-bold uppercase text-slate-400">{s.label}</p>
+            <div key={s.label} className={cn('rounded-2xl border-2 border-slate-900 p-4 text-center animate-pop', s.cls)} style={{ animationDelay: `${i * 80}ms` }}>
+              <p className="font-display text-2xl font-extrabold text-slate-900">{s.value}</p>
+              <p className="text-[10px] font-extrabold uppercase tracking-wider text-slate-600">{s.label}</p>
             </div>
           ))}
         </div>

@@ -12,26 +12,26 @@ const SEVERITY: Record<AuditLog['severity'], { tone: Tone; label: string }> = {
   WARN: { tone: 'amber', label: 'WARN' },
   CRITICAL: { tone: 'rose', label: 'CRITICAL' },
 };
-const ROLE_TONE: Record<AppRole, Tone> = { GUEST: 'slate', STUDENT: 'indigo', TEACHER: 'emerald', HEAD_TEACHER: 'amber', ADMIN: 'rose' };
+const ROLE_TONE: Record<AppRole, Tone> = { GUEST: 'slate', STUDENT: 'indigo', TEACHER: 'emerald', HEAD_TEACHER: 'amber', ADMIN: 'violet' };
 const PAGE_SIZE = 8;
 
 const columns: Column<AuditLog>[] = [
-  { key: 'createdAt', header: 'Thời gian', render: (l) => <span className="text-xs text-slate-600 whitespace-nowrap">{formatDateTime(l.createdAt)}</span> },
+  { key: 'createdAt', header: 'Thời gian', render: (l) => <span className="text-xs font-mono text-slate-700 whitespace-nowrap">{formatDateTime(l.createdAt)}</span> },
   {
     key: 'actor',
     header: 'Người thực hiện',
     render: (l) => (
       <div className="flex items-center gap-2">
-        <span className="font-semibold text-slate-800 text-sm">{l.actor}</span>
+        <span className="font-bold text-slate-900 text-sm">{l.actor}</span>
         <Badge tone={ROLE_TONE[l.role]} size="xs">
           {ROLE_LABEL[l.role]}
         </Badge>
       </div>
     ),
   },
-  { key: 'action', header: 'Hành động', render: (l) => <Badge tone="indigo" size="xs" className="font-mono">{l.action}</Badge> },
-  { key: 'target', header: 'Đối tượng', render: (l) => <span className="text-xs text-slate-600">{l.target}</span> },
-  { key: 'ip', header: 'IP', render: (l) => <span className="font-mono text-[11px] text-slate-500">{l.ip}</span> },
+  { key: 'action', header: 'Hành động', render: (l) => <span className="font-mono text-[11px] font-bold bg-slate-900 text-amber-300 px-1.5 py-0.5 rounded">{l.action}</span> },
+  { key: 'target', header: 'Đối tượng', render: (l) => <span className="text-xs text-slate-700">{l.target}</span> },
+  { key: 'ip', header: 'IP', render: (l) => <span className="font-mono text-[11px] text-slate-600">{l.ip}</span> },
   { key: 'severity', header: 'Mức độ', render: (l) => <Badge tone={SEVERITY[l.severity].tone} solid={l.severity === 'CRITICAL'} size="xs">{SEVERITY[l.severity].label}</Badge> },
 ];
 
@@ -53,9 +53,13 @@ export const AdminAuditLogsPage: React.FC = () => {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Nhật ký hệ thống (Audit)"
+        title={
+          <>
+            Nhật ký <span className="mark">hệ thống</span>
+          </>
+        }
         icon={<History />}
-        description="Lưu vết mọi thao tác nhạy cảm: thay đổi phân quyền, khoá tài khoản, sửa cấu hình, xoá dữ liệu."
+        description="Lưu vết mọi thao tác nhạy cảm: thay đổi phân quyền, khoá tài khoản, sửa cấu hình, xoá dữ liệu. Bản ghi không thể chỉnh sửa."
         actions={
           <Button variant="outline" leftIcon={<Download className="w-4 h-4" />} onClick={() => toast.info('Đang xuất CSV', `${filtered.length} bản ghi theo bộ lọc hiện tại.`)}>
             Xuất CSV
@@ -64,13 +68,13 @@ export const AdminAuditLogsPage: React.FC = () => {
       />
 
       <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
-        <StatCard label="Tổng bản ghi" value={MOCK_AUDIT_LOGS.length} tone="indigo" icon={<History />} />
+        <StatCard label="Tổng bản ghi" value={MOCK_AUDIT_LOGS.length} tone="indigo" icon={<History />} hint="30 ngày gần nhất" />
         <StatCard label="Thông tin" value={count('INFO')} tone="slate" icon={<Info />} />
         <StatCard label="Cảnh báo" value={count('WARN')} tone="amber" icon={<AlertTriangle />} />
-        <StatCard label="Nghiêm trọng" value={count('CRITICAL')} tone="rose" icon={<ShieldAlert />} />
+        <StatCard label="Nghiêm trọng" value={count('CRITICAL')} tone="rose" icon={<ShieldAlert />} hint="cần xem xét" />
       </div>
 
-      <Card padding="sm" className="animate-fade-down">
+      <Card hard padding="sm" className="animate-fade-down">
         <div className="flex flex-col lg:flex-row lg:items-center gap-3">
           <div className="lg:w-72">
             <SearchInput

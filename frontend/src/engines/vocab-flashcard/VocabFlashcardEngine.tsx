@@ -108,12 +108,12 @@ export const VocabFlashcardEngine: React.FC<VocabFlashcardEngineProps> = ({ card
       <div className={cn('flip-card h-[340px] cursor-pointer select-none transition-all duration-300', leaving && 'opacity-0 -translate-x-8 scale-95')} onClick={() => setFlipped((f) => !f)}>
         <div className={cn('flip-inner relative w-full h-full', flipped && 'is-flipped')}>
           {/* Front */}
-          <div className="flip-face absolute inset-0 rounded-3xl bg-white border border-slate-200 shadow-card flex flex-col items-center justify-center p-8 text-center">
+          <div className="flip-face absolute inset-0 rounded-3xl bg-white border-2 border-slate-900 shadow-hard flex flex-col items-center justify-center p-8 text-center">
             <Sparkles className="w-5 h-5 text-indigo-300 absolute top-5 left-5" />
             <p className="text-4xl md:text-5xl font-black text-slate-900 tracking-tight">{card.word}</p>
             <p className="text-indigo-600 font-mono mt-2">{card.ipa}</p>
             <p className="text-xs italic text-slate-400 mt-1">{card.pos}</p>
-            <button onClick={speak} className="mt-6 w-12 h-12 rounded-full bg-indigo-600 text-white flex items-center justify-center shadow-md shadow-indigo-200 hover:scale-110 transition-transform">
+            <button onClick={speak} className="mt-6 w-12 h-12 rounded-full bg-indigo-600 text-white border-2 border-slate-900 shadow-hard-sm flex items-center justify-center hover:scale-110 transition-transform">
               <Volume2 className="w-5 h-5" />
             </button>
             <p className="absolute bottom-5 text-[11px] font-semibold text-slate-400 flex items-center gap-1">
@@ -121,7 +121,7 @@ export const VocabFlashcardEngine: React.FC<VocabFlashcardEngineProps> = ({ card
             </p>
           </div>
           {/* Back */}
-          <div className="flip-face flip-back absolute inset-0 rounded-3xl bg-gradient-to-br from-indigo-600 via-violet-600 to-indigo-700 text-white shadow-lift flex flex-col justify-center p-8">
+          <div className="flip-face flip-back absolute inset-0 rounded-3xl bg-slate-900 border-2 border-slate-900 text-white shadow-hard flex flex-col justify-center p-8">
             <div aria-hidden className="absolute inset-0 bg-grid opacity-10 rounded-3xl" />
             <div className="relative space-y-3">
               <div className="flex items-center gap-2">

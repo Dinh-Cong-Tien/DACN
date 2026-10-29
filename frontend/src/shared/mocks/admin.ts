@@ -1,3 +1,4 @@
+import { PHOTOS, pravatar, unsplash } from '@/shared/components/media/Img';
 import type { AppUser, AuditLog, CourseTreeNode, ServiceStatus, SkillTag, SystemSetting } from '@/shared/types';
 
 const u = (id: string, fullName: string, email: string, role: AppUser['role'], status: AppUser['status'], plan: AppUser['plan'], joinedAt: string, lastActiveAt: string, streak = 0, effortPoints = 0): AppUser => ({
@@ -11,6 +12,7 @@ const u = (id: string, fullName: string, email: string, role: AppUser['role'], s
   lastActiveAt,
   streak,
   effortPoints,
+  avatarUrl: pravatar(Number(id.split('-')[1]) + 10),
 });
 
 export const MOCK_USERS: AppUser[] = [

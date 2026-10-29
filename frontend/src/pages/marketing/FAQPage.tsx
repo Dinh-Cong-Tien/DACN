@@ -1,7 +1,8 @@
 import React, { useMemo, useState } from 'react';
-import { HelpCircle, MessageCircle, ArrowRight } from 'lucide-react';
-import { Accordion, Button, Card, EmptyState, SearchInput, SectionTitle, Chip } from '@/shared/components/ui';
+import { Search, MessageCircle, ArrowRight } from 'lucide-react';
+import { Accordion, Input, SectionTitle, Chip, EmptyState, Button } from '@/shared/components/ui';
 import { Reveal } from '@/shared/components/motion';
+import { Img, PHOTOS, pravatar } from '@/shared/components/media/Img';
 import { FAQS } from '@/shared/mocks';
 import { useDocumentTitle } from '@/shared/hooks';
 
@@ -10,53 +11,41 @@ export const FAQPage: React.FC = () => {
   const [q, setQ] = useState('');
   const [cat, setCat] = useState('Tất cả');
   const cats = ['Tất cả', ...Array.from(new Set(FAQS.map((f) => f.category)))];
-  const list = useMemo(() => {
-    const s = q.trim().toLowerCase();
-    return FAQS.filter((f) => (cat === 'Tất cả' || f.category === cat) && (!s || f.question.toLowerCase().includes(s) || f.answer.toLowerCase().includes(s)));
-  }, [q, cat]);
-  const groups = Array.from(new Set(list.map((f) => f.category)));
+  const list = useMemo(() => FAQS.filter((f) => (cat === 'Tất cả' || f.category === cat) && (f.question + f.answer).toLowerCase().includes(q.toLowerCase())), [q, cat]);
 
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16 pb-24 space-y-8">
-      <Reveal>
-        <SectionTitle eyebrow="FAQ" title="Câu hỏi thường gặp" description="Không tìm thấy câu trả lời? Liên hệ đội ngũ hỗ trợ của chúng tôi." />
-      </Reveal>
-      <div className="space-y-3 animate-fade-up">
-        <SearchInput value={q} onChange={(e) => setQ(e.target.value)} placeholder="Tìm câu hỏi, ví dụ: thi xếp lớp, gói VIP..." inputSize="lg" />
-        <div className="flex flex-wrap gap-2 justify-center">
-          {cats.map((c) => (
-            <Chip key={c} active={cat === c} onClick={() => setCat(c)}>
-              {c}
-            </Chip>
-          ))}
-        </div>
-      </div>
-      {groups.length === 0 ? (
-        <EmptyState icon={<HelpCircle />} title="Không tìm thấy câu hỏi phù hợp" description="Thử từ khoá khác hoặc gửi câu hỏi cho chúng tôi." />
-      ) : (
-        groups.map((g, gi) => (
-          <Reveal key={g} delay={gi * 60}>
-            <h2 className="text-sm font-extrabold uppercase tracking-wider text-indigo-600 mb-3">{g}</h2>
-            <Accordion items={list.filter((f) => f.category === g).map((f) => ({ id: f.id, title: f.question, content: f.answer, icon: <HelpCircle /> }))} defaultOpen={gi === 0 ? list.find((f) => f.category === g)?.id : undefined} />
-          </Reveal>
-        ))
-      )}
-      <Reveal animation="scale-in">
-        <Card className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-indigo-50/60 border-indigo-100">
-          <div className="flex items-center gap-3">
-            <div className="w-11 h-11 rounded-xl bg-indigo-600 text-white flex items-center justify-center">
-              <MessageCircle className="w-5 h-5" />
-            </div>
-            <div>
-              <p className="font-bold text-slate-900">Vẫn còn thắc mắc?</p>
-              <p className="text-xs text-slate-500">Đội ngũ hỗ trợ phản hồi trong vòng 24 giờ.</p>
-            </div>
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14 md:py-20 grid lg:grid-cols-[1fr_340px] gap-12 items-start">
+      <div className="space-y-8">
+        <Reveal className="space-y-6">
+          <SectionTitle align="left" eyebrow="FAQ" title={<>Hỏi nhanh, <span className="mark">đáp gọn</span>.</>} description="Những câu chúng tôi nhận được nhiều nhất qua email và lớp học." />
+          <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Tìm câu hỏi... (ví dụ: xếp lớp, VIP, lớp học)" leftIcon={<Search />} inputSize="lg" />
+          <div className="flex gap-2 flex-wrap">
+            {cats.map((c) => (
+              <Chip key={c} active={cat === c} onClick={() => setCat(c)}>
+                {c}
+              </Chip>
+            ))}
           </div>
-          <Button to="/contact" rightIcon={<ArrowRight className="w-4 h-4" />}>
-            Liên hệ hỗ trợ
+        </Reveal>
+        {list.length === 0 ? <EmptyState title="Không tìm thấy câu hỏi" description="Thử từ khoá ngắn hơn hoặc gửi câu hỏi cho chúng tôi." /> : <Accordion key={cat + q} defaultOpen={list[0]?.id} items={list.map((f) => ({ id: f.id, title: f.question, content: f.answer }))} />}
+      </div>
+      <aside className="space-y-5 lg:sticky lg:top-24">
+        <div className="photo-frame tilt-2">
+          <Img src={PHOTOS.team} alt="Đội ngũ hỗ trợ" ratio="4/3" fallbackClass="bg-amber-200" />
+        </div>
+        <div className="bg-white rounded-2xl border-2 border-slate-900 shadow-hard p-5 space-y-3">
+          <div className="flex -space-x-2">
+            {[43, 44, 42].map((n) => (
+              <img key={n} src={pravatar(n)} alt="" className="w-9 h-9 rounded-full border-2 border-white object-cover" />
+            ))}
+          </div>
+          <p className="font-display font-extrabold text-slate-900">Chưa thấy câu trả lời?</p>
+          <p className="text-sm text-slate-600">Đội hỗ trợ trả lời trong 2 giờ, từ 8:00–22:00 mỗi ngày kể cả cuối tuần.</p>
+          <Button to="/contact" variant="gradient" size="sm" fullWidth leftIcon={<MessageCircle className="w-4 h-4" />} rightIcon={<ArrowRight className="w-4 h-4" />}>
+            Gửi câu hỏi
           </Button>
-        </Card>
-      </Reveal>
+        </div>
+      </aside>
     </div>
   );
 };

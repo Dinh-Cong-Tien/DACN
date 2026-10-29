@@ -151,7 +151,7 @@ export const ExamRunner: React.FC<ExamRunnerProps> = ({ test, onSubmitExam, onEx
                     }}
                     className={cn(
                       'h-9 rounded-lg border text-xs font-bold flex items-center justify-center transition-all duration-200 relative',
-                      isA ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-slate-600 border-slate-200 hover:border-indigo-400',
+                      isA ? 'bg-indigo-600 text-white border-slate-900' : 'bg-white text-slate-600 border-slate-300 hover:border-slate-900',
                       isF && 'ring-2 ring-amber-400 ring-offset-1',
                       isC && 'scale-110 shadow-md z-10'
                     )}
@@ -180,9 +180,9 @@ export const ExamRunner: React.FC<ExamRunnerProps> = ({ test, onSubmitExam, onEx
   );
 
   return (
-    <div className="min-h-screen bg-slate-100 flex flex-col">
+    <div className="min-h-screen bg-paper flex flex-col">
       {/* Top bar */}
-      <header className="bg-white/90 backdrop-blur-xl border-b border-slate-200 sticky top-0 z-40">
+      <header className="bg-cream/90 backdrop-blur-xl border-b-2 border-slate-900 sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-4 md:px-6 h-16 flex items-center justify-between gap-4">
           <div className="flex items-center gap-3 min-w-0">
             <Logo size="sm" to="#" />
@@ -195,7 +195,7 @@ export const ExamRunner: React.FC<ExamRunnerProps> = ({ test, onSubmitExam, onEx
           </div>
 
           <div className="flex items-center gap-2 md:gap-3">
-            <div className={cn('flex items-center gap-2 px-3 md:px-4 h-10 rounded-xl font-mono font-black text-base md:text-lg transition-colors', danger ? 'bg-rose-50 text-rose-600 border border-rose-200 animate-pulse' : 'bg-slate-900 text-white')}>
+            <div className={cn('flex items-center gap-2 px-3 md:px-4 h-10 rounded-xl font-mono font-black text-base md:text-lg transition-colors', danger ? 'bg-rose-100 text-rose-700 border-2 border-rose-500 animate-pulse' : 'bg-slate-900 text-amber-300 border-2 border-slate-900')}>
               <Clock className="w-4 h-4" />
               <span>{formatClock(Math.max(0, remaining))}</span>
             </div>
@@ -217,7 +217,7 @@ export const ExamRunner: React.FC<ExamRunnerProps> = ({ test, onSubmitExam, onEx
           </div>
         </div>
         <div className="h-1 bg-slate-100">
-          <div className="h-full bg-gradient-to-r from-indigo-500 to-violet-500 transition-[width] duration-500" style={{ width: `${pct}%` }} />
+          <div className="h-full bg-violet-500 transition-[width] duration-500" style={{ width: `${pct}%` }} />
         </div>
       </header>
 
@@ -243,7 +243,7 @@ export const ExamRunner: React.FC<ExamRunnerProps> = ({ test, onSubmitExam, onEx
             </div>
           )}
 
-          <div className="flex items-center justify-between gap-3 bg-white p-3 md:p-4 rounded-2xl border border-slate-200 shadow-soft sticky bottom-4">
+          <div className="flex items-center justify-between gap-3 bg-white p-3 md:p-4 rounded-2xl border-2 border-slate-900 shadow-hard sticky bottom-4">
             <Button variant="outline" size="sm" disabled={currentIndex === 0} onClick={() => setCurrentIndex((i) => i - 1)} leftIcon={<ChevronLeft className="w-4 h-4" />}>
               <span className="hidden sm:inline">Câu trước</span>
             </Button>
@@ -273,7 +273,7 @@ export const ExamRunner: React.FC<ExamRunnerProps> = ({ test, onSubmitExam, onEx
         </div>
 
         <aside className="hidden lg:block">
-          <div className="sticky top-24 bg-white rounded-3xl border border-slate-200 shadow-soft p-5 space-y-4 animate-slide-in-right">
+          <div className="sticky top-24 bg-white rounded-3xl border-2 border-slate-900 shadow-hard p-5 space-y-4 animate-slide-in-right">
             <div className="flex items-center justify-between">
               <span className="font-bold text-slate-900 text-sm">Bảng câu hỏi</span>
               <Badge tone="indigo">

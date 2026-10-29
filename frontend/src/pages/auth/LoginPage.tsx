@@ -1,17 +1,18 @@
 import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Mail, ArrowRight, GraduationCap, UserCog, ShieldCheck, BookUser } from 'lucide-react';
+import { Mail, ArrowRight } from 'lucide-react';
 import { Button, Card, Checkbox, Divider, Input, PasswordInput, Alert } from '@/shared/components/ui';
+import { pravatar } from '@/shared/components/media/Img';
 import { useAuthStore, DEMO_USERS, resolveDemoRole } from '@/shared/stores/authStore';
 import { toast } from '@/shared/stores/uiStore';
 import { ROLE_HOME } from '@/shared/utils';
 import { useDocumentTitle } from '@/shared/hooks';
 
 const DEMO = [
-  { email: 'student@orbi.edu.vn', label: 'Học viên', icon: GraduationCap, cls: 'bg-indigo-50 text-indigo-700 hover:bg-indigo-100' },
-  { email: 'teacher@orbi.edu.vn', label: 'Giáo viên', icon: BookUser, cls: 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100' },
-  { email: 'head@orbi.edu.vn', label: 'Trưởng BM', icon: UserCog, cls: 'bg-amber-50 text-amber-700 hover:bg-amber-100' },
-  { email: 'admin@orbi.edu.vn', label: 'Quản trị', icon: ShieldCheck, cls: 'bg-rose-50 text-rose-700 hover:bg-rose-100' },
+  { email: 'student@orbi.edu.vn', label: 'Học viên', img: 11, cls: 'bg-indigo-100 hover:bg-indigo-200' },
+  { email: 'teacher@orbi.edu.vn', label: 'Giáo viên', img: 43, cls: 'bg-emerald-100 hover:bg-emerald-200' },
+  { email: 'head@orbi.edu.vn', label: 'Trưởng BM', img: 44, cls: 'bg-amber-200 hover:bg-amber-300' },
+  { email: 'admin@orbi.edu.vn', label: 'Quản trị', img: 45, cls: 'bg-violet-100 hover:bg-violet-200' },
 ];
 
 export const LoginPage: React.FC = () => {
@@ -46,16 +47,17 @@ export const LoginPage: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div className="text-center space-y-1 animate-fade-down">
-        <h1 className="text-2xl font-black text-slate-900 tracking-tight">Đăng nhập tài khoản</h1>
-        <p className="text-sm text-slate-500">
+      <div className="space-y-2 animate-fade-down">
+        <span className="sticker tilt-1 !bg-amber-300">Chào mừng trở lại</span>
+        <h1 className="font-display text-3xl font-extrabold text-slate-900 tracking-tight">Đăng nhập</h1>
+        <p className="text-sm text-slate-600">
           Chưa có tài khoản?{' '}
-          <Link to="/auth/register" className="font-bold text-indigo-600 hover:underline">
+          <Link to="/auth/register" className="font-bold text-violet-600 hover:underline underline-offset-2">
             Đăng ký miễn phí
           </Link>
         </p>
       </div>
-      <Card padding="lg" className="animate-fade-up">
+      <Card hard padding="lg" className="animate-fade-up">
         {error && (
           <Alert type="error" className="mb-4" onClose={() => setError('')}>
             {error}
@@ -66,35 +68,33 @@ export const LoginPage: React.FC = () => {
           <PasswordInput label="Mật khẩu" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" autoComplete="current-password" />
           <div className="flex items-center justify-between">
             <Checkbox checked={remember} onChange={setRemember} label="Ghi nhớ đăng nhập" />
-            <Link to="/auth/forgot-password" className="text-xs font-semibold text-indigo-600 hover:underline">
+            <Link to="/auth/forgot-password" className="text-xs font-bold text-slate-600 hover:text-violet-600">
               Quên mật khẩu?
             </Link>
           </div>
-          <Button type="submit" fullWidth size="lg" variant="gradient" loading={loading} rightIcon={<ArrowRight className="w-4 h-4" />} className="shine">
+          <Button type="submit" fullWidth size="lg" variant="gradient" loading={loading} rightIcon={<ArrowRight className="w-4 h-4" />}>
             Đăng nhập
           </Button>
         </form>
         <Divider label="Tài khoản demo" className="my-5" />
         <div className="grid grid-cols-2 gap-2">
-          {DEMO.map((d) => {
-            const Icon = d.icon;
-            return (
-              <button
-                key={d.email}
-                type="button"
-                onClick={() => {
-                  setEmail(d.email);
-                  setPassword('OrbiLingo@2026');
-                  setError('');
-                }}
-                className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold transition-all active:scale-95 ${d.cls}`}
-              >
-                <Icon className="w-4 h-4" /> {d.label}
-              </button>
-            );
-          })}
+          {DEMO.map((d) => (
+            <button
+              key={d.email}
+              type="button"
+              onClick={() => {
+                setEmail(d.email);
+                setPassword('OrbiLingo@2026');
+                setError('');
+              }}
+              className={`flex items-center gap-2.5 px-3 py-2 rounded-xl border-2 border-slate-900 text-xs font-bold text-slate-900 transition-all hover:-translate-y-0.5 hover:shadow-hard-sm active:translate-y-0 ${d.cls}`}
+            >
+              <img src={pravatar(d.img)} alt="" className="w-7 h-7 rounded-full border-2 border-slate-900 object-cover" />
+              {d.label}
+            </button>
+          ))}
         </div>
-        <p className="text-[11px] text-slate-400 text-center mt-3">Mật khẩu demo: OrbiLingo@2026</p>
+        <p className="text-[11px] text-slate-500 text-center mt-3">Mật khẩu demo: OrbiLingo@2026</p>
       </Card>
     </div>
   );

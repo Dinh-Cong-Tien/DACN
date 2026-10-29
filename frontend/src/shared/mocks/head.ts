@@ -1,3 +1,4 @@
+import { PHOTOS, pravatar, unsplash } from '@/shared/components/media/Img';
 import type { ApprovalRequest, ClassReport, Complaint, Subject, TeacherSummary } from '@/shared/types';
 
 export const MOCK_SUBJECTS: Subject[] = [
@@ -8,12 +9,12 @@ export const MOCK_SUBJECTS: Subject[] = [
 ];
 
 export const MOCK_TEACHERS: TeacherSummary[] = [
-  { id: 't-1', name: 'Trần Thu Hà', initials: 'TH', email: 'teacher@orbi.edu.vn', subject: 'TOEIC Listening & Reading', classesCount: 4, studentsCount: 100, avgClassScore: 648, status: 'ACTIVE' },
-  { id: 't-2', name: 'Phạm Ngọc Linh', initials: 'NL', email: 'linh.pham@orbi.edu.vn', subject: 'VSTEP 4 kỹ năng', classesCount: 3, studentsCount: 64, avgClassScore: 6.9, status: 'ACTIVE' },
-  { id: 't-3', name: 'Nguyễn Văn Dũng', initials: 'VD', email: 'dung.nguyen@orbi.edu.vn', subject: 'TOEIC Listening & Reading', classesCount: 3, studentsCount: 78, avgClassScore: 601, status: 'ACTIVE' },
-  { id: 't-4', name: 'Hoàng Thị Lan', initials: 'TL', email: 'lan.hoang@orbi.edu.vn', subject: 'Ngữ pháp nền tảng', classesCount: 2, studentsCount: 55, avgClassScore: 540, status: 'ACTIVE' },
-  { id: 't-5', name: 'Đinh Công Minh', initials: 'CM', email: 'minh.dinh@orbi.edu.vn', subject: 'VSTEP 4 kỹ năng', classesCount: 2, studentsCount: 40, avgClassScore: 6.2, status: 'PENDING' },
-  { id: 't-6', name: 'Võ Thanh Trúc', initials: 'TT', email: 'truc.vo@orbi.edu.vn', subject: 'Từ vựng học thuật', classesCount: 1, studentsCount: 30, avgClassScore: 7.1, status: 'LOCKED' },
+  { id: 't-1', name: 'Trần Thu Hà', initials: 'TH', avatarUrl: pravatar(41), email: 'teacher@orbi.edu.vn', subject: 'TOEIC Listening & Reading', classesCount: 4, studentsCount: 100, avgClassScore: 648, status: 'ACTIVE' },
+  { id: 't-2', name: 'Phạm Ngọc Linh', initials: 'NL', avatarUrl: pravatar(42), email: 'linh.pham@orbi.edu.vn', subject: 'VSTEP 4 kỹ năng', classesCount: 3, studentsCount: 64, avgClassScore: 6.9, status: 'ACTIVE' },
+  { id: 't-3', name: 'Nguyễn Văn Dũng', initials: 'VD', avatarUrl: pravatar(43), email: 'dung.nguyen@orbi.edu.vn', subject: 'TOEIC Listening & Reading', classesCount: 3, studentsCount: 78, avgClassScore: 601, status: 'ACTIVE' },
+  { id: 't-4', name: 'Hoàng Thị Lan', initials: 'TL', avatarUrl: pravatar(44), email: 'lan.hoang@orbi.edu.vn', subject: 'Ngữ pháp nền tảng', classesCount: 2, studentsCount: 55, avgClassScore: 540, status: 'ACTIVE' },
+  { id: 't-5', name: 'Đinh Công Minh', initials: 'CM', avatarUrl: pravatar(45), email: 'minh.dinh@orbi.edu.vn', subject: 'VSTEP 4 kỹ năng', classesCount: 2, studentsCount: 40, avgClassScore: 6.2, status: 'PENDING' },
+  { id: 't-6', name: 'Võ Thanh Trúc', initials: 'TT', avatarUrl: pravatar(46), email: 'truc.vo@orbi.edu.vn', subject: 'Từ vựng học thuật', classesCount: 1, studentsCount: 30, avgClassScore: 7.1, status: 'LOCKED' },
 ];
 
 export const MOCK_APPROVALS: ApprovalRequest[] = [

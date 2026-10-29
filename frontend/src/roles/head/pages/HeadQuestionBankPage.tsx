@@ -9,12 +9,58 @@ import { CrudEditor, QuestionRenderer } from '@/engines';
 const SKILL_OPTS = ['LISTENING', 'READING', 'WRITING', 'SPEAKING', 'VOCABULARY', 'GRAMMAR'].map((s) => ({ value: s, label: s }));
 
 const columns: Column<IQuestion>[] = [
-  { key: 'stem', header: 'Câu hỏi', render: (r) => (<p className="font-semibold text-slate-800 max-w-md truncate" title={r.stem}>{r.stem}</p>) },
-  { key: 'examType', header: 'Kỳ thi', render: (r) => <Badge tone={r.examType === 'TOEIC' ? 'indigo' : 'emerald'} size="xs">{r.examType}</Badge> },
-  { key: 'partOrSkill', header: 'Part', render: (r) => <Badge tone="violet" size="xs">{r.partOrSkill.replace(/_/g, ' ')}</Badge> },
-  { key: 'skillType', header: 'Kỹ năng', render: (r) => <span className="text-xs font-semibold text-slate-600">{r.skillType}</span> },
-  { key: 'difficulty', header: 'Độ khó', align: 'center', render: (r) => <span className="text-amber-500 text-xs tracking-tight">{'★'.repeat(r.difficulty)}<span className="text-slate-200">{'★'.repeat(5 - r.difficulty)}</span></span> },
-  { key: 'tags', header: 'Tags', render: (r) => (<div className="flex gap-1 flex-wrap">{r.tags.slice(0, 2).map((t) => <Badge key={t} tone="slate" size="xs">#{t}</Badge>)}</div>) },
+  {
+    key: 'stem',
+    header: 'Câu hỏi',
+    render: (r) => (
+      <p className="font-semibold text-slate-800 max-w-md truncate" title={r.stem}>
+        {r.stem}
+      </p>
+    ),
+  },
+  {
+    key: 'examType',
+    header: 'Kỳ thi',
+    render: (r) => (
+      <Badge tone={r.examType === 'TOEIC' ? 'indigo' : 'emerald'} size="xs">
+        {r.examType}
+      </Badge>
+    ),
+  },
+  {
+    key: 'partOrSkill',
+    header: 'Part',
+    render: (r) => (
+      <Badge tone="violet" size="xs">
+        {r.partOrSkill.replace(/_/g, ' ')}
+      </Badge>
+    ),
+  },
+  { key: 'skillType', header: 'Kỹ năng', render: (r) => <span className="text-xs font-bold text-slate-600">{r.skillType}</span> },
+  {
+    key: 'difficulty',
+    header: 'Độ khó',
+    align: 'center',
+    render: (r) => (
+      <span className="text-amber-500 text-xs tracking-tight">
+        {'★'.repeat(r.difficulty)}
+        <span className="text-slate-300">{'★'.repeat(5 - r.difficulty)}</span>
+      </span>
+    ),
+  },
+  {
+    key: 'tags',
+    header: 'Tags',
+    render: (r) => (
+      <div className="flex gap-1 flex-wrap">
+        {r.tags.slice(0, 2).map((t) => (
+          <Badge key={t} tone="slate" size="xs">
+            #{t}
+          </Badge>
+        ))}
+      </div>
+    ),
+  },
 ];
 
 export const HeadQuestionBankPage: React.FC = () => {
@@ -24,9 +70,17 @@ export const HeadQuestionBankPage: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Ngân hàng câu hỏi" description="Quản lý, hiệu đính và phân loại câu hỏi theo Part / kỹ năng thuộc bộ môn." icon={<Database />} />
+      <PageHeader
+        title={
+          <>
+            Ngân hàng <span className="mark">câu hỏi</span>
+          </>
+        }
+        description="Quản lý, hiệu đính và phân loại câu hỏi theo Part / kỹ năng thuộc bộ môn."
+        icon={<Database />}
+      />
       <div className="grid grid-cols-1 xl:grid-cols-[1fr_320px] gap-5">
-        <Card className="animate-fade-up">
+        <Card hard className="animate-fade-up">
           <CardHeader title="Phân bố theo Part / kỹ năng" subtitle="Số câu hỏi mẫu đang có trong ngân hàng" />
           <MiniBars data={byPart} height={130} />
         </Card>

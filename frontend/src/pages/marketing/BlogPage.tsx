@@ -1,104 +1,85 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Clock, ArrowRight, Tag, Newspaper } from 'lucide-react';
-import { Badge, Card, SectionTitle } from '@/shared/components/ui';
+import { Clock, ArrowRight, Tag } from 'lucide-react';
+import { Badge, SectionTitle, Avatar, Button } from '@/shared/components/ui';
 import { Reveal, Stagger } from '@/shared/components/motion';
+import { Img } from '@/shared/components/media/Img';
 import { BLOG_POSTS, BLOG_CATEGORIES } from '@/shared/mocks';
 import { useDocumentTitle } from '@/shared/hooks';
 import { formatDate } from '@/shared/utils';
 
 export const BlogPage: React.FC = () => {
-  useDocumentTitle('Kinh nghiệm & Cẩm nang');
+  useDocumentTitle('Kinh nghiệm thi');
   const [featured, ...rest] = BLOG_POSTS;
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 pb-24 space-y-10">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14 md:py-20 space-y-12">
       <Reveal>
-        <SectionTitle eyebrow="Blog" title="Kinh nghiệm thi & Cẩm nang học" description="Chiến thuật, lộ trình và phương pháp từ đội ngũ giáo viên OrbiLingo." />
+        <SectionTitle align="left" eyebrow="Kinh nghiệm thi" title={<>Bài viết từ giáo viên, <span className="mark">không copy</span> từ mạng.</>} description="Mẹo làm bài, lộ trình, phương pháp học. Mỗi bài có tên tác giả và ngày đăng." />
       </Reveal>
 
-      <Reveal animation="scale-in">
-        <Link to={`/blog/${featured.slug}`} className="block group">
-          <Card padding="none" hover className="grid md:grid-cols-2 overflow-hidden">
-            <div className={`relative min-h-[240px] bg-gradient-to-br ${featured.gradient} p-8 flex flex-col justify-end text-white`}>
-              <div aria-hidden className="absolute inset-0 bg-grid opacity-20" />
-              <Newspaper className="relative w-10 h-10 opacity-80 mb-auto" />
-              <Badge className="relative bg-white/20 text-white border-white/30 w-fit">Nổi bật</Badge>
+      <Reveal>
+        <Link to={`/blog/${featured.slug}`} className="group grid lg:grid-cols-[1.2fr_1fr] rounded-3xl border-2 border-slate-900 shadow-hard bg-white overflow-hidden card-hard-hover">
+          <Img src={featured.coverUrl} alt={featured.title} ratio="video" fallbackClass="bg-indigo-200" wrapperClass="lg:aspect-auto lg:min-h-[340px]" />
+          <div className="p-7 md:p-9 flex flex-col justify-center space-y-4">
+            <div className="flex gap-2">
+              <Badge tone="violet" solid>
+                Nổi bật
+              </Badge>
+              <Badge tone="slate">{featured.category}</Badge>
             </div>
-            <div className="p-8 space-y-4">
-              <Badge tone="indigo">{featured.category}</Badge>
-              <h2 className="text-2xl font-black text-slate-900 leading-tight group-hover:text-indigo-700 transition">{featured.title}</h2>
-              <p className="text-sm text-slate-600 leading-relaxed">{featured.excerpt}</p>
-              <div className="flex items-center gap-4 text-xs text-slate-500">
-                <span>{featured.author}</span>
-                <span>{formatDate(featured.date)}</span>
-                <span className="flex items-center gap-1">
-                  <Clock className="w-3.5 h-3.5" /> {featured.readMin} phút đọc
-                </span>
-              </div>
-              <span className="text-sm font-bold text-indigo-600 flex items-center gap-1">
-                Đọc bài <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+            <h2 className="font-display text-2xl md:text-3xl font-extrabold text-slate-900 leading-tight group-hover:underline decoration-4 decoration-amber-300 underline-offset-4">{featured.title}</h2>
+            <p className="text-slate-600 leading-relaxed">{featured.excerpt}</p>
+            <div className="flex items-center gap-3 text-xs text-slate-500 font-semibold pt-2">
+              <Avatar name={featured.author} src={featured.authorAvatar} size="sm" />
+              <span className="text-slate-900">{featured.author}</span> · {formatDate(featured.date)} ·
+              <span className="flex items-center gap-1">
+                <Clock className="w-3.5 h-3.5" /> {featured.readMin} phút đọc
               </span>
             </div>
-          </Card>
+          </div>
         </Link>
       </Reveal>
 
-      <div className="grid lg:grid-cols-[1fr_280px] gap-8">
-        <Stagger className="grid sm:grid-cols-2 gap-5" step={80}>
+      <div className="grid lg:grid-cols-[1fr_280px] gap-10 items-start">
+        <Stagger className="grid sm:grid-cols-2 gap-6">
           {rest.map((p) => (
-            <Link key={p.id} to={`/blog/${p.slug}`} className="block group">
-              <Card padding="none" hover className="h-full flex flex-col overflow-hidden">
-                <div className={`h-28 bg-gradient-to-br ${p.gradient} relative`}>
-                  <div aria-hidden className="absolute inset-0 bg-dots opacity-30" />
+            <Link key={p.id} to={`/blog/${p.slug}`} className="group bg-white rounded-3xl border-2 border-slate-900 shadow-hard overflow-hidden card-hard-hover block">
+              <Img src={p.coverUrl} alt={p.title} ratio="video" fallbackClass="bg-amber-200" />
+              <div className="p-5 space-y-3">
+                <Badge tone="slate">{p.category}</Badge>
+                <h3 className="font-display font-bold text-lg text-slate-900 leading-snug group-hover:underline decoration-4 decoration-amber-300 underline-offset-4">{p.title}</h3>
+                <p className="text-sm text-slate-600 line-clamp-2">{p.excerpt}</p>
+                <div className="flex items-center gap-2 text-xs text-slate-500 font-semibold pt-3 border-t-2 border-slate-100">
+                  <Avatar name={p.author} src={p.authorAvatar} size="xs" /> {p.author} · {formatDate(p.date)} · {p.readMin}'
                 </div>
-                <div className="p-5 space-y-3 flex-1 flex flex-col">
-                  <Badge tone="slate" size="xs" className="w-fit">
-                    {p.category}
-                  </Badge>
-                  <h3 className="font-bold text-slate-900 leading-snug group-hover:text-indigo-700 transition">{p.title}</h3>
-                  <p className="text-xs text-slate-500 leading-relaxed line-clamp-2 flex-1">{p.excerpt}</p>
-                  <div className="flex items-center justify-between text-[11px] text-slate-400 pt-3 border-t border-slate-100">
-                    <span>{formatDate(p.date)}</span>
-                    <span className="flex items-center gap-1">
-                      <Clock className="w-3 h-3" /> {p.readMin} phút
-                    </span>
-                  </div>
-                </div>
-              </Card>
+              </div>
             </Link>
           ))}
         </Stagger>
-        <aside className="space-y-4">
-          <Reveal animation="slide-in-right">
-            <Card>
-              <h3 className="font-bold text-slate-900 mb-3 flex items-center gap-2">
-                <Tag className="w-4 h-4 text-indigo-600" /> Chuyên mục
-              </h3>
-              <ul className="space-y-1">
-                {BLOG_CATEGORIES.map((c) => (
-                  <li key={c.slug}>
-                    <Link to={`/blog/category/${c.slug}`} className="flex items-center justify-between px-3 py-2 rounded-xl text-sm text-slate-700 hover:bg-indigo-50 hover:text-indigo-700 transition">
-                      {c.name}
-                      <span className="text-xs text-slate-400">{BLOG_POSTS.filter((p) => p.categorySlug === c.slug).length}</span>
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </Card>
-          </Reveal>
-          <Reveal animation="slide-in-right" delay={100}>
-            <Card>
-              <h3 className="font-bold text-slate-900 mb-3">Thẻ phổ biến</h3>
-              <div className="flex flex-wrap gap-1.5">
-                {Array.from(new Set(BLOG_POSTS.flatMap((p) => p.tags))).map((t) => (
-                  <Badge key={t} tone="slate">
-                    #{t}
-                  </Badge>
-                ))}
-              </div>
-            </Card>
-          </Reveal>
+        <aside className="space-y-5 lg:sticky lg:top-24">
+          <div className="bg-white rounded-2xl border-2 border-slate-900 shadow-hard p-5">
+            <p className="text-[11px] font-extrabold uppercase tracking-wider text-slate-500 mb-3 flex items-center gap-1">
+              <Tag className="w-3.5 h-3.5" /> Chủ đề
+            </p>
+            <ul className="space-y-1">
+              {BLOG_CATEGORIES.map((c) => (
+                <li key={c.slug}>
+                  <Link to={`/blog/category/${c.slug}`} className="flex items-center justify-between px-3 py-2 rounded-xl text-sm font-semibold text-slate-700 hover:bg-amber-100 hover:text-slate-900 transition">
+                    {c.name}
+                    <span className="text-xs text-slate-400">{BLOG_POSTS.filter((p) => p.categorySlug === c.slug).length}</span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div className="bg-slate-900 text-white rounded-2xl border-2 border-slate-900 shadow-hard p-5 space-y-3">
+            <p className="font-display font-extrabold text-lg">Nhận bài mới mỗi thứ Hai</p>
+            <p className="text-xs text-slate-300">Một email, không spam. Huỷ bất kỳ lúc nào.</p>
+            <Button to="/auth/register" variant="gradient" size="sm" fullWidth rightIcon={<ArrowRight className="w-4 h-4" />}>
+              Đăng ký nhận
+            </Button>
+          </div>
         </aside>
       </div>
     </div>

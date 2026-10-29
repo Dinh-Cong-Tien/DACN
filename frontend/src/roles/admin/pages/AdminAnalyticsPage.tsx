@@ -22,9 +22,9 @@ const TOP_PAGES: PageRow[] = [
 ];
 
 const columns: Column<PageRow>[] = [
-  { key: 'path', header: 'Trang', render: (r) => <span className="font-mono text-xs text-indigo-700">{r.path}</span> },
-  { key: 'views', header: 'Lượt xem', align: 'right', render: (r) => <span className="font-bold text-slate-800">{formatNumber(r.views)}</span> },
-  { key: 'avgTime', header: 'TG trung bình', align: 'right', render: (r) => <span className="text-xs text-slate-500">{r.avgTime}</span> },
+  { key: 'path', header: 'Trang', render: (r) => <span className="font-mono text-xs text-indigo-800 bg-indigo-50 px-1.5 py-0.5 rounded">{r.path}</span> },
+  { key: 'views', header: 'Lượt xem', align: 'right', render: (r) => <span className="font-mono font-bold text-slate-900">{formatNumber(r.views)}</span> },
+  { key: 'avgTime', header: 'TG trung bình', align: 'right', render: (r) => <span className="text-xs font-mono text-slate-600">{r.avgTime}</span> },
 ];
 
 export const AdminAnalyticsPage: React.FC = () => {
@@ -35,16 +35,20 @@ export const AdminAnalyticsPage: React.FC = () => {
 
   const devices: { label: string; value: number; icon: React.ReactNode; tone: Tone }[] = [
     { label: 'Desktop', value: 54, icon: <Monitor className="w-4 h-4" />, tone: 'indigo' },
-    { label: 'Mobile', value: 38, icon: <Smartphone className="w-4 h-4" />, tone: 'emerald' },
+    { label: 'Mobile', value: 38, icon: <Smartphone className="w-4 h-4" />, tone: 'violet' },
     { label: 'Tablet', value: 8, icon: <Tablet className="w-4 h-4" />, tone: 'amber' },
   ];
 
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Thống kê truy cập"
+        title={
+          <>
+            Thống kê <span className="mark">truy cập</span>
+          </>
+        }
         icon={<BarChart3 />}
-        description="Lưu lượng, người dùng hoạt động và hành vi học tập trên toàn hệ thống."
+        description="Lưu lượng, người dùng hoạt động và hành vi học tập trên toàn hệ thống. Nguồn: nhật ký API Gateway."
         actions={
           <Segmented
             value={range}
@@ -65,22 +69,22 @@ export const AdminAnalyticsPage: React.FC = () => {
       </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
-        <Card className="xl:col-span-2 animate-fade-up">
+        <Card hard className="xl:col-span-2 animate-fade-up">
           <CardHeader title="Lượt truy cập theo ngày" subtitle={range === '7' ? 'Tuần hiện tại' : '30 ngày gần nhất (theo tuần)'} />
-          <MiniBars data={ADMIN_TRAFFIC.map((d) => ({ ...d, value: Math.round(d.value * mult), tone: 'sky' as Tone }))} height={170} />
+          <MiniBars data={ADMIN_TRAFFIC.map((d) => ({ ...d, value: Math.round(d.value * mult), tone: 'indigo' as Tone }))} height={170} />
         </Card>
-        <Card className="animate-fade-up" style={{ animationDelay: '80ms' }}>
+        <Card hard tone="yellow" className="animate-fade-up" style={{ animationDelay: '80ms' }}>
           <CardHeader title="Đăng ký mới" subtitle="12 tháng gần nhất" />
-          <Sparkline data={ADMIN_SIGNUPS} width={280} height={90} tone="indigo" className="w-full" />
-          <div className="mt-4 pt-4 border-t border-slate-100 space-y-3">
-            <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Thiết bị</p>
+          <Sparkline data={ADMIN_SIGNUPS} width={280} height={90} tone="violet" className="w-full" />
+          <div className="mt-4 pt-4 border-t-2 border-dashed border-slate-900/20 space-y-3">
+            <p className="text-[11px] font-extrabold uppercase tracking-wider text-slate-700">Thiết bị</p>
             {devices.map((d) => (
               <div key={d.label}>
                 <div className="flex items-center justify-between text-xs mb-1">
-                  <span className="flex items-center gap-1.5 font-semibold text-slate-700">
+                  <span className="flex items-center gap-1.5 font-bold text-slate-800">
                     {d.icon} {d.label}
                   </span>
-                  <span className="font-bold">{d.value}%</span>
+                  <span className="font-mono font-bold">{d.value}%</span>
                 </div>
                 <ProgressBar value={d.value} size="sm" tone={d.tone} />
               </div>
@@ -90,30 +94,28 @@ export const AdminAnalyticsPage: React.FC = () => {
       </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
-        <Card className="xl:col-span-2 animate-fade-up" style={{ animationDelay: '120ms' }}>
+        <Card hard className="xl:col-span-2 animate-fade-up" style={{ animationDelay: '120ms' }}>
           <CardHeader title="Trang được xem nhiều nhất" subtitle="Theo lượt xem trong kỳ" />
           <DataTable<PageRow> columns={columns} rows={TOP_PAGES} dense />
         </Card>
-        <Card className="animate-fade-up" style={{ animationDelay: '160ms' }}>
-          <CardHeader title="Tỷ lệ kỳ thi" subtitle="Theo số lượt làm đề" />
-          <div className="flex items-center justify-around py-4">
+        <Card hard tone="ink" className="animate-fade-up" style={{ animationDelay: '160ms' }}>
+          <p className="font-display font-bold">Tỷ lệ kỳ thi</p>
+          <p className="text-xs text-slate-400">Theo số lượt làm đề</p>
+          <div className="flex items-center justify-around py-5">
             <div className="text-center">
-              <RingProgress value={68} size={110} tone="indigo">
-                <div>
-                  <p className="text-xl font-black text-slate-900">68%</p>
-                </div>
+              <RingProgress value={68} size={110} tone="amber" trackClass="stroke-white/10">
+                <p className="font-display text-xl font-extrabold">68%</p>
               </RingProgress>
-              <p className="text-xs font-bold text-indigo-700 mt-2">TOEIC</p>
+              <p className="text-xs font-bold text-amber-300 mt-2">TOEIC</p>
             </div>
             <div className="text-center">
-              <RingProgress value={32} size={110} tone="emerald">
-                <div>
-                  <p className="text-xl font-black text-slate-900">32%</p>
-                </div>
+              <RingProgress value={32} size={110} tone="emerald" trackClass="stroke-white/10">
+                <p className="font-display text-xl font-extrabold">32%</p>
               </RingProgress>
-              <p className="text-xs font-bold text-emerald-700 mt-2">VSTEP</p>
+              <p className="text-xs font-bold text-emerald-300 mt-2">VSTEP</p>
             </div>
           </div>
+          <p className="text-[11px] text-slate-400 font-mono">Cập nhật {new Date().toLocaleTimeString('vi-VN')}</p>
         </Card>
       </div>
     </div>

@@ -1,3 +1,4 @@
+import { PHOTOS, pravatar, unsplash } from '@/shared/components/media/Img';
 import type { Course, DictionaryEntry, GrammarTopic, Lesson, TranscriptLine } from '@/shared/types';
 
 export const SAMPLE_VIDEO_URL = 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4';
@@ -29,6 +30,7 @@ const mkLesson = (id: string, title: string, type: Lesson['type'], durationMin: 
 export const MOCK_COURSES: Course[] = [
   {
     id: 'c-toeic-foundation',
+    coverUrl: PHOTOS.studying,
     slug: 'toeic-foundation-450-650',
     title: 'TOEIC Foundation — Nền tảng 450 → 650',
     examType: 'TOEIC',
@@ -62,6 +64,7 @@ export const MOCK_COURSES: Course[] = [
   },
   {
     id: 'c-toeic-intensive',
+    coverUrl: PHOTOS.laptop,
     slug: 'toeic-intensive-650-850',
     title: 'TOEIC Intensive — Bứt phá 650 → 850',
     examType: 'TOEIC',
@@ -82,6 +85,7 @@ export const MOCK_COURSES: Course[] = [
   },
   {
     id: 'c-vstep-b1',
+    coverUrl: PHOTOS.writing,
     slug: 'vstep-b1-complete',
     title: 'VSTEP B1 Complete — 4 kỹ năng đạt chuẩn ra trường',
     examType: 'VSTEP',
@@ -102,6 +106,7 @@ export const MOCK_COURSES: Course[] = [
   },
   {
     id: 'c-vstep-b2',
+    coverUrl: PHOTOS.library,
     slug: 'vstep-b2-master',
     title: 'VSTEP B2 Master — Chinh phục bậc 4',
     examType: 'VSTEP',
@@ -118,6 +123,7 @@ export const MOCK_COURSES: Course[] = [
   },
   {
     id: 'c-grammar-24',
+    coverUrl: PHOTOS.books,
     slug: '24-chu-diem-ngu-phap',
     title: '24 Chủ điểm Ngữ pháp Tiếng Anh cốt lõi',
     examType: 'TOEIC',
@@ -135,6 +141,7 @@ export const MOCK_COURSES: Course[] = [
   },
   {
     id: 'c-vocab-business',
+    coverUrl: PHOTOS.office,
     slug: 'tu-vung-toeic-business',
     title: 'Từ vựng TOEIC theo 20 chủ đề Business',
     examType: 'TOEIC',

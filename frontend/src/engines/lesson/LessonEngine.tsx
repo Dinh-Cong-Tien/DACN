@@ -27,7 +27,7 @@ const DictionaryPopover: React.FC<{ entry: DictionaryEntry; x: number; y: number
     }
   };
   return (
-    <div className="fixed z-[90] w-72 bg-white rounded-2xl border border-slate-200 shadow-card p-4 animate-scale-in" style={{ left: Math.min(x, window.innerWidth - 300), top: y + 12 }}>
+    <div className="fixed z-[90] w-72 bg-white rounded-2xl border-2 border-slate-900 shadow-hard p-4 animate-scale-in" style={{ left: Math.min(x, window.innerWidth - 300), top: y + 12 }}>
       <div className="flex items-start justify-between gap-2">
         <div>
           <p className="font-black text-slate-900 text-lg leading-tight">{entry.word}</p>
@@ -191,7 +191,7 @@ export const LessonEngine: React.FC<LessonEngineProps> = ({ course, lesson, onSe
                     key={i}
                     ref={active ? activeRef : undefined}
                     onClick={() => jumpTo(line)}
-                    className={cn('w-full text-left px-3 py-2.5 rounded-xl transition-all duration-300 flex gap-3 group', active ? 'bg-indigo-50 border border-indigo-200 shadow-sm' : 'hover:bg-slate-50 border border-transparent')}
+                    className={cn('w-full text-left px-3 py-2.5 rounded-xl transition-all duration-300 flex gap-3 group', active ? 'bg-amber-100 border-2 border-slate-900' : 'hover:bg-slate-50 border-2 border-transparent')}
                   >
                     <span className={cn('text-[11px] font-mono font-bold shrink-0 mt-0.5 w-10 flex items-center gap-1', active ? 'text-indigo-600' : 'text-slate-400')}>
                       {active && <Play className="w-3 h-3 fill-current" />}

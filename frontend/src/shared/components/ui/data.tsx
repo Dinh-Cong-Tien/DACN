@@ -16,14 +16,14 @@ export interface TabItem {
 export const Tabs: React.FC<{ items: TabItem[]; value: string; onChange: (k: string) => void; className?: string; variant?: 'underline' | 'pill' }> = ({ items, value, onChange, className, variant = 'underline' }) => {
   if (variant === 'pill') {
     return (
-      <div className={cn('inline-flex p-1 rounded-2xl bg-slate-100 gap-1 overflow-x-auto no-scrollbar max-w-full', className)}>
+      <div className={cn('inline-flex p-1 rounded-2xl bg-white border-2 border-slate-900 gap-1 overflow-x-auto no-scrollbar max-w-full', className)}>
         {items.map((it) => (
           <button
             key={it.key}
             onClick={() => onChange(it.key)}
             className={cn(
               'px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all duration-300 ease-spring flex items-center gap-1.5 [&>svg]:w-4 [&>svg]:h-4',
-              value === it.key ? 'bg-white text-indigo-700 shadow-sm' : 'text-slate-500 hover:text-slate-800'
+              value === it.key ? 'bg-slate-900 text-amber-300' : 'text-slate-600 hover:text-slate-900'
             )}
           >
             {it.icon}
@@ -57,7 +57,7 @@ export const Tabs: React.FC<{ items: TabItem[]; value: string; onChange: (k: str
 
 // ============ SEGMENTED ============
 export const Segmented: React.FC<{ options: { value: string; label: string }[]; value: string; onChange: (v: string) => void; className?: string; size?: 'sm' | 'md' }> = ({ options, value, onChange, className, size = 'md' }) => (
-  <div className={cn('inline-flex p-1 rounded-xl bg-slate-100 gap-0.5', className)}>
+  <div className={cn('inline-flex p-1 rounded-xl bg-white border-2 border-slate-900 gap-0.5', className)}>
     {options.map((o) => (
       <button
         key={o.value}
@@ -65,7 +65,7 @@ export const Segmented: React.FC<{ options: { value: string; label: string }[]; 
         className={cn(
           'rounded-lg font-bold transition-all duration-300 ease-spring',
           size === 'sm' ? 'px-3 py-1 text-[11px]' : 'px-4 py-1.5 text-xs',
-          value === o.value ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-800'
+          value === o.value ? 'bg-slate-900 text-white' : 'text-slate-600 hover:text-slate-900'
         )}
       >
         {o.label}
@@ -76,16 +76,16 @@ export const Segmented: React.FC<{ options: { value: string; label: string }[]; 
 
 // ============ PROGRESS ============
 const barTone: Record<Tone, string> = {
-  indigo: 'from-indigo-500 to-violet-500',
-  violet: 'from-violet-500 to-fuchsia-500',
-  emerald: 'from-emerald-500 to-teal-400',
-  amber: 'from-amber-400 to-orange-500',
-  rose: 'from-rose-500 to-pink-500',
-  sky: 'from-sky-500 to-cyan-400',
-  slate: 'from-slate-500 to-slate-700',
-  teal: 'from-teal-500 to-emerald-400',
-  orange: 'from-orange-500 to-amber-400',
-  fuchsia: 'from-fuchsia-500 to-pink-500',
+  indigo: 'from-indigo-600 to-indigo-400',
+  violet: 'from-violet-600 to-violet-400',
+  emerald: 'from-emerald-600 to-emerald-400',
+  amber: 'from-amber-500 to-amber-300',
+  rose: 'from-rose-600 to-rose-400',
+  sky: 'from-sky-600 to-sky-400',
+  slate: 'from-slate-800 to-slate-600',
+  teal: 'from-teal-600 to-teal-400',
+  orange: 'from-orange-600 to-orange-400',
+  fuchsia: 'from-fuchsia-600 to-fuchsia-400',
 };
 
 export const ProgressBar: React.FC<{ value: number; tone?: Tone; size?: 'xs' | 'sm' | 'md' | 'lg'; label?: string; showValue?: boolean; className?: string; striped?: boolean; animate?: boolean }> = ({
@@ -119,7 +119,7 @@ export const ProgressBar: React.FC<{ value: number; tone?: Tone; size?: 'xs' | '
           {showValue && <span className="font-bold text-slate-800">{Math.round(value)}%</span>}
         </div>
       )}
-      <div className={cn('w-full rounded-full bg-slate-100 overflow-hidden', h)}>
+      <div className={cn('w-full rounded-full bg-slate-200 overflow-hidden', h)}>
         <div
           className={cn('h-full rounded-full bg-gradient-to-r transition-[width] duration-1000 ease-spring', barTone[tone], striped && 'stripes animate-progress-stripes')}
           style={{ width: `${Math.min(100, Math.max(0, w))}%` }}
@@ -149,13 +149,13 @@ export const RingProgress: React.FC<{ value: number; size?: number; stroke?: num
   const r = (size - stroke) / 2;
   const c = 2 * Math.PI * r;
   const colors: Record<Tone, string> = {
-    indigo: '#4f46e5',
-    violet: '#7c3aed',
-    emerald: '#059669',
-    amber: '#f59e0b',
+    indigo: '#118A72',
+    violet: '#FA5330',
+    emerald: '#10b981',
+    amber: '#F5B000',
     rose: '#e11d48',
-    sky: '#0284c7',
-    slate: '#475569',
+    sky: '#0ea5e9',
+    slate: '#716A5E',
     teal: '#0d9488',
     orange: '#ea580c',
     fuchsia: '#c026d3',
@@ -221,7 +221,7 @@ export const MiniBars: React.FC<{ data: { label: string; value: number; tone?: T
 
 export const Sparkline: React.FC<{ data: number[]; width?: number; height?: number; tone?: Tone; className?: string; fill?: boolean }> = ({ data, width = 160, height = 48, tone = 'indigo', className, fill = true }) => {
   const { ref, inView } = useInView<HTMLDivElement>();
-  const colors: Record<Tone, string> = { indigo: '#4f46e5', violet: '#7c3aed', emerald: '#059669', amber: '#f59e0b', rose: '#e11d48', sky: '#0284c7', slate: '#64748b', teal: '#0d9488', orange: '#ea580c', fuchsia: '#c026d3' };
+  const colors: Record<Tone, string> = { indigo: '#118A72', violet: '#FA5330', emerald: '#10b981', amber: '#F5B000', rose: '#e11d48', sky: '#0ea5e9', slate: '#716A5E', teal: '#0d9488', orange: '#ea580c', fuchsia: '#c026d3' };
   const max = Math.max(...data, 1);
   const min = Math.min(...data, 0);
   const pts = data.map((v, i) => {
@@ -259,7 +259,7 @@ export const Sparkline: React.FC<{ data: number[]; width?: number; height?: numb
 
 export const RadarChart: React.FC<{ data: { label: string; value: number }[]; size?: number; tone?: Tone; className?: string }> = ({ data, size = 220, tone = 'indigo', className }) => {
   const { ref, inView } = useInView<HTMLDivElement>();
-  const colors: Record<Tone, string> = { indigo: '#4f46e5', violet: '#7c3aed', emerald: '#059669', amber: '#f59e0b', rose: '#e11d48', sky: '#0284c7', slate: '#64748b', teal: '#0d9488', orange: '#ea580c', fuchsia: '#c026d3' };
+  const colors: Record<Tone, string> = { indigo: '#118A72', violet: '#FA5330', emerald: '#10b981', amber: '#F5B000', rose: '#e11d48', sky: '#0ea5e9', slate: '#716A5E', teal: '#0d9488', orange: '#ea580c', fuchsia: '#c026d3' };
   const c = size / 2;
   const r = size / 2 - 28;
   const n = data.length;
@@ -307,7 +307,7 @@ export const Heatmap: React.FC<{ weeks?: number; data: Record<string, number>; c
     d.setDate(today.getDate() - i);
     days.push(d.toISOString().slice(0, 10));
   }
-  const level = (v: number) => (v === 0 ? 'bg-slate-100' : v < 15 ? 'bg-indigo-200' : v < 30 ? 'bg-indigo-400' : v < 60 ? 'bg-indigo-600' : 'bg-indigo-800');
+  const level = (v: number) => (v === 0 ? 'bg-slate-200' : v < 15 ? 'bg-indigo-200' : v < 30 ? 'bg-indigo-400' : v < 60 ? 'bg-indigo-600' : 'bg-indigo-900');
   return (
     <div className={cn('flex gap-1 overflow-x-auto no-scrollbar', className)}>
       {Array.from({ length: weeks }).map((_, w) => (
@@ -357,10 +357,10 @@ export function DataTable<T extends { id: string }>({
   loading?: boolean;
 }) {
   return (
-    <div className={cn('overflow-x-auto rounded-2xl border border-slate-200 bg-white', className)}>
+    <div className={cn('overflow-x-auto rounded-2xl border-2 border-slate-900 bg-white', className)}>
       <table className="w-full text-sm">
         <thead>
-          <tr className="bg-slate-50/80 border-b border-slate-200">
+          <tr className="bg-amber-100 border-b-2 border-slate-900">
             {selectable && <th className="w-10 px-4" />}
             {columns.map((c) => (
               <th

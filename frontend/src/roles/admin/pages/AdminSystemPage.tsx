@@ -7,10 +7,10 @@ import { useDocumentTitle } from '@/shared/hooks';
 import { Badge, Button, Card, CardHeader, PageHeader, ProgressBar, Timeline, Tone } from '@/shared/components/ui';
 import { toast } from '@/shared/stores/uiStore';
 
-const STATUS_META: Record<ServiceStatus['status'], { tone: Tone; label: string; dot: string }> = {
-  UP: { tone: 'emerald', label: 'Hoạt động', dot: 'bg-emerald-500 animate-pulse' },
-  DEGRADED: { tone: 'amber', label: 'Suy giảm', dot: 'bg-amber-500' },
-  DOWN: { tone: 'rose', label: 'Ngừng', dot: 'bg-rose-500' },
+const STATUS_META: Record<ServiceStatus['status'], { tone: Tone; label: string; led: string }> = {
+  UP: { tone: 'emerald', label: 'OPERATIONAL', led: 'bg-emerald-400 shadow-[0_0_12px_#34d399] animate-pulse' },
+  DEGRADED: { tone: 'amber', label: 'DEGRADED', led: 'bg-amber-300 shadow-[0_0_12px_#fcd34d]' },
+  DOWN: { tone: 'rose', label: 'OUTAGE', led: 'bg-rose-500 shadow-[0_0_12px_#f43f5e]' },
 };
 
 const RESOURCES: { label: string; value: number; icon: React.ReactNode; detail: string }[] = [
@@ -32,6 +32,7 @@ export const AdminSystemPage: React.FC = () => {
   const [checking, setChecking] = useState(false);
   const [checkedAt, setCheckedAt] = useState(new Date());
   const up = MOCK_SERVICES.filter((s) => s.status === 'UP').length;
+  const allUp = up === MOCK_SERVICES.length;
 
   const recheck = () => {
     setChecking(true);
@@ -45,9 +46,13 @@ export const AdminSystemPage: React.FC = () => {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Trạng thái dịch vụ"
+        title={
+          <>
+            Trạng thái <span className="mark">dịch vụ</span>
+          </>
+        }
         icon={<Activity />}
-        description={`Kiểm tra lần cuối lúc ${checkedAt.toLocaleTimeString('vi-VN')}. Giám sát API, CSDL, cache, lưu trữ media và các job nền.`}
+        description={`Kiểm tra lần cuối lúc ${checkedAt.toLocaleTimeString('vi-VN')} · Giám sát API, CSDL, cache, lưu trữ media và các job nền.`}
         actions={
           <Button leftIcon={<RefreshCw className={cn('w-4 h-4', checking && 'animate-spin')} />} onClick={recheck} loading={checking}>
             Kiểm tra lại
@@ -55,15 +60,21 @@ export const AdminSystemPage: React.FC = () => {
         }
       />
 
-      <Card className={cn('flex items-center gap-4 animate-fade-down', up === MOCK_SERVICES.length ? 'border-emerald-200 bg-emerald-50/50' : 'border-amber-200 bg-amber-50/50')} padding="sm">
-        <span className={cn('w-10 h-10 rounded-xl flex items-center justify-center text-white', up === MOCK_SERVICES.length ? 'bg-emerald-500' : 'bg-amber-500')}>
-          {up === MOCK_SERVICES.length ? <CheckCircle2 className="w-5 h-5" /> : <AlertTriangle className="w-5 h-5" />}
-        </span>
-        <div>
-          <p className="font-bold text-slate-900">{up === MOCK_SERVICES.length ? 'Tất cả hệ thống hoạt động bình thường' : `${MOCK_SERVICES.length - up} dịch vụ đang suy giảm hiệu năng`}</p>
-          <p className="text-xs text-slate-500">
-            {up}/{MOCK_SERVICES.length} dịch vụ UP · uptime 30 ngày 99.94%
-          </p>
+      {/* Bảng trạng thái tổng */}
+      <Card hard tone="ink" padding="sm" className="flex flex-col md:flex-row md:items-center gap-4 animate-fade-down">
+        <div className="flex items-center gap-4 flex-1">
+          <span className={cn('w-4 h-4 rounded-full shrink-0', allUp ? STATUS_META.UP.led : STATUS_META.DEGRADED.led)} />
+          <div>
+            <p className="font-display font-bold text-lg">{allUp ? 'Tất cả hệ thống hoạt động bình thường' : `${MOCK_SERVICES.length - up} dịch vụ đang suy giảm hiệu năng`}</p>
+            <p className="text-xs text-slate-400 font-mono">
+              {up}/{MOCK_SERVICES.length} UP · uptime 30d 99.94% · region ap-southeast-1 · build 1.4.2+ab12cd
+            </p>
+          </div>
+        </div>
+        <div className="flex gap-1.5 md:pr-2">
+          {Array.from({ length: 30 }).map((_, i) => (
+            <span key={i} className={cn('w-1.5 h-6 rounded-sm', i === 25 ? 'bg-amber-300' : i === 12 ? 'bg-rose-500' : 'bg-emerald-400')} title={`Ngày -${29 - i}`} />
+          ))}
         </div>
       </Card>
 
@@ -71,32 +82,29 @@ export const AdminSystemPage: React.FC = () => {
         {MOCK_SERVICES.map((s, i) => {
           const m = STATUS_META[s.status];
           return (
-            <Card key={s.name} className="animate-fade-up card-hover" style={{ animationDelay: `${i * 60}ms` }}>
+            <Card key={s.name} hard hover className="animate-fade-up" style={{ animationDelay: `${i * 60}ms` }}>
               <div className="flex items-start justify-between gap-3">
                 <div className="flex items-center gap-3">
-                  <span className="relative flex w-3 h-3">
-                    <span className={cn('absolute inline-flex w-full h-full rounded-full opacity-60', s.status === 'UP' && 'bg-emerald-400 animate-pulse-ring')} />
-                    <span className={cn('relative inline-flex w-3 h-3 rounded-full', m.dot)} />
-                  </span>
+                  <span className={cn('w-3.5 h-3.5 rounded-full border-2 border-slate-900 shrink-0', m.led)} />
                   <div>
-                    <p className="font-bold text-slate-900">{s.name}</p>
-                    <p className="text-[11px] text-slate-500">{s.description}</p>
+                    <p className="font-display font-bold text-slate-900">{s.name}</p>
+                    <p className="text-[11px] text-slate-500 font-mono">{s.description}</p>
                   </div>
                 </div>
-                <Badge tone={m.tone} size="xs">
+                <Badge tone={m.tone} size="xs" solid={s.status !== 'UP'}>
                   {m.label}
                 </Badge>
               </div>
-              <div className="grid grid-cols-2 gap-3 mt-4 pt-4 border-t border-slate-100">
+              <div className="grid grid-cols-2 gap-3 mt-4 pt-4 border-t-2 border-dashed border-slate-200">
                 <div>
-                  <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Độ trễ</p>
-                  <p className={cn('text-lg font-black', s.latencyMs > 250 ? 'text-amber-600' : 'text-slate-900')}>
+                  <p className="text-[10px] font-extrabold uppercase tracking-wider text-slate-500">Độ trễ</p>
+                  <p className={cn('font-mono text-xl font-bold', s.latencyMs > 250 ? 'text-amber-700' : 'text-slate-900')}>
                     {s.latencyMs} <span className="text-xs font-semibold text-slate-400">ms</span>
                   </p>
                 </div>
                 <div>
-                  <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Uptime</p>
-                  <p className="text-lg font-black text-slate-900">{s.uptime}</p>
+                  <p className="text-[10px] font-extrabold uppercase tracking-wider text-slate-500">Uptime</p>
+                  <p className="font-mono text-xl font-bold text-slate-900">{s.uptime}</p>
                 </div>
               </div>
             </Card>
@@ -105,25 +113,25 @@ export const AdminSystemPage: React.FC = () => {
       </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
-        <Card className="xl:col-span-2 animate-fade-up">
-          <CardHeader title="Tài nguyên máy chủ" subtitle="Server chính · ap-southeast-1" />
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+        <Card hard className="xl:col-span-2 animate-fade-up">
+          <CardHeader title="Tài nguyên máy chủ" subtitle="orbi-prod-01 · Ubuntu 22.04 · ap-southeast-1" icon={<Cpu />} />
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {RESOURCES.map((r) => (
-              <div key={r.label} className="p-4 rounded-2xl border border-slate-200">
+              <div key={r.label} className="p-4 rounded-2xl border-2 border-slate-900/10 bg-slate-50">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="flex items-center gap-2 text-sm font-bold text-slate-800 [&>svg]:w-4 [&>svg]:h-4 [&>svg]:text-indigo-600">
+                  <span className="flex items-center gap-2 text-sm font-bold text-slate-900 [&>svg]:w-4 [&>svg]:h-4 [&>svg]:text-indigo-700">
                     {r.icon} {r.label}
                   </span>
-                  <span className="text-sm font-black text-slate-900">{r.value}%</span>
+                  <span className="font-mono text-sm font-bold text-slate-900">{r.value}%</span>
                 </div>
                 <ProgressBar value={r.value} tone={r.value > 80 ? 'rose' : r.value > 60 ? 'amber' : 'emerald'} />
-                <p className="text-[11px] text-slate-400 mt-2">{r.detail}</p>
+                <p className="text-[11px] text-slate-500 mt-2 font-mono">{r.detail}</p>
               </div>
             ))}
           </div>
         </Card>
-        <Card className="animate-fade-up" style={{ animationDelay: '100ms' }}>
-          <CardHeader title="Nhật ký sự cố" subtitle="7 ngày gần nhất" />
+        <Card hard tone="cream" className="animate-fade-up" style={{ animationDelay: '100ms' }}>
+          <CardHeader title="Nhật ký sự cố" subtitle="7 ngày gần nhất" icon={<AlertTriangle />} />
           <Timeline items={INCIDENTS} />
         </Card>
       </div>

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Plus, ClipboardList, MoreHorizontal, Lock, Unlock, Trash2, ChevronRight, ChevronLeft } from 'lucide-react';
+import { Plus, ClipboardList, MoreHorizontal, Lock, Unlock, Trash2, ChevronRight, ChevronLeft, CalendarClock } from 'lucide-react';
 import { useDocumentTitle } from '@/shared/hooks';
 import { toast } from '@/shared/stores/uiStore';
 import { MOCK_ASSIGNMENTS, MOCK_CLASSES, MOCK_TESTS } from '@/shared/mocks';
@@ -23,6 +23,7 @@ export const TeacherAssignmentsPage: React.FC = () => {
 
   const list = rows.filter((a) => (status === 'ALL' || a.status === status) && (!classId || a.classId === classId));
   const now = new Date();
+  const nextDue = [...rows].filter((a) => a.status === 'OPEN' && new Date(a.dueDate) > now).sort((a, b) => a.dueDate.localeCompare(b.dueDate))[0];
 
   const toggleStatus = (a: Assignment) => {
     setRows((s) => s.map((x) => (x.id === a.id ? { ...x, status: x.status === 'OPEN' ? 'CLOSED' : 'OPEN' } : x)));
@@ -52,17 +53,57 @@ export const TeacherAssignmentsPage: React.FC = () => {
   };
 
   const cols: Column<Assignment>[] = [
-    { key: 'title', header: 'Bài tập', render: (r) => (<div><p className="font-bold text-slate-900">{r.title}</p><p className="text-[11px] text-slate-500">{r.className}</p></div>) },
-    { key: 'type', header: 'Loại', render: (r) => <Badge tone={TYPE_TONE[r.type]}>{TYPE_LABEL[r.type]}</Badge> },
-    { key: 'dueDate', header: 'Hạn nộp', render: (r) => { const over = new Date(r.dueDate) < now && r.status === 'OPEN'; return (<div className="flex items-center gap-2"><span className="text-sm">{formatDate(r.dueDate)}</span>{over && <Badge tone="rose" size="xs">Quá hạn</Badge>}</div>); } },
-    { key: 'submitted', header: 'Đã nộp', width: '170px', render: (r) => <ProgressBar value={r.total ? (r.submitted / r.total) * 100 : 0} size="sm" label={`${r.submitted}/${r.total}`} showValue tone="emerald" /> },
-    { key: 'avgScore', header: 'Điểm TB', align: 'center', render: (r) => <span className="font-bold">{r.avgScore ?? '—'}</span> },
-    { key: 'status', header: 'Trạng thái', render: (r) => <Badge tone={r.status === 'OPEN' ? 'emerald' : r.status === 'CLOSED' ? 'slate' : 'amber'} dot>{STATUS_LABEL[r.status]}</Badge> },
     {
-      key: 'actions', header: '', align: 'right', width: '56px',
+      key: 'title',
+      header: 'Bài tập',
+      render: (r) => (
+        <div>
+          <p className="font-bold text-slate-900">{r.title}</p>
+          <p className="text-[11px] text-slate-500">{r.className}</p>
+        </div>
+      ),
+    },
+    { key: 'type', header: 'Loại', render: (r) => <Badge tone={TYPE_TONE[r.type]}>{TYPE_LABEL[r.type]}</Badge> },
+    {
+      key: 'dueDate',
+      header: 'Hạn nộp',
+      render: (r) => {
+        const over = new Date(r.dueDate) < now && r.status === 'OPEN';
+        return (
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-semibold">{formatDate(r.dueDate)}</span>
+            {over && (
+              <Badge tone="rose" size="xs">
+                Quá hạn
+              </Badge>
+            )}
+          </div>
+        );
+      },
+    },
+    { key: 'submitted', header: 'Đã nộp', width: '170px', render: (r) => <ProgressBar value={r.total ? (r.submitted / r.total) * 100 : 0} size="sm" label={`${r.submitted}/${r.total}`} showValue tone="indigo" /> },
+    { key: 'avgScore', header: 'Điểm TB', align: 'center', render: (r) => <span className="font-display font-extrabold">{r.avgScore ?? '—'}</span> },
+    {
+      key: 'status',
+      header: 'Trạng thái',
+      render: (r) => (
+        <Badge tone={r.status === 'OPEN' ? 'emerald' : r.status === 'CLOSED' ? 'slate' : 'amber'} dot>
+          {STATUS_LABEL[r.status]}
+        </Badge>
+      ),
+    },
+    {
+      key: 'actions',
+      header: '',
+      align: 'right',
+      width: '56px',
       render: (r) => (
         <Dropdown
-          trigger={<button className="w-8 h-8 rounded-lg hover:bg-slate-100 flex items-center justify-center text-slate-500"><MoreHorizontal className="w-4 h-4" /></button>}
+          trigger={
+            <button className="w-8 h-8 rounded-lg hover:bg-slate-100 flex items-center justify-center text-slate-500">
+              <MoreHorizontal className="w-4 h-4" />
+            </button>
+          }
           items={[
             { label: r.status === 'OPEN' ? 'Đóng bài tập' : 'Mở bài tập', icon: r.status === 'OPEN' ? <Lock /> : <Unlock />, onClick: () => toggleStatus(r) },
             { divider: true, label: '' },
@@ -77,19 +118,46 @@ export const TeacherAssignmentsPage: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Bài tập & Đề thi" description="Giao bài tập về nhà, đề thi thử và bài tự luận theo hạn nộp." icon={<ClipboardList />} actions={<Button leftIcon={<Plus className="w-4 h-4" />} onClick={() => setOpen(true)}>Giao bài mới</Button>} />
+      <PageHeader
+        title={
+          <>
+            Bài tập & <span className="mark">Đề thi</span>
+          </>
+        }
+        description="Giao bài tập về nhà, đề thi thử và bài tự luận theo hạn nộp."
+        icon={<ClipboardList />}
+        actions={
+          <Button variant="gradient" leftIcon={<Plus className="w-4 h-4" />} onClick={() => setOpen(true)}>
+            Giao bài mới
+          </Button>
+        }
+      />
 
-      <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
-        <StatCard label="Tổng bài tập" value={rows.length} tone="indigo" />
-        <StatCard label="Đang mở" value={rows.filter((a) => a.status === 'OPEN').length} tone="emerald" />
-        <StatCard label="Quá hạn" value={rows.filter((a) => a.status === 'OPEN' && new Date(a.dueDate) < now).length} tone="rose" />
-        <StatCard label="Tỷ lệ nộp TB" value={Math.round((rows.reduce((s, a) => s + (a.total ? a.submitted / a.total : 0), 0) / rows.length) * 100)} suffix="%" tone="amber" />
+      <div className="grid grid-cols-1 xl:grid-cols-[1fr_320px] gap-4">
+        <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
+          <StatCard label="Tổng bài tập" value={rows.length} tone="indigo" />
+          <StatCard label="Đang mở" value={rows.filter((a) => a.status === 'OPEN').length} tone="emerald" />
+          <StatCard label="Quá hạn" value={rows.filter((a) => a.status === 'OPEN' && new Date(a.dueDate) < now).length} tone="rose" />
+          <StatCard label="Tỷ lệ nộp TB" value={Math.round((rows.reduce((s, a) => s + (a.total ? a.submitted / a.total : 0), 0) / rows.length) * 100)} suffix="%" tone="amber" />
+        </div>
+        <Card hard tone="ink" padding="sm" className="flex items-center gap-4">
+          <span className="w-12 h-12 rounded-xl bg-amber-300 border-2 border-black text-slate-900 flex items-center justify-center shrink-0">
+            <CalendarClock className="w-6 h-6" />
+          </span>
+          <div className="min-w-0">
+            <p className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Hạn gần nhất</p>
+            <p className="font-bold text-sm truncate">{nextDue?.title ?? 'Không có'}</p>
+            <p className="text-xs text-amber-300 font-bold">{nextDue ? `${formatDate(nextDue.dueDate)} · ${nextDue.className}` : '—'}</p>
+          </div>
+        </Card>
       </div>
 
-      <Card padding="sm" className="flex flex-col md:flex-row md:items-center gap-3">
+      <Card hard padding="sm" className="flex flex-col md:flex-row md:items-center gap-3">
         <div className="flex gap-2 flex-wrap">
           {(['ALL', 'OPEN', 'CLOSED', 'DRAFT'] as const).map((s) => (
-            <Chip key={s} active={status === s} onClick={() => setStatus(s)}>{s === 'ALL' ? 'Tất cả' : STATUS_LABEL[s]}</Chip>
+            <Chip key={s} active={status === s} onClick={() => setStatus(s)}>
+              {s === 'ALL' ? 'Tất cả' : STATUS_LABEL[s]}
+            </Chip>
           ))}
         </div>
         <div className="md:ml-auto md:w-56">
@@ -99,11 +167,28 @@ export const TeacherAssignmentsPage: React.FC = () => {
 
       <DataTable columns={cols} rows={list} emptyTitle="Không có bài tập" className="animate-fade-up" />
 
-      <Modal open={open} onClose={() => setOpen(false)} title="Giao bài tập mới" size="lg" icon={<ClipboardList />}
+      <Modal
+        open={open}
+        onClose={() => setOpen(false)}
+        title="Giao bài tập mới"
+        size="lg"
+        icon={<ClipboardList />}
         footer={
           <>
-            {step > 0 && <Button variant="ghost" leftIcon={<ChevronLeft className="w-4 h-4" />} onClick={() => setStep((s) => s - 1)}>Quay lại</Button>}
-            {step < 2 ? <Button onClick={next} rightIcon={<ChevronRight className="w-4 h-4" />}>Tiếp tục</Button> : <Button variant="success" onClick={submit}>Giao bài</Button>}
+            {step > 0 && (
+              <Button variant="ghost" leftIcon={<ChevronLeft className="w-4 h-4" />} onClick={() => setStep((s) => s - 1)}>
+                Quay lại
+              </Button>
+            )}
+            {step < 2 ? (
+              <Button onClick={next} rightIcon={<ChevronRight className="w-4 h-4" />}>
+                Tiếp tục
+              </Button>
+            ) : (
+              <Button variant="success" onClick={submit}>
+                Giao bài
+              </Button>
+            )}
           </>
         }
       >
@@ -124,10 +209,16 @@ export const TeacherAssignmentsPage: React.FC = () => {
         {step === 2 && (
           <div className="space-y-4 animate-fade-up">
             <Input label="Hạn nộp" type="datetime-local" required value={form.dueDate} onChange={(e) => setForm((f) => ({ ...f, dueDate: e.target.value }))} />
-            <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 text-sm space-y-1">
-              <p><b>Lớp:</b> {MOCK_CLASSES.find((c) => c.id === form.classId)?.name}</p>
-              <p><b>Loại:</b> {TYPE_LABEL[form.type]}</p>
-              <p><b>Tiêu đề:</b> {form.title || '—'}</p>
+            <div className="p-4 rounded-2xl bg-amber-50 border-2 border-slate-900 text-sm space-y-1">
+              <p>
+                <b>Lớp:</b> {MOCK_CLASSES.find((c) => c.id === form.classId)?.name}
+              </p>
+              <p>
+                <b>Loại:</b> {TYPE_LABEL[form.type]}
+              </p>
+              <p>
+                <b>Tiêu đề:</b> {form.title || '—'}
+              </p>
             </div>
           </div>
         )}

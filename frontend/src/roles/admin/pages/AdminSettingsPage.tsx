@@ -46,7 +46,7 @@ export const AdminSettingsPage: React.FC = () => {
       case 'TOGGLE':
         return <Switch checked={Boolean(v)} onChange={(x) => set(s.key, x)} />;
       case 'NUMBER':
-        return <Input type="number" inputSize="sm" value={Number(v)} onChange={(e) => set(s.key, Number(e.target.value))} className="w-32" />;
+        return <Input type="number" inputSize="sm" value={Number(v)} onChange={(e) => set(s.key, Number(e.target.value))} className="w-32 font-mono" />;
       case 'SELECT':
         return <Select inputSize="sm" value={String(v)} onChange={(e) => set(s.key, e.target.value)} options={(s.options ?? []).map((o) => ({ value: o, label: o }))} className="w-44" />;
       default:
@@ -56,7 +56,15 @@ export const AdminSettingsPage: React.FC = () => {
 
   return (
     <div className="space-y-6 pb-24">
-      <PageHeader title="Cấu hình tham số hệ thống" icon={<Sliders />} description="Thiết lập chung, hạn mức học tập, quy tắc động lực và bảo mật. Mọi thay đổi được ghi vào nhật ký kiểm toán." />
+      <PageHeader
+        title={
+          <>
+            Cấu hình <span className="mark">tham số</span>
+          </>
+        }
+        icon={<Sliders />}
+        description="Thiết lập chung, hạn mức học tập, quy tắc động lực và bảo mật. Mọi thay đổi được ghi vào nhật ký kiểm toán kèm IP người thực hiện."
+      />
 
       {maintenance && (
         <Alert type="warning" title="Chế độ bảo trì đang BẬT">
@@ -66,17 +74,23 @@ export const AdminSettingsPage: React.FC = () => {
 
       <Tabs variant="pill" value={tab} onChange={setTab} items={groups.map((g) => ({ key: g, label: g, icon: GROUP_ICON[g], count: MOCK_SETTINGS.filter((s) => s.group === g).length }))} />
 
-      <Card padding="none" className="animate-fade-up" key={tab}>
-        <ul className="divide-y divide-slate-100">
+      <Card hard padding="none" className="animate-fade-up overflow-hidden" key={tab}>
+        <div className="px-5 py-3 bg-amber-100 border-b-2 border-slate-900 flex items-center justify-between">
+          <p className="font-display font-bold text-slate-900 flex items-center gap-2 [&>svg]:w-4 [&>svg]:h-4">
+            {GROUP_ICON[tab]} {tab}
+          </p>
+          <span className="text-[11px] font-mono text-slate-600">{MOCK_SETTINGS.filter((s) => s.group === tab).length} tham số</span>
+        </div>
+        <ul className="divide-y-2 divide-slate-100">
           {MOCK_SETTINGS.filter((s) => s.group === tab).map((s, i) => {
             const changed = values[s.key] !== saved[s.key];
             const isMaint = s.key === 'maintenance_mode';
             return (
-              <li key={s.key} className={cn('flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-5 transition-colors animate-fade-up', changed && 'bg-indigo-50/40', isMaint && maintenance && 'bg-amber-50/60')} style={{ animationDelay: `${i * 40}ms` }}>
+              <li key={s.key} className={cn('flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-5 transition-colors animate-fade-up', changed && 'bg-indigo-50', isMaint && maintenance && 'bg-amber-50')} style={{ animationDelay: `${i * 40}ms` }}>
                 <div className="min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
                     <p className="text-sm font-bold text-slate-900">{s.label}</p>
-                    <span className="font-mono text-[10px] text-slate-400">{s.key}</span>
+                    <span className="font-mono text-[10px] text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded">{s.key}</span>
                     {changed && (
                       <Badge tone="indigo" size="xs" className="animate-pop">
                         Đã sửa
@@ -98,13 +112,13 @@ export const AdminSettingsPage: React.FC = () => {
       </Card>
 
       <div className="fixed bottom-4 left-4 right-4 lg:left-auto lg:right-8 lg:w-[480px] z-30">
-        <div className={cn('glass rounded-2xl p-3 flex items-center justify-between gap-3 transition-all duration-300', dirty ? 'translate-y-0 opacity-100' : 'translate-y-2 opacity-90')}>
-          <p className="text-xs font-semibold text-slate-600 pl-2">{dirty ? `${dirty} thay đổi chưa lưu` : 'Không có thay đổi'}</p>
+        <div className={cn('bg-slate-900 text-white rounded-2xl border-2 border-slate-900 shadow-hard p-3 flex items-center justify-between gap-3 transition-all duration-300', dirty ? 'translate-y-0 opacity-100' : 'translate-y-2 opacity-90')}>
+          <p className="text-xs font-bold pl-2">{dirty ? <span className="text-amber-300">{dirty} thay đổi chưa lưu</span> : <span className="text-slate-400">Không có thay đổi</span>}</p>
           <div className="flex items-center gap-2">
-            <Button size="sm" variant="ghost" leftIcon={<RotateCcw className="w-4 h-4" />} onClick={() => setResetOpen(true)}>
+            <Button size="sm" variant="ghost" className="text-slate-300 hover:bg-white/10 hover:text-white" leftIcon={<RotateCcw className="w-4 h-4" />} onClick={() => setResetOpen(true)}>
               Mặc định
             </Button>
-            <Button size="sm" leftIcon={<Save className="w-4 h-4" />} onClick={save} loading={saving} disabled={!dirty}>
+            <Button size="sm" variant="gradient" leftIcon={<Save className="w-4 h-4" />} onClick={save} loading={saving} disabled={!dirty}>
               Lưu cấu hình
             </Button>
           </div>

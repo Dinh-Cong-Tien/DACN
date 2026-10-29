@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { FileQuestion, Eye, Upload } from 'lucide-react';
-import { ALL_QUESTIONS } from '@/shared/mocks';
+import { ALL_QUESTIONS, QUESTIONS_BY_PART } from '@/shared/mocks';
 import type { IQuestion, SkillType } from '@/shared/types';
 import { useDocumentTitle } from '@/shared/hooks';
-import { Badge, Button, Column, Modal, PageHeader, StatCard, Tone } from '@/shared/components/ui';
+import { Badge, Button, Card, CardHeader, Column, MiniBars, Modal, PageHeader, StatCard, Tone } from '@/shared/components/ui';
 import { CrudEditor, CrudField, QuestionRenderer } from '@/engines';
 import { toast } from '@/shared/stores/uiStore';
 
@@ -16,15 +16,24 @@ const columns: Column<IQuestion>[] = [
     header: 'Câu hỏi',
     render: (q) => (
       <div className="max-w-md">
-        <p className="font-semibold text-slate-800 truncate">{q.stem.length > 70 ? `${q.stem.slice(0, 70)}…` : q.stem}</p>
-        <p className="text-[11px] text-slate-400 font-mono">{q.id}</p>
+        <p className="font-semibold text-slate-900 truncate">{q.stem.length > 70 ? `${q.stem.slice(0, 70)}…` : q.stem}</p>
+        <p className="text-[11px] text-slate-500 font-mono">{q.id}</p>
       </div>
     ),
   },
   { key: 'examType', header: 'Kỳ thi', render: (q) => <Badge tone={q.examType === 'TOEIC' ? 'indigo' : 'emerald'} solid size="xs">{q.examType}</Badge> },
-  { key: 'partOrSkill', header: 'Part', render: (q) => <span className="font-mono text-xs text-slate-600">{q.partOrSkill}</span> },
+  { key: 'partOrSkill', header: 'Part', render: (q) => <span className="font-mono text-xs text-slate-700 bg-slate-100 px-1.5 py-0.5 rounded">{q.partOrSkill}</span> },
   { key: 'skillType', header: 'Kỹ năng', render: (q) => <Badge tone={SKILL_TONE[q.skillType]}>{q.skillType}</Badge> },
-  { key: 'difficulty', header: 'Độ khó', render: (q) => <span className="text-amber-500 text-xs tracking-wider">{'★'.repeat(q.difficulty)}<span className="text-slate-200">{'★'.repeat(Math.max(0, 5 - q.difficulty))}</span></span> },
+  {
+    key: 'difficulty',
+    header: 'Độ khó',
+    render: (q) => (
+      <span className="text-amber-500 text-xs tracking-wider">
+        {'★'.repeat(q.difficulty)}
+        <span className="text-slate-300">{'★'.repeat(Math.max(0, 5 - q.difficulty))}</span>
+      </span>
+    ),
+  },
   {
     key: 'tags',
     header: 'Thẻ',
@@ -35,7 +44,7 @@ const columns: Column<IQuestion>[] = [
             #{t}
           </Badge>
         ))}
-        {q.tags.length > 2 && <span className="text-[10px] text-slate-400">+{q.tags.length - 2}</span>}
+        {q.tags.length > 2 && <span className="text-[10px] text-slate-500">+{q.tags.length - 2}</span>}
       </div>
     ),
   },
@@ -64,16 +73,31 @@ export const AdminQuestionsPage: React.FC = () => {
   useDocumentTitle('Ngân hàng câu hỏi');
   const [preview, setPreview] = useState<IQuestion | null>(null);
   const toeic = ALL_QUESTIONS.filter((q) => q.examType === 'TOEIC').length;
+  const byPart = Object.entries(QUESTIONS_BY_PART).map(([k, v]) => ({ label: k.replace('PART_', 'P').replace('VSTEP_', 'V-'), value: v.length, tone: (k.startsWith('VSTEP') ? 'emerald' : 'indigo') as Tone }));
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Ngân hàng câu hỏi" icon={<FileQuestion />} description="Quản trị CSDL câu hỏi: tạo, sửa, xoá, phân loại theo kỳ thi, Part và kỹ năng." />
+      <PageHeader
+        title={
+          <>
+            Ngân hàng <span className="mark">câu hỏi</span>
+          </>
+        }
+        icon={<FileQuestion />}
+        description="Quản trị CSDL câu hỏi: tạo, sửa, xoá, phân loại theo kỳ thi, Part và kỹ năng. Dữ liệu mẫu, kho thật 12.600 câu."
+      />
 
-      <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
-        <StatCard label="Tổng câu hỏi (mẫu)" value={ALL_QUESTIONS.length} tone="indigo" />
-        <StatCard label="TOEIC" value={toeic} tone="violet" />
-        <StatCard label="VSTEP" value={ALL_QUESTIONS.length - toeic} tone="emerald" />
-        <StatCard label="Có lời giải" value={ALL_QUESTIONS.filter((q) => q.explanation).length} tone="amber" />
+      <div className="grid grid-cols-1 xl:grid-cols-[1fr_1.2fr] gap-4">
+        <div className="grid grid-cols-2 gap-4">
+          <StatCard label="Câu mẫu" value={ALL_QUESTIONS.length} tone="indigo" hint="đang hiển thị" />
+          <StatCard label="TOEIC" value={toeic} tone="violet" hint="Part 1–7" />
+          <StatCard label="VSTEP" value={ALL_QUESTIONS.length - toeic} tone="emerald" hint="Reading · Listening" />
+          <StatCard label="Có lời giải" value={ALL_QUESTIONS.filter((q) => q.explanation).length} tone="amber" hint="đã biên soạn" />
+        </div>
+        <Card hard className="animate-fade-up">
+          <CardHeader title="Phân bố theo Part" subtitle="Số câu mẫu trong từng phần thi" />
+          <MiniBars data={byPart} height={130} />
+        </Card>
       </div>
 
       <CrudEditor<IQuestion>

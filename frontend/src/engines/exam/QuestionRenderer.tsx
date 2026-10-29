@@ -75,12 +75,12 @@ export const QuestionRenderer: React.FC<QuestionRendererProps> = ({
   };
 
   return (
-    <div className={cn('bg-white rounded-3xl border border-slate-200 p-5 md:p-7 shadow-soft space-y-5', className)} key={question.id}>
+    <div className={cn('bg-white rounded-3xl border-2 border-slate-900 p-5 md:p-7 shadow-hard space-y-5', className)} key={question.id}>
       {!hidePassage && question.passage && <PassageBlock passage={question.passage} examMode={examMode} />}
 
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-start gap-3 min-w-0">
-          {index !== undefined && <span className="w-9 h-9 rounded-xl bg-indigo-600 text-white font-black text-sm flex items-center justify-center shrink-0 shadow-sm shadow-indigo-200">{index + 1}</span>}
+          {index !== undefined && <span className="w-9 h-9 rounded-xl bg-slate-900 text-amber-300 font-black text-sm flex items-center justify-center shrink-0 border-2 border-slate-900">{index + 1}</span>}
           <h3 className="text-base md:text-lg font-bold text-slate-900 leading-snug pt-1.5">{question.stem}</h3>
         </div>
         <div className="flex flex-col items-end gap-1.5 shrink-0">
@@ -101,8 +101,8 @@ export const QuestionRenderer: React.FC<QuestionRendererProps> = ({
           let style = 'border-slate-200 hover:border-indigo-300 hover:bg-indigo-50/40 text-slate-700 hover:translate-x-0.5';
           let circle = 'bg-slate-100 text-slate-600 group-hover:bg-indigo-100 group-hover:text-indigo-700';
           if (isSelected) {
-            style = 'border-indigo-500 bg-indigo-50 text-indigo-900 font-semibold shadow-glow';
-            circle = 'bg-indigo-600 text-white';
+            style = 'border-slate-900 bg-amber-100 text-slate-900 font-semibold shadow-hard-sm';
+            circle = 'bg-slate-900 text-amber-300';
           }
           if (showExplanation) {
             if (opt.key === correctKey) {

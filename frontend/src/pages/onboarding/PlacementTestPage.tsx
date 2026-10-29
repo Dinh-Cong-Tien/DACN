@@ -1,8 +1,9 @@
 import React, { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Clock, ChevronLeft, ChevronRight, Send, Sparkles } from 'lucide-react';
+import { Clock, ChevronLeft, ChevronRight, Send, Headphones, BookOpen, Timer } from 'lucide-react';
 import { useCountdown, useDocumentTitle } from '@/shared/hooks';
 import { Badge, Button, Card, ProgressBar, Modal } from '@/shared/components/ui';
+import { Img, PHOTOS } from '@/shared/components/media/Img';
 import { QuestionRenderer } from '@/engines';
 import { TOEIC_PART5, TOEIC_PART2, TOEIC_PART7, VSTEP_READING } from '@/shared/mocks';
 import { cn, formatClock, getCorrectKey } from '@/shared/utils';
@@ -38,46 +39,57 @@ export const PlacementTestPage: React.FC = () => {
 
   if (!started) {
     return (
-      <Card padding="lg" className="animate-scale-in text-center space-y-6 max-w-2xl mx-auto">
-        <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-indigo-600 to-violet-600 text-white flex items-center justify-center mx-auto shadow-lift animate-float">
-          <Sparkles className="w-9 h-9" />
-        </div>
-        <div className="space-y-2">
-          <Badge tone="indigo">Bước 5 / 6</Badge>
-          <h1 className="text-2xl md:text-3xl font-black text-slate-900 tracking-tight">Bài thi xếp lớp 15 phút</h1>
-          <p className="text-sm text-slate-500 max-w-md mx-auto">{questions.length} câu trộn Nghe – Đọc – Ngữ pháp. Kết quả dùng để ước lượng năng lực ban đầu θ₀ và sinh lộ trình phù hợp.</p>
-        </div>
-        <div className="grid grid-cols-3 gap-3 text-center">
-          {[
-            [`${questions.length}`, 'câu hỏi'],
-            ['15', 'phút'],
-            ['1 lần', 'phát audio'],
-          ].map(([v, l], i) => (
-            <div key={l} className="rounded-2xl bg-slate-50 border border-slate-200 p-4 animate-pop" style={{ animationDelay: `${i * 80}ms` }}>
-              <p className="text-2xl font-black text-indigo-700">{v}</p>
-              <p className="text-[10px] font-bold uppercase text-slate-400">{l}</p>
+      <Card hard padding="none" className="animate-scale-in overflow-hidden max-w-4xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-[1fr_300px]">
+          <div className="p-7 md:p-10 space-y-6">
+            <span className="sticker tilt-1">Bước 5 / 6</span>
+            <h1 className="font-display text-3xl md:text-4xl font-extrabold text-slate-900 tracking-tight leading-tight">
+              Bài thi xếp lớp <span className="mark">15 phút</span>
+            </h1>
+            <p className="text-sm text-slate-600 leading-relaxed">{questions.length} câu trộn Nghe – Đọc – Ngữ pháp, lấy từ đề ETS 2024 và đề mẫu VSTEP. Kết quả dùng để ước lượng năng lực ban đầu và sinh lộ trình 3 chặng phù hợp.</p>
+            <div className="grid grid-cols-3 gap-3">
+              {[
+                { v: `${questions.length}`, l: 'câu hỏi', Icon: BookOpen, cls: 'bg-indigo-100' },
+                { v: '15', l: 'phút', Icon: Timer, cls: 'bg-amber-100' },
+                { v: '1 lần', l: 'phát audio', Icon: Headphones, cls: 'bg-violet-100' },
+              ].map((s, i) => (
+                <div key={s.l} className={cn('rounded-2xl border-2 border-slate-900 p-3 text-center animate-pop', s.cls)} style={{ animationDelay: `${i * 80}ms` }}>
+                  <s.Icon className="w-4 h-4 mx-auto text-slate-700 mb-1" />
+                  <p className="font-display text-2xl font-extrabold text-slate-900 leading-none">{s.v}</p>
+                  <p className="text-[10px] font-extrabold uppercase text-slate-600 mt-1">{s.l}</p>
+                </div>
+              ))}
             </div>
-          ))}
+            <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+              <Button size="xl" variant="gradient" onClick={() => setStarted(true)}>
+                Bắt đầu làm bài
+              </Button>
+              <p className="text-xs text-slate-500">Không chắc câu nào? Cứ chọn đáp án bạn nghĩ là đúng — hệ thống cần thấy điểm mạnh/yếu thật.</p>
+            </div>
+          </div>
+          <div className="relative bg-indigo-600 min-h-[260px]">
+            <Img src={PHOTOS.writing} alt="Làm bài xếp lớp" wrapperClass="absolute inset-0" fallbackClass="bg-indigo-600" />
+            <div className="absolute bottom-4 left-4 right-4 bg-white rounded-2xl border-2 border-slate-900 p-3 shadow-hard-sm tilt-3">
+              <p className="text-[11px] font-extrabold uppercase text-slate-500">Mẹo nhỏ</p>
+              <p className="text-xs font-bold text-slate-900">Đeo tai nghe, tắt thông báo, ngồi 15 phút không gián đoạn.</p>
+            </div>
+          </div>
         </div>
-        <Button size="xl" variant="gradient" className="shine" onClick={() => setStarted(true)}>
-          Bắt đầu làm bài
-        </Button>
-        <p className="text-xs text-slate-400">Không chắc câu nào? Cứ chọn phương án bạn nghĩ là đúng — hệ thống cần thấy điểm mạnh/yếu thật của bạn.</p>
       </Card>
     );
   }
 
   return (
     <div className="space-y-4 animate-fade-up">
-      <Card padding="sm">
+      <Card hard padding="sm">
         <div className="flex items-center justify-between gap-3 flex-wrap">
           <div className="flex items-center gap-2">
-            <Badge tone="indigo">
+            <Badge tone="indigo" solid>
               Câu {index + 1}/{questions.length}
             </Badge>
-            <span className="text-xs text-slate-500 font-semibold">{answered} đã trả lời</span>
+            <span className="text-xs text-slate-600 font-bold">{answered} đã trả lời</span>
           </div>
-          <div className={cn('flex items-center gap-2 px-3 h-9 rounded-xl font-mono font-black', remaining < 120 ? 'bg-rose-50 text-rose-600 animate-pulse' : 'bg-slate-900 text-white')}>
+          <div className={cn('flex items-center gap-2 px-3 h-9 rounded-xl border-2 border-slate-900 font-mono font-black', remaining < 120 ? 'bg-violet-500 text-white animate-pulse' : 'bg-slate-900 text-amber-300')}>
             <Clock className="w-4 h-4" />
             {formatClock(Math.max(0, remaining))}
           </div>
@@ -91,7 +103,7 @@ export const PlacementTestPage: React.FC = () => {
         </div>
       )}
 
-      <div className="flex items-center justify-between bg-white p-3 md:p-4 rounded-2xl border border-slate-200 shadow-soft">
+      <div className="flex items-center justify-between bg-white p-3 md:p-4 rounded-2xl border-2 border-slate-900 shadow-hard">
         <Button variant="outline" size="sm" disabled={index === 0} leftIcon={<ChevronLeft className="w-4 h-4" />} onClick={() => setIndex((i) => i - 1)}>
           Câu trước
         </Button>

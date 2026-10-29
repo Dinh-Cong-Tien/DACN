@@ -4,6 +4,7 @@ import { useDocumentTitle } from '@/shared/hooks';
 import { MOCK_CLASSES, MOCK_CLASS_STUDENTS, MOCK_ASSIGNMENTS, CLASS_WEEKLY_PROGRESS } from '@/shared/mocks';
 import type { ClassStudent } from '@/shared/types';
 import { Avatar, Badge, Card, CardHeader, Column, DataTable, MiniBars, PageHeader, ProgressBar, RadarChart, Select, StatCard } from '@/shared/components/ui';
+import { Img } from '@/shared/components/media/Img';
 
 const SCORE_DIST = [
   { label: '<450', value: 2, tone: 'rose' as const },
@@ -32,54 +33,93 @@ export const TeacherAnalyticsPage: React.FC = () => {
   const assignments = MOCK_ASSIGNMENTS.filter((a) => a.classId === cls.id);
 
   const cols: Column<ClassStudent>[] = [
-    { key: 'name', header: 'Học viên', render: (r) => (<div className="flex items-center gap-2"><Avatar name={r.name} size="xs" /><span className="font-semibold">{r.name}</span></div>) },
-    { key: 'avgScore', header: 'Điểm TB', align: 'center', render: (r) => <span className="font-black">{r.avgScore}</span> },
+    {
+      key: 'name',
+      header: 'Học viên',
+      render: (r) => (
+        <div className="flex items-center gap-2">
+          <Avatar name={r.name} src={r.avatarUrl} size="xs" />
+          <span className="font-bold">{r.name}</span>
+        </div>
+      ),
+    },
+    { key: 'avgScore', header: 'Điểm TB', align: 'center', render: (r) => <span className="font-display font-extrabold">{r.avgScore}</span> },
     { key: 'completion', header: 'Hoàn thành', align: 'center', render: (r) => <span>{r.completion}%</span> },
-    { key: 'status', header: '', render: (r) => <Badge tone={r.status === 'GOOD' ? 'emerald' : r.status === 'WARNING' ? 'amber' : 'rose'} size="xs" dot>{r.status}</Badge> },
+    {
+      key: 'status',
+      header: '',
+      render: (r) => (
+        <Badge tone={r.status === 'GOOD' ? 'emerald' : r.status === 'WARNING' ? 'amber' : 'rose'} size="xs" dot>
+          {r.status === 'GOOD' ? 'Tốt' : r.status === 'WARNING' ? 'Cảnh báo' : 'Nguy cơ'}
+        </Badge>
+      ),
+    },
   ];
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Thống kê lớp học" description="Tiến độ hoàn thành, phân bố điểm và hồ sơ kỹ năng của lớp." icon={<BarChart3 />} actions={<div className="w-64"><Select options={MOCK_CLASSES.map((c) => ({ value: c.id, label: c.name }))} value={classId} onChange={(e) => setClassId(e.target.value)} /></div>} />
+      <PageHeader
+        title={
+          <>
+            Thống kê <span className="mark">lớp học</span>
+          </>
+        }
+        description="Tiến độ hoàn thành, phân bố điểm và hồ sơ kỹ năng của lớp."
+        icon={<BarChart3 />}
+        actions={
+          <div className="w-64">
+            <Select options={MOCK_CLASSES.map((c) => ({ value: c.id, label: c.name }))} value={classId} onChange={(e) => setClassId(e.target.value)} />
+          </div>
+        }
+      />
 
-      <div className="grid grid-cols-2 xl:grid-cols-4 gap-4" key={cls.id}>
-        <StatCard label="Học viên" value={cls.studentsCount} icon={<Users />} tone="emerald" />
-        <StatCard label="Điểm TB" value={cls.avgScore} icon={<TrendingUp />} tone="indigo" delta={3} deltaLabel="so với tháng trước" />
-        <StatCard label="Hoàn thành" value={cls.completionRate} suffix="%" icon={<CheckCircle2 />} tone="sky" />
-        <StatCard label="Chuyên cần" value={cls.attendanceRate} suffix="%" icon={<Clock />} tone="amber" />
+      <div className="grid grid-cols-1 xl:grid-cols-[280px_1fr] gap-4" key={cls.id}>
+        <div className="photo-frame relative min-h-[150px] tilt-3">
+          <Img src={cls.coverUrl} alt={cls.name} wrapperClass="absolute inset-0" fallbackClass="bg-indigo-200" />
+          <div className="absolute inset-x-0 bottom-0 p-3 bg-slate-900/80 text-white">
+            <p className="font-display font-bold text-sm truncate">{cls.name}</p>
+            <p className="text-[11px] text-slate-300">{cls.schedule}</p>
+          </div>
+        </div>
+        <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
+          <StatCard label="Học viên" value={cls.studentsCount} icon={<Users />} tone="emerald" />
+          <StatCard label="Điểm TB" value={cls.avgScore} icon={<TrendingUp />} tone="indigo" delta={3} deltaLabel="so với tháng trước" />
+          <StatCard label="Hoàn thành" value={cls.completionRate} suffix="%" icon={<CheckCircle2 />} tone="sky" />
+          <StatCard label="Chuyên cần" value={cls.attendanceRate} suffix="%" icon={<Clock />} tone="amber" />
+        </div>
       </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-5">
-        <Card className="animate-fade-up">
+        <Card hard className="animate-fade-up">
           <CardHeader title="Hoàn thành bài tập theo tuần" subtitle="% học viên nộp đúng hạn" />
-          <MiniBars data={CLASS_WEEKLY_PROGRESS.map((d) => ({ ...d, tone: 'emerald' as const }))} max={100} height={150} />
+          <MiniBars data={CLASS_WEEKLY_PROGRESS.map((d) => ({ ...d, tone: 'indigo' as const }))} max={100} height={150} />
         </Card>
-        <Card className="animate-fade-up" style={{ animationDelay: '60ms' }}>
-          <CardHeader title="Phân bố điểm thi thử gần nhất" subtitle={`${cls.studentsCount} học viên`} />
+        <Card hard className="animate-fade-up" style={{ animationDelay: '60ms' }}>
+          <CardHeader title="Phân bố điểm thi thử gần nhất" subtitle={`${cls.studentsCount} học viên · ETS 2024 Test 2`} />
           <MiniBars data={SCORE_DIST} height={150} />
         </Card>
       </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-5">
-        <Card className="flex flex-col items-center animate-fade-up" style={{ animationDelay: '100ms' }}>
+        <Card hard tone="cream" className="flex flex-col items-center animate-fade-up" style={{ animationDelay: '100ms' }}>
           <CardHeader title="Hồ sơ kỹ năng lớp" subtitle="Trung bình (%)" className="w-full" />
-          <RadarChart data={CLASS_RADAR} tone="emerald" size={240} />
+          <RadarChart data={CLASS_RADAR} tone="indigo" size={240} />
         </Card>
-        <Card className="animate-fade-up" style={{ animationDelay: '140ms' }}>
+        <Card hard className="animate-fade-up" style={{ animationDelay: '140ms' }}>
           <CardHeader title="Tỷ lệ nộp bài" subtitle="Theo từng bài tập" />
           <div className="space-y-4">
             {(assignments.length ? assignments : MOCK_ASSIGNMENTS.slice(0, 4)).map((a) => (
-              <ProgressBar key={a.id} value={a.total ? (a.submitted / a.total) * 100 : 0} label={a.title} showValue size="sm" tone={a.submitted / a.total > 0.7 ? 'emerald' : 'amber'} />
+              <ProgressBar key={a.id} value={a.total ? (a.submitted / a.total) * 100 : 0} label={a.title} showValue size="sm" tone={a.submitted / a.total > 0.7 ? 'indigo' : 'amber'} />
             ))}
           </div>
         </Card>
         <div className="space-y-4 animate-fade-up" style={{ animationDelay: '180ms' }}>
-          <Card padding="sm">
-            <p className="text-xs font-extrabold uppercase tracking-wider text-emerald-600 mb-2 px-1">🏆 Top học viên</p>
+          <Card hard tone="yellow" padding="sm">
+            <p className="text-xs font-extrabold uppercase tracking-wider text-slate-900 mb-2 px-1">🏆 Top học viên</p>
             <DataTable columns={cols} rows={top} dense />
           </Card>
-          <Card padding="sm">
-            <p className="text-xs font-extrabold uppercase tracking-wider text-rose-600 mb-2 px-1">⚠️ Cần hỗ trợ</p>
+          <Card hard tone="coral" padding="sm">
+            <p className="text-xs font-extrabold uppercase tracking-wider text-white mb-2 px-1">⚠️ Cần hỗ trợ</p>
             <DataTable columns={cols} rows={bottom} dense />
           </Card>
         </div>

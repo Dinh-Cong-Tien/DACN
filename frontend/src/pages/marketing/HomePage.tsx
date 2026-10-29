@@ -1,201 +1,400 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, Sparkles, Target, Compass, FileText, AlertTriangle, RotateCcw, Calculator, FolderOpen, Trophy, Quote, CheckCircle2, Headphones, BookOpen } from 'lucide-react';
-import { Badge, Button, Card, GradientPanel, SectionTitle } from '@/shared/components/ui';
-import { CountUp, FloatingBlobs, Reveal, Stagger } from '@/shared/components/motion';
-import { HOME_STATS, TESTIMONIALS } from '@/shared/mocks';
+import { ArrowRight, Star, CheckCircle2, Play, Flame, Target, BookOpen, Users, FileText, AlertTriangle, RotateCcw, Compass, Quote, Headphones } from 'lucide-react';
+import { Button, Card, SectionTitle, Avatar, Badge } from '@/shared/components/ui';
+import { Reveal, Stagger, CountUp, Doodles } from '@/shared/components/motion';
+import { Img, PHOTOS, pravatar } from '@/shared/components/media/Img';
+import { HOME_STATS, TESTIMONIALS, MOCK_TESTS, PRICING_PLANS, MOCK_COURSES } from '@/shared/mocks';
 import { useDocumentTitle } from '@/shared/hooks';
+import { formatCurrency, formatNumber, cn } from '@/shared/utils';
 
-const STEPS = [
-  { n: '01', title: 'Chẩn đoán đầu vào', desc: 'Bài test 15 phút xác định năng lực θ₀, điểm mạnh và lỗ hổng kiến thức.', icon: Target, cls: 'bg-sky-50 text-sky-600' },
-  { n: '02', title: 'Lộ trình thích ứng', desc: 'Tự động phân bổ bài học 3 chặng: Nền tảng → Chuyên sâu → Thực chiến.', icon: Compass, cls: 'bg-violet-50 text-violet-600' },
-  { n: '03', title: 'Luyện tập & Thi thử', desc: 'Phòng thi mô phỏng thật: đếm giờ, audio một lần, bảng câu hỏi.', icon: FileText, cls: 'bg-amber-50 text-amber-600' },
-  { n: '04', title: 'Phân tích lỗi sai', desc: 'Câu sai tự động vào Sổ tay, phân loại ngữ pháp / từ vựng / nghe nhầm.', icon: AlertTriangle, cls: 'bg-rose-50 text-rose-600' },
-  { n: '05', title: 'Ôn tập ngắt quãng', desc: 'SM-2 nhắc ôn đúng "thời điểm vàng" để không lặp lại lỗi cũ.', icon: RotateCcw, cls: 'bg-emerald-50 text-emerald-600' },
-];
+const PARTNERS = ['ĐH Đà Nẵng', 'ĐH Duy Tân', 'ĐH Bách Khoa', 'ĐH FPT', 'VNU Hà Nội', 'ĐH Kinh tế', 'ĐH Ngoại ngữ', 'HUTECH', 'ĐH Sư phạm'];
 
-const TOOLS = [
-  { to: '/score-converter', title: 'Quy đổi điểm', desc: 'TOEIC ↔ VSTEP ↔ CEFR ↔ IELTS trong một bảng tham chiếu.', icon: Calculator, tone: 'indigo' },
-  { to: '/resources', title: 'Kho tài liệu mở', desc: 'PDF 24 chủ điểm ngữ pháp, 600 từ vựng, cẩm nang Writing.', icon: FolderOpen, tone: 'emerald' },
-  { to: '/leaderboard', title: 'Bảng vinh danh', desc: 'Top học viên chuyên cần tuần này. Bạn sẽ ở đâu?', icon: Trophy, tone: 'amber' },
+const LOOP = [
+  { n: '01', title: 'Thi xếp lớp 15 phút', text: '20 câu rải đều 7 Part. Hệ thống ước lượng trình độ hiện tại, chỉ ra Part nào đang kéo điểm bạn xuống.', photo: PHOTOS.notes, tag: 'Chẩn đoán' },
+  { n: '02', title: 'Lộ trình 3 chặng theo ngày thi', text: 'Nền tảng → Chuyên sâu → Thực chiến. Mỗi tuần có mục tiêu cụ thể, tự giãn hoặc nén theo thời gian còn lại.', photo: PHOTOS.desk, tag: 'Cá nhân hoá' },
+  { n: '03', title: 'Thi thử như thi thật', text: 'Đề chuẩn ETS 2024–2025 và format Bộ GD&ĐT. Audio phát một lần, không tua, tự nộp khi hết giờ.', photo: PHOTOS.headphones, tag: 'Luyện đề' },
+  { n: '04', title: 'Sổ tay lỗi sai tự động', text: 'Câu sai được lưu kèm lời giải và nguyên nhân: ngữ pháp, từ vựng hay bẫy nghe. Không phải ghi chép tay.', photo: PHOTOS.writing, tag: 'Phân tích' },
+  { n: '05', title: 'Ôn đúng lúc sắp quên', text: 'Thuật toán SM-2 nhắc lại sau 1, 3, 7, 14, 30 ngày. Mỗi sáng chỉ cần 10 phút ôn phần hệ thống gợi ý.', photo: PHOTOS.studying, tag: 'Ghi nhớ' },
 ];
 
 export const HomePage: React.FC = () => {
   useDocumentTitle('Trang chủ');
+  const featured = MOCK_TESTS.filter((t) => t.isFree).slice(0, 3);
+
   return (
-    <div className="pb-20">
-      {/* HERO */}
-      <section className="relative overflow-hidden pt-16 pb-20 md:pt-24 md:pb-28">
-        <FloatingBlobs />
-        <div aria-hidden className="absolute inset-0 bg-dots opacity-60 mask-fade-b" />
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-7">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white border border-indigo-200 text-indigo-700 text-xs font-bold shadow-soft animate-fade-down">
-            <Sparkles className="w-4 h-4" />
-            Nền tảng luyện thi thích ứng theo năng lực
+    <div className="overflow-hidden">
+      {/* ================= HERO ================= */}
+      <section className="relative bg-paper">
+        <Doodles className="hidden md:block" />
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-12 md:pt-20 pb-16 md:pb-24 grid lg:grid-cols-[1.1fr_1fr] gap-12 items-center">
+          <div className="space-y-7">
+            <span className="sticker tilt-1 animate-tilt-in !bg-amber-300">
+              <Star className="w-3.5 h-3.5 fill-current" /> Kho đề ETS 2025 đã cập nhật
+            </span>
+            <h1 className="font-display text-[2.75rem] sm:text-6xl lg:text-[4.4rem] font-extrabold text-slate-900 leading-[1.02] text-balance animate-fade-up">
+              Luyện TOEIC, VSTEP <br className="hidden sm:block" />
+              đúng chỗ bạn đang <span className="mark mark-coral">yếu</span>.
+            </h1>
+            <p className="text-lg text-slate-600 leading-relaxed max-w-xl animate-fade-up delay-100">
+              Thi xếp lớp 15 phút, nhận lộ trình theo ngày thi của bạn. Mỗi câu sai được lưu lại, giải thích và nhắc ôn đúng lúc. 45 phút mỗi ngày là đủ.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-3 animate-fade-up delay-200">
+              <Button to="/auth/register" size="xl" variant="gradient" rightIcon={<ArrowRight className="w-5 h-5" />}>
+                Làm bài xếp lớp miễn phí
+              </Button>
+              <Button to="/mock-tests" size="xl" variant="outline" leftIcon={<Play className="w-5 h-5" />}>
+                Xem kho đề thi thử
+              </Button>
+            </div>
+            <div className="flex items-center gap-4 animate-fade-up delay-300">
+              <div className="flex -space-x-3">
+                {[21, 22, 23, 24, 25].map((n) => (
+                  <img key={n} src={pravatar(n)} alt="" className="w-10 h-10 rounded-full border-2 border-cream object-cover" />
+                ))}
+              </div>
+              <div>
+                <div className="flex items-center gap-1 text-amber-500">
+                  {Array.from({ length: 5 }).map((_, i) => (
+                    <Star key={i} className="w-4 h-4 fill-current" />
+                  ))}
+                  <span className="text-xs font-bold text-slate-700 ml-1">4.9/5</span>
+                </div>
+                <p className="text-xs text-slate-500 font-semibold">
+                  <b className="text-slate-900">24.800+</b> học viên đang học mỗi ngày
+                </p>
+              </div>
+            </div>
           </div>
-          <h1 className="text-4xl sm:text-5xl lg:text-7xl font-black text-slate-900 tracking-tight leading-[1.05] max-w-4xl mx-auto animate-fade-up">
-            Học thông minh. Luyện đúng mục tiêu.
-            <span className="text-gradient block mt-2">Bứt phá TOEIC & VSTEP</span>
-          </h1>
-          <p className="text-base sm:text-lg text-slate-600 max-w-2xl mx-auto leading-relaxed animate-fade-up delay-150">
-            Không còn làm đề vô định. OrbiLingo phân tích từng câu sai, chỉ ra lỗ hổng kiến thức và nhắc ôn tập ngắt quãng để bạn đạt mục tiêu điểm số nhanh nhất.
-          </p>
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2 animate-fade-up delay-300">
-            <Button to="/auth/register" variant="gradient" size="xl" rightIcon={<ArrowRight className="w-5 h-5" />} className="shine w-full sm:w-auto">
-              Làm bài đánh giá miễn phí
-            </Button>
-            <Button to="/mock-tests" variant="outline" size="xl" className="w-full sm:w-auto">
-              Xem kho đề thi thử
-            </Button>
-          </div>
-          <div className="flex items-center justify-center gap-4 text-xs text-slate-500 animate-fade-in delay-500">
-            {['Miễn phí mãi mãi', 'Không cần thẻ', 'Chuẩn ETS & Bộ GD&ĐT'].map((t) => (
-              <span key={t} className="flex items-center gap-1">
-                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" /> {t}
-              </span>
-            ))}
+
+          <div className="relative mx-auto w-full max-w-md lg:max-w-none">
+            <div className="photo-frame tilt-2 animate-tilt-in delay-200">
+              <Img src={PHOTOS.heroStudents} alt="Học viên luyện thi cùng nhau" ratio="4/3" fallbackClass="bg-indigo-300" />
+            </div>
+            <div className="absolute -left-6 top-8 bg-white rounded-2xl border-2 border-slate-900 shadow-hard px-4 py-3 animate-fade-up delay-500 tilt-1 hidden sm:block">
+              <p className="text-[10px] font-extrabold uppercase tracking-wider text-slate-500">Sau 8 tuần</p>
+              <p className="font-display text-2xl font-extrabold text-emerald-600">+145 điểm</p>
+            </div>
+            <div className="absolute -right-4 top-1/3 bg-amber-300 rounded-2xl border-2 border-slate-900 shadow-hard px-4 py-3 animate-fade-up delay-700 tilt-2 hidden sm:flex items-center gap-2">
+              <Flame className="w-6 h-6 text-violet-600 fill-violet-500" />
+              <div>
+                <p className="font-display text-xl font-extrabold text-slate-900 leading-none">61 ngày</p>
+                <p className="text-[10px] font-bold text-slate-700">streak của Long</p>
+              </div>
+            </div>
+            <div className="absolute -bottom-6 left-10 bg-indigo-600 text-white rounded-2xl border-2 border-slate-900 shadow-hard px-4 py-3 animate-fade-up delay-700 tilt-3 hidden sm:block">
+              <p className="text-[10px] font-extrabold uppercase tracking-wider text-indigo-100">Part 5 hôm nay</p>
+              <p className="font-display text-2xl font-extrabold">28/30</p>
+            </div>
           </div>
         </div>
-        <div className="relative max-w-5xl mx-auto px-4 mt-16">
-          <Stagger className="grid grid-cols-2 md:grid-cols-4 gap-4" step={90}>
-            {HOME_STATS.map((s) => (
-              <Card key={s.label} className="text-center" padding="sm">
-                <p className="text-2xl md:text-3xl font-black text-slate-900">
-                  <CountUp value={s.value} suffix={s.suffix} />
-                </p>
-                <p className="text-xs text-slate-500 font-semibold mt-1">{s.label}</p>
-              </Card>
+      </section>
+
+      {/* ================= MARQUEE ================= */}
+      <section className="border-y-2 border-slate-900 bg-slate-900 text-white py-4 overflow-hidden">
+        <div className="flex whitespace-nowrap animate-marquee">
+          {[...PARTNERS, ...PARTNERS].map((p, i) => (
+            <span key={i} className="mx-8 font-display font-bold text-sm md:text-base tracking-wide text-slate-200 flex items-center gap-8">
+              {p}
+              <span className="w-2 h-2 rounded-full bg-amber-300" />
+            </span>
+          ))}
+        </div>
+      </section>
+
+      {/* ================= STATS ================= */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14">
+        <Stagger className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          {HOME_STATS.map((s, i) => (
+            <div key={s.label} className={cn('rounded-2xl border-2 border-slate-900 p-5 md:p-6', ['bg-white', 'bg-amber-200', 'bg-indigo-100', 'bg-violet-100'][i])}>
+              <p className="font-display text-3xl md:text-4xl font-extrabold text-slate-900">
+                <CountUp value={s.value} suffix={s.suffix} />
+              </p>
+              <p className="text-sm font-semibold text-slate-600 mt-1">{s.label}</p>
+            </div>
+          ))}
+        </Stagger>
+      </section>
+
+      {/* ================= 5-STEP LOOP (zigzag) ================= */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24 space-y-16">
+        <Reveal>
+          <SectionTitle eyebrow="Cách OrbiLingo hoạt động" title={<>Không làm đề vô định. <span className="mark-teal mark">Làm đúng</span> việc cần làm.</>} description="Năm bước lặp lại mỗi tuần. Dữ liệu từ bài làm của bạn quyết định bước tiếp theo." />
+        </Reveal>
+        <div className="space-y-14 md:space-y-20">
+          {LOOP.map((step, i) => (
+            <Reveal key={step.n} className={cn('grid md:grid-cols-2 gap-8 md:gap-16 items-center', i % 2 === 1 && 'md:[&>*:first-child]:order-2')}>
+              <div className="space-y-4">
+                <div className="flex items-center gap-4">
+                  <span className="font-display text-6xl md:text-7xl font-extrabold text-slate-200 leading-none">{step.n}</span>
+                  <span className="sticker !bg-indigo-100 tilt-2">{step.tag}</span>
+                </div>
+                <h3 className="font-display text-2xl md:text-3xl font-extrabold text-slate-900">{step.title}</h3>
+                <p className="text-slate-600 leading-relaxed text-lg">{step.text}</p>
+              </div>
+              <div className={cn('photo-frame', i % 2 === 0 ? 'tilt-2' : 'tilt-1')}>
+                <Img src={step.photo} alt={step.title} ratio="4/3" fallbackClass={['bg-amber-200', 'bg-indigo-200', 'bg-violet-200', 'bg-sky-200', 'bg-emerald-200'][i]} />
+              </div>
+            </Reveal>
+          ))}
+        </div>
+      </section>
+
+      {/* ================= BENTO FEATURES ================= */}
+      <section className="bg-slate-900 text-white py-16 md:py-24 relative">
+        <div aria-hidden className="absolute inset-0 bg-dots opacity-10" />
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
+          <Reveal>
+            <SectionTitle dark eyebrow="Tính năng" title="Mọi thứ cho một kỳ thi, trong một chỗ." description="Từ đề thi tới lớp học với giáo viên. Không cần cài thêm ứng dụng nào." />
+          </Reveal>
+          <div className="grid md:grid-cols-3 md:grid-rows-2 gap-4 md:gap-5">
+            <Reveal className="md:col-span-2 md:row-span-2">
+              <Link to="/mock-tests" className="block h-full rounded-3xl bg-indigo-600 border-2 border-slate-900 shadow-hard p-7 md:p-9 group hover:-translate-y-1 transition">
+                <div className="flex items-start justify-between">
+                  <FileText className="w-10 h-10" />
+                  <Badge tone="amber" solid>
+                    180+ đề
+                  </Badge>
+                </div>
+                <h3 className="font-display text-3xl font-extrabold mt-10">Phòng thi thử chuẩn ETS & Bộ GD&ĐT</h3>
+                <p className="text-indigo-100 mt-3 max-w-md leading-relaxed">Đồng hồ đếm ngược, audio phát một lần, bảng câu hỏi và cờ đánh dấu. Nộp xong có ngay điểm quy đổi và danh sách câu sai.</p>
+                <div className="mt-8 grid grid-cols-3 gap-3 max-w-md">
+                  {featured.map((t) => (
+                    <div key={t.id} className="rounded-xl bg-white/10 border border-white/20 p-3">
+                      <p className="text-[10px] font-extrabold uppercase text-indigo-100">{t.examType}</p>
+                      <p className="text-xs font-bold truncate">{t.title}</p>
+                      <p className="text-[10px] text-indigo-200 mt-1">{formatNumber(t.attempts)} lượt làm</p>
+                    </div>
+                  ))}
+                </div>
+                <span className="inline-flex items-center gap-2 mt-8 font-bold group-hover:gap-3 transition-all">
+                  Vào phòng thi <ArrowRight className="w-4 h-4" />
+                </span>
+              </Link>
+            </Reveal>
+            <Reveal delay={100}>
+              <Link to="/auth/register" className="block h-full rounded-3xl bg-amber-300 text-slate-900 border-2 border-slate-900 shadow-hard p-6 hover:-translate-y-1 transition">
+                <AlertTriangle className="w-8 h-8" />
+                <h3 className="font-display text-xl font-extrabold mt-6">Sổ tay lỗi sai</h3>
+                <p className="text-sm text-slate-700 mt-2">Tự lưu câu sai kèm nguyên nhân. Luyện lại đúng 10 câu bạn hay sai nhất.</p>
+              </Link>
+            </Reveal>
+            <Reveal delay={200}>
+              <Link to="/auth/register" className="block h-full rounded-3xl bg-violet-500 text-white border-2 border-slate-900 shadow-hard p-6 hover:-translate-y-1 transition">
+                <RotateCcw className="w-8 h-8" />
+                <h3 className="font-display text-xl font-extrabold mt-6">Flashcard SM-2</h3>
+                <p className="text-sm text-violet-100 mt-2">600 từ Business theo chủ đề, lật thẻ, chấm 4 mức nhớ. Nhắc ôn đúng ngày.</p>
+              </Link>
+            </Reveal>
+            <Reveal delay={150} className="md:col-span-1">
+              <div className="h-full rounded-3xl overflow-hidden border-2 border-slate-900 shadow-hard relative min-h-[220px]">
+                <Img src={PHOTOS.classroom} alt="Lớp học với giáo viên" wrapperClass="absolute inset-0" fallbackClass="bg-sky-300" />
+                <div className="absolute inset-x-0 bottom-0 p-5 bg-slate-900/80 backdrop-blur-sm">
+                  <div className="flex items-center gap-2 text-amber-300">
+                    <Users className="w-4 h-4" />
+                    <p className="font-display font-bold">Lớp học với giáo viên</p>
+                  </div>
+                  <p className="text-xs text-slate-300 mt-1">Mã mời 8 ký tự, bài tập có hạn nộp, chấm Writing/Speaking theo rubric.</p>
+                </div>
+              </div>
+            </Reveal>
+            <Reveal delay={250} className="md:col-span-2">
+              <div className="h-full rounded-3xl bg-white text-slate-900 border-2 border-slate-900 shadow-hard p-6 flex flex-col sm:flex-row gap-6 items-center">
+                <div className="flex-1">
+                  <div className="flex items-center gap-2">
+                    <Compass className="w-6 h-6 text-indigo-600" />
+                    <h3 className="font-display text-xl font-extrabold">Lộ trình 3 chặng</h3>
+                  </div>
+                  <p className="text-sm text-slate-600 mt-2 leading-relaxed">Nhập ngày thi và số phút mỗi ngày. Lộ trình tự chia tuần, mở khoá dần theo tiến độ thật của bạn.</p>
+                  <div className="flex gap-2 mt-4 flex-wrap">
+                    {['Nền tảng · 4 tuần', 'Chuyên sâu · 5 tuần', 'Thực chiến · 3 tuần'].map((s, i) => (
+                      <span key={s} className={cn('px-3 py-1 rounded-lg border-2 border-slate-900 text-xs font-bold', ['bg-emerald-200', 'bg-amber-200', 'bg-violet-200'][i])}>
+                        {s}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+                <div className="w-full sm:w-40 photo-frame tilt-2 shrink-0">
+                  <Img src={PHOTOS.laptop} alt="" ratio="square" fallbackClass="bg-indigo-200" />
+                </div>
+              </div>
+            </Reveal>
+          </div>
+        </div>
+      </section>
+
+      {/* ================= TOEIC vs VSTEP ================= */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24 space-y-12">
+        <Reveal>
+          <SectionTitle eyebrow="Hai kỳ thi, một nền tảng" title={<>Bạn thi <span className="mark">TOEIC</span> hay <span className="mark mark-coral">VSTEP</span>?</>} description="Chọn kỳ thi khi bắt đầu, có thể đổi bất kỳ lúc nào. Mọi tiến độ được giữ nguyên." />
+        </Reveal>
+        <div className="grid md:grid-cols-2 gap-6">
+          <Reveal>
+            <Card hard tone="teal" padding="lg" className="h-full relative overflow-hidden">
+              <div className="absolute -right-10 -top-10 w-48 h-48 rounded-full border-[16px] border-white/15" />
+              <Badge tone="amber" solid>
+                Listening & Reading
+              </Badge>
+              <h3 className="font-display text-4xl font-extrabold mt-4">TOEIC 450 → 990</h3>
+              <p className="text-indigo-100 mt-3 leading-relaxed">200 câu, 120 phút, 7 Part. Thường dùng cho tốt nghiệp đại học và xin việc khối doanh nghiệp.</p>
+              <ul className="mt-6 space-y-2 text-sm">
+                {['Luyện từng Part với giải thích tức thì', 'Full test ETS 2023–2025', 'Từ vựng 20 chủ đề Business'].map((l) => (
+                  <li key={l} className="flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-amber-300" /> {l}
+                  </li>
+                ))}
+              </ul>
+              <Button to="/toeic" variant="white" className="mt-8" rightIcon={<ArrowRight className="w-4 h-4" />}>
+                Lộ trình TOEIC
+              </Button>
+            </Card>
+          </Reveal>
+          <Reveal delay={120}>
+            <Card hard tone="coral" padding="lg" className="h-full relative overflow-hidden">
+              <div className="absolute -right-10 -bottom-10 w-48 h-48 rounded-full bg-white/10" />
+              <Badge tone="amber" solid>
+                4 kỹ năng
+              </Badge>
+              <h3 className="font-display text-4xl font-extrabold mt-4">VSTEP B1 → C1</h3>
+              <p className="text-violet-100 mt-3 leading-relaxed">Nghe – Đọc – Viết – Nói theo format Bộ GD&ĐT. Chuẩn đầu ra đại học, sau đại học và giáo viên.</p>
+              <ul className="mt-6 space-y-2 text-sm">
+                {['Đề mẫu ĐHQG, ĐH Đà Nẵng', 'Writing Task 1/2 có đếm từ và rubric', 'Speaking Part 1–3 ghi âm, giáo viên chấm'].map((l) => (
+                  <li key={l} className="flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-amber-300" /> {l}
+                  </li>
+                ))}
+              </ul>
+              <Button to="/vstep" variant="white" className="mt-8" rightIcon={<ArrowRight className="w-4 h-4" />}>
+                Lộ trình VSTEP
+              </Button>
+            </Card>
+          </Reveal>
+        </div>
+      </section>
+
+      {/* ================= COURSES STRIP ================= */}
+      <section className="bg-amber-100 border-y-2 border-slate-900 py-16 md:py-20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
+          <Reveal className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+            <SectionTitle align="left" eyebrow="Khoá học" title="Giáo viên thật, video có transcript." description="Nhấn vào từ trong transcript để tra nghĩa. Mỗi bài có quiz củng cố." />
+            <Button to="/courses" variant="ink" rightIcon={<ArrowRight className="w-4 h-4" />}>
+              Tất cả khoá học
+            </Button>
+          </Reveal>
+          <Stagger className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            {MOCK_COURSES.slice(0, 3).map((c, i) => (
+              <Link key={c.id} to={`/courses/${c.id}`} className={cn('block bg-white rounded-3xl border-2 border-slate-900 shadow-hard overflow-hidden card-hard-hover', i === 1 && 'lg:-translate-y-3')}>
+                <Img src={c.coverUrl} alt={c.title} ratio="video" fallbackClass="bg-indigo-200" />
+                <div className="p-5">
+                  <div className="flex items-center gap-2">
+                    <Badge tone={c.examType === 'TOEIC' ? 'indigo' : 'violet'}>{c.examType}</Badge>
+                    <Badge tone={c.isFree ? 'emerald' : 'amber'}>{c.isFree ? 'Miễn phí' : 'VIP'}</Badge>
+                  </div>
+                  <h3 className="font-display font-bold text-lg text-slate-900 mt-3 leading-snug">{c.title}</h3>
+                  <div className="flex items-center justify-between mt-4 text-xs text-slate-500 font-semibold">
+                    <span className="flex items-center gap-2">
+                      <Avatar name={c.teacherName} src={pravatar(40 + i)} size="xs" /> {c.teacherName}
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <Star className="w-3.5 h-3.5 text-amber-500 fill-current" /> {c.rating} · {c.lessonsCount} bài
+                    </span>
+                  </div>
+                </div>
+              </Link>
             ))}
           </Stagger>
         </div>
       </section>
 
-      {/* 5 STEPS */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-20 space-y-12">
+      {/* ================= TESTIMONIALS ================= */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24 space-y-12">
         <Reveal>
-          <SectionTitle eyebrow="Mô hình sư phạm" title="Vòng lặp học tập khép kín 5 bước" description="Mỗi thao tác làm bài đều được kết nối bằng dữ liệu thực, tạo thành quy trình cải thiện điểm số liên tục." />
+          <SectionTitle eyebrow="Học viên nói gì" title={<>Điểm số thật, người thật.</>} description="Ba trong số hàng nghìn học viên đã tăng điểm trong năm nay." />
         </Reveal>
-        <Stagger className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4" step={100}>
-          {STEPS.map((s) => {
-            const Icon = s.icon;
-            return (
-              <Card key={s.n} hover className="relative space-y-3">
-                <div className="flex items-center justify-between">
-                  <div className={`w-11 h-11 rounded-xl flex items-center justify-center ${s.cls}`}>
-                    <Icon className="w-5 h-5" />
+        <Stagger className="grid md:grid-cols-3 gap-6">
+          {TESTIMONIALS.map((t, i) => (
+            <Card key={t.name} hard padding="lg" className={cn('relative', ['tilt-3', '', 'tilt-2'][i])}>
+              <Quote className="w-8 h-8 text-violet-400 absolute top-5 right-5" />
+              <div className="flex items-center gap-1 text-amber-500">
+                {Array.from({ length: 5 }).map((_, k) => (
+                  <Star key={k} className="w-4 h-4 fill-current" />
+                ))}
+              </div>
+              <p className="text-slate-700 leading-relaxed mt-4">"{t.quote}"</p>
+              <div className="flex items-center justify-between mt-6 pt-5 border-t-2 border-slate-100">
+                <div className="flex items-center gap-3">
+                  <Avatar name={t.name} src={t.avatar} size="md" ring />
+                  <div>
+                    <p className="text-sm font-bold text-slate-900">{t.name}</p>
+                    <p className="text-xs text-slate-500">{t.role}</p>
                   </div>
-                  <span className="text-3xl font-black text-slate-100">{s.n}</span>
                 </div>
-                <h3 className="font-bold text-slate-900">{s.title}</h3>
-                <p className="text-xs text-slate-500 leading-relaxed">{s.desc}</p>
-              </Card>
-            );
-          })}
-        </Stagger>
-      </section>
-
-      {/* TOEIC vs VSTEP */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 space-y-10">
-        <Reveal>
-          <SectionTitle eyebrow="Hai kỳ thi, một nền tảng" title="Chọn mục tiêu của bạn" />
-        </Reveal>
-        <div className="grid md:grid-cols-2 gap-6">
-          <Reveal animation="slide-in-left">
-            <GradientPanel tone="indigo" className="h-full">
-              <Headphones className="w-10 h-10 mb-4 opacity-90" />
-              <Badge tone="indigo" className="bg-white/15 text-white border-white/20 mb-3">
-                Listening & Reading
-              </Badge>
-              <h3 className="text-2xl font-black">TOEIC 450 → 990</h3>
-              <p className="text-indigo-100 text-sm mt-2 leading-relaxed">7 Part chuẩn ETS, 200 câu / 120 phút. Chiến thuật từng Part, bẫy nghe, word form và đọc hiểu đoạn kép.</p>
-              <Button to="/toeic" variant="secondary" size="sm" className="mt-6 bg-white text-indigo-700 hover:bg-indigo-50" rightIcon={<ArrowRight className="w-4 h-4" />}>
-                Khám phá TOEIC
-              </Button>
-            </GradientPanel>
-          </Reveal>
-          <Reveal animation="slide-in-right">
-            <GradientPanel tone="emerald" className="h-full">
-              <BookOpen className="w-10 h-10 mb-4 opacity-90" />
-              <Badge tone="emerald" className="bg-white/15 text-white border-white/20 mb-3">
-                4 kỹ năng
-              </Badge>
-              <h3 className="text-2xl font-black">VSTEP B1 → C1</h3>
-              <p className="text-emerald-100 text-sm mt-2 leading-relaxed">Format Bộ GD&ĐT: Nghe – Đọc – Viết – Nói. Bài mẫu Writing, khung trả lời Speaking và giáo viên chấm bài.</p>
-              <Button to="/vstep" variant="secondary" size="sm" className="mt-6 bg-white text-emerald-700 hover:bg-emerald-50" rightIcon={<ArrowRight className="w-4 h-4" />}>
-                Khám phá VSTEP
-              </Button>
-            </GradientPanel>
-          </Reveal>
-        </div>
-      </section>
-
-      {/* TOOLS */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 space-y-10">
-        <Reveal>
-          <SectionTitle eyebrow="Miễn phí cho mọi người" title="Công cụ không cần đăng nhập" />
-        </Reveal>
-        <Stagger className="grid md:grid-cols-3 gap-5">
-          {TOOLS.map((t) => {
-            const Icon = t.icon;
-            return (
-              <Link key={t.to} to={t.to} className="block group">
-                <Card hover className="space-y-3 h-full">
-                  <div className={`w-12 h-12 rounded-2xl bg-${t.tone}-50 text-${t.tone}-600 flex items-center justify-center group-hover:scale-110 transition-transform`}>
-                    <Icon className="w-6 h-6" />
-                  </div>
-                  <h3 className="font-bold text-slate-900 text-base">{t.title}</h3>
-                  <p className="text-sm text-slate-500 leading-relaxed">{t.desc}</p>
-                  <span className="text-xs font-bold text-indigo-600 inline-flex items-center gap-1">
-                    Mở công cụ <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
-                  </span>
-                </Card>
-              </Link>
-            );
-          })}
-        </Stagger>
-      </section>
-
-      {/* TESTIMONIALS */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 space-y-10">
-        <Reveal>
-          <SectionTitle eyebrow="Học viên nói gì" title="Kết quả thật từ người học thật" />
-        </Reveal>
-        <Stagger className="grid md:grid-cols-3 gap-5" step={120}>
-          {TESTIMONIALS.map((t) => (
-            <Card key={t.name} hover className="flex flex-col">
-              <Quote className="w-7 h-7 text-indigo-200 mb-3" />
-              <p className="text-sm text-slate-700 leading-relaxed flex-1">"{t.quote}"</p>
-              <div className="flex items-center justify-between mt-5 pt-4 border-t border-slate-100">
-                <div>
-                  <p className="text-sm font-bold text-slate-900">{t.name}</p>
-                  <p className="text-xs text-slate-500">{t.role}</p>
-                </div>
-                <Badge tone="emerald" solid>
-                  {t.score}
-                </Badge>
+                <span className="sticker !bg-emerald-200 !text-emerald-900 tilt-2">{t.score}</span>
               </div>
             </Card>
           ))}
         </Stagger>
       </section>
 
-      {/* CTA */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8">
-        <Reveal animation="scale-in">
-          <GradientPanel tone="slate" className="text-center py-14">
-            <h2 className="text-3xl md:text-4xl font-black">Sẵn sàng bứt phá điểm số?</h2>
-            <p className="text-slate-300 mt-3 max-w-xl mx-auto">Tạo tài khoản miễn phí, làm bài xếp lớp và nhận lộ trình cá nhân hoá trong 15 phút.</p>
-            <div className="flex flex-col sm:flex-row justify-center gap-3 mt-8">
-              <Button to="/auth/register" variant="gradient" size="lg" rightIcon={<ArrowRight className="w-4 h-4" />} className="shine">
-                Bắt đầu ngay
-              </Button>
-              <Button to="/pricing" variant="outline" size="lg" className="bg-transparent border-white/30 text-white hover:bg-white/10 hover:text-white">
-                Xem bảng giá
-              </Button>
+      {/* ================= PRICING SHORT ================= */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-16 md:pb-24">
+        <Reveal>
+          <Card hard tone="cream" padding="lg" className="grid lg:grid-cols-[1fr_auto] gap-8 items-center">
+            <div>
+              <span className="sticker tilt-1 !bg-amber-300">Bảng giá</span>
+              <h3 className="font-display text-3xl md:text-4xl font-extrabold text-slate-900 mt-4">Bắt đầu miễn phí. Nâng cấp khi cần đề mới nhất.</h3>
+              <p className="text-slate-600 mt-3 max-w-xl">Gói Free đủ để thi xếp lớp, luyện Part và dùng sổ tay lỗi sai. Gói VIP mở kho đề 2025 và không giới hạn flashcard.</p>
             </div>
-          </GradientPanel>
+            <div className="grid grid-cols-3 gap-3">
+              {PRICING_PLANS.map((p) => (
+                <Link key={p.id} to="/pricing" className={cn('rounded-2xl border-2 border-slate-900 p-4 text-center hover:-translate-y-1 transition', p.highlight ? 'bg-violet-500 text-white shadow-hard' : 'bg-white')}>
+                  <p className="text-[10px] font-extrabold uppercase tracking-wider">{p.name}</p>
+                  <p className="font-display text-lg font-extrabold mt-1">{p.price === 0 ? '0đ' : formatCurrency(p.price).replace(/\s/g, '')}</p>
+                  <p className={cn('text-[10px] mt-0.5', p.highlight ? 'text-violet-100' : 'text-slate-500')}>{p.period}</p>
+                </Link>
+              ))}
+            </div>
+          </Card>
         </Reveal>
       </section>
+
+      {/* ================= FINAL CTA ================= */}
+      <section className="relative bg-slate-900 text-white overflow-hidden">
+        <Doodles tone="light" className="opacity-80" />
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 md:py-28 grid lg:grid-cols-[1fr_380px] gap-12 items-center">
+          <div className="space-y-6">
+            <h2 className="font-display text-4xl md:text-5xl font-extrabold leading-tight text-balance">
+              Kỳ thi tiếp theo của bạn là <span className="mark mark-full">khi nào</span>?
+            </h2>
+            <p className="text-slate-300 text-lg max-w-xl">Nhập ngày thi, làm bài xếp lớp 15 phút. Bạn sẽ có lộ trình tới ngày đó ngay hôm nay.</p>
+            <div className="flex flex-col sm:flex-row gap-3">
+              <Button to="/auth/register" size="xl" variant="gradient" rightIcon={<ArrowRight className="w-5 h-5" />}>
+                Tạo tài khoản miễn phí
+              </Button>
+              <Button to="/score-converter" size="xl" variant="white" leftIcon={<Target className="w-5 h-5" />}>
+                Quy đổi điểm mục tiêu
+              </Button>
+            </div>
+            <p className="text-xs text-slate-500 flex items-center gap-3 flex-wrap">
+              <span className="flex items-center gap-1">
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" /> Không cần thẻ
+              </span>
+              <span className="flex items-center gap-1">
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" /> Huỷ bất kỳ lúc nào
+              </span>
+              <span className="flex items-center gap-1">
+                <Headphones className="w-3.5 h-3.5 text-emerald-400" /> Hỗ trợ 8:00–22:00 mỗi ngày
+              </span>
+            </p>
+          </div>
+          <div className="photo-frame tilt-1 hidden lg:block">
+            <Img src={PHOTOS.graduation} alt="Tốt nghiệp" ratio="4/3" fallbackClass="bg-violet-300" />
+          </div>
+        </div>
+      </section>
+      <span className="hidden">
+        <BookOpen />
+      </span>
     </div>
   );
 };

@@ -15,7 +15,14 @@ export const StudentPracticeSessionPage: React.FC = () => {
 
   return (
     <div className="space-y-5">
-      <Breadcrumb items={[{ label: 'Luyện tập', to: '/app/practice' }, { label: title }]} className="animate-fade-down" />
+      <div className="flex items-center justify-between gap-3 flex-wrap animate-fade-down">
+        <Breadcrumb items={[{ label: 'Luyện tập', to: '/app/practice' }, { label: title }]} />
+        {info && (
+          <span className="sticker tilt-2 !text-[10px]">
+            {info.questions} câu trong đề thật · {info.skill}
+          </span>
+        )}
+      </div>
       <PracticeEngine
         key={part}
         title={title}

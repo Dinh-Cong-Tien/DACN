@@ -1,99 +1,92 @@
 import React, { useState } from 'react';
-import { Mail, Phone, MapPin, Send, Clock, MessageCircle } from 'lucide-react';
-import { Button, Card, Input, Select, SectionTitle, Textarea } from '@/shared/components/ui';
-import { Reveal, Stagger } from '@/shared/components/motion';
-import { useDocumentTitle } from '@/shared/hooks';
+import { Mail, MapPin, Phone, Send, Clock, MessageCircle } from 'lucide-react';
+import { Button, Input, Textarea, Select, SectionTitle, Card } from '@/shared/components/ui';
+import { Reveal } from '@/shared/components/motion';
+import { Img, PHOTOS, pravatar } from '@/shared/components/media/Img';
 import { toast } from '@/shared/stores/uiStore';
-
-const INFO = [
-  { icon: MapPin, title: 'Địa chỉ', lines: ['54 Nguyễn Lương Bằng', 'Liên Chiểu, Đà Nẵng'] },
-  { icon: Phone, title: 'Hotline', lines: ['0236 555 0199', 'T2 – T7, 8:00 – 21:00'] },
-  { icon: Mail, title: 'Email', lines: ['hello@orbilingo.vn', 'support@orbilingo.vn'] },
-  { icon: Clock, title: 'Phản hồi', lines: ['Trong vòng 24 giờ', 'Ưu tiên tài khoản VIP'] },
-];
+import { useDocumentTitle } from '@/shared/hooks';
 
 export const ContactPage: React.FC = () => {
   useDocumentTitle('Liên hệ');
   const [form, setForm] = useState({ name: '', email: '', topic: 'support', message: '' });
-  const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
-
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
-    const er: Record<string, string> = {};
-    if (!form.name.trim()) er.name = 'Vui lòng nhập họ tên';
-    if (!/^\S+@\S+\.\S+$/.test(form.email)) er.email = 'Email không hợp lệ';
-    if (form.message.trim().length < 10) er.message = 'Nội dung tối thiểu 10 ký tự';
-    setErrors(er);
-    if (Object.keys(er).length) return;
+    if (!form.name || !form.email || !form.message) return toast.error('Thiếu thông tin', 'Vui lòng điền tên, email và nội dung.');
     setLoading(true);
     setTimeout(() => {
       setLoading(false);
       setForm({ name: '', email: '', topic: 'support', message: '' });
-      toast.success('Đã gửi liên hệ', 'Chúng tôi sẽ phản hồi qua email trong 24 giờ.');
+      toast.success('Đã gửi', 'Chúng tôi sẽ phản hồi qua email trong 2 giờ làm việc.');
     }, 700);
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 pb-24 space-y-12">
-      <Reveal>
-        <SectionTitle eyebrow="Liên hệ" title="Chúng tôi luôn sẵn sàng hỗ trợ" description="Gửi câu hỏi về lộ trình học, gói dịch vụ hoặc hợp tác giảng dạy." />
-      </Reveal>
-      <div className="grid lg:grid-cols-[1fr_380px] gap-8">
-        <Reveal animation="slide-in-left">
-          <Card padding="lg">
-            <form onSubmit={submit} className="space-y-4">
-              <div className="grid sm:grid-cols-2 gap-4">
-                <Input label="Họ và tên" required value={form.name} onChange={(e) => setForm((s) => ({ ...s, name: e.target.value }))} error={errors.name} placeholder="Nguyễn Văn A" />
-                <Input label="Email" required type="email" value={form.email} onChange={(e) => setForm((s) => ({ ...s, email: e.target.value }))} error={errors.email} placeholder="ban@example.com" />
-              </div>
-              <Select
-                label="Chủ đề"
-                value={form.topic}
-                onChange={(e) => setForm((s) => ({ ...s, topic: e.target.value }))}
-                options={[
-                  { value: 'support', label: 'Hỗ trợ kỹ thuật' },
-                  { value: 'billing', label: 'Thanh toán & gói VIP' },
-                  { value: 'teacher', label: 'Hợp tác giảng dạy' },
-                  { value: 'other', label: 'Khác' },
-                ]}
-              />
-              <Textarea label="Nội dung" required value={form.message} onChange={(e) => setForm((s) => ({ ...s, message: e.target.value }))} error={errors.message} placeholder="Mô tả vấn đề hoặc câu hỏi của bạn..." />
-              <Button type="submit" size="lg" loading={loading} leftIcon={<Send className="w-4 h-4" />}>
-                Gửi liên hệ
-              </Button>
-            </form>
-          </Card>
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14 md:py-20 grid lg:grid-cols-[1fr_1.1fr] gap-12 items-start">
+      <div className="space-y-8">
+        <Reveal>
+          <SectionTitle align="left" eyebrow="Liên hệ" title={<>Có người thật <span className="mark">trả lời</span>.</>} description="Hỗ trợ 8:00–22:00 mỗi ngày, kể cả cuối tuần. Email thường được trả lời trong 2 giờ." />
         </Reveal>
-        <Stagger className="space-y-4" animation="slide-in-right">
-          {INFO.map((i) => {
-            const Icon = i.icon;
+        <Reveal className="photo-frame tilt-1">
+          <Img src={PHOTOS.office} alt="Văn phòng OrbiLingo" ratio="video" fallbackClass="bg-indigo-200" />
+        </Reveal>
+        <Reveal className="grid sm:grid-cols-2 gap-4">
+          {[
+            [MapPin, 'Văn phòng', '54 Nguyễn Lương Bằng, Liên Chiểu, Đà Nẵng', 'bg-amber-200'],
+            [Phone, 'Hotline', '0236 555 0199', 'bg-indigo-100'],
+            [Mail, 'Email', 'hello@orbilingo.vn', 'bg-violet-100'],
+            [Clock, 'Giờ làm việc', '8:00 – 22:00, Thứ 2 – Chủ nhật', 'bg-sky-100'],
+          ].map(([Icon, t, d, bg]) => {
+            const I = Icon as React.ElementType;
             return (
-              <Card key={i.title} hover className="flex items-start gap-4">
-                <div className="w-11 h-11 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0">
-                  <Icon className="w-5 h-5" />
-                </div>
-                <div>
-                  <p className="font-bold text-slate-900 text-sm">{i.title}</p>
-                  {i.lines.map((l) => (
-                    <p key={l} className="text-xs text-slate-500">
-                      {l}
-                    </p>
-                  ))}
-                </div>
-              </Card>
+              <div key={t as string} className={`rounded-2xl border-2 border-slate-900 p-4 ${bg as string}`}>
+                <I className="w-5 h-5 text-slate-900" />
+                <p className="text-[10px] font-extrabold uppercase tracking-wider text-slate-600 mt-3">{t as string}</p>
+                <p className="text-sm font-bold text-slate-900">{d as string}</p>
+              </div>
             );
           })}
-          <Card className="bg-indigo-600 text-white border-indigo-600">
-            <MessageCircle className="w-6 h-6 mb-2" />
-            <p className="font-bold">Hỏi nhanh qua FAQ</p>
-            <p className="text-xs text-indigo-100 mt-1">Hầu hết câu hỏi phổ biến đã có câu trả lời.</p>
-            <Button to="/faq" size="sm" variant="secondary" className="mt-3 bg-white text-indigo-700 hover:bg-indigo-50">
-              Xem FAQ
-            </Button>
-          </Card>
-        </Stagger>
+        </Reveal>
+        <Reveal className="flex items-center gap-3">
+          <div className="flex -space-x-2">
+            {[43, 44, 42].map((n) => (
+              <img key={n} src={pravatar(n)} alt="" className="w-9 h-9 rounded-full border-2 border-cream object-cover" />
+            ))}
+          </div>
+          <p className="text-sm text-slate-600 flex items-center gap-1">
+            <MessageCircle className="w-4 h-4 text-emerald-600" /> 3 nhân viên đang trực
+          </p>
+        </Reveal>
       </div>
+
+      <Reveal delay={100}>
+        <Card hard padding="lg" className="space-y-4">
+          <h2 className="font-display text-2xl font-extrabold text-slate-900">Gửi tin nhắn</h2>
+          <form onSubmit={submit} className="space-y-4">
+            <div className="grid sm:grid-cols-2 gap-4">
+              <Input label="Họ và tên" required value={form.name} onChange={(e) => setForm((s) => ({ ...s, name: e.target.value }))} placeholder="Nguyễn Văn A" />
+              <Input label="Email" required type="email" value={form.email} onChange={(e) => setForm((s) => ({ ...s, email: e.target.value }))} placeholder="name@example.com" />
+            </div>
+            <Select
+              label="Chủ đề"
+              value={form.topic}
+              onChange={(e) => setForm((s) => ({ ...s, topic: e.target.value }))}
+              options={[
+                { value: 'support', label: 'Hỗ trợ kỹ thuật' },
+                { value: 'billing', label: 'Thanh toán & gói VIP' },
+                { value: 'teacher', label: 'Hợp tác giáo viên' },
+                { value: 'school', label: 'Triển khai cho trường/lớp' },
+                { value: 'other', label: 'Khác' },
+              ]}
+            />
+            <Textarea label="Nội dung" required value={form.message} onChange={(e) => setForm((s) => ({ ...s, message: e.target.value }))} placeholder="Mô tả vấn đề hoặc câu hỏi của bạn..." />
+            <Button type="submit" size="lg" variant="gradient" fullWidth loading={loading} rightIcon={<Send className="w-4 h-4" />}>
+              Gửi tin nhắn
+            </Button>
+            <p className="text-[11px] text-slate-500 text-center">Bằng việc gửi, bạn đồng ý để chúng tôi liên hệ lại qua email đã cung cấp.</p>
+          </form>
+        </Card>
+      </Reveal>
     </div>
   );
 };

@@ -1,101 +1,114 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Headphones, BookOpen, PenTool, Mic, ArrowRight, Lock } from 'lucide-react';
-import { Badge, Card, GradientPanel, SectionTitle, Button } from '@/shared/components/ui';
+import { ArrowRight, Headphones, BookOpen, PenTool, Mic, Zap, Lock } from 'lucide-react';
+import { Badge, Button, SectionTitle, Card } from '@/shared/components/ui';
 import { Reveal, Stagger } from '@/shared/components/motion';
-import { TOEIC_PARTS_INFO, VSTEP_PARTS_INFO } from '@/shared/mocks';
+import { Img, PHOTOS } from '@/shared/components/media/Img';
+import { TOEIC_PARTS_INFO, VSTEP_PARTS_INFO, QUESTIONS_BY_PART } from '@/shared/mocks';
 import { useDocumentTitle } from '@/shared/hooks';
+import { cn } from '@/shared/utils';
 
-const ICONS: Record<string, React.ElementType> = { Listening: Headphones, Reading: BookOpen, Writing: PenTool, Speaking: Mic };
-const TONES: Record<string, string> = { Listening: 'bg-sky-50 text-sky-600', Reading: 'bg-violet-50 text-violet-600', Writing: 'bg-amber-50 text-amber-600', Speaking: 'bg-rose-50 text-rose-600' };
+const SKILL_ICON: Record<string, React.ElementType> = { Listening: Headphones, Reading: BookOpen, Writing: PenTool, Speaking: Mic };
+const TILES = ['bg-white', 'bg-indigo-100', 'bg-amber-200', 'bg-white', 'bg-violet-100', 'bg-white', 'bg-sky-100'];
 
 export const PracticePage: React.FC = () => {
-  useDocumentTitle('Luyện tập');
+  useDocumentTitle('Luyện tập kỹ năng');
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 pb-24 space-y-14">
-      <Reveal>
-        <SectionTitle eyebrow="Luyện tập theo kỹ năng" title="Luyện từng Part, xem giải thích ngay" description="Mỗi câu trả lời được phản hồi tức thì kèm lời giải. Câu sai tự động lưu vào Sổ tay lỗi sai của bạn." />
-      </Reveal>
+    <div>
+      <section className="bg-paper border-b-2 border-slate-900">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14 md:py-20 grid lg:grid-cols-[1fr_380px] gap-10 items-center">
+          <SectionTitle align="left" eyebrow="Luyện tập" title={<>Luyện từng Part, <span className="mark-coral mark">giải thích ngay</span> sau mỗi câu.</>} description="Chọn Part TOEIC hoặc kỹ năng VSTEP. Mỗi phiên 10–30 câu, có combo, có tổng kết và câu sai tự vào sổ tay." />
+          <div className="relative">
+            <div className="photo-frame tilt-1">
+              <Img src={PHOTOS.typing} alt="" ratio="4/3" fallbackClass="bg-indigo-200" />
+            </div>
+            <span className="sticker tilt-2 absolute -bottom-4 -right-2 !bg-amber-300">
+              <Zap className="w-3.5 h-3.5" /> Combo x5
+            </span>
+          </div>
+        </div>
+      </section>
 
-      <section className="space-y-6">
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14 space-y-8">
         <Reveal>
-          <h2 className="text-xl font-black text-slate-900 flex items-center gap-2">
-            <Badge tone="indigo" solid>
-              TOEIC
-            </Badge>
-            7 Part Listening & Reading
-          </h2>
+          <SectionTitle align="left" eyebrow="TOEIC" title="7 Part Listening & Reading" />
         </Reveal>
-        <Stagger className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4" step={70}>
-          {TOEIC_PARTS_INFO.map((p) => {
-            const Icon = ICONS[p.skill];
+        <Stagger className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {TOEIC_PARTS_INFO.map((p, i) => {
+            const Icon = SKILL_ICON[p.skill];
+            const count = QUESTIONS_BY_PART[p.id]?.length ?? 0;
             return (
-              <Link key={p.id} to="/auth/register" className="block group">
-                <Card hover className="h-full space-y-3">
-                  <div className="flex items-center justify-between">
-                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${TONES[p.skill]}`}>
+              <Link key={p.id} to="/auth/register" className={cn('group rounded-3xl border-2 border-slate-900 shadow-hard p-5 card-hard-hover block', TILES[i], i === 6 && 'lg:col-span-2')}>
+                <div className="flex items-start justify-between">
+                  <span className="w-11 h-11 rounded-xl bg-slate-900 text-amber-300 flex items-center justify-center">
+                    <Icon className="w-5 h-5" />
+                  </span>
+                  <Badge tone="slate" size="xs">
+                    {p.questions} câu / đề
+                  </Badge>
+                </div>
+                <p className="font-display text-2xl font-extrabold text-slate-900 mt-5">{p.name}</p>
+                <p className="text-sm font-bold text-slate-700">{p.nameVi}</p>
+                <p className="text-xs text-slate-600 mt-2 line-clamp-2">{p.description}</p>
+                <div className="flex items-center justify-between mt-4 text-xs font-bold">
+                  <span className="text-slate-500">{count > 0 ? `${count} câu mẫu` : 'Sắp có'}</span>
+                  <span className="flex items-center gap-1 text-violet-600 group-hover:gap-2 transition-all">
+                    Luyện <ArrowRight className="w-3.5 h-3.5" />
+                  </span>
+                </div>
+              </Link>
+            );
+          })}
+        </Stagger>
+      </section>
+
+      <section className="bg-violet-500 text-white border-y-2 border-slate-900 py-14">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
+          <Reveal>
+            <SectionTitle dark align="left" eyebrow="VSTEP" title="4 kỹ năng theo format Bộ GD&ĐT" />
+          </Reveal>
+          <Stagger className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {VSTEP_PARTS_INFO.map((p) => {
+              const Icon = SKILL_ICON[p.skill];
+              const auto = p.skill === 'Listening' || p.skill === 'Reading';
+              return (
+                <Link key={p.id} to="/auth/register" className="bg-white text-slate-900 rounded-3xl border-2 border-slate-900 shadow-hard p-5 card-hard-hover block">
+                  <div className="flex items-start justify-between">
+                    <span className="w-11 h-11 rounded-xl bg-violet-100 border-2 border-slate-900 text-violet-700 flex items-center justify-center">
                       <Icon className="w-5 h-5" />
-                    </div>
-                    <Badge tone="slate" size="xs">
-                      {p.questions} câu
+                    </span>
+                    <Badge tone={auto ? 'emerald' : 'amber'} size="xs">
+                      {auto ? 'Chấm tự động' : 'Giáo viên chấm'}
                     </Badge>
                   </div>
-                  <div>
-                    <p className="text-[11px] font-extrabold uppercase tracking-wider text-slate-400">{p.name}</p>
-                    <h3 className="font-bold text-slate-900">{p.nameVi}</h3>
-                  </div>
-                  <p className="text-xs text-slate-500 leading-relaxed line-clamp-2">{p.description}</p>
-                  <span className="text-xs font-bold text-indigo-600 flex items-center gap-1">
-                    <Lock className="w-3 h-3" /> Đăng nhập để luyện <ArrowRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
-                  </span>
-                </Card>
-              </Link>
-            );
-          })}
-        </Stagger>
+                  <p className="font-display text-2xl font-extrabold mt-5">{p.nameVi}</p>
+                  <p className="text-xs text-slate-600 mt-2">{p.description}</p>
+                  <p className="text-xs font-bold text-slate-500 mt-4">{p.minutes} phút trong đề thật</p>
+                </Link>
+              );
+            })}
+          </Stagger>
+        </div>
       </section>
 
-      <section className="space-y-6">
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <Reveal>
-          <h2 className="text-xl font-black text-slate-900 flex items-center gap-2">
-            <Badge tone="emerald" solid>
-              VSTEP
-            </Badge>
-            4 kỹ năng
-          </h2>
+          <Card hard tone="ink" padding="lg" className="grid md:grid-cols-[1fr_auto] gap-6 items-center">
+            <div className="flex items-start gap-4">
+              <span className="w-12 h-12 rounded-xl bg-amber-300 text-slate-900 flex items-center justify-center shrink-0">
+                <Lock className="w-6 h-6" />
+              </span>
+              <div>
+                <h3 className="font-display text-2xl font-extrabold">Luyện tập cần tài khoản</h3>
+                <p className="text-slate-300 mt-1">Để sổ tay lỗi sai và lịch ôn hoạt động, hệ thống cần lưu bài làm của bạn. Đăng ký mất chưa tới một phút.</p>
+              </div>
+            </div>
+            <Button to="/auth/register" size="lg" variant="gradient" rightIcon={<ArrowRight className="w-4 h-4" />}>
+              Tạo tài khoản
+            </Button>
+          </Card>
         </Reveal>
-        <Stagger className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4" step={90}>
-          {VSTEP_PARTS_INFO.map((p) => {
-            const Icon = ICONS[p.skill];
-            return (
-              <Link key={p.id} to="/auth/register" className="block group">
-                <Card hover className="h-full space-y-3">
-                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${TONES[p.skill]}`}>
-                    <Icon className="w-5 h-5" />
-                  </div>
-                  <h3 className="font-bold text-slate-900">{p.nameVi}</h3>
-                  <p className="text-xs text-slate-500 leading-relaxed line-clamp-3">{p.description}</p>
-                  <span className="text-xs font-bold text-emerald-600 flex items-center gap-1">
-                    Luyện ngay <ArrowRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
-                  </span>
-                </Card>
-              </Link>
-            );
-          })}
-        </Stagger>
       </section>
-
-      <Reveal animation="scale-in">
-        <GradientPanel tone="indigo" className="flex flex-col md:flex-row items-center justify-between gap-6">
-          <div>
-            <h3 className="text-2xl font-black">Luyện tập không giới hạn với tài khoản miễn phí</h3>
-            <p className="text-indigo-100 mt-1 text-sm">Phản hồi tức thì, giải thích chi tiết, sổ tay lỗi sai và lịch ôn tự động.</p>
-          </div>
-          <Button to="/auth/register" variant="secondary" size="lg" className="bg-white text-indigo-700 hover:bg-indigo-50 shrink-0" rightIcon={<ArrowRight className="w-4 h-4" />}>
-            Tạo tài khoản
-          </Button>
-        </GradientPanel>
-      </Reveal>
     </div>
   );
 };

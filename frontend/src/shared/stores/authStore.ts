@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { AppRole, AppUser } from '@/shared/types';
+import { pravatar } from '@/shared/components/media/Img';
 
 interface AuthState {
   user: AppUser | null;
@@ -31,6 +32,7 @@ export const DEMO_USERS: Record<AppRole, AppUser> = {
     fullName: 'Nguyễn Minh Anh',
     email: 'student@orbi.edu.vn',
     role: 'STUDENT',
+    avatarUrl: pravatar(11),
     status: 'ACTIVE',
     plan: 'FREE',
     target: { examType: 'TOEIC', score: '750', examDate: '2026-12-20' },
@@ -44,6 +46,7 @@ export const DEMO_USERS: Record<AppRole, AppUser> = {
     fullName: 'Trần Thu Hà',
     email: 'teacher@orbi.edu.vn',
     role: 'TEACHER',
+    avatarUrl: pravatar(43),
     status: 'ACTIVE',
     plan: 'VIP',
     streak: 30,
@@ -56,6 +59,7 @@ export const DEMO_USERS: Record<AppRole, AppUser> = {
     fullName: 'Lê Quốc Bảo',
     email: 'head@orbi.edu.vn',
     role: 'HEAD_TEACHER',
+    avatarUrl: pravatar(44),
     status: 'ACTIVE',
     plan: 'VIP',
     streak: 45,
@@ -68,6 +72,7 @@ export const DEMO_USERS: Record<AppRole, AppUser> = {
     fullName: 'Phạm Quản Trị',
     email: 'admin@orbi.edu.vn',
     role: 'ADMIN',
+    avatarUrl: pravatar(45),
     status: 'ACTIVE',
     plan: 'VIP',
     streak: 0,

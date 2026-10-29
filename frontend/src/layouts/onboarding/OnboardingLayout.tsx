@@ -1,8 +1,8 @@
 import React from 'react';
 import { Outlet, useLocation, Link } from 'react-router-dom';
 import { X } from 'lucide-react';
-import { Logo, Stepper } from '@/shared/components/ui';
-import { FloatingBlobs, PageTransition } from '@/shared/components/motion';
+import { Logo, Stepper, Avatar } from '@/shared/components/ui';
+import { PageTransition, Doodles } from '@/shared/components/motion';
 import { useAuthStore } from '@/shared/stores/authStore';
 
 const STEPS = [
@@ -24,15 +24,20 @@ export const OnboardingLayout: React.FC = () => {
   const isTest = pathname.includes('placement-test');
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col relative overflow-hidden">
-      <FloatingBlobs className="opacity-50" />
-      <header className="relative z-10 border-b border-slate-200/70 bg-white/70 backdrop-blur-xl">
+    <div className="min-h-screen bg-paper flex flex-col relative overflow-hidden">
+      <Doodles />
+      <header className="relative z-10 border-b-2 border-slate-900/10 bg-cream/80 backdrop-blur-xl">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
           <Logo size="sm" tagline="Thiết lập lộ trình cá nhân" to="/" />
           <div className="flex items-center gap-3">
-            {user && <span className="hidden sm:block text-xs font-semibold text-slate-500">Xin chào, {user.fullName.split(' ').slice(-1)[0]} 👋</span>}
-            <Link to="/app/dashboard" className="p-2 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition" title="Bỏ qua, vào Dashboard">
-              <X className="w-5 h-5" />
+            {user && (
+              <span className="hidden sm:flex items-center gap-2 text-xs font-bold text-slate-700">
+                <Avatar name={user.fullName} src={user.avatarUrl} size="xs" />
+                Xin chào, {user.fullName.split(' ').slice(-1)[0]} 👋
+              </span>
+            )}
+            <Link to="/app/dashboard" className="p-2 rounded-xl border-2 border-slate-900 bg-white text-slate-700 shadow-hard-sm hover:-translate-y-0.5 transition" title="Bỏ qua, vào Dashboard">
+              <X className="w-4 h-4" />
             </Link>
           </div>
         </div>

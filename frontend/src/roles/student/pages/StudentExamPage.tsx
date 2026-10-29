@@ -12,7 +12,7 @@ export const StudentExamPage: React.FC = () => {
   useDocumentTitle(`Phòng thi · ${test.title}`);
 
   return (
-    <div className="fixed inset-0 z-50 bg-slate-100 overflow-y-auto">
+    <div className="fixed inset-0 z-50 bg-paper overflow-y-auto">
       <ExamRunner
         test={test}
         onSubmitExam={(r) => {

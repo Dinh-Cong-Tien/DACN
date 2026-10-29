@@ -10,18 +10,30 @@ export interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
   hover?: boolean;
   padding?: 'none' | 'sm' | 'md' | 'lg';
   glass?: boolean;
+  hard?: boolean; // viền đậm + bóng lệch kiểu sticker
+  tone?: 'white' | 'cream' | 'ink' | 'teal' | 'coral' | 'yellow' | 'sky';
   as?: 'div' | 'section' | 'article';
 }
 
-export const Card: React.FC<CardProps> = ({ hover, padding = 'md', glass, className, children, as = 'div', ...rest }) => {
+const cardTone = {
+  white: 'bg-white',
+  cream: 'bg-slate-50',
+  ink: 'bg-slate-900 text-white',
+  teal: 'bg-indigo-600 text-white',
+  coral: 'bg-violet-500 text-white',
+  yellow: 'bg-amber-300 text-slate-900',
+  sky: 'bg-sky-100',
+};
+
+export const Card: React.FC<CardProps> = ({ hover, padding = 'md', glass, hard, tone = 'white', className, children, as = 'div', ...rest }) => {
   const Tag = as;
   return (
     <Tag
       className={cn(
-        'rounded-2xl border bg-white',
-        glass ? 'glass' : 'border-slate-200/80 shadow-soft',
+        'rounded-2xl',
+        glass ? 'glass' : hard ? cn('card-hard', cardTone[tone]) : cn('border border-slate-900/10 shadow-soft', cardTone[tone]),
         { none: '', sm: 'p-4', md: 'p-5 md:p-6', lg: 'p-6 md:p-8' }[padding],
-        hover && 'card-hover cursor-pointer',
+        hover && (hard ? 'card-hard-hover cursor-pointer' : 'card-hover cursor-pointer'),
         className
       )}
       {...rest}
@@ -34,9 +46,9 @@ export const Card: React.FC<CardProps> = ({ hover, padding = 'md', glass, classN
 export const CardHeader: React.FC<{ title: React.ReactNode; subtitle?: React.ReactNode; action?: React.ReactNode; icon?: React.ReactNode; className?: string }> = ({ title, subtitle, action, icon, className }) => (
   <div className={cn('flex items-start justify-between gap-4 mb-4', className)}>
     <div className="flex items-start gap-3 min-w-0">
-      {icon && <div className="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0 [&>svg]:w-5 [&>svg]:h-5">{icon}</div>}
+      {icon && <div className="w-10 h-10 rounded-xl bg-amber-300 border-2 border-slate-900 text-slate-900 flex items-center justify-center shrink-0 [&>svg]:w-5 [&>svg]:h-5">{icon}</div>}
       <div className="min-w-0">
-        <h3 className="font-bold text-slate-900 text-base leading-tight">{title}</h3>
+        <h3 className="font-display font-bold text-slate-900 text-base leading-tight">{title}</h3>
         {subtitle && <p className="text-xs text-slate-500 mt-0.5">{subtitle}</p>}
       </div>
     </div>
@@ -56,11 +68,11 @@ export const Breadcrumb: React.FC<{ items: Crumb[]; className?: string }> = ({ i
       <React.Fragment key={`${c.label}-${i}`}>
         {i > 0 && <ChevronRight className="w-3.5 h-3.5 text-slate-300" />}
         {c.to ? (
-          <Link to={c.to} className="hover:text-indigo-600 transition font-medium">
+          <Link to={c.to} className="hover:text-indigo-700 transition font-semibold">
             {c.label}
           </Link>
         ) : (
-          <span className="font-semibold text-slate-800">{c.label}</span>
+          <span className="font-bold text-slate-900">{c.label}</span>
         )}
       </React.Fragment>
     ))}
@@ -79,47 +91,38 @@ export const PageHeader: React.FC<{
   <div className={cn('flex flex-col md:flex-row md:items-end justify-between gap-4 mb-6 md:mb-8 animate-fade-down', className)}>
     <div className="space-y-2 min-w-0">
       {crumbs && <Breadcrumb items={crumbs} />}
-      {eyebrow && <span className="inline-block text-[11px] font-extrabold uppercase tracking-wider text-indigo-600">{eyebrow}</span>}
+      {eyebrow && <span className="sticker tilt-3 !text-[10px] !py-1">{eyebrow}</span>}
       <div className="flex items-center gap-3">
-        {icon && <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-indigo-600 to-violet-600 text-white flex items-center justify-center shadow-md shadow-indigo-200 [&>svg]:w-5 [&>svg]:h-5">{icon}</div>}
-        <h1 className="text-2xl md:text-3xl font-black text-slate-900 tracking-tight">{title}</h1>
+        {icon && <div className="w-11 h-11 rounded-xl bg-violet-500 border-2 border-slate-900 shadow-hard-sm text-white flex items-center justify-center [&>svg]:w-5 [&>svg]:h-5">{icon}</div>}
+        <h1 className="font-display text-2xl md:text-3xl font-extrabold text-slate-900 tracking-tight">{title}</h1>
       </div>
-      {description && <p className="text-sm text-slate-500 max-w-2xl leading-relaxed">{description}</p>}
+      {description && <p className="text-sm text-slate-600 max-w-2xl leading-relaxed">{description}</p>}
     </div>
     {actions && <div className="flex items-center gap-2 shrink-0 flex-wrap">{actions}</div>}
   </div>
 );
 
 // ============ SECTION TITLE (marketing) ============
-export const SectionTitle: React.FC<{ eyebrow?: string; title: React.ReactNode; description?: React.ReactNode; align?: 'center' | 'left'; className?: string; dark?: boolean }> = ({
-  eyebrow,
-  title,
-  description,
-  align = 'center',
-  className,
-  dark,
-}) => (
-  <div className={cn('space-y-3 max-w-2xl', align === 'center' ? 'mx-auto text-center' : 'text-left', className)}>
-    {eyebrow && (
-      <span className={cn('inline-block text-[11px] font-extrabold uppercase tracking-wider px-3 py-1 rounded-full', dark ? 'bg-white/10 text-indigo-200' : 'bg-indigo-50 text-indigo-600')}>{eyebrow}</span>
-    )}
-    <h2 className={cn('text-3xl md:text-4xl font-black tracking-tight leading-tight', dark ? 'text-white' : 'text-slate-900')}>{title}</h2>
-    {description && <p className={cn('text-sm md:text-base leading-relaxed', dark ? 'text-slate-300' : 'text-slate-500')}>{description}</p>}
+export const SectionTitle: React.FC<{ eyebrow?: string; title: React.ReactNode; description?: React.ReactNode; align?: 'center' | 'left'; className?: string; dark?: boolean }> = ({ eyebrow, title, description, align = 'center', className, dark }) => (
+  <div className={cn('space-y-4 max-w-2xl', align === 'center' ? 'mx-auto text-center' : 'text-left', className)}>
+    {eyebrow && <span className={cn('sticker', dark && '!bg-amber-300 !text-slate-900')}>{eyebrow}</span>}
+    <h2 className={cn('font-display text-3xl md:text-[2.6rem] font-extrabold tracking-tight leading-[1.1] text-balance', dark ? 'text-white' : 'text-slate-900')}>{title}</h2>
+    {description && <p className={cn('text-base leading-relaxed', dark ? 'text-slate-300' : 'text-slate-600')}>{description}</p>}
   </div>
 );
 
 // ============ STAT CARD ============
-const statTone: Record<Tone, string> = {
-  indigo: 'from-indigo-500 to-violet-500 shadow-indigo-200',
-  violet: 'from-violet-500 to-fuchsia-500 shadow-violet-200',
-  emerald: 'from-emerald-500 to-teal-500 shadow-emerald-200',
-  amber: 'from-amber-400 to-orange-500 shadow-amber-200',
-  rose: 'from-rose-500 to-pink-500 shadow-rose-200',
-  sky: 'from-sky-500 to-cyan-500 shadow-sky-200',
-  slate: 'from-slate-600 to-slate-800 shadow-slate-200',
-  teal: 'from-teal-500 to-emerald-500 shadow-teal-200',
-  orange: 'from-orange-500 to-amber-500 shadow-orange-200',
-  fuchsia: 'from-fuchsia-500 to-pink-500 shadow-fuchsia-200',
+const statTone: Record<Tone, { bg: string; icon: string }> = {
+  indigo: { bg: 'bg-indigo-100', icon: 'bg-indigo-600 text-white' },
+  violet: { bg: 'bg-violet-100', icon: 'bg-violet-500 text-white' },
+  emerald: { bg: 'bg-emerald-100', icon: 'bg-emerald-500 text-white' },
+  amber: { bg: 'bg-amber-100', icon: 'bg-amber-300 text-slate-900' },
+  rose: { bg: 'bg-rose-100', icon: 'bg-rose-500 text-white' },
+  sky: { bg: 'bg-sky-100', icon: 'bg-sky-500 text-white' },
+  slate: { bg: 'bg-slate-100', icon: 'bg-slate-900 text-white' },
+  teal: { bg: 'bg-teal-100', icon: 'bg-teal-600 text-white' },
+  orange: { bg: 'bg-orange-100', icon: 'bg-orange-500 text-white' },
+  fuchsia: { bg: 'bg-fuchsia-100', icon: 'bg-fuchsia-500 text-white' },
 };
 
 export const StatCard: React.FC<{
@@ -134,49 +137,39 @@ export const StatCard: React.FC<{
   className?: string;
   format?: (n: number) => string;
 }> = ({ label, value, suffix, icon, tone = 'indigo', delta, deltaLabel, hint, className, format }) => (
-  <Card className={cn('relative overflow-hidden group', className)} padding="sm">
-    <div className={cn('absolute -right-6 -top-6 w-24 h-24 rounded-full bg-gradient-to-br opacity-10 group-hover:opacity-20 group-hover:scale-125 transition-all duration-500', statTone[tone])} />
-    <div className="flex items-start justify-between gap-3 relative">
+  <div className={cn('relative overflow-hidden rounded-2xl border-2 border-slate-900 p-4 md:p-5 group transition-all duration-200 hover:-translate-y-0.5 hover:shadow-hard', statTone[tone].bg, className)}>
+    <div className="flex items-start justify-between gap-3">
       <div className="min-w-0">
-        <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400">{label}</p>
-        <p className="text-2xl md:text-3xl font-black text-slate-900 mt-1.5 tracking-tight">
+        <p className="text-[11px] font-extrabold uppercase tracking-wider text-slate-700">{label}</p>
+        <p className="font-display text-3xl md:text-4xl font-extrabold text-slate-900 mt-1.5 tracking-tight leading-none">
           {typeof value === 'number' ? <CountUp value={value} format={format} /> : value}
-          {suffix && <span className="text-sm font-bold text-slate-400 ml-1">{suffix}</span>}
+          {suffix && <span className="font-sans text-sm font-bold text-slate-600 ml-1">{suffix}</span>}
         </p>
         {(delta !== undefined || hint) && (
-          <div className="flex items-center gap-1.5 mt-1.5 text-[11px] font-semibold">
+          <div className="flex items-center gap-1.5 mt-2.5 text-[11px] font-bold">
             {delta !== undefined && (
-              <span className={cn('inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md', delta >= 0 ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700')}>
+              <span className={cn('inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md border border-slate-900', delta >= 0 ? 'bg-emerald-200 text-emerald-900' : 'bg-rose-200 text-rose-900')}>
                 {delta >= 0 ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
                 {delta >= 0 ? '+' : ''}
                 {delta}%
               </span>
             )}
-            <span className="text-slate-400">{deltaLabel ?? hint}</span>
+            <span className="text-slate-600">{deltaLabel ?? hint}</span>
           </div>
         )}
       </div>
       {icon && (
-        <div className={cn('w-11 h-11 rounded-xl bg-gradient-to-br text-white flex items-center justify-center shrink-0 shadow-md [&>svg]:w-5 [&>svg]:h-5 transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-6', statTone[tone])}>
-          {icon}
-        </div>
+        <div className={cn('w-11 h-11 rounded-xl border-2 border-slate-900 flex items-center justify-center shrink-0 [&>svg]:w-5 [&>svg]:h-5 transition-transform duration-300 group-hover:-rotate-6 group-hover:scale-110', statTone[tone].icon)}>{icon}</div>
       )}
     </div>
-  </Card>
+  </div>
 );
 
 // ============ EMPTY STATE ============
-export const EmptyState: React.FC<{ icon?: React.ReactNode; title: string; description?: string; action?: React.ReactNode; className?: string; compact?: boolean }> = ({
-  icon,
-  title,
-  description,
-  action,
-  className,
-  compact,
-}) => (
+export const EmptyState: React.FC<{ icon?: React.ReactNode; title: string; description?: string; action?: React.ReactNode; className?: string; compact?: boolean }> = ({ icon, title, description, action, className, compact }) => (
   <div className={cn('flex flex-col items-center justify-center text-center animate-scale-in', compact ? 'py-8' : 'py-16', className)}>
-    <div className="w-16 h-16 rounded-3xl bg-slate-100 text-slate-400 flex items-center justify-center mb-4 [&>svg]:w-7 [&>svg]:h-7 animate-float">{icon ?? <Inbox />}</div>
-    <h3 className="font-bold text-slate-800">{title}</h3>
+    <div className="w-16 h-16 rounded-2xl bg-amber-200 border-2 border-slate-900 text-slate-900 flex items-center justify-center mb-4 [&>svg]:w-7 [&>svg]:h-7 animate-float tilt-1">{icon ?? <Inbox />}</div>
+    <h3 className="font-display font-bold text-slate-900">{title}</h3>
     {description && <p className="text-sm text-slate-500 mt-1 max-w-sm">{description}</p>}
     {action && <div className="mt-5">{action}</div>}
   </div>
@@ -202,21 +195,21 @@ export const SkeletonGrid: React.FC<{ count?: number; cols?: string }> = ({ coun
   </div>
 );
 
-// ============ GRADIENT PANEL ============
+// ============ COLOR PANEL (tên cũ GradientPanel giữ để tương thích) ============
 export const GradientPanel: React.FC<React.HTMLAttributes<HTMLDivElement> & { tone?: 'indigo' | 'emerald' | 'rose' | 'amber' | 'slate' | 'sky' }> = ({ tone = 'indigo', className, children, ...rest }) => {
   const g = {
-    indigo: 'from-indigo-600 via-violet-600 to-indigo-700',
-    emerald: 'from-emerald-600 via-teal-600 to-emerald-700',
-    rose: 'from-rose-600 via-pink-600 to-rose-700',
-    amber: 'from-amber-500 via-orange-500 to-amber-600',
-    slate: 'from-slate-800 via-slate-900 to-slate-950',
-    sky: 'from-sky-600 via-cyan-600 to-sky-700',
+    indigo: 'bg-indigo-600 text-white',
+    emerald: 'bg-emerald-500 text-white',
+    rose: 'bg-violet-500 text-white',
+    amber: 'bg-amber-300 text-slate-900',
+    slate: 'bg-slate-900 text-white',
+    sky: 'bg-sky-500 text-white',
   }[tone];
   return (
-    <div className={cn('relative overflow-hidden rounded-3xl bg-gradient-to-br text-white p-6 md:p-8 shadow-lift', g, className)} {...rest}>
-      <div aria-hidden className="absolute inset-0 bg-grid opacity-[0.12]" />
-      <div aria-hidden className="absolute -top-20 -right-20 w-72 h-72 rounded-full bg-white/10 blur-3xl animate-float-slow" />
-      <div aria-hidden className="absolute -bottom-24 -left-10 w-64 h-64 rounded-full bg-white/10 blur-3xl animate-float" />
+    <div className={cn('relative overflow-hidden rounded-3xl border-2 border-slate-900 shadow-hard p-6 md:p-8', g, className)} {...rest}>
+      <div aria-hidden className="absolute inset-0 bg-dots opacity-20" />
+      <div aria-hidden className="absolute -top-16 -right-16 w-56 h-56 rounded-full border-[18px] border-white/15" />
+      <div aria-hidden className="absolute -bottom-20 -left-10 w-48 h-48 rounded-full bg-white/10" />
       <div className="relative">{children}</div>
     </div>
   );
