@@ -6,7 +6,7 @@ import { Button, Card, SectionTitle, Avatar, Badge } from '@/shared/components/u
 import { Reveal, Stagger, CountUp, Doodles, RotatingWords } from '@/shared/components/motion';
 import { Img, PHOTOS, pravatar } from '@/shared/components/media/Img';
 import { HOME_STATS, TESTIMONIALS, MOCK_TESTS, PRICING_PLANS, MOCK_COURSES } from '@/shared/mocks';
-import { useDocumentTitle, useGate } from '@/shared/hooks';
+import { useDocumentTitle, useGate, useInView } from '@/shared/hooks';
 import { formatCurrency, formatNumber, cn } from '@/shared/utils';
 
 const PARTNERS = ['ĐH Đà Nẵng', 'ĐH Duy Tân', 'ĐH Bách Khoa', 'ĐH FPT', 'VNU Hà Nội', 'ĐH Kinh tế', 'ĐH Ngoại ngữ', 'HUTECH', 'ĐH Sư phạm'];
@@ -76,9 +76,10 @@ const LoopConnector: React.FC<{ containerRef: React.RefObject<HTMLDivElement>; p
     // Vẽ dần từng đoạn khi cuộn tới
     const onScroll = () => {
       const r = box.getBoundingClientRect();
-      const line = window.innerHeight * 0.75 - r.top;
+      const vh = window.innerHeight;
       setShown((prev) => {
-        const next = list.map((pp, i) => Boolean(prev[i]) || line > pp.trigger);
+        // Hiện khi đoạn nối nằm trong vùng nhìn, ẩn khi cuộn ra khỏi (cả lên lẫn xuống)
+        const next = list.map((pp) => r.top + pp.a[1] < vh * 0.85 && r.top + pp.b[1] > vh * 0.12);
         return next.length === prev.length && next.every((v, i) => v === prev[i]) ? prev : next;
       });
     };
@@ -145,6 +146,46 @@ const LoopConnector: React.FC<{ containerRef: React.RefObject<HTMLDivElement>; p
         );
       })}
     </svg>
+  );
+};
+
+/**
+ * Một hàng trong 5 bước: ẩn khi ở ngoài màn hình, cuộn tới thì nổi lên dần
+ * (chữ trượt vào từ phía mình, ảnh trượt từ phía đối diện + phóng nhẹ + rõ dần), cuộn đi thì ẩn lại.
+ */
+const StepRow: React.FC<{ index: number; step: (typeof LOOP)[number]; photoRef: (el: HTMLDivElement | null) => void }> = ({ index: i, step, photoRef }) => {
+  const { ref, inView: on } = useInView<HTMLDivElement>({ once: false, threshold: 0.25, rootMargin: '0px 0px -8% 0px' });
+  const textLeft = i % 2 === 0; // hàng chẵn: chữ trái, ảnh phải
+  const ease = 'transition-all duration-[1000ms] ease-[cubic-bezier(0.16,1,0.3,1)]';
+  const hiddenText = textLeft ? '-translate-x-16' : 'translate-x-16';
+  const hiddenPhoto = textLeft ? 'translate-x-20' : '-translate-x-20';
+  const item = (delay: number) => ({ transitionDelay: on ? `${delay}ms` : '0ms' });
+  return (
+    <div ref={ref} className={cn('grid md:grid-cols-2 gap-8 md:gap-16 items-center', !textLeft && 'md:[&>*:first-child]:order-2')}>
+      <div className="space-y-4">
+        <div className="flex items-center gap-4">
+          <span className={cn('font-display text-6xl md:text-7xl font-extrabold leading-none text-white/10', ease, on ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 translate-y-6 scale-75')} style={item(0)}>
+            {step.n}
+          </span>
+          <span className={cn('px-3 py-1 rounded-full border border-white/15 bg-white/5 text-xs font-bold text-amber-300', ease, on ? 'opacity-100 translate-x-0' : cn('opacity-0', hiddenText))} style={item(120)}>
+            {step.tag}
+          </span>
+        </div>
+        <h3 className={cn('font-display text-2xl md:text-3xl font-extrabold text-white', ease, on ? 'opacity-100 translate-x-0 blur-0' : cn('opacity-0 blur-sm', hiddenText))} style={item(200)}>
+          {step.title}
+        </h3>
+        <p className={cn('text-slate-400 leading-relaxed text-lg', ease, on ? 'opacity-100 translate-x-0 blur-0' : cn('opacity-0 blur-sm', hiddenText))} style={item(300)}>
+          {step.text}
+        </p>
+      </div>
+      <div
+        ref={photoRef}
+        className={cn('night-photo relative z-10 md:w-[82%]', ease, textLeft ? 'md:ml-auto' : '', on ? cn('opacity-100 translate-x-0 scale-100', textLeft ? 'rotate-[1.5deg]' : 'rotate-[-1.5deg]') : cn('opacity-0 scale-90', hiddenPhoto, textLeft ? 'rotate-[6deg]' : 'rotate-[-6deg]'))}
+        style={item(150)}
+      >
+        <Img src={step.photo} alt={step.title} ratio="4/3" fallbackClass="bg-slate-800" />
+      </div>
+    </div>
   );
 };
 
@@ -316,19 +357,7 @@ export const HomePage: React.FC = () => {
         <div ref={loopBoxRef} className="relative space-y-14 md:space-y-28">
           <LoopConnector containerRef={loopBoxRef} photoRefs={loopPhotoRefs} dark />
           {LOOP.map((step, i) => (
-            <Reveal key={step.n} className={cn('grid md:grid-cols-2 gap-8 md:gap-16 items-center', i % 2 === 1 && 'md:[&>*:first-child]:order-2')}>
-              <div className="space-y-4">
-                <div className="flex items-center gap-4">
-                  <span className="font-display text-6xl md:text-7xl font-extrabold leading-none text-white/10">{step.n}</span>
-                  <span className="px-3 py-1 rounded-full border border-white/15 bg-white/5 text-xs font-bold text-amber-300">{step.tag}</span>
-                </div>
-                <h3 className="font-display text-2xl md:text-3xl font-extrabold text-white">{step.title}</h3>
-                <p className="text-slate-400 leading-relaxed text-lg">{step.text}</p>
-              </div>
-              <div ref={(el) => (loopPhotoRefs.current[i] = el)} className={cn('night-photo relative z-10 md:w-[82%]', i % 2 === 0 ? 'md:ml-auto rotate-[1.5deg]' : 'rotate-[-1.5deg]')}>
-                <Img src={step.photo} alt={step.title} ratio="4/3" fallbackClass="bg-slate-800" />
-              </div>
-            </Reveal>
+            <StepRow key={step.n} index={i} step={step} photoRef={(el) => (loopPhotoRefs.current[i] = el)} />
           ))}
         </div>
       </section>
