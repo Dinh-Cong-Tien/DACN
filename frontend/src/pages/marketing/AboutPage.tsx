@@ -48,10 +48,10 @@ export const AboutPage: React.FC = () => {
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14">
         <Stagger className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {[
-            [24800, '+', 'học viên'],
+            [24837, '+', 'học viên'],
             [38, '', 'giáo viên & cộng tác viên'],
-            [180, '+', 'đề thi thử'],
-            [145, '', 'điểm tăng trung bình'],
+            [183, '+', 'đề thi thử'],
+            [147, '', 'điểm tăng trung bình'],
           ].map(([v, s, l], i) => (
             <div key={l as string} className={cn('rounded-2xl border-2 border-slate-900 p-5', ['bg-white', 'bg-amber-200', 'bg-indigo-100', 'bg-violet-100'][i])}>
               <p className="font-display text-4xl font-extrabold text-slate-900">
@@ -73,7 +73,7 @@ export const AboutPage: React.FC = () => {
               { id: '1', title: 'Tháng 3/2025 — Cuốn sổ lỗi sai', description: 'Lớp TOEIC 28 người. Mỗi buổi cô Hà ghi câu sai của từng bạn vào sổ và giao bài ôn riêng.', time: '2025', tone: 'amber' },
               { id: '2', title: 'Tháng 8/2025 — Bản Google Sheet', description: 'Sổ chuyển sang bảng tính, tự nhắc ôn sau 1-3-7 ngày. Điểm trung bình lớp tăng 62 điểm sau 2 tháng.', time: '2025', tone: 'indigo' },
               { id: '3', title: 'Tháng 1/2026 — Khởi động dự án', description: 'Đồ án chuyên ngành: xây nền tảng với thi thử, sổ tay lỗi sai, SM-2 và lớp học cho giáo viên.', time: '2026', tone: 'violet' },
-              { id: '4', title: 'Tháng 10/2026 — Phiên bản hiện tại', description: '5 vai trò, 180+ đề, 12.600 câu hỏi được duyệt. Hơn 24.000 học viên.', time: 'Nay', tone: 'emerald' },
+              { id: '4', title: 'Tháng 10/2026 — Phiên bản hiện tại', description: '5 vai trò, 183 đề, 12.614 câu hỏi được duyệt. 24.837 học viên.', time: 'Nay', tone: 'emerald' },
             ]}
           />
         </Reveal>

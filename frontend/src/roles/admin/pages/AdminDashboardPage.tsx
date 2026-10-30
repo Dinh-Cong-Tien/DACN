@@ -57,7 +57,7 @@ export const AdminDashboardPage: React.FC = () => {
           {[
             { label: 'Người dùng', value: MOCK_USERS.length, suffix: 'tài khoản', sub: '+12% tuần này' },
             { label: 'Truy cập 7 ngày', value: traffic, suffix: 'lượt', sub: `đỉnh ${formatNumber(Math.max(...ADMIN_TRAFFIC.map((t) => t.value)))}` },
-            { label: 'Câu hỏi', value: 12600, suffix: 'câu', sub: 'TOEIC & VSTEP' },
+            { label: 'Câu hỏi', value: 12614, suffix: 'câu', sub: 'TOEIC & VSTEP' },
             { label: 'Dịch vụ', value: upCount, suffix: `/${MOCK_SERVICES.length}`, sub: 'uptime 99.94%' },
           ].map((s) => (
             <div key={s.label} className="px-4 py-4">

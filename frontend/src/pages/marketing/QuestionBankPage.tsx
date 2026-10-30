@@ -17,7 +17,7 @@ export const QuestionBankPage: React.FC = () => {
   const [showExp, setShowExp] = useState(false);
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const parts = Object.entries(QUESTIONS_BY_PART);
-  const total = 12600;
+  const total = 12614;
 
   return (
     <div>

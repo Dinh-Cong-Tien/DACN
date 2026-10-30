@@ -84,7 +84,7 @@ export const AdminQuestionsPage: React.FC = () => {
           </>
         }
         icon={<FileQuestion />}
-        description="Quản trị CSDL câu hỏi: tạo, sửa, xoá, phân loại theo kỳ thi, Part và kỹ năng. Dữ liệu mẫu, kho thật 12.600 câu."
+        description="Quản trị CSDL câu hỏi: tạo, sửa, xoá, phân loại theo kỳ thi, Part và kỹ năng. Dữ liệu mẫu, kho thật 12.614 câu."
       />
 
       <div className="grid grid-cols-1 xl:grid-cols-[1fr_1.2fr] gap-4">

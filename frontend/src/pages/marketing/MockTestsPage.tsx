@@ -25,7 +25,7 @@ export const MockTestsPage: React.FC = () => {
         <div aria-hidden className="absolute inset-0 bg-dots opacity-10" />
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14 md:py-20 grid lg:grid-cols-[1fr_400px] gap-10 items-center">
           <div className="space-y-6">
-            <SectionTitle dark align="left" eyebrow="Phòng thi thử" title={<>Thi như thật. <span className="mark mark-full">Chấm ngay</span>.</>} description="180+ đề TOEIC chuẩn ETS và VSTEP theo format Bộ GD&ĐT. Đồng hồ, audio phát một lần, bảng câu hỏi và tự nộp khi hết giờ." />
+            <SectionTitle dark align="left" eyebrow="Phòng thi thử" title={<>Thi như thật. <span className="mark mark-full">Chấm ngay</span>.</>} description="183 đề TOEIC chuẩn ETS và VSTEP theo format Bộ GD&ĐT. Đồng hồ, audio phát một lần, bảng câu hỏi và tự nộp khi hết giờ." />
             <div className="flex flex-wrap gap-3 text-sm">
               {[
                 [Timer, 'Đếm ngược chuẩn 120 phút'],
