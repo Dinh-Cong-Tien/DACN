@@ -26,70 +26,81 @@ export const HomePage: React.FC = () => {
 
   return (
     <div className="overflow-hidden">
-      {/* ================= HERO ================= */}
-      <section className="relative bg-paper overflow-hidden">
-        <ThreeBackground variant="particles" className="opacity-60" />
-        <Doodles className="hidden md:block" />
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-12 md:pt-20 pb-16 md:pb-24 grid lg:grid-cols-[1.1fr_1fr] gap-12 items-center">
-          <div className="space-y-7">
-            <span className="sticker tilt-1 animate-tilt-in !bg-amber-300">
-              <Star className="w-3.5 h-3.5 fill-current" /> Kho đề ETS 2025 đã cập nhật
+      {/* ================= HERO (nền tối, chữ khổng lồ gradient, ảnh người bên phải) ================= */}
+      <section className="hero-dark relative bg-slate-950 text-white overflow-hidden pt-[72px]">
+        <ThreeBackground variant="particles" dark className="opacity-50" />
+        {/* Quầng sáng gradient hồng-cam phía sau chữ và ảnh */}
+        <div aria-hidden className="absolute -top-40 -left-40 w-[640px] h-[640px] rounded-full bg-violet-500/30 blur-[140px] animate-float-slow" />
+        <div aria-hidden className="absolute top-1/3 -right-32 w-[560px] h-[560px] rounded-full bg-fuchsia-500/25 blur-[140px] animate-float" />
+        <div aria-hidden className="absolute bottom-0 left-1/3 w-[420px] h-[420px] rounded-full bg-amber-400/15 blur-[120px]" />
+
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-14 md:pt-20 pb-0 grid lg:grid-cols-[1.25fr_1fr] gap-8 items-end min-h-[calc(100vh-72px)]">
+          <div className="space-y-6 pb-16 md:pb-24">
+            <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-white/15 bg-white/5 text-xs font-bold text-slate-200 animate-fade-down">
+              <span className="w-2 h-2 rounded-full bg-amber-300 animate-pulse" /> Kho đề ETS 2025 đã cập nhật
             </span>
-            <h1 className="font-display text-[2.75rem] sm:text-6xl lg:text-[4.4rem] font-extrabold text-slate-900 leading-[1.02] text-balance animate-fade-up">
-              Luyện TOEIC, VSTEP <br className="hidden sm:block" />
-              đúng chỗ bạn đang{' '}
-              <span className="mark mark-coral">
-                <RotatingWords words={['yếu', 'bỏ lỡ', 'hay sai', 'cần nhất']} />
+
+            <h1 className="font-display font-extrabold leading-[0.9] tracking-tight animate-fade-up">
+              <span className="block text-[4.2rem] sm:text-[6rem] lg:text-[8.2rem] hero-gradient-text">
+                <RotatingWords words={['BỨT PHÁ', 'CHINH PHỤC', 'LÀM CHỦ']} interval={2800} />
               </span>
-              .
+              <span className="block mt-3 text-2xl sm:text-3xl lg:text-4xl text-white font-bold">
+                <span className="font-script text-amber-300 text-3xl sm:text-4xl lg:text-5xl mr-3 align-middle">điểm số</span>
+                TOEIC &amp; VSTEP của bạn
+              </span>
             </h1>
-            <p className="text-lg text-slate-600 leading-relaxed max-w-xl animate-fade-up delay-100">
-              Thi xếp lớp 15 phút, nhận lộ trình theo ngày thi của bạn. Mỗi câu sai được lưu lại, giải thích và nhắc ôn đúng lúc. 45 phút mỗi ngày là đủ.
+
+            <p className="text-base sm:text-lg text-slate-300 leading-relaxed max-w-lg animate-fade-up delay-100">
+              Thi xếp lớp 15 phút, nhận lộ trình theo ngày thi. Mỗi câu sai được lưu lại, giải thích và nhắc ôn đúng lúc. 45 phút mỗi ngày là đủ.
             </p>
+
             <div className="flex flex-col sm:flex-row gap-3 animate-fade-up delay-200">
               <Button to={gate('/onboarding/goal', '/try')} size="xl" variant="gradient" rightIcon={<ArrowRight className="w-5 h-5" />}>
                 Học thử miễn phí ngay
               </Button>
-              <Button to="/mock-tests" size="xl" variant="outline" leftIcon={<Play className="w-5 h-5" />}>
+              <Button to="/mock-tests" size="xl" variant="white" leftIcon={<Play className="w-5 h-5" />} className="!border-white/20 !bg-white/10 !text-white hover:!bg-white hover:!text-slate-900">
                 Xem kho đề thi thử
               </Button>
             </div>
+
             <div className="flex items-center gap-4 animate-fade-up delay-300">
               <div className="flex -space-x-3">
                 {[21, 22, 23, 24, 25].map((n) => (
-                  <img key={n} src={pravatar(n)} alt="" className="w-10 h-10 rounded-full border-2 border-cream object-cover" />
+                  <img key={n} src={pravatar(n)} alt="" className="w-10 h-10 rounded-full border-2 border-slate-950 object-cover" />
                 ))}
               </div>
               <div>
-                <div className="flex items-center gap-1 text-amber-500">
+                <div className="flex items-center gap-1 text-amber-300">
                   {Array.from({ length: 5 }).map((_, i) => (
                     <Star key={i} className="w-4 h-4 fill-current" />
                   ))}
-                  <span className="text-xs font-bold text-slate-700 ml-1">4.9/5</span>
+                  <span className="text-xs font-bold text-white ml-1">4.9/5</span>
                 </div>
-                <p className="text-xs text-slate-500 font-semibold">
-                  <b className="text-slate-900">24.800+</b> học viên đang học mỗi ngày
+                <p className="text-xs text-slate-400 font-semibold">
+                  <b className="text-white">24.800+</b> học viên đang học mỗi ngày
                 </p>
               </div>
             </div>
           </div>
 
-          <div className="relative mx-auto w-full max-w-md lg:max-w-none">
-            <div className="photo-frame tilt-2 animate-tilt-in delay-200">
-              <Img src={PHOTOS.heroStudents} alt="Học viên luyện thi cùng nhau" ratio="4/3" fallbackClass="bg-indigo-300" />
+          {/* Ảnh người: cắt nền tối, đứng sát mép dưới, kèm thẻ nổi */}
+          <div className="relative self-end hidden lg:block w-[88%] mx-auto">
+            <div className="absolute inset-x-8 bottom-0 top-16 rounded-t-[3rem] bg-gradient-to-b from-violet-500/40 via-fuchsia-500/20 to-transparent blur-2xl" aria-hidden />
+            <div className="relative animate-fade-up delay-200" style={{ maskImage: 'linear-gradient(to bottom, black 85%, transparent)', WebkitMaskImage: 'linear-gradient(to bottom, black 85%, transparent)' }}>
+              <Img src={PHOTOS.heroPerson} alt="Học viên OrbiLingo" ratio="3/4" wrapperClass="rounded-t-[3rem] overflow-hidden" fallbackClass="bg-slate-800" />
             </div>
-            <div className="absolute -left-6 top-8 bg-white rounded-2xl border-2 border-slate-900 shadow-hard px-4 py-3 animate-fade-up delay-500 tilt-1 hidden sm:block">
+            <div className="absolute -left-12 -top-6 bg-white text-slate-900 rounded-2xl px-4 py-3 shadow-card animate-fade-up delay-500 tilt-1">
               <p className="text-[10px] font-extrabold uppercase tracking-wider text-slate-500">Sau 8 tuần</p>
               <p className="font-display text-2xl font-extrabold text-emerald-600">+145 điểm</p>
             </div>
-            <div className="absolute -right-4 top-1/3 bg-amber-300 rounded-2xl border-2 border-slate-900 shadow-hard px-4 py-3 animate-fade-up delay-700 tilt-2 hidden sm:flex items-center gap-2">
+            <div className="absolute -right-10 top-10 bg-amber-300 text-slate-900 rounded-2xl px-4 py-3 shadow-card animate-fade-up delay-700 tilt-2 flex items-center gap-2">
               <Flame className="w-6 h-6 text-violet-600 fill-violet-500" />
               <div>
-                <p className="font-display text-xl font-extrabold text-slate-900 leading-none">61 ngày</p>
+                <p className="font-display text-xl font-extrabold leading-none">61 ngày</p>
                 <p className="text-[10px] font-bold text-slate-700">streak của Long</p>
               </div>
             </div>
-            <div className="absolute -bottom-6 left-10 bg-indigo-600 text-white rounded-2xl border-2 border-slate-900 shadow-hard px-4 py-3 animate-fade-up delay-700 tilt-3 hidden sm:block">
+            <div className="absolute -left-8 bottom-8 bg-indigo-600 text-white rounded-2xl px-4 py-3 shadow-card animate-fade-up delay-700 tilt-3">
               <p className="text-[10px] font-extrabold uppercase tracking-wider text-indigo-100">Part 5 hôm nay</p>
               <p className="font-display text-2xl font-extrabold">28/30</p>
             </div>

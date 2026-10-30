@@ -38,6 +38,7 @@ export const pravatar = (n: number) => `https://i.pravatar.cc/160?img=${((n - 1)
 
 export const PHOTOS = {
   heroStudents: unsplash('1523240795612-9a054b0db644', 1200),
+  heroPerson: unsplash('1531746020798-e6953c6e8e04', 1000),
   studying: unsplash('1522202176988-66273c2fd55f', 1000),
   library: unsplash('1513258496099-48168024aec0', 1000),
   writing: unsplash('1434030216411-0b793f4b4173', 1000),

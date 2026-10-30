@@ -45,12 +45,17 @@ export const GuestLayout: React.FC<GuestLayoutProps> = ({ contained }) => {
     navigate('/');
   };
 
+  // Trang chủ có hero nền tối → header trong suốt, chữ trắng khi chưa cuộn
+  const onDarkHero = location.pathname === '/' && !scrolled;
   const linkCls = ({ isActive }: { isActive: boolean }) =>
-    cn('px-3 py-2 rounded-xl text-sm font-bold whitespace-nowrap transition-all duration-200 inline-flex items-center gap-1.5', isActive ? 'bg-slate-900 text-amber-300' : 'text-slate-700 hover:bg-slate-900/5 hover:text-slate-900');
+    cn(
+      'px-3 py-2 rounded-xl text-sm font-bold whitespace-nowrap transition-all duration-200 inline-flex items-center gap-1.5',
+      isActive ? (onDarkHero ? 'bg-white/10 text-amber-300' : 'bg-slate-900 text-amber-300') : onDarkHero ? 'text-slate-200 hover:bg-white/10 hover:text-white' : 'text-slate-700 hover:bg-slate-900/5 hover:text-slate-900'
+    );
 
   const dropdown = (label: string, items: { to: string; label: string; badge?: string }[], active = false) => (
     <div key={label} className="relative group/menu">
-      <button className={cn('px-3 py-2 rounded-xl text-sm font-bold flex items-center gap-1 transition whitespace-nowrap', active ? 'bg-slate-900 text-amber-300' : 'text-slate-700 hover:bg-slate-900/5 hover:text-slate-900')}>
+      <button className={cn('px-3 py-2 rounded-xl text-sm font-bold flex items-center gap-1 transition whitespace-nowrap', active ? (onDarkHero ? 'bg-white/10 text-amber-300' : 'bg-slate-900 text-amber-300') : onDarkHero ? 'text-slate-200 hover:bg-white/10 hover:text-white' : 'text-slate-700 hover:bg-slate-900/5 hover:text-slate-900')}>
         {label}
         {items.some((i) => i.badge) && !active && <span className="w-1.5 h-1.5 rounded-full bg-violet-500" />}
         <ChevronDown className="w-3.5 h-3.5 transition-transform group-hover/menu:rotate-180" />
@@ -107,9 +112,9 @@ export const GuestLayout: React.FC<GuestLayoutProps> = ({ contained }) => {
   const bottomItems = isStudent ? studentPrimary.items.slice(0, 4) : [];
 
   return (
-    <div className={cn('min-h-screen flex flex-col bg-cream font-sans text-slate-800', contained && 'portal')}>
+    <div className={cn('relative min-h-screen flex flex-col bg-cream font-sans text-slate-800', contained && 'portal')}>
       {/* Thanh thông báo trên cùng: chỉ cho khách */}
-      {!isAuth && (
+      {!isAuth && location.pathname !== '/' && (
         <div className="bg-slate-900 text-white text-xs font-semibold">
           <div className="max-w-7xl mx-auto px-4 h-9 flex items-center justify-center gap-2 text-center">
             <span className="inline-block w-2 h-2 rounded-full bg-amber-300 animate-pulse" />
@@ -121,13 +126,13 @@ export const GuestLayout: React.FC<GuestLayoutProps> = ({ contained }) => {
         </div>
       )}
 
-      <header className={cn('sticky top-0 z-40 transition-all duration-300 border-b-2', scrolled ? 'bg-cream/90 backdrop-blur-xl border-slate-900/10' : 'bg-cream border-transparent')}>
+      <header className={cn('top-0 z-40 transition-all duration-300 border-b-2', onDarkHero ? 'absolute inset-x-0 bg-transparent border-transparent' : scrolled ? 'sticky bg-cream/90 backdrop-blur-xl border-slate-900/10' : 'sticky bg-cream border-transparent')}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-[72px] flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <button onClick={() => setOpen((o) => !o)} className="lg:hidden p-2 rounded-xl border-2 border-slate-900 bg-white" aria-label="Menu">
+            <button onClick={() => setOpen((o) => !o)} className={cn('lg:hidden p-2 rounded-xl border-2', onDarkHero ? 'border-white/30 bg-white/10 text-white' : 'border-slate-900 bg-white')} aria-label="Menu">
               {open ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </button>
-            <Logo size="md" to={isStudent ? '/app/dashboard' : '/'} />
+            <Logo size="md" dark={onDarkHero} to={isStudent ? '/app/dashboard' : '/'} />
           </div>
 
           <nav className="hidden lg:flex items-center gap-0.5">{desktopNav}</nav>
@@ -141,11 +146,11 @@ export const GuestLayout: React.FC<GuestLayoutProps> = ({ contained }) => {
                     {user.streak} ngày
                   </div>
                 )}
-                <button onClick={() => setPalette(true)} className="p-2 rounded-xl text-slate-700 hover:bg-slate-900/5 transition" aria-label="Tìm kiếm (⌘K)" title="Tìm kiếm (⌘K)">
+                <button onClick={() => setPalette(true)} className={cn('p-2 rounded-xl transition', onDarkHero ? 'text-slate-200 hover:bg-white/10' : 'text-slate-700 hover:bg-slate-900/5')} aria-label="Tìm kiếm (⌘K)" title="Tìm kiếm (⌘K)">
                   <Search className="w-5 h-5" />
                 </button>
                 {isStudent && (
-                  <NavLink to="/app/notifications" className="relative p-2 rounded-xl text-slate-700 hover:bg-slate-900/5 transition" aria-label="Thông báo">
+                  <NavLink to="/app/notifications" className={cn('relative p-2 rounded-xl transition', onDarkHero ? 'text-slate-200 hover:bg-white/10' : 'text-slate-700 hover:bg-slate-900/5')} aria-label="Thông báo">
                     <Bell className={cn('w-5 h-5', unread > 0 && 'animate-ring-bell')} />
                     {unread > 0 && <span className="absolute top-1 right-1 min-w-[16px] h-4 px-1 rounded-full bg-violet-500 text-white text-[9px] font-black flex items-center justify-center ring-2 ring-cream">{unread}</span>}
                   </NavLink>
@@ -185,7 +190,7 @@ export const GuestLayout: React.FC<GuestLayoutProps> = ({ contained }) => {
               </>
             ) : (
               <div className="hidden lg:flex items-center gap-2">
-                <Button to="/auth/login" variant="ghost" size="sm" leftIcon={<LogIn className="w-4 h-4" />}>
+                <Button to="/auth/login" variant="ghost" size="sm" leftIcon={<LogIn className="w-4 h-4" />} className={cn(onDarkHero && '!text-slate-200 hover:!bg-white/10 hover:!text-white')}>
                   Đăng nhập
                 </Button>
                 <Button to="/try" variant="gradient" size="sm" rightIcon={<ArrowRight className="w-4 h-4" />}>

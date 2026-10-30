@@ -147,6 +147,27 @@
   animation: heartbeat 2.4s ease-in-out infinite;
 }
 
+/* ===== Hero tối trang chủ ===== */
+.font-script {
+  font-family: 'Caveat', 'Be Vietnam Pro', cursive;
+  font-weight: 700;
+  letter-spacing: 0;
+}
+/* Chữ khổng lồ gradient coral → hồng → vàng, chạy nhẹ */
+.hero-gradient-text {
+  background: linear-gradient(90deg, #ff7352 0%, #ff4fa3 35%, #c26bff 60%, #ffd24d 100%);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  animation: gradient-x 8s ease infinite;
+}
+@keyframes gradient-x {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
 /* Thẻ nghiêng theo chuột (3D tilt) */
 .tilt-card {
   transform-style: preserve-3d;
