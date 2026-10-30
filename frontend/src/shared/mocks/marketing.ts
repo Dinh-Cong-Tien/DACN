@@ -216,8 +216,8 @@ export const BLOG_CATEGORIES = [
 
 export const TESTIMONIALS: Testimonial[] = [
   {
-    avatar: '/images/students/hoang-long.webp',
-    name: 'Phạm Hoàng Long',
+    avatar: '/images/students/hoang-lan.webp',
+    name: 'Phạm Hoàng Lan',
     role: 'Sinh viên ĐH Bách khoa Hà Nội',
     exam: 'TOEIC',
     before: '620',
