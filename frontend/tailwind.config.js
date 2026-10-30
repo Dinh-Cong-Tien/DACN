@@ -15,7 +15,7 @@ export default {
     extend: {
       fontFamily: {
         sans: ['Be Vietnam Pro', 'system-ui', 'sans-serif'],
-        display: ['Lexend', 'Be Vietnam Pro', 'system-ui', 'sans-serif'],
+        display: ['Be Vietnam Pro', 'system-ui', 'sans-serif'],
         mono: ['JetBrains Mono', 'ui-monospace', 'SFMono-Regular', 'monospace'],
       },
       colors: {

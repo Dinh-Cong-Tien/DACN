@@ -1,5 +1,5 @@
 import { ThreeBackground } from '@/shared/components/three/ThreeBackground';
-import React from 'react';
+import React, { useLayoutEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, Star, CheckCircle2, Play, Flame, Target, BookOpen, Users, FileText, AlertTriangle, RotateCcw, Compass, Quote, Headphones } from 'lucide-react';
 import { Button, Card, SectionTitle, Avatar, Badge } from '@/shared/components/ui';
@@ -19,7 +19,60 @@ const LOOP = [
   { n: '05', title: 'Ôn đúng lúc sắp quên', text: 'Thuật toán SM-2 nhắc lại sau 1, 3, 7, 14, 30 ngày. Mỗi sáng chỉ cần 10 phút ôn phần hệ thống gợi ý.', photo: PHOTOS.studying, tag: 'Ghi nhớ' },
 ];
 
+/** Đường cong nét đứt nối ảnh bước i với ảnh bước i+1 (chỉ desktop) */
+const LoopConnector: React.FC<{ containerRef: React.RefObject<HTMLDivElement>; photoRefs: React.MutableRefObject<(HTMLDivElement | null)[]> }> = ({ containerRef, photoRefs }) => {
+  const [size, setSize] = useState({ w: 0, h: 0 });
+  const [paths, setPaths] = useState<{ d: string; a: [number, number]; b: [number, number] }[]>([]);
+  useLayoutEffect(() => {
+    const box = containerRef.current;
+    if (!box) return;
+    // offsetLeft/Top bỏ qua transform (tilt, fade-up) nên vị trí ổn định
+    const pos = (el: HTMLElement) => {
+      let x = 0;
+      let y = 0;
+      let n: HTMLElement | null = el;
+      while (n && n !== box) {
+        x += n.offsetLeft;
+        y += n.offsetTop;
+        n = n.offsetParent as HTMLElement | null;
+      }
+      return { x, y, w: el.offsetWidth, h: el.offsetHeight };
+    };
+    const calc = () => {
+      setSize({ w: box.offsetWidth, h: box.offsetHeight });
+      const els = photoRefs.current.filter(Boolean) as HTMLDivElement[];
+      const out: { d: string; a: [number, number]; b: [number, number] }[] = [];
+      for (let i = 0; i < els.length - 1; i++) {
+        const p = pos(els[i]);
+        const q = pos(els[i + 1]);
+        const a: [number, number] = [p.x + p.w / 2, p.y + p.h + 14];
+        const b: [number, number] = [q.x + q.w / 2, q.y - 14];
+        const dy = b[1] - a[1];
+        out.push({ d: `M ${a[0]} ${a[1]} C ${a[0]} ${a[1] + dy * 0.75}, ${b[0]} ${b[1] - dy * 0.75}, ${b[0]} ${b[1]}`, a, b });
+      }
+      setPaths(out);
+    };
+    calc();
+    const ro = new ResizeObserver(calc);
+    ro.observe(box);
+    return () => ro.disconnect();
+  }, [containerRef, photoRefs]);
+  return (
+    <svg aria-hidden className="hidden md:block absolute inset-0 pointer-events-none" width={size.w} height={size.h} viewBox={`0 0 ${size.w || 1} ${size.h || 1}`}>
+      {paths.map((p, i) => (
+        <g key={i}>
+          <path d={p.d} fill="none" stroke="#141A2B" strokeOpacity="0.35" strokeWidth="2.5" strokeLinecap="round" strokeDasharray="2 12" className="loop-dash" />
+          <circle cx={p.a[0]} cy={p.a[1]} r="6" fill="#FA5330" stroke="#141A2B" strokeWidth="2" />
+          <circle cx={p.b[0]} cy={p.b[1]} r="6" fill="#FFD24D" stroke="#141A2B" strokeWidth="2" />
+        </g>
+      ))}
+    </svg>
+  );
+};
+
 export const HomePage: React.FC = () => {
+  const loopBoxRef = useRef<HTMLDivElement>(null);
+  const loopPhotoRefs = useRef<(HTMLDivElement | null)[]>([]);
   useDocumentTitle('Trang chủ');
   const gate = useGate();
   const featured = MOCK_TESTS.filter((t) => t.isFree).slice(0, 3);
@@ -40,18 +93,22 @@ export const HomePage: React.FC = () => {
               <span className="w-2 h-2 rounded-full bg-amber-300 animate-pulse" /> Kho đề ETS 2025 đã cập nhật
             </span>
 
-            <h1 className="font-display font-extrabold leading-[0.9] tracking-tight animate-fade-up">
-              <span className="block text-[4.2rem] sm:text-[6rem] lg:text-[8.2rem] hero-gradient-text">
+            <h1 className="font-display font-extrabold tracking-tight animate-fade-up">
+              <span className="block text-[4.2rem] sm:text-[6rem] lg:text-[8.2rem] leading-[1.15] pt-[0.05em] pb-[0.12em] -mb-[0.1em] hero-gradient-text">
                 <RotatingWords words={['BỨT PHÁ', 'CHINH PHỤC', 'LÀM CHỦ']} interval={2800} />
               </span>
               <span className="block mt-3 text-2xl sm:text-3xl lg:text-4xl text-white font-bold">
-                <span className="font-script text-amber-300 text-3xl sm:text-4xl lg:text-5xl mr-3 align-middle">điểm số</span>
+                <span className="text-amber-300 mr-2">điểm số</span>
                 TOEIC &amp; VSTEP của bạn
               </span>
             </h1>
 
-            <p className="text-base sm:text-lg text-slate-300 leading-relaxed max-w-lg animate-fade-up delay-100">
-              Thi xếp lớp 15 phút, nhận lộ trình theo ngày thi. Mỗi câu sai được lưu lại, giải thích và nhắc ôn đúng lúc. 45 phút mỗi ngày là đủ.
+            <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-base sm:text-lg font-semibold text-slate-300 animate-fade-up delay-100">
+              <span>Xếp lớp 15 phút</span>
+              <span className="text-violet-400">—</span>
+              <span>Lộ trình riêng</span>
+              <span className="text-violet-400">—</span>
+              <span>Ôn đúng chỗ sai</span>
             </p>
 
             <div className="flex flex-col sm:flex-row gap-3 animate-fade-up delay-200">
@@ -84,11 +141,20 @@ export const HomePage: React.FC = () => {
           </div>
 
           {/* Ảnh người: cắt nền tối, đứng sát mép dưới, kèm thẻ nổi */}
-          <div className="relative self-end hidden lg:block w-[88%] mx-auto">
-            <div className="absolute inset-x-8 bottom-0 top-16 rounded-t-[3rem] bg-gradient-to-b from-violet-500/40 via-fuchsia-500/20 to-transparent blur-2xl" aria-hidden />
-            <div className="relative animate-fade-up delay-200" style={{ maskImage: 'linear-gradient(to bottom, black 85%, transparent)', WebkitMaskImage: 'linear-gradient(to bottom, black 85%, transparent)' }}>
-              <Img src={PHOTOS.heroPerson} alt="Học viên OrbiLingo" ratio="3/4" wrapperClass="rounded-t-[3rem] overflow-hidden" fallbackClass="bg-slate-800" />
+          <div className="relative self-end hidden lg:flex justify-center h-[min(680px,calc(100vh-120px))]">
+            {/* Vòng tròn gradient phía sau người (như mẫu) */}
+            <div aria-hidden className="absolute inset-x-0 bottom-0 flex items-end justify-center pointer-events-none">
+              <div className="relative w-[640px] h-[640px] -mb-[120px] flex items-center justify-center">
+                <div className="absolute w-[640px] h-[640px] rounded-full border border-white/5" />
+                <div className="absolute w-[540px] h-[540px] rounded-full border-2 border-white/10 animate-spin-slow [border-top-color:rgba(255,210,77,0.6)]" />
+                <div className="absolute w-[440px] h-[440px] rounded-full bg-gradient-to-br from-violet-500 via-fuchsia-500 to-amber-400 opacity-90 animate-float-slow" />
+              </div>
             </div>
+            <img
+              src="/images/hero-student.webp"
+              alt="Học viên OrbiLingo"
+              className="relative h-full w-auto object-contain object-bottom animate-fade-up delay-200 [filter:drop-shadow(0_20px_40px_rgba(0,0,0,0.45))_drop-shadow(0_0_24px_rgba(250,83,48,0.25))]"
+            />
             <div className="absolute -left-12 -top-6 bg-white text-slate-900 rounded-2xl px-4 py-3 shadow-card animate-fade-up delay-500 tilt-1">
               <p className="text-[10px] font-extrabold uppercase tracking-wider text-slate-500">Sau 8 tuần</p>
               <p className="font-display text-2xl font-extrabold text-emerald-600">+145 điểm</p>
@@ -152,7 +218,8 @@ export const HomePage: React.FC = () => {
         <Reveal>
           <SectionTitle eyebrow="Cách OrbiLingo hoạt động" title={<>Không làm đề vô định. <span className="mark-teal mark">Làm đúng</span> việc cần làm.</>} description="Năm bước lặp lại mỗi tuần. Dữ liệu từ bài làm của bạn quyết định bước tiếp theo." />
         </Reveal>
-        <div className="space-y-14 md:space-y-20">
+        <div ref={loopBoxRef} className="relative space-y-14 md:space-y-28">
+          <LoopConnector containerRef={loopBoxRef} photoRefs={loopPhotoRefs} />
           {LOOP.map((step, i) => (
             <Reveal key={step.n} className={cn('grid md:grid-cols-2 gap-8 md:gap-16 items-center', i % 2 === 1 && 'md:[&>*:first-child]:order-2')}>
               <div className="space-y-4">
@@ -163,7 +230,7 @@ export const HomePage: React.FC = () => {
                 <h3 className="font-display text-2xl md:text-3xl font-extrabold text-slate-900">{step.title}</h3>
                 <p className="text-slate-600 leading-relaxed text-lg">{step.text}</p>
               </div>
-              <div className={cn('photo-frame', i % 2 === 0 ? 'tilt-2' : 'tilt-1')}>
+              <div ref={(el) => (loopPhotoRefs.current[i] = el)} className={cn('photo-frame relative z-10 md:w-[82%]', i % 2 === 0 ? 'tilt-2 md:ml-auto' : 'tilt-1')}>
                 <Img src={step.photo} alt={step.title} ratio="4/3" fallbackClass={['bg-amber-200', 'bg-indigo-200', 'bg-violet-200', 'bg-sky-200', 'bg-emerald-200'][i]} />
               </div>
             </Reveal>

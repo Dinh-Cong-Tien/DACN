@@ -15,8 +15,8 @@
   h2,
   h3,
   .font-display {
-    font-family: 'Lexend', 'Be Vietnam Pro', system-ui, sans-serif;
-    letter-spacing: -0.02em;
+    font-family: 'Be Vietnam Pro', system-ui, sans-serif;
+    letter-spacing: -0.025em;
   }
   ::selection {
     @apply bg-amber-300 text-slate-900;
@@ -149,9 +149,8 @@
 
 /* ===== Hero tối trang chủ ===== */
 .font-script {
-  font-family: 'Caveat', 'Be Vietnam Pro', cursive;
-  font-weight: 700;
-  letter-spacing: 0;
+  font-family: 'Be Vietnam Pro', system-ui, sans-serif;
+  font-weight: 800;
 }
 /* Chữ khổng lồ gradient coral → hồng → vàng, chạy nhẹ */
 .hero-gradient-text {
@@ -167,6 +166,10 @@
   0%, 100% { background-position: 0% 50%; }
   50% { background-position: 100% 50%; }
 }
+
+/* Nét đứt chạy dọc đường nối 5 bước */
+@keyframes loop-dash { to { stroke-dashoffset: -28; } }
+.loop-dash { animation: loop-dash 1.6s linear infinite; }
 
 /* Thẻ nghiêng theo chuột (3D tilt) */
 .tilt-card {
@@ -372,9 +375,6 @@
 }
 .marquee-track.reverse {
   animation-direction: reverse;
-}
-.marquee:hover .marquee-track {
-  animation-play-state: paused;
 }
 
 @media (prefers-reduced-motion: reduce) {
