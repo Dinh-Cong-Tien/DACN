@@ -6,10 +6,10 @@ const GROUPS: NavGroup[] = [
   {
     title: 'Quản trị',
     items: [
-      { to: '/admin/dashboard', label: 'Tổng quan hệ thống', icon: LayoutDashboard },
-      { to: '/admin/users', label: 'Người dùng & Phân quyền', icon: Users },
-      { to: '/admin/skill-tags', label: 'Danh mục kỹ năng', icon: Tags },
-      { to: '/admin/courses', label: 'Cây thư mục khoá học', icon: FolderTree },
+      { to: '/admin/dashboard', label: 'Tổng quan', icon: LayoutDashboard },
+      { to: '/admin/users', label: 'Người dùng', icon: Users },
+      { to: '/admin/skill-tags', label: 'Kỹ năng', icon: Tags },
+      { to: '/admin/courses', label: 'Khoá học', icon: FolderTree },
     ],
   },
   {

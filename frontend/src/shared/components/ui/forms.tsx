@@ -25,7 +25,7 @@ export const Field: React.FC<FieldProps> = ({ label, hint, error, required, clas
 );
 
 const baseInput =
-  'w-full rounded-xl border-2 border-slate-300 bg-white text-sm font-medium text-slate-900 placeholder:text-slate-400 transition-all duration-200 focus:outline-none focus:border-slate-900 focus:shadow-hard-sm disabled:bg-slate-50 disabled:text-slate-400';
+  'w-full rounded-xl border border-slate-200 bg-white text-sm font-medium text-slate-900 placeholder:text-slate-400 transition-all duration-200 focus:outline-none focus:border-slate-900 focus:ring-4 focus:ring-slate-900/5 disabled:bg-slate-50 disabled:text-slate-400';
 
 export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   label?: string;
@@ -150,7 +150,7 @@ export const RadioCard: React.FC<{
     onClick={onSelect}
     className={cn(
       'relative w-full text-left p-4 rounded-2xl border-2 transition-all duration-300 ease-spring group',
-      selected ? 'border-slate-900 bg-amber-100 shadow-hard' : 'border-slate-200 bg-white hover:border-slate-900 hover:-translate-y-0.5',
+      selected ? 'border-slate-900 bg-white shadow-card' : 'border-slate-200 bg-white hover:border-slate-400 hover:-translate-y-0.5',
       className
     )}
   >
@@ -159,7 +159,7 @@ export const RadioCard: React.FC<{
         <div
           className={cn(
             'w-11 h-11 rounded-xl flex items-center justify-center shrink-0 transition-all duration-300 [&>svg]:w-5 [&>svg]:h-5',
-            selected ? 'bg-slate-900 text-amber-300 scale-105' : 'bg-slate-100 text-slate-500 group-hover:bg-indigo-100 group-hover:text-indigo-700'
+            selected ? 'bg-indigo-600 text-white scale-105' : 'bg-slate-100 text-slate-500 group-hover:bg-indigo-50 group-hover:text-indigo-700'
           )}
         >
           {icon}

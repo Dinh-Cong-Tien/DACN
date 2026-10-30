@@ -55,7 +55,7 @@ export const Modal: React.FC<ModalProps> = ({ open, onClose, title, description,
   return createPortal(
     <div className={cn('fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4', closing ? 'animate-fade-in [animation-direction:reverse]' : 'animate-fade-in')} role="dialog" aria-modal>
       <div className="absolute inset-0 bg-slate-900/50 backdrop-blur-sm" onClick={onClose} />
-      <div className={cn('relative w-full bg-white rounded-t-3xl sm:rounded-3xl border-2 border-slate-900 shadow-hard-lg flex flex-col max-h-[92vh]', w, closing ? 'animate-scale-in [animation-direction:reverse]' : 'animate-scale-in')}>
+      <div className={cn('relative w-full bg-white rounded-t-3xl sm:rounded-3xl border border-slate-900/10 shadow-2xl flex flex-col max-h-[92vh]', w, closing ? 'animate-scale-in [animation-direction:reverse]' : 'animate-scale-in')}>
         {(title || !hideClose) && (
           <div className="flex items-start gap-3 px-6 pt-6 pb-4">
             {icon && <div className="w-11 h-11 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0 [&>svg]:w-5 [&>svg]:h-5">{icon}</div>}
@@ -164,7 +164,7 @@ export const Dropdown: React.FC<{ trigger: React.ReactNode; items: MenuItem[]; a
         {trigger}
       </div>
       {open && (
-        <div className={cn('absolute z-50 mt-2 min-w-[200px] bg-white rounded-2xl border-2 border-slate-900 shadow-hard p-1.5 animate-scale-in origin-top', align === 'right' ? 'right-0' : 'left-0')}>
+        <div className={cn('absolute z-50 mt-2 min-w-[200px] bg-white rounded-2xl border border-slate-900/10 shadow-card p-1.5 animate-scale-in origin-top', align === 'right' ? 'right-0' : 'left-0')}>
           {header && <div className="px-3 py-2 border-b border-slate-100 mb-1">{header}</div>}
           {items.map((it, i) =>
             it.divider ? (
@@ -224,7 +224,7 @@ export const ToastContainer: React.FC = () => {
       {toasts.map((t) => {
         const { Icon, cls } = map[t.type];
         return (
-          <div key={t.id} className="relative overflow-hidden flex items-start gap-3 p-4 rounded-2xl bg-white border-2 border-slate-900 shadow-hard animate-slide-in-right">
+          <div key={t.id} className="relative overflow-hidden flex items-start gap-3 p-4 rounded-2xl bg-white border border-slate-900/10 shadow-card animate-slide-in-right">
             <div className={cn('w-9 h-9 rounded-xl flex items-center justify-center shrink-0 animate-pop', cls)}>
               <Icon className="w-5 h-5" />
             </div>

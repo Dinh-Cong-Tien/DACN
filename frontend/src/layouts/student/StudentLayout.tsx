@@ -7,10 +7,10 @@ const GROUPS: NavGroup[] = [
     title: 'Học tập',
     items: [
       { to: '/app/dashboard', label: 'Tổng quan', icon: LayoutDashboard },
-      { to: '/app/learning-path', label: 'Lộ trình của tôi', icon: Compass },
-      { to: '/app/courses', label: 'Khoá học & Video', icon: PlayCircle },
-      { to: '/app/practice', label: 'Luyện tập kỹ năng', icon: Layers },
-      { to: '/app/mock-tests', label: 'Thi thử TOEIC/VSTEP', icon: FileText },
+      { to: '/app/learning-path', label: 'Lộ trình', icon: Compass },
+      { to: '/app/courses', label: 'Khoá học', icon: PlayCircle },
+      { to: '/app/practice', label: 'Luyện tập', icon: Layers },
+      { to: '/app/mock-tests', label: 'Thi thử', icon: FileText },
     ],
   },
   {

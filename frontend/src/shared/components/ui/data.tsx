@@ -16,19 +16,19 @@ export interface TabItem {
 export const Tabs: React.FC<{ items: TabItem[]; value: string; onChange: (k: string) => void; className?: string; variant?: 'underline' | 'pill' }> = ({ items, value, onChange, className, variant = 'underline' }) => {
   if (variant === 'pill') {
     return (
-      <div className={cn('inline-flex p-1 rounded-2xl bg-white border-2 border-slate-900 gap-1 overflow-x-auto no-scrollbar max-w-full', className)}>
+      <div className={cn('inline-flex p-1 rounded-full bg-slate-100 gap-1 overflow-x-auto no-scrollbar max-w-full', className)}>
         {items.map((it) => (
           <button
             key={it.key}
             onClick={() => onChange(it.key)}
             className={cn(
-              'px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all duration-300 ease-spring flex items-center gap-1.5 [&>svg]:w-4 [&>svg]:h-4',
-              value === it.key ? 'bg-slate-900 text-amber-300' : 'text-slate-600 hover:text-slate-900'
+              'px-4 py-2 rounded-full text-xs font-bold whitespace-nowrap transition-all duration-300 ease-spring flex items-center gap-1.5 [&>svg]:w-4 [&>svg]:h-4',
+              value === it.key ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-900'
             )}
           >
             {it.icon}
             {it.label}
-            {it.count !== undefined && <span className={cn('px-1.5 rounded-md text-[10px]', value === it.key ? 'bg-indigo-50' : 'bg-slate-200/70')}>{it.count}</span>}
+            {it.count !== undefined && <span className={cn('px-1.5 rounded-md text-[10px]', value === it.key ? 'bg-slate-100' : 'bg-slate-200/70')}>{it.count}</span>}
           </button>
         ))}
       </div>
@@ -57,7 +57,7 @@ export const Tabs: React.FC<{ items: TabItem[]; value: string; onChange: (k: str
 
 // ============ SEGMENTED ============
 export const Segmented: React.FC<{ options: { value: string; label: string }[]; value: string; onChange: (v: string) => void; className?: string; size?: 'sm' | 'md' }> = ({ options, value, onChange, className, size = 'md' }) => (
-  <div className={cn('inline-flex p-1 rounded-xl bg-white border-2 border-slate-900 gap-0.5', className)}>
+  <div className={cn('inline-flex p-1 rounded-full bg-slate-100 gap-0.5', className)}>
     {options.map((o) => (
       <button
         key={o.value}
@@ -65,7 +65,7 @@ export const Segmented: React.FC<{ options: { value: string; label: string }[]; 
         className={cn(
           'rounded-lg font-bold transition-all duration-300 ease-spring',
           size === 'sm' ? 'px-3 py-1 text-[11px]' : 'px-4 py-1.5 text-xs',
-          value === o.value ? 'bg-slate-900 text-white' : 'text-slate-600 hover:text-slate-900'
+          value === o.value ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-900'
         )}
       >
         {o.label}
@@ -357,10 +357,10 @@ export function DataTable<T extends { id: string }>({
   loading?: boolean;
 }) {
   return (
-    <div className={cn('overflow-x-auto rounded-2xl border-2 border-slate-900 bg-white', className)}>
+    <div className={cn('overflow-x-auto rounded-3xl border border-slate-900/10 bg-white', className)}>
       <table className="w-full text-sm">
         <thead>
-          <tr className="bg-amber-100 border-b-2 border-slate-900">
+          <tr className="bg-slate-50/80 border-b border-slate-900/10">
             {selectable && <th className="w-10 px-4" />}
             {columns.map((c) => (
               <th
@@ -454,7 +454,7 @@ export const Accordion: React.FC<{ items: { id: string; title: React.ReactNode; 
       {items.map((it) => {
         const isOpen = open === it.id;
         return (
-          <div key={it.id} className={cn('rounded-2xl border bg-white transition-all duration-300', isOpen ? 'border-indigo-200 shadow-soft' : 'border-slate-200')}>
+          <div key={it.id} className={cn('rounded-2xl border bg-white transition-all duration-300', isOpen ? 'border-slate-900/20 shadow-soft' : 'border-slate-900/10')}>
             <button onClick={() => setOpen(isOpen ? null : it.id)} className="w-full flex items-center gap-3 px-5 py-4 text-left">
               {it.icon && <span className="text-indigo-600 [&>svg]:w-5 [&>svg]:h-5">{it.icon}</span>}
               <span className="flex-1 font-bold text-sm text-slate-900">{it.title}</span>

@@ -7,9 +7,9 @@ const GROUPS: NavGroup[] = [
     title: 'Giảng dạy',
     items: [
       { to: '/teacher/dashboard', label: 'Tổng quan', icon: LayoutDashboard },
-      { to: '/teacher/classes', label: 'Lớp học của tôi', icon: Users },
-      { to: '/teacher/assignments', label: 'Bài tập & Đề thi', icon: ClipboardList },
-      { to: '/teacher/grading', label: 'Bàn chấm bài', icon: PenTool, badge: '3' },
+      { to: '/teacher/classes', label: 'Lớp học', icon: Users },
+      { to: '/teacher/assignments', label: 'Bài tập', icon: ClipboardList },
+      { to: '/teacher/grading', label: 'Chấm bài', icon: PenTool, badge: '3' },
     ],
   },
   {

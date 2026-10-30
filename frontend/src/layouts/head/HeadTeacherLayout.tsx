@@ -6,9 +6,9 @@ const GROUPS: NavGroup[] = [
   {
     title: 'Bộ môn',
     items: [
-      { to: '/head/dashboard', label: 'Tổng quan bộ môn', icon: LayoutDashboard },
-      { to: '/head/subjects', label: 'Danh mục môn học', icon: Library },
-      { to: '/head/question-bank', label: 'Ngân hàng câu hỏi', icon: Database },
+      { to: '/head/dashboard', label: 'Tổng quan', icon: LayoutDashboard },
+      { to: '/head/subjects', label: 'Môn học', icon: Library },
+      { to: '/head/question-bank', label: 'Câu hỏi', icon: Database },
       { to: '/head/teachers', label: 'Giáo viên', icon: Users },
       { to: '/head/classes', label: 'Lớp học', icon: School },
     ],
