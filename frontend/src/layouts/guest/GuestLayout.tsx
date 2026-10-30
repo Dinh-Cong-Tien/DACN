@@ -1,9 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { Outlet, Link, NavLink, useLocation } from 'react-router-dom';
-import { Menu, X, LogIn, ArrowRight, ChevronDown, Facebook, Youtube, Mail, MapPin, Phone, LayoutDashboard, Instagram } from 'lucide-react';
-import { cn, ROLE_HOME } from '@/shared/utils';
+import { Menu, X, LogIn, ArrowRight, ChevronDown, Facebook, Youtube, Mail, MapPin, Phone, Instagram } from 'lucide-react';
+import { cn } from '@/shared/utils';
 import { useScrolled } from '@/shared/hooks';
-import { useAuthStore } from '@/shared/stores/authStore';
 import { Logo, Button, CommandPalette } from '@/shared/components/ui';
 import { PageTransition } from '@/shared/components/motion';
 import { ScrollProgress, BackToTop, RouteProgress } from '@/shared/components/layout/ScrollExtras';
@@ -30,8 +29,6 @@ export const GuestLayout: React.FC = () => {
   const scrolled = useScrolled(12);
   const [open, setOpen] = useState(false);
   const location = useLocation();
-  const user = useAuthStore((s) => s.user);
-  const isAuth = useAuthStore((s) => s.isAuthenticated());
 
   useEffect(() => {
     setOpen(false);
@@ -85,20 +82,12 @@ export const GuestLayout: React.FC = () => {
           </nav>
 
           <div className="hidden lg:flex items-center gap-2">
-            {isAuth && user ? (
-              <Button to={ROLE_HOME[user.role]} variant="gradient" size="sm" leftIcon={<LayoutDashboard className="w-4 h-4" />}>
-                Vào khu vực học
-              </Button>
-            ) : (
-              <>
-                <Button to="/auth/login" variant="ghost" size="sm" leftIcon={<LogIn className="w-4 h-4" />}>
-                  Đăng nhập
-                </Button>
-                <Button to="/auth/register" variant="gradient" size="sm" rightIcon={<ArrowRight className="w-4 h-4" />}>
-                  Học thử miễn phí
-                </Button>
-              </>
-            )}
+            <Button to="/auth/login" variant="ghost" size="sm" leftIcon={<LogIn className="w-4 h-4" />}>
+              Đăng nhập
+            </Button>
+            <Button to="/auth/register" variant="gradient" size="sm" rightIcon={<ArrowRight className="w-4 h-4" />}>
+              Học thử miễn phí
+            </Button>
           </div>
 
           <button onClick={() => setOpen((o) => !o)} className="lg:hidden p-2 rounded-xl border-2 border-slate-900 bg-white shadow-hard-sm" aria-label="Menu">
@@ -115,20 +104,12 @@ export const GuestLayout: React.FC = () => {
                 </NavLink>
               ))}
               <div className="pt-3 flex gap-2">
-                {isAuth && user ? (
-                  <Button to={ROLE_HOME[user.role]} fullWidth variant="gradient">
-                    Vào khu vực học
-                  </Button>
-                ) : (
-                  <>
-                    <Button to="/auth/login" variant="outline" fullWidth>
-                      Đăng nhập
-                    </Button>
-                    <Button to="/auth/register" variant="gradient" fullWidth>
-                      Đăng ký
-                    </Button>
-                  </>
-                )}
+                <Button to="/auth/login" variant="outline" fullWidth>
+                  Đăng nhập
+                </Button>
+                <Button to="/auth/register" variant="gradient" fullWidth>
+                  Đăng ký
+                </Button>
               </div>
             </div>
           </div>
