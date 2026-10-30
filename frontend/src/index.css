@@ -167,10 +167,9 @@
   50% { background-position: 100% 50%; }
 }
 
-/* Nét đứt đường nối 5 bước trôi chậm theo chiều đi (chu kỳ = 6 + 8) */
-@keyframes orbit-flow { to { stroke-dashoffset: -14; } }
-.orbit-flow { animation: orbit-flow 1.8s linear infinite; }
-@media (prefers-reduced-motion: reduce) { .orbit-flow { animation: none; } }
+/* Nét đứt chạy dọc đường nối 5 bước */
+@keyframes loop-dash { to { stroke-dashoffset: -28; } }
+.loop-dash { animation: loop-dash 1.6s linear infinite; }
 
 /* ===== Giao diện đêm (trang chủ) ===== */
 .glass-night {
