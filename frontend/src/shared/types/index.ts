@@ -475,30 +475,16 @@ export interface ScoreRow {
   description: string;
 }
 
-/** Khối giới thiệu kỳ thi ở trang chủ: thông tin kỳ thi + phiếu điểm thi thử mẫu */
-export interface ExamTrackReport {
-  test: string;
-  date: string;
-  learner: string;
-  total: string;
-  totalMax?: string;
-  totalNote?: string;
-  skills: { label: string; value: number; max: number; display: string }[];
-  parts?: { label: string; pct: number }[];
-  levels?: { label: string; range: string; active?: boolean }[];
-  note: string;
-}
-
+/** Khối giới thiệu kỳ thi ở trang chủ: ảnh + bảng thông tin thực tế của kỳ thi */
 export interface ExamTrack {
   id: 'toeic' | 'vstep';
-  code: string;
-  title: string;
-  meta: string[];
+  name: string;
+  photo: string;
+  photoAlt: string;
   desc: string;
-  items: string[];
+  facts: { label: string; value: string }[];
   to: string;
   cta: string;
-  report: ExamTrackReport;
 }
 
 export interface FaqItem {
