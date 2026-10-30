@@ -140,7 +140,7 @@ export const HomePage: React.FC = () => {
                   <span className="text-xs font-bold text-white ml-1">4.9/5</span>
                 </div>
                 <p className="text-xs text-slate-400 font-semibold">
-                  <b className="text-white">24.800+</b> học viên đang học mỗi ngày
+                  <b className="text-white">24.837</b> học viên đang học mỗi ngày
                 </p>
               </div>
             </div>

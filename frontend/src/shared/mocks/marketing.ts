@@ -221,8 +221,8 @@ export const TESTIMONIALS = [
 ];
 
 export const HOME_STATS = [
-  { label: 'Học viên đang học', value: 24800, suffix: '+' },
-  { label: 'Câu hỏi chuẩn ETS/Bộ GD&ĐT', value: 12600, suffix: '+' },
-  { label: 'Đề thi thử', value: 180, suffix: '+' },
-  { label: 'Điểm tăng trung bình', value: 145, suffix: ' điểm' },
+  { label: 'Học viên đang học', value: 24837, suffix: '+' },
+  { label: 'Câu hỏi chuẩn ETS/Bộ GD&ĐT', value: 12614, suffix: '+' },
+  { label: 'Đề thi thử', value: 183, suffix: '+' },
+  { label: 'Điểm tăng trung bình', value: 147, suffix: ' điểm' },
 ];
