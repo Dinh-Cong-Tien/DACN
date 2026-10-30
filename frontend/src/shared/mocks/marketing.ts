@@ -220,6 +220,26 @@ export const TESTIMONIALS = [
   { avatar: pravatar(18), name: 'Trần Gia Huy', role: 'Nhân viên kinh doanh', target: 'TOEIC 750', quote: 'Thích nhất là phòng thi thử: đồng hồ, audio không tua lại, cảm giác y như thi thật nên đi thi không bị khớp.', score: '480 → 760' },
 ];
 
+/** Kết quả thi gần đây hiển thị ở trang chủ (bảng vinh danh rút gọn) */
+export interface HomeResult {
+  name: string;
+  school: string;
+  avatar: string;
+  exam: 'TOEIC' | 'VSTEP';
+  before: string;
+  after: string;
+  gain: string; // vd. "+245 điểm" hoặc "Đạt chuẩn đầu ra"
+  weeks: number;
+  date: string; // ngày thi (dd/mm/yyyy)
+}
+
+export const HOME_RESULTS: HomeResult[] = [
+  { name: 'Nguyễn Minh Thư', school: 'ĐH Kinh tế Quốc dân', avatar: pravatar(47), exam: 'TOEIC', before: '545', after: '790', gain: '+245 điểm', weeks: 10, date: '12/10/2026' },
+  { name: 'Lê Quốc Bảo', school: 'ĐH Bách khoa TP.HCM', avatar: pravatar(59), exam: 'TOEIC', before: '610', after: '855', gain: '+245 điểm', weeks: 12, date: '05/10/2026' },
+  { name: 'Trần Thu Hà', school: 'ĐH Sư phạm Hà Nội', avatar: pravatar(45), exam: 'VSTEP', before: 'B1', after: 'B2', gain: 'Đạt chuẩn đầu ra', weeks: 8, date: '28/09/2026' },
+  { name: 'Phạm Đức Anh', school: 'Học viện Ngân hàng', avatar: pravatar(60), exam: 'TOEIC', before: '420', after: '650', gain: '+230 điểm', weeks: 9, date: '21/09/2026' },
+];
+
 export const HOME_STATS = [
   { label: 'Học viên đang học', value: 24800, suffix: '+' },
   { label: 'Câu hỏi chuẩn ETS/Bộ GD&ĐT', value: 12600, suffix: '+' },

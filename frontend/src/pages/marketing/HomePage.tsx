@@ -3,9 +3,9 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, Star, CheckCircle2, Play, Flame, Target, BookOpen, Users, FileText, AlertTriangle, RotateCcw, Compass, Quote, Headphones } from 'lucide-react';
 import { Button, Card, SectionTitle, Avatar, Badge } from '@/shared/components/ui';
-import { Reveal, Stagger, CountUp, Doodles, TypeLoop } from '@/shared/components/motion';
+import { Reveal, Stagger, Doodles, TypeLoop } from '@/shared/components/motion';
 import { Img, PHOTOS, pravatar } from '@/shared/components/media/Img';
-import { HOME_STATS, TESTIMONIALS, MOCK_TESTS, PRICING_PLANS, MOCK_COURSES } from '@/shared/mocks';
+import { HOME_RESULTS, TESTIMONIALS, MOCK_TESTS, PRICING_PLANS, MOCK_COURSES } from '@/shared/mocks';
 import { useDocumentTitle, useGate, useInView } from '@/shared/hooks';
 import { formatCurrency, formatNumber, cn } from '@/shared/utils';
 import { LoopConnector } from './home/LoopConnector';
@@ -203,31 +203,49 @@ export const HomePage: React.FC = () => {
         </div>
       </section>
 
-      {/* ================= STATS ================= */}
-      {/* Hàng số liệu kiểu báo cáo: chữ trắng, đường kẻ mảnh, không thẻ kính / không gradient */}
+      {/* ================= KẾT QUẢ GẦN ĐÂY ================= */}
+      {/* Bảng vinh danh rút gọn: người thật, điểm trước → sau, ngày thi — thay cho hàng số liệu chung chung */}
       <section className="relative isolate max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14 md:py-16">
-        <p className="text-xs font-medium text-slate-500 mb-4">Số liệu OrbiLingo tính đến tháng 10/2026</p>
-        <Stagger className="grid grid-cols-2 lg:grid-cols-4 border-y border-white/10">
-          {HOME_STATS.map((s, i) => {
-            const plus = s.suffix.trim() === '+';
-            return (
-              <div
-                key={s.label}
-                className={cn(
-                  'py-7 md:py-9 pr-4 md:pr-8',
-                  i % 2 === 1 ? 'pl-5 md:pl-8 border-l border-white/10' : 'pl-0',
-                  i === 2 && 'lg:pl-8 lg:border-l lg:border-white/10',
-                  i >= 2 && 'border-t border-white/10 lg:border-t-0'
-                )}
-              >
-                <p className="font-display text-[2.1rem] md:text-5xl font-bold leading-none tracking-tight text-white tabular-nums">
-                  <CountUp value={s.value} />
-                  {plus ? <span className="text-amber-300">+</span> : <span className="text-lg md:text-2xl font-semibold text-slate-400 ml-1.5">{s.suffix.trim()}</span>}
-                </p>
-                <p className="text-sm text-slate-400 mt-3">{s.label}</p>
+        <div className="flex flex-wrap items-end justify-between gap-3 mb-5">
+          <div>
+            <h2 className="text-lg font-bold text-white">Kết quả thi gần đây</h2>
+            <p className="text-sm text-slate-500 mt-0.5">Học viên gửi kèm phiếu điểm, đội ngũ OrbiLingo đã đối chiếu.</p>
+          </div>
+          <Link to="/leaderboard" className="group inline-flex items-center gap-1.5 text-sm font-semibold text-slate-300 hover:text-white transition">
+            Xem bảng vinh danh <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" />
+          </Link>
+        </div>
+        <Stagger className="grid sm:grid-cols-2 lg:grid-cols-4 border-y border-white/10">
+          {HOME_RESULTS.map((r, i) => (
+            <article
+              key={r.name}
+              className={cn(
+                'py-6 md:py-7 sm:pr-6',
+                i > 0 && 'border-t border-white/10 sm:border-t-0',
+                i % 2 === 1 && 'sm:pl-6 sm:border-l sm:border-white/10',
+                i >= 2 && 'sm:border-t sm:border-white/10 lg:border-t-0',
+                i === 2 && 'lg:pl-6 lg:border-l lg:border-white/10'
+              )}
+            >
+              <div className="flex items-center gap-3">
+                <img src={r.avatar} alt={r.name} loading="lazy" className="w-10 h-10 rounded-full object-cover bg-slate-800" />
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold text-white truncate">{r.name}</p>
+                  <p className="text-xs text-slate-500 truncate">{r.school}</p>
+                </div>
               </div>
-            );
-          })}
+              <p className="mt-5 text-[11px] font-semibold uppercase tracking-wider text-slate-500">{r.exam === 'TOEIC' ? 'TOEIC Listening & Reading' : 'VSTEP bậc 3–5'}</p>
+              <p className="mt-1 flex items-baseline gap-2 tabular-nums">
+                <span className="text-lg font-semibold text-slate-500">{r.before}</span>
+                <ArrowRight className="w-4 h-4 text-slate-600 self-center" />
+                <span className="font-display text-3xl md:text-4xl font-bold text-white leading-none">{r.after}</span>
+              </p>
+              <p className="mt-3 text-sm font-semibold text-emerald-300">{r.gain}</p>
+              <p className="mt-0.5 text-xs text-slate-500">
+                Sau {r.weeks} tuần · thi ngày {r.date}
+              </p>
+            </article>
+          ))}
         </Stagger>
       </section>
 
