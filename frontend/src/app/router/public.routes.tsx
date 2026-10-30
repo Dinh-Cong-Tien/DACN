@@ -20,6 +20,7 @@ import { HelpPage } from '@/pages/marketing/HelpPage';
 import { ScoreConverterPage } from '@/pages/marketing/ScoreConverterPage';
 import { ResourcesPage } from '@/pages/marketing/ResourcesPage';
 import { NotFoundPage } from '@/pages/marketing/NotFoundPage';
+import { TryPage } from '@/pages/marketing/TryPage';
 
 export const publicRoutes: RouteObject[] = [
   {
@@ -27,6 +28,7 @@ export const publicRoutes: RouteObject[] = [
     element: <GuestLayout />,
     children: [
       { index: true, element: <HomePage /> },
+      { path: 'try', element: <TryPage /> },
       { path: 'toeic', element: <ToeicPage /> },
       { path: 'vstep', element: <VstepPage /> },
       { path: 'courses', element: <CoursesPage /> },

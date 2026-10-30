@@ -45,8 +45,8 @@ export const HomePage: React.FC = () => {
               Thi xếp lớp 15 phút, nhận lộ trình theo ngày thi của bạn. Mỗi câu sai được lưu lại, giải thích và nhắc ôn đúng lúc. 45 phút mỗi ngày là đủ.
             </p>
             <div className="flex flex-col sm:flex-row gap-3 animate-fade-up delay-200">
-              <Button to={gate('/onboarding/goal', '/auth/register')} size="xl" variant="gradient" rightIcon={<ArrowRight className="w-5 h-5" />}>
-                Làm bài xếp lớp miễn phí
+              <Button to={gate('/onboarding/goal', '/try')} size="xl" variant="gradient" rightIcon={<ArrowRight className="w-5 h-5" />}>
+                Học thử miễn phí ngay
               </Button>
               <Button to="/mock-tests" size="xl" variant="outline" leftIcon={<Play className="w-5 h-5" />}>
                 Xem kho đề thi thử

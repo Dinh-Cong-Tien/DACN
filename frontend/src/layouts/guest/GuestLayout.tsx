@@ -188,7 +188,7 @@ export const GuestLayout: React.FC<GuestLayoutProps> = ({ contained }) => {
                 <Button to="/auth/login" variant="ghost" size="sm" leftIcon={<LogIn className="w-4 h-4" />}>
                   Đăng nhập
                 </Button>
-                <Button to="/auth/register" variant="gradient" size="sm" rightIcon={<ArrowRight className="w-4 h-4" />}>
+                <Button to="/try" variant="gradient" size="sm" rightIcon={<ArrowRight className="w-4 h-4" />}>
                   Học thử miễn phí
                 </Button>
               </div>
@@ -219,8 +219,8 @@ export const GuestLayout: React.FC<GuestLayoutProps> = ({ contained }) => {
                   <Button to="/auth/login" variant="outline" fullWidth>
                     Đăng nhập
                   </Button>
-                  <Button to="/auth/register" variant="gradient" fullWidth>
-                    Đăng ký
+                  <Button to="/try" variant="gradient" fullWidth>
+                    Học thử miễn phí
                   </Button>
                 </div>
               )}
