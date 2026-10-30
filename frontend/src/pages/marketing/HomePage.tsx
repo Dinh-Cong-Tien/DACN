@@ -2,7 +2,7 @@ import { ThreeBackground } from '@/shared/components/three/ThreeBackground';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, Star, CheckCircle2, Play, Flame, Target, BookOpen, Users, FileText, AlertTriangle, RotateCcw, Compass, Quote, Headphones } from 'lucide-react';
-import { Button, Card, SectionTitle, Avatar, Badge } from '@/shared/components/ui';
+import { Button, Card, SectionTitle, Avatar } from '@/shared/components/ui';
 import { Reveal, Stagger, CountUp, Doodles, TypeLoop } from '@/shared/components/motion';
 import { Img, PHOTOS, pravatar } from '@/shared/components/media/Img';
 import { HOME_STATS, HOME_EXAM_TRACKS, TESTIMONIALS, PRICING_PLANS, MOCK_COURSES } from '@/shared/mocks';
@@ -10,6 +10,7 @@ import { useDocumentTitle, useGate, useInView } from '@/shared/hooks';
 import { formatCurrency, cn } from '@/shared/utils';
 import { LoopConnector } from './home/LoopConnector';
 import { ExamTrackCard } from './home/ExamTrackCard';
+import { CourseTile } from './home/CourseTile';
 
 /** Trường của học viên (logo chính thức lấy từ Wikimedia, lưu tại public/images/universities) */
 const PARTNERS: { name: string; logo: string }[] = [
@@ -358,38 +359,16 @@ export const HomePage: React.FC = () => {
       <section className="relative isolate py-16 md:py-20">
         <div aria-hidden className="night-divider -z-10" />
         <div aria-hidden className="night-grid -z-10" />
-        <div aria-hidden className="pointer-events-none absolute -z-10 rounded-full left-1/2 -translate-x-1/2 top-1/3 w-[900px] h-[420px] bg-fuchsia-600/15 blur-[150px]" />
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
           <Reveal className="flex flex-col md:flex-row md:items-end justify-between gap-4">
             <SectionTitle dark align="left" eyebrow="Khoá học" title={<>Lộ trình học, <span className="hero-gradient-text">video có bản ghi.</span></>} description="Nhấn vào từ trong transcript để tra nghĩa. Mỗi bài có quiz củng cố." />
-            <Button to="/courses" variant="white" rightIcon={<ArrowRight className="w-4 h-4" />} className="!border-white/20 !bg-white/10 !text-white hover:!bg-white hover:!text-slate-900">
-              Tất cả khoá học
-            </Button>
+            <Link to="/courses" className="group inline-flex shrink-0 items-center gap-1.5 font-semibold text-slate-200 hover:text-white">
+              Xem tất cả {MOCK_COURSES.length} khoá học <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" />
+            </Link>
           </Reveal>
           <Stagger className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
-            {MOCK_COURSES.slice(0, 3).map((c, i) => (
-              <Link key={c.id} to={`/courses/${c.id}`} className={cn('glass-night block rounded-3xl overflow-hidden transition-all duration-300 hover:-translate-y-1.5 hover:border-white/25 card-hover', i === 1 && 'lg:-translate-y-3')}>
-                <Img src={c.coverUrl} alt={c.title} ratio="video" fallbackClass="bg-slate-800" />
-                <div className="p-5">
-                  <div className="flex items-center gap-2">
-                    <Badge tone={c.examType === 'TOEIC' ? 'indigo' : 'violet'} solid>
-                      {c.examType}
-                    </Badge>
-                    <Badge tone={c.isFree ? 'emerald' : 'amber'} solid>
-                      {c.isFree ? 'Miễn phí' : 'VIP'}
-                    </Badge>
-                  </div>
-                  <h3 className="font-display font-bold text-lg text-white mt-3 leading-snug">{c.title}</h3>
-                  <div className="flex items-center justify-between mt-4 text-xs text-slate-400 font-semibold">
-                    <span className="flex items-center gap-2">
-                      <Avatar name={c.teacherName} src={pravatar(40 + i)} size="xs" /> {c.teacherName}
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <Star className="w-3.5 h-3.5 text-amber-300 fill-current" /> {c.rating} · {c.lessonsCount} bài
-                    </span>
-                  </div>
-                </div>
-              </Link>
+            {MOCK_COURSES.slice(0, 3).map((c) => (
+              <CourseTile key={c.id} course={c} />
             ))}
           </Stagger>
         </div>
