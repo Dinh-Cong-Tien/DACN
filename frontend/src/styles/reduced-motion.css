@@ -10,4 +10,9 @@
     animation-duration: 60s !important;
     animation-iteration-count: infinite !important;
   }
+  /* Con trỏ gõ chữ ở hero vẫn nhấp nháy bình thường */
+  .type-caret-blink {
+    animation-duration: 1s !important;
+    animation-iteration-count: infinite !important;
+  }
 }
