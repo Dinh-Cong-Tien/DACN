@@ -50,7 +50,7 @@ export const HeadDashboardPage: React.FC = () => {
           </div>
         </div>
 
-        <div className="rounded-3xl bg-white border border-slate-900/10 p-2 grid grid-cols-2 sm:grid-cols-4 divide-x divide-slate-900/10">
+        <div className="rounded-3xl bg-white border border-slate-900/10 p-2 grid grid-cols-2 sm:grid-cols-2 xl:grid-cols-4 divide-x divide-slate-900/10">
           {[
             { label: 'Môn học', value: MOCK_SUBJECTS.length, suffix: 'môn', sub: `${totalClasses} lớp đang mở` },
             { label: 'Giáo viên', value: MOCK_TEACHERS.length, suffix: 'GV', sub: `${activeTeachers.length} đang hoạt động` },

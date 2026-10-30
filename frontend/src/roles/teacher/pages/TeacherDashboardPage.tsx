@@ -54,7 +54,7 @@ export const TeacherDashboardPage: React.FC = () => {
           </div>
         </div>
 
-        <div className="rounded-3xl bg-white border border-slate-900/10 p-2 grid grid-cols-2 sm:grid-cols-4 divide-x divide-slate-900/10">
+        <div className="rounded-3xl bg-white border border-slate-900/10 p-2 grid grid-cols-2 sm:grid-cols-2 xl:grid-cols-4 divide-x divide-slate-900/10">
           {[
             { label: 'Lớp đang dạy', value: MOCK_CLASSES.length, suffix: 'lớp', sub: 'Học kỳ 1 · 2026' },
             { label: 'Học viên', value: totalStudents, suffix: 'HV', sub: '+8% so với tháng trước' },

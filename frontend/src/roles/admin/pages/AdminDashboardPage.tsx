@@ -53,7 +53,7 @@ export const AdminDashboardPage: React.FC = () => {
           </div>
         </div>
 
-        <div className="rounded-3xl bg-white border border-slate-900/10 p-2 grid grid-cols-2 sm:grid-cols-4 divide-x divide-slate-900/10">
+        <div className="rounded-3xl bg-white border border-slate-900/10 p-2 grid grid-cols-2 sm:grid-cols-2 xl:grid-cols-4 divide-x divide-slate-900/10">
           {[
             { label: 'Người dùng', value: MOCK_USERS.length, suffix: 'tài khoản', sub: '+12% tuần này' },
             { label: 'Truy cập 7 ngày', value: traffic, suffix: 'lượt', sub: `đỉnh ${formatNumber(Math.max(...ADMIN_TRAFFIC.map((t) => t.value)))}` },

@@ -65,7 +65,7 @@ export const AppShell: React.FC<AppShellProps> = ({ groups, brandTagline, accent
   };
 
   // Link menu giống trang chủ: chữ đậm, active = pill tối
-  const linkCls = ({ isActive }: { isActive: boolean }) => cn('px-3 py-2 rounded-xl text-sm font-bold whitespace-nowrap transition-all duration-200 inline-flex items-center gap-1.5', isActive ? 'bg-slate-900 text-amber-300' : 'text-slate-700 hover:bg-slate-900/5 hover:text-slate-900');
+  const linkCls = ({ isActive }: { isActive: boolean }) => cn('px-3 py-2 rounded-xl text-sm font-bold whitespace-nowrap shrink-0 transition-all duration-200 inline-flex items-center gap-1.5', isActive ? 'bg-slate-900 text-amber-300' : 'text-slate-700 hover:bg-slate-900/5 hover:text-slate-900');
 
   const isGroupActive = (g: NavGroup) => g.items.some((it) => location.pathname.startsWith(it.to));
 
@@ -75,13 +75,13 @@ export const AppShell: React.FC<AppShellProps> = ({ groups, brandTagline, accent
       <header className={cn('sticky top-0 z-40 transition-all duration-300 border-b-2', scrolled ? 'bg-cream/90 backdrop-blur-xl border-slate-900/10' : 'bg-cream border-transparent')}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-[72px] flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <button onClick={() => setMobileNav(true)} className="lg:hidden p-2 rounded-xl border-2 border-slate-900 bg-white" aria-label="Menu">
+            <button onClick={() => setMobileNav(true)} className="md:hidden p-2 rounded-xl border-2 border-slate-900 bg-white" aria-label="Menu">
               <Menu className="w-5 h-5" />
             </button>
             <Logo size="md" to={home} />
           </div>
 
-          <nav className="hidden lg:flex items-center gap-0.5">
+          <nav className="hidden md:flex items-center gap-0.5 overflow-x-auto no-scrollbar">
             {primary?.items.map((item) => (
               <NavLink key={item.to} to={item.to} end={item.end} className={linkCls}>
                 {item.label}
@@ -93,7 +93,7 @@ export const AppShell: React.FC<AppShellProps> = ({ groups, brandTagline, accent
               const hasBadge = g.items.some((it) => it.badge);
               return (
                 <div key={gi} className="relative group/menu">
-                  <button className={cn('px-3 py-2 rounded-xl text-sm font-bold flex items-center gap-1 transition', active ? 'bg-slate-900 text-amber-300' : 'text-slate-700 hover:bg-slate-900/5 hover:text-slate-900')}>
+                  <button className={cn('px-3 py-2 rounded-xl text-sm font-bold flex items-center gap-1 transition whitespace-nowrap shrink-0', active ? 'bg-slate-900 text-amber-300' : 'text-slate-700 hover:bg-slate-900/5 hover:text-slate-900')}>
                     {g.title}
                     {hasBadge && !active && <span className="w-1.5 h-1.5 rounded-full bg-violet-500" />}
                     <ChevronDown className="w-3.5 h-3.5 transition-transform group-hover/menu:rotate-180" />
@@ -124,7 +124,7 @@ export const AppShell: React.FC<AppShellProps> = ({ groups, brandTagline, accent
           <div className="flex items-center gap-1.5 md:gap-2">
             {topExtra}
             {showStreak && user && (
-              <div className="hidden md:inline-flex items-center gap-1.5 px-3 h-9 rounded-xl bg-amber-300 text-slate-900 text-xs font-extrabold">
+              <div className="hidden xl:inline-flex items-center gap-1.5 px-3 h-9 rounded-xl bg-amber-300 text-slate-900 text-xs font-extrabold">
                 <Flame className="w-4 h-4 text-violet-600 fill-violet-500 animate-bounce-soft" />
                 {user.streak} ngày
               </div>
@@ -174,7 +174,7 @@ export const AppShell: React.FC<AppShellProps> = ({ groups, brandTagline, accent
 
       {/* ===== Drawer (dưới lg) ===== */}
       {mobileOpen && (
-        <div className="lg:hidden fixed inset-0 z-50 animate-fade-in">
+        <div className="md:hidden fixed inset-0 z-50 animate-fade-in">
           <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => setMobileNav(false)} />
           <aside className="absolute left-0 top-0 bottom-0 w-80 max-w-[85vw] flex flex-col animate-slide-in-left shadow-2xl bg-white">
             <div className="h-[72px] flex items-center justify-between px-4 border-b-2 border-slate-900/10">
@@ -228,14 +228,14 @@ export const AppShell: React.FC<AppShellProps> = ({ groups, brandTagline, accent
       )}
 
       {/* ===== Nội dung ===== */}
-      <main className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-10 pb-24 lg:pb-12 min-w-0">
+      <main className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-10 pb-24 md:pb-12 min-w-0">
         <PageTransition>
           <Outlet />
         </PageTransition>
       </main>
 
       {/* ===== Thanh điều hướng dưới (mobile) ===== */}
-      <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-slate-900 px-2 pb-[env(safe-area-inset-bottom)]">
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-slate-900 px-2 pb-[env(safe-area-inset-bottom)]">
         <div className="grid grid-cols-5 h-16">
           {bottomItems.map((item) => {
             const Icon = item.icon;
