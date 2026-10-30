@@ -204,19 +204,30 @@ export const HomePage: React.FC = () => {
       </section>
 
       {/* ================= STATS ================= */}
-      <section className="relative isolate max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        <div aria-hidden className="night-grid -inset-x-[20vw] -z-10" />
-        <div aria-hidden className="pointer-events-none absolute -z-10 rounded-full left-[-10%] top-1/2 -translate-y-1/2 w-[420px] h-[420px] bg-indigo-500/25 blur-[120px]" />
-        <div aria-hidden className="pointer-events-none absolute -z-10 rounded-full right-[-10%] top-1/2 -translate-y-1/2 w-[420px] h-[420px] bg-fuchsia-500/20 blur-[120px]" />
-        <Stagger className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          {HOME_STATS.map((s) => (
-            <div key={s.label} className="glass-night rounded-3xl p-6 md:p-7 transition-all duration-300 hover:-translate-y-1 hover:border-white/20">
-              <p className="font-display text-3xl md:text-[2.6rem] font-extrabold leading-none hero-gradient-text">
-                <CountUp value={s.value} suffix={s.suffix} />
-              </p>
-              <p className="text-sm font-semibold text-slate-400 mt-3">{s.label}</p>
-            </div>
-          ))}
+      {/* Hàng số liệu kiểu báo cáo: chữ trắng, đường kẻ mảnh, không thẻ kính / không gradient */}
+      <section className="relative isolate max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14 md:py-16">
+        <p className="text-xs font-medium text-slate-500 mb-4">Số liệu OrbiLingo tính đến tháng 10/2026</p>
+        <Stagger className="grid grid-cols-2 lg:grid-cols-4 border-y border-white/10">
+          {HOME_STATS.map((s, i) => {
+            const plus = s.suffix.trim() === '+';
+            return (
+              <div
+                key={s.label}
+                className={cn(
+                  'py-7 md:py-9 pr-4 md:pr-8',
+                  i % 2 === 1 ? 'pl-5 md:pl-8 border-l border-white/10' : 'pl-0',
+                  i === 2 && 'lg:pl-8 lg:border-l lg:border-white/10',
+                  i >= 2 && 'border-t border-white/10 lg:border-t-0'
+                )}
+              >
+                <p className="font-display text-[2.1rem] md:text-5xl font-bold leading-none tracking-tight text-white tabular-nums">
+                  <CountUp value={s.value} />
+                  {plus ? <span className="text-amber-300">+</span> : <span className="text-lg md:text-2xl font-semibold text-slate-400 ml-1.5">{s.suffix.trim()}</span>}
+                </p>
+                <p className="text-sm text-slate-400 mt-3">{s.label}</p>
+              </div>
+            );
+          })}
         </Stagger>
       </section>
 
