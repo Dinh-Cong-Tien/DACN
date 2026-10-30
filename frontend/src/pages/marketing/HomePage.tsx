@@ -1,8 +1,8 @@
 import { ThreeBackground } from '@/shared/components/three/ThreeBackground';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, Star, CheckCircle2, Play, Flame, Target, BookOpen, Users, FileText, AlertTriangle, RotateCcw, Compass, Quote, Headphones } from 'lucide-react';
-import { Button, Card, SectionTitle, Avatar } from '@/shared/components/ui';
+import { ArrowRight, Star, CheckCircle2, Play, Flame, Target, BookOpen, Users, FileText, AlertTriangle, RotateCcw, Compass, Headphones } from 'lucide-react';
+import { Button, Card, SectionTitle } from '@/shared/components/ui';
 import { Reveal, Stagger, CountUp, Doodles, TypeLoop } from '@/shared/components/motion';
 import { Img, PHOTOS, pravatar } from '@/shared/components/media/Img';
 import { HOME_STATS, HOME_EXAM_TRACKS, TESTIMONIALS, PRICING_PLANS, MOCK_COURSES } from '@/shared/mocks';
@@ -11,6 +11,7 @@ import { formatCurrency, cn } from '@/shared/utils';
 import { LoopConnector } from './home/LoopConnector';
 import { ExamTrackCard } from './home/ExamTrackCard';
 import { CourseTile } from './home/CourseTile';
+import { TestimonialCard } from './home/TestimonialCard';
 
 /** Trường của học viên (logo chính thức lấy từ Wikimedia, lưu tại public/images/universities) */
 const PARTNERS: { name: string; logo: string }[] = [
@@ -377,32 +378,12 @@ export const HomePage: React.FC = () => {
       {/* ================= TESTIMONIALS ================= */}
       <section className="relative isolate max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24 space-y-12">
         <div aria-hidden className="night-divider -z-10" />
-        <div aria-hidden className="pointer-events-none absolute -z-10 rounded-full left-1/2 -translate-x-1/2 top-[30%] w-[1000px] h-[480px] bg-violet-600/20 blur-[160px]" />
-        <div aria-hidden className="pointer-events-none absolute -z-10 rounded-full -right-[10vw] bottom-0 w-[420px] h-[420px] bg-amber-400/10 blur-[140px]" />
         <Reveal>
           <SectionTitle dark eyebrow="Học viên nói gì" title={<>Điểm số thật, <span className="hero-gradient-text">người thật.</span></>} description="Ba trong số hàng nghìn học viên đã tăng điểm trong năm nay." />
         </Reveal>
         <Stagger className="grid md:grid-cols-3 gap-6">
           {TESTIMONIALS.map((t) => (
-            <div key={t.name} className="glass-night relative rounded-3xl p-7 transition-all duration-300 hover:-translate-y-1 hover:border-white/20">
-              <Quote className="w-8 h-8 text-violet-400/60 absolute top-6 right-6" />
-              <div className="flex items-center gap-1 text-amber-300">
-                {Array.from({ length: 5 }).map((_, k) => (
-                  <Star key={k} className="w-4 h-4 fill-current" />
-                ))}
-              </div>
-              <p className="text-slate-300 leading-relaxed mt-4">"{t.quote}"</p>
-              <div className="flex items-center justify-between mt-6 pt-5 border-t border-white/10">
-                <div className="flex items-center gap-3">
-                  <Avatar name={t.name} src={t.avatar} size="md" />
-                  <div>
-                    <p className="text-sm font-bold text-white">{t.name}</p>
-                    <p className="text-xs text-slate-400">{t.role}</p>
-                  </div>
-                </div>
-                <span className="px-2.5 py-1 rounded-lg bg-emerald-400/15 border border-emerald-400/30 text-emerald-300 text-xs font-extrabold">{t.score}</span>
-              </div>
-            </div>
+            <TestimonialCard key={t.name} item={t} />
           ))}
         </Stagger>
       </section>

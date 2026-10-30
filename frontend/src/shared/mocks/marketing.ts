@@ -1,5 +1,5 @@
 import { PHOTOS, pravatar, unsplash } from '@/shared/components/media/Img';
-import type { BlogPost, ExamTrack, FaqItem, PricingPlan, ResourceDoc, ScoreRow } from '@/shared/types';
+import type { BlogPost, ExamTrack, FaqItem, PricingPlan, ResourceDoc, ScoreRow, Testimonial } from '@/shared/types';
 
 export const SCORE_TABLE: ScoreRow[] = [
   { cefr: 'A1', vstep: 'Bậc 1 (< 4.0)', toeic: '120 – 220', ielts: '1.0 – 2.5', toefl: '< 30', description: 'Sơ cấp — hiểu câu đơn giản, giao tiếp cơ bản.' },
@@ -214,10 +214,49 @@ export const BLOG_CATEGORIES = [
   { slug: 'phuong-phap', name: 'Phương pháp học' },
 ];
 
-export const TESTIMONIALS = [
-  { avatar: pravatar(12), name: 'Phạm Hoàng Long', role: 'Sinh viên ĐH Bách Khoa', target: 'TOEIC 900', quote: 'Sổ tay lỗi sai thực sự thay đổi cách mình học. Không còn làm đề xong rồi quên, mỗi câu sai đều quay lại đúng lúc mình sắp quên.', score: '620 → 905' },
-  { avatar: pravatar(16), name: 'Đỗ Thị Mai', role: 'Giáo viên tiểu học', target: 'VSTEP C1', quote: 'Lộ trình 3 chặng rõ ràng, mỗi ngày chỉ cần 45 phút. Phần Writing được giáo viên chấm chi tiết từng tiêu chí.', score: 'B1 → C1' },
-  { avatar: pravatar(18), name: 'Trần Gia Huy', role: 'Nhân viên kinh doanh', target: 'TOEIC 750', quote: 'Thích nhất là phòng thi thử: đồng hồ, audio không tua lại, cảm giác y như thi thật nên đi thi không bị khớp.', score: '480 → 760' },
+export const TESTIMONIALS: Testimonial[] = [
+  {
+    avatar: pravatar(12),
+    name: 'Phạm Hoàng Long',
+    role: 'Sinh viên năm 4, ĐH Bách khoa Hà Nội',
+    exam: 'TOEIC',
+    before: '620',
+    after: '905',
+    weeks: 11,
+    examDate: '14/09/2026',
+    venue: 'IIG Hà Nội',
+    target: 'TOEIC 900',
+    score: '620 → 905',
+    quote: 'Trước mình làm đề xong là thôi, câu sai lần sau vẫn sai. Từ hồi dùng sổ tay lỗi sai thì Part 5 lên rõ, riêng Reading tăng hơn 150 điểm.',
+  },
+  {
+    avatar: pravatar(16),
+    name: 'Đỗ Thị Mai',
+    role: 'Giáo viên tiểu học, Hội An',
+    exam: 'VSTEP',
+    before: 'B1',
+    after: 'C1',
+    weeks: 16,
+    examDate: '21/06/2026',
+    venue: 'ĐH Ngoại ngữ – ĐH Đà Nẵng',
+    target: 'VSTEP C1',
+    score: 'B1 → C1',
+    quote: 'Đi dạy cả ngày nên tối chỉ học được khoảng 45 phút. Bài Writing nào cô cũng chấm lại theo từng tiêu chí, nhờ vậy mình biết mình mất điểm ở đâu.',
+  },
+  {
+    avatar: pravatar(18),
+    name: 'Trần Gia Huy',
+    role: 'Nhân viên kinh doanh, TP.HCM',
+    exam: 'TOEIC',
+    before: '480',
+    after: '760',
+    weeks: 9,
+    examDate: '03/08/2026',
+    venue: 'IIG TP.HCM',
+    target: 'TOEIC 750',
+    score: '480 → 760',
+    quote: 'Phòng thi thử chạy audio một lần, không tua được, giống hệt hôm thi thật. Lúc vào thi mình không bị khớp nữa.',
+  },
 ];
 
 export const HOME_STATS = [

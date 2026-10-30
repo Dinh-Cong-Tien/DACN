@@ -475,6 +475,22 @@ export interface ScoreRow {
   description: string;
 }
 
+/** Nhận xét học viên: điểm trước/sau, ngày và nơi thi */
+export interface Testimonial {
+  name: string;
+  role: string;
+  avatar?: string;
+  exam: 'TOEIC' | 'VSTEP';
+  before: string;
+  after: string;
+  weeks: number;
+  examDate: string;
+  venue: string;
+  target: string;
+  score: string;
+  quote: string;
+}
+
 /** Khối giới thiệu kỳ thi ở trang chủ: ảnh + bảng thông tin thực tế của kỳ thi */
 export interface ExamTrack {
   id: 'toeic' | 'vstep';
