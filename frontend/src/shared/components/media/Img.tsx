@@ -54,7 +54,7 @@ export const PHOTOS = {
   team: unsplash('1521737711867-e3b97375f902', 1000),
   flatlay: unsplash('1503676260728-1c00da094a0b', 1000),
   students2: unsplash('1517486808906-6ca8b3f04846', 1000),
-  graduation: unsplash('1523050854058-8df90110c9f1', 1000),
+  graduation: unsplash('1523580494863-6f3031224c94', 1000),
   campus: unsplash('1541339907198-e08756dedf3f', 1000),
   typing: unsplash('1486312338219-ce68d2c6f44d', 1000),
 };
