@@ -10,7 +10,18 @@ import { useDocumentTitle, useGate, useInView } from '@/shared/hooks';
 import { formatCurrency, formatNumber, cn } from '@/shared/utils';
 import { LoopConnector } from './home/LoopConnector';
 
-const PARTNERS = ['ĐH Đà Nẵng', 'ĐH Duy Tân', 'ĐH Bách Khoa', 'ĐH FPT', 'VNU Hà Nội', 'ĐH Kinh tế', 'ĐH Ngoại ngữ', 'HUTECH', 'ĐH Sư phạm'];
+/** Trường của học viên (logo chính thức lấy từ Wikimedia, lưu tại public/images/universities) */
+const PARTNERS: { name: string; logo: string }[] = [
+  { name: 'ĐH Đà Nẵng', logo: 'udn' },
+  { name: 'ĐH Duy Tân', logo: 'dtu' },
+  { name: 'ĐH Bách khoa Hà Nội', logo: 'hust' },
+  { name: 'ĐH FPT', logo: 'fpt' },
+  { name: 'ĐHQG Hà Nội', logo: 'vnu' },
+  { name: 'ĐH Kinh tế Quốc dân', logo: 'neu' },
+  { name: 'ĐH Ngoại ngữ – ĐHQGHN', logo: 'ulis' },
+  { name: 'HUTECH', logo: 'hutech' },
+  { name: 'ĐH Sư phạm Hà Nội', logo: 'hnue' },
+];
 
 const MARQUEE_POINTS = ['TOEIC 450 → 990', 'VSTEP B1 · B2 · C1', 'Đề ETS 2024–2025', 'Audio phát một lần', 'Sổ tay lỗi sai', 'Ôn tập SM-2', 'Giáo viên chấm bài', 'Lớp học có mã mời'];
 
@@ -184,9 +195,12 @@ export const HomePage: React.FC = () => {
         <div className="marquee">
           <div className="marquee-track whitespace-nowrap">
             {[...PARTNERS, ...PARTNERS].map((p, i) => (
-              <span key={i} className="mx-3 inline-flex items-center gap-2.5 px-4 py-2 rounded-xl border border-white/10 bg-white/5 font-display font-bold text-sm md:text-base text-slate-100 transition-colors hover:bg-amber-300 hover:text-slate-900 hover:border-amber-300">
-                <span className="w-7 h-7 rounded-lg bg-amber-300 text-slate-900 flex items-center justify-center text-[11px] font-black">{p.replace('ĐH ', '').slice(0, 2).toUpperCase()}</span>
-                {p}
+              <span key={i} aria-hidden={i >= PARTNERS.length || undefined} className="mx-3 inline-flex items-center gap-2.5 pl-1.5 pr-4 py-1.5 rounded-xl border border-white/10 bg-white/5 font-display font-bold text-sm md:text-base text-slate-100 transition-colors hover:bg-amber-300 hover:text-slate-900 hover:border-amber-300">
+                {/* nền trắng để logo trong suốt / màu tối vẫn rõ trên nền đêm */}
+                <span className="w-9 h-9 rounded-lg bg-white p-1 flex items-center justify-center shrink-0">
+                  <img src={`/images/universities/${p.logo}.webp`} alt={`Logo ${p.name}`} loading="lazy" decoding="async" className="max-w-full max-h-full object-contain" />
+                </span>
+                {p.name}
               </span>
             ))}
           </div>
