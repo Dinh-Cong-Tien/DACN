@@ -5,10 +5,11 @@ import { ArrowRight, Star, CheckCircle2, Play, Flame, Target, BookOpen, Users, F
 import { Button, Card, SectionTitle, Avatar, Badge } from '@/shared/components/ui';
 import { Reveal, Stagger, CountUp, Doodles, TypeLoop } from '@/shared/components/motion';
 import { Img, PHOTOS, pravatar } from '@/shared/components/media/Img';
-import { HOME_STATS, TESTIMONIALS, PRICING_PLANS, MOCK_COURSES } from '@/shared/mocks';
+import { HOME_STATS, HOME_EXAM_TRACKS, TESTIMONIALS, PRICING_PLANS, MOCK_COURSES } from '@/shared/mocks';
 import { useDocumentTitle, useGate, useInView } from '@/shared/hooks';
 import { formatCurrency, cn } from '@/shared/utils';
 import { LoopConnector } from './home/LoopConnector';
+import { ExamTrackCard } from './home/ExamTrackCard';
 
 /** Trường của học viên (logo chính thức lấy từ Wikimedia, lưu tại public/images/universities) */
 const PARTNERS: { name: string; logo: string }[] = [
@@ -339,53 +340,15 @@ export const HomePage: React.FC = () => {
       {/* ================= TOEIC vs VSTEP ================= */}
       <section className="relative isolate max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24 space-y-12">
         <div aria-hidden className="night-divider -z-10" />
-        <div aria-hidden className="pointer-events-none absolute -z-10 rounded-full -left-[15vw] top-1/3 w-[600px] h-[500px] bg-indigo-500/25 blur-[150px]" />
-        <div aria-hidden className="pointer-events-none absolute -z-10 rounded-full -right-[15vw] top-1/3 w-[600px] h-[500px] bg-violet-500/25 blur-[150px]" />
+        <div aria-hidden className="pointer-events-none absolute -z-10 rounded-full -left-[15vw] top-1/3 w-[600px] h-[500px] bg-indigo-500/10 blur-[150px]" />
+        <div aria-hidden className="pointer-events-none absolute -z-10 rounded-full -right-[15vw] top-1/3 w-[600px] h-[500px] bg-violet-500/10 blur-[150px]" />
         <Reveal>
           <SectionTitle dark eyebrow="Hai kỳ thi, một nền tảng" title={<>Bạn thi <span className="text-indigo-300">TOEIC</span> hay <span className="text-violet-400">VSTEP</span>?</>} description="Chọn kỳ thi khi bắt đầu, có thể đổi bất kỳ lúc nào. Mọi tiến độ được giữ nguyên." />
         </Reveal>
         <div className="grid md:grid-cols-2 gap-6">
-          {[
-            {
-              tone: 'from-indigo-600 to-indigo-900',
-              glow: 'rgba(17,138,114,0.7)',
-              badge: 'Listening & Reading',
-              title: 'TOEIC 450 → 990',
-              desc: '200 câu, 120 phút, 7 Part. Thường dùng cho tốt nghiệp đại học và xin việc khối doanh nghiệp.',
-              items: ['Luyện từng Part với giải thích tức thì', 'Full test ETS 2023–2025', 'Từ vựng 20 chủ đề Business'],
-              to: '/toeic',
-              cta: 'Lộ trình TOEIC',
-            },
-            {
-              tone: 'from-violet-500 to-fuchsia-700',
-              glow: 'rgba(250,83,48,0.7)',
-              badge: '4 kỹ năng',
-              title: 'VSTEP B1 → C1',
-              desc: 'Nghe – Đọc – Viết – Nói theo format Bộ GD&ĐT. Chuẩn đầu ra đại học, sau đại học và giáo viên.',
-              items: ['Đề mẫu ĐHQG, ĐH Đà Nẵng', 'Writing Task 1/2 có đếm từ và rubric', 'Speaking Part 1–3 ghi âm, giáo viên chấm'],
-              to: '/vstep',
-              cta: 'Lộ trình VSTEP',
-            },
-          ].map((x, i) => (
-            <Reveal key={x.title} delay={i * 120}>
-              <div className={cn('relative h-full overflow-hidden rounded-3xl bg-gradient-to-br text-white border border-white/10 p-8 md:p-10', x.tone)} style={{ boxShadow: `0 40px 80px -40px ${x.glow}` }}>
-                <div aria-hidden className="absolute -right-10 -top-10 w-48 h-48 rounded-full border-[16px] border-white/10" />
-                <Badge tone="amber" solid>
-                  {x.badge}
-                </Badge>
-                <h3 className="font-display text-4xl font-extrabold mt-4">{x.title}</h3>
-                <p className="text-white/80 mt-3 leading-relaxed">{x.desc}</p>
-                <ul className="mt-6 space-y-2 text-sm">
-                  {x.items.map((l) => (
-                    <li key={l} className="flex items-center gap-2">
-                      <CheckCircle2 className="w-4 h-4 text-amber-300" /> {l}
-                    </li>
-                  ))}
-                </ul>
-                <Button to={x.to} variant="white" className="mt-8" rightIcon={<ArrowRight className="w-4 h-4" />}>
-                  {x.cta}
-                </Button>
-              </div>
+          {HOME_EXAM_TRACKS.map((t, i) => (
+            <Reveal key={t.id} delay={i * 120} className="h-full">
+              <ExamTrackCard track={t} />
             </Reveal>
           ))}
         </div>

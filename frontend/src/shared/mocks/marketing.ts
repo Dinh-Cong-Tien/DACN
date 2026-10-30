@@ -1,5 +1,5 @@
 import { PHOTOS, pravatar, unsplash } from '@/shared/components/media/Img';
-import type { BlogPost, FaqItem, PricingPlan, ResourceDoc, ScoreRow } from '@/shared/types';
+import type { BlogPost, ExamTrack, FaqItem, PricingPlan, ResourceDoc, ScoreRow } from '@/shared/types';
 
 export const SCORE_TABLE: ScoreRow[] = [
   { cefr: 'A1', vstep: 'Bậc 1 (< 4.0)', toeic: '120 – 220', ielts: '1.0 – 2.5', toefl: '< 30', description: 'Sơ cấp — hiểu câu đơn giản, giao tiếp cơ bản.' },
@@ -225,4 +225,69 @@ export const HOME_STATS = [
   { label: 'Câu hỏi chuẩn ETS/Bộ GD&ĐT', value: 12614, suffix: '+' },
   { label: 'Đề thi thử', value: 183, suffix: '+' },
   { label: 'Điểm tăng trung bình', value: 147, suffix: ' điểm' },
+];
+
+export const HOME_EXAM_TRACKS: ExamTrack[] = [
+  {
+    id: 'toeic',
+    code: 'TOEIC Listening & Reading',
+    title: 'TOEIC 450 → 990',
+    meta: ['200 câu', '120 phút', '7 Part'],
+    desc: 'Dùng cho chuẩn đầu ra đại học và hồ sơ xin việc khối doanh nghiệp.',
+    items: ['Luyện từng Part, giải thích ngay sau mỗi câu', 'Full test ETS 2023–2025', 'Từ vựng 20 chủ đề Business'],
+    to: '/toeic',
+    cta: 'Lộ trình TOEIC',
+    report: {
+      test: 'Full Test 07 · ETS 2025',
+      date: '12/10/2026',
+      learner: 'Nguyễn Thảo Vy',
+      total: '855',
+      totalMax: '/ 990',
+      totalNote: '+145 so với bài đầu vào',
+      skills: [
+        { label: 'Listening', value: 445, max: 495, display: '445' },
+        { label: 'Reading', value: 410, max: 495, display: '410' },
+      ],
+      parts: [
+        { label: 'P1', pct: 92 },
+        { label: 'P2', pct: 81 },
+        { label: 'P3', pct: 77 },
+        { label: 'P4', pct: 74 },
+        { label: 'P5', pct: 63 },
+        { label: 'P6', pct: 79 },
+        { label: 'P7', pct: 71 },
+      ],
+      note: 'Part 5 đúng 63%, lộ trình tuần này thêm 40 câu ngữ pháp.',
+    },
+  },
+  {
+    id: 'vstep',
+    code: 'VSTEP bậc 3–5',
+    title: 'VSTEP B1 → C1',
+    meta: ['4 kỹ năng', '172 phút', 'Format Bộ GD&ĐT'],
+    desc: 'Chuẩn đầu ra đại học, sau đại học và chuẩn năng lực giáo viên.',
+    items: ['Đề mẫu ĐHQG Hà Nội, ĐH Đà Nẵng', 'Writing Task 1/2 có đếm từ và rubric', 'Speaking Part 1–3 ghi âm, giáo viên chấm'],
+    to: '/vstep',
+    cta: 'Lộ trình VSTEP',
+    report: {
+      test: 'Đề mẫu ĐH Đà Nẵng · Đề 3',
+      date: '19/10/2026',
+      learner: 'Lê Bảo Ngọc',
+      total: '6.5',
+      totalMax: '/ 10',
+      totalNote: 'Đạt bậc 4 (B2)',
+      skills: [
+        { label: 'Nghe', value: 7, max: 10, display: '7.0' },
+        { label: 'Đọc', value: 6.5, max: 10, display: '6.5' },
+        { label: 'Viết', value: 6, max: 10, display: '6.0' },
+        { label: 'Nói', value: 6.5, max: 10, display: '6.5' },
+      ],
+      levels: [
+        { label: 'B1', range: '4.0–5.5' },
+        { label: 'B2', range: '6.0–8.0', active: true },
+        { label: 'C1', range: '8.5–10' },
+      ],
+      note: 'Viết 6.0: Task 2 thiếu từ nối, mới 231/250 từ.',
+    },
+  },
 ];
