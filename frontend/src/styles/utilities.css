@@ -1,0 +1,59 @@
+/* Tiện ích nhỏ bổ sung cho Tailwind (layer utilities) */
+@layer utilities {
+  .stagger > * {
+    animation-delay: calc(var(--stagger, 70ms) * var(--i, 0));
+  }
+  .delay-75 { animation-delay: 75ms; }
+  .delay-100 { animation-delay: 100ms; }
+  .delay-150 { animation-delay: 150ms; }
+  .delay-200 { animation-delay: 200ms; }
+  .delay-300 { animation-delay: 300ms; }
+  .delay-500 { animation-delay: 500ms; }
+  .delay-700 { animation-delay: 700ms; }
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+  .no-scrollbar { scrollbar-width: none; }
+  .mask-fade-b {
+    -webkit-mask-image: linear-gradient(to bottom, black 70%, transparent);
+    mask-image: linear-gradient(to bottom, black 70%, transparent);
+  }
+  /* Trong khu vực portal (.portal): làm mềm các khối viền đậm/bóng lệch cho thoáng như trang chủ */
+  .portal .card-hard {
+    border-width: 1px;
+    border-color: rgba(20, 26, 43, 0.1);
+    box-shadow: 0 1px 2px rgba(20, 26, 43, 0.04), 0 10px 24px -14px rgba(20, 26, 43, 0.14);
+  }
+  .portal .card-hard-hover:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 2px 4px rgba(20, 26, 43, 0.05), 0 16px 32px -14px rgba(20, 26, 43, 0.2);
+  }
+  .portal .shadow-hard,
+  .portal .shadow-hard-sm,
+  .portal .shadow-hard-lg {
+    box-shadow: 0 1px 2px rgba(20, 26, 43, 0.04), 0 8px 20px -12px rgba(20, 26, 43, 0.14);
+  }
+  .portal .sticker {
+    box-shadow: none;
+    border-color: rgba(20, 26, 43, 0.12);
+    transform: none;
+  }
+  .portal .bg-paper {
+    background-image: none;
+  }
+  /* Tiêu đề trang: không highlight bút dạ */
+  .page-title .mark,
+  .page-title .mark-coral,
+  .page-title .mark-teal,
+  .page-title .mark-full {
+    background: none;
+    padding: 0;
+    color: inherit;
+  }
+  /* Nút trong header trang nhỏ gọn hơn */
+  .page-title ~ * .btn-3d {
+    border-bottom-width: 3px;
+  }
+  .tilt-1 { --tilt: -3deg; transform: rotate(-3deg); }
+  .tilt-2 { --tilt: 2deg; transform: rotate(2deg); }
+  .tilt-3 { --tilt: -1deg; transform: rotate(-1deg); }
+  .text-balance { text-wrap: balance; }
+}

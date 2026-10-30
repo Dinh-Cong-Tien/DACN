@@ -1,0 +1,97 @@
+/* Animation & micro-interaction dùng chung toàn site */
+@keyframes toast-bar {
+  from { width: 100%; }
+  to { width: 0%; }
+}
+.animate-toast-bar {
+  animation: toast-bar linear forwards;
+}
+
+/* ===== Micro-animation bổ sung ===== */
+/* Ảnh trong card phóng nhẹ khi hover */
+.card-hover img,
+.card-hard-hover img,
+.photo-frame img {
+  transition: transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.card-hover:hover img,
+.card-hard-hover:hover img,
+.photo-frame:hover img {
+  transform: scale(1.05);
+}
+/* Sticker lắc nhẹ khi hover */
+.sticker {
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.sticker:hover {
+  transform: rotate(0deg) scale(1.06);
+}
+/* Chuông rung định kỳ khi có thông báo */
+@keyframes ring-bell {
+  0%, 86%, 100% { transform: rotate(0); }
+  88% { transform: rotate(14deg); }
+  90% { transform: rotate(-12deg); }
+  92% { transform: rotate(10deg); }
+  94% { transform: rotate(-8deg); }
+  96% { transform: rotate(4deg); }
+}
+.animate-ring-bell {
+  animation: ring-bell 6s ease-in-out infinite;
+  transform-origin: top center;
+}
+/* Thanh EQ khi audio đang phát */
+@keyframes eq {
+  0%, 100% { transform: scaleY(0.3); }
+  50% { transform: scaleY(1); }
+}
+.eq-bar {
+  transform-origin: bottom;
+  animation: eq 0.9s ease-in-out infinite;
+}
+.eq-bar:nth-child(2) { animation-delay: 0.15s; }
+.eq-bar:nth-child(3) { animation-delay: 0.3s; }
+.eq-bar:nth-child(4) { animation-delay: 0.45s; }
+/* Ảnh hiện dần bằng clip-path khi cuộn tới */
+@keyframes reveal-img {
+  from { clip-path: inset(0 100% 0 0); }
+  to { clip-path: inset(0 0 0 0); }
+}
+.animate-reveal-img {
+  animation: reveal-img 0.9s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+/* Chữ xoay vòng ở hero */
+@keyframes word-in {
+  from { opacity: 0; transform: translateY(60%) rotateX(-40deg); }
+  to { opacity: 1; transform: translateY(0) rotateX(0); }
+}
+.animate-word-in {
+  animation: word-in 0.55s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+/* Gạch chân chạy khi hover link */
+.link-underline {
+  background-image: linear-gradient(currentColor, currentColor);
+  background-size: 0% 2px;
+  background-repeat: no-repeat;
+  background-position: left 100%;
+  transition: background-size 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.link-underline:hover {
+  background-size: 100% 2px;
+}
+/* Nhịp đập nhẹ cho các phần tử nhấn mạnh */
+@keyframes heartbeat {
+  0%, 100% { transform: scale(1); }
+  14% { transform: scale(1.12); }
+  28% { transform: scale(1); }
+  42% { transform: scale(1.08); }
+}
+.animate-heartbeat {
+  animation: heartbeat 2.4s ease-in-out infinite;
+}
+
+/* Thẻ nghiêng theo chuột (3D tilt) */
+.tilt-card {
+  transform-style: preserve-3d;
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s;
+  will-change: transform;
+}

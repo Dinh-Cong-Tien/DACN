@@ -1,0 +1,19 @@
+/* Dải chữ chạy (marquee): nội dung được nhân đôi, track rộng theo nội dung để lặp liền mạch */
+@keyframes marquee-x {
+  from { transform: translate3d(0, 0, 0); }
+  to { transform: translate3d(-50%, 0, 0); }
+}
+.marquee {
+  overflow: hidden;
+  -webkit-mask-image: linear-gradient(to right, transparent, black 8%, black 92%, transparent);
+  mask-image: linear-gradient(to right, transparent, black 8%, black 92%, transparent);
+}
+.marquee-track {
+  display: flex;
+  width: max-content;
+  will-change: transform;
+  animation: marquee-x 32s linear infinite;
+}
+.marquee-track.reverse {
+  animation-direction: reverse;
+}

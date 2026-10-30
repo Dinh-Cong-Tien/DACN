@@ -1,5 +1,5 @@
 import { ThreeBackground } from '@/shared/components/three/ThreeBackground';
-import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, Star, CheckCircle2, Play, Flame, Target, BookOpen, Users, FileText, AlertTriangle, RotateCcw, Compass, Quote, Headphones } from 'lucide-react';
 import { Button, Card, SectionTitle, Avatar, Badge } from '@/shared/components/ui';
@@ -8,6 +8,7 @@ import { Img, PHOTOS, pravatar } from '@/shared/components/media/Img';
 import { HOME_STATS, TESTIMONIALS, MOCK_TESTS, PRICING_PLANS, MOCK_COURSES } from '@/shared/mocks';
 import { useDocumentTitle, useGate, useInView } from '@/shared/hooks';
 import { formatCurrency, formatNumber, cn } from '@/shared/utils';
+import { LoopConnector } from './home/LoopConnector';
 
 const PARTNERS = ['ĐH Đà Nẵng', 'ĐH Duy Tân', 'ĐH Bách Khoa', 'ĐH FPT', 'VNU Hà Nội', 'ĐH Kinh tế', 'ĐH Ngoại ngữ', 'HUTECH', 'ĐH Sư phạm'];
 
@@ -20,78 +21,6 @@ const LOOP = [
   { n: '04', title: 'Sổ tay lỗi sai tự động', text: 'Câu sai được lưu kèm lời giải và nguyên nhân: ngữ pháp, từ vựng hay bẫy nghe. Không phải ghi chép tay.', photo: PHOTOS.writing, tag: 'Phân tích' },
   { n: '05', title: 'Ôn đúng lúc sắp quên', text: 'Thuật toán SM-2 nhắc lại sau 1, 3, 7, 14, 30 ngày. Mỗi sáng chỉ cần 10 phút ôn phần hệ thống gợi ý.', photo: PHOTOS.studying, tag: 'Ghi nhớ' },
 ];
-
-/**
- * Đường cong nét đứt ngắn nối mép dưới ảnh bước i với mép trên ảnh bước i+1 (chỉ desktop).
- * Đồng bộ với hiệu ứng từng mục: khi hàng bước i+1 hiện ra thì đoạn nối tự vẽ từ ảnh trên xuống ảnh dưới,
- * chấm đến bật lên ở cuối; khi hàng đó ẩn thì đoạn nối thu lại.
- */
-const LoopConnector: React.FC<{ containerRef: React.RefObject<HTMLDivElement>; photoRefs: React.MutableRefObject<(HTMLDivElement | null)[]>; rowsOn: boolean[]; dark?: boolean }> = ({ containerRef, photoRefs, rowsOn, dark }) => {
-  const [size, setSize] = useState({ w: 0, h: 0 });
-  const [paths, setPaths] = useState<{ d: string; a: [number, number]; b: [number, number] }[]>([]);
-  useLayoutEffect(() => {
-    const box = containerRef.current;
-    if (!box) return;
-    // offsetLeft/Top bỏ qua transform của hiệu ứng xuất hiện nên vị trí ổn định
-    const pos = (el: HTMLElement) => {
-      let x = 0;
-      let y = 0;
-      let n: HTMLElement | null = el;
-      while (n && n !== box) {
-        x += n.offsetLeft;
-        y += n.offsetTop;
-        n = n.offsetParent as HTMLElement | null;
-      }
-      return { x, y, w: el.offsetWidth, h: el.offsetHeight };
-    };
-    const calc = () => {
-      setSize({ w: box.offsetWidth, h: box.offsetHeight });
-      const els = photoRefs.current.filter(Boolean) as HTMLDivElement[];
-      const out: { d: string; a: [number, number]; b: [number, number] }[] = [];
-      for (let i = 0; i < els.length - 1; i++) {
-        const p = pos(els[i]);
-        const q = pos(els[i + 1]);
-        const a: [number, number] = [p.x + p.w / 2, p.y + p.h + 18];
-        const b: [number, number] = [q.x + q.w / 2, q.y - 18];
-        const dy = b[1] - a[1];
-        out.push({ d: `M ${a[0]} ${a[1]} C ${a[0]} ${a[1] + dy * 0.75}, ${b[0]} ${b[1] - dy * 0.75}, ${b[0]} ${b[1]}`, a, b });
-      }
-      setPaths(out);
-    };
-    calc();
-    const ro = new ResizeObserver(calc);
-    ro.observe(box);
-    return () => ro.disconnect();
-  }, [containerRef, photoRefs]);
-
-  const ink = dark ? '#0B0F1C' : '#141A2B';
-  return (
-    <svg aria-hidden className="hidden md:block absolute inset-0 pointer-events-none" width={size.w} height={size.h} viewBox={`0 0 ${size.w || 1} ${size.h || 1}`}>
-      {paths.map((p, i) => {
-        const on = Boolean(rowsOn[i + 1]); // hiện cùng lúc với hàng bước kế tiếp
-        const mid = `loop-mask-${i}`;
-        return (
-          <g key={i}>
-            <defs>
-              {/* Mặt nạ vẽ dần: nét đứt giữ nguyên nhịp, chỉ phần đã "mở" mới thấy */}
-              <mask id={mid} maskUnits="userSpaceOnUse" x={0} y={0} width={size.w} height={size.h}>
-                <path d={p.d} fill="none" stroke="#fff" strokeWidth="12" pathLength={1} strokeDasharray="1" strokeDashoffset={on ? 0 : 1} style={{ transition: `stroke-dashoffset ${on ? '0.9s' : '0.5s'} cubic-bezier(0.65, 0, 0.35, 1) ${on ? '0.15s' : '0s'}` }} />
-              </mask>
-            </defs>
-            <path d={p.d} fill="none" stroke={dark ? '#ffffff' : '#141A2B'} strokeOpacity={dark ? 0.55 : 0.4} strokeWidth="4.5" strokeLinecap="round" strokeDasharray="5 13" className="loop-dash" mask={`url(#${mid})`} />
-            {/* chấm đi: hiện ngay khi bắt đầu vẽ */}
-            <circle cx={p.a[0]} cy={p.a[1]} r="8" fill="#FA5330" stroke={ink} strokeWidth="3" className="loop-dot" style={{ transform: `scale(${on ? 1 : 0})`, transition: 'transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)' }} />
-            {/* chấm đến: bật lên khi nét vừa vẽ tới, kèm vành sáng */}
-            <g className="loop-dot" style={{ transform: `scale(${on ? 1 : 0})`, transition: `transform 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) ${on ? '0.95s' : '0s'}` }}>
-              <circle cx={p.b[0]} cy={p.b[1]} r="15" fill="#FFD24D" fillOpacity="0.18" className={on ? 'loop-pin' : undefined} />
-              <circle cx={p.b[0]} cy={p.b[1]} r="8" fill="#FFD24D" stroke={ink} strokeWidth="3" />
-            </g>
-          </g>
-        );
-      })}
-    </svg>
-  );
-};
 
 /**
  * Một hàng trong 5 bước: ẩn khi ở ngoài khung nhìn, cuộn tới thì mờ dần hiện ra và trượt nhẹ lên.

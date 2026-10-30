@@ -1,0 +1,19 @@
+/* ===== Hero tối trang chủ ===== */
+.font-script {
+  font-family: 'Be Vietnam Pro', system-ui, sans-serif;
+  font-weight: 800;
+}
+/* Chữ khổng lồ gradient coral → hồng → vàng, chạy nhẹ */
+.hero-gradient-text {
+  background: linear-gradient(90deg, #ff7352 0%, #ff4fa3 35%, #c26bff 60%, #ffd24d 100%);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  animation: gradient-x 8s ease infinite;
+}
+@keyframes gradient-x {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}

@@ -1,0 +1,13 @@
+/* Tôn trọng tuỳ chọn giảm chuyển động của hệ điều hành — luôn nạp cuối cùng */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  /* Marquee là trang trí chậm, vẫn giữ chuyển động nhưng chậm hơn */
+  .marquee-track {
+    animation-duration: 60s !important;
+    animation-iteration-count: infinite !important;
+  }
+}
