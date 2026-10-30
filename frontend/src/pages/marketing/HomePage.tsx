@@ -22,13 +22,14 @@ const LOOP = [
 ];
 
 /**
- * Đường nối giữa ảnh bước i và i+1 (desktop) theo kiểu sơ đồ quy trình:
- * đi thẳng xuống → bo góc → chạy ngang → bo góc → xuống ảnh kế tiếp.
- * Nét đứt mảnh một màu, tự vẽ dần khi đoạn đó vào khung nhìn và thu lại khi ra khỏi.
+ * Đường nối "quỹ đạo" giữa ảnh bước i và i+1 (desktop):
+ * rời mép trên ảnh bước trước theo phương thẳng đứng → vòm cung đều ra ngoài khối chữ → chạy dọc mép ngoài
+ * → lượn vào và đáp thẳng đứng xuống mép trên ảnh bước sau.
+ * Nét đứt đều (6/8), một dải màu vàng → cam trên rãnh mờ, nút tròn rỗng ở hai đầu; vẽ dần khi vào khung nhìn, thu lại khi ra.
  */
 const LoopConnector: React.FC<{ containerRef: React.RefObject<HTMLDivElement>; photoRefs: React.MutableRefObject<(HTMLDivElement | null)[]>; dark?: boolean }> = ({ containerRef, photoRefs }) => {
   const [size, setSize] = useState({ w: 0, h: 0 });
-  const [paths, setPaths] = useState<{ d: string; a: [number, number]; b: [number, number] }[]>([]);
+  const [paths, setPaths] = useState<{ d: string; a: [number, number]; b: [number, number]; top: number }[]>([]);
   const [shown, setShown] = useState<boolean[]>([]);
   useLayoutEffect(() => {
     const box = containerRef.current;
@@ -45,28 +46,32 @@ const LoopConnector: React.FC<{ containerRef: React.RefObject<HTMLDivElement>; p
       }
       return { x, y, w: el.offsetWidth, h: el.offsetHeight };
     };
-    let list: { d: string; a: [number, number]; b: [number, number] }[] = [];
+    let list: { d: string; a: [number, number]; b: [number, number]; top: number }[] = [];
     const calc = () => {
-      setSize({ w: box.offsetWidth, h: box.offsetHeight });
+      const W = box.offsetWidth;
+      setSize({ w: W, h: box.offsetHeight });
       const els = photoRefs.current.filter(Boolean) as HTMLDivElement[];
+      // Mép ngoài của vòng cung: lấn ra ngoài container một chút nhưng không chạm mép màn hình
+      const room = Math.max(0, (window.innerWidth - W) / 2 - 16);
       const out: typeof list = [];
       for (let i = 0; i < els.length - 1; i++) {
         const p = pos(els[i]);
         const q = pos(els[i + 1]);
-        const a: [number, number] = [Math.round(p.x + p.w / 2), Math.round(p.y + p.h + 20)];
-        const b: [number, number] = [Math.round(q.x + q.w / 2), Math.round(q.y - 20)];
-        const midY = Math.round((a[1] + b[1]) / 2);
-        const dir = b[0] < a[0] ? -1 : 1;
-        const r = Math.min(28, Math.abs(b[0] - a[0]) / 2, (b[1] - a[1]) / 4);
+        const photoRight = p.x > W / 2; // ảnh bước i ở cột phải → vòng ra mép trái, và ngược lại
+        const edge = photoRight ? -Math.min(32, room) : W + Math.min(32, room);
+        const a: [number, number] = [Math.round(p.x + p.w * (photoRight ? 0.4 : 0.6)), Math.round(p.y)];
+        const b: [number, number] = [Math.round(q.x + q.w * (photoRight ? 0.35 : 0.65)), Math.round(q.y)];
+        const span = b[1] - a[1];
+        const lift = Math.min(96, span * 0.18); // độ cao đỉnh vòm phía trên ảnh i
+        const mid = Math.round(a[1] + span * 0.45); // điểm giữa trên mép ngoài
+        const turn = Math.round(b[1] - Math.min(130, span * 0.2)); // cao độ bắt đầu lượn vào ảnh i+1
+        // Cubic với tiếp tuyến thẳng đứng ở cả 4 điểm neo → đường cong đối xứng, đều tay như vẽ bằng thước cong
         const d = [
           `M ${a[0]} ${a[1]}`,
-          `V ${midY - r}`,
-          `Q ${a[0]} ${midY} ${a[0] + dir * r} ${midY}`,
-          `H ${b[0] - dir * r}`,
-          `Q ${b[0]} ${midY} ${b[0]} ${midY + r}`,
-          `V ${b[1]}`,
+          `C ${a[0]} ${Math.round(a[1] - lift / 0.75)}, ${edge} ${Math.round(a[1] - lift / 0.75)}, ${edge} ${mid}`,
+          `C ${edge} ${turn}, ${b[0]} ${turn}, ${b[0]} ${b[1]}`,
         ].join(' ');
-        out.push({ d, a, b });
+        out.push({ d, a, b, top: a[1] - lift });
       }
       list = out;
       setPaths(out);
@@ -75,7 +80,7 @@ const LoopConnector: React.FC<{ containerRef: React.RefObject<HTMLDivElement>; p
       const r = box.getBoundingClientRect();
       const vh = window.innerHeight;
       setShown((prev) => {
-        const next = list.map((pp) => r.top + pp.a[1] < vh * 0.82 && r.top + pp.b[1] > vh * 0.15);
+        const next = list.map((pp) => r.top + pp.top < vh * 0.7 && r.top + pp.b[1] > vh * 0.2);
         return next.length === prev.length && next.every((v, i) => v === prev[i]) ? prev : next;
       });
     };
@@ -87,28 +92,47 @@ const LoopConnector: React.FC<{ containerRef: React.RefObject<HTMLDivElement>; p
     });
     ro.observe(box);
     window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', calc);
     return () => {
       ro.disconnect();
       window.removeEventListener('scroll', onScroll);
+      window.removeEventListener('resize', calc);
     };
   }, [containerRef, photoRefs]);
 
-  const draw = 'stroke-dashoffset 1.2s cubic-bezier(0.65, 0, 0.35, 1)';
+  const draw = 'stroke-dashoffset 1.4s cubic-bezier(0.65, 0, 0.35, 1)';
   return (
     <svg aria-hidden className="hidden md:block absolute inset-0 pointer-events-none overflow-visible" width={size.w} height={size.h} viewBox={`0 0 ${size.w || 1} ${size.h || 1}`}>
       {paths.map((p, i) => {
         const on = Boolean(shown[i]);
-        const mid = `loop-mask-${i}`;
+        const gid = `orbit-grad-${i}`;
+        const mid = `orbit-mask-${i}`;
         return (
           <g key={i}>
-            {/* Mặt nạ vẽ dần cho đường nét đứt */}
-            <mask id={mid} maskUnits="userSpaceOnUse" x="0" y="0" width={size.w} height={size.h}>
-              <path d={p.d} fill="none" stroke="#fff" strokeWidth="6" pathLength={1} strokeDasharray="1" strokeDashoffset={on ? 0 : 1} style={{ transition: draw }} />
-            </mask>
-            <path d={p.d} fill="none" stroke="#ffffff" strokeOpacity="0.28" strokeWidth="1.5" strokeDasharray="6 7" strokeLinecap="round" mask={`url(#${mid})`} />
-            {/* Đầu nối: vòng tròn rỗng */}
-            <circle cx={p.a[0]} cy={p.a[1]} r="4" fill="#0b0f1c" stroke="#ffffff" strokeOpacity="0.5" strokeWidth="1.5" style={{ opacity: on ? 1 : 0, transition: 'opacity 0.4s ease' }} />
-            <circle cx={p.b[0]} cy={p.b[1]} r="4" fill="#0b0f1c" stroke="#FFD24D" strokeOpacity="0.9" strokeWidth="1.5" style={{ opacity: on ? 1 : 0, transition: 'opacity 0.4s ease 0.9s' }} />
+            <defs>
+              <linearGradient id={gid} gradientUnits="userSpaceOnUse" x1={p.a[0]} y1={p.top} x2={p.b[0]} y2={p.b[1]}>
+                <stop offset="0%" stopColor="#FFD24D" />
+                <stop offset="100%" stopColor="#FF7352" />
+              </linearGradient>
+              {/* Mặt nạ vẽ dần: nét đứt giữ nguyên nhịp, chỉ phần được "mở" mới hiện */}
+              <mask id={mid} maskUnits="userSpaceOnUse" x={-200} y={-300} width={size.w + 400} height={size.h + 600}>
+                <path d={p.d} fill="none" stroke="#fff" strokeWidth="10" pathLength={1} strokeDasharray="1" strokeDashoffset={on ? 0 : 1} style={{ transition: draw }} />
+              </mask>
+            </defs>
+            <g mask={`url(#${mid})`}>
+              {/* rãnh mờ liền bên dưới giúp đường đọc liền mạch */}
+              <path d={p.d} fill="none" stroke="#ffffff" strokeOpacity="0.06" strokeWidth="1.5" />
+              {/* nét đứt chính, trôi rất chậm theo chiều đi */}
+              <path d={p.d} fill="none" stroke={`url(#${gid})`} strokeOpacity="0.85" strokeWidth="1.5" strokeDasharray="6 8" className="orbit-flow" />
+            </g>
+            {/* nút đầu: vòng rỗng */}
+            <circle cx={p.a[0]} cy={p.a[1]} r="4.5" fill="#0d1020" stroke="#FFD24D" strokeWidth="1.5" style={{ opacity: on ? 1 : 0, transition: 'opacity 0.3s ease' }} />
+            {/* nút cuối: vòng rỗng có tâm + vành mờ */}
+            <g style={{ opacity: on ? 1 : 0, transition: `opacity 0.4s ease ${on ? '1.2s' : '0s'}` }}>
+              <circle cx={p.b[0]} cy={p.b[1]} r="9" fill="none" stroke="#FF7352" strokeOpacity="0.25" strokeWidth="1" />
+              <circle cx={p.b[0]} cy={p.b[1]} r="4.5" fill="#0d1020" stroke="#FF7352" strokeWidth="1.5" />
+              <circle cx={p.b[0]} cy={p.b[1]} r="1.75" fill="#FF7352" />
+            </g>
           </g>
         );
       })}
