@@ -5,9 +5,9 @@ import { ArrowRight, Star, CheckCircle2, Play, Flame, Target, BookOpen, Users, F
 import { Button, Card, SectionTitle, Avatar, Badge } from '@/shared/components/ui';
 import { Reveal, Stagger, CountUp, Doodles, TypeLoop } from '@/shared/components/motion';
 import { Img, PHOTOS, pravatar } from '@/shared/components/media/Img';
-import { HOME_STATS, TESTIMONIALS, MOCK_TESTS, PRICING_PLANS, MOCK_COURSES } from '@/shared/mocks';
+import { HOME_STATS, TESTIMONIALS, PRICING_PLANS, MOCK_COURSES } from '@/shared/mocks';
 import { useDocumentTitle, useGate, useInView } from '@/shared/hooks';
-import { formatCurrency, formatNumber, cn } from '@/shared/utils';
+import { formatCurrency, cn } from '@/shared/utils';
 import { LoopConnector } from './home/LoopConnector';
 
 /** Trường của học viên (logo chính thức lấy từ Wikimedia, lưu tại public/images/universities) */
@@ -36,6 +36,47 @@ const LOOP = [
 ];
 
 /**
+ * Thẻ tính năng dạng ảnh: ảnh phủ kín, lớp tối dần từ dưới lên, chữ ngắn ở đáy.
+ * Dùng chung cho mọi ô trong bento (khác nhau bằng props), ảnh phóng nhẹ khi hover.
+ */
+const FeatureCard: React.FC<{
+  to: string;
+  photo: string;
+  icon: React.ReactNode;
+  iconClass: string;
+  title: string;
+  text: string;
+  badge?: string;
+  cta?: string;
+  large?: boolean;
+  children?: React.ReactNode;
+}> = ({ to, photo, icon, iconClass, title, text, badge, cta, large, children }) => (
+  <Link to={to} className={cn('group relative isolate block h-full overflow-hidden rounded-3xl border border-white/10 bg-slate-900', large ? 'min-h-[420px] md:min-h-[520px]' : 'min-h-[240px]')}>
+    {/* bọc riêng vì wrapper của Img luôn có class relative */}
+    <div className="absolute inset-0 -z-10">
+      <Img src={photo} alt={title} wrapperClass="h-full" fallbackClass="bg-slate-800" className="transition-[opacity,transform] duration-700 ease-out group-hover:scale-105" />
+    </div>
+    <div aria-hidden className="absolute inset-0 -z-10 bg-gradient-to-t from-slate-950 via-slate-950/60 to-slate-950/5" />
+    <div className="flex h-full flex-col justify-between p-5 md:p-7">
+      <div className="flex items-start justify-between gap-3">
+        <span className={cn('w-10 h-10 rounded-xl flex items-center justify-center text-white shadow-lg [&>svg]:w-5 [&>svg]:h-5', iconClass)}>{icon}</span>
+        {badge && <span className="px-2.5 py-1 rounded-md bg-amber-300 text-slate-900 text-xs font-bold">{badge}</span>}
+      </div>
+      <div className={large ? 'max-w-lg' : undefined}>
+        <h3 className={cn('font-display font-extrabold text-white leading-tight', large ? 'text-2xl md:text-4xl' : 'text-lg md:text-xl')}>{title}</h3>
+        <p className={cn('text-slate-300 mt-2', large ? 'text-base md:text-lg' : 'text-sm')}>{text}</p>
+        {children}
+        {cta && (
+          <span className="inline-flex items-center gap-2 mt-5 font-bold text-white group-hover:gap-3 transition-all">
+            {cta} <ArrowRight className="w-4 h-4" />
+          </span>
+        )}
+      </div>
+    </div>
+  </Link>
+);
+
+/**
  * Một hàng trong 5 bước: ẩn khi ở ngoài khung nhìn, cuộn tới thì mờ dần hiện ra và trượt nhẹ lên.
  * Hiệu ứng tiết chế: chỉ opacity + dịch chuyển dọc nhỏ, các phần lệch nhau vài chục ms.
  */
@@ -50,7 +91,7 @@ const StepRow: React.FC<{ index: number; step: (typeof LOOP)[number]; photoRef: 
     <div ref={ref} className={cn('grid md:grid-cols-2 gap-8 md:gap-16 items-center', !textLeft && 'md:[&>*:first-child]:order-2')}>
       <div className="space-y-4">
         <div className={cn('flex items-center gap-4', base, state)} style={show(0)}>
-          <span className="font-display text-6xl md:text-7xl font-extrabold leading-none text-white/10">{step.n}</span>
+          <span className="font-display text-6xl md:text-7xl font-extrabold leading-[1.1] bg-gradient-to-br from-amber-200 via-amber-300 to-orange-500 bg-clip-text text-transparent">{step.n}</span>
           <span className="px-3 py-1 rounded-full border border-white/15 bg-white/5 text-xs font-bold text-amber-300">{step.tag}</span>
         </div>
         <h3 className={cn('font-display text-2xl md:text-3xl font-extrabold text-white', base, state)} style={show(80)}>
@@ -81,7 +122,6 @@ export const HomePage: React.FC = () => {
   }, []);
   useDocumentTitle('Trang chủ');
   const gate = useGate();
-  const featured = MOCK_TESTS.filter((t) => t.isFree).slice(0, 3);
 
   return (
     <div className="relative overflow-hidden night-bg text-white">
@@ -105,10 +145,6 @@ export const HomePage: React.FC = () => {
 
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-14 md:pt-20 pb-0 grid lg:grid-cols-[1.25fr_1fr] gap-8 items-end min-h-[calc(100vh-72px)]">
           <div className="space-y-6 pb-16 md:pb-24">
-            <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-white/15 bg-white/5 text-xs font-bold text-slate-200 animate-fade-down">
-              <span className="w-2 h-2 rounded-full bg-amber-300 animate-pulse" /> Kho đề ETS 2025 đã cập nhật
-            </span>
-
             <h1 className="font-display font-extrabold tracking-tight animate-fade-up">
               <span className="sr-only">{HERO_WORDS.join(', ')} </span>
               <span className="block text-[3rem] sm:text-[5.1rem] lg:text-[7rem] leading-[1.15] pt-[0.05em] pb-[0.12em] -mb-[0.1em] hero-type-word">
@@ -272,78 +308,29 @@ export const HomePage: React.FC = () => {
           <Reveal>
             <SectionTitle dark eyebrow="Tính năng" title={<>Mọi thứ cho một kỳ thi, <span className="hero-gradient-text">trong một chỗ.</span></>} description="Từ đề thi tới lớp học với giáo viên. Không cần cài thêm ứng dụng nào." />
           </Reveal>
-          <div className="grid md:grid-cols-3 md:grid-rows-2 gap-4 md:gap-5">
+          <div className="grid md:grid-cols-3 gap-4 md:gap-5">
             <Reveal className="md:col-span-2 md:row-span-2">
-              <Link to="/mock-tests" className="relative overflow-hidden block h-full rounded-3xl bg-gradient-to-br from-indigo-600 to-indigo-800 border border-white/10 p-7 md:p-9 group hover:-translate-y-1 transition shadow-[0_30px_60px_-30px_rgba(17,138,114,0.8)]">
-                <div aria-hidden className="absolute -right-20 -top-20 w-72 h-72 rounded-full bg-white/10 blur-2xl" />
-                <div className="relative flex items-start justify-between">
-                  <FileText className="w-10 h-10" />
-                  <Badge tone="amber" solid>
-                    180+ đề
-                  </Badge>
-                </div>
-                <h3 className="relative font-display text-3xl font-extrabold mt-10">Phòng thi thử chuẩn ETS & Bộ GD&ĐT</h3>
-                <p className="relative text-indigo-100 mt-3 max-w-md leading-relaxed">Đồng hồ đếm ngược, audio phát một lần, bảng câu hỏi và cờ đánh dấu. Nộp xong có ngay điểm quy đổi và danh sách câu sai.</p>
-                <div className="relative mt-8 grid grid-cols-3 gap-3 max-w-md">
-                  {featured.map((t) => (
-                    <div key={t.id} className="rounded-xl bg-white/10 border border-white/15 p-3">
-                      <p className="text-[10px] font-extrabold uppercase text-indigo-100">{t.examType}</p>
-                      <p className="text-xs font-bold truncate">{t.title}</p>
-                      <p className="text-[10px] text-indigo-200 mt-1">{formatNumber(t.attempts)} lượt làm</p>
-                    </div>
-                  ))}
-                </div>
-                <span className="relative inline-flex items-center gap-2 mt-8 font-bold group-hover:gap-3 transition-all">
-                  Vào phòng thi <ArrowRight className="w-4 h-4" />
-                </span>
-              </Link>
+              <FeatureCard to="/mock-tests" photo={PHOTOS.library} icon={<FileText />} iconClass="bg-indigo-500" title="Phòng thi thử chuẩn ETS & Bộ GD&ĐT" text="Đồng hồ, audio phát một lần, chấm điểm ngay khi nộp." badge="183 đề" cta="Vào phòng thi" large />
             </Reveal>
             <Reveal delay={100}>
-              <Link to={gate('/app/mistakes', '/auth/register')} className="block h-full rounded-3xl bg-amber-300 text-slate-900 border border-white/10 p-6 hover:-translate-y-1 transition shadow-[0_30px_60px_-30px_rgba(245,176,0,0.7)]">
-                <AlertTriangle className="w-8 h-8" />
-                <h3 className="font-display text-xl font-extrabold mt-6">Sổ tay lỗi sai</h3>
-                <p className="text-sm text-slate-800 mt-2">Tự lưu câu sai kèm nguyên nhân. Luyện lại đúng 10 câu bạn hay sai nhất.</p>
-              </Link>
+              <FeatureCard to={gate('/app/mistakes', '/auth/register')} photo={PHOTOS.lecture} icon={<AlertTriangle />} iconClass="bg-amber-300 text-slate-900" title="Sổ tay lỗi sai" text="Câu sai tự lưu, luyện lại đúng chỗ yếu." />
             </Reveal>
             <Reveal delay={200}>
-              <Link to={gate('/app/review', '/auth/register')} className="block h-full rounded-3xl bg-gradient-to-br from-violet-500 to-fuchsia-600 text-white border border-white/10 p-6 hover:-translate-y-1 transition shadow-[0_30px_60px_-30px_rgba(250,83,48,0.8)]">
-                <RotateCcw className="w-8 h-8" />
-                <h3 className="font-display text-xl font-extrabold mt-6">Flashcard SM-2</h3>
-                <p className="text-sm text-white/80 mt-2">600 từ Business theo chủ đề, lật thẻ, chấm 4 mức nhớ. Nhắc ôn đúng ngày.</p>
-              </Link>
+              <FeatureCard to={gate('/app/review', '/auth/register')} photo={PHOTOS.books} icon={<RotateCcw />} iconClass="bg-violet-500" title="Flashcard SM-2" text="600 từ Business, nhắc ôn đúng ngày." />
             </Reveal>
-            <Reveal delay={150} className="md:col-span-1">
-              <div className="h-full rounded-3xl overflow-hidden border border-white/10 relative min-h-[220px]">
-                <Img src={PHOTOS.classroom} alt="Lớp học với giáo viên" wrapperClass="absolute inset-0" fallbackClass="bg-slate-800" />
-                <div className="absolute inset-x-0 bottom-0 p-5 bg-gradient-to-t from-slate-950 via-slate-950/85 to-transparent">
-                  <div className="flex items-center gap-2 text-amber-300">
-                    <Users className="w-4 h-4" />
-                    <p className="font-display font-bold">Lớp học với giáo viên</p>
-                  </div>
-                  <p className="text-xs text-slate-300 mt-1">Mã mời 8 ký tự, bài tập có hạn nộp, chấm Writing/Speaking theo rubric.</p>
-                </div>
-              </div>
+            <Reveal delay={150}>
+              <FeatureCard to="/courses" photo={PHOTOS.classroom} icon={<Users />} iconClass="bg-emerald-500" title="Lớp học với giáo viên" text="Mã mời, bài tập, chấm theo rubric." />
             </Reveal>
             <Reveal delay={250} className="md:col-span-2">
-              <div className="glass-night h-full rounded-3xl p-6 flex flex-col sm:flex-row gap-6 items-center">
-                <div className="flex-1">
-                  <div className="flex items-center gap-2">
-                    <Compass className="w-6 h-6 text-amber-300" />
-                    <h3 className="font-display text-xl font-extrabold text-white">Lộ trình 3 chặng</h3>
-                  </div>
-                  <p className="text-sm text-slate-400 mt-2 leading-relaxed">Nhập ngày thi và số phút mỗi ngày. Lộ trình tự chia tuần, mở khoá dần theo tiến độ thật của bạn.</p>
-                  <div className="flex gap-2 mt-4 flex-wrap">
-                    {['Nền tảng · 4 tuần', 'Chuyên sâu · 5 tuần', 'Thực chiến · 3 tuần'].map((s, i) => (
-                      <span key={s} className={cn('px-3 py-1 rounded-full border text-xs font-bold', ['border-emerald-400/40 text-emerald-300 bg-emerald-400/10', 'border-amber-300/40 text-amber-300 bg-amber-300/10', 'border-violet-400/40 text-violet-300 bg-violet-400/10'][i])}>
-                        {s}
-                      </span>
-                    ))}
-                  </div>
+              <FeatureCard to={gate('/app/learning-path', '/auth/register')} photo={PHOTOS.meeting} icon={<Compass />} iconClass="bg-sky-500" title="Lộ trình 3 chặng" text="Tự chia tuần theo ngày thi của bạn.">
+                <div className="flex gap-2 mt-3 flex-wrap">
+                  {['Nền tảng · 4 tuần', 'Chuyên sâu · 5 tuần', 'Thực chiến · 3 tuần'].map((t) => (
+                    <span key={t} className="px-2.5 py-1 rounded-md bg-white/15 backdrop-blur-sm text-xs font-semibold text-white">
+                      {t}
+                    </span>
+                  ))}
                 </div>
-                <div className="w-full sm:w-40 night-photo rotate-[2deg] shrink-0">
-                  <Img src={PHOTOS.laptop} alt="" ratio="square" fallbackClass="bg-slate-800" />
-                </div>
-              </div>
+              </FeatureCard>
             </Reveal>
           </div>
         </div>
