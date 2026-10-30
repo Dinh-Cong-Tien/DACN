@@ -2,7 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, Star, CheckCircle2, Play, Flame, Target, BookOpen, Users, FileText, AlertTriangle, RotateCcw, Compass, Quote, Headphones } from 'lucide-react';
 import { Button, Card, SectionTitle, Avatar, Badge } from '@/shared/components/ui';
-import { Reveal, Stagger, CountUp, Doodles } from '@/shared/components/motion';
+import { Reveal, Stagger, CountUp, Doodles, RotatingWords } from '@/shared/components/motion';
 import { Img, PHOTOS, pravatar } from '@/shared/components/media/Img';
 import { HOME_STATS, TESTIMONIALS, MOCK_TESTS, PRICING_PLANS, MOCK_COURSES } from '@/shared/mocks';
 import { useDocumentTitle } from '@/shared/hooks';
@@ -34,7 +34,11 @@ export const HomePage: React.FC = () => {
             </span>
             <h1 className="font-display text-[2.75rem] sm:text-6xl lg:text-[4.4rem] font-extrabold text-slate-900 leading-[1.02] text-balance animate-fade-up">
               Luyện TOEIC, VSTEP <br className="hidden sm:block" />
-              đúng chỗ bạn đang <span className="mark mark-coral">yếu</span>.
+              đúng chỗ bạn đang{' '}
+              <span className="mark mark-coral">
+                <RotatingWords words={['yếu', 'bỏ lỡ', 'hay sai', 'cần nhất']} />
+              </span>
+              .
             </h1>
             <p className="text-lg text-slate-600 leading-relaxed max-w-xl animate-fade-up delay-100">
               Thi xếp lớp 15 phút, nhận lộ trình theo ngày thi của bạn. Mỗi câu sai được lưu lại, giải thích và nhắc ôn đúng lúc. 45 phút mỗi ngày là đủ.

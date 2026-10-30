@@ -151,7 +151,7 @@ export const ExamRunner: React.FC<ExamRunnerProps> = ({ test, onSubmitExam, onEx
                     }}
                     className={cn(
                       'h-9 rounded-lg border text-xs font-bold flex items-center justify-center transition-all duration-200 relative',
-                      isA ? 'bg-indigo-600 text-white border-slate-900' : 'bg-white text-slate-600 border-slate-300 hover:border-slate-900',
+                      isA ? 'bg-indigo-600 text-white border-slate-900 animate-pop' : 'bg-white text-slate-600 border-slate-300 hover:border-slate-900',
                       isF && 'ring-2 ring-amber-400 ring-offset-1',
                       isC && 'scale-110 shadow-md z-10'
                     )}

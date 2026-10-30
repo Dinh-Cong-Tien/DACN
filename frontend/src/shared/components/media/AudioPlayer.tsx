@@ -95,7 +95,15 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({ src, examMode, autoPla
         {!compact && (
           <div className="flex items-center justify-between text-[11px] font-semibold text-slate-500 mb-1.5">
             <span className="flex items-center gap-1">
-              <Volume2 className={cn('w-3.5 h-3.5', playing && 'text-indigo-600 animate-pulse')} />
+              {playing ? (
+                <span className="inline-flex items-end gap-[2px] h-3.5 w-4">
+                  {[0, 1, 2, 3].map((i) => (
+                    <span key={i} className="eq-bar w-[3px] h-full rounded-sm bg-indigo-600" />
+                  ))}
+                </span>
+              ) : (
+                <Volume2 className="w-3.5 h-3.5" />
+              )}
               {examMode ? (locked ? 'Đã phát — không thể nghe lại' : 'Audio chỉ phát 1 lần, không tua') : 'Audio'}
             </span>
             <span className="font-mono">

@@ -42,18 +42,19 @@ const sizeCls: Record<ButtonSize, string> = {
 
 export const Button: React.FC<ButtonProps> = ({ variant = 'primary', size = 'md', loading, leftIcon, rightIcon, fullWidth, className, children, to, href, disabled, type = 'button', ...rest }) => {
   const cls = cn(
-    'inline-flex items-center justify-center font-bold whitespace-nowrap select-none transition-all duration-200 ease-spring',
+    'group/btn inline-flex items-center justify-center font-bold whitespace-nowrap select-none transition-all duration-200 ease-spring',
     'disabled:opacity-50 disabled:pointer-events-none',
     variantCls[variant],
     sizeCls[size],
     fullWidth && 'w-full',
     className
   );
+  // Icon trái/phải nhích nhẹ khi hover để gợi ý hướng hành động
   const inner = (
     <>
-      {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : leftIcon}
+      {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : leftIcon ? <span className="inline-flex transition-transform duration-300 group-hover/btn:-translate-x-0.5 group-hover/btn:scale-110">{leftIcon}</span> : null}
       {children && <span>{children}</span>}
-      {!loading && rightIcon}
+      {!loading && rightIcon && <span className="inline-flex transition-transform duration-300 group-hover/btn:translate-x-1">{rightIcon}</span>}
     </>
   );
   if (to)

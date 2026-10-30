@@ -1,9 +1,11 @@
-import React, { Children, isValidElement, cloneElement } from 'react';
+import React, { Children, isValidElement, cloneElement, useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useCountUp, useInView } from '@/shared/hooks';
 import { cn } from '@/shared/utils';
 
-type RevealAnim = 'fade-up' | 'fade-in' | 'scale-in' | 'slide-in-left' | 'slide-in-right' | 'fade-down' | 'tilt-in';
+export { fireConfetti, Confetti } from './confetti';
+
+type RevealAnim = 'fade-up' | 'fade-in' | 'scale-in' | 'slide-in-left' | 'slide-in-right' | 'fade-down' | 'tilt-in' | 'reveal-img';
 
 interface RevealProps extends React.HTMLAttributes<HTMLDivElement> {
   animation?: RevealAnim;
@@ -79,6 +81,42 @@ export const CountUp: React.FC<CountUpProps> = ({ value, duration = 1200, suffix
   );
 };
 
+/** Chữ xoay vòng: đổi từ mỗi `interval` ms với hiệu ứng lật lên */
+export const RotatingWords: React.FC<{ words: string[]; interval?: number; className?: string }> = ({ words, interval = 2400, className }) => {
+  const [i, setI] = useState(0);
+  useEffect(() => {
+    const id = setInterval(() => setI((x) => (x + 1) % words.length), interval);
+    return () => clearInterval(id);
+  }, [words.length, interval]);
+  const longest = words.reduce((a, b) => (a.length >= b.length ? a : b), '');
+  return (
+    <span className={cn('relative inline-grid align-baseline', className)} style={{ perspective: '600px' }}>
+      <span className="invisible col-start-1 row-start-1 whitespace-nowrap">{longest}</span>
+      <span key={i} className="col-start-1 row-start-1 whitespace-nowrap animate-word-in">
+        {words[i]}
+      </span>
+    </span>
+  );
+};
+
+/** Hiệu ứng gõ chữ */
+export const TypeWriter: React.FC<{ text: string; speed?: number; className?: string; cursor?: boolean }> = ({ text, speed = 40, className, cursor = true }) => {
+  const [n, setN] = useState(0);
+  const { ref, inView } = useInView<HTMLSpanElement>();
+  useEffect(() => {
+    if (!inView) return;
+    if (n >= text.length) return;
+    const id = setTimeout(() => setN((x) => x + 1), speed);
+    return () => clearTimeout(id);
+  }, [n, text.length, speed, inView]);
+  return (
+    <span ref={ref} className={className}>
+      {text.slice(0, n)}
+      {cursor && n < text.length && <span className="inline-block w-[2px] h-[1em] bg-current align-middle ml-0.5 animate-pulse" />}
+    </span>
+  );
+};
+
 /** Nền trang trí: khối màu mờ chuyển động chậm (giữ cho tương thích) */
 export const FloatingBlobs: React.FC<{ className?: string; tone?: 'indigo' | 'emerald' | 'rose' | 'amber' }> = ({ className, tone = 'indigo' }) => {
   const tones = {
@@ -96,24 +134,39 @@ export const FloatingBlobs: React.FC<{ className?: string; tone?: 'indigo' | 'em
   );
 };
 
-/** Hoạ tiết vẽ tay: sao, vòng tròn, đường lượn — tạo cảm giác "thật", không AI */
-export const Doodles: React.FC<{ className?: string; tone?: 'dark' | 'light' }> = ({ className, tone = 'dark' }) => {
+/** Hoạ tiết vẽ tay: sao, vòng tròn, đường lượn — có parallax nhẹ theo cuộn trang */
+export const Doodles: React.FC<{ className?: string; tone?: 'dark' | 'light'; parallax?: boolean }> = ({ className, tone = 'dark', parallax = true }) => {
   const stroke = tone === 'dark' ? '#141A2B' : '#ffffff';
+  const [y, setY] = useState(0);
+  useEffect(() => {
+    if (!parallax) return;
+    let raf = 0;
+    const onScroll = () => {
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(() => setY(window.scrollY));
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => {
+      window.removeEventListener('scroll', onScroll);
+      cancelAnimationFrame(raf);
+    };
+  }, [parallax]);
+  const p = (k: number) => ({ transform: `translateY(${(y * k).toFixed(1)}px)` });
   return (
     <div aria-hidden className={cn('pointer-events-none absolute inset-0 overflow-hidden', className)}>
-      <svg className="absolute top-10 right-10 w-16 h-16 animate-float opacity-70" viewBox="0 0 64 64" fill="none" stroke={stroke} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M32 6l6 18 18 6-18 6-6 18-6-18-18-6 18-6z" fill="#FFD24D" />
+      <svg style={p(-0.08)} className="absolute top-10 right-10 w-16 h-16 opacity-70" viewBox="0 0 64 64" fill="none" stroke={stroke} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+        <path className="animate-spin-slow origin-center" d="M32 6l6 18 18 6-18 6-6 18-6-18-18-6 18-6z" fill="#FFD24D" />
       </svg>
-      <svg className="absolute bottom-24 left-8 w-24 h-24 animate-float-slow opacity-70" viewBox="0 0 100 100" fill="none" stroke={stroke} strokeWidth="3" strokeLinecap="round">
-        <circle cx="50" cy="50" r="38" strokeDasharray="8 10" />
+      <svg style={p(0.06)} className="absolute bottom-24 left-8 w-24 h-24 animate-float-slow opacity-70" viewBox="0 0 100 100" fill="none" stroke={stroke} strokeWidth="3" strokeLinecap="round">
+        <circle cx="50" cy="50" r="38" strokeDasharray="8 10" className="animate-spin-slow origin-center" />
       </svg>
-      <svg className="absolute top-1/3 left-[12%] w-28 h-10 opacity-60" viewBox="0 0 120 40" fill="none" stroke={tone === 'dark' ? '#FA5330' : '#FFD24D'} strokeWidth="4" strokeLinecap="round">
+      <svg style={p(-0.04)} className="absolute top-1/3 left-[12%] w-28 h-10 opacity-60" viewBox="0 0 120 40" fill="none" stroke={tone === 'dark' ? '#FA5330' : '#FFD24D'} strokeWidth="4" strokeLinecap="round">
         <path d="M4 28c14-20 26-20 40 0s26 20 40 0 24-20 32-10" />
       </svg>
-      <svg className="absolute bottom-10 right-[18%] w-14 h-14 animate-bounce-soft opacity-70" viewBox="0 0 64 64" fill="none" stroke={stroke} strokeWidth="3">
+      <svg style={p(0.1)} className="absolute bottom-10 right-[18%] w-14 h-14 animate-bounce-soft opacity-70" viewBox="0 0 64 64" fill="none" stroke={stroke} strokeWidth="3">
         <rect x="10" y="10" width="44" height="44" rx="8" fill={tone === 'dark' ? '#A9E8D4' : 'rgba(255,255,255,0.25)'} transform="rotate(12 32 32)" />
       </svg>
-      <svg className="absolute top-20 left-1/2 w-10 h-10 opacity-60" viewBox="0 0 40 40" fill="none" stroke={stroke} strokeWidth="3" strokeLinecap="round">
+      <svg style={p(-0.05)} className="absolute top-20 left-1/2 w-10 h-10 opacity-60 animate-heartbeat" viewBox="0 0 40 40" fill="none" stroke={stroke} strokeWidth="3" strokeLinecap="round">
         <path d="M6 20h28M20 6v28" />
       </svg>
     </div>

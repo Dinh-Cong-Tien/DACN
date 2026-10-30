@@ -197,7 +197,7 @@ export const AppShell: React.FC<AppShellProps> = ({ groups, brandTagline, accent
             )}
             {notificationsTo && (
               <NavLink to={notificationsTo} className="relative p-2 rounded-xl text-slate-700 hover:bg-slate-900/5 transition">
-                <Bell className="w-5 h-5" />
+                <Bell className={cn('w-5 h-5', unread > 0 && 'animate-ring-bell')} />
                 {unread > 0 && <span className="absolute top-1 right-1 min-w-[16px] h-4 px-1 rounded-full bg-violet-500 text-white text-[9px] font-black flex items-center justify-center ring-2 ring-cream animate-pop">{unread}</span>}
               </NavLink>
             )}
