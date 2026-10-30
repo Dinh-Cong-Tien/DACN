@@ -1,5 +1,5 @@
 import { ThreeBackground } from '@/shared/components/three/ThreeBackground';
-import React, { useLayoutEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, Star, CheckCircle2, Play, Flame, Target, BookOpen, Users, FileText, AlertTriangle, RotateCcw, Compass, Quote, Headphones } from 'lucide-react';
 import { Button, Card, SectionTitle, Avatar, Badge } from '@/shared/components/ui';
@@ -23,12 +23,12 @@ const LOOP = [
 
 /**
  * Đường cong nét đứt ngắn nối mép dưới ảnh bước i với mép trên ảnh bước i+1 (chỉ desktop).
- * Mờ dần hiện ra khi đoạn nối vào khung nhìn, ẩn lại khi cuộn ra khỏi.
+ * Đồng bộ với hiệu ứng từng mục: khi hàng bước i+1 hiện ra thì đoạn nối tự vẽ từ ảnh trên xuống ảnh dưới,
+ * chấm đến bật lên ở cuối; khi hàng đó ẩn thì đoạn nối thu lại.
  */
-const LoopConnector: React.FC<{ containerRef: React.RefObject<HTMLDivElement>; photoRefs: React.MutableRefObject<(HTMLDivElement | null)[]>; dark?: boolean }> = ({ containerRef, photoRefs, dark }) => {
+const LoopConnector: React.FC<{ containerRef: React.RefObject<HTMLDivElement>; photoRefs: React.MutableRefObject<(HTMLDivElement | null)[]>; rowsOn: boolean[]; dark?: boolean }> = ({ containerRef, photoRefs, rowsOn, dark }) => {
   const [size, setSize] = useState({ w: 0, h: 0 });
   const [paths, setPaths] = useState<{ d: string; a: [number, number]; b: [number, number] }[]>([]);
-  const [shown, setShown] = useState<boolean[]>([]);
   useLayoutEffect(() => {
     const box = containerRef.current;
     if (!box) return;
@@ -44,52 +44,51 @@ const LoopConnector: React.FC<{ containerRef: React.RefObject<HTMLDivElement>; p
       }
       return { x, y, w: el.offsetWidth, h: el.offsetHeight };
     };
-    let list: { d: string; a: [number, number]; b: [number, number] }[] = [];
     const calc = () => {
       setSize({ w: box.offsetWidth, h: box.offsetHeight });
       const els = photoRefs.current.filter(Boolean) as HTMLDivElement[];
-      const out: typeof list = [];
+      const out: { d: string; a: [number, number]; b: [number, number] }[] = [];
       for (let i = 0; i < els.length - 1; i++) {
         const p = pos(els[i]);
         const q = pos(els[i + 1]);
-        const a: [number, number] = [p.x + p.w / 2, p.y + p.h + 14];
-        const b: [number, number] = [q.x + q.w / 2, q.y - 14];
+        const a: [number, number] = [p.x + p.w / 2, p.y + p.h + 18];
+        const b: [number, number] = [q.x + q.w / 2, q.y - 18];
         const dy = b[1] - a[1];
         out.push({ d: `M ${a[0]} ${a[1]} C ${a[0]} ${a[1] + dy * 0.75}, ${b[0]} ${b[1] - dy * 0.75}, ${b[0]} ${b[1]}`, a, b });
       }
-      list = out;
       setPaths(out);
     };
-    const onScroll = () => {
-      const r = box.getBoundingClientRect();
-      const vh = window.innerHeight;
-      setShown((prev) => {
-        const next = list.map((pp) => r.top + pp.a[1] < vh * 0.9 && r.top + pp.b[1] > vh * 0.1);
-        return next.length === prev.length && next.every((v, i) => v === prev[i]) ? prev : next;
-      });
-    };
     calc();
-    onScroll();
-    const ro = new ResizeObserver(() => {
-      calc();
-      onScroll();
-    });
+    const ro = new ResizeObserver(calc);
     ro.observe(box);
-    window.addEventListener('scroll', onScroll, { passive: true });
-    return () => {
-      ro.disconnect();
-      window.removeEventListener('scroll', onScroll);
-    };
+    return () => ro.disconnect();
   }, [containerRef, photoRefs]);
+
+  const ink = dark ? '#0B0F1C' : '#141A2B';
   return (
     <svg aria-hidden className="hidden md:block absolute inset-0 pointer-events-none" width={size.w} height={size.h} viewBox={`0 0 ${size.w || 1} ${size.h || 1}`}>
-      {paths.map((p, i) => (
-        <g key={i} style={{ opacity: shown[i] ? 1 : 0, transition: 'opacity 0.7s ease-out' }}>
-          <path d={p.d} fill="none" stroke={dark ? '#ffffff' : '#141A2B'} strokeOpacity={dark ? 0.4 : 0.35} strokeWidth="2.5" strokeLinecap="round" strokeDasharray="2 12" className="loop-dash" />
-          <circle cx={p.a[0]} cy={p.a[1]} r="6" fill="#FA5330" stroke={dark ? '#0B0F1C' : '#141A2B'} strokeWidth="2" />
-          <circle cx={p.b[0]} cy={p.b[1]} r="6" fill="#FFD24D" stroke={dark ? '#0B0F1C' : '#141A2B'} strokeWidth="2" />
-        </g>
-      ))}
+      {paths.map((p, i) => {
+        const on = Boolean(rowsOn[i + 1]); // hiện cùng lúc với hàng bước kế tiếp
+        const mid = `loop-mask-${i}`;
+        return (
+          <g key={i}>
+            <defs>
+              {/* Mặt nạ vẽ dần: nét đứt giữ nguyên nhịp, chỉ phần đã "mở" mới thấy */}
+              <mask id={mid} maskUnits="userSpaceOnUse" x={0} y={0} width={size.w} height={size.h}>
+                <path d={p.d} fill="none" stroke="#fff" strokeWidth="12" pathLength={1} strokeDasharray="1" strokeDashoffset={on ? 0 : 1} style={{ transition: `stroke-dashoffset ${on ? '0.9s' : '0.5s'} cubic-bezier(0.65, 0, 0.35, 1) ${on ? '0.15s' : '0s'}` }} />
+              </mask>
+            </defs>
+            <path d={p.d} fill="none" stroke={dark ? '#ffffff' : '#141A2B'} strokeOpacity={dark ? 0.55 : 0.4} strokeWidth="4.5" strokeLinecap="round" strokeDasharray="5 13" className="loop-dash" mask={`url(#${mid})`} />
+            {/* chấm đi: hiện ngay khi bắt đầu vẽ */}
+            <circle cx={p.a[0]} cy={p.a[1]} r="8" fill="#FA5330" stroke={ink} strokeWidth="3" className="loop-dot" style={{ transform: `scale(${on ? 1 : 0})`, transition: 'transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)' }} />
+            {/* chấm đến: bật lên khi nét vừa vẽ tới, kèm vành sáng */}
+            <g className="loop-dot" style={{ transform: `scale(${on ? 1 : 0})`, transition: `transform 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) ${on ? '0.95s' : '0s'}` }}>
+              <circle cx={p.b[0]} cy={p.b[1]} r="15" fill="#FFD24D" fillOpacity="0.18" className={on ? 'loop-pin' : undefined} />
+              <circle cx={p.b[0]} cy={p.b[1]} r="8" fill="#FFD24D" stroke={ink} strokeWidth="3" />
+            </g>
+          </g>
+        );
+      })}
     </svg>
   );
 };
@@ -98,8 +97,9 @@ const LoopConnector: React.FC<{ containerRef: React.RefObject<HTMLDivElement>; p
  * Một hàng trong 5 bước: ẩn khi ở ngoài khung nhìn, cuộn tới thì mờ dần hiện ra và trượt nhẹ lên.
  * Hiệu ứng tiết chế: chỉ opacity + dịch chuyển dọc nhỏ, các phần lệch nhau vài chục ms.
  */
-const StepRow: React.FC<{ index: number; step: (typeof LOOP)[number]; photoRef: (el: HTMLDivElement | null) => void }> = ({ index: i, step, photoRef }) => {
+const StepRow: React.FC<{ index: number; step: (typeof LOOP)[number]; photoRef: (el: HTMLDivElement | null) => void; onToggle?: (index: number, on: boolean) => void }> = ({ index: i, step, photoRef, onToggle }) => {
   const { ref, inView: on } = useInView<HTMLDivElement>({ once: false, threshold: 0.2, rootMargin: '0px 0px -10% 0px' });
+  useEffect(() => onToggle?.(i, on), [i, on, onToggle]);
   const textLeft = i % 2 === 0;
   const base = 'transition-[opacity,transform] duration-700 ease-out motion-reduce:transition-none';
   const show = (delay: number) => ({ transitionDelay: on ? `${delay}ms` : '0ms' });
@@ -128,6 +128,15 @@ const StepRow: React.FC<{ index: number; step: (typeof LOOP)[number]; photoRef: 
 export const HomePage: React.FC = () => {
   const loopBoxRef = useRef<HTMLDivElement>(null);
   const loopPhotoRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const [rowsOn, setRowsOn] = useState<boolean[]>([]);
+  const toggleRow = useCallback((idx: number, on: boolean) => {
+    setRowsOn((prev) => {
+      if (Boolean(prev[idx]) === on) return prev;
+      const next = [...prev];
+      next[idx] = on;
+      return next;
+    });
+  }, []);
   useDocumentTitle('Trang chủ');
   const gate = useGate();
   const featured = MOCK_TESTS.filter((t) => t.isFree).slice(0, 3);
@@ -291,9 +300,9 @@ export const HomePage: React.FC = () => {
           <SectionTitle dark eyebrow="Cách OrbiLingo hoạt động" title={<>Không làm đề vô định. <span className="hero-gradient-text">Làm đúng</span> việc cần làm.</>} description="Năm bước lặp lại mỗi tuần. Dữ liệu từ bài làm của bạn quyết định bước tiếp theo." />
         </Reveal>
         <div ref={loopBoxRef} className="relative space-y-14 md:space-y-28">
-          <LoopConnector containerRef={loopBoxRef} photoRefs={loopPhotoRefs} dark />
+          <LoopConnector containerRef={loopBoxRef} photoRefs={loopPhotoRefs} rowsOn={rowsOn} dark />
           {LOOP.map((step, i) => (
-            <StepRow key={step.n} index={i} step={step} photoRef={(el) => (loopPhotoRefs.current[i] = el)} />
+            <StepRow key={step.n} index={i} step={step} photoRef={(el) => (loopPhotoRefs.current[i] = el)} onToggle={toggleRow} />
           ))}
         </div>
       </section>

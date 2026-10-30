@@ -168,8 +168,13 @@
 }
 
 /* Nét đứt chạy dọc đường nối 5 bước */
-@keyframes loop-dash { to { stroke-dashoffset: -28; } }
-.loop-dash { animation: loop-dash 1.6s linear infinite; }
+@keyframes loop-dash { to { stroke-dashoffset: -36; } }
+.loop-dash { animation: loop-dash 1.8s linear infinite; }
+.loop-dot { transform-box: fill-box; transform-origin: center; }
+/* Vành sáng chấm đến "thở" nhẹ */
+@keyframes loop-pin { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.35); opacity: 0.4; } }
+.loop-pin { transform-box: fill-box; transform-origin: center; animation: loop-pin 2.4s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) { .loop-dash, .loop-pin { animation: none; } }
 
 /* ===== Giao diện đêm (trang chủ) ===== */
 .glass-night {
