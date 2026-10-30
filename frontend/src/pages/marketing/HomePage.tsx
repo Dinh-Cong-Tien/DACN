@@ -361,7 +361,7 @@ export const HomePage: React.FC = () => {
         <div aria-hidden className="pointer-events-none absolute -z-10 rounded-full left-1/2 -translate-x-1/2 top-1/3 w-[900px] h-[420px] bg-fuchsia-600/15 blur-[150px]" />
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
           <Reveal className="flex flex-col md:flex-row md:items-end justify-between gap-4">
-            <SectionTitle dark align="left" eyebrow="Khoá học" title={<>Giáo viên thật, <span className="hero-gradient-text">video có transcript.</span></>} description="Nhấn vào từ trong transcript để tra nghĩa. Mỗi bài có quiz củng cố." />
+            <SectionTitle dark align="left" eyebrow="Khoá học" title={<>Lộ trình học, <span className="hero-gradient-text">video có bản ghi.</span></>} description="Nhấn vào từ trong transcript để tra nghĩa. Mỗi bài có quiz củng cố." />
             <Button to="/courses" variant="white" rightIcon={<ArrowRight className="w-4 h-4" />} className="!border-white/20 !bg-white/10 !text-white hover:!bg-white hover:!text-slate-900">
               Tất cả khoá học
             </Button>
