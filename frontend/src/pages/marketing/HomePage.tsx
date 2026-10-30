@@ -22,19 +22,18 @@ const LOOP = [
 ];
 
 /**
- * Đường nối cong uốn lượn giữa ảnh bước i và i+1 (desktop):
- * - nét chấm tròn gradient cam → hồng → vàng, chảy nhẹ dọc đường
- * - quầng sáng mờ bên dưới, tự vẽ dần khi cuộn tới
- * - một đốm sáng chạy dọc đường cong, hai đầu là "chốt" phát sáng
+ * Đường nối giữa ảnh bước i và i+1 (desktop) theo kiểu sơ đồ quy trình:
+ * đi thẳng xuống → bo góc → chạy ngang → bo góc → xuống ảnh kế tiếp.
+ * Nét đứt mảnh một màu, tự vẽ dần khi đoạn đó vào khung nhìn và thu lại khi ra khỏi.
  */
 const LoopConnector: React.FC<{ containerRef: React.RefObject<HTMLDivElement>; photoRefs: React.MutableRefObject<(HTMLDivElement | null)[]>; dark?: boolean }> = ({ containerRef, photoRefs }) => {
   const [size, setSize] = useState({ w: 0, h: 0 });
-  const [paths, setPaths] = useState<{ d: string; a: [number, number]; b: [number, number]; trigger: number }[]>([]);
+  const [paths, setPaths] = useState<{ d: string; a: [number, number]; b: [number, number] }[]>([]);
   const [shown, setShown] = useState<boolean[]>([]);
   useLayoutEffect(() => {
     const box = containerRef.current;
     if (!box) return;
-    // offsetLeft/Top bỏ qua transform (ảnh nghiêng, fade-up) nên vị trí ổn định
+    // offsetLeft/Top bỏ qua transform của hiệu ứng xuất hiện nên vị trí luôn chính xác
     const pos = (el: HTMLElement) => {
       let x = 0;
       let y = 0;
@@ -46,7 +45,7 @@ const LoopConnector: React.FC<{ containerRef: React.RefObject<HTMLDivElement>; p
       }
       return { x, y, w: el.offsetWidth, h: el.offsetHeight };
     };
-    let list: { d: string; a: [number, number]; b: [number, number]; trigger: number }[] = [];
+    let list: { d: string; a: [number, number]; b: [number, number] }[] = [];
     const calc = () => {
       setSize({ w: box.offsetWidth, h: box.offsetHeight });
       const els = photoRefs.current.filter(Boolean) as HTMLDivElement[];
@@ -54,32 +53,29 @@ const LoopConnector: React.FC<{ containerRef: React.RefObject<HTMLDivElement>; p
       for (let i = 0; i < els.length - 1; i++) {
         const p = pos(els[i]);
         const q = pos(els[i + 1]);
-        // Xuất phát ở mép dưới phía trong của ảnh trên, đáp xuống mép trên phía trong của ảnh dưới
-        const toRight = q.x > p.x;
-        const a: [number, number] = [p.x + p.w * (toRight ? 0.72 : 0.28), p.y + p.h + 18];
-        const b: [number, number] = [q.x + q.w * (toRight ? 0.28 : 0.72), q.y - 18];
-        const dx = b[0] - a[0];
-        const dy = b[1] - a[1];
-        // Hai đoạn cong nối tiếp: rơi xuống hơi ngược hướng rồi lượn ngang, đuôi hạ mềm (như nét vẽ tay)
-        const mx = a[0] + dx * 0.5;
-        const my = a[1] + dy * 0.55;
+        const a: [number, number] = [Math.round(p.x + p.w / 2), Math.round(p.y + p.h + 20)];
+        const b: [number, number] = [Math.round(q.x + q.w / 2), Math.round(q.y - 20)];
+        const midY = Math.round((a[1] + b[1]) / 2);
+        const dir = b[0] < a[0] ? -1 : 1;
+        const r = Math.min(28, Math.abs(b[0] - a[0]) / 2, (b[1] - a[1]) / 4);
         const d = [
           `M ${a[0]} ${a[1]}`,
-          `C ${a[0] - dx * 0.1} ${a[1] + dy * 0.6}, ${mx - dx * 0.38} ${my + dy * 0.14}, ${mx} ${my}`,
-          `S ${b[0] + dx * 0.08} ${b[1] - dy * 0.65}, ${b[0]} ${b[1]}`,
+          `V ${midY - r}`,
+          `Q ${a[0]} ${midY} ${a[0] + dir * r} ${midY}`,
+          `H ${b[0] - dir * r}`,
+          `Q ${b[0]} ${midY} ${b[0]} ${midY + r}`,
+          `V ${b[1]}`,
         ].join(' ');
-        out.push({ d, a, b, trigger: p.y + p.h * 0.6 });
+        out.push({ d, a, b });
       }
       list = out;
       setPaths(out);
     };
-    // Vẽ dần từng đoạn khi cuộn tới
     const onScroll = () => {
       const r = box.getBoundingClientRect();
       const vh = window.innerHeight;
       setShown((prev) => {
-        // Hiện khi đoạn nối nằm trong vùng nhìn, ẩn khi cuộn ra khỏi (cả lên lẫn xuống)
-        const next = list.map((pp) => r.top + pp.a[1] < vh * 0.85 && r.top + pp.b[1] > vh * 0.12);
+        const next = list.map((pp) => r.top + pp.a[1] < vh * 0.82 && r.top + pp.b[1] > vh * 0.15);
         return next.length === prev.length && next.every((v, i) => v === prev[i]) ? prev : next;
       });
     };
@@ -97,51 +93,22 @@ const LoopConnector: React.FC<{ containerRef: React.RefObject<HTMLDivElement>; p
     };
   }, [containerRef, photoRefs]);
 
+  const draw = 'stroke-dashoffset 1.2s cubic-bezier(0.65, 0, 0.35, 1)';
   return (
     <svg aria-hidden className="hidden md:block absolute inset-0 pointer-events-none overflow-visible" width={size.w} height={size.h} viewBox={`0 0 ${size.w || 1} ${size.h || 1}`}>
-      <defs>
-        <filter id="loop-glow" x="-20%" y="-20%" width="140%" height="140%">
-          <feGaussianBlur stdDeviation="7" />
-        </filter>
-        <radialGradient id="loop-comet">
-          <stop offset="0%" stopColor="#ffffff" />
-          <stop offset="35%" stopColor="#FFD24D" />
-          <stop offset="100%" stopColor="#FFD24D" stopOpacity="0" />
-        </radialGradient>
-      </defs>
       {paths.map((p, i) => {
-        const gid = `loop-grad-${i}`;
         const on = Boolean(shown[i]);
+        const mid = `loop-mask-${i}`;
         return (
           <g key={i}>
-            <defs>
-              <linearGradient id={gid} gradientUnits="userSpaceOnUse" x1={p.a[0]} y1={p.a[1]} x2={p.b[0]} y2={p.b[1]}>
-                <stop offset="0%" stopColor="#FF7352" />
-                <stop offset="55%" stopColor="#E25BD8" />
-                <stop offset="100%" stopColor="#FFD24D" />
-              </linearGradient>
-            </defs>
-            {/* Quầng sáng mờ, tự vẽ dần */}
-            <path d={p.d} fill="none" stroke={`url(#${gid})`} strokeWidth="12" strokeOpacity="0.3" strokeLinecap="round" filter="url(#loop-glow)" pathLength={1} strokeDasharray="1" strokeDashoffset={on ? 0 : 1} style={{ transition: 'stroke-dashoffset 1.6s cubic-bezier(0.65,0,0.35,1)' }} />
-            {/* "Ray" mảnh liền rất nhạt, cũng vẽ dần */}
-            <path d={p.d} fill="none" stroke={`url(#${gid})`} strokeOpacity="0.25" strokeWidth="1.25" pathLength={1} strokeDasharray="1" strokeDashoffset={on ? 0 : 1} style={{ transition: 'stroke-dashoffset 1.6s cubic-bezier(0.65,0,0.35,1)' }} />
-            {/* Nét chấm tròn gradient chảy dọc đường */}
-            <path d={p.d} fill="none" stroke={`url(#${gid})`} strokeWidth="3.5" strokeLinecap="round" strokeDasharray="0.1 13" className="loop-flow" style={{ opacity: on ? 1 : 0, transition: 'opacity 0.8s ease 0.9s' }} />
-            {/* Đốm sáng chạy dọc đường */}
-            {on && (
-              <circle r="8" fill="url(#loop-comet)">
-                <animateMotion dur="3.8s" begin="1.4s" repeatCount="indefinite" path={p.d} keyPoints="0;1" keyTimes="0;1" calcMode="spline" keySplines="0.45 0 0.55 1" />
-              </circle>
-            )}
-            {/* Chốt hai đầu */}
-            <g style={{ opacity: on ? 1 : 0, transition: 'opacity 0.5s ease' }}>
-              <circle cx={p.a[0]} cy={p.a[1]} r="11" fill="#FF7352" fillOpacity="0.16" />
-              <circle cx={p.a[0]} cy={p.a[1]} r="4.5" fill="#FF7352" stroke="#0b0f1c" strokeWidth="2" />
-            </g>
-            <g style={{ opacity: on ? 1 : 0, transition: 'opacity 0.5s ease 1.4s' }}>
-              <circle cx={p.b[0]} cy={p.b[1]} r="12" fill="#FFD24D" fillOpacity="0.2" className="loop-pin" />
-              <circle cx={p.b[0]} cy={p.b[1]} r="5" fill="#FFD24D" stroke="#0b0f1c" strokeWidth="2" />
-            </g>
+            {/* Mặt nạ vẽ dần cho đường nét đứt */}
+            <mask id={mid} maskUnits="userSpaceOnUse" x="0" y="0" width={size.w} height={size.h}>
+              <path d={p.d} fill="none" stroke="#fff" strokeWidth="6" pathLength={1} strokeDasharray="1" strokeDashoffset={on ? 0 : 1} style={{ transition: draw }} />
+            </mask>
+            <path d={p.d} fill="none" stroke="#ffffff" strokeOpacity="0.28" strokeWidth="1.5" strokeDasharray="6 7" strokeLinecap="round" mask={`url(#${mid})`} />
+            {/* Đầu nối: vòng tròn rỗng */}
+            <circle cx={p.a[0]} cy={p.a[1]} r="4" fill="#0b0f1c" stroke="#ffffff" strokeOpacity="0.5" strokeWidth="1.5" style={{ opacity: on ? 1 : 0, transition: 'opacity 0.4s ease' }} />
+            <circle cx={p.b[0]} cy={p.b[1]} r="4" fill="#0b0f1c" stroke="#FFD24D" strokeOpacity="0.9" strokeWidth="1.5" style={{ opacity: on ? 1 : 0, transition: 'opacity 0.4s ease 0.9s' }} />
           </g>
         );
       })}
@@ -150,39 +117,30 @@ const LoopConnector: React.FC<{ containerRef: React.RefObject<HTMLDivElement>; p
 };
 
 /**
- * Một hàng trong 5 bước: ẩn khi ở ngoài màn hình, cuộn tới thì nổi lên dần
- * (chữ trượt vào từ phía mình, ảnh trượt từ phía đối diện + phóng nhẹ + rõ dần), cuộn đi thì ẩn lại.
+ * Một hàng trong 5 bước: ẩn khi ở ngoài khung nhìn, cuộn tới thì mờ dần hiện ra và trượt nhẹ lên.
+ * Hiệu ứng tiết chế: chỉ opacity + dịch chuyển dọc nhỏ, các phần lệch nhau vài chục ms.
  */
 const StepRow: React.FC<{ index: number; step: (typeof LOOP)[number]; photoRef: (el: HTMLDivElement | null) => void }> = ({ index: i, step, photoRef }) => {
-  const { ref, inView: on } = useInView<HTMLDivElement>({ once: false, threshold: 0.25, rootMargin: '0px 0px -8% 0px' });
-  const textLeft = i % 2 === 0; // hàng chẵn: chữ trái, ảnh phải
-  const ease = 'transition-all duration-[1000ms] ease-[cubic-bezier(0.16,1,0.3,1)]';
-  const hiddenText = textLeft ? '-translate-x-16' : 'translate-x-16';
-  const hiddenPhoto = textLeft ? 'translate-x-20' : '-translate-x-20';
-  const item = (delay: number) => ({ transitionDelay: on ? `${delay}ms` : '0ms' });
+  const { ref, inView: on } = useInView<HTMLDivElement>({ once: false, threshold: 0.2, rootMargin: '0px 0px -10% 0px' });
+  const textLeft = i % 2 === 0;
+  const base = 'transition-[opacity,transform] duration-700 ease-out motion-reduce:transition-none';
+  const show = (delay: number) => ({ transitionDelay: on ? `${delay}ms` : '0ms' });
+  const state = on ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6';
   return (
     <div ref={ref} className={cn('grid md:grid-cols-2 gap-8 md:gap-16 items-center', !textLeft && 'md:[&>*:first-child]:order-2')}>
       <div className="space-y-4">
-        <div className="flex items-center gap-4">
-          <span className={cn('font-display text-6xl md:text-7xl font-extrabold leading-none text-white/10', ease, on ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 translate-y-6 scale-75')} style={item(0)}>
-            {step.n}
-          </span>
-          <span className={cn('px-3 py-1 rounded-full border border-white/15 bg-white/5 text-xs font-bold text-amber-300', ease, on ? 'opacity-100 translate-x-0' : cn('opacity-0', hiddenText))} style={item(120)}>
-            {step.tag}
-          </span>
+        <div className={cn('flex items-center gap-4', base, state)} style={show(0)}>
+          <span className="font-display text-6xl md:text-7xl font-extrabold leading-none text-white/10">{step.n}</span>
+          <span className="px-3 py-1 rounded-full border border-white/15 bg-white/5 text-xs font-bold text-amber-300">{step.tag}</span>
         </div>
-        <h3 className={cn('font-display text-2xl md:text-3xl font-extrabold text-white', ease, on ? 'opacity-100 translate-x-0 blur-0' : cn('opacity-0 blur-sm', hiddenText))} style={item(200)}>
+        <h3 className={cn('font-display text-2xl md:text-3xl font-extrabold text-white', base, state)} style={show(80)}>
           {step.title}
         </h3>
-        <p className={cn('text-slate-400 leading-relaxed text-lg', ease, on ? 'opacity-100 translate-x-0 blur-0' : cn('opacity-0 blur-sm', hiddenText))} style={item(300)}>
+        <p className={cn('text-slate-400 leading-relaxed text-lg', base, state)} style={show(160)}>
           {step.text}
         </p>
       </div>
-      <div
-        ref={photoRef}
-        className={cn('night-photo relative z-10 md:w-[82%]', ease, textLeft ? 'md:ml-auto' : '', on ? cn('opacity-100 translate-x-0 scale-100', textLeft ? 'rotate-[1.5deg]' : 'rotate-[-1.5deg]') : cn('opacity-0 scale-90', hiddenPhoto, textLeft ? 'rotate-[6deg]' : 'rotate-[-6deg]'))}
-        style={item(150)}
-      >
+      <div ref={photoRef} className={cn('night-photo relative z-10 md:w-[82%]', textLeft && 'md:ml-auto', base, on ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10')} style={show(120)}>
         <Img src={step.photo} alt={step.title} ratio="4/3" fallbackClass="bg-slate-800" />
       </div>
     </div>
