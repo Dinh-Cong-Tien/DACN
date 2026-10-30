@@ -1,12 +1,18 @@
 import React from 'react';
-import { Img } from '@/shared/components/media/Img';
+import { cn } from '@/shared/utils';
 import type { Testimonial } from '@/shared/types';
 
-/** Thẻ vinh danh học viên: ảnh người đứng, điểm đạt được, điểm đầu vào, số tuần, ngày + nơi thi */
+// indigo/violet đã được đổi sang teal/coral trong tailwind.config
+const RING = { TOEIC: 'from-indigo-400/70 to-indigo-700/30', VSTEP: 'from-violet-400/70 to-violet-700/30' } as const;
+
+/** Thẻ vinh danh học viên: ảnh người đã tách nền đứng trên vòng tròn màu, thông tin điểm bên dưới */
 export const TestimonialCard: React.FC<{ item: Testimonial }> = ({ item: t }) => (
   <figure className="h-full flex flex-col overflow-hidden rounded-2xl border border-white/10 bg-slate-900">
-    <Img src={t.avatar ?? ''} alt={t.name} ratio="3/4" fallbackClass="bg-slate-800" />
-    <figcaption className="flex-1 flex flex-col p-5">
+    <div className="relative h-80 md:h-[22rem] overflow-hidden bg-gradient-to-b from-slate-800/60 to-slate-900">
+      <div aria-hidden className={cn('absolute left-1/2 top-10 -translate-x-1/2 w-64 h-64 md:w-72 md:h-72 rounded-full bg-gradient-to-br', RING[t.exam])} />
+      {t.avatar && <img src={t.avatar} alt={t.name} loading="lazy" className="absolute inset-x-0 bottom-0 mx-auto h-full w-auto object-contain object-bottom [filter:drop-shadow(0_16px_28px_rgba(0,0,0,0.45))]" />}
+    </div>
+    <figcaption className="flex-1 flex flex-col border-t border-white/10 p-5">
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0">
           <p className="font-semibold text-white">{t.name}</p>
