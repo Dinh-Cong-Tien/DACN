@@ -130,7 +130,15 @@ export const PageHeader: React.FC<{
 // ============ SECTION TITLE (marketing) ============
 export const SectionTitle: React.FC<{ eyebrow?: string; title: React.ReactNode; description?: React.ReactNode; align?: 'center' | 'left'; className?: string; dark?: boolean }> = ({ eyebrow, title, description, align = 'center', className, dark }) => (
   <div className={cn('space-y-4 max-w-2xl', align === 'center' ? 'mx-auto text-center' : 'text-left', className)}>
-    {eyebrow && <span className={cn('sticker', dark && '!bg-amber-300 !text-slate-900')}>{eyebrow}</span>}
+    {eyebrow &&
+      (dark ? (
+        <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-white/15 bg-white/5 text-xs font-bold text-slate-200">
+          <span className="w-1.5 h-1.5 rounded-full bg-amber-300" />
+          {eyebrow}
+        </span>
+      ) : (
+        <span className="sticker">{eyebrow}</span>
+      ))}
     <h2 className={cn('font-display text-3xl md:text-[2.6rem] font-extrabold tracking-tight leading-[1.1] text-balance', dark ? 'text-white' : 'text-slate-900')}>{title}</h2>
     {description && <p className={cn('text-base leading-relaxed', dark ? 'text-slate-300' : 'text-slate-600')}>{description}</p>}
   </div>

@@ -171,6 +171,36 @@
 @keyframes loop-dash { to { stroke-dashoffset: -28; } }
 .loop-dash { animation: loop-dash 1.6s linear infinite; }
 
+/* ===== Giao diện đêm (trang chủ) ===== */
+.glass-night {
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.02));
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.06) inset, 0 30px 60px -30px rgba(0, 0, 0, 0.6);
+}
+.night-photo {
+  border-radius: 1.5rem;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 30px 60px -25px rgba(0, 0, 0, 0.7), 0 0 0 6px rgba(255, 255, 255, 0.03);
+  transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.night-photo:hover { transform: rotate(0deg) translateY(-4px); }
+.night-photo img { transition: transform 0.7s cubic-bezier(0.16, 1, 0.3, 1); }
+.night-photo:hover img { transform: scale(1.05); }
+/* Trường sao bằng CSS (nhẹ hơn WebGL) */
+.bg-stars {
+  background-image:
+    radial-gradient(1px 1px at 20px 30px, rgba(255,255,255,0.7), transparent 60%),
+    radial-gradient(1px 1px at 120px 80px, rgba(255,255,255,0.5), transparent 60%),
+    radial-gradient(1.5px 1.5px at 200px 160px, rgba(255,210,77,0.7), transparent 60%),
+    radial-gradient(1px 1px at 280px 40px, rgba(255,255,255,0.6), transparent 60%),
+    radial-gradient(1px 1px at 340px 220px, rgba(255,255,255,0.4), transparent 60%),
+    radial-gradient(1.5px 1.5px at 60px 260px, rgba(169,232,212,0.6), transparent 60%);
+  background-size: 380px 300px;
+}
+
 /* Thẻ nghiêng theo chuột (3D tilt) */
 .tilt-card {
   transform-style: preserve-3d;

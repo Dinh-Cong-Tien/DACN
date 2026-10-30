@@ -46,7 +46,8 @@ export const GuestLayout: React.FC<GuestLayoutProps> = ({ contained }) => {
   };
 
   // Trang chủ có hero nền tối → header trong suốt, chữ trắng khi chưa cuộn
-  const onDarkHero = location.pathname === '/' && !scrolled;
+  // Trang chủ dùng nền tối toàn trang → header luôn chữ sáng; khi cuộn chuyển kính tối
+  const onDarkHero = location.pathname === '/';
   const linkCls = ({ isActive }: { isActive: boolean }) =>
     cn(
       'px-3 py-2 rounded-xl text-sm font-bold whitespace-nowrap transition-all duration-200 inline-flex items-center gap-1.5',
@@ -126,7 +127,7 @@ export const GuestLayout: React.FC<GuestLayoutProps> = ({ contained }) => {
         </div>
       )}
 
-      <header className={cn('top-0 z-40 transition-all duration-300 border-b-2', onDarkHero ? 'absolute inset-x-0 bg-transparent border-transparent' : scrolled ? 'sticky bg-cream/90 backdrop-blur-xl border-slate-900/10' : 'sticky bg-cream border-transparent')}>
+      <header className={cn('top-0 z-40 transition-all duration-300 border-b', onDarkHero ? (scrolled ? 'fixed inset-x-0 bg-slate-950/75 backdrop-blur-xl border-white/10' : 'absolute inset-x-0 bg-transparent border-transparent') : scrolled ? 'sticky bg-cream/90 backdrop-blur-xl border-slate-900/10' : 'sticky bg-cream border-transparent')}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-[72px] flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <button onClick={() => setOpen((o) => !o)} className={cn('lg:hidden p-2 rounded-xl border-2', onDarkHero ? 'border-white/30 bg-white/10 text-white' : 'border-slate-900 bg-white')} aria-label="Menu">
@@ -266,7 +267,7 @@ export const GuestLayout: React.FC<GuestLayoutProps> = ({ contained }) => {
         </nav>
       )}
 
-      <footer className="relative bg-slate-900 text-slate-300 overflow-hidden border-t-4 border-amber-300">
+      <footer className={cn('relative text-slate-300 overflow-hidden', onDarkHero ? 'bg-slate-950 border-t border-white/10' : 'bg-slate-900 border-t-4 border-amber-300')}>
         <div aria-hidden className="absolute inset-0 bg-dots opacity-10" />
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-10">
           <div className="lg:col-span-2 space-y-4">
