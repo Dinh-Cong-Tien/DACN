@@ -1,3 +1,4 @@
+import { ThreeBackground } from '@/shared/components/three/ThreeBackground';
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, Star, CheckCircle2, Play, Flame, Target, BookOpen, Users, FileText, AlertTriangle, RotateCcw, Compass, Quote, Headphones } from 'lucide-react';
@@ -26,7 +27,8 @@ export const HomePage: React.FC = () => {
   return (
     <div className="overflow-hidden">
       {/* ================= HERO ================= */}
-      <section className="relative bg-paper">
+      <section className="relative bg-paper overflow-hidden">
+        <ThreeBackground variant="particles" className="opacity-60" />
         <Doodles className="hidden md:block" />
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-12 md:pt-20 pb-16 md:pb-24 grid lg:grid-cols-[1.1fr_1fr] gap-12 items-center">
           <div className="space-y-7">
@@ -378,6 +380,7 @@ export const HomePage: React.FC = () => {
 
       {/* ================= FINAL CTA ================= */}
       <section className="relative bg-slate-900 text-white overflow-hidden">
+        <ThreeBackground variant="globe" dark className="opacity-70" offsetX={0.6} />
         <Doodles tone="light" className="opacity-80" />
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 md:py-28 grid lg:grid-cols-[1fr_380px] gap-12 items-center">
           <div className="space-y-6">

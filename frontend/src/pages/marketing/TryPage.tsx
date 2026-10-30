@@ -1,3 +1,4 @@
+import { ThreeBackground } from '@/shared/components/three/ThreeBackground';
 import React, { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, CheckCircle2, Clock, Headphones, PenLine, Sparkles, ShieldCheck } from 'lucide-react';
@@ -103,6 +104,7 @@ export const TryPage: React.FC = () => {
   // ===== Bước 1: chọn bộ mẫu =====
   return (
     <div className="relative overflow-hidden">
+      <ThreeBackground variant="particles" className="opacity-50" />
       <Doodles />
       <div className="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-14 md:py-20">
         <div className="max-w-2xl space-y-5 animate-fade-up">

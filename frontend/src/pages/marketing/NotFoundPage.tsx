@@ -1,3 +1,4 @@
+import { ThreeBackground } from '@/shared/components/three/ThreeBackground';
 import React from 'react';
 import { Home, ArrowLeft, Search } from 'lucide-react';
 import { Button } from '@/shared/components/ui';
@@ -9,6 +10,7 @@ export const NotFoundPage: React.FC = () => {
   useDocumentTitle('Không tìm thấy trang');
   return (
     <div className="relative min-h-[70vh] flex items-center overflow-hidden bg-paper">
+      <ThreeBackground variant="globe" className="opacity-50" offsetX={0.7} />
       <Doodles />
       <div className="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-20 grid md:grid-cols-[1fr_300px] gap-12 items-center">
         <div className="space-y-6 animate-fade-up">

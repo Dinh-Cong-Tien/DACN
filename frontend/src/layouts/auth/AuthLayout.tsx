@@ -1,3 +1,4 @@
+import { ThreeBackground } from '@/shared/components/three/ThreeBackground';
 import React from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { CheckCircle2, Quote, Star, ArrowRight, ArrowLeft } from 'lucide-react';
@@ -30,6 +31,7 @@ export const AuthLayout: React.FC = () => {
         style={{ transitionProperty: 'transform, background-color' }}
       >
         <div aria-hidden className="absolute inset-0 bg-dots opacity-20" />
+        <ThreeBackground variant="globe" dark className="opacity-35" offsetX={0.35} interactive={false} />
         <Doodles tone="light" parallax={false} />
 
         <div className="relative">
