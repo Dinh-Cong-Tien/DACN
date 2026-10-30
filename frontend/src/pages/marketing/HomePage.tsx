@@ -100,7 +100,7 @@ export const HomePage: React.FC = () => {
 
             <h1 className="font-display font-extrabold tracking-tight animate-fade-up">
               <span className="sr-only">{HERO_WORDS.join(', ')} </span>
-              <span className="block text-[3rem] sm:text-[5.1rem] lg:text-[7rem] leading-[1.15] pt-[0.05em] pb-[0.12em] -mb-[0.1em] hero-gradient-text">
+              <span className="block text-[3rem] sm:text-[5.1rem] lg:text-[7rem] leading-[1.15] pt-[0.05em] pb-[0.12em] -mb-[0.1em] hero-type-word">
                 <TypeLoop words={HERO_WORDS} />
               </span>
               <span className="block mt-3 text-2xl sm:text-3xl lg:text-4xl text-white font-bold">

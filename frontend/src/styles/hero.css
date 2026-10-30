@@ -17,3 +17,29 @@
   0%, 100% { background-position: 0% 50%; }
   50% { background-position: 100% 50%; }
 }
+
+/* Chữ gõ ở hero (BỨT PHÁ / CHINH PHỤC / LÀM CHỦ): nét đậm nhất, khít chữ,
+   dải màu vàng → cam → hồng → tím trôi liên tục, quầng sáng mềm phía sau */
+.hero-type-word {
+  font-weight: 900;
+  letter-spacing: -0.035em;
+  background-image: linear-gradient(100deg, #ffc65c 0%, #ff7a4d 20%, #ff4f8b 45%, #b86bff 70%, #ff7a4d 85%, #ffc65c 100%);
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 0.06em 0.22em rgba(255, 84, 128, 0.32));
+  animation: hero-type-shine 7s linear infinite;
+}
+@keyframes hero-type-shine {
+  from { background-position: 0% 50%; }
+  to { background-position: 200% 50%; }
+}
+/* Con trỏ cùng tông với chữ */
+.hero-type-word .type-caret {
+  width: 0.06em;
+  margin-left: 0.08em;
+  background: linear-gradient(180deg, #ffd24d, #ff4f8b);
+  box-shadow: 0 0 0.25em rgba(255, 110, 120, 0.7);
+}

@@ -10,6 +10,11 @@
     animation-duration: 60s !important;
     animation-iteration-count: infinite !important;
   }
+  /* Dải màu chữ gõ ở hero vẫn trôi chậm */
+  .hero-type-word {
+    animation-duration: 7s !important;
+    animation-iteration-count: infinite !important;
+  }
   /* Con trỏ gõ chữ ở hero vẫn nhấp nháy bình thường */
   .type-caret-blink {
     animation-duration: 1s !important;
