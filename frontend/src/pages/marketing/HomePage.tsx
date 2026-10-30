@@ -95,14 +95,27 @@ export const HomePage: React.FC = () => {
       </section>
 
       {/* ================= MARQUEE ================= */}
-      <section className="border-y-2 border-slate-900 bg-slate-900 text-white py-4 overflow-hidden">
-        <div className="flex whitespace-nowrap animate-marquee">
-          {[...PARTNERS, ...PARTNERS].map((p, i) => (
-            <span key={i} className="mx-8 font-display font-bold text-sm md:text-base tracking-wide text-slate-200 flex items-center gap-8">
-              {p}
-              <span className="w-2 h-2 rounded-full bg-amber-300" />
-            </span>
-          ))}
+      <section className="border-y-2 border-slate-900 bg-slate-900 text-white py-5 space-y-3">
+        <p className="text-center text-[11px] font-extrabold uppercase tracking-[0.2em] text-slate-400">Học viên đến từ</p>
+        <div className="marquee">
+          <div className="marquee-track whitespace-nowrap">
+            {[...PARTNERS, ...PARTNERS].map((p, i) => (
+              <span key={i} className="mx-3 inline-flex items-center gap-2.5 px-4 py-2 rounded-xl border border-white/10 bg-white/5 font-display font-bold text-sm md:text-base text-slate-100 transition-colors hover:bg-amber-300 hover:text-slate-900 hover:border-amber-300">
+                <span className="w-7 h-7 rounded-lg bg-amber-300 text-slate-900 flex items-center justify-center text-[11px] font-black">{p.replace('ĐH ', '').slice(0, 2).toUpperCase()}</span>
+                {p}
+              </span>
+            ))}
+          </div>
+        </div>
+        <div className="marquee">
+          <div className="marquee-track reverse whitespace-nowrap">
+            {[...['TOEIC 450 → 990', 'VSTEP B1 · B2 · C1', 'Đề ETS 2024–2025', 'Audio phát một lần', 'Sổ tay lỗi sai', 'Ôn tập SM-2', 'Giáo viên chấm bài', 'Lớp học có mã mời'], ...['TOEIC 450 → 990', 'VSTEP B1 · B2 · C1', 'Đề ETS 2024–2025', 'Audio phát một lần', 'Sổ tay lỗi sai', 'Ôn tập SM-2', 'Giáo viên chấm bài', 'Lớp học có mã mời']].map((t, i) => (
+              <span key={i} className="mx-6 inline-flex items-center gap-4 text-xs md:text-sm font-semibold text-slate-400">
+                {t}
+                <span className="w-1.5 h-1.5 rounded-full bg-violet-500" />
+              </span>
+            ))}
+          </div>
         </div>
       </section>
 
