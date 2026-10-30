@@ -5,7 +5,7 @@ import { Button, Card, SectionTitle, Badge, Accordion } from '@/shared/component
 import { Reveal, Stagger, Doodles } from '@/shared/components/motion';
 import { Img, PHOTOS, pravatar } from '@/shared/components/media/Img';
 import { VSTEP_PARTS_INFO, MOCK_TESTS } from '@/shared/mocks';
-import { useDocumentTitle } from '@/shared/hooks';
+import { useDocumentTitle, useGate } from '@/shared/hooks';
 import { cn, formatNumber } from '@/shared/utils';
 
 const VSTEP_LEVELS_UI = [
@@ -19,6 +19,7 @@ const TONES = ['bg-indigo-100 text-indigo-800', 'bg-violet-100 text-violet-800',
 
 export const VstepPage: React.FC = () => {
   useDocumentTitle('Luyện thi VSTEP');
+  const gate = useGate();
   const tests = MOCK_TESTS.filter((t) => t.examType === 'VSTEP');
 
   return (
@@ -146,7 +147,7 @@ export const VstepPage: React.FC = () => {
         </Reveal>
         <Stagger className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
           {tests.map((t) => (
-            <Link key={t.id} to="/auth/login" className="block bg-white rounded-3xl border-2 border-slate-900 shadow-hard overflow-hidden card-hard-hover">
+            <Link key={t.id} to={gate(`/app/mock-tests/${t.id}`)} className="block bg-white rounded-3xl border-2 border-slate-900 shadow-hard overflow-hidden card-hard-hover">
               <Img src={t.coverUrl} alt="" ratio="video" fallbackClass="bg-violet-200" />
               <div className="p-4 space-y-2">
                 <div className="flex gap-1.5 flex-wrap">

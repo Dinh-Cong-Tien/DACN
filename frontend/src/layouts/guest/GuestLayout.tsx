@@ -1,116 +1,229 @@
 import React, { useEffect, useState } from 'react';
-import { Outlet, Link, NavLink, useLocation } from 'react-router-dom';
-import { Menu, X, LogIn, ArrowRight, ChevronDown, Facebook, Youtube, Mail, MapPin, Phone, Instagram } from 'lucide-react';
-import { cn } from '@/shared/utils';
+import { Outlet, Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
+import { Menu, X, LogIn, ArrowRight, ChevronDown, Facebook, Youtube, Mail, MapPin, Phone, Instagram, Search, Bell, Flame, User, Settings, LogOut, Sparkles, LayoutDashboard } from 'lucide-react';
+import { cn, ROLE_HOME, ROLE_LABEL } from '@/shared/utils';
 import { useScrolled } from '@/shared/hooks';
-import { Logo, Button, CommandPalette } from '@/shared/components/ui';
+import { useAuthStore } from '@/shared/stores/authStore';
+import { useUiStore, toast } from '@/shared/stores/uiStore';
+import { Logo, Button, CommandPalette, Avatar, Dropdown, Badge } from '@/shared/components/ui';
 import { PageTransition } from '@/shared/components/motion';
 import { ScrollProgress, BackToTop, RouteProgress } from '@/shared/components/layout/ScrollExtras';
+import { PUBLIC_NAV, STUDENT_NAV } from '@/shared/components/layout/navConfig';
+import { MOCK_NOTIFICATIONS } from '@/shared/mocks';
 
-const NAV = [
-  { to: '/toeic', label: 'TOEIC' },
-  { to: '/vstep', label: 'VSTEP' },
-  { to: '/courses', label: 'Khoá học' },
-  { to: '/mock-tests', label: 'Thi thử' },
-  {
-    label: 'Công cụ',
-    children: [
-      { to: '/score-converter', label: 'Quy đổi điểm TOEIC ↔ VSTEP ↔ CEFR' },
-      { to: '/resources', label: 'Kho tài liệu mở' },
-      { to: '/question-bank', label: 'Ngân hàng câu hỏi' },
-      { to: '/leaderboard', label: 'Bảng vinh danh' },
-    ],
-  },
-  { to: '/pricing', label: 'Bảng giá' },
-  { to: '/blog', label: 'Kinh nghiệm' },
-];
+interface GuestLayoutProps {
+  /** Bọc nội dung trong container (dùng cho các trang học viên /app/*) */
+  contained?: boolean;
+}
 
-export const GuestLayout: React.FC = () => {
+/**
+ * Layout chung của toàn website: khách và học viên dùng cùng một header.
+ * - Chưa đăng nhập: menu công khai + Đăng nhập / Học thử miễn phí.
+ * - Học viên: menu học tập (Tổng quan, Lộ trình, Khoá học, Luyện tập, Thi thử, Ôn luyện ▾, Thành tích ▾, Công cụ ▾) + streak, chuông, avatar.
+ * - Giáo viên / Trưởng bộ môn / Admin: menu công khai + avatar có link vào khu vực quản lý.
+ */
+export const GuestLayout: React.FC<GuestLayoutProps> = ({ contained }) => {
   const scrolled = useScrolled(12);
   const [open, setOpen] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
+  const user = useAuthStore((s) => s.user);
+  const isAuth = useAuthStore((s) => s.isAuthenticated());
+  const logout = useAuthStore((s) => s.logout);
+  const setPalette = useUiStore((s) => s.setPalette);
+  const isStudent = isAuth && user?.role === 'STUDENT';
+  const unread = MOCK_NOTIFICATIONS.filter((n) => !n.isRead).length;
 
   useEffect(() => {
     setOpen(false);
     window.scrollTo({ top: 0 });
   }, [location.pathname]);
 
-  const linkCls = ({ isActive }: { isActive: boolean }) =>
-    cn('px-3 py-2 rounded-xl text-sm font-bold transition-all duration-200', isActive ? 'bg-slate-900 text-amber-300' : 'text-slate-700 hover:bg-slate-900/5 hover:text-slate-900');
+  const handleLogout = () => {
+    logout();
+    toast.info('Đã đăng xuất', 'Hẹn gặp lại bạn!');
+    navigate('/');
+  };
 
-  return (
-    <div className="min-h-screen flex flex-col bg-cream font-sans text-slate-800">
-      {/* Thanh thông báo trên cùng */}
-      <div className="bg-slate-900 text-white text-xs font-semibold">
-        <div className="max-w-7xl mx-auto px-4 h-9 flex items-center justify-center gap-2 text-center">
-          <span className="inline-block w-2 h-2 rounded-full bg-amber-300 animate-pulse" />
-          Kho đề ETS 2025 mới cập nhật · Thi thử miễn phí mỗi tuần
-          <Link to="/mock-tests" className="underline underline-offset-2 text-amber-300 hover:text-amber-200 ml-1">
-            Làm đề ngay →
-          </Link>
+  const linkCls = ({ isActive }: { isActive: boolean }) =>
+    cn('px-3 py-2 rounded-xl text-sm font-bold whitespace-nowrap transition-all duration-200 inline-flex items-center gap-1.5', isActive ? 'bg-slate-900 text-amber-300' : 'text-slate-700 hover:bg-slate-900/5 hover:text-slate-900');
+
+  const dropdown = (label: string, items: { to: string; label: string; badge?: string }[], active = false) => (
+    <div key={label} className="relative group/menu">
+      <button className={cn('px-3 py-2 rounded-xl text-sm font-bold flex items-center gap-1 transition whitespace-nowrap', active ? 'bg-slate-900 text-amber-300' : 'text-slate-700 hover:bg-slate-900/5 hover:text-slate-900')}>
+        {label}
+        {items.some((i) => i.badge) && !active && <span className="w-1.5 h-1.5 rounded-full bg-violet-500" />}
+        <ChevronDown className="w-3.5 h-3.5 transition-transform group-hover/menu:rotate-180" />
+      </button>
+      <div className="absolute left-0 top-full pt-2 opacity-0 translate-y-1 pointer-events-none group-hover/menu:opacity-100 group-hover/menu:translate-y-0 group-hover/menu:pointer-events-auto transition-all duration-200 z-50">
+        <div className="w-72 bg-white rounded-2xl border-2 border-slate-900 shadow-hard p-2">
+          {items.map((c) => (
+            <NavLink key={c.to} to={c.to} className={({ isActive }) => cn('flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm font-semibold transition', isActive ? 'bg-amber-100 text-slate-900' : 'text-slate-700 hover:bg-amber-100 hover:text-slate-900')}>
+              <span className="flex-1">{c.label}</span>
+              {c.badge && (
+                <Badge tone="violet" solid size="xs">
+                  {c.badge}
+                </Badge>
+              )}
+            </NavLink>
+          ))}
         </div>
       </div>
+    </div>
+  );
+
+  // ===== Menu desktop =====
+  const [studentPrimary, ...studentRest] = STUDENT_NAV;
+  const desktopNav = isStudent
+    ? [
+        ...studentPrimary.items.map((item) => (
+          <NavLink key={item.to} to={item.to} className={linkCls}>
+            {item.label}
+          </NavLink>
+        )),
+        ...studentRest.map((g) =>
+          dropdown(
+            g.title ?? '',
+            g.items.map((i) => ({ to: i.to, label: i.label, badge: i.badge })),
+            g.items.some((i) => location.pathname.startsWith(i.to))
+          )
+        ),
+      ]
+    : PUBLIC_NAV.map((item) =>
+        item.children ? (
+          dropdown(item.label, item.children)
+        ) : (
+          <NavLink key={item.to} to={item.to!} className={linkCls}>
+            {item.label}
+          </NavLink>
+        )
+      );
+
+  // ===== Menu mobile (phẳng theo nhóm) =====
+  const mobileGroups: { title?: string; items: { to: string; label: string; badge?: string }[] }[] = isStudent
+    ? STUDENT_NAV.map((g) => ({ title: g.title, items: g.items.map((i) => ({ to: i.to, label: i.label, badge: i.badge })) }))
+    : [{ items: PUBLIC_NAV.flatMap((i) => (i.children ? i.children : [{ to: i.to!, label: i.label }])) }];
+
+  const bottomItems = isStudent ? studentPrimary.items.slice(0, 4) : [];
+
+  return (
+    <div className={cn('min-h-screen flex flex-col bg-cream font-sans text-slate-800', contained && 'portal')}>
+      {/* Thanh thông báo trên cùng: chỉ cho khách */}
+      {!isAuth && (
+        <div className="bg-slate-900 text-white text-xs font-semibold">
+          <div className="max-w-7xl mx-auto px-4 h-9 flex items-center justify-center gap-2 text-center">
+            <span className="inline-block w-2 h-2 rounded-full bg-amber-300 animate-pulse" />
+            Kho đề ETS 2025 mới cập nhật · Thi thử miễn phí mỗi tuần
+            <Link to="/mock-tests" className="underline underline-offset-2 text-amber-300 hover:text-amber-200 ml-1">
+              Làm đề ngay →
+            </Link>
+          </div>
+        </div>
+      )}
 
       <header className={cn('sticky top-0 z-40 transition-all duration-300 border-b-2', scrolled ? 'bg-cream/90 backdrop-blur-xl border-slate-900/10' : 'bg-cream border-transparent')}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-[72px] flex items-center justify-between gap-4">
-          <Logo size="md" />
-
-          <nav className="hidden lg:flex items-center gap-0.5">
-            {NAV.map((item) =>
-              item.children ? (
-                <div key={item.label} className="relative group">
-                  <button className="px-3 py-2 rounded-xl text-sm font-bold text-slate-700 hover:bg-slate-900/5 hover:text-slate-900 flex items-center gap-1 transition">
-                    {item.label}
-                    <ChevronDown className="w-3.5 h-3.5 transition-transform group-hover:rotate-180" />
-                  </button>
-                  <div className="absolute left-0 top-full pt-2 opacity-0 translate-y-1 pointer-events-none group-hover:opacity-100 group-hover:translate-y-0 group-hover:pointer-events-auto transition-all duration-200">
-                    <div className="w-72 bg-white rounded-2xl border-2 border-slate-900 shadow-hard p-2">
-                      {item.children.map((c) => (
-                        <Link key={c.to} to={c.to} className="block px-3 py-2.5 rounded-xl text-sm font-semibold text-slate-700 hover:bg-amber-100 hover:text-slate-900 transition">
-                          {c.label}
-                        </Link>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              ) : (
-                <NavLink key={item.to} to={item.to!} className={linkCls}>
-                  {item.label}
-                </NavLink>
-              )
-            )}
-          </nav>
-
-          <div className="hidden lg:flex items-center gap-2">
-            <Button to="/auth/login" variant="ghost" size="sm" leftIcon={<LogIn className="w-4 h-4" />}>
-              Đăng nhập
-            </Button>
-            <Button to="/auth/register" variant="gradient" size="sm" rightIcon={<ArrowRight className="w-4 h-4" />}>
-              Học thử miễn phí
-            </Button>
+          <div className="flex items-center gap-3">
+            <button onClick={() => setOpen((o) => !o)} className="lg:hidden p-2 rounded-xl border-2 border-slate-900 bg-white" aria-label="Menu">
+              {open ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            </button>
+            <Logo size="md" to={isStudent ? '/app/dashboard' : '/'} />
           </div>
 
-          <button onClick={() => setOpen((o) => !o)} className="lg:hidden p-2 rounded-xl border-2 border-slate-900 bg-white shadow-hard-sm" aria-label="Menu">
-            {open ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-          </button>
+          <nav className="hidden lg:flex items-center gap-0.5">{desktopNav}</nav>
+
+          <div className="flex items-center gap-1.5 md:gap-2">
+            {isAuth && user ? (
+              <>
+                {isStudent && (
+                  <div className="hidden xl:inline-flex items-center gap-1.5 px-3 h-9 rounded-xl bg-amber-300 text-slate-900 text-xs font-extrabold whitespace-nowrap">
+                    <Flame className="w-4 h-4 text-violet-600 fill-violet-500 animate-bounce-soft" />
+                    {user.streak} ngày
+                  </div>
+                )}
+                <button onClick={() => setPalette(true)} className="p-2 rounded-xl text-slate-700 hover:bg-slate-900/5 transition" aria-label="Tìm kiếm (⌘K)" title="Tìm kiếm (⌘K)">
+                  <Search className="w-5 h-5" />
+                </button>
+                {isStudent && (
+                  <NavLink to="/app/notifications" className="relative p-2 rounded-xl text-slate-700 hover:bg-slate-900/5 transition" aria-label="Thông báo">
+                    <Bell className={cn('w-5 h-5', unread > 0 && 'animate-ring-bell')} />
+                    {unread > 0 && <span className="absolute top-1 right-1 min-w-[16px] h-4 px-1 rounded-full bg-violet-500 text-white text-[9px] font-black flex items-center justify-center ring-2 ring-cream">{unread}</span>}
+                  </NavLink>
+                )}
+                <Dropdown
+                  align="right"
+                  header={
+                    <div className="flex items-center gap-3">
+                      <Avatar name={user.fullName} src={user.avatarUrl} size="md" />
+                      <div className="min-w-0">
+                        <p className="text-sm font-bold text-slate-900 truncate">{user.fullName}</p>
+                        <p className="text-[11px] text-slate-500 truncate">{user.email}</p>
+                        <Badge tone="indigo" size="xs" className="mt-1">
+                          {ROLE_LABEL[user.role]}
+                        </Badge>
+                      </div>
+                    </div>
+                  }
+                  items={[
+                    ...(isStudent
+                      ? [
+                          { label: 'Hồ sơ cá nhân', icon: <User />, onClick: () => navigate('/app/profile') },
+                          { label: 'Cài đặt', icon: <Settings />, onClick: () => navigate('/app/settings') },
+                          ...(user.plan === 'FREE' ? [{ label: 'Nâng cấp VIP', icon: <Sparkles />, onClick: () => navigate('/pricing') }] : []),
+                        ]
+                      : [{ label: `Khu vực ${ROLE_LABEL[user.role].toLowerCase()}`, icon: <LayoutDashboard />, onClick: () => navigate(ROLE_HOME[user.role]) }]),
+                    { divider: true, label: '' },
+                    { label: 'Đăng xuất', icon: <LogOut />, danger: true, onClick: handleLogout },
+                  ]}
+                  trigger={
+                    <button className="flex items-center gap-2 pl-1 pr-2 py-1 rounded-xl hover:bg-slate-900/5 transition" aria-label="Tài khoản">
+                      <Avatar name={user.fullName} src={user.avatarUrl} size="sm" ring status="online" />
+                      <ChevronDown className="w-3.5 h-3.5 text-slate-500" />
+                    </button>
+                  }
+                />
+              </>
+            ) : (
+              <div className="hidden lg:flex items-center gap-2">
+                <Button to="/auth/login" variant="ghost" size="sm" leftIcon={<LogIn className="w-4 h-4" />}>
+                  Đăng nhập
+                </Button>
+                <Button to="/auth/register" variant="gradient" size="sm" rightIcon={<ArrowRight className="w-4 h-4" />}>
+                  Học thử miễn phí
+                </Button>
+              </div>
+            )}
+          </div>
         </div>
 
         {open && (
-          <div className="lg:hidden border-t-2 border-slate-900/10 bg-cream animate-fade-down">
-            <div className="px-4 py-4 space-y-1">
-              {NAV.flatMap((item) => (item.children ? item.children : [item])).map((c) => (
-                <NavLink key={c.to} to={c.to!} className={({ isActive }) => cn('block px-3 py-2.5 rounded-xl text-sm font-bold', isActive ? 'bg-slate-900 text-amber-300' : 'text-slate-700 hover:bg-slate-900/5')}>
-                  {c.label}
-                </NavLink>
+          <div className="lg:hidden border-t-2 border-slate-900/10 bg-cream animate-fade-down max-h-[80vh] overflow-y-auto">
+            <div className="px-4 py-4 space-y-4">
+              {mobileGroups.map((g, gi) => (
+                <div key={gi} className="space-y-1">
+                  {g.title && <p className="px-3 pb-1 text-[10px] font-extrabold uppercase tracking-[0.14em] text-slate-400">{g.title}</p>}
+                  {g.items.map((c) => (
+                    <NavLink key={c.to} to={c.to} className={({ isActive }) => cn('flex items-center px-3 py-2.5 rounded-xl text-sm font-bold', isActive ? 'bg-slate-900 text-amber-300' : 'text-slate-700 hover:bg-slate-900/5')}>
+                      <span className="flex-1">{c.label}</span>
+                      {c.badge && (
+                        <Badge tone="violet" solid size="xs">
+                          {c.badge}
+                        </Badge>
+                      )}
+                    </NavLink>
+                  ))}
+                </div>
               ))}
-              <div className="pt-3 flex gap-2">
-                <Button to="/auth/login" variant="outline" fullWidth>
-                  Đăng nhập
-                </Button>
-                <Button to="/auth/register" variant="gradient" fullWidth>
-                  Đăng ký
-                </Button>
-              </div>
+              {!isAuth && (
+                <div className="pt-3 flex gap-2">
+                  <Button to="/auth/login" variant="outline" fullWidth>
+                    Đăng nhập
+                  </Button>
+                  <Button to="/auth/register" variant="gradient" fullWidth>
+                    Đăng ký
+                  </Button>
+                </div>
+              )}
             </div>
           </div>
         )}
@@ -121,11 +234,32 @@ export const GuestLayout: React.FC = () => {
       <BackToTop />
       <CommandPalette />
 
-      <main className="flex-1">
+      <main className={cn('flex-1', contained && 'w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-10 pb-24 lg:pb-12')}>
         <PageTransition>
           <Outlet />
         </PageTransition>
       </main>
+
+      {/* Thanh điều hướng dưới cho học viên trên mobile */}
+      {isStudent && bottomItems.length > 0 && (
+        <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-slate-900 px-2 pb-[env(safe-area-inset-bottom)]">
+          <div className="grid grid-cols-5 h-16">
+            {bottomItems.map((item) => {
+              const Icon = item.icon;
+              return (
+                <NavLink key={item.to} to={item.to} className={({ isActive }) => cn('flex flex-col items-center justify-center gap-1 text-[10px] font-bold transition-colors', isActive ? 'text-amber-300' : 'text-slate-400')}>
+                  <Icon className="w-5 h-5" />
+                  <span className="truncate max-w-[64px]">{item.label}</span>
+                </NavLink>
+              );
+            })}
+            <button onClick={() => setOpen(true)} className="flex flex-col items-center justify-center gap-1 text-[10px] font-bold text-slate-400">
+              <Menu className="w-5 h-5" />
+              Thêm
+            </button>
+          </div>
+        </nav>
+      )}
 
       <footer className="relative bg-slate-900 text-slate-300 overflow-hidden border-t-4 border-amber-300">
         <div aria-hidden className="absolute inset-0 bg-dots opacity-10" />
@@ -139,10 +273,6 @@ export const GuestLayout: React.FC = () => {
                   <Icon className="w-4 h-4" />
                 </a>
               ))}
-            </div>
-            <div className="flex flex-wrap gap-2 pt-2">
-              <span className="sticker !bg-slate-800 !text-slate-200 !border-slate-600 !shadow-none !text-[10px]">Chuẩn ETS 2024–2025</span>
-              <span className="sticker tilt-2 !bg-slate-800 !text-slate-200 !border-slate-600 !shadow-none !text-[10px]">Format Bộ GD&ĐT</span>
             </div>
           </div>
           <div>

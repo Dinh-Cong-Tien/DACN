@@ -5,7 +5,7 @@ import { Reveal, Stagger, CountUp } from '@/shared/components/motion';
 import { Img, PHOTOS } from '@/shared/components/media/Img';
 import { QUESTIONS_BY_PART, TOEIC_PART5, TOEIC_PART2, VSTEP_READING } from '@/shared/mocks';
 import { QuestionRenderer } from '@/engines';
-import { useDocumentTitle } from '@/shared/hooks';
+import { useDocumentTitle, useGate } from '@/shared/hooks';
 import { cn } from '@/shared/utils';
 
 const LABEL: Record<string, string> = { PART_1: 'Part 1 · Tranh', PART_2: 'Part 2 · Hỏi đáp', PART_3: 'Part 3 · Hội thoại', PART_4: 'Part 4 · Bài nói', PART_5: 'Part 5 · Câu', PART_6: 'Part 6 · Đoạn', PART_7: 'Part 7 · Đọc hiểu', VSTEP_READING: 'VSTEP Reading', VSTEP_LISTENING: 'VSTEP Listening' };
@@ -13,6 +13,7 @@ const SAMPLES = [TOEIC_PART5[0], TOEIC_PART2[0], VSTEP_READING[1]];
 
 export const QuestionBankPage: React.FC = () => {
   useDocumentTitle('Ngân hàng câu hỏi');
+  const gate = useGate();
   const [showExp, setShowExp] = useState(false);
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const parts = Object.entries(QUESTIONS_BY_PART);
@@ -78,7 +79,7 @@ export const QuestionBankPage: React.FC = () => {
           </Badge>
           <span className="text-sm text-slate-600">
             Khách chỉ xem được câu mẫu. Đăng ký để luyện toàn bộ ngân hàng.{' '}
-            <Button to="/auth/register" size="xs" variant="gradient" rightIcon={<ArrowRight className="w-3 h-3" />} className="ml-2">
+            <Button to={gate('/app/practice', '/auth/register')} size="xs" variant="gradient" rightIcon={<ArrowRight className="w-3 h-3" />} className="ml-2">
               Đăng ký
             </Button>
           </span>

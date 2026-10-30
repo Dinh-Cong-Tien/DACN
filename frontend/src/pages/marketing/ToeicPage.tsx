@@ -5,11 +5,12 @@ import { Button, Card, SectionTitle, Badge, Chip } from '@/shared/components/ui'
 import { Reveal, Stagger, CountUp, Doodles } from '@/shared/components/motion';
 import { Img, PHOTOS } from '@/shared/components/media/Img';
 import { TOEIC_PARTS_INFO, MOCK_TESTS, SCORE_TABLE } from '@/shared/mocks';
-import { useDocumentTitle } from '@/shared/hooks';
+import { useDocumentTitle, useGate } from '@/shared/hooks';
 import { cn, formatNumber } from '@/shared/utils';
 
 export const ToeicPage: React.FC = () => {
   useDocumentTitle('Luyện thi TOEIC');
+  const gate = useGate();
   const [active, setActive] = useState(TOEIC_PARTS_INFO[0].id);
   const part = TOEIC_PARTS_INFO.find((p) => p.id === active)!;
   const tests = MOCK_TESTS.filter((t) => t.examType === 'TOEIC').slice(0, 4);
@@ -183,7 +184,7 @@ export const ToeicPage: React.FC = () => {
         </Reveal>
         <Stagger className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
           {tests.map((t) => (
-            <Link key={t.id} to="/auth/login" className="block bg-white rounded-3xl border-2 border-slate-900 shadow-hard overflow-hidden card-hard-hover">
+            <Link key={t.id} to={gate(`/app/mock-tests/${t.id}`)} className="block bg-white rounded-3xl border-2 border-slate-900 shadow-hard overflow-hidden card-hard-hover">
               <Img src={t.coverUrl} alt="" ratio="video" fallbackClass="bg-indigo-200" />
               <div className="p-4 space-y-2">
                 <div className="flex gap-1.5 flex-wrap">

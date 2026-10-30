@@ -5,7 +5,7 @@ import { Badge, Breadcrumb, Button, Card, Accordion, Avatar } from '@/shared/com
 import { Reveal } from '@/shared/components/motion';
 import { Img, pravatar } from '@/shared/components/media/Img';
 import { MOCK_COURSES } from '@/shared/mocks';
-import { useDocumentTitle } from '@/shared/hooks';
+import { useDocumentTitle, useGate } from '@/shared/hooks';
 import { formatNumber } from '@/shared/utils';
 
 const ICON = { VIDEO: PlayCircle, READING: FileText, QUIZ: HelpCircle } as const;
@@ -14,6 +14,7 @@ export const CourseDetailPage: React.FC = () => {
   const { id } = useParams();
   const course = MOCK_COURSES.find((c) => c.id === id || c.slug === id) ?? MOCK_COURSES[0];
   useDocumentTitle(course.title);
+  const gate = useGate();
   const lessons = course.sections.flatMap((s) => s.lessons);
   const freeCount = lessons.filter((l) => l.isFree || !l.isLocked).length;
   const teacherIdx = Array.from(new Set(MOCK_COURSES.map((c) => c.teacherName))).indexOf(course.teacherName);
@@ -125,10 +126,10 @@ export const CourseDetailPage: React.FC = () => {
           <Card hard padding="lg" className="space-y-4">
             <p className="font-display text-3xl font-extrabold text-slate-900">{course.isFree ? 'Miễn phí' : 'Gói VIP'}</p>
             <p className="text-sm text-slate-600">{course.isFree ? 'Chỉ cần tài khoản để bắt đầu học.' : 'Bao gồm trong gói VIP TOEIC / VSTEP Master.'}</p>
-            <Button to="/auth/register" fullWidth size="lg" variant="gradient" rightIcon={<ArrowRight className="w-4 h-4" />}>
+            <Button to={gate(`/app/courses/${course.id}`, '/auth/register')} fullWidth size="lg" variant="gradient" rightIcon={<ArrowRight className="w-4 h-4" />}>
               Đăng ký học ngay
             </Button>
-            <Button to="/auth/login" fullWidth variant="outline">
+            <Button to={gate(`/app/courses/${course.id}`)} fullWidth variant="outline">
               Đã có tài khoản? Đăng nhập
             </Button>
             <ul className="text-sm text-slate-700 space-y-2 pt-3 border-t-2 border-slate-100">

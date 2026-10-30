@@ -5,7 +5,7 @@ import { Button, Card, SectionTitle, Avatar, Badge } from '@/shared/components/u
 import { Reveal, Stagger, CountUp, Doodles, RotatingWords } from '@/shared/components/motion';
 import { Img, PHOTOS, pravatar } from '@/shared/components/media/Img';
 import { HOME_STATS, TESTIMONIALS, MOCK_TESTS, PRICING_PLANS, MOCK_COURSES } from '@/shared/mocks';
-import { useDocumentTitle } from '@/shared/hooks';
+import { useDocumentTitle, useGate } from '@/shared/hooks';
 import { formatCurrency, formatNumber, cn } from '@/shared/utils';
 
 const PARTNERS = ['ĐH Đà Nẵng', 'ĐH Duy Tân', 'ĐH Bách Khoa', 'ĐH FPT', 'VNU Hà Nội', 'ĐH Kinh tế', 'ĐH Ngoại ngữ', 'HUTECH', 'ĐH Sư phạm'];
@@ -20,6 +20,7 @@ const LOOP = [
 
 export const HomePage: React.FC = () => {
   useDocumentTitle('Trang chủ');
+  const gate = useGate();
   const featured = MOCK_TESTS.filter((t) => t.isFree).slice(0, 3);
 
   return (
@@ -44,7 +45,7 @@ export const HomePage: React.FC = () => {
               Thi xếp lớp 15 phút, nhận lộ trình theo ngày thi của bạn. Mỗi câu sai được lưu lại, giải thích và nhắc ôn đúng lúc. 45 phút mỗi ngày là đủ.
             </p>
             <div className="flex flex-col sm:flex-row gap-3 animate-fade-up delay-200">
-              <Button to="/auth/register" size="xl" variant="gradient" rightIcon={<ArrowRight className="w-5 h-5" />}>
+              <Button to={gate('/onboarding/goal', '/auth/register')} size="xl" variant="gradient" rightIcon={<ArrowRight className="w-5 h-5" />}>
                 Làm bài xếp lớp miễn phí
               </Button>
               <Button to="/mock-tests" size="xl" variant="outline" leftIcon={<Play className="w-5 h-5" />}>
@@ -190,14 +191,14 @@ export const HomePage: React.FC = () => {
               </Link>
             </Reveal>
             <Reveal delay={100}>
-              <Link to="/auth/register" className="block h-full rounded-3xl bg-amber-300 text-slate-900 border-2 border-slate-900 shadow-hard p-6 hover:-translate-y-1 transition">
+              <Link to={gate('/app/mistakes', '/auth/register')} className="block h-full rounded-3xl bg-amber-300 text-slate-900 border-2 border-slate-900 shadow-hard p-6 hover:-translate-y-1 transition">
                 <AlertTriangle className="w-8 h-8" />
                 <h3 className="font-display text-xl font-extrabold mt-6">Sổ tay lỗi sai</h3>
                 <p className="text-sm text-slate-700 mt-2">Tự lưu câu sai kèm nguyên nhân. Luyện lại đúng 10 câu bạn hay sai nhất.</p>
               </Link>
             </Reveal>
             <Reveal delay={200}>
-              <Link to="/auth/register" className="block h-full rounded-3xl bg-violet-500 text-white border-2 border-slate-900 shadow-hard p-6 hover:-translate-y-1 transition">
+              <Link to={gate('/app/review', '/auth/register')} className="block h-full rounded-3xl bg-violet-500 text-white border-2 border-slate-900 shadow-hard p-6 hover:-translate-y-1 transition">
                 <RotateCcw className="w-8 h-8" />
                 <h3 className="font-display text-xl font-extrabold mt-6">Flashcard SM-2</h3>
                 <p className="text-sm text-violet-100 mt-2">600 từ Business theo chủ đề, lật thẻ, chấm 4 mức nhớ. Nhắc ôn đúng ngày.</p>

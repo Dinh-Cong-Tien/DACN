@@ -40,7 +40,9 @@ export const LoginPage: React.FC = () => {
       login(user, 'demo-jwt-token');
       setLoading(false);
       toast.success(`Xin chào, ${user.fullName}!`, 'Đăng nhập thành công.');
-      const from = (location.state as { from?: string } | null)?.from;
+      // Ưu tiên đích đến được ghi nhớ (?next= từ trang công khai hoặc state.from từ AuthGuard)
+      const next = new URLSearchParams(location.search).get('next');
+      const from = next ?? (location.state as { from?: string } | null)?.from;
       navigate(from && from.startsWith('/') ? from : ROLE_HOME[role]);
     }, 600);
   };

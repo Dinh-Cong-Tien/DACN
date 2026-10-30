@@ -5,7 +5,7 @@ import { Badge, Button, SectionTitle, Card } from '@/shared/components/ui';
 import { Reveal, Stagger } from '@/shared/components/motion';
 import { Img, PHOTOS } from '@/shared/components/media/Img';
 import { TOEIC_PARTS_INFO, VSTEP_PARTS_INFO, QUESTIONS_BY_PART } from '@/shared/mocks';
-import { useDocumentTitle } from '@/shared/hooks';
+import { useDocumentTitle, useGate } from '@/shared/hooks';
 import { cn } from '@/shared/utils';
 
 const SKILL_ICON: Record<string, React.ElementType> = { Listening: Headphones, Reading: BookOpen, Writing: PenTool, Speaking: Mic };
@@ -13,6 +13,7 @@ const TILES = ['bg-white', 'bg-indigo-100', 'bg-amber-200', 'bg-white', 'bg-viol
 
 export const PracticePage: React.FC = () => {
   useDocumentTitle('Luyện tập kỹ năng');
+  const gate = useGate();
   return (
     <div>
       <section className="bg-paper border-b-2 border-slate-900">
@@ -38,7 +39,7 @@ export const PracticePage: React.FC = () => {
             const Icon = SKILL_ICON[p.skill];
             const count = QUESTIONS_BY_PART[p.id]?.length ?? 0;
             return (
-              <Link key={p.id} to="/auth/register" className={cn('group rounded-3xl border-2 border-slate-900 shadow-hard p-5 card-hard-hover block', TILES[i], i === 6 && 'lg:col-span-2')}>
+              <Link key={p.id} to={gate(`/app/practice/session/${p.id}`, '/auth/register')} className={cn('group rounded-3xl border-2 border-slate-900 shadow-hard p-5 card-hard-hover block', TILES[i], i === 6 && 'lg:col-span-2')}>
                 <div className="flex items-start justify-between">
                   <span className="w-11 h-11 rounded-xl bg-slate-900 text-amber-300 flex items-center justify-center">
                     <Icon className="w-5 h-5" />
@@ -72,7 +73,7 @@ export const PracticePage: React.FC = () => {
               const Icon = SKILL_ICON[p.skill];
               const auto = p.skill === 'Listening' || p.skill === 'Reading';
               return (
-                <Link key={p.id} to="/auth/register" className="bg-white text-slate-900 rounded-3xl border-2 border-slate-900 shadow-hard p-5 card-hard-hover block">
+                <Link key={p.id} to={gate(p.skill === 'Writing' ? '/app/writing' : p.skill === 'Speaking' ? '/app/speaking' : `/app/practice/session/${p.id}`, '/auth/register')} className="bg-white text-slate-900 rounded-3xl border-2 border-slate-900 shadow-hard p-5 card-hard-hover block">
                   <div className="flex items-start justify-between">
                     <span className="w-11 h-11 rounded-xl bg-violet-100 border-2 border-slate-900 text-violet-700 flex items-center justify-center">
                       <Icon className="w-5 h-5" />
@@ -103,7 +104,7 @@ export const PracticePage: React.FC = () => {
                 <p className="text-slate-300 mt-1">Để sổ tay lỗi sai và lịch ôn hoạt động, hệ thống cần lưu bài làm của bạn. Đăng ký mất chưa tới một phút.</p>
               </div>
             </div>
-            <Button to="/auth/register" size="lg" variant="gradient" rightIcon={<ArrowRight className="w-4 h-4" />}>
+            <Button to={gate('/app/practice', '/auth/register')} size="lg" variant="gradient" rightIcon={<ArrowRight className="w-4 h-4" />}>
               Tạo tài khoản
             </Button>
           </Card>

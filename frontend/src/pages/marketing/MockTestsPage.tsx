@@ -5,11 +5,12 @@ import { Badge, Chip, SectionTitle, Tabs, Button, EmptyState } from '@/shared/co
 import { Reveal, Stagger } from '@/shared/components/motion';
 import { Img, PHOTOS } from '@/shared/components/media/Img';
 import { MOCK_TESTS } from '@/shared/mocks';
-import { useDocumentTitle } from '@/shared/hooks';
+import { useDocumentTitle, useGate } from '@/shared/hooks';
 import { cn, formatNumber } from '@/shared/utils';
 
 export const MockTestsPage: React.FC = () => {
   useDocumentTitle('Đề thi thử');
+  const gate = useGate();
   const [tab, setTab] = useState('TOEIC');
   const [kind, setKind] = useState<'ALL' | 'FULL' | 'MINI' | 'FREE'>('ALL');
   const list = useMemo(
@@ -78,7 +79,7 @@ export const MockTestsPage: React.FC = () => {
         ) : (
           <Stagger key={tab + kind} className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
             {list.map((t, i) => (
-              <Link key={t.id} to="/auth/login" className={cn('group bg-white rounded-3xl border-2 border-slate-900 shadow-hard overflow-hidden card-hard-hover block', i === 0 && 'sm:col-span-2 lg:col-span-1')}>
+              <Link key={t.id} to={gate(`/app/mock-tests/${t.id}`)} className={cn('group bg-white rounded-3xl border-2 border-slate-900 shadow-hard overflow-hidden card-hard-hover block', i === 0 && 'sm:col-span-2 lg:col-span-1')}>
                 <div className="relative">
                   <Img src={t.coverUrl} alt="" ratio="video" fallbackClass={t.examType === 'TOEIC' ? 'bg-indigo-200' : 'bg-violet-200'} />
                   <div className="absolute top-3 left-3 flex gap-1.5">

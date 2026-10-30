@@ -5,13 +5,14 @@ import { Badge, Chip, SectionTitle, Avatar, Input, Button, EmptyState } from '@/
 import { Reveal, Stagger } from '@/shared/components/motion';
 import { Img, PHOTOS, pravatar } from '@/shared/components/media/Img';
 import { MOCK_COURSES } from '@/shared/mocks';
-import { useDocumentTitle } from '@/shared/hooks';
+import { useDocumentTitle, useGate } from '@/shared/hooks';
 import { cn, formatNumber } from '@/shared/utils';
 
 type Filter = 'ALL' | 'TOEIC' | 'VSTEP' | 'FREE';
 
 export const CoursesPage: React.FC = () => {
   useDocumentTitle('Khoá học');
+  const gate = useGate();
   const [filter, setFilter] = useState<Filter>('ALL');
   const [q, setQ] = useState('');
   const list = useMemo(
@@ -114,7 +115,7 @@ export const CoursesPage: React.FC = () => {
               <h3 className="font-display text-2xl md:text-3xl font-extrabold">Không biết nên học khoá nào?</h3>
               <p className="text-slate-300 mt-2">Làm bài xếp lớp 15 phút. Lộ trình sẽ gợi ý đúng khoá cho trình độ của bạn.</p>
             </div>
-            <Button to="/auth/register" size="lg" variant="gradient" rightIcon={<ArrowRight className="w-4 h-4" />}>
+            <Button to={gate('/app/courses', '/auth/register')} size="lg" variant="gradient" rightIcon={<ArrowRight className="w-4 h-4" />}>
               Thi xếp lớp
             </Button>
           </div>

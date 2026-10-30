@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { useAuthStore } from '@/shared/stores/authStore';
 
 /** Theo dõi phần tử xuất hiện trong viewport (dùng cho scroll reveal) */
 export function useInView<T extends HTMLElement = HTMLDivElement>(options?: IntersectionObserverInit & { once?: boolean }) {
@@ -125,6 +126,15 @@ export function useMockLoading(ms = 500): boolean {
     return () => clearTimeout(id);
   }, [ms]);
   return loading;
+}
+
+/**
+ * Cổng đăng nhập cho link trên trang công khai:
+ * đã đăng nhập → đi thẳng vào tính năng; chưa → tới trang đăng nhập (nhớ đích đến).
+ */
+export function useGate() {
+  const isAuth = useAuthStore((s) => s.isAuthenticated());
+  return (appPath: string, fallback = '/auth/login') => (isAuth ? appPath : `${fallback}?next=${encodeURIComponent(appPath)}`);
 }
 
 export function useDocumentTitle(title: string) {
