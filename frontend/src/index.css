@@ -314,6 +314,19 @@
   .portal .bg-paper {
     background-image: none;
   }
+  /* Tiêu đề trang: không highlight bút dạ */
+  .page-title .mark,
+  .page-title .mark-coral,
+  .page-title .mark-teal,
+  .page-title .mark-full {
+    background: none;
+    padding: 0;
+    color: inherit;
+  }
+  /* Nút trong header trang nhỏ gọn hơn */
+  .page-title ~ * .btn-3d {
+    border-bottom-width: 3px;
+  }
   .tilt-1 { --tilt: -3deg; transform: rotate(-3deg); }
   .tilt-2 { --tilt: 2deg; transform: rotate(2deg); }
   .tilt-3 { --tilt: -1deg; transform: rotate(-1deg); }

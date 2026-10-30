@@ -116,18 +116,14 @@ export const PageHeader: React.FC<{
   eyebrow?: string;
   className?: string;
   icon?: React.ReactNode;
-}> = ({ title, description, actions, crumbs, eyebrow, className, icon }) => (
-  <div className={cn('flex flex-col md:flex-row md:items-end justify-between gap-5 mb-8 md:mb-10 animate-fade-down', className)}>
-    <div className="space-y-2.5 min-w-0">
-      {crumbs && <Breadcrumb items={crumbs} />}
-      {eyebrow && <span className="inline-block text-[11px] font-extrabold uppercase tracking-[0.14em] text-indigo-700">{eyebrow}</span>}
-      <div className="flex items-center gap-3">
-        {icon && <div className="w-11 h-11 rounded-2xl bg-indigo-50 text-indigo-700 flex items-center justify-center [&>svg]:w-5 [&>svg]:h-5">{icon}</div>}
-        <h1 className="font-display text-3xl md:text-4xl font-extrabold text-slate-900 tracking-tight leading-tight">{title}</h1>
-      </div>
-      {description && <p className="text-base text-slate-500 max-w-2xl leading-relaxed">{description}</p>}
+}> = ({ title, actions, crumbs, className }) => (
+  // Header trang tối giản: chỉ breadcrumb + tiêu đề cỡ vừa + hành động (icon/eyebrow/description bị bỏ qua có chủ ý)
+  <div className={cn('flex items-center justify-between gap-4 mb-6 md:mb-8 animate-fade-down', className)}>
+    <div className="min-w-0">
+      {crumbs && <Breadcrumb items={crumbs} className="mb-1.5" />}
+      <h1 className="page-title font-display text-xl md:text-2xl font-bold text-slate-900 tracking-tight truncate">{title}</h1>
     </div>
-    {actions && <div className="flex items-center gap-2 shrink-0 flex-wrap">{actions}</div>}
+    {actions && <div className="flex items-center gap-2 shrink-0 flex-wrap justify-end">{actions}</div>}
   </div>
 );
 
