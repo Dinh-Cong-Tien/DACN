@@ -25,17 +25,34 @@ const cardTone = {
   sky: 'bg-sky-100',
 };
 
-export const Card: React.FC<CardProps> = ({ hover, padding = 'md', glass, hard, tone = 'white', className, children, as = 'div', ...rest }) => {
+export const Card: React.FC<CardProps> = ({ hover, padding = 'md', glass, hard, tone = 'white', className, children, as = 'div', style, onMouseMove, onMouseLeave, ...rest }) => {
   const Tag = as;
+  const [tilt, setTilt] = React.useState<string | undefined>();
+  // Nghiêng nhẹ theo vị trí chuột khi card có hover (tối đa ~4°)
+  const handleMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    onMouseMove?.(e);
+    if (!hover || window.matchMedia?.('(pointer: coarse)').matches) return;
+    const r = e.currentTarget.getBoundingClientRect();
+    const px = (e.clientX - r.left) / r.width - 0.5;
+    const py = (e.clientY - r.top) / r.height - 0.5;
+    setTilt(`perspective(900px) rotateX(${(-py * 6).toFixed(2)}deg) rotateY(${(px * 6).toFixed(2)}deg) translateY(-4px)`);
+  };
+  const handleLeave = (e: React.MouseEvent<HTMLDivElement>) => {
+    onMouseLeave?.(e);
+    setTilt(undefined);
+  };
   return (
     <Tag
       className={cn(
         'rounded-2xl',
         glass ? 'glass' : hard ? cn('card-hard', cardTone[tone]) : cn('border border-slate-900/10 shadow-soft', cardTone[tone]),
         { none: '', sm: 'p-4', md: 'p-5 md:p-6', lg: 'p-6 md:p-8' }[padding],
-        hover && (hard ? 'card-hard-hover cursor-pointer' : 'card-hover cursor-pointer'),
+        hover && (hard ? 'card-hard-hover cursor-pointer tilt-card' : 'card-hover cursor-pointer tilt-card'),
         className
       )}
+      style={tilt ? { ...style, transform: tilt } : style}
+      onMouseMove={handleMove}
+      onMouseLeave={handleLeave}
       {...rest}
     >
       {children}

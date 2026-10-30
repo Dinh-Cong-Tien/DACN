@@ -4,8 +4,9 @@ import { Bell, ChevronLeft, LogOut, Menu, Search, Settings, User, X, Flame, Spar
 import { cn, ROLE_LABEL } from '@/shared/utils';
 import { useAuthStore } from '@/shared/stores/authStore';
 import { useUiStore, toast } from '@/shared/stores/uiStore';
-import { Avatar, Badge, Dropdown, Logo, Tooltip } from '@/shared/components/ui';
+import { Avatar, Badge, Dropdown, Logo, Tooltip, CommandPalette } from '@/shared/components/ui';
 import { PageTransition } from '@/shared/components/motion';
+import { RouteProgress, BackToTop } from '@/shared/components/layout/ScrollExtras';
 import { MOCK_NOTIFICATIONS } from '@/shared/mocks';
 
 export interface NavItem {
@@ -51,7 +52,9 @@ export const AppShell: React.FC<AppShellProps> = ({ groups, brandTagline, accent
   const toggleSidebar = useUiStore((s) => s.toggleSidebar);
   const mobileOpen = useUiStore((s) => s.mobileNavOpen);
   const setMobileNav = useUiStore((s) => s.setMobileNav);
+  const setPalette = useUiStore((s) => s.setPalette);
   const a = accentMap[accent];
+  const bottomItems = groups.flatMap((g) => g.items).slice(0, 4);
   const unread = MOCK_NOTIFICATIONS.filter((n) => !n.isRead).length;
 
   useEffect(() => {
@@ -168,11 +171,14 @@ export const AppShell: React.FC<AppShellProps> = ({ groups, brandTagline, accent
               <Menu className="w-5 h-5" />
             </button>
             <span className="font-display text-sm font-bold text-slate-900 truncate">{headerLabel}</span>
-            <div className="hidden md:flex items-center gap-2 ml-4 px-3 h-9 rounded-xl border-2 border-slate-900/10 bg-white w-64 text-slate-400">
+            <button onClick={() => setPalette(true)} className="hidden md:flex items-center gap-2 ml-4 px-3 h-9 rounded-xl border-2 border-slate-900/10 bg-white w-64 text-slate-400 hover:border-slate-900 hover:text-slate-700 transition-all hover:shadow-hard-sm text-left">
               <Search className="w-4 h-4" />
-              <span className="text-xs">Tìm kiếm nhanh...</span>
+              <span className="text-xs">Tìm trang, đề thi, khoá học...</span>
               <kbd className="ml-auto text-[10px] font-bold px-1.5 py-0.5 rounded border border-slate-300 bg-slate-50">⌘K</kbd>
-            </div>
+            </button>
+            <button onClick={() => setPalette(true)} className="md:hidden p-2 rounded-xl hover:bg-slate-900/5" aria-label="Tìm kiếm">
+              <Search className="w-5 h-5" />
+            </button>
           </div>
 
           <div className="flex items-center gap-2 md:gap-3">
@@ -227,12 +233,42 @@ export const AppShell: React.FC<AppShellProps> = ({ groups, brandTagline, accent
           </div>
         </header>
 
-        <main className="flex-1 p-4 md:p-8 min-w-0">
+        <main className="flex-1 p-4 md:p-8 pb-24 lg:pb-8 min-w-0">
           <PageTransition>
             <Outlet />
           </PageTransition>
         </main>
+
+        {/* Thanh điều hướng dưới cho mobile (kiểu app) */}
+        <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-slate-900 border-t-2 border-slate-900 px-2 pb-[env(safe-area-inset-bottom)]">
+          <div className="grid grid-cols-5 h-16">
+            {bottomItems.map((item) => {
+              const Icon = item.icon;
+              return (
+                <NavLink key={item.to} to={item.to} end={item.end} className={({ isActive }) => cn('flex flex-col items-center justify-center gap-1 text-[10px] font-bold transition-colors', isActive ? 'text-amber-300' : 'text-slate-400')}>
+                  {({ isActive }) => (
+                    <>
+                      <span className={cn('w-9 h-6 rounded-full flex items-center justify-center transition-all', isActive && 'bg-amber-300/15')}>
+                        <Icon className="w-5 h-5" />
+                      </span>
+                      <span className="truncate max-w-[64px]">{item.label.split(' ').slice(0, 2).join(' ')}</span>
+                    </>
+                  )}
+                </NavLink>
+              );
+            })}
+            <button onClick={() => setMobileNav(true)} className="flex flex-col items-center justify-center gap-1 text-[10px] font-bold text-slate-400">
+              <span className="w-9 h-6 rounded-full flex items-center justify-center">
+                <Menu className="w-5 h-5" />
+              </span>
+              Thêm
+            </button>
+          </div>
+        </nav>
       </div>
+      <RouteProgress />
+      <BackToTop />
+      <CommandPalette />
     </div>
   );
 };

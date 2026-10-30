@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from 'react';
+import { fireConfetti } from '@/shared/components/motion/confetti';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Trophy, Clock, Target, AlertTriangle, RotateCcw, BookmarkPlus, Share2, Flag, CheckCircle2 } from 'lucide-react';
 import { useDocumentTitle } from '@/shared/hooks';
@@ -52,6 +53,7 @@ export const StudentExamResultPage: React.FC = () => {
 
   const isVstep = test.examType === 'VSTEP';
   const pct = Math.round((result.correctCount / Math.max(1, result.total)) * 100);
+  React.useEffect(() => { if (pct >= 60) fireConfetti(); }, [pct]);
   const score = isVstep ? Math.round((result.correctCount / result.total) * 10 * 2) / 2 : Math.round(((result.correctCount / result.total) * 990) / 5) * 5;
   const maxScore = isVstep ? 10 : 990;
   const wrong = questions.filter((q) => result.answers[q.id] !== getCorrectKey(q));

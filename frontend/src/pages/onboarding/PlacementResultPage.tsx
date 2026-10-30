@@ -1,4 +1,5 @@
 import React, { useMemo } from 'react';
+import { fireConfetti } from '@/shared/components/motion/confetti';
 import { useNavigate } from 'react-router-dom';
 import { ArrowRight, Compass, CheckCircle2, Lock, Play, PartyPopper } from 'lucide-react';
 import { useDocumentTitle, useLocalStorage } from '@/shared/hooks';
@@ -31,6 +32,7 @@ export const PlacementResultPage: React.FC = () => {
   }, []);
 
   const pct = Math.round((result.correct / result.total) * 100);
+  React.useEffect(() => { fireConfetti({ count: 90 }); }, []);
   const isVstep = state.examType === 'VSTEP';
   const estimated = isVstep ? Math.round((3 + pct * 0.06) * 2) / 2 : Math.round((300 + pct * 6) / 5) * 5;
   const level = isVstep ? (estimated >= 8.5 ? 'C1' : estimated >= 6 ? 'B2' : estimated >= 4 ? 'B1' : 'A2') : estimated >= 785 ? 'B2' : estimated >= 550 ? 'B1' : 'A2';

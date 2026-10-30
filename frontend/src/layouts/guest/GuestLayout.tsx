@@ -4,8 +4,9 @@ import { Menu, X, LogIn, ArrowRight, ChevronDown, Facebook, Youtube, Mail, MapPi
 import { cn, ROLE_HOME } from '@/shared/utils';
 import { useScrolled } from '@/shared/hooks';
 import { useAuthStore } from '@/shared/stores/authStore';
-import { Logo, Button } from '@/shared/components/ui';
+import { Logo, Button, CommandPalette } from '@/shared/components/ui';
 import { PageTransition } from '@/shared/components/motion';
+import { ScrollProgress, BackToTop, RouteProgress } from '@/shared/components/layout/ScrollExtras';
 
 const NAV = [
   { to: '/toeic', label: 'TOEIC' },
@@ -133,6 +134,11 @@ export const GuestLayout: React.FC = () => {
           </div>
         )}
       </header>
+
+      <ScrollProgress />
+      <RouteProgress />
+      <BackToTop />
+      <CommandPalette />
 
       <main className="flex-1">
         <PageTransition>

@@ -224,10 +224,11 @@ export const ToastContainer: React.FC = () => {
       {toasts.map((t) => {
         const { Icon, cls } = map[t.type];
         return (
-          <div key={t.id} className="flex items-start gap-3 p-4 rounded-2xl bg-white border-2 border-slate-900 shadow-hard animate-slide-in-right">
-            <div className={cn('w-9 h-9 rounded-xl flex items-center justify-center shrink-0', cls)}>
+          <div key={t.id} className="relative overflow-hidden flex items-start gap-3 p-4 rounded-2xl bg-white border-2 border-slate-900 shadow-hard animate-slide-in-right">
+            <div className={cn('w-9 h-9 rounded-xl flex items-center justify-center shrink-0 animate-pop', cls)}>
               <Icon className="w-5 h-5" />
             </div>
+            <span aria-hidden className="absolute left-0 bottom-0 h-1 bg-slate-900/80 animate-toast-bar" style={{ animationDuration: `${t.duration}ms` }} />
             <div className="flex-1 min-w-0">
               <p className="text-sm font-bold text-slate-900">{t.title}</p>
               {t.message && <p className="text-xs text-slate-500 mt-0.5 leading-relaxed">{t.message}</p>}

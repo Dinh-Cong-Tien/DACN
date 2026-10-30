@@ -42,6 +42,34 @@
   img {
     @apply select-none;
   }
+  /* Lớp hạt mịn (grain) phủ toàn trang tạo cảm giác giấy thật */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: 9990;
+    pointer-events: none;
+    opacity: 0.045;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+  h1 {
+    font-size: clamp(1.75rem, 1.2rem + 1.6vw, 2.6rem);
+  }
+}
+
+@keyframes toast-bar {
+  from { width: 100%; }
+  to { width: 0%; }
+}
+.animate-toast-bar {
+  animation: toast-bar linear forwards;
+}
+
+/* Thẻ nghiêng theo chuột (3D tilt) */
+.tilt-card {
+  transform-style: preserve-3d;
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s;
+  will-change: transform;
 }
 
 @layer components {
