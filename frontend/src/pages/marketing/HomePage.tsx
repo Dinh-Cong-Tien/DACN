@@ -80,10 +80,11 @@ export const HomePage: React.FC = () => {
   const featured = MOCK_TESTS.filter((t) => t.isFree).slice(0, 3);
 
   return (
-    <div className="relative overflow-hidden bg-slate-950 text-white">
+    <div className="relative overflow-hidden night-bg text-white">
       {/* Nền đêm xuyên suốt trang: sao + quầng sáng tím-hồng-cam rải dọc trang */}
       <div aria-hidden className="pointer-events-none absolute inset-0">
         <div className="absolute inset-0 bg-stars opacity-60" />
+        <div className="absolute inset-0 bg-stars-2 animate-twinkle" />
         <div className="absolute top-[18%] -left-40 w-[620px] h-[620px] rounded-full bg-violet-500/20 blur-[140px]" />
         <div className="absolute top-[34%] -right-40 w-[560px] h-[560px] rounded-full bg-fuchsia-600/20 blur-[140px]" />
         <div className="absolute top-[52%] left-1/4 w-[520px] h-[520px] rounded-full bg-indigo-500/15 blur-[140px]" />
@@ -186,7 +187,9 @@ export const HomePage: React.FC = () => {
       </section>
 
       {/* ================= MARQUEE ================= */}
-      <section className="relative border-y border-white/10 bg-white/[0.02] py-5 space-y-3">
+      <section className="relative isolate border-y border-white/10 bg-white/[0.02] py-5 space-y-3">
+        <div aria-hidden className="pointer-events-none absolute -z-10 rounded-full -left-40 -top-24 w-[520px] h-[260px] bg-violet-500/20 blur-[100px]" />
+        <div aria-hidden className="pointer-events-none absolute -z-10 rounded-full -right-40 -bottom-24 w-[520px] h-[260px] bg-indigo-500/20 blur-[100px]" />
         <p className="text-center text-[11px] font-extrabold uppercase tracking-[0.2em] text-slate-400">Học viên đến từ</p>
         <div className="marquee">
           <div className="marquee-track whitespace-nowrap">
@@ -211,7 +214,10 @@ export const HomePage: React.FC = () => {
       </section>
 
       {/* ================= STATS ================= */}
-      <section className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+      <section className="relative isolate max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+        <div aria-hidden className="night-grid -inset-x-[20vw] -z-10" />
+        <div aria-hidden className="pointer-events-none absolute -z-10 rounded-full left-[-10%] top-1/2 -translate-y-1/2 w-[420px] h-[420px] bg-indigo-500/25 blur-[120px]" />
+        <div aria-hidden className="pointer-events-none absolute -z-10 rounded-full right-[-10%] top-1/2 -translate-y-1/2 w-[420px] h-[420px] bg-fuchsia-500/20 blur-[120px]" />
         <Stagger className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {HOME_STATS.map((s) => (
             <div key={s.label} className="glass-night rounded-3xl p-6 md:p-7 transition-all duration-300 hover:-translate-y-1 hover:border-white/20">
@@ -225,7 +231,13 @@ export const HomePage: React.FC = () => {
       </section>
 
       {/* ================= 5-STEP LOOP (zigzag) ================= */}
-      <section className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24 space-y-16">
+      <section className="relative isolate max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24 space-y-16">
+        <div aria-hidden className="night-divider -z-10" />
+        <div aria-hidden className="night-grid night-grid-top -inset-x-[20vw] -z-10" />
+        <div aria-hidden className="pointer-events-none absolute -z-10 rounded-full -right-[18vw] top-[18%] w-[560px] h-[560px] bg-amber-400/15 blur-[140px]" />
+        <div aria-hidden className="pointer-events-none absolute -z-10 rounded-full -left-[18vw] top-[38%] w-[560px] h-[560px] bg-fuchsia-500/20 blur-[140px]" />
+        <div aria-hidden className="pointer-events-none absolute -z-10 rounded-full -right-[18vw] top-[60%] w-[560px] h-[560px] bg-indigo-500/20 blur-[140px]" />
+        <div aria-hidden className="pointer-events-none absolute -z-10 rounded-full -left-[18vw] top-[80%] w-[560px] h-[560px] bg-violet-500/20 blur-[140px]" />
         <Reveal>
           <SectionTitle dark eyebrow="Cách OrbiLingo hoạt động" title={<>Không làm đề vô định. <span className="hero-gradient-text">Làm đúng</span> việc cần làm.</>} description="Năm bước lặp lại mỗi tuần. Dữ liệu từ bài làm của bạn quyết định bước tiếp theo." />
         </Reveal>
@@ -250,7 +262,9 @@ export const HomePage: React.FC = () => {
       </section>
 
       {/* ================= BENTO FEATURES ================= */}
-      <section className="relative py-16 md:py-24">
+      <section className="relative isolate py-16 md:py-24">
+        <div aria-hidden className="night-divider -z-10" />
+        <div aria-hidden className="aurora -z-10" />
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
           <Reveal>
             <SectionTitle dark eyebrow="Tính năng" title={<>Mọi thứ cho một kỳ thi, <span className="hero-gradient-text">trong một chỗ.</span></>} description="Từ đề thi tới lớp học với giáo viên. Không cần cài thêm ứng dụng nào." />
@@ -333,7 +347,10 @@ export const HomePage: React.FC = () => {
       </section>
 
       {/* ================= TOEIC vs VSTEP ================= */}
-      <section className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24 space-y-12">
+      <section className="relative isolate max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24 space-y-12">
+        <div aria-hidden className="night-divider -z-10" />
+        <div aria-hidden className="pointer-events-none absolute -z-10 rounded-full -left-[15vw] top-1/3 w-[600px] h-[500px] bg-indigo-500/25 blur-[150px]" />
+        <div aria-hidden className="pointer-events-none absolute -z-10 rounded-full -right-[15vw] top-1/3 w-[600px] h-[500px] bg-violet-500/25 blur-[150px]" />
         <Reveal>
           <SectionTitle dark eyebrow="Hai kỳ thi, một nền tảng" title={<>Bạn thi <span className="text-indigo-300">TOEIC</span> hay <span className="text-violet-400">VSTEP</span>?</>} description="Chọn kỳ thi khi bắt đầu, có thể đổi bất kỳ lúc nào. Mọi tiến độ được giữ nguyên." />
         </Reveal>
@@ -385,7 +402,10 @@ export const HomePage: React.FC = () => {
       </section>
 
       {/* ================= COURSES STRIP ================= */}
-      <section className="relative py-16 md:py-20">
+      <section className="relative isolate py-16 md:py-20">
+        <div aria-hidden className="night-divider -z-10" />
+        <div aria-hidden className="night-grid -z-10" />
+        <div aria-hidden className="pointer-events-none absolute -z-10 rounded-full left-1/2 -translate-x-1/2 top-1/3 w-[900px] h-[420px] bg-fuchsia-600/15 blur-[150px]" />
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
           <Reveal className="flex flex-col md:flex-row md:items-end justify-between gap-4">
             <SectionTitle dark align="left" eyebrow="Khoá học" title={<>Giáo viên thật, <span className="hero-gradient-text">video có transcript.</span></>} description="Nhấn vào từ trong transcript để tra nghĩa. Mỗi bài có quiz củng cố." />
@@ -423,7 +443,10 @@ export const HomePage: React.FC = () => {
       </section>
 
       {/* ================= TESTIMONIALS ================= */}
-      <section className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24 space-y-12">
+      <section className="relative isolate max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24 space-y-12">
+        <div aria-hidden className="night-divider -z-10" />
+        <div aria-hidden className="pointer-events-none absolute -z-10 rounded-full left-1/2 -translate-x-1/2 top-[30%] w-[1000px] h-[480px] bg-violet-600/20 blur-[160px]" />
+        <div aria-hidden className="pointer-events-none absolute -z-10 rounded-full -right-[10vw] bottom-0 w-[420px] h-[420px] bg-amber-400/10 blur-[140px]" />
         <Reveal>
           <SectionTitle dark eyebrow="Học viên nói gì" title={<>Điểm số thật, <span className="hero-gradient-text">người thật.</span></>} description="Ba trong số hàng nghìn học viên đã tăng điểm trong năm nay." />
         </Reveal>
@@ -453,7 +476,9 @@ export const HomePage: React.FC = () => {
       </section>
 
       {/* ================= PRICING SHORT ================= */}
-      <section className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-16 md:pb-24">
+      <section className="relative isolate max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-16 md:pb-24">
+        <div aria-hidden className="pointer-events-none absolute -z-10 rounded-full -left-[10vw] top-0 w-[520px] h-[420px] bg-fuchsia-500/20 blur-[150px]" />
+        <div aria-hidden className="pointer-events-none absolute -z-10 rounded-full right-0 top-1/4 w-[420px] h-[380px] bg-indigo-500/20 blur-[140px]" />
         <Reveal>
           <div className="glass-night rounded-3xl p-7 md:p-10 grid lg:grid-cols-[1fr_auto] gap-8 items-center">
             <div>
@@ -477,7 +502,9 @@ export const HomePage: React.FC = () => {
       </section>
 
       {/* ================= FINAL CTA ================= */}
-      <section className="relative overflow-hidden border-t border-white/10">
+      <section className="relative isolate overflow-hidden border-t border-white/10">
+        <div aria-hidden className="pointer-events-none absolute -z-10 rounded-full left-1/4 -top-20 w-[700px] h-[500px] bg-violet-600/25 blur-[160px]" />
+        <div aria-hidden className="pointer-events-none absolute -z-10 rounded-full -right-20 bottom-0 w-[520px] h-[420px] bg-amber-400/15 blur-[150px]" />
         <ThreeBackground variant="globe" dark className="opacity-70" offsetX={0.6} />
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 md:py-28 grid lg:grid-cols-[1fr_380px] gap-12 items-center">
           <div className="space-y-6">
