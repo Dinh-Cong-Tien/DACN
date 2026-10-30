@@ -1,19 +1,11 @@
 import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Mail, ArrowRight } from 'lucide-react';
+import { Mail, ArrowRight, UserPlus } from 'lucide-react';
 import { Button, Card, Checkbox, Divider, Input, PasswordInput, Alert } from '@/shared/components/ui';
-import { pravatar } from '@/shared/components/media/Img';
 import { useAuthStore, DEMO_USERS, resolveDemoRole } from '@/shared/stores/authStore';
 import { toast } from '@/shared/stores/uiStore';
 import { ROLE_HOME } from '@/shared/utils';
 import { useDocumentTitle } from '@/shared/hooks';
-
-const DEMO = [
-  { email: 'student@orbi.edu.vn', label: 'Học viên', img: 11, cls: 'bg-indigo-100 hover:bg-indigo-200' },
-  { email: 'teacher@orbi.edu.vn', label: 'Giáo viên', img: 43, cls: 'bg-emerald-100 hover:bg-emerald-200' },
-  { email: 'head@orbi.edu.vn', label: 'Trưởng BM', img: 44, cls: 'bg-amber-200 hover:bg-amber-300' },
-  { email: 'admin@orbi.edu.vn', label: 'Quản trị', img: 45, cls: 'bg-violet-100 hover:bg-violet-200' },
-];
 
 export const LoginPage: React.FC = () => {
   useDocumentTitle('Đăng nhập');
@@ -52,12 +44,7 @@ export const LoginPage: React.FC = () => {
       <div className="space-y-2 animate-fade-down">
         <span className="sticker tilt-1 !bg-amber-300">Chào mừng trở lại</span>
         <h1 className="font-display text-3xl font-extrabold text-slate-900 tracking-tight">Đăng nhập</h1>
-        <p className="text-sm text-slate-600">
-          Chưa có tài khoản?{' '}
-          <Link to="/auth/register" className="font-bold text-violet-600 hover:underline underline-offset-2">
-            Đăng ký miễn phí
-          </Link>
-        </p>
+        <p className="text-sm text-slate-600">Tiếp tục lộ trình học của bạn.</p>
       </div>
       <Card hard padding="lg" className="animate-fade-up">
         {error && (
@@ -78,25 +65,10 @@ export const LoginPage: React.FC = () => {
             Đăng nhập
           </Button>
         </form>
-        <Divider label="Tài khoản demo" className="my-5" />
-        <div className="grid grid-cols-2 gap-2">
-          {DEMO.map((d) => (
-            <button
-              key={d.email}
-              type="button"
-              onClick={() => {
-                setEmail(d.email);
-                setPassword('OrbiLingo@2026');
-                setError('');
-              }}
-              className={`flex items-center gap-2.5 px-3 py-2 rounded-xl border-2 border-slate-900 text-xs font-bold text-slate-900 transition-all hover:-translate-y-0.5 hover:shadow-hard-sm active:translate-y-0 ${d.cls}`}
-            >
-              <img src={pravatar(d.img)} alt="" className="w-7 h-7 rounded-full border-2 border-slate-900 object-cover" />
-              {d.label}
-            </button>
-          ))}
-        </div>
-        <p className="text-[11px] text-slate-500 text-center mt-3">Mật khẩu demo: OrbiLingo@2026</p>
+        <Divider label="Chưa có tài khoản?" className="my-5" />
+        <Button to="/auth/register" fullWidth size="lg" variant="outline" leftIcon={<UserPlus className="w-4 h-4" />}>
+          Đăng ký tài khoản mới
+        </Button>
       </Card>
     </div>
   );

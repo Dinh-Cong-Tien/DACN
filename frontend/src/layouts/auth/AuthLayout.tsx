@@ -1,5 +1,5 @@
 import React from 'react';
-import { Outlet, Link } from 'react-router-dom';
+import { Outlet } from 'react-router-dom';
 import { CheckCircle2, Quote, Star } from 'lucide-react';
 import { Logo, Avatar } from '@/shared/components/ui';
 import { PageTransition, Doodles } from '@/shared/components/motion';
@@ -70,11 +70,6 @@ export const AuthLayout: React.FC = () => {
             <Outlet />
           </PageTransition>
         </div>
-        <p className="mt-8 text-xs text-slate-500">
-          <Link to="/" className="hover:text-indigo-700 font-semibold">
-            ← Về trang chủ
-          </Link>
-        </p>
       </main>
     </div>
   );
