@@ -99,6 +99,68 @@ export const RotatingWords: React.FC<{ words: string[]; interval?: number; class
   );
 };
 
+/**
+ * Gõ chữ lặp vòng: gõ từng ký tự → dừng đọc → xoá lùi từng ký tự như bấm Backspace → gõ từ kế tiếp.
+ * Tách theo code point (NFC) nên chữ có dấu tiếng Việt không bị vỡ. Giữ chỗ bằng từ dài nhất để bố cục không nhảy.
+ * Người dùng bật "giảm chuyển động" thì chỉ đổi cả từ, không gõ.
+ * Phần chữ động là aria-hidden: nơi dùng tự đặt chữ sr-only bên ngoài (không đặt bên trong vùng background-clip:text vì sẽ bị vẽ ra).
+ */
+export const TypeLoop: React.FC<{
+  words: string[];
+  typeSpeed?: number; // ms / ký tự khi gõ
+  deleteSpeed?: number; // ms / ký tự khi xoá
+  hold?: number; // ms dừng khi gõ xong
+  gap?: number; // ms nghỉ khi đã xoá hết
+  startDelay?: number;
+  className?: string;
+  caretClassName?: string;
+}> = ({ words, typeSpeed = 120, deleteSpeed = 60, hold = 1800, gap = 380, startDelay = 500, className, caretClassName }) => {
+  const chars = React.useMemo(() => words.map((w) => Array.from(w.normalize('NFC'))), [words]);
+  const reduce = React.useMemo(() => typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches, []);
+  const [wi, setWi] = useState(0);
+  const [n, setN] = useState(reduce ? chars[0]?.length ?? 0 : 0);
+  const [phase, setPhase] = useState<'start' | 'typing' | 'holding' | 'deleting'>(reduce ? 'holding' : 'start');
+
+  useEffect(() => {
+    const len = chars[wi]?.length ?? 0;
+    let t: ReturnType<typeof setTimeout>;
+    if (reduce) {
+      t = setTimeout(() => {
+        const next = (wi + 1) % chars.length;
+        setWi(next);
+        setN(chars[next].length);
+      }, hold + 1200);
+    } else if (phase === 'start') t = setTimeout(() => setPhase('typing'), startDelay);
+    else if (phase === 'typing') t = n < len ? setTimeout(() => setN(n + 1), typeSpeed) : setTimeout(() => setPhase('holding'), 0);
+    else if (phase === 'holding') t = setTimeout(() => setPhase('deleting'), hold);
+    else
+      t =
+        n > 0
+          ? setTimeout(() => setN(n - 1), deleteSpeed)
+          : setTimeout(() => {
+              setWi((wi + 1) % chars.length);
+              setPhase('typing');
+            }, gap);
+    return () => clearTimeout(t);
+  }, [chars, wi, n, phase, reduce, typeSpeed, deleteSpeed, hold, gap, startDelay]);
+
+  const longest = words.reduce((a, b) => (Array.from(a).length >= Array.from(b).length ? a : b), '');
+  const caret = <span aria-hidden className={cn('type-caret', (phase === 'holding' || phase === 'start') && 'type-caret-blink', caretClassName)} />;
+  return (
+    <span className={cn('relative inline-grid align-baseline', className)}>
+      {/* giữ chỗ theo từ dài nhất (kể cả con trỏ) */}
+      <span aria-hidden className="invisible col-start-1 row-start-1 whitespace-nowrap">
+        {longest}
+        {caret}
+      </span>
+      <span aria-hidden className="col-start-1 row-start-1 whitespace-nowrap">
+        {chars[wi]?.slice(0, n).join('')}
+        {!reduce && caret}
+      </span>
+    </span>
+  );
+};
+
 /** Hiệu ứng gõ chữ */
 export const TypeWriter: React.FC<{ text: string; speed?: number; className?: string; cursor?: boolean }> = ({ text, speed = 40, className, cursor = true }) => {
   const [n, setN] = useState(0);

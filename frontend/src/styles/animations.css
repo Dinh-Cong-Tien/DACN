@@ -95,3 +95,17 @@
   transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s;
   will-change: transform;
 }
+
+/* Con trỏ gõ chữ (TypeLoop): đứng yên khi đang gõ/xoá, nhấp nháy khi dừng */
+.type-caret {
+  display: inline-block;
+  width: 0.07em;
+  height: 0.82em;
+  margin-left: 0.06em;
+  vertical-align: -0.04em;
+  border-radius: 999px;
+  background: #ffd24d;
+  -webkit-text-fill-color: initial;
+}
+.type-caret-blink { animation: type-caret-blink 1s steps(1, end) infinite; }
+@keyframes type-caret-blink { 50% { opacity: 0; } }

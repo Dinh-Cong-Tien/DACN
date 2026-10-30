@@ -3,7 +3,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, Star, CheckCircle2, Play, Flame, Target, BookOpen, Users, FileText, AlertTriangle, RotateCcw, Compass, Quote, Headphones } from 'lucide-react';
 import { Button, Card, SectionTitle, Avatar, Badge } from '@/shared/components/ui';
-import { Reveal, Stagger, CountUp, Doodles, RotatingWords } from '@/shared/components/motion';
+import { Reveal, Stagger, CountUp, Doodles, TypeLoop } from '@/shared/components/motion';
 import { Img, PHOTOS, pravatar } from '@/shared/components/media/Img';
 import { HOME_STATS, TESTIMONIALS, MOCK_TESTS, PRICING_PLANS, MOCK_COURSES } from '@/shared/mocks';
 import { useDocumentTitle, useGate, useInView } from '@/shared/hooks';
@@ -13,6 +13,8 @@ import { LoopConnector } from './home/LoopConnector';
 const PARTNERS = ['ĐH Đà Nẵng', 'ĐH Duy Tân', 'ĐH Bách Khoa', 'ĐH FPT', 'VNU Hà Nội', 'ĐH Kinh tế', 'ĐH Ngoại ngữ', 'HUTECH', 'ĐH Sư phạm'];
 
 const MARQUEE_POINTS = ['TOEIC 450 → 990', 'VSTEP B1 · B2 · C1', 'Đề ETS 2024–2025', 'Audio phát một lần', 'Sổ tay lỗi sai', 'Ôn tập SM-2', 'Giáo viên chấm bài', 'Lớp học có mã mời'];
+
+const HERO_WORDS = ['BỨT PHÁ', 'CHINH PHỤC', 'LÀM CHỦ'];
 
 const LOOP = [
   { n: '01', title: 'Thi xếp lớp 15 phút', text: '20 câu rải đều 7 Part. Hệ thống ước lượng trình độ hiện tại, chỉ ra Part nào đang kéo điểm bạn xuống.', photo: PHOTOS.notes, tag: 'Chẩn đoán' },
@@ -97,8 +99,9 @@ export const HomePage: React.FC = () => {
             </span>
 
             <h1 className="font-display font-extrabold tracking-tight animate-fade-up">
+              <span className="sr-only">{HERO_WORDS.join(', ')} </span>
               <span className="block text-[4.2rem] sm:text-[6rem] lg:text-[8.2rem] leading-[1.15] pt-[0.05em] pb-[0.12em] -mb-[0.1em] hero-gradient-text">
-                <RotatingWords words={['BỨT PHÁ', 'CHINH PHỤC', 'LÀM CHỦ']} interval={2800} />
+                <TypeLoop words={HERO_WORDS} />
               </span>
               <span className="block mt-3 text-2xl sm:text-3xl lg:text-4xl text-white font-bold">
                 <span className="text-amber-300 mr-2">điểm số</span>
