@@ -21,60 +21,70 @@ const LOOP = [
   { n: '05', title: 'Ôn đúng lúc sắp quên', text: 'Thuật toán SM-2 nhắc lại sau 1, 3, 7, 14, 30 ngày. Mỗi sáng chỉ cần 10 phút ôn phần hệ thống gợi ý.', photo: PHOTOS.studying, tag: 'Ghi nhớ' },
 ];
 
-/** Đường cong nét đứt nối ảnh bước i với ảnh bước i+1 (chỉ desktop) */
-const LoopConnector: React.FC<{ containerRef: React.RefObject<HTMLDivElement>; photoRefs: React.MutableRefObject<(HTMLDivElement | null)[]>; dark?: boolean }> = ({ containerRef, photoRefs, dark }) => {
-  const [size, setSize] = useState({ w: 0, h: 0 });
-  const [paths, setPaths] = useState<{ d: string; a: [number, number]; b: [number, number] }[]>([]);
+/**
+ * Trục thời gian dọc cho 5 bước: đường trục mảnh ở giữa được "rót" gradient theo tiến độ cuộn,
+ * mỗi bước có nút số phát sáng khi đường sáng chạm tới.
+ */
+const useTimelineProgress = (boxRef: React.RefObject<HTMLDivElement>, nodeRefs: React.MutableRefObject<(HTMLDivElement | null)[]>) => {
+  const [progress, setProgress] = useState(0);
+  const [active, setActive] = useState(-1);
   useLayoutEffect(() => {
-    const box = containerRef.current;
+    const box = boxRef.current;
     if (!box) return;
-    // offsetLeft/Top bỏ qua transform (tilt, fade-up) nên vị trí ổn định
-    const pos = (el: HTMLElement) => {
-      let x = 0;
-      let y = 0;
-      let n: HTMLElement | null = el;
-      while (n && n !== box) {
-        x += n.offsetLeft;
-        y += n.offsetTop;
-        n = n.offsetParent as HTMLElement | null;
-      }
-      return { x, y, w: el.offsetWidth, h: el.offsetHeight };
+    let raf = 0;
+    const update = () => {
+      const r = box.getBoundingClientRect();
+      const anchor = window.innerHeight * 0.55; // điểm "đầu bút" ở giữa màn hình
+      const p = Math.min(1, Math.max(0, (anchor - r.top) / r.height));
+      setProgress(p);
+      const fillY = p * box.offsetHeight;
+      let a = -1;
+      nodeRefs.current.forEach((n, i) => {
+        if (n && n.offsetTop + n.offsetHeight / 2 <= fillY + 2) a = i;
+      });
+      setActive(a);
     };
-    const calc = () => {
-      setSize({ w: box.offsetWidth, h: box.offsetHeight });
-      const els = photoRefs.current.filter(Boolean) as HTMLDivElement[];
-      const out: { d: string; a: [number, number]; b: [number, number] }[] = [];
-      for (let i = 0; i < els.length - 1; i++) {
-        const p = pos(els[i]);
-        const q = pos(els[i + 1]);
-        const a: [number, number] = [p.x + p.w / 2, p.y + p.h + 14];
-        const b: [number, number] = [q.x + q.w / 2, q.y - 14];
-        const dy = b[1] - a[1];
-        out.push({ d: `M ${a[0]} ${a[1]} C ${a[0]} ${a[1] + dy * 0.75}, ${b[0]} ${b[1] - dy * 0.75}, ${b[0]} ${b[1]}`, a, b });
-      }
-      setPaths(out);
+    const onScroll = () => {
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(update);
     };
-    calc();
-    const ro = new ResizeObserver(calc);
-    ro.observe(box);
-    return () => ro.disconnect();
-  }, [containerRef, photoRefs]);
-  return (
-    <svg aria-hidden className="hidden md:block absolute inset-0 pointer-events-none" width={size.w} height={size.h} viewBox={`0 0 ${size.w || 1} ${size.h || 1}`}>
-      {paths.map((p, i) => (
-        <g key={i}>
-          <path d={p.d} fill="none" stroke={dark ? '#ffffff' : '#141A2B'} strokeOpacity={dark ? 0.4 : 0.35} strokeWidth="2.5" strokeLinecap="round" strokeDasharray="2 12" className="loop-dash" />
-          <circle cx={p.a[0]} cy={p.a[1]} r="6" fill="#FA5330" stroke={dark ? '#0B0F1C' : '#141A2B'} strokeWidth="2" />
-          <circle cx={p.b[0]} cy={p.b[1]} r="6" fill="#FFD24D" stroke={dark ? '#0B0F1C' : '#141A2B'} strokeWidth="2" />
-        </g>
-      ))}
-    </svg>
-  );
+    update();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', onScroll);
+    return () => {
+      cancelAnimationFrame(raf);
+      window.removeEventListener('scroll', onScroll);
+      window.removeEventListener('resize', onScroll);
+    };
+  }, [boxRef, nodeRefs]);
+  return { progress, active };
 };
+
+const TimelineNode = React.forwardRef<HTMLDivElement, { n: string; on: boolean; side: 'left' | 'right' }>(({ n, on, side }, ref) => (
+  <div ref={ref} className="relative hidden md:flex items-center justify-center">
+    {/* Tia sáng nối sang ảnh */}
+    <span
+      aria-hidden
+      className={cn('absolute top-1/2 h-px w-12 transition-all duration-700', side === 'right' ? 'left-1/2 ml-7 origin-left' : 'right-1/2 mr-7 origin-right', on ? 'scale-x-100 opacity-100' : 'scale-x-0 opacity-0')}
+      style={{ background: side === 'right' ? 'linear-gradient(90deg, rgba(255,115,82,0.9), transparent)' : 'linear-gradient(270deg, rgba(255,115,82,0.9), transparent)' }}
+    />
+    {on && <span aria-hidden className="absolute w-14 h-14 rounded-full bg-violet-500/30 animate-pulse-ring" />}
+    <span
+      className={cn(
+        'relative z-10 w-14 h-14 rounded-full flex items-center justify-center font-display text-base font-extrabold transition-all duration-500',
+        on ? 'text-white bg-gradient-to-br from-violet-500 via-fuchsia-500 to-amber-400 shadow-[0_0_0_6px_rgba(250,83,48,0.15),0_0_30px_rgba(250,83,48,0.55)] scale-100' : 'text-slate-500 bg-slate-950 border border-white/15 scale-90'
+      )}
+    >
+      {n}
+    </span>
+  </div>
+));
+TimelineNode.displayName = 'TimelineNode';
 
 export const HomePage: React.FC = () => {
   const loopBoxRef = useRef<HTMLDivElement>(null);
-  const loopPhotoRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const loopNodeRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const { progress: loopProgress, active: loopActive } = useTimelineProgress(loopBoxRef, loopNodeRefs);
   useDocumentTitle('Trang chủ');
   const gate = useGate();
   const featured = MOCK_TESTS.filter((t) => t.isFree).slice(0, 3);
@@ -167,10 +177,6 @@ export const HomePage: React.FC = () => {
               alt="Học viên OrbiLingo"
               className="relative h-full w-auto object-contain object-bottom animate-fade-up delay-200 [filter:drop-shadow(0_20px_40px_rgba(0,0,0,0.45))_drop-shadow(0_0_24px_rgba(250,83,48,0.25))]"
             />
-            <div className="absolute -left-12 -top-6 bg-white text-slate-900 rounded-2xl px-4 py-3 shadow-card animate-fade-up delay-500 tilt-1">
-              <p className="text-[10px] font-extrabold uppercase tracking-wider text-slate-500">Sau 8 tuần</p>
-              <p className="font-display text-2xl font-extrabold text-emerald-600">+145 điểm</p>
-            </div>
             <div className="absolute -right-10 top-10 bg-amber-300 text-slate-900 rounded-2xl px-4 py-3 shadow-card animate-fade-up delay-700 tilt-2 flex items-center gap-2">
               <Flame className="w-6 h-6 text-violet-600 fill-violet-500" />
               <div>
@@ -241,23 +247,37 @@ export const HomePage: React.FC = () => {
         <Reveal>
           <SectionTitle dark eyebrow="Cách OrbiLingo hoạt động" title={<>Không làm đề vô định. <span className="hero-gradient-text">Làm đúng</span> việc cần làm.</>} description="Năm bước lặp lại mỗi tuần. Dữ liệu từ bài làm của bạn quyết định bước tiếp theo." />
         </Reveal>
-        <div ref={loopBoxRef} className="relative space-y-14 md:space-y-28">
-          <LoopConnector containerRef={loopBoxRef} photoRefs={loopPhotoRefs} dark />
-          {LOOP.map((step, i) => (
-            <Reveal key={step.n} className={cn('grid md:grid-cols-2 gap-8 md:gap-16 items-center', i % 2 === 1 && 'md:[&>*:first-child]:order-2')}>
-              <div className="space-y-4">
-                <div className="flex items-center gap-4">
-                  <span className="font-display text-6xl md:text-7xl font-extrabold leading-none text-white/10">{step.n}</span>
+        <div ref={loopBoxRef} className="relative space-y-14 md:space-y-10">
+          {/* Trục giữa: nền mờ + phần đã "rót" gradient theo tiến độ cuộn */}
+          <div aria-hidden className="hidden md:block absolute left-1/2 -translate-x-1/2 top-0 bottom-0 w-[2px] rounded-full bg-white/10 [mask-image:linear-gradient(to_bottom,transparent,black_6%,black_94%,transparent)]" />
+          <div aria-hidden className="hidden md:block absolute left-1/2 -translate-x-1/2 top-0 w-[2px] rounded-full bg-gradient-to-b from-violet-500 via-fuchsia-500 to-amber-400 shadow-[0_0_14px_rgba(250,83,48,0.7)]" style={{ height: `${loopProgress * 100}%` }}>
+            <span className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-3 h-3 rounded-full bg-amber-300 shadow-[0_0_16px_4px_rgba(255,210,77,0.8)]" />
+          </div>
+          {LOOP.map((step, i) => {
+            const photoRight = i % 2 === 0;
+            const text = (
+              <div key="t" className={cn('space-y-4', photoRight ? 'md:text-right md:items-end' : '')}>
+                <div className={cn('flex items-center gap-3', photoRight && 'md:justify-end')}>
+                  <span className="md:hidden w-10 h-10 rounded-full flex items-center justify-center font-display font-extrabold text-white bg-gradient-to-br from-violet-500 via-fuchsia-500 to-amber-400">{step.n}</span>
                   <span className="px-3 py-1 rounded-full border border-white/15 bg-white/5 text-xs font-bold text-amber-300">{step.tag}</span>
                 </div>
                 <h3 className="font-display text-2xl md:text-3xl font-extrabold text-white">{step.title}</h3>
-                <p className="text-slate-400 leading-relaxed text-lg">{step.text}</p>
+                <p className={cn('text-slate-400 leading-relaxed text-lg max-w-md', photoRight && 'md:ml-auto')}>{step.text}</p>
               </div>
-              <div ref={(el) => (loopPhotoRefs.current[i] = el)} className={cn('night-photo relative z-10 md:w-[82%]', i % 2 === 0 ? 'md:ml-auto rotate-[1.5deg]' : 'rotate-[-1.5deg]')}>
+            );
+            const photo = (
+              <div key="p" className={cn('night-photo relative z-10 transition-all duration-700', loopActive >= i ? 'opacity-100 md:grayscale-0' : 'md:opacity-60 md:grayscale', photoRight ? 'rotate-[1.5deg]' : 'rotate-[-1.5deg]')}>
                 <Img src={step.photo} alt={step.title} ratio="4/3" fallbackClass="bg-slate-800" />
               </div>
-            </Reveal>
-          ))}
+            );
+            return (
+              <Reveal key={step.n} className="grid md:grid-cols-[1fr_120px_1fr] gap-8 md:gap-0 items-center">
+                {photoRight ? text : photo}
+                <TimelineNode ref={(el) => (loopNodeRefs.current[i] = el)} n={step.n} on={loopActive >= i} side={photoRight ? 'right' : 'left'} />
+                {photoRight ? photo : text}
+              </Reveal>
+            );
+          })}
         </div>
       </section>
 
