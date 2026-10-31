@@ -160,11 +160,11 @@ export const HomePage: React.FC = () => {
             </h1>
 
             <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-base sm:text-lg font-semibold text-slate-300 animate-fade-up delay-100">
-              <span>Xếp lớp 15 phút</span>
+              <span>Nỗ Lực</span>
               <span className="text-violet-400">—</span>
-              <span>Lộ trình riêng</span>
+              <span>Kiên Trì</span>
               <span className="text-violet-400">—</span>
-              <span>Ôn đúng chỗ sai</span>
+              <span>Thành Công</span>
             </p>
 
             <div className="flex flex-col sm:flex-row gap-3 animate-fade-up delay-200">
