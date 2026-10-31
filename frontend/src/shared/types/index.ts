@@ -481,6 +481,8 @@ export interface Testimonial {
   role: string;
   avatar?: string;
   exam: 'TOEIC' | 'VSTEP';
+  /** Tên bài thi hiển thị dưới điểm, vd "TOEIC Listening & Reading" */
+  test: string;
   before: string;
   after: string;
   weeks: number;
