@@ -18,7 +18,7 @@ export function useAfterLogin() {
 }
 
 export const AuthHeading: React.FC<{ title: string; sub?: React.ReactNode }> = ({ title, sub }) => (
-  <div className="mb-8">
+  <div className="mb-8 [@media(max-height:800px)]:mb-6">
     <h1 className="font-display text-[2rem] font-bold leading-tight tracking-tight text-slate-900">{title}</h1>
     {sub && <p className="mt-1.5 text-[15px] text-slate-600">{sub}</p>}
   </div>
@@ -90,7 +90,7 @@ export const FormError: React.FC<{ children: React.ReactNode }> = ({ children })
 );
 
 export const OrDivider: React.FC<{ label: string }> = ({ label }) => (
-  <div className="my-6 flex items-center gap-3 text-[13px] text-slate-500">
+  <div className="my-6 flex items-center gap-3 text-[13px] text-slate-500 [@media(max-height:800px)]:my-4">
     <span className="h-px flex-1 bg-slate-200" />
     {label}
     <span className="h-px flex-1 bg-slate-200" />

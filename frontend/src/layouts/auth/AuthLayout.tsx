@@ -147,12 +147,13 @@ export const AuthLayout: React.FC = () => {
       {/* Cột form */}
       <div
         className={cn(
-          'auth-form auth-slide flex min-h-screen flex-col lg:absolute lg:inset-y-0 lg:left-0 lg:min-h-0 lg:w-1/2 lg:overflow-y-auto',
+          // Ẩn thanh cuộn của cột (vẫn cuộn được) — thanh cuộn đứng giữa màn hình trông như lỗi
+          'auth-form auth-slide no-scrollbar flex min-h-screen flex-col lg:absolute lg:inset-y-0 lg:left-0 lg:min-h-0 lg:w-1/2 lg:overflow-y-auto',
           isRegister ? 'lg:translate-x-full' : 'lg:translate-x-0',
           swap && `auth-form--swap-${swap}`
         )}
       >
-        <header className="flex h-[76px] shrink-0 items-center justify-between gap-4 px-5 sm:px-10 xl:px-14">
+        <header className="flex h-[76px] shrink-0 items-center [@media(max-height:800px)]:h-16 justify-between gap-4 px-5 sm:px-10 xl:px-14">
           <Logo size="md" />
           <p className="text-sm text-slate-600">
             {isLogin ? (
@@ -178,13 +179,13 @@ export const AuthLayout: React.FC = () => {
           </p>
         </header>
 
-        <main className="flex flex-1 items-center justify-center px-5 py-10 sm:px-10">
+        <main className="flex flex-1 items-center justify-center px-5 py-10 sm:px-10 [@media(max-height:800px)]:py-3">
           <div key={pathname} className="auth-stagger w-full max-w-[420px]">
             <Outlet />
           </div>
         </main>
 
-        <footer className="flex shrink-0 flex-wrap items-center gap-x-4 gap-y-1 px-5 py-6 text-[12px] text-slate-500 sm:px-10 xl:px-14">
+        <footer className="flex shrink-0 flex-wrap items-center gap-x-4 gap-y-1 px-5 py-6 [@media(max-height:800px)]:py-4 text-[12px] text-slate-500 sm:px-10 xl:px-14">
           <span>© 2026 OrbiLingo</span>
           <Link to="/help" className="hover:text-slate-800">
             Điều khoản
