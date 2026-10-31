@@ -43,7 +43,9 @@ export const SUPPORT_REPLIES: SupportReply[] = [
     keywords: ['hoc phi', 'gia', 'bao nhieu tien', 'goi vip', 'thanh toan', 'phi'],
     texts: [
       'Dạ bên mình có 3 gói ạ:',
-      'Free 0đ: bài xếp lớp, 3 đề thi thử/tuần, sổ tay lỗi sai cơ bản.\nVIP TOEIC 199.000đ/30 ngày: không giới hạn đề TOEIC, có kho đề ETS 2025.\nVSTEP Master 499.000đ/90 ngày: đề 4 kỹ năng, mỗi tháng 4 lượt chấm Writing và 2 lượt chấm Speaking.',
+      'Free 0đ: bài xếp lớp, 3 đề thi thử/tuần, sổ tay lỗi sai cơ bản.',
+      'VIP TOEIC 199.000đ/30 ngày: không giới hạn đề TOEIC, có kho đề ETS 2025.',
+      'VSTEP Master 499.000đ/90 ngày: đề 4 kỹ năng, mỗi tháng 4 lượt chấm Writing và 2 lượt chấm Speaking.',
       'Thanh toán chuyển khoản hoặc ví điện tử, chưa dùng quá 3 đề thì được hoàn tiền trong 7 ngày nha bạn.',
     ],
     links: [{ label: 'Xem bảng giá', to: '/pricing' }],
