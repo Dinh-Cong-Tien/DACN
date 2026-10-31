@@ -4,16 +4,7 @@ import { Checkbox } from '@/shared/components/ui';
 import { useAuthStore, DEMO_USERS, resolveDemoRole } from '@/shared/stores/authStore';
 import { toast } from '@/shared/stores/uiStore';
 import { useDocumentTitle } from '@/shared/hooks';
-import type { AppRole } from '@/shared/types';
 import { AuthHeading, TextField, SubmitButton, FormError, OrDivider, SocialButtons, useAfterLogin, textLink } from './shared/AuthKit';
-
-/** Tài khoản demo: role suy từ tiền tố email (resolveDemoRole), mật khẩu bất kỳ */
-const DEMO_ROLES: [AppRole, string][] = [
-  ['STUDENT', 'Học viên'],
-  ['TEACHER', 'Giáo viên'],
-  ['HEAD_TEACHER', 'Trưởng bộ môn'],
-  ['ADMIN', 'Quản trị'],
-];
 
 export const LoginPage: React.FC = () => {
   useDocumentTitle('Đăng nhập');
@@ -68,28 +59,7 @@ export const LoginPage: React.FC = () => {
           <SubmitButton loading={loading}>Đăng nhập</SubmitButton>
         </div>
       </form>
-      <div className="mt-8 rounded-xl bg-slate-50 px-4 py-3.5 ring-1 ring-inset ring-slate-200">
-        <p className="text-[13px] text-slate-600">
-          <span className="font-medium text-slate-800">Tài khoản demo</span> · bấm để điền sẵn, mật khẩu bất kỳ
-        </p>
-        <div className="mt-2.5 flex flex-wrap gap-1.5">
-          {DEMO_ROLES.map(([role, label]) => (
-            <button
-              key={role}
-              type="button"
-              onClick={() => {
-                setEmail(DEMO_USERS[role].email);
-                setPassword('orbi2026');
-                setError('');
-              }}
-              className={`h-8 rounded-md border px-2.5 text-[13px] transition-colors ${email === DEMO_USERS[role].email ? 'border-indigo-600 bg-white text-indigo-700' : 'border-slate-300 bg-white text-slate-700 hover:border-slate-400'}`}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
-      </div>
-      <p className="mt-6 text-sm text-slate-600 lg:hidden">
+      <p className="mt-8 text-sm text-slate-600 lg:hidden">
         Chưa có tài khoản?{' '}
         <Link to="/auth/register" className={textLink}>
           Đăng ký miễn phí
