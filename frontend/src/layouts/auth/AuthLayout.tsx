@@ -1,6 +1,6 @@
-import React, { useRef } from 'react';
-import { Link, Outlet, useLocation } from 'react-router-dom';
-import { ArrowLeft, Check } from 'lucide-react';
+import React, { useEffect, useRef, useState } from 'react';
+import { Link, useLocation, useOutlet } from 'react-router-dom';
+import { ArrowLeft } from 'lucide-react';
 import { Logo } from '@/shared/components/ui';
 import { TESTIMONIALS, SUPPORT_INFO } from '@/shared/mocks';
 import { cn } from '@/shared/utils';
@@ -8,119 +8,177 @@ import './AuthLayout.css';
 
 type AsideVariant = 'login' | 'register';
 const VARIANTS: AsideVariant[] = ['login', 'register'];
+const variantOf = (path: string): AsideVariant => (path.endsWith('/register') ? 'register' : 'login');
 
-/** Ảnh nền khối ảnh (Pexels) + vị trí cắt để người trong ảnh không bị thẻ nổi che */
+/** Một trang trong cột form: trang cũ được giữ lại một lúc để mờ dần thay vì biến mất ngay */
+interface FormView {
+  key: string;
+  el: React.ReactNode;
+  leaving?: boolean;
+  /** Độ trễ trước khi form mới hiện (giây): chờ cột form trượt tới nơi khi đổi bên */
+  delay: number;
+}
+
+/** Ảnh trong khung vòm (Pexels) + vị trí cắt để mặt người nằm giữa vòm */
 const VISUAL: Record<AsideVariant, { src: string; pos: string }> = {
-  login: { src: '/images/auth/login-study.webp', pos: '52% 50%' },
-  register: { src: '/images/auth/register-listen.webp', pos: '50% 30%' },
+  login: { src: '/images/auth/login-study.webp', pos: '64% 35%' },
+  register: { src: '/images/auth/register-listen.webp', pos: '55% 22%' },
 };
 
-const floatCard = 'rounded-2xl bg-white shadow-[0_24px_60px_-20px_rgba(4,20,16,0.55)] ring-1 ring-black/5';
+/** Tiêu đề trên khối ảnh theo từng trang */
+const HEADLINE: Record<AsideVariant, { title: string; sub: string }> = {
+  login: { title: 'Học đúng phần còn yếu, điểm lên thấy rõ.', sub: 'Lộ trình tự điều chỉnh sau mỗi bài làm. Câu sai được lưu lại để ôn đến khi nhớ.' },
+  register: { title: 'Bắt đầu bằng 15 phút xếp lớp.', sub: 'Biết mình đang ở mức nào, yếu Part nào và cần bao nhiêu tuần để đạt mục tiêu.' },
+};
+
+const card = 'rounded-2xl bg-white text-slate-900 shadow-[0_18px_40px_-14px_rgba(3,24,19,0.55)] ring-1 ring-black/5';
 
 /** Thẻ kết quả thi thử mẫu (giống màn hình trong app) */
 const ScoreCard: React.FC = () => (
-  <div className={cn(floatCard, 'w-[300px] p-5')}>
-    <div className="flex items-start justify-between gap-4">
+  <div className={cn(card, 'w-[244px] p-4')}>
+    <div className="flex items-start justify-between gap-3">
       <div>
-        <p className="text-sm font-semibold text-slate-900">ETS 2025 · Test 3</p>
-        <p className="text-[12px] text-slate-500">Nộp lúc 21:47, 28/10</p>
-        <p className="mt-1 text-[12px] font-medium text-emerald-700">+70 so với Test 2</p>
+        <p className="text-[13px] font-semibold">ETS 2025 · Test 3</p>
+        <p className="text-[11px] text-slate-500">Nộp 21:47, 28/10</p>
       </div>
-      <p className="text-right">
-        <span className="text-[1.6rem] font-semibold leading-none tabular-nums text-slate-900">785</span>
-        <span className="text-[12px] text-slate-500">/990</span>
+      <p className="text-right leading-none">
+        <span className="text-[1.45rem] font-semibold tabular-nums">785</span>
+        <span className="text-[11px] text-slate-500">/990</span>
       </p>
     </div>
-    <dl className="mt-4 space-y-2 text-[13px]">
+    <dl className="mt-3 space-y-1.5 text-[12px]">
       {(
         [
           ['Listening', 410],
           ['Reading', 375],
         ] as const
       ).map(([k, v]) => (
-        <div key={k} className="grid grid-cols-[68px_1fr_32px] items-center gap-3">
+        <div key={k} className="grid grid-cols-[58px_1fr_28px] items-center gap-2.5">
           <dt className="text-slate-600">{k}</dt>
           <dd className="h-1.5 overflow-hidden rounded-full bg-slate-100">
             <span className="block h-full rounded-full bg-indigo-600" style={{ width: `${(v / 495) * 100}%` }} />
           </dd>
-          <dd className="text-right tabular-nums text-slate-900">{v}</dd>
+          <dd className="text-right tabular-nums">{v}</dd>
         </div>
       ))}
     </dl>
+    <p className="mt-3 border-t border-slate-100 pt-2.5 text-[11px] font-medium text-emerald-700">+70 điểm so với Test 2</p>
   </div>
 );
 
-const STEPS = [
-  ['Làm bài xếp lớp', '40 câu, khoảng 15 phút'],
-  ['Nhận lộ trình theo ngày thi', '30–45 phút mỗi ngày'],
-  ['Học và thi thử', '3 đề miễn phí mỗi tuần'],
-];
-
-/** Thẻ 3 bước sau khi đăng ký */
-const StepsCard: React.FC = () => (
-  <div className={cn(floatCard, 'w-[300px] p-5')}>
-    <p className="text-sm font-semibold text-slate-900">Sau khi tạo tài khoản</p>
-    <ol className="mt-3.5 space-y-3">
-      {STEPS.map(([t, d], i) => (
-        <li key={t} className="flex items-start gap-3">
-          <span className={cn('mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[11px] font-semibold', i === 0 ? 'bg-indigo-600 text-white' : 'border border-slate-300 text-slate-600')}>
-            {i === 0 ? <Check className="h-3 w-3" strokeWidth={3} /> : i + 1}
-          </span>
-          <span className="text-[13px] leading-snug">
-            <span className="block font-medium text-slate-900">{t}</span>
-            <span className="text-slate-500">{d}</span>
-          </span>
-        </li>
-      ))}
-    </ol>
+/** Thẻ kết quả bài xếp lớp mẫu */
+const PlacementCard: React.FC = () => (
+  <div className={cn(card, 'w-[244px] p-4')}>
+    <p className="text-[13px] font-semibold">Kết quả xếp lớp</p>
+    <p className="text-[11px] text-slate-500">40 câu · làm trong 14 phút</p>
+    <div className="mt-3 flex items-end justify-between">
+      <p className="leading-none">
+        <span className="text-[11px] text-slate-500">Hiện tại </span>
+        <span className="text-[1.45rem] font-semibold tabular-nums">545</span>
+      </p>
+      <p className="text-right text-[12px] leading-tight">
+        <span className="block text-slate-500">Mục tiêu</span>
+        <span className="font-semibold tabular-nums">750</span>
+      </p>
+    </div>
+    <div className="mt-2.5 h-1.5 overflow-hidden rounded-full bg-slate-100">
+      <span className="block h-full w-[72%] rounded-full bg-indigo-600" />
+    </div>
+    <p className="mt-3 border-t border-slate-100 pt-2.5 text-[11px] text-slate-600">
+      Lộ trình gợi ý <b className="font-semibold text-slate-900">14 tuần</b> · 45 phút/ngày
+    </p>
   </div>
 );
 
-/** Cảm nhận học viên ở chân ảnh */
+/** Thẻ nhỏ thứ hai ở mép phải vòm */
+const MiniCard: React.FC<{ variant: AsideVariant }> = ({ variant }) =>
+  variant === 'register' ? (
+    <div className={cn(card, 'w-[176px] px-3.5 py-3')}>
+      <p className="text-[11px] text-slate-500">Cần ưu tiên</p>
+      <p className="mt-0.5 text-[13px] font-semibold">Part 3 · đúng 52%</p>
+    </div>
+  ) : (
+    <div className={cn(card, 'w-[176px] px-3.5 py-3')}>
+      <p className="text-[11px] text-slate-500">Hôm nay</p>
+      <p className="mt-0.5 text-[13px] font-semibold">3/4 bài · 38 phút</p>
+      <div className="mt-2 grid grid-cols-4 gap-1">
+        {[1, 2, 3, 4].map((i) => (
+          <span key={i} className={cn('h-1 rounded-full', i <= 3 ? 'bg-indigo-600' : 'bg-slate-200')} />
+        ))}
+      </div>
+    </div>
+  );
+
+/** Cảm nhận học viên gọn ở chân khối */
 const Quote: React.FC<{ variant: AsideVariant }> = ({ variant }) => {
   const t = TESTIMONIALS[variant === 'register' ? 2 : 0];
   return (
-    <figure className="text-white">
-      <blockquote className="text-[17px] leading-relaxed text-white/95 xl:text-lg">“{t.quote}”</blockquote>
-      <figcaption className="mt-5 flex items-center gap-3">
-        <img src={t.avatar} alt="" className="h-11 w-11 rounded-full bg-white/20 object-cover object-top ring-2 ring-white/30" />
-        <span className="text-[13px] leading-snug">
-          <span className="block text-[15px] font-medium text-white">{t.name}</span>
-          <span className="text-white/70">
-            {t.exam} {t.score} · thi {t.examDate} tại {t.venue}
-          </span>
-        </span>
-      </figcaption>
+    <figure className="flex items-start gap-3.5">
+      <img src={t.avatar} alt="" className="h-10 w-10 shrink-0 rounded-full bg-white/15 object-cover object-top ring-2 ring-white/20" />
+      <div className="min-w-0">
+        <blockquote className="line-clamp-2 text-[14px] leading-relaxed text-white/85">“{t.quote}”</blockquote>
+        <figcaption className="mt-1.5 text-[12px] text-white/55">
+          <span className="font-medium text-white/90">{t.name}</span> · {t.exam} {t.score} · thi {t.examDate}
+        </figcaption>
+      </div>
     </figure>
   );
 };
 
 /**
- * Khối ảnh: render sẵn cả 2 bộ (ảnh, thẻ nổi, cảm nhận); ảnh đổi kiểu kéo rèm theo hướng trượt,
- * thẻ và cảm nhận đổi bằng fade → khi khối trượt sang bên kia nội dung đổi mượt, không nháy.
+ * Khối ảnh: nền xanh thương hiệu, tiêu đề ở trên, ảnh học viên trong khung vòm với thẻ sản phẩm gắn ở mép,
+ * cảm nhận ở dưới. Render sẵn cả 2 bộ nội dung; ảnh đổi kiểu kéo rèm theo hướng trượt, chữ/thẻ đổi bằng fade.
  */
 const AuthVisual: React.FC<{ variant: AsideVariant; swap: string }> = ({ variant, swap }) => (
-  <div className={cn('relative h-full overflow-hidden rounded-[28px] bg-[#0E2A24]', swap && `auth-panel--swap-${swap}`)}>
-    <div className="auth-visual__img absolute inset-0">
+  <div className={cn('relative flex h-full flex-col overflow-hidden rounded-[28px] bg-[#0D3F36] px-10 pb-8 pt-10 text-white xl:px-12 xl:pt-12', swap && `auth-panel--swap-${swap}`)}>
+    {/* Ánh sáng dịu góc trên + đáy tối hơn cho có chiều sâu */}
+    <div aria-hidden className="pointer-events-none absolute inset-0 bg-[radial-gradient(120%_70%_at_0%_0%,rgba(255,255,255,0.10),transparent_60%),linear-gradient(to_bottom,transparent_55%,rgba(4,26,21,0.55))]" />
+
+    {/* Tiêu đề */}
+    <div className="relative grid">
       {VARIANTS.map((k) => (
-        <div key={k} className={cn('auth-photo', `auth-photo--${k}`, k === variant && 'is-on')}>
-          <img src={VISUAL[k].src} alt="" className="auth-photo__img" style={{ objectPosition: VISUAL[k].pos }} />
+        <div key={k} aria-hidden={k !== variant} className={cn('auth-swap-item [grid-area:1/1]', k === variant && 'is-on')}>
+          <h2 className="max-w-[440px] font-display text-[1.75rem] font-bold leading-[1.2] tracking-tight xl:text-[2rem]">{HEADLINE[k].title}</h2>
+          <p className="mt-3 max-w-[420px] text-[15px] leading-relaxed text-white/70 [@media(max-height:760px)]:hidden">{HEADLINE[k].sub}</p>
         </div>
       ))}
     </div>
-    <div aria-hidden className="absolute inset-0 bg-gradient-to-t from-[#06171390] via-transparent to-transparent" />
-    <div aria-hidden className="absolute inset-x-0 bottom-0 h-[55%] bg-gradient-to-t from-[#061713e6] via-[#06171380] to-transparent" />
 
-    {VARIANTS.map((k) => (
-      <div key={`card-${k}`} aria-hidden={k !== variant} className={cn('auth-swap-item absolute left-8 top-8 xl:left-10 xl:top-10', k === variant && 'is-on')}>
-        {k === 'register' ? <StepsCard /> : <ScoreCard />}
+    {/* Khung vòm + thẻ */}
+    <div className="relative mt-8 min-h-0 flex-1">
+      <div className="absolute inset-y-0 left-[14%] right-[2%] flex justify-center">
+        <div className="relative aspect-[4/5] h-full max-w-full">
+          {/* Vòm tỉ lệ 4:5: góc trên = nửa chiều rộng (50% ngang / 40% dọc), góc dưới 28px */}
+          <div className="auth-visual__img absolute inset-0 overflow-hidden bg-[#165247] ring-1 ring-white/10" style={{ borderRadius: '50% 50% 28px 28px / 40% 40% 28px 28px' }}>
+            {VARIANTS.map((k) => (
+              <div key={k} className={cn('auth-photo', `auth-photo--${k}`, k === variant && 'is-on')}>
+                <img src={VISUAL[k].src} alt="" className="auth-photo__img" style={{ objectPosition: VISUAL[k].pos }} />
+              </div>
+            ))}
+          </div>
+
+          {VARIANTS.map((k) => (
+            <div key={`card-${k}`} aria-hidden={k !== variant} className={cn('auth-swap-item absolute bottom-[12%] right-[62%] z-10', k === variant && 'is-on')}>
+              {k === 'register' ? <PlacementCard /> : <ScoreCard />}
+            </div>
+          ))}
+          {VARIANTS.map((k) => (
+            <div key={`mini-${k}`} aria-hidden={k !== variant} className={cn('auth-swap-item auth-swap-item--late absolute -right-5 top-[28%] z-10 [@media(max-height:760px)]:hidden', k === variant && 'is-on')}>
+              <MiniCard variant={k} />
+            </div>
+          ))}
+        </div>
       </div>
-    ))}
-    {VARIANTS.map((k) => (
-      <div key={`quote-${k}`} aria-hidden={k !== variant} className={cn('auth-swap-item absolute inset-x-8 bottom-8 max-w-[520px] xl:inset-x-10 xl:bottom-10', k === variant && 'is-on')}>
-        <Quote variant={k} />
-      </div>
-    ))}
+    </div>
+
+    {/* Cảm nhận */}
+    <div className="relative mt-8 grid border-t border-white/10 pt-6">
+      {VARIANTS.map((k) => (
+        <div key={`quote-${k}`} aria-hidden={k !== variant} className={cn('auth-swap-item [grid-area:1/1]', k === variant && 'is-on')}>
+          <Quote variant={k} />
+        </div>
+      ))}
+    </div>
   </div>
 );
 
@@ -135,6 +193,21 @@ export const AuthLayout: React.FC = () => {
   const isLogin = pathname.endsWith('/login');
   const isRegister = pathname.endsWith('/register');
   const variant: AsideVariant = isRegister ? 'register' : 'login';
+  const outlet = useOutlet();
+
+  // Trang cũ ở lại để mờ dần trong lúc trang mới hiện lên (kiểu chuyển route), sau đó mới gỡ ra
+  const [views, setViews] = useState<FormView[]>([{ key: pathname, el: outlet, delay: 0 }]);
+  useEffect(() => {
+    setViews((vs) => {
+      const top = vs[vs.length - 1];
+      if (top.key === pathname) return vs;
+      const delay = variantOf(top.key) !== variantOf(pathname) ? 0.5 : 0.22;
+      return [...vs.filter((v) => v.key !== pathname).map((v) => ({ ...v, leaving: true })), { key: pathname, el: outlet, delay }];
+    });
+    const id = setTimeout(() => setViews((vs) => vs.filter((v) => !v.leaving)), 800);
+    return () => clearTimeout(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pathname]);
 
   // Đếm số lần đổi bên để luân phiên tên animation (a/b) → mỗi lần chuyển đều chạy lại; lần đầu vào trang thì không chạy
   const swapRef = useRef({ variant, n: 0 });
@@ -149,8 +222,7 @@ export const AuthLayout: React.FC = () => {
         className={cn(
           // Ẩn thanh cuộn của cột (vẫn cuộn được) — thanh cuộn đứng giữa màn hình trông như lỗi
           'auth-form auth-slide no-scrollbar flex min-h-screen flex-col lg:absolute lg:inset-y-0 lg:left-0 lg:min-h-0 lg:w-1/2 lg:overflow-y-auto',
-          isRegister ? 'lg:translate-x-full' : 'lg:translate-x-0',
-          swap && `auth-form--swap-${swap}`
+          isRegister ? 'lg:translate-x-full' : 'lg:translate-x-0'
         )}
       >
         <header className="flex h-[76px] shrink-0 items-center [@media(max-height:800px)]:h-16 justify-between gap-4 px-5 sm:px-10 xl:px-14">
@@ -180,8 +252,19 @@ export const AuthLayout: React.FC = () => {
         </header>
 
         <main className="flex flex-1 items-center justify-center px-5 py-10 sm:px-10 [@media(max-height:800px)]:py-3">
-          <div key={pathname} className="auth-stagger w-full max-w-[420px]">
-            <Outlet />
+          {/* Các trang chồng cùng một ô lưới: trang cũ mờ đi, trang mới hiện lên đúng chỗ */}
+          <div className="grid w-full max-w-[420px]">
+            {views.map((v) =>
+              v.leaving ? (
+                <div key={v.key} aria-hidden className="auth-leave [grid-area:1/1]">
+                  {v.el}
+                </div>
+              ) : (
+                <div key={v.key} className="auth-stagger [grid-area:1/1]" style={{ '--d': `${v.delay}s` } as React.CSSProperties}>
+                  {v.key === pathname ? outlet : v.el}
+                </div>
+              )
+            )}
           </div>
         </main>
 

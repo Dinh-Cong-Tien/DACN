@@ -20,10 +20,6 @@
 .auth-panel--swap-a { animation: auth-squeeze-a var(--auth-dur) var(--auth-ease); }
 .auth-panel--swap-b { animation: auth-squeeze-b var(--auth-dur) var(--auth-ease); }
 
-/* Form ẩn lúc mới đổi nội dung, hiện dần khi gần tới nơi */
-.auth-form--swap-a { animation: auth-form-a var(--auth-dur) cubic-bezier(0.4, 0, 0.2, 1) both; }
-.auth-form--swap-b { animation: auth-form-b var(--auth-dur) cubic-bezier(0.4, 0, 0.2, 1) both; }
-
 /*
  * ===== Đổi ảnh kiểu kéo rèm theo hướng trượt =====
  * Khung (auth-photo) dịch vào, ảnh bên trong dịch ngược lại cùng khoảng → ảnh như đứng yên, chỉ mép rèm chạy.
@@ -76,33 +72,31 @@
   pointer-events: auto;
   transition: opacity 0.6s ease 0.7s, transform 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) 0.7s;
 }
+/* Thẻ nhỏ thứ hai trồi lên sau thẻ chính một nhịp */
+.auth-swap-item--late.is-on { transition-delay: 0.85s; }
 
 /* ===== Lần đầu vào trang ===== */
 .auth-visual__img {
   animation: auth-zoom 1.8s cubic-bezier(0.2, 0.7, 0.2, 1) both;
 }
 
-/* Từng khối con của form hiện lần lượt, cách nhau 60ms */
+/* Từng khối con của form hiện lần lượt: trễ chung --d (đặt từ React) + 60ms mỗi khối */
 .auth-stagger > * {
-  animation: auth-rise 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  animation: auth-rise 0.65s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  animation-delay: calc(var(--d, 0s) + var(--i, 0) * 0.06s);
 }
-.auth-stagger > :nth-child(2) { animation-delay: 0.06s; }
-.auth-stagger > :nth-child(3) { animation-delay: 0.12s; }
-.auth-stagger > :nth-child(4) { animation-delay: 0.18s; }
-.auth-stagger > :nth-child(5) { animation-delay: 0.24s; }
-.auth-stagger > :nth-child(6) { animation-delay: 0.3s; }
-.auth-stagger > :nth-child(7) { animation-delay: 0.36s; }
-/* Khi đang đổi bên, form xuất hiện muộn hơn cho khớp lúc cột form tới nơi */
-.auth-form--swap-a .auth-stagger > *,
-.auth-form--swap-b .auth-stagger > * {
-  animation-delay: calc(0.45s + var(--i, 0) * 0.05s);
+.auth-stagger > :nth-child(2) { --i: 1; }
+.auth-stagger > :nth-child(3) { --i: 2; }
+.auth-stagger > :nth-child(4) { --i: 3; }
+.auth-stagger > :nth-child(5) { --i: 4; }
+.auth-stagger > :nth-child(6) { --i: 5; }
+.auth-stagger > :nth-child(7) { --i: 6; }
+
+/* Trang cũ: mờ dần và nhích lên nhẹ rồi được gỡ khỏi DOM */
+.auth-leave {
+  pointer-events: none;
+  animation: auth-leave 0.4s cubic-bezier(0.4, 0, 1, 1) both;
 }
-.auth-form--swap-a .auth-stagger > :nth-child(2), .auth-form--swap-b .auth-stagger > :nth-child(2) { --i: 1; }
-.auth-form--swap-a .auth-stagger > :nth-child(3), .auth-form--swap-b .auth-stagger > :nth-child(3) { --i: 2; }
-.auth-form--swap-a .auth-stagger > :nth-child(4), .auth-form--swap-b .auth-stagger > :nth-child(4) { --i: 3; }
-.auth-form--swap-a .auth-stagger > :nth-child(5), .auth-form--swap-b .auth-stagger > :nth-child(5) { --i: 4; }
-.auth-form--swap-a .auth-stagger > :nth-child(6), .auth-form--swap-b .auth-stagger > :nth-child(6) { --i: 5; }
-.auth-form--swap-a .auth-stagger > :nth-child(7), .auth-form--swap-b .auth-stagger > :nth-child(7) { --i: 6; }
 
 /* Chrome tự điền: giữ nền trắng thay vì xanh nhạt, vẫn giữ viền sáng khi focus */
 .auth-form input:-webkit-autofill {
@@ -122,13 +116,8 @@
   0%, 100% { transform: scale(1); }
   50% { transform: scale(0.96); }
 }
-@keyframes auth-form-a {
-  0%, 30% { opacity: 0; }
-  100% { opacity: 1; }
-}
-@keyframes auth-form-b {
-  0%, 30% { opacity: 0; }
-  100% { opacity: 1; }
+@keyframes auth-leave {
+  to { opacity: 0; transform: translateY(-10px); }
 }
 @keyframes auth-zoom {
   from { transform: scale(1.08); }
