@@ -1,107 +1,86 @@
 import React, { useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Mail, User, ArrowRight, CheckCircle2 } from 'lucide-react';
-import { Button, Card, Checkbox, Input, PasswordInput, ProgressBar, Alert } from '@/shared/components/ui';
 import { useAuthStore, DEMO_USERS } from '@/shared/stores/authStore';
 import { toast } from '@/shared/stores/uiStore';
 import { useDocumentTitle } from '@/shared/hooks';
+import { cn } from '@/shared/utils';
+import { AuthHeading, TextField, SubmitButton, OrDivider, SocialButtons, textLink } from './shared/AuthKit';
 
-function strength(pw: string): { score: number; label: string; tone: 'rose' | 'amber' | 'emerald' | 'indigo' } {
-  let s = 0;
-  if (pw.length >= 8) s++;
-  if (/[A-Z]/.test(pw)) s++;
-  if (/[0-9]/.test(pw)) s++;
-  if (/[^A-Za-z0-9]/.test(pw)) s++;
-  if (!pw) return { score: 0, label: '', tone: 'rose' };
-  if (s <= 1) return { score: 25, label: 'Yếu', tone: 'rose' };
-  if (s === 2) return { score: 50, label: 'Trung bình', tone: 'amber' };
-  if (s === 3) return { score: 75, label: 'Khá', tone: 'emerald' };
-  return { score: 100, label: 'Mạnh', tone: 'indigo' };
+/** Độ mạnh mật khẩu 0–4: đủ 8 ký tự, chữ hoa, chữ số, ký tự đặc biệt */
+function strength(pw: string) {
+  const s = [pw.length >= 8, /[A-Z]/.test(pw), /[0-9]/.test(pw), /[^A-Za-z0-9]/.test(pw)].filter(Boolean).length;
+  return { s, label: ['', 'Yếu', 'Trung bình', 'Khá', 'Mạnh'][s], color: ['', 'bg-red-500', 'bg-amber-500', 'bg-emerald-500', 'bg-emerald-600'][s] };
 }
 
 export const RegisterPage: React.FC = () => {
   useDocumentTitle('Đăng ký');
   const navigate = useNavigate();
   const login = useAuthStore((s) => s.login);
-  const [form, setForm] = useState({ name: '', email: '', password: '', confirm: '' });
-  const [agree, setAgree] = useState(false);
+  const [form, setForm] = useState({ name: '', email: '', password: '' });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
   const st = useMemo(() => strength(form.password), [form.password]);
+  const set = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement>) => setForm((f) => ({ ...f, [k]: e.target.value }));
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
     const er: Record<string, string> = {};
-    if (form.name.trim().length < 2) er.name = 'Vui lòng nhập họ tên';
-    if (!/^\S+@\S+\.\S+$/.test(form.email)) er.email = 'Email không hợp lệ';
-    if (form.password.length < 8) er.password = 'Mật khẩu tối thiểu 8 ký tự';
-    if (form.confirm !== form.password) er.confirm = 'Mật khẩu xác nhận không khớp';
-    if (!agree) er.agree = 'Bạn cần đồng ý điều khoản sử dụng';
+    if (form.name.trim().length < 2) er.name = 'Nhập họ và tên của bạn.';
+    if (!/^[^\s@]+@[^\s@]+\.[a-z]{2,}$/i.test(form.email.trim())) er.email = 'Email chưa đúng định dạng.';
+    if (form.password.length < 8) er.password = 'Mật khẩu cần ít nhất 8 ký tự.';
     setErrors(er);
     if (Object.keys(er).length) return;
     setLoading(true);
     setTimeout(() => {
       login({ ...DEMO_USERS.STUDENT, fullName: form.name.trim(), email: form.email.trim(), streak: 0, effortPoints: 0, target: undefined, joinedAt: new Date().toISOString() }, 'demo-jwt-token');
       setLoading(false);
-      toast.success('Tạo tài khoản thành công', 'Hãy thiết lập lộ trình học của bạn.');
+      toast.success('Đã tạo tài khoản', 'Làm bài xếp lớp để nhận lộ trình nhé.');
       navigate('/onboarding/goal');
     }, 700);
   };
 
   return (
-    <div className="space-y-6">
-      <div className="space-y-2 animate-fade-down">
-        <span className="sticker tilt-1 !bg-emerald-200">Miễn phí · Không cần thẻ</span>
-        <h1 className="font-display text-3xl font-extrabold text-slate-900 tracking-tight">Tạo tài khoản</h1>
-        <p className="text-sm text-slate-600">
-          Đã có tài khoản?{' '}
-          <Link to="/auth/login" className="font-bold text-violet-600 hover:underline underline-offset-2">
-            Đăng nhập
-          </Link>
-        </p>
-      </div>
-      <Card hard padding="lg" className="animate-fade-up">
-        {errors.agree && (
-          <Alert type="warning" className="mb-4">
-            {errors.agree}
-          </Alert>
-        )}
-        <form onSubmit={submit} className="space-y-4">
-          <Input label="Họ và tên" value={form.name} onChange={(e) => setForm((s) => ({ ...s, name: e.target.value }))} error={errors.name} placeholder="Nguyễn Văn A" leftIcon={<User />} />
-          <Input label="Email" type="email" value={form.email} onChange={(e) => setForm((s) => ({ ...s, email: e.target.value }))} error={errors.email} placeholder="name@example.com" leftIcon={<Mail />} />
-          <div className="space-y-2">
-            <PasswordInput label="Mật khẩu" value={form.password} onChange={(e) => setForm((s) => ({ ...s, password: e.target.value }))} error={errors.password} placeholder="Tối thiểu 8 ký tự" />
-            {form.password && (
-              <div className="animate-fade-down">
-                <ProgressBar value={st.score} tone={st.tone} size="xs" animate={false} />
-                <p className="text-[11px] text-slate-500 mt-1">
-                  Độ mạnh: <b className="text-slate-900">{st.label}</b> · nên có chữ hoa, số và ký tự đặc biệt
-                </p>
+    <>
+      <AuthHeading title="Tạo tài khoản" sub="Miễn phí, không cần thẻ thanh toán." />
+      <SocialButtons onDone={() => navigate('/onboarding/goal')} />
+      <OrDivider label="hoặc đăng ký bằng email" />
+      <form onSubmit={submit} className="space-y-4" noValidate>
+        <TextField label="Họ và tên" value={form.name} onChange={set('name')} error={errors.name} placeholder="Nguyễn Minh Anh" autoComplete="name" autoFocus />
+        <TextField label="Email" type="email" value={form.email} onChange={set('email')} error={errors.email} placeholder="ban@email.com" autoComplete="email" />
+        <div>
+          <TextField label="Mật khẩu" type="password" value={form.password} onChange={set('password')} error={errors.password} hint={form.password ? undefined : 'Ít nhất 8 ký tự, nên có chữ hoa và chữ số.'} autoComplete="new-password" />
+          {form.password && !errors.password && (
+            <div className="mt-2 flex items-center gap-3">
+              <div className="grid flex-1 grid-cols-4 gap-1">
+                {[1, 2, 3, 4].map((i) => (
+                  <span key={i} className={cn('h-1 rounded-full transition-colors', i <= st.s ? st.color : 'bg-slate-200')} />
+                ))}
               </div>
-            )}
-          </div>
-          <PasswordInput label="Xác nhận mật khẩu" value={form.confirm} onChange={(e) => setForm((s) => ({ ...s, confirm: e.target.value }))} error={errors.confirm} placeholder="Nhập lại mật khẩu" />
-          <Checkbox
-            checked={agree}
-            onChange={setAgree}
-            label={
-              <span className="text-xs">
-                Tôi đồng ý với <a className="font-bold text-violet-600 hover:underline">Điều khoản sử dụng</a> và <a className="font-bold text-violet-600 hover:underline">Chính sách bảo mật</a>
-              </span>
-            }
-          />
-          <Button type="submit" fullWidth size="lg" variant="gradient" loading={loading} rightIcon={<ArrowRight className="w-4 h-4" />}>
-            Đăng ký & thiết lập lộ trình
-          </Button>
-        </form>
-        <ul className="mt-5 pt-4 border-t-2 border-slate-100 grid grid-cols-1 sm:grid-cols-3 gap-2 text-[11px] font-semibold text-slate-600">
-          {['Thi xếp lớp 15 phút', 'Lộ trình theo ngày thi', '3 đề thi thử / tuần'].map((t) => (
-            <li key={t} className="flex items-center gap-1.5">
-              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" /> {t}
-            </li>
-          ))}
-        </ul>
-      </Card>
-    </div>
+              <span className="w-[72px] text-right text-[12px] text-slate-500">{st.label}</span>
+            </div>
+          )}
+        </div>
+        <div className="pt-1">
+          <SubmitButton loading={loading}>Tạo tài khoản</SubmitButton>
+        </div>
+      </form>
+      <p className="mt-5 text-[13px] leading-relaxed text-slate-500">
+        Khi đăng ký, bạn đồng ý với{' '}
+        <Link to="/help" className="text-slate-700 underline underline-offset-2 hover:text-slate-900">
+          Điều khoản sử dụng
+        </Link>{' '}
+        và{' '}
+        <Link to="/help" className="text-slate-700 underline underline-offset-2 hover:text-slate-900">
+          Chính sách bảo mật
+        </Link>{' '}
+        của OrbiLingo.
+      </p>
+      <p className="mt-6 text-sm text-slate-600 lg:hidden">
+        Đã có tài khoản?{' '}
+        <Link to="/auth/login" className={textLink}>
+          Đăng nhập
+        </Link>
+      </p>
+    </>
   );
 };

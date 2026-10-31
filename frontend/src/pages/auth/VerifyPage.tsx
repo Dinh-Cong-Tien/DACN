@@ -1,11 +1,10 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { MailCheck, ArrowRight, RefreshCw } from 'lucide-react';
-import { Button, Card } from '@/shared/components/ui';
 import { toast } from '@/shared/stores/uiStore';
 import { useDocumentTitle } from '@/shared/hooks';
 import { useAuthStore } from '@/shared/stores/authStore';
 import { cn } from '@/shared/utils';
+import { AuthHeading, SubmitButton, FormError, textLink } from './shared/AuthKit';
 
 export const VerifyPage: React.FC = () => {
   useDocumentTitle('Xác thực email');
@@ -14,6 +13,7 @@ export const VerifyPage: React.FC = () => {
   const [digits, setDigits] = useState<string[]>(Array(6).fill(''));
   const [countdown, setCountdown] = useState(60);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
   const [shake, setShake] = useState(false);
   const refs = useRef<(HTMLInputElement | null)[]>([]);
 
@@ -46,74 +46,78 @@ export const VerifyPage: React.FC = () => {
     if (e.key === 'ArrowRight' && i < 5) refs.current[i + 1]?.focus();
   };
 
-  const submit = () => {
-    const code = digits.join('');
-    if (code.length < 6) {
+  const submit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (digits.join('').length < 6) {
+      setError('Nhập đủ 6 chữ số trong email.');
       setShake(true);
       setTimeout(() => setShake(false), 400);
       return;
     }
+    setError('');
     setLoading(true);
     setTimeout(() => {
       setLoading(false);
-      toast.success('Xác thực thành công', 'Email của bạn đã được kích hoạt.');
+      toast.success('Đã xác thực email');
       navigate('/onboarding/goal');
     }, 600);
   };
 
+  const mm = `0:${String(countdown).padStart(2, '0')}`;
+
   return (
-    <div className="space-y-6">
-      <div className="space-y-3 animate-fade-down">
-        <div className="w-16 h-16 rounded-2xl bg-amber-300 border-2 border-slate-900 shadow-hard-sm text-slate-900 flex items-center justify-center animate-float tilt-2">
-          <MailCheck className="w-8 h-8" />
-        </div>
-        <h1 className="font-display text-3xl font-extrabold text-slate-900 tracking-tight">Xác thực email</h1>
-        <p className="text-sm text-slate-600">
-          Nhập mã 6 số đã gửi tới <b className="text-slate-900">{user?.email || 'email của bạn'}</b>
-        </p>
-      </div>
-      <Card hard padding="lg" className="animate-fade-up space-y-5">
-        <div className={cn('flex justify-between gap-2', shake && 'animate-shake')}>
+    <>
+      <AuthHeading
+        title="Nhập mã xác thực"
+        sub={
+          <>
+            Mã 6 số vừa được gửi tới {user?.email ? <b className="font-medium text-slate-900">{user.email}</b> : 'email của bạn'}. Mã có hiệu lực 10 phút.
+          </>
+        }
+      />
+      {error && <FormError>{error}</FormError>}
+      <form onSubmit={submit} className="space-y-6">
+        <div className={cn('grid grid-cols-6 gap-2 sm:gap-2.5', shake && 'animate-shake')}>
           {digits.map((d, i) => (
             <input
               key={i}
               ref={(el) => (refs.current[i] = el)}
               value={d}
               inputMode="numeric"
+              autoComplete={i === 0 ? 'one-time-code' : 'off'}
+              aria-label={`Chữ số ${i + 1}`}
               maxLength={6}
+              autoFocus={i === 0}
               onChange={(e) => setAt(i, e.target.value)}
               onKeyDown={(e) => onKey(i, e)}
               onFocus={(e) => e.target.select()}
               className={cn(
-                'w-12 h-14 text-center font-display text-xl font-extrabold rounded-xl border-2 transition-all duration-200 focus:outline-none',
-                d ? 'border-slate-900 bg-amber-100 text-slate-900 shadow-hard-sm -translate-y-0.5' : 'border-slate-300 text-slate-800 focus:border-slate-900'
+                'h-14 w-full rounded-lg border bg-white text-center text-[1.4rem] font-semibold tabular-nums text-slate-900 transition-[border-color,box-shadow] focus:border-indigo-600 focus:outline-none focus:ring-[3px] focus:ring-indigo-600/15',
+                d ? 'border-slate-400' : 'border-slate-300'
               )}
             />
           ))}
         </div>
-        <Button fullWidth size="lg" variant="gradient" loading={loading} onClick={submit} rightIcon={<ArrowRight className="w-4 h-4" />}>
-          Xác nhận
-        </Button>
-        <div className="text-center text-xs text-slate-600">
-          {countdown > 0 ? (
-            <span>
-              Gửi lại mã sau <b className="text-slate-900 font-mono">{countdown}s</b>
-            </span>
-          ) : (
-            <button
-              type="button"
-              onClick={() => {
-                setCountdown(60);
-                toast.info('Đã gửi lại mã', 'Kiểm tra hộp thư (kể cả mục Spam).');
-              }}
-              className="inline-flex items-center gap-1 font-bold text-violet-600 hover:underline"
-            >
-              <RefreshCw className="w-3.5 h-3.5" /> Gửi lại mã xác thực
-            </button>
-          )}
-        </div>
-        <p className="text-[11px] text-slate-500 text-center">Demo: nhập bất kỳ 6 chữ số để tiếp tục.</p>
-      </Card>
-    </div>
+        <SubmitButton loading={loading}>Xác nhận</SubmitButton>
+      </form>
+      <p className="mt-6 text-sm text-slate-600">
+        Chưa nhận được mã?{' '}
+        {countdown > 0 ? (
+          <span className="tabular-nums text-slate-500">Gửi lại sau {mm}</span>
+        ) : (
+          <button
+            type="button"
+            onClick={() => {
+              setCountdown(60);
+              toast.info('Đã gửi lại mã', 'Kiểm tra cả mục Spam nếu chưa thấy.');
+            }}
+            className={textLink}
+          >
+            Gửi lại mã
+          </button>
+        )}
+      </p>
+      <p className="mt-2 text-[12px] text-slate-400">Bản demo: nhập 6 chữ số bất kỳ.</p>
+    </>
   );
 };

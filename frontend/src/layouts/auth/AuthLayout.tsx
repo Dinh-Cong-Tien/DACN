@@ -1,162 +1,167 @@
 import React from 'react';
-import { Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { CheckCircle2, Quote, Star, ArrowRight, ArrowLeft } from 'lucide-react';
-import { Logo, Avatar } from '@/shared/components/ui';
-import { Doodles } from '@/shared/components/motion';
-import { Img, PHOTOS } from '@/shared/components/media/Img';
-import { ThreeBackground } from '@/shared/components/three/ThreeBackground';
-import { TESTIMONIALS } from '@/shared/mocks';
+import { Link, Outlet, useLocation } from 'react-router-dom';
+import { ArrowLeft, Check } from 'lucide-react';
+import { Logo } from '@/shared/components/ui';
+import { TESTIMONIALS, SUPPORT_INFO } from '@/shared/mocks';
 import { cn } from '@/shared/utils';
-import { LoginPage } from '@/pages/auth/LoginPage';
-import { RegisterPage } from '@/pages/auth/RegisterPage';
 
-const LOGIN_POINTS = ['Chẩn đoán năng lực 15 phút, nhận lộ trình ngay', 'Thi thử chuẩn ETS & Bộ GD&ĐT, audio một lần như thi thật', 'Sổ tay lỗi sai + ôn tập ngắt quãng SM-2', 'Miễn phí mãi mãi với tính năng cốt lõi'];
-const REGISTER_POINTS = ['Tạo tài khoản 30 giây, không cần thẻ', 'Làm bài xếp lớp để biết mình đang ở đâu', 'Nhận lộ trình 3 chặng theo ngày thi', 'Mỗi ngày 45 phút, đúng phần bạn còn yếu'];
+type AsideVariant = 'login' | 'register';
 
-const EASE = 'cubic-bezier(0.68, -0.05, 0.27, 1.05)';
-const DUR = 1000;
+/** Bản xem trước kết quả thi thử + việc hôm nay (nội dung mẫu, giống màn hình thật trong app) */
+const ProgressPreview: React.FC = () => (
+  <div className="relative">
+    <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-[0_1px_2px_rgba(16,24,40,0.04),0_16px_40px_-16px_rgba(16,24,40,0.18)]">
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <p className="text-sm font-semibold text-slate-900">ETS 2025 · Test 3</p>
+          <p className="text-[12px] text-slate-500">Nộp lúc 21:47, 28/10/2026</p>
+        </div>
+        <p className="text-right">
+          <span className="text-[1.75rem] font-semibold leading-none tabular-nums text-slate-900">785</span>
+          <span className="text-[13px] text-slate-500">/990</span>
+          <span className="mt-1 block text-[12px] font-medium text-emerald-700">+70 so với Test 2</span>
+        </p>
+      </div>
+      <dl className="mt-4 space-y-2.5 text-[13px]">
+        {[
+          ['Listening', 410, 495],
+          ['Reading', 375, 495],
+        ].map(([k, v, max]) => (
+          <div key={k} className="grid grid-cols-[72px_1fr_36px] items-center gap-3">
+            <dt className="text-slate-600">{k}</dt>
+            <dd className="h-1.5 overflow-hidden rounded-full bg-slate-100">
+              <span className="block h-full rounded-full bg-indigo-600" style={{ width: `${((v as number) / (max as number)) * 100}%` }} />
+            </dd>
+            <dd className="text-right tabular-nums text-slate-900">{v}</dd>
+          </div>
+        ))}
+      </dl>
+    </div>
+    <div className="relative -mt-3 ml-auto w-[82%] rounded-xl border border-slate-200 bg-white p-4 shadow-[0_1px_2px_rgba(16,24,40,0.04),0_16px_40px_-16px_rgba(16,24,40,0.2)]">
+      <p className="text-[13px] font-semibold text-slate-900">Hôm nay · còn 1 việc</p>
+      <ul className="mt-2.5 space-y-2 text-[13px]">
+        {[
+          ['Ôn 14 từ đến hạn', true],
+          ['Part 5 · 20 câu về mạo từ', true],
+          ['Nghe chép Part 3 · bài 12', false],
+        ].map(([t, done]) => (
+          <li key={t as string} className="flex items-center gap-2.5">
+            <span className={cn('flex h-4 w-4 shrink-0 items-center justify-center rounded-full border', done ? 'border-indigo-600 bg-indigo-600 text-white' : 'border-slate-300')}>{done && <Check className="h-3 w-3" strokeWidth={3} />}</span>
+            <span className={done ? 'text-slate-400 line-through decoration-slate-300' : 'text-slate-800'}>{t}</span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  </div>
+);
 
-/** Panel màu của mỗi mặt thẻ */
-const Panel: React.FC<{ register: boolean; onSwitch: () => void }> = ({ register, onSwitch }) => {
-  const t = TESTIMONIALS[register ? 1 : 0];
-  const points = register ? REGISTER_POINTS : LOGIN_POINTS;
+const STEPS = [
+  ['Làm bài xếp lớp', '40 câu, khoảng 15 phút. Biết mình đang ở mức nào và yếu Part nào.'],
+  ['Nhận lộ trình theo ngày thi', 'Chia theo tuần, mỗi ngày 30–45 phút, tự điều chỉnh sau mỗi bài làm.'],
+  ['Học và thi thử', 'Mỗi tuần 3 đề miễn phí, câu sai được lưu vào sổ tay để ôn lại.'],
+];
+
+const StepsPreview: React.FC = () => (
+  <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-[0_1px_2px_rgba(16,24,40,0.04),0_16px_40px_-16px_rgba(16,24,40,0.18)]">
+    <p className="text-sm font-semibold text-slate-900">Sau khi tạo tài khoản</p>
+    <ol className="mt-4 space-y-4">
+      {STEPS.map(([t, d], i) => (
+        <li key={t} className="grid grid-cols-[28px_1fr] gap-3">
+          <span className="flex h-7 w-7 items-center justify-center rounded-full border border-slate-300 text-[13px] font-semibold tabular-nums text-slate-700">{i + 1}</span>
+          <div>
+            <p className="text-[15px] font-medium text-slate-900">{t}</p>
+            <p className="mt-0.5 text-[13px] leading-relaxed text-slate-600">{d}</p>
+          </div>
+        </li>
+      ))}
+    </ol>
+  </div>
+);
+
+/** Cột phải: bản xem trước sản phẩm + cảm nhận học viên */
+const AuthAside: React.FC<{ variant: AsideVariant }> = ({ variant }) => {
+  const t = TESTIMONIALS[variant === 'register' ? 2 : 0];
   return (
-    <aside className={cn('relative hidden lg:flex overflow-hidden text-white flex-col justify-between p-12', register ? 'bg-violet-500' : 'bg-indigo-600')}>
-      <div aria-hidden className="absolute inset-0 bg-dots opacity-20" />
-      <ThreeBackground variant="globe" dark className="opacity-35" offsetX={0.35} interactive={false} />
-      <Doodles tone="light" parallax={false} />
-      <div className="relative">
-        <Logo size="lg" dark tagline="Học thông minh · Đúng mục tiêu" />
-      </div>
-      <div className="relative grid grid-cols-[1fr_200px] gap-6 items-end">
-        <div className="space-y-6 max-w-md">
-          <h2 className="font-display text-4xl font-extrabold leading-tight tracking-tight">
-            {register ? (
-              <>
-                Bắt đầu <span className="mark">hành trình</span> của bạn hôm nay.
-              </>
-            ) : (
-              <>
-                Mỗi câu sai là một <span className="mark">cơ hội</span> tăng điểm.
-              </>
-            )}
-          </h2>
-          <p className={cn('leading-relaxed', register ? 'text-violet-100' : 'text-indigo-100')}>
-            {register ? 'Chỉ cần email. Không cần thẻ, không ràng buộc. Hủy bất kỳ lúc nào.' : 'Lộ trình cá nhân hoá cập nhật theo từng bài làm. Học 45 phút mỗi ngày, đúng thứ bạn còn yếu.'}
-          </p>
-          <ul className="space-y-2.5">
-            {points.map((p) => (
-              <li key={p} className="flex items-center gap-3 text-sm">
-                <span className="w-6 h-6 rounded-lg bg-amber-300 text-slate-900 flex items-center justify-center shrink-0">
-                  <CheckCircle2 className="w-4 h-4" />
-                </span>
-                {p}
-              </li>
-            ))}
-          </ul>
-        </div>
-        <div className={cn('photo-frame', register ? 'tilt-1' : 'tilt-2')}>
-          <Img src={register ? PHOTOS.discussion : PHOTOS.studying} alt="Học viên OrbiLingo" ratio="3/4" fallbackClass={register ? 'bg-violet-400' : 'bg-indigo-400'} />
-        </div>
-      </div>
-      <div className="relative space-y-5">
-        <div className="bg-white text-slate-900 rounded-3xl border-2 border-slate-900 shadow-hard p-6 max-w-lg">
-          <div className="flex items-center gap-1 mb-2 text-amber-500">
-            {Array.from({ length: 5 }).map((_, i) => (
-              <Star key={i} className="w-4 h-4 fill-current" />
-            ))}
-          </div>
-          <Quote className="w-6 h-6 text-violet-500 mb-2" />
-          <p className="text-sm leading-relaxed">"{t.quote}"</p>
-          <div className="flex items-center justify-between mt-4">
-            <div className="flex items-center gap-3">
-              <Avatar name={t.name} src={t.avatar} size="md" ring />
-              <div>
-                <p className="text-sm font-bold">{t.name}</p>
-                <p className="text-xs text-slate-500">{t.role}</p>
-              </div>
-            </div>
-            <span className="sticker tilt-2 !bg-emerald-200">{t.score}</span>
-          </div>
-        </div>
-        <div className="flex items-center justify-between gap-4">
-          <p className="text-sm text-white/80">{register ? 'Đã có tài khoản?' : 'Chưa có tài khoản?'}</p>
-          <button onClick={onSwitch} className="inline-flex items-center gap-2 h-11 px-5 rounded-xl border-2 border-white/80 text-white text-sm font-bold hover:bg-white hover:text-slate-900 transition-all duration-300 group">
-            {register ? (
-              <>
-                <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1" /> Đăng nhập
-              </>
-            ) : (
-              <>
-                Đăng ký <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
-              </>
-            )}
-          </button>
-        </div>
+    <aside className="relative hidden border-l border-slate-200 bg-[#F3F6F5] lg:flex lg:flex-col lg:justify-center">
+      <div className="mx-auto w-full max-w-[440px] px-10 py-16">
+        {variant === 'register' ? <StepsPreview /> : <ProgressPreview />}
+        <figure className="mt-12">
+          <blockquote className="text-[15px] leading-relaxed text-slate-700">“{t.quote}”</blockquote>
+          <figcaption className="mt-4 flex items-center gap-3">
+            <img src={t.avatar} alt="" className="h-10 w-10 rounded-full bg-slate-200 object-cover object-top" />
+            <span className="text-[13px] leading-snug">
+              <span className="block font-medium text-slate-900">{t.name}</span>
+              <span className="text-slate-500">
+                {t.exam} {t.score} · thi {t.examDate} tại {t.venue}
+              </span>
+            </span>
+          </figcaption>
+        </figure>
       </div>
     </aside>
   );
 };
 
 /**
- * Layout xác thực kiểu LẬT THẺ 3D:
- * cả màn hình là một thẻ; mặt trước = [panel teal | form Đăng nhập], mặt sau = [form Đăng ký | panel coral].
- * Bấm chuyển thì thẻ xoay 180° quanh trục dọc, vị trí panel/form đổi bên.
+ * Layout các trang tài khoản (đăng nhập, đăng ký, quên/đặt lại mật khẩu, xác thực email):
+ * cột trái là form trên nền trắng (logo + link chuyển trang ở trên, thông tin hỗ trợ ở dưới),
+ * cột phải (từ lg) là bản xem trước sản phẩm.
  */
 export const AuthLayout: React.FC = () => {
   const { pathname } = useLocation();
-  const navigate = useNavigate();
-  const isRegister = pathname.includes('register');
-  const isFlip = pathname.endsWith('/login') || pathname.endsWith('/register');
+  const isLogin = pathname.endsWith('/login');
+  const isRegister = pathname.endsWith('/register');
 
-  if (!isFlip) {
-    return (
-      <div className="min-h-screen grid lg:grid-cols-2 bg-cream">
-        <Panel register={false} onSwitch={() => navigate('/auth/register')} />
-        <main className="flex flex-col items-center justify-center p-6 sm:p-10 bg-paper">
-          <div className="lg:hidden mb-8">
-            <Logo size="md" />
-          </div>
-          <div key={pathname} className="w-full max-w-md animate-fade-up">
+  return (
+    <div className="grid min-h-screen bg-white lg:grid-cols-[minmax(0,1fr)_minmax(0,0.92fr)]">
+      <div className="flex min-h-screen flex-col">
+        <header className="flex h-[72px] items-center justify-between gap-4 px-5 sm:px-10">
+          <Logo size="md" />
+          <p className="text-sm text-slate-600">
+            {isLogin ? (
+              <>
+                <span className="hidden sm:inline">Chưa có tài khoản? </span>
+                <Link to="/auth/register" className="font-medium text-indigo-700 hover:underline underline-offset-2">
+                  Đăng ký
+                </Link>
+              </>
+            ) : isRegister ? (
+              <>
+                <span className="hidden sm:inline">Đã có tài khoản? </span>
+                <Link to="/auth/login" className="font-medium text-indigo-700 hover:underline underline-offset-2">
+                  Đăng nhập
+                </Link>
+              </>
+            ) : (
+              <Link to="/auth/login" className="inline-flex items-center gap-1.5 font-medium text-slate-700 hover:text-slate-900">
+                <ArrowLeft className="h-4 w-4" />
+                Đăng nhập
+              </Link>
+            )}
+          </p>
+        </header>
+
+        <main className="flex flex-1 items-center justify-center px-5 py-10 sm:px-10">
+          <div key={pathname} className="w-full max-w-[400px] animate-fade-up">
             <Outlet />
           </div>
         </main>
+
+        <footer className="flex flex-wrap items-center gap-x-4 gap-y-1 px-5 py-6 text-[12px] text-slate-500 sm:px-10">
+          <span>© 2026 OrbiLingo</span>
+          <Link to="/help" className="hover:text-slate-800">
+            Điều khoản
+          </Link>
+          <Link to="/help" className="hover:text-slate-800">
+            Bảo mật
+          </Link>
+          <span>
+            Hỗ trợ {SUPPORT_INFO.hotline} ({SUPPORT_INFO.hours[0]}:00–{SUPPORT_INFO.hours[1]}:00)
+          </span>
+        </footer>
       </div>
-    );
-  }
 
-  const face = 'absolute inset-0 grid lg:grid-cols-2 [backface-visibility:hidden] [-webkit-backface-visibility:hidden]';
-  const formCls = 'flex flex-col items-center justify-center p-6 sm:p-10 bg-paper min-h-screen lg:min-h-0 overflow-y-auto';
-
-  return (
-    <div className="min-h-screen bg-cream overflow-hidden" style={{ perspective: '2600px' }}>
-      <div className="relative min-h-screen will-change-transform" style={{ transformStyle: 'preserve-3d', transition: `transform ${DUR}ms ${EASE}`, transform: isRegister ? 'rotateY(180deg)' : 'rotateY(0deg)' }}>
-        {/* Mặt trước: Đăng nhập */}
-        <div className={face} aria-hidden={isRegister}>
-          <Panel register={false} onSwitch={() => navigate('/auth/register')} />
-          <main className={formCls}>
-            <div className="lg:hidden mb-8">
-              <Logo size="md" />
-            </div>
-            <div className="w-full max-w-md">
-              <LoginPage />
-            </div>
-          </main>
-        </div>
-
-        {/* Mặt sau: Đăng ký — xoay sẵn 180° để khi thẻ lật tới thì đọc xuôi; panel ở bên phải */}
-        <div className={face} style={{ transform: 'rotateY(180deg)' }} aria-hidden={!isRegister}>
-          <main className={formCls}>
-            <div className="lg:hidden mb-8">
-              <Logo size="md" />
-            </div>
-            <div className="w-full max-w-md">
-              <RegisterPage />
-            </div>
-          </main>
-          <Panel register onSwitch={() => navigate('/auth/login')} />
-        </div>
-      </div>
+      <AuthAside variant={isRegister ? 'register' : 'login'} />
     </div>
   );
 };
