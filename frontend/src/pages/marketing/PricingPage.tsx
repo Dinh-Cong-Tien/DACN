@@ -3,7 +3,7 @@ import { Check, Minus, ChevronDown } from 'lucide-react';
 import { PRICING_PLANS, FAQS } from '@/shared/mocks';
 import { useDocumentTitle } from '@/shared/hooks';
 import { cn, formatNumber } from '@/shared/utils';
-import { PageHeader, Section, SectionHead, ActionLink } from './shared/PageKit';
+import { Accent, PageHeader, Section, SectionHead, ActionLink } from './shared/PageKit';
 
 type Cycle = 'term' | 'year';
 
@@ -40,7 +40,8 @@ export const PricingPage: React.FC = () => {
     <div className="bg-page">
       <PageHeader
         crumbs={[{ label: 'Trang chủ', to: '/' }, { label: 'Bảng giá' }]}
-        title="Bảng giá"
+        eyebrow="Bảng giá"
+        title={<>Bắt đầu miễn phí. <Accent>Nâng cấp khi cần.</Accent></>}
         lead="Dùng miễn phí không giới hạn thời gian. Nâng cấp khi cần thêm đề, flashcard hoặc giáo viên chấm bài. Không tự động gia hạn."
       />
 

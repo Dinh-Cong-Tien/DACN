@@ -1,7 +1,7 @@
 import React from 'react';
 import { VSTEP_PARTS_INFO, MOCK_TESTS } from '@/shared/mocks';
 import { useDocumentTitle, useGate } from '@/shared/hooks';
-import { PageHeader, Section, SectionHead, ActionLink, CtaStrip } from './shared/PageKit';
+import { Accent, PageHeader, Section, SectionHead, ActionLink, CtaStrip } from './shared/PageKit';
 import { TestList } from './shared/TestList';
 
 const LEVELS = [
@@ -55,7 +55,8 @@ export const VstepPage: React.FC = () => {
     <div className="bg-page">
       <PageHeader
         crumbs={[{ label: 'Trang chủ', to: '/' }, { label: 'Luyện thi VSTEP' }]}
-        title="Luyện thi VSTEP bậc 3–5 (B1, B2, C1)"
+        eyebrow="Luyện thi VSTEP"
+        title={<>Luyện thi VSTEP <Accent>bậc 3–5</Accent> (B1, B2, C1)</>}
         lead="Nghe và Đọc chấm tự động ngay khi nộp. Viết và Nói được giáo viên chấm theo tiêu chí của Bộ GD&ĐT, có nhận xét từng lỗi để biết lần sau sửa gì."
         actions={
           <>

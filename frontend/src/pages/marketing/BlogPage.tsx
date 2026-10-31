@@ -7,7 +7,7 @@ import { useDocumentTitle } from '@/shared/hooks';
 import { toast } from '@/shared/stores/uiStore';
 import { formatDate, formatNumber } from '@/shared/utils';
 import type { BlogPost } from '@/shared/types';
-import { Section } from './shared/PageKit';
+import { Section, Accent, Eyebrow } from './shared/PageKit';
 
 const Meta: React.FC<{ p: BlogPost }> = ({ p }) => (
   <p className="text-[13px] text-slate-500">
@@ -26,7 +26,10 @@ export const BlogPage: React.FC = () => {
       {/* Đầu trang kiểu chuyên mục báo: tên chuyên mục + thanh chủ đề */}
       <header className="border-b border-slate-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-10">
-          <h1 className="font-display text-[2.1rem] md:text-[2.6rem] font-bold tracking-tight text-slate-900">Kinh nghiệm thi</h1>
+          <Eyebrow>Blog OrbiLingo</Eyebrow>
+          <h1 className="mt-3 font-display text-[2.3rem] md:text-[3.2rem] font-extrabold leading-[1.1] tracking-tight text-slate-900">
+            Kinh nghiệm <Accent>thi thật</Accent>
+          </h1>
           <p className="mt-2 max-w-2xl text-slate-600">Mẹo làm bài, lộ trình và phương pháp học do giáo viên OrbiLingo viết. Bài nào cũng ghi rõ tác giả và ngày đăng.</p>
           <nav aria-label="Chủ đề" className="mt-6 flex gap-6 overflow-x-auto no-scrollbar text-sm">
             <span className="-mb-px shrink-0 border-b-2 border-indigo-600 pb-3 font-medium text-slate-900">Tất cả</span>

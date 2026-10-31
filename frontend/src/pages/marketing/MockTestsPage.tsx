@@ -3,7 +3,7 @@ import { Timer, Volume2, Flag, ClipboardCheck } from 'lucide-react';
 import { MOCK_TESTS } from '@/shared/mocks';
 import { useDocumentTitle, useGate } from '@/shared/hooks';
 import { cn } from '@/shared/utils';
-import { PageHeader, Section, SectionHead, UnderlineTabs, CtaStrip } from './shared/PageKit';
+import { Accent, PageHeader, Section, SectionHead, UnderlineTabs, CtaStrip } from './shared/PageKit';
 import { TestList } from './shared/TestList';
 
 type Exam = 'TOEIC' | 'VSTEP';
@@ -32,7 +32,8 @@ export const MockTestsPage: React.FC = () => {
     <div className="bg-page">
       <PageHeader
         crumbs={[{ label: 'Trang chủ', to: '/' }, { label: 'Đề thi thử' }]}
-        title="Đề thi thử TOEIC và VSTEP"
+        eyebrow="Thi thử"
+        title={<>Đề thi thử <Accent>TOEIC và VSTEP</Accent></>}
         lead="Đề TOEIC theo format ETS mới nhất và đề VSTEP theo định dạng của Bộ GD&ĐT. Làm trên máy như thi thật, nộp bài là có điểm và giải thích."
         facts={[
           { value: '96', label: 'Đề TOEIC' },

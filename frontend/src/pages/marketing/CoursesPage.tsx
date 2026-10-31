@@ -7,7 +7,7 @@ import { MOCK_COURSES } from '@/shared/mocks';
 import { useDocumentTitle, useGate } from '@/shared/hooks';
 import { cn, formatNumber } from '@/shared/utils';
 import type { Course } from '@/shared/types';
-import { PageHeader, Section, UnderlineTabs, CtaStrip } from './shared/PageKit';
+import { Accent, PageHeader, Section, UnderlineTabs, CtaStrip } from './shared/PageKit';
 
 type Exam = 'ALL' | 'TOEIC' | 'VSTEP';
 type Sort = 'popular' | 'rating' | 'short';
@@ -66,7 +66,8 @@ export const CoursesPage: React.FC = () => {
     <div className="bg-page">
       <PageHeader
         crumbs={[{ label: 'Trang chủ', to: '/' }, { label: 'Khoá học' }]}
-        title="Khoá học TOEIC và VSTEP"
+        eyebrow="Khoá học"
+        title={<>Khoá học <Accent>TOEIC và VSTEP</Accent></>}
         lead="Video bài giảng có bản ghi chữ, bấm vào từ để tra nghĩa và nghe phát âm. Cuối mỗi bài có quiz 5 câu, sai câu nào được lưu vào sổ tay lỗi sai."
         facts={[
           { value: String(MOCK_COURSES.length), label: 'Khoá học' },

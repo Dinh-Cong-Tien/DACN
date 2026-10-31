@@ -4,7 +4,7 @@ import { Headphones, BookOpen } from 'lucide-react';
 import { TOEIC_PARTS_INFO, MOCK_TESTS, SCORE_TABLE, SKILL_SCORES, MOCK_ATTEMPTS } from '@/shared/mocks';
 import { useDocumentTitle, useGate } from '@/shared/hooks';
 import { cn } from '@/shared/utils';
-import { PageHeader, Section, SectionHead, ActionLink, CtaStrip } from './shared/PageKit';
+import { Accent, PageHeader, Section, SectionHead, ActionLink, CtaStrip } from './shared/PageKit';
 import { TestList } from './shared/TestList';
 
 /** Bản xem trước phiếu kết quả thi thử (dữ liệu thật của lượt làm gần nhất trong mock) */
@@ -62,7 +62,8 @@ export const ToeicPage: React.FC = () => {
     <div className="bg-page">
       <PageHeader
         crumbs={[{ label: 'Trang chủ', to: '/' }, { label: 'Luyện thi TOEIC' }]}
-        title="Luyện thi TOEIC Listening & Reading"
+        eyebrow="Luyện thi TOEIC"
+        title={<>Luyện thi TOEIC <Accent>Listening & Reading</Accent></>}
         lead="Luyện từng Part với giải thích sau mỗi câu, thi thử full test đúng 120 phút, nộp bài là có điểm quy đổi 10–990 và biết Part nào đang kéo điểm xuống."
         actions={
           <>
@@ -100,7 +101,7 @@ export const ToeicPage: React.FC = () => {
                     onClick={() => setActive(p.id)}
                     className={cn(
                       'flex w-full items-center justify-between border-t border-slate-200 px-4 py-3 text-left text-sm transition-colors',
-                      p.id === active ? 'bg-indigo-50 text-indigo-800' : 'text-slate-700 hover:bg-slate-50'
+                      p.id === active ? 'bg-indigo-500/10 text-indigo-800 dark:text-indigo-300' : 'text-slate-700 hover:bg-slate-50'
                     )}
                   >
                     <span>

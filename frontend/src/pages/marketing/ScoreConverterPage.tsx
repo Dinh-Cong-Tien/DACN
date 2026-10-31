@@ -4,7 +4,7 @@ import { SCORE_TABLE } from '@/shared/mocks';
 import type { ScoreRow } from '@/shared/types';
 import { useDocumentTitle } from '@/shared/hooks';
 import { cn } from '@/shared/utils';
-import { PageHeader, Section, SectionHead, CtaStrip } from './shared/PageKit';
+import { Accent, PageHeader, Section, SectionHead, CtaStrip } from './shared/PageKit';
 
 type Source = 'TOEIC' | 'VSTEP' | 'IELTS' | 'CEFR';
 
@@ -57,7 +57,8 @@ export const ScoreConverterPage: React.FC = () => {
     <div className="bg-page">
       <PageHeader
         crumbs={[{ label: 'Trang chủ', to: '/' }, { label: 'Công cụ' }, { label: 'Quy đổi điểm' }]}
-        title="Quy đổi điểm TOEIC, VSTEP, IELTS, CEFR"
+        eyebrow="Công cụ"
+        title={<><Accent>Quy đổi điểm</Accent> TOEIC, VSTEP, IELTS, CEFR</>}
         lead="Nhập điểm bạn đang có, xem bậc tương đương ở các thang điểm khác. Công cụ miễn phí, không cần đăng nhập."
       />
 
@@ -151,7 +152,7 @@ export const ScoreConverterPage: React.FC = () => {
             </thead>
             <tbody className="divide-y divide-slate-200">
               {SCORE_TABLE.map((r) => (
-                <tr key={r.cefr} className={cn('transition-colors', row?.cefr === r.cefr && 'bg-indigo-50')}>
+                <tr key={r.cefr} className={cn('transition-colors', row?.cefr === r.cefr && 'bg-indigo-500/10')}>
                   <td className="px-5 py-3 font-semibold text-slate-900">{r.cefr}</td>
                   <td className="px-4 py-3 text-slate-800">{r.vstep}</td>
                   <td className="px-4 py-3 tabular-nums text-slate-800">{r.toeic}</td>

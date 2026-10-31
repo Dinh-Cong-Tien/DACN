@@ -3,7 +3,7 @@ import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
 import { MOCK_LEADERBOARD } from '@/shared/mocks';
 import { useDocumentTitle, useGate } from '@/shared/hooks';
 import { cn, formatNumber } from '@/shared/utils';
-import { PageHeader, Section, UnderlineTabs, ActionLink } from './shared/PageKit';
+import { Accent, PageHeader, Section, UnderlineTabs, ActionLink } from './shared/PageKit';
 
 type Period = 'week' | 'month';
 type Exam = 'ALL' | 'TOEIC' | 'VSTEP';
@@ -36,7 +36,8 @@ export const LeaderboardPage: React.FC = () => {
     <div className="bg-page">
       <PageHeader
         crumbs={[{ label: 'Trang chủ', to: '/' }, { label: 'Bảng vinh danh' }]}
-        title="Bảng vinh danh học viên chuyên cần"
+        eyebrow="Bảng vinh danh"
+        title={<>Học viên <Accent>chuyên cần</Accent> nhất</>}
         lead="Xếp theo điểm nỗ lực: số câu luyện tập, đề thi thử đã nộp và chuỗi ngày học liên tục. Bảng tuần làm mới lúc 0:00 thứ Hai."
       />
 

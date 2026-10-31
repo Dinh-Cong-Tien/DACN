@@ -5,18 +5,19 @@ import { cn } from '@/shared/utils';
 
 /*
  * Bộ khung dùng chung cho các trang marketing bên trong (TOEIC, VSTEP, khoá học, thi thử...).
- * Phong cách "sản phẩm thật": nền trắng/xám nhạt, viền mảnh 1px, bo 12px, không bóng cứng, không nghiêng, không hoạ tiết.
+ * Cùng ngôn ngữ với trang chủ: nhãn nhỏ màu vàng, tiêu đề lớn có cụm chữ gradient (<Accent>), đường kẻ phát sáng
+ * giữa các phần, thẻ kính mờ cho dải kêu gọi, nút chính cam 3D. Màu chữ theo bảng slate nên tự khớp chế độ sáng/tối.
  */
 
 // ============ Nút dạng link / button ============
 type Variant = 'primary' | 'secondary' | 'ghost' | 'light';
 const VARIANT: Record<Variant, string> = {
-  primary: 'bg-indigo-600 text-white hover:bg-indigo-700',
-  secondary: 'border border-slate-300 bg-white text-slate-900 hover:border-slate-400 hover:bg-slate-50',
+  primary: 'btn-3d border-violet-700 bg-violet-500 text-white hover:bg-violet-400',
+  secondary: 'border border-slate-900/15 bg-slate-900/[0.03] text-slate-900 backdrop-blur-sm hover:bg-slate-900/[0.07]',
   ghost: 'text-slate-700 hover:bg-slate-100',
   light: 'bg-white text-slate-900 hover:bg-slate-100',
 };
-const SIZE = { md: 'h-10 px-4 text-sm', lg: 'h-12 px-5 text-[15px]' } as const;
+const SIZE = { md: 'h-10 px-4 text-sm rounded-xl', lg: 'h-12 px-6 text-[15px] rounded-xl' } as const;
 
 export const ActionLink: React.FC<{ to: string; variant?: Variant; size?: keyof typeof SIZE; className?: string; children: React.ReactNode; icon?: React.ReactNode }> = ({
   to,
@@ -26,15 +27,26 @@ export const ActionLink: React.FC<{ to: string; variant?: Variant; size?: keyof 
   children,
   icon,
 }) => (
-  <Link to={to} className={cn('inline-flex items-center justify-center gap-2 rounded-lg font-semibold transition-colors', VARIANT[variant], SIZE[size], className)}>
+  <Link to={to} className={cn('inline-flex items-center justify-center gap-2 font-bold transition-all', VARIANT[variant], SIZE[size], className)}>
     {children}
     {icon}
   </Link>
 );
 
 export const ActionButton: React.FC<React.ButtonHTMLAttributes<HTMLButtonElement> & { variant?: Variant; size?: keyof typeof SIZE }> = ({ variant = 'primary', size = 'md', className, ...rest }) => (
-  <button className={cn('inline-flex items-center justify-center gap-2 rounded-lg font-semibold transition-colors disabled:opacity-50', VARIANT[variant], SIZE[size], className)} {...rest} />
+  <button className={cn('inline-flex items-center justify-center gap-2 font-bold transition-all disabled:opacity-50', VARIANT[variant], SIZE[size], className)} {...rest} />
 );
+
+/** Cụm chữ gradient hồng–cam–tím trong tiêu đề, giống trang chủ */
+export const Accent: React.FC<{ children: React.ReactNode }> = ({ children }) => <span className="hero-gradient-text">{children}</span>;
+
+/** Nhãn nhỏ in hoa màu vàng phía trên tiêu đề (kiểu "Bảng giá" trên trang chủ) */
+export const Eyebrow: React.FC<{ children: React.ReactNode; className?: string }> = ({ children, className }) => (
+  <p className={cn('text-[11px] font-extrabold uppercase tracking-[0.18em] text-amber-700 dark:text-amber-300', className)}>{children}</p>
+);
+
+/** Đường kẻ phát sáng giữa các phần (night-divider, chế độ sáng tự đổi màu trong night-theme.css) */
+const Divider = () => <div aria-hidden className="night-divider" />;
 
 // ============ Đầu trang ============
 export interface Crumb {
@@ -42,17 +54,21 @@ export interface Crumb {
   to?: string;
 }
 
-/** Đầu trang: breadcrumb, tiêu đề, đoạn dẫn, hàng số liệu thật, nút hành động; cột phải tuỳ chọn (ảnh / khối minh hoạ) */
+/** Đầu trang: breadcrumb, nhãn vàng, tiêu đề lớn, đoạn dẫn, hàng số liệu, nút hành động; cột phải tuỳ chọn (ảnh / khối minh hoạ) */
 export const PageHeader: React.FC<{
   crumbs: Crumb[];
+  eyebrow?: string;
   title: React.ReactNode;
   lead?: React.ReactNode;
   facts?: { value: string; label: string }[];
   actions?: React.ReactNode;
   aside?: React.ReactNode;
   className?: string;
-}> = ({ crumbs, title, lead, facts, actions, aside, className }) => (
-  <section className={cn('border-b border-slate-200 bg-page', className)}>
+}> = ({ crumbs, eyebrow, title, lead, facts, actions, aside, className }) => (
+  <section className={cn('relative isolate bg-page', className)}>
+    {/* Quầng sáng sau tiêu đề như hero trang chủ */}
+    <div aria-hidden className="pointer-events-none absolute -top-32 left-[8%] -z-10 h-[420px] w-[620px] rounded-full bg-violet-500/25 opacity-50 blur-[140px] dark:opacity-100" />
+    <div aria-hidden className="pointer-events-none absolute right-[4%] top-10 -z-10 h-[360px] w-[480px] rounded-full bg-fuchsia-500/20 opacity-40 blur-[140px] dark:opacity-100" />
     <div className={cn('max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-12 md:pb-16 grid gap-10 items-center', aside && 'lg:grid-cols-[1.15fr_1fr]')}>
       <div>
         <nav aria-label="Breadcrumb" className="flex items-center gap-1 text-[13px] text-slate-500">
@@ -69,15 +85,16 @@ export const PageHeader: React.FC<{
             </React.Fragment>
           ))}
         </nav>
-        <h1 className="mt-6 font-display text-[2.1rem] leading-[1.15] md:text-[2.8rem] font-bold tracking-tight text-slate-900 text-balance">{title}</h1>
-        {lead && <p className="mt-4 max-w-xl text-[17px] leading-relaxed text-slate-600">{lead}</p>}
+        {eyebrow && <Eyebrow className="mt-8">{eyebrow}</Eyebrow>}
+        <h1 className={cn('font-display text-[2.3rem] leading-[1.1] md:text-[3.2rem] lg:text-[3.5rem] font-extrabold tracking-tight text-slate-900 text-balance', eyebrow ? 'mt-3' : 'mt-6')}>{title}</h1>
+        {lead && <p className="mt-5 max-w-xl text-[17px] leading-relaxed text-slate-600">{lead}</p>}
         {actions && <div className="mt-7 flex flex-wrap gap-3">{actions}</div>}
         {facts && (
-          <dl className="mt-9 flex flex-wrap gap-x-10 gap-y-4 border-t border-slate-200 pt-6">
+          <dl className="mt-10 flex flex-wrap gap-x-9 gap-y-5 border-t border-slate-900/10 pt-7">
             {facts.map((f) => (
-              <div key={f.label}>
-                <dt className="text-[13px] text-slate-500">{f.label}</dt>
-                <dd className="mt-0.5 text-xl font-semibold text-slate-900 tabular-nums">{f.value}</dd>
+              <div key={f.label} className="flex flex-col-reverse">
+                <dt className="mt-1.5 text-[13px] text-slate-500">{f.label}</dt>
+                <dd className="font-display text-[1.6rem] md:text-[1.85rem] font-bold leading-none tracking-tight text-slate-900 tabular-nums">{f.value}</dd>
               </div>
             ))}
           </dl>
@@ -89,18 +106,22 @@ export const PageHeader: React.FC<{
 );
 
 // ============ Section ============
+/** Một phần của trang: ngăn cách bằng đường kẻ phát sáng như trang chủ; `muted` thêm quầng sáng nhẹ phía sau */
 export const Section: React.FC<{ muted?: boolean; className?: string; innerClassName?: string; children: React.ReactNode; id?: string }> = ({ muted, className, innerClassName, children, id }) => (
-  <section id={id} className={cn(muted ? 'bg-slate-100/60 border-y border-slate-200' : 'bg-page', className)}>
-    <div className={cn('max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14 md:py-20', innerClassName)}>{children}</div>
+  <section id={id} className={cn('relative isolate bg-page', className)}>
+    <Divider />
+    {muted && <div aria-hidden className="pointer-events-none absolute left-1/2 top-1/3 -z-10 h-[420px] w-[760px] -translate-x-1/2 rounded-full bg-indigo-500/15 opacity-60 blur-[150px] dark:opacity-100" />}
+    <div className={cn('max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24', innerClassName)}>{children}</div>
   </section>
 );
 
 /** Tiêu đề khối: không nhãn viên thuốc, không tô vàng chữ; có thể kèm link "Xem tất cả" bên phải */
-export const SectionHead: React.FC<{ title: React.ReactNode; desc?: React.ReactNode; action?: { label: string; to: string }; className?: string }> = ({ title, desc, action, className }) => (
-  <div className={cn('mb-8 flex flex-col gap-3 md:flex-row md:items-end md:justify-between', className)}>
+export const SectionHead: React.FC<{ eyebrow?: string; title: React.ReactNode; desc?: React.ReactNode; action?: { label: string; to: string }; className?: string }> = ({ eyebrow, title, desc, action, className }) => (
+  <div className={cn('mb-10 flex flex-col gap-3 md:flex-row md:items-end md:justify-between', className)}>
     <div className="max-w-2xl">
-      <h2 className="font-display text-2xl md:text-[2rem] font-bold tracking-tight text-slate-900 leading-tight">{title}</h2>
-      {desc && <p className="mt-2 text-slate-600 leading-relaxed">{desc}</p>}
+      {eyebrow && <Eyebrow className="mb-3">{eyebrow}</Eyebrow>}
+      <h2 className="font-display text-[1.8rem] md:text-[2.4rem] font-extrabold tracking-tight text-slate-900 leading-[1.1] text-balance">{title}</h2>
+      {desc && <p className="mt-3 text-slate-600 leading-relaxed">{desc}</p>}
     </div>
     {action && (
       <Link to={action.to} className="inline-flex shrink-0 items-center gap-1 text-sm font-semibold text-indigo-700 hover:text-indigo-800 hover:underline underline-offset-4">
@@ -133,12 +154,14 @@ export function UnderlineTabs<T extends string>({ items, value, onChange, classN
   );
 }
 
-/** Dải kêu gọi cuối trang: một dòng chữ + nút, nền trắng viền mảnh (không khối màu chói) */
-export const CtaStrip: React.FC<{ title: string; text?: string; action: { label: string; to: string } }> = ({ title, text, action }) => (
-  <div className="flex flex-col gap-5 rounded-xl border border-slate-200 bg-white p-6 md:flex-row md:items-center md:justify-between md:p-8">
+/** Dải kêu gọi cuối trang: thẻ kính mờ như khối "Bảng giá" của trang chủ, tiêu đề lớn + nút cam */
+export const CtaStrip: React.FC<{ title: React.ReactNode; text?: string; eyebrow?: string; action: { label: string; to: string } }> = ({ title, text, eyebrow = 'Bắt đầu', action }) => (
+  <div className="glass-night relative isolate flex flex-col gap-6 overflow-hidden rounded-3xl p-7 md:flex-row md:items-center md:justify-between md:p-10">
+    <div aria-hidden className="pointer-events-none absolute -left-20 -top-24 -z-10 h-[260px] w-[420px] rounded-full bg-violet-500/25 opacity-50 blur-[100px] dark:opacity-100" />
     <div>
-      <p className="text-lg font-semibold text-slate-900">{title}</p>
-      {text && <p className="mt-1 text-slate-600">{text}</p>}
+      <Eyebrow>{eyebrow}</Eyebrow>
+      <p className="mt-3 font-display text-2xl md:text-[2rem] font-extrabold leading-tight tracking-tight text-slate-900">{title}</p>
+      {text && <p className="mt-2 max-w-xl text-slate-600">{text}</p>}
     </div>
     <ActionLink to={action.to} size="lg" className="shrink-0">
       {action.label}

@@ -5,7 +5,7 @@ import { useDocumentTitle, useGate } from '@/shared/hooks';
 import { toast } from '@/shared/stores/uiStore';
 import { cn, formatNumber } from '@/shared/utils';
 import type { ResourceDoc } from '@/shared/types';
-import { PageHeader, Section, CtaStrip } from './shared/PageKit';
+import { Accent, PageHeader, Section, CtaStrip } from './shared/PageKit';
 
 /** Ô nhãn loại tệp kiểu trình quản lý tài liệu */
 const TYPE_TAG: Record<ResourceDoc['type'], { label: string; cls: string }> = {
@@ -30,7 +30,8 @@ export const ResourcesPage: React.FC = () => {
     <div className="bg-page">
       <PageHeader
         crumbs={[{ label: 'Trang chủ', to: '/' }, { label: 'Công cụ' }, { label: 'Kho tài liệu' }]}
-        title="Kho tài liệu ôn thi"
+        eyebrow="Tài liệu miễn phí"
+        title={<>Kho <Accent>tài liệu</Accent> ôn thi</>}
         lead="Tóm tắt ngữ pháp, từ vựng theo chủ đề, bài mẫu Writing và audio luyện nghe do giáo viên OrbiLingo biên soạn. Tải miễn phí, in ra học được."
         facts={[
           { value: String(RESOURCES.length), label: 'Tài liệu' },

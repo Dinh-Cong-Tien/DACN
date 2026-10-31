@@ -3,7 +3,7 @@ import { TOEIC_PART5, TOEIC_PART2, VSTEP_READING } from '@/shared/mocks';
 import { QuestionRenderer } from '@/engines';
 import { useDocumentTitle, useGate } from '@/shared/hooks';
 import { formatNumber } from '@/shared/utils';
-import { PageHeader, Section, ActionLink } from './shared/PageKit';
+import { Accent, PageHeader, Section, ActionLink } from './shared/PageKit';
 
 const SAMPLES = [TOEIC_PART5[0], TOEIC_PART2[0], VSTEP_READING[1]];
 
@@ -31,7 +31,8 @@ export const QuestionBankPage: React.FC = () => {
     <div className="bg-page">
       <PageHeader
         crumbs={[{ label: 'Trang chủ', to: '/' }, { label: 'Công cụ' }, { label: 'Ngân hàng câu hỏi' }]}
-        title="Ngân hàng câu hỏi TOEIC và VSTEP"
+        eyebrow="Ngân hàng câu hỏi"
+        title={<><Accent>12.614 câu hỏi</Accent> TOEIC và VSTEP</>}
         lead="Mỗi câu có lời giải, độ khó từ 1 đến 5 và thẻ kiến thức (thì, từ loại, paraphrase...). Câu mới chỉ được dùng trong đề sau khi trưởng bộ môn duyệt."
         facts={[
           { value: formatNumber(TOTAL), label: 'Câu hỏi đã duyệt' },
