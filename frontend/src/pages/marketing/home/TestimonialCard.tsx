@@ -6,11 +6,11 @@ import type { Testimonial } from '@/shared/types';
 const BLOCK = { TOEIC: 'bg-indigo-500', VSTEP: 'bg-violet-500' } as const;
 const LABEL = { TOEIC: 'text-indigo-300', VSTEP: 'text-violet-300' } as const;
 
-/** Thẻ vinh danh học viên: ảnh người tách nền đứng trước khối màu bo góc, điểm lớn + bài thi + tên bên dưới */
+/** Thẻ vinh danh học viên: ảnh người tách nền đứng trước khối màu nửa bầu dục, điểm lớn + bài thi + tên bên dưới */
 export const TestimonialCard: React.FC<{ item: Testimonial }> = ({ item: t }) => (
   <figure className="h-full flex flex-col text-center">
     <div className="relative h-72 md:h-80">
-      <div aria-hidden className={cn('absolute inset-x-3 bottom-0 h-[52%] rounded-3xl', BLOCK[t.exam])} />
+      <div aria-hidden className={cn('absolute inset-x-3 bottom-0 h-[62%] rounded-[50%_50%_0_0/100%_100%_0_0]', BLOCK[t.exam])} />
       {t.avatar && <img src={t.avatar} alt={t.name} loading="lazy" className="relative mx-auto h-full w-auto object-contain object-bottom" />}
     </div>
     <figcaption className="flex-1 flex flex-col pt-5">
