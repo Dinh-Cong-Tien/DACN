@@ -9,7 +9,7 @@ import { Logo, Button, CommandPalette, Badge } from '@/shared/components/ui';
 import { PageTransition } from '@/shared/components/motion';
 import { ScrollProgress, BackToTop, RouteProgress } from '@/shared/components/layout/ScrollExtras';
 import { ChatWidget } from '@/shared/components/support';
-import { PUBLIC_NAV, STUDENT_NAV, type MenuLink } from '@/shared/components/layout/navConfig';
+import { PUBLIC_NAV, STUDENT_NAV, STUDENT_TOOLS, type MenuLink } from '@/shared/components/layout/navConfig';
 import { ThemeToggle } from '@/shared/components/layout/ThemeToggle';
 import { UserMenu } from '@/shared/components/layout/UserMenu';
 import { PageBackdrop } from '@/shared/components/layout/PageBackdrop';
@@ -73,8 +73,12 @@ export const GuestLayout: React.FC<GuestLayoutProps> = ({ contained }) => {
       </button>
       <div className="absolute left-0 top-full pt-2 opacity-0 translate-y-1 pointer-events-none group-hover/menu:opacity-100 group-hover/menu:translate-y-0 group-hover/menu:pointer-events-auto transition-all duration-200 z-50">
         <div className={cn('bg-white rounded-xl border border-slate-200 shadow-[0_12px_32px_-8px_rgba(16,24,40,0.18)] p-1.5', items.some((i) => i.desc) ? 'w-[340px]' : 'w-64')}>
-          {items.map((c) => (
-            <NavLink key={c.to} to={c.to} className={({ isActive }) => cn('group/item flex items-center gap-3 px-2.5 py-2 rounded-lg text-sm transition-colors', isActive ? 'bg-slate-100 text-slate-900' : 'text-slate-700 hover:bg-slate-50 hover:text-slate-900')}>
+          {items.map((c, ci) => (
+            <React.Fragment key={c.to}>
+            {c.group && c.group !== items[ci - 1]?.group && (
+              <p className={cn('px-2.5 pb-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-400', ci > 0 ? 'mt-1.5 border-t border-slate-200 pt-2.5' : 'pt-1')}>{c.group}</p>
+            )}
+            <NavLink to={c.to} className={({ isActive }) => cn('group/item flex items-center gap-3 px-2.5 py-2 rounded-lg text-sm transition-colors', isActive ? 'bg-slate-100 text-slate-900' : 'text-slate-700 hover:bg-slate-50 hover:text-slate-900')}>
               {c.img && <img src={c.img} alt="" className={cn('shrink-0 transition-transform duration-200 group-hover/item:scale-110', c.desc ? 'h-9 w-9' : 'h-7 w-7')} />}
               <span className="min-w-0 flex-1">
                 <span className="block font-medium">{c.label}</span>
@@ -86,6 +90,7 @@ export const GuestLayout: React.FC<GuestLayoutProps> = ({ contained }) => {
                 </Badge>
               )}
             </NavLink>
+            </React.Fragment>
           ))}
         </div>
       </div>
@@ -95,7 +100,11 @@ export const GuestLayout: React.FC<GuestLayoutProps> = ({ contained }) => {
   // ===== Menu desktop: menu chính cho mọi người; học viên đi theo appTo (trang của học viên) =====
   const [studentPrimary] = STUDENT_NAV;
   const hrefOf = (i: { to?: string; appTo?: string }) => (isStudent && i.appTo) || i.to!;
-  const mainNav = PUBLIC_NAV.map((i) => ({ ...i, to: hrefOf(i), children: i.children?.map((c) => ({ ...c, to: hrefOf(c) })) }));
+  const mainNav = PUBLIC_NAV.map((i) => {
+    const children = i.children?.map((c) => ({ ...c, to: hrefOf(c) }));
+    // Học viên: Lộ trình / Sổ tay lỗi sai / Lịch ôn / Tiến độ nằm đầu menu Công cụ
+    return { ...i, to: hrefOf(i), children: isStudent && children ? [...STUDENT_TOOLS, ...children.map((c) => ({ ...c, group: i.label }))] : children };
+  });
   const desktopNav = mainNav.map((item) =>
     item.children ? (
       dropdown(item.label, item.img, item.children, item.children.some((c) => location.pathname.startsWith(c.to)))
@@ -111,8 +120,12 @@ export const GuestLayout: React.FC<GuestLayoutProps> = ({ contained }) => {
   const mobileGroups: { title?: string; items: MenuLink[] }[] = [
     { items: mainNav.filter((i) => !i.children).map((i) => ({ to: i.to, label: i.label, img: i.img })) },
     ...mainNav.filter((i) => i.children).map((i) => ({ title: i.label, items: i.children! })),
-    // Học viên: thêm các nhóm học tập (nhóm Công cụ đã có ở trên)
-    ...(isStudent ? STUDENT_NAV.filter((g) => g.title !== 'Công cụ') : []),
+    // Học viên: thêm các nhóm học tập còn lại (bỏ mục đã có ở trên)
+    ...(isStudent
+      ? STUDENT_NAV.filter((g) => g.title !== 'Công cụ')
+          .map((g) => ({ title: g.title, items: g.items.filter((it) => !mainNav.some((m) => m.to === it.to || m.children?.some((c) => c.to === it.to))) }))
+          .filter((g) => g.items.length)
+      : []),
   ];
 
   const bottomItems = isStudent ? studentPrimary.items.slice(0, 4) : [];
@@ -160,7 +173,7 @@ export const GuestLayout: React.FC<GuestLayoutProps> = ({ contained }) => {
                 )}
                 <UserMenu user={user} onLogout={handleLogout} onDark={onDarkHero} />
                 {/* Cùng vị trí nút cam "Học thử miễn phí" của khách */}
-                <Button to={isStudent ? '/app/dashboard' : ROLE_HOME[user.role]} variant="gradient" size="sm" rightIcon={<ArrowRight className="w-4 h-4" />} className="hidden xl:inline-flex">
+                <Button to={isStudent ? '/#goc-hoc-tap' : ROLE_HOME[user.role]} variant="gradient" size="sm" rightIcon={<ArrowRight className="w-4 h-4" />} className="hidden xl:inline-flex">
                   {isStudent ? 'Vào học' : 'Trang quản lý'}
                 </Button>
               </>
@@ -184,7 +197,7 @@ export const GuestLayout: React.FC<GuestLayoutProps> = ({ contained }) => {
                 <div key={gi} className="space-y-1">
                   {g.title && <p className="px-3 pb-1 text-[10px] font-extrabold uppercase tracking-[0.14em] text-slate-400">{g.title}</p>}
                   {g.items.map((c) => (
-                    <NavLink key={c.to} to={c.to} className={({ isActive }) => cn('flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold', isActive ? 'bg-slate-900/[0.06] text-indigo-700' : 'text-slate-700 hover:bg-slate-900/5')}>
+                    <NavLink key={c.to} to={c.to} end={c.to === '/'} className={({ isActive }) => cn('flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold', isActive ? 'bg-slate-900/[0.06] text-indigo-700' : 'text-slate-700 hover:bg-slate-900/5')}>
                       {c.img && <img src={c.img} alt="" className="w-6 h-6 shrink-0" />}
                       <span className="flex-1">{c.label}</span>
                       {c.badge && (
@@ -239,7 +252,7 @@ export const GuestLayout: React.FC<GuestLayoutProps> = ({ contained }) => {
             {bottomItems.map((item) => {
               const Icon = item.icon;
               return (
-                <NavLink key={item.to} to={item.to} className={({ isActive }) => cn('flex flex-col items-center justify-center gap-1 text-[10px] font-bold transition-colors', isActive ? 'text-amber-300' : 'text-slate-400')}>
+                <NavLink key={item.to} to={item.to} end={item.end} className={({ isActive }) => cn('flex flex-col items-center justify-center gap-1 text-[10px] font-bold transition-colors', isActive ? 'text-amber-300' : 'text-slate-400')}>
                   <Icon className="w-5 h-5" />
                   <span className="truncate max-w-[64px]">{item.label}</span>
                 </NavLink>

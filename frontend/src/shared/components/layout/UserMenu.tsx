@@ -13,8 +13,6 @@ const pick = (to: string, label?: string): MenuLink => {
   return { ...it, label: label ?? it.label };
 };
 
-/** Học tập: đi theo trình tự học (xem tổng quan → lộ trình → ôn câu sai → ôn đến hạn → xem tiến bộ) */
-const STUDY = [pick('/app/dashboard'), pick('/app/learning-path', 'Lộ trình học'), pick('/app/mistakes'), pick('/app/review'), pick('/app/progress')];
 /** Luyện kỹ năng: lưới 3×2, nhãn ngắn */
 const SKILLS = [
   pick('/app/vocabulary', 'Từ vựng'),
@@ -35,8 +33,8 @@ const PERSONAL = [
 const SectionLabel: React.FC<{ children: React.ReactNode }> = ({ children }) => <p className="px-2 pb-1.5 text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-400">{children}</p>;
 
 /**
- * Menu tài khoản trên header (một cột, 4 khối):
- * thông tin + chỉ số → Học tập → Luyện kỹ năng → Cá nhân, Đăng xuất tách riêng ở cuối.
+ * Menu tài khoản trên header (một cột, 3 khối): thông tin + chỉ số → Luyện kỹ năng → Cá nhân, Đăng xuất tách riêng ở cuối.
+ * Lộ trình / Sổ tay lỗi sai / Lịch ôn / Tiến độ nằm trong menu Công cụ; nội dung Tổng quan nằm ở trang chủ.
  * Giáo viên / Trưởng bộ môn / Admin: thông tin + link khu quản lý + Đăng xuất.
  */
 export const UserMenu: React.FC<{ user: AppUser; onLogout: () => void; onDark?: boolean }> = ({ user, onLogout, onDark }) => {
@@ -121,24 +119,8 @@ export const UserMenu: React.FC<{ user: AppUser; onLogout: () => void; onDark?: 
 
           {isStudent ? (
             <>
-              {/* 2. Học tập */}
+              {/* 2. Luyện kỹ năng */}
               <div className="px-2 pt-4">
-                <SectionLabel>Học tập</SectionLabel>
-                {STUDY.map((it) => (
-                  <NavLink key={it.to} to={it.to} role="menuitem" className={rowCls}>
-                    {it.img && <img src={it.img} alt="" className="h-6 w-6 shrink-0" />}
-                    <span className="flex-1">{it.label}</span>
-                    {it.badge && (
-                      <Badge tone="violet" solid size="xs">
-                        {it.badge}
-                      </Badge>
-                    )}
-                  </NavLink>
-                ))}
-              </div>
-
-              {/* 3. Luyện kỹ năng */}
-              <div className="px-2 pt-3">
                 <SectionLabel>Luyện kỹ năng</SectionLabel>
                 <div className="grid grid-cols-3 gap-1.5 px-1">
                   {SKILLS.map((it) => (
@@ -155,7 +137,7 @@ export const UserMenu: React.FC<{ user: AppUser; onLogout: () => void; onDark?: 
                 </div>
               </div>
 
-              {/* 4. Cá nhân */}
+              {/* 3. Cá nhân */}
               <div className="px-2 pt-3">
                 <SectionLabel>Cá nhân</SectionLabel>
                 <div className="grid grid-cols-2 gap-x-1">

@@ -1,6 +1,6 @@
 import { ThreeBackground } from '@/shared/components/three/ThreeBackground';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { ArrowRight, Star, CheckCircle2, Play, Flame, Target, BookOpen, Users, FileText, AlertTriangle, RotateCcw, Compass, Headphones } from 'lucide-react';
 import { Button, Card, SectionTitle } from '@/shared/components/ui';
 import { Reveal, Stagger, CountUp, Doodles, TypeLoop, RevealPhoto } from '@/shared/components/motion';
@@ -9,6 +9,8 @@ import { HOME_STATS, HOME_EXAM_TRACKS, TESTIMONIALS, PRICING_PLANS, MOCK_COURSES
 import { useDocumentTitle, useGate, useInView } from '@/shared/hooks';
 import { formatCurrency, cn } from '@/shared/utils';
 import { useResolvedTheme } from '@/shared/stores/themeStore';
+import { useAuthStore } from '@/shared/stores/authStore';
+import { StudentDashboardPage } from '@/roles/student/pages/StudentDashboardPage';
 import { LoopConnector } from './home/LoopConnector';
 import { ExamTrackCard } from './home/ExamTrackCard';
 import { CourseTile } from './home/CourseTile';
@@ -131,6 +133,14 @@ export const HomePage: React.FC = () => {
   useDocumentTitle('Trang chủ');
   const gate = useGate();
   const isDark = useResolvedTheme() === 'dark';
+  const isStudent = useAuthStore((s) => s.isAuthenticated() && s.user?.role === 'STUDENT');
+  const { hash } = useLocation();
+  // Link "Vào học" (/#goc-hoc-tap): cuộn tới khối Góc học tập
+  useEffect(() => {
+    if (!hash) return;
+    const id = setTimeout(() => document.getElementById(hash.slice(1))?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 80);
+    return () => clearTimeout(id);
+  }, [hash]);
 
   // Trang chủ thiết kế cho nền tối: giữ bảng màu gốc ở chế độ tối (keep-palette), chế độ sáng dùng biến thể light:
   return (
@@ -175,8 +185,8 @@ export const HomePage: React.FC = () => {
             </p>
 
             <div className="flex flex-col sm:flex-row gap-3 animate-fade-up delay-200">
-              <Button to={gate('/onboarding/goal', '/try')} size="xl" variant="gradient" rightIcon={<ArrowRight className="w-5 h-5" />}>
-                Học thử miễn phí ngay
+              <Button to={isStudent ? '/#goc-hoc-tap' : gate('/onboarding/goal', '/try')} size="xl" variant="gradient" rightIcon={<ArrowRight className="w-5 h-5" />}>
+                {isStudent ? 'Vào góc học tập' : 'Học thử miễn phí ngay'}
               </Button>
               <Button to="/mock-tests" size="xl" variant="white" leftIcon={<Play className="w-5 h-5" />} className="!border-white/20 !bg-white/10 !text-white hover:!bg-white hover:!text-slate-900 light:!border-slate-300 light:!bg-white light:!text-slate-900 light:hover:!bg-slate-100">
                 Xem kho đề thi thử
@@ -245,6 +255,17 @@ export const HomePage: React.FC = () => {
           </div>
         </div>
       </section>
+
+      {/* ================= GÓC HỌC TẬP (thay trang Tổng quan; chỉ khi học viên đã đăng nhập) ================= */}
+      {/* theme-native: dùng lại bảng màu theo chế độ (trang chủ giữ bảng màu gốc), portal: thẻ viền mảnh như khu học viên */}
+      {isStudent && (
+        <section id="goc-hoc-tap" className="theme-native portal relative isolate scroll-mt-20">
+          <div aria-hidden className="night-divider" />
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14 md:py-20">
+            <StudentDashboardPage />
+          </div>
+        </section>
+      )}
 
       {/* ================= MARQUEE ================= */}
       <section className="relative isolate border-y border-white/10 bg-white/[0.02] light:border-slate-900/10 light:bg-white/50 py-5 space-y-3">

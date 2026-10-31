@@ -1,4 +1,4 @@
-import { LayoutDashboard, Compass, Layers, FileText, AlertTriangle, RotateCcw, BookOpen, GraduationCap, PlayCircle, Headphones, Target, TrendingUp, Bookmark, Trophy, Award, PenTool, Mic, Calculator, FolderOpen, Newspaper, Tag, Briefcase, Wrench, Database } from 'lucide-react';
+import { Home, Compass, Layers, FileText, AlertTriangle, RotateCcw, BookOpen, GraduationCap, PlayCircle, Headphones, Target, TrendingUp, Bookmark, Trophy, Award, PenTool, Mic, Calculator, FolderOpen, Newspaper, Tag, Briefcase, Wrench, Database } from 'lucide-react';
 import type React from 'react';
 import type { NavGroup } from './AppShell';
 
@@ -7,7 +7,7 @@ export const STUDENT_NAV: NavGroup[] = [
   {
     title: 'Học tập',
     items: [
-      { to: '/app/dashboard', label: 'Tổng quan', img: '/images/nav/bar-chart.webp', icon: LayoutDashboard },
+      { to: '/', label: 'Trang chủ', img: '/images/nav/bar-chart.webp', icon: Home, end: true },
       { to: '/app/learning-path', label: 'Lộ trình', img: '/images/nav/compass.webp', icon: Compass },
       { to: '/app/courses', label: 'Khoá học', img: '/images/nav/laptop.webp', icon: PlayCircle },
       { to: '/app/practice', label: 'Luyện tập', img: '/images/nav/pencil.webp', icon: Layers },
@@ -57,7 +57,17 @@ export interface MenuLink {
   badge?: string;
   /** Đường dẫn khi đã đăng nhập học viên (vd. /courses → /app/courses) */
   appTo?: string;
+  /** Tên nhóm hiển thị trong dropdown (mục đầu tiên của nhóm có nhãn nhỏ phía trên) */
+  group?: string;
 }
+
+/** Mục học tập cá nhân, hiện đầu menu Công cụ khi học viên đã đăng nhập */
+export const STUDENT_TOOLS: MenuLink[] = [
+  { to: '/app/learning-path', label: 'Lộ trình học', img: '/images/nav/compass.webp', desc: 'Lộ trình theo ngày thi của bạn', group: 'Học tập của bạn' },
+  { to: '/app/mistakes', label: 'Sổ tay lỗi sai', img: '/images/nav/spiral-notepad.webp', desc: 'Câu làm sai được lưu để làm lại', badge: '5', group: 'Học tập của bạn' },
+  { to: '/app/review', label: 'Lịch ôn ngắt quãng', img: '/images/nav/spiral-calendar.webp', desc: 'Ôn đúng lúc sắp quên', group: 'Học tập của bạn' },
+  { to: '/app/progress', label: 'Tiến độ & Phân tích', img: '/images/nav/chart-increasing.webp', desc: 'Điểm thi thử, % đúng từng Part', group: 'Học tập của bạn' },
+];
 
 export interface PublicNavItem {
   to?: string;

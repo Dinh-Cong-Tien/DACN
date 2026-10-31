@@ -50,7 +50,7 @@ export const TryPage: React.FC = () => {
             </ul>
             <div className="flex flex-wrap gap-3 pt-2">
               {isAuth ? (
-                <Button to="/app/dashboard" size="lg" variant="gradient" rightIcon={<ArrowRight className="w-4 h-4" />}>
+                <Button to="/" size="lg" variant="gradient" rightIcon={<ArrowRight className="w-4 h-4" />}>
                   Vào trang học của tôi
                 </Button>
               ) : (

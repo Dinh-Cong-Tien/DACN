@@ -18,7 +18,7 @@ interface Cmd {
 }
 
 const STUDENT: Cmd[] = [
-  { id: 'dash', label: 'Tổng quan', group: 'Điều hướng', to: '/app/dashboard', icon: LayoutDashboard },
+  { id: 'dash', label: 'Trang chủ', group: 'Điều hướng', to: '/', icon: LayoutDashboard },
   { id: 'path', label: 'Lộ trình của tôi', group: 'Điều hướng', to: '/app/learning-path', icon: Compass },
   { id: 'practice', label: 'Luyện tập kỹ năng', group: 'Điều hướng', to: '/app/practice', icon: PlayCircle },
   { id: 'mock', label: 'Thi thử TOEIC/VSTEP', group: 'Điều hướng', to: '/app/mock-tests', icon: FileText },

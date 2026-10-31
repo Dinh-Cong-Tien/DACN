@@ -36,7 +36,7 @@ export const OnboardingLayout: React.FC = () => {
                 Xin chào, {user.fullName.split(' ').slice(-1)[0]} 👋
               </span>
             )}
-            <Link to="/app/dashboard" className="p-2 rounded-xl border-2 border-slate-900 bg-white text-slate-700 shadow-hard-sm hover:-translate-y-0.5 transition" title="Bỏ qua, vào Dashboard">
+            <Link to="/" className="p-2 rounded-xl border-2 border-slate-900 bg-white text-slate-700 shadow-hard-sm hover:-translate-y-0.5 transition" title="Bỏ qua, vào Dashboard">
               <X className="w-4 h-4" />
             </Link>
           </div>

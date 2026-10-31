@@ -42,7 +42,7 @@ export const PlacementResultPage: React.FC = () => {
     completeOnboarding();
     updateUser({ target: { examType: state.examType, score: target, examDate: state.examDate || undefined } });
     toast.success('Lộ trình đã sẵn sàng!', 'Chúc bạn học tập hiệu quả cùng OrbiLingo.');
-    navigate('/app/dashboard');
+    navigate('/');
   };
 
   return (

@@ -1,8 +1,7 @@
-import { RouteObject } from 'react-router-dom';
+import { Navigate, RouteObject } from 'react-router-dom';
 import { AuthGuard } from '../guards/AuthGuard';
 import { RoleGuard } from '../guards/RoleGuard';
 import { StudentLayout } from '@/layouts/student/StudentLayout';
-import { StudentDashboardPage } from '@/roles/student/pages/StudentDashboardPage';
 import { StudentLearningPathPage } from '@/roles/student/pages/StudentLearningPathPage';
 import { StudentCoursesPage } from '@/roles/student/pages/StudentCoursesPage';
 import { StudentLessonPage } from '@/roles/student/pages/StudentLessonPage';
@@ -42,8 +41,9 @@ export const studentRoutes: RouteObject[] = [
             path: '/app',
             element: <StudentLayout />,
             children: [
-              { index: true, element: <StudentDashboardPage /> },
-              { path: 'dashboard', element: <StudentDashboardPage /> },
+              { index: true, element: <Navigate to="/" replace /> },
+              // Trang Tổng quan đã gộp vào trang chủ (khối "Góc học tập")
+              { path: 'dashboard', element: <Navigate to="/" replace /> },
               { path: 'learning-path', element: <StudentLearningPathPage /> },
               { path: 'courses', element: <StudentCoursesPage /> },
               { path: 'courses/:id', element: <StudentLessonPage /> },

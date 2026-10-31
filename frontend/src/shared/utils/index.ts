@@ -87,7 +87,7 @@ export const ROLE_LABEL: Record<string, string> = {
 };
 
 export const ROLE_HOME: Record<string, string> = {
-  STUDENT: '/app/dashboard',
+  STUDENT: '/',
   TEACHER: '/teacher/dashboard',
   HEAD_TEACHER: '/head/dashboard',
   ADMIN: '/admin/dashboard',
