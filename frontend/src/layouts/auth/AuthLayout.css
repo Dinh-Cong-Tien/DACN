@@ -1,13 +1,57 @@
-/* Trang tài khoản: ảnh thu nhẹ khi vào trang, thẻ nổi trồi lên, form xuất hiện lần lượt */
+/*
+ * Trang tài khoản.
+ * Đăng nhập: form trái | ảnh phải. Đăng ký: ảnh trái | form phải.
+ * Khi chuyển qua lại, khối ảnh trượt sang bên kia (thu nhẹ ở giữa đường) và form trượt ngược chiều bên dưới.
+ */
+:root {
+  --auth-ease: cubic-bezier(0.77, 0, 0.18, 1);
+  --auth-dur: 0.95s;
+}
+
+/* ===== Hai cột trượt đổi chỗ (chỉ từ lg, vị trí đặt bằng lg:translate-x-*) ===== */
+.auth-slide {
+  transition: transform var(--auth-dur) var(--auth-ease);
+  will-change: transform;
+}
+
+/* Khối ảnh co lại ở giữa hành trình rồi giãn ra; 2 tên keyframes luân phiên để mỗi lần chuyển đều chạy lại */
+.auth-panel--swap-a { animation: auth-squeeze-a var(--auth-dur) var(--auth-ease); }
+.auth-panel--swap-b { animation: auth-squeeze-b var(--auth-dur) var(--auth-ease); }
+
+/* Form mờ đi khi đang trượt (che lúc nội dung đổi), hiện lại khi tới nơi */
+.auth-form--swap-a { animation: auth-form-a var(--auth-dur) ease both; }
+.auth-form--swap-b { animation: auth-form-b var(--auth-dur) ease both; }
+
+/* ===== Ảnh và nội dung trên ảnh đổi bằng cross-fade ===== */
+/* Ảnh cũ tối dần về nền trước, ảnh mới hiện sau → không bị chồng hai ảnh lên nhau */
+.auth-photo {
+  opacity: 0;
+  transform: scale(1.06);
+  transition: opacity 0.35s ease, transform 0.35s ease;
+}
+.auth-photo.is-on {
+  opacity: 1;
+  transform: scale(1);
+  transition: opacity 0.6s ease 0.4s, transform 1.4s cubic-bezier(0.2, 0.7, 0.2, 1) 0.4s;
+}
+
+.auth-swap-item {
+  opacity: 0;
+  transform: translateY(12px);
+  pointer-events: none;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+.auth-swap-item.is-on {
+  opacity: 1;
+  transform: none;
+  pointer-events: auto;
+  transition: opacity 0.6s ease 0.55s, transform 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) 0.55s;
+}
+
+/* ===== Lần đầu vào trang ===== */
 .auth-visual__img {
   animation: auth-zoom 1.8s cubic-bezier(0.2, 0.7, 0.2, 1) both;
 }
-
-.auth-rise {
-  animation: auth-rise 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) both;
-}
-.auth-rise--1 { animation-delay: 0.35s; }
-.auth-rise--2 { animation-delay: 0.55s; }
 
 /* Từng khối con của form hiện lần lượt, cách nhau 60ms */
 .auth-stagger > * {
@@ -20,11 +64,36 @@
 .auth-stagger > :nth-child(6) { animation-delay: 0.3s; }
 .auth-stagger > :nth-child(7) { animation-delay: 0.36s; }
 
+/* Chrome tự điền: giữ nền trắng thay vì xanh nhạt, vẫn giữ viền sáng khi focus */
+.auth-form input:-webkit-autofill {
+  -webkit-box-shadow: 0 0 0 1000px #fff inset;
+  -webkit-text-fill-color: #0f172a;
+  caret-color: #0f172a;
+}
+.auth-form input:-webkit-autofill:focus {
+  -webkit-box-shadow: 0 0 0 1000px #fff inset, 0 0 0 3px rgb(17 138 114 / 0.15);
+}
+
+@keyframes auth-squeeze-a {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(0.93); }
+}
+@keyframes auth-squeeze-b {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(0.93); }
+}
+@keyframes auth-form-a {
+  0%, 45% { opacity: 0; }
+  100% { opacity: 1; }
+}
+@keyframes auth-form-b {
+  0%, 45% { opacity: 0; }
+  100% { opacity: 1; }
+}
 @keyframes auth-zoom {
   from { transform: scale(1.08); }
   to { transform: scale(1); }
 }
-
 @keyframes auth-rise {
   from { opacity: 0; transform: translateY(14px); }
   to { opacity: 1; transform: translateY(0); }
