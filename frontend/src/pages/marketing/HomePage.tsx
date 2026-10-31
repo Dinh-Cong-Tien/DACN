@@ -198,12 +198,20 @@ export const HomePage: React.FC = () => {
 
           {/* Ảnh người: cắt nền tối, đứng sát mép dưới, kèm thẻ nổi */}
           <div className="relative self-end hidden lg:flex justify-center h-[min(680px,calc(100vh-120px))]">
-            {/* Vòng tròn gradient phía sau người (như mẫu) */}
+            {/* Hệ quỹ đạo phía sau người: vòng ngoài nét đứt quay chậm, cung vàng quay, 2 vệ tinh chạy ngược chiều, đĩa gradient xoay màu + thở nhẹ */}
             <div aria-hidden className="absolute inset-x-0 bottom-0 flex items-end justify-center pointer-events-none">
-              <div className="relative w-[640px] h-[640px] -mb-[120px] flex items-center justify-center">
-                <div className="absolute w-[640px] h-[640px] rounded-full border border-white/5" />
-                <div className="absolute w-[540px] h-[540px] rounded-full border-2 border-white/10 animate-spin-slow [border-top-color:rgba(255,210,77,0.6)]" />
-                <div className="absolute w-[440px] h-[440px] rounded-full bg-gradient-to-br from-violet-500 via-fuchsia-500 to-amber-400 opacity-90 animate-float-slow" />
+              <div className="hero-orbits relative w-[640px] h-[640px] -mb-[120px] flex items-center justify-center">
+                <div className="hero-orbit hero-orbit--outer absolute w-[640px] h-[640px] rounded-full" />
+                <div className="hero-orbit hero-orbit--sat absolute w-[640px] h-[640px]">
+                  <span className="hero-orbit__dot" />
+                </div>
+                <div className="hero-orbit hero-orbit--arc absolute w-[540px] h-[540px] rounded-full" />
+                <div className="hero-orbit hero-orbit--sat-rev absolute w-[540px] h-[540px]">
+                  <span className="hero-orbit__dot hero-orbit__dot--coral" />
+                </div>
+                <div className="hero-disc absolute w-[440px] h-[440px]">
+                  <div className="hero-disc__fill w-full h-full rounded-full bg-gradient-to-br from-violet-500 via-fuchsia-500 to-amber-400" />
+                </div>
               </div>
             </div>
             <img
@@ -211,16 +219,21 @@ export const HomePage: React.FC = () => {
               alt="Học viên OrbiLingo"
               className="relative h-full w-auto object-contain object-bottom animate-fade-up delay-200 [filter:drop-shadow(0_20px_40px_rgba(0,0,0,0.45))_drop-shadow(0_0_24px_rgba(250,83,48,0.25))]"
             />
-            <div className="absolute -right-10 top-10 bg-amber-300 text-slate-900 rounded-2xl px-4 py-3 shadow-card animate-fade-up delay-700 tilt-2 flex items-center gap-2">
-              <Flame className="w-6 h-6 text-violet-600 fill-violet-500" />
-              <div>
-                <p className="font-display text-xl font-extrabold leading-none">61 ngày</p>
-                <p className="text-[10px] font-bold text-slate-700">streak của Long</p>
+            {/* Thẻ nổi: lớp ngoài bồng bềnh lên xuống, lớp trong giữ hiệu ứng hiện ra + độ nghiêng */}
+            <div className="hero-bob absolute -right-10 top-10">
+              <div className="bg-amber-300 text-slate-900 rounded-2xl px-4 py-3 shadow-card animate-fade-up delay-700 tilt-2 flex items-center gap-2">
+                <Flame className="hero-flame w-6 h-6 text-violet-600 fill-violet-500" />
+                <div>
+                  <p className="font-display text-xl font-extrabold leading-none">61 ngày</p>
+                  <p className="text-[10px] font-bold text-slate-700">streak của Long</p>
+                </div>
               </div>
             </div>
-            <div className="absolute -left-8 bottom-8 bg-indigo-600 text-white rounded-2xl px-4 py-3 shadow-card animate-fade-up delay-700 tilt-3">
-              <p className="text-[10px] font-extrabold uppercase tracking-wider text-indigo-100">Part 5 hôm nay</p>
-              <p className="font-display text-2xl font-extrabold">28/30</p>
+            <div className="hero-bob hero-bob--late absolute -left-8 bottom-8">
+              <div className="bg-indigo-600 text-white rounded-2xl px-4 py-3 shadow-card animate-fade-up delay-700 tilt-3">
+                <p className="text-[10px] font-extrabold uppercase tracking-wider text-indigo-100">Part 5 hôm nay</p>
+                <p className="font-display text-2xl font-extrabold">28/30</p>
+              </div>
             </div>
           </div>
         </div>

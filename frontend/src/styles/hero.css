@@ -43,3 +43,96 @@
   background: linear-gradient(180deg, #ffd24d, #ff4f8b);
   box-shadow: 0 0 0.25em rgba(255, 110, 120, 0.7);
 }
+
+/* ===== Hệ quỹ đạo sau ảnh người ở hero ===== */
+.hero-orbit--outer {
+  border: 1px dashed rgba(255, 255, 255, 0.12);
+  animation: hero-spin 90s linear infinite;
+}
+.hero-orbit--arc {
+  border: 2px solid rgba(255, 255, 255, 0.08);
+  border-top-color: rgba(255, 210, 77, 0.75);
+  border-right-color: rgba(255, 210, 77, 0.25);
+  animation: hero-spin 16s linear infinite;
+}
+/* Vệ tinh: khung vuông xoay, chấm sáng nằm ở mép trên */
+.hero-orbit--sat {
+  animation: hero-spin 22s linear infinite;
+}
+.hero-orbit--sat-rev {
+  animation: hero-spin 30s linear infinite reverse;
+}
+.hero-orbit__dot {
+  position: absolute;
+  top: -5px;
+  left: 50%;
+  width: 10px;
+  height: 10px;
+  margin-left: -5px;
+  border-radius: 9999px;
+  background: #ffd24d;
+  box-shadow: 0 0 0 4px rgba(255, 210, 77, 0.15), 0 0 16px rgba(255, 210, 77, 0.6);
+}
+.hero-orbit__dot--coral {
+  width: 8px;
+  height: 8px;
+  top: -4px;
+  margin-left: -4px;
+  background: #ff7352;
+  box-shadow: 0 0 0 3px rgba(255, 115, 82, 0.15), 0 0 14px rgba(255, 115, 82, 0.6);
+}
+/* Đĩa gradient: thở nhẹ (lớp ngoài) + màu xoay vòng chậm (lớp trong) */
+.hero-disc {
+  animation: hero-breathe 9s ease-in-out infinite;
+}
+.hero-disc__fill {
+  opacity: 0.9;
+  animation: hero-spin 24s linear infinite;
+}
+/* Thẻ nổi bồng bềnh, hai thẻ lệch nhịp */
+.hero-bob {
+  animation: hero-bob 6s ease-in-out infinite;
+}
+.hero-bob--late {
+  animation-duration: 7s;
+  animation-delay: -3s;
+}
+.hero-flame {
+  transform-origin: 50% 90%;
+  animation: hero-flicker 1.6s ease-in-out infinite;
+}
+@keyframes hero-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes hero-breathe {
+  0%,
+  100% {
+    transform: translateY(0) scale(1);
+  }
+  50% {
+    transform: translateY(-10px) scale(1.03);
+  }
+}
+@keyframes hero-bob {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-12px);
+  }
+}
+@keyframes hero-flicker {
+  0%,
+  100% {
+    transform: scale(1) rotate(0);
+  }
+  30% {
+    transform: scale(1.08, 0.95) rotate(-3deg);
+  }
+  60% {
+    transform: scale(0.96, 1.06) rotate(2deg);
+  }
+}

@@ -15,6 +15,15 @@
     animation-duration: 7s !important;
     animation-iteration-count: infinite !important;
   }
+  /* Hoạ tiết quỹ đạo, đĩa màu, thẻ nổi ở hero là trang trí chuyển động rất chậm: giữ lại nhưng chậm gấp đôi */
+  .hero-orbit--outer { animation-duration: 180s !important; animation-iteration-count: infinite !important; }
+  .hero-orbit--arc { animation-duration: 32s !important; animation-iteration-count: infinite !important; }
+  .hero-orbit--sat { animation-duration: 44s !important; animation-iteration-count: infinite !important; }
+  .hero-orbit--sat-rev { animation-duration: 60s !important; animation-iteration-count: infinite !important; }
+  .hero-disc { animation-duration: 18s !important; animation-iteration-count: infinite !important; }
+  .hero-disc__fill { animation-duration: 48s !important; animation-iteration-count: infinite !important; }
+  .hero-bob { animation-duration: 12s !important; animation-iteration-count: infinite !important; }
+  .hero-flame { animation-duration: 3s !important; animation-iteration-count: infinite !important; }
   /* Con trỏ gõ chữ ở hero vẫn nhấp nháy bình thường */
   .type-caret-blink {
     animation-duration: 1s !important;

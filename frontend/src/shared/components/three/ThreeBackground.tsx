@@ -20,7 +20,7 @@ const PALETTE = {
 
 /**
  * Nền 3D bằng Three.js, tải lười (dynamic import) để không làm nặng bundle đầu.
- * Tự dừng khi cuộn khuất, dpr tối đa 1.5, tôn trọng prefers-reduced-motion (chỉ render 1 khung tĩnh).
+ * Tự dừng khi cuộn khuất, dpr tối đa 1.5. Khi máy bật giảm chuyển động: vẫn chuyển động nhưng chậm hơn và tắt parallax theo chuột.
  */
 export const ThreeBackground: React.FC<ThreeBackgroundProps> = ({ variant = 'globe', dark, className, interactive = true, offsetX = 0.55 }) => {
   const ref = useRef<HTMLDivElement>(null);
@@ -35,6 +35,7 @@ export const ThreeBackground: React.FC<ThreeBackgroundProps> = ({ variant = 'glo
       if (disposed || !host) return;
       const colors = dark ? PALETTE.dark : PALETTE.light;
       const reduced = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+      const speed = reduced ? 0.45 : 1;
 
       const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true, powerPreference: 'low-power' });
       renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
@@ -51,7 +52,8 @@ export const ThreeBackground: React.FC<ThreeBackgroundProps> = ({ variant = 'glo
       const disposables: { dispose: () => void }[] = [];
 
       // ===== Biến thể GLOBE =====
-      const satellites: { mesh: import('three').Mesh; radius: number; speed: number; phase: number; tilt: import('three').Euler }[] = [];
+      const satellites: { mesh: import('three').Mesh; ring: import('three').Mesh; radius: number; speed: number; phase: number; tilt: import('three').Euler }[] = [];
+      let sphere: import('three').Points | null = null;
       if (variant === 'globe') {
         const N = 1600;
         const pos = new Float32Array(N * 3);
@@ -69,6 +71,7 @@ export const ThreeBackground: React.FC<ThreeBackgroundProps> = ({ variant = 'glo
         const mat = new THREE.PointsMaterial({ color: colors.points, size: 0.035, transparent: true, opacity: 0.85, sizeAttenuation: true });
         const points = new THREE.Points(geo, mat);
         root.add(points);
+        sphere = points;
         disposables.push(geo, mat);
 
         const rings = [
@@ -88,7 +91,7 @@ export const ThreeBackground: React.FC<ThreeBackgroundProps> = ({ variant = 'glo
           const sat = new THREE.Mesh(sg, sm);
           root.add(sat);
           disposables.push(sg, sm);
-          satellites.push({ mesh: sat, radius: rg.r, speed: rg.speed, phase: Math.random() * Math.PI * 2, tilt: rg.tilt });
+          satellites.push({ mesh: sat, ring: mesh, radius: rg.r, speed: rg.speed, phase: Math.random() * Math.PI * 2, tilt: rg.tilt });
         });
         root.position.x = offsetX * 4;
         root.rotation.z = -0.15;
@@ -152,31 +155,36 @@ export const ThreeBackground: React.FC<ThreeBackgroundProps> = ({ variant = 'glo
       const tick = () => {
         raf = requestAnimationFrame(tick);
         if (!visible) return;
-        const t = clock.getElapsedTime();
-        root.rotation.y += 0.0022;
+        const t = clock.getElapsedTime() * speed;
+        root.rotation.y += 0.0022 * speed;
         root.rotation.x += (target.y * 0.25 - root.rotation.x) * 0.03;
         root.position.y += (-target.y * 0.3 - root.position.y) * 0.03;
         if (variant === 'globe') root.position.x += (offsetX * 4 + target.x * 0.4 - root.position.x) * 0.03;
-        satellites.forEach((s) => {
-          const a = t * s.speed + s.phase;
+        // Vành quỹ đạo chao nhẹ quanh trục, vệ tinh bám theo vành; quả cầu điểm tự quay chậm hơn
+        satellites.forEach((s, i) => {
+          s.ring.rotation.set(s.tilt.x + Math.sin(t * 0.25 + i * 2) * 0.12, s.tilt.y + Math.cos(t * 0.2 + i) * 0.1, s.tilt.z);
+          const a = t * s.speed * 1.6 + s.phase;
           const v = new THREE.Vector3(Math.cos(a) * s.radius, Math.sin(a) * s.radius, 0);
-          v.applyEuler(s.tilt);
+          v.applyEuler(s.ring.rotation);
           s.mesh.position.copy(v);
+          s.mesh.scale.setScalar(1 + Math.sin(t * 2 + i) * 0.25);
         });
+        if (sphere) sphere.rotation.y -= 0.0012 * speed;
         if (pGeo) {
           const arr = pGeo.attributes.position.array as Float32Array;
           for (let i = 0; i < arr.length; i += 3) arr[i + 1] += Math.sin(t * 0.6 + i) * 0.0012;
           pGeo.attributes.position.needsUpdate = true;
         }
+        // Khối wireframe: tự xoay, bồng bềnh và "thở" nhẹ
         wires.forEach((w, i) => {
-          w.rotation.x += 0.003 + i * 0.001;
-          w.rotation.y += 0.004;
-          w.position.y += Math.sin(t * 0.8 + i) * 0.002;
+          w.rotation.x += (0.003 + i * 0.001) * speed;
+          w.rotation.y += 0.004 * speed;
+          w.position.y += Math.sin(t * 0.8 + i) * 0.002 * speed;
+          w.scale.setScalar(1 + Math.sin(t * 0.6 + i * 1.7) * 0.06);
         });
         renderer.render(scene, camera);
       };
-      if (reduced) renderer.render(scene, camera);
-      else tick();
+      tick();
 
       cleanup = () => {
         cancelAnimationFrame(raf);
