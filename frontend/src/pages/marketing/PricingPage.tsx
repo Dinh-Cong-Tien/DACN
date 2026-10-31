@@ -37,7 +37,7 @@ export const PricingPage: React.FC = () => {
   const faqs = FAQS.filter((f) => f.category === 'Thanh toán' || f.id === 'f-2');
 
   return (
-    <div className="bg-white">
+    <div className="bg-page">
       <PageHeader
         crumbs={[{ label: 'Trang chủ', to: '/' }, { label: 'Bảng giá' }]}
         title="Bảng giá"
@@ -119,7 +119,7 @@ export const PricingPage: React.FC = () => {
               {COMPARE.map(([group, name, a, b, c], i) => (
                 <React.Fragment key={name}>
                   {(i === 0 || COMPARE[i - 1][0] !== group) && (
-                    <tr className="bg-[#F6F7F9]">
+                    <tr className="bg-slate-100/60">
                       <td colSpan={4} className="px-5 py-2 text-[12px] font-medium uppercase tracking-wide text-slate-500">
                         {group}
                       </td>

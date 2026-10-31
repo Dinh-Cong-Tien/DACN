@@ -27,7 +27,7 @@ export const ResourcesPage: React.FC = () => {
   const total = RESOURCES.reduce((a, r) => a + r.downloads, 0);
 
   return (
-    <div className="bg-white">
+    <div className="bg-page">
       <PageHeader
         crumbs={[{ label: 'Trang chủ', to: '/' }, { label: 'Công cụ' }, { label: 'Kho tài liệu' }]}
         title="Kho tài liệu ôn thi"
@@ -79,7 +79,7 @@ export const ResourcesPage: React.FC = () => {
                 {list.map((r) => {
                   const t = TYPE_TAG[r.type];
                   return (
-                    <li key={r.id} className="flex items-start gap-4 px-4 py-4 hover:bg-[#FAFBFC] sm:px-5">
+                    <li key={r.id} className="flex items-start gap-4 px-4 py-4 hover:bg-slate-50 sm:px-5">
                       <span className={cn('mt-0.5 flex h-11 w-9 shrink-0 items-end justify-center rounded-md border pb-1 text-[10px] font-semibold', t.cls)}>{t.label}</span>
                       <div className="min-w-0 flex-1">
                         <p className="font-medium text-slate-900">{r.title}</p>

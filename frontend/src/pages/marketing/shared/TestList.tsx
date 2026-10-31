@@ -14,7 +14,7 @@ export const TestList: React.FC<{ tests: MockTestSummary[] }> = ({ tests }) => {
   return (
     <div className="overflow-hidden rounded-xl border border-slate-200 bg-white">
       <table className="w-full text-sm">
-        <thead className="hidden md:table-header-group bg-[#F6F7F9] text-left text-[13px] text-slate-500">
+        <thead className="hidden md:table-header-group bg-slate-100/60 text-left text-[13px] text-slate-500">
           <tr>
             <th className="px-5 py-3 font-medium">Đề thi</th>
             <th className="px-4 py-3 font-medium">Phần thi</th>
@@ -26,7 +26,7 @@ export const TestList: React.FC<{ tests: MockTestSummary[] }> = ({ tests }) => {
         </thead>
         <tbody className="divide-y divide-slate-200">
           {tests.map((t) => (
-            <tr key={t.id} className="group hover:bg-[#FAFBFC]">
+            <tr key={t.id} className="group hover:bg-slate-50">
               <td className="px-5 py-4">
                 <Link to={gate(`/app/mock-tests/${t.id}`)} className="font-medium text-slate-900 group-hover:text-indigo-700">
                   {t.title}

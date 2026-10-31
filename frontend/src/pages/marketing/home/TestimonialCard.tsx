@@ -7,7 +7,7 @@ import './TestimonialCard.css';
 
 // indigo/violet đã được đổi sang teal/coral trong tailwind.config
 const DOME = { TOEIC: 'from-indigo-400 to-indigo-600', VSTEP: 'from-violet-400 to-violet-600' } as const;
-const LABEL = { TOEIC: 'text-indigo-300', VSTEP: 'text-violet-300' } as const;
+const LABEL = { TOEIC: 'text-indigo-300 light:text-indigo-700', VSTEP: 'text-violet-300 light:text-violet-600' } as const;
 
 /** Thẻ vinh danh học viên: ảnh người tách nền đứng trước khối màu nửa bầu dục, điểm lớn + bài thi + tên, 3 chỉ số bên dưới */
 export const TestimonialCard: React.FC<{ item: Testimonial }> = ({ item: t }) => {
@@ -27,13 +27,13 @@ export const TestimonialCard: React.FC<{ item: Testimonial }> = ({ item: t }) =>
         {/* điểm dạng số thì đếm tăng dần khi cuộn tới */}
         <p className="font-display text-6xl md:text-7xl font-extrabold leading-none tracking-tight text-amber-400 tabular-nums">{/^\d+$/.test(t.after) ? <CountUp value={Number(t.after)} duration={1400} format={String} /> : t.after}</p>
         <p className={cn('mt-2 text-sm font-semibold', LABEL[t.exam])}>{t.test}</p>
-        <p className="mt-3 font-display text-xl font-bold text-white">{t.name}</p>
-        <p className="text-sm text-slate-400">{t.role}</p>
-        <dl className="mt-5 grid grid-cols-3 divide-x divide-white/10 rounded-xl border border-white/10 bg-white/[0.03] py-3">
+        <p className="mt-3 font-display text-xl font-bold text-white light:text-slate-900">{t.name}</p>
+        <p className="text-sm text-slate-400 light:text-slate-500">{t.role}</p>
+        <dl className="mt-5 grid grid-cols-3 divide-x divide-white/10 rounded-xl border border-white/10 bg-white/[0.03] light:divide-slate-200 light:border-slate-200 light:bg-white py-3">
           {stats.map((s) => (
             <div key={s.label} className="px-2">
               <dt className="text-[11px] text-slate-500">{s.label}</dt>
-              <dd className="mt-0.5 text-sm font-semibold text-slate-100 tabular-nums">{s.value}</dd>
+              <dd className="mt-0.5 text-sm font-semibold text-slate-100 light:text-slate-800 tabular-nums">{s.value}</dd>
             </div>
           ))}
         </dl>

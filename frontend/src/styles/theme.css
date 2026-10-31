@@ -1,0 +1,179 @@
+/*
+ * Chế độ màu sáng / tối (themeStore gắn class `dark` lên <html>).
+ *
+ * - Thang slate + cream + nền thẻ (bg-white) là biến CSS → chế độ tối đảo thang màu, mọi trang tự đổi theo
+ *   mà không phải thêm `dark:` cho từng class.
+ * - Khối vốn thiết kế nền tối (trang chủ, footer, banner bg-slate-800/900/950) và khối nền màu pastel
+ *   (nhãn vàng, xanh…) giữ bảng màu gốc để chữ bên trong vẫn đúng tương phản.
+ * - Trang chủ ở chế độ sáng dùng biến thể `light:` (tailwind.config) + các quy tắc html:not(.dark) trong night-theme/hero.css.
+ */
+:root {
+  --slate-50: 250 247 241;
+  --slate-100: 243 238 229;
+  --slate-200: 230 223 211;
+  --slate-300: 209 200 185;
+  --slate-400: 158 149 134;
+  --slate-500: 113 106 94;
+  --slate-600: 81 76 68;
+  --slate-700: 58 55 51;
+  --slate-800: 36 42 56;
+  --slate-900: 20 26 43;
+  --slate-950: 11 15 28;
+  --cream: 250 247 241;
+  --surface: 255 255 255;
+  --line-strong: rgb(20 26 43);
+}
+
+.dark {
+  color-scheme: dark;
+  --slate-50: 14 19 33;
+  --slate-100: 22 28 45;
+  --slate-200: 38 45 63;
+  --slate-300: 54 62 82;
+  --slate-400: 111 118 139;
+  --slate-500: 143 150 168;
+  --slate-600: 170 176 191;
+  --slate-700: 198 203 214;
+  --slate-800: 222 225 232;
+  --slate-900: 239 241 245;
+  --slate-950: 248 249 251;
+  --cream: 11 15 28;
+  --surface: 18 24 38;
+  --line-strong: rgb(255 255 255 / 0.14);
+}
+
+/* Giữ bảng màu gốc cho khối thiết kế sẵn nền tối và khối nền pastel */
+.dark .keep-palette,
+.dark .bg-slate-800,
+.dark .bg-slate-900,
+.dark .bg-slate-950,
+.dark [class~="bg-indigo-50"],
+.dark [class~="bg-indigo-100"],
+.dark [class~="bg-indigo-200"],
+.dark [class~="bg-indigo-300"],
+.dark [class~="bg-violet-50"],
+.dark [class~="bg-violet-100"],
+.dark [class~="bg-violet-200"],
+.dark [class~="bg-violet-300"],
+.dark [class~="bg-amber-50"],
+.dark [class~="bg-amber-100"],
+.dark [class~="bg-amber-200"],
+.dark [class~="bg-amber-300"],
+.dark [class~="bg-emerald-50"],
+.dark [class~="bg-emerald-100"],
+.dark [class~="bg-emerald-200"],
+.dark [class~="bg-emerald-300"],
+.dark [class~="bg-rose-50"],
+.dark [class~="bg-rose-100"],
+.dark [class~="bg-rose-200"],
+.dark [class~="bg-rose-300"],
+.dark [class~="bg-sky-50"],
+.dark [class~="bg-sky-100"],
+.dark [class~="bg-sky-200"],
+.dark [class~="bg-sky-300"],
+.dark [class~="bg-teal-50"],
+.dark [class~="bg-teal-100"],
+.dark [class~="bg-teal-200"],
+.dark [class~="bg-teal-300"],
+.dark [class~="bg-orange-50"],
+.dark [class~="bg-orange-100"],
+.dark [class~="bg-orange-200"],
+.dark [class~="bg-orange-300"],
+.dark [class~="bg-fuchsia-50"],
+.dark [class~="bg-fuchsia-100"],
+.dark [class~="bg-fuchsia-200"],
+.dark [class~="bg-fuchsia-300"],
+.dark [class~="bg-lime-50"],
+.dark [class~="bg-lime-100"],
+.dark [class~="bg-lime-200"],
+.dark [class~="bg-lime-300"],
+.dark [class~="bg-yellow-50"],
+.dark [class~="bg-yellow-100"],
+.dark [class~="bg-yellow-200"],
+.dark [class~="bg-yellow-300"],
+.dark [class~="bg-red-50"],
+.dark [class~="bg-red-100"],
+.dark [class~="bg-red-200"],
+.dark [class~="bg-red-300"],
+.dark [class~="bg-green-50"],
+.dark [class~="bg-green-100"],
+.dark [class~="bg-green-200"],
+.dark [class~="bg-green-300"],
+.dark [class~="bg-blue-50"],
+.dark [class~="bg-blue-100"],
+.dark [class~="bg-blue-200"],
+.dark [class~="bg-blue-300"],
+.dark [class~="bg-purple-50"],
+.dark [class~="bg-purple-100"],
+.dark [class~="bg-purple-200"],
+.dark [class~="bg-purple-300"],
+.dark [class~="bg-pink-50"],
+.dark [class~="bg-pink-100"],
+.dark [class~="bg-pink-200"],
+.dark [class~="bg-pink-300"],
+.dark [class~="bg-cyan-50"],
+.dark [class~="bg-cyan-100"],
+.dark [class~="bg-cyan-200"],
+.dark [class~="bg-cyan-300"],
+.dark [class~="bg-lavender-50"],
+.dark [class~="bg-lavender-100"],
+.dark [class~="bg-lavender-200"],
+.dark [class~="bg-lavender-300"],
+.dark [class~="bg-amber-400"],
+.dark [class~="bg-white"].keep-white {
+  --slate-50: 250 247 241;
+  --slate-100: 243 238 229;
+  --slate-200: 230 223 211;
+  --slate-300: 209 200 185;
+  --slate-400: 158 149 134;
+  --slate-500: 113 106 94;
+  --slate-600: 81 76 68;
+  --slate-700: 58 55 51;
+  --slate-800: 36 42 56;
+  --slate-900: 20 26 43;
+  --slate-950: 11 15 28;
+  --cream: 250 247 241;
+  --surface: 255 255 255;
+  --line-strong: rgb(20 26 43);
+}
+
+/* ===== Nền trang ===== */
+.bg-page { background-color: #fff; }
+.dark .bg-page { background-color: transparent; }
+
+/* Nền đêm giống trang chủ cho mọi trang khi ở chế độ tối */
+.dark body {
+  background-color: #0b0f1c;
+  background-image:
+    radial-gradient(1100px 520px at 12% -120px, rgba(124, 58, 237, 0.16), transparent 70%),
+    radial-gradient(900px 480px at 92% 8%, rgba(17, 138, 114, 0.14), transparent 70%),
+    radial-gradient(1000px 600px at 50% 110%, rgba(250, 83, 48, 0.08), transparent 70%),
+    linear-gradient(180deg, #0b0f1c 0%, #110f24 35%, #0c1322 70%, #0e0f22 100%);
+  background-attachment: fixed;
+}
+.dark .bg-paper {
+  background-color: transparent;
+  background-image: radial-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+}
+
+/* ===== Bề mặt thẻ / ô nhập: trắng ở chế độ sáng, xám đêm ở chế độ tối ===== */
+.dark .bg-white { background-color: rgb(var(--surface) / var(--tw-bg-opacity, 1)); }
+.dark .bg-white\/95 { background-color: rgb(var(--surface) / 0.95); }
+.dark .bg-white\/90 { background-color: rgb(var(--surface) / 0.9); }
+.dark .bg-white\/80 { background-color: rgb(var(--surface) / 0.8); }
+.dark .hover\:bg-white:hover { background-color: rgb(var(--surface)); }
+
+/* Viền đậm kiểu cũ (border-slate-900) nếu đảo màu sẽ thành viền trắng chói → đổi thành viền mảnh sáng mờ */
+.dark .border-slate-900 { border-color: var(--line-strong); }
+.dark .shadow-hard, .dark .shadow-hard-sm, .dark .shadow-hard-lg { --tw-shadow-color: rgba(0, 0, 0, 0.6); }
+
+/* Chữ nhấn trên nền tối của chế độ tối: link/nhãn màu teal đậm khó đọc → sáng hơn một bậc */
+.dark .text-indigo-700 { color: #3cbe9b; }
+.dark .text-indigo-800 { color: #73d6b9; }
+.dark .hover\:text-indigo-700:hover, .dark .hover\:text-indigo-800:hover { color: #73d6b9; }
+.dark .keep-palette .text-indigo-700 { color: #0e6f5d; }
+
+/* Dải dạ quang dưới chữ: ở chế độ tối dùng màu trong mờ để chữ sáng vẫn đọc rõ */
+.dark .mark { background: linear-gradient(transparent 62%, rgba(255, 210, 77, 0.38) 62%, rgba(255, 210, 77, 0.38) 92%, transparent 92%); }
+.dark .mark-coral { background-image: linear-gradient(transparent 62%, rgba(250, 83, 48, 0.4) 62%, rgba(250, 83, 48, 0.4) 92%, transparent 92%); }
+.dark .mark-teal { background-image: linear-gradient(transparent 62%, rgba(17, 138, 114, 0.5) 62%, rgba(17, 138, 114, 0.5) 92%, transparent 92%); }

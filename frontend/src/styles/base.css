@@ -20,7 +20,7 @@
   }
   * {
     scrollbar-width: thin;
-    scrollbar-color: rgb(209 200 185) transparent;
+    scrollbar-color: rgb(var(--slate-300)) transparent;
   }
   *::-webkit-scrollbar {
     width: 8px;

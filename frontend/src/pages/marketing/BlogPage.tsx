@@ -22,7 +22,7 @@ export const BlogPage: React.FC = () => {
   const [email, setEmail] = useState('');
 
   return (
-    <div className="bg-white">
+    <div className="bg-page">
       {/* Đầu trang kiểu chuyên mục báo: tên chuyên mục + thanh chủ đề */}
       <header className="border-b border-slate-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-10">

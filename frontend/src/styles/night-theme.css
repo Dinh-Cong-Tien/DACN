@@ -94,3 +94,30 @@
   50% { opacity: 0.85; }
 }
 .animate-twinkle { animation: twinkle 4.5s ease-in-out infinite; }
+
+/* ===== Trang chủ ở chế độ sáng: cùng bố cục, đổi nền đêm thành nền kem có quầng màu nhạt ===== */
+html:not(.dark) .night-bg {
+  background-color: #faf7f1;
+  background-image: linear-gradient(180deg, #fbf8f3 0%, #f7f2fb 16%, #f3f8f5 34%, #fbf3ee 52%, #f4f6fb 70%, #f8f2f8 86%, #faf7f1 100%);
+}
+html:not(.dark) .night-bg .rounded-full[class*='blur-['] {
+  opacity: 0.45;
+}
+html:not(.dark) .glass-night {
+  background: rgba(255, 255, 255, 0.75);
+  border-color: rgba(20, 26, 43, 0.08);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.8) inset, 0 30px 60px -34px rgba(20, 26, 43, 0.3);
+}
+html:not(.dark) .night-photo {
+  border-color: rgba(20, 26, 43, 0.08);
+  box-shadow: 0 30px 60px -30px rgba(20, 26, 43, 0.35), 0 0 0 6px rgba(20, 26, 43, 0.03);
+}
+html:not(.dark) .night-grid {
+  background-image: linear-gradient(rgba(20, 26, 43, 0.06) 1px, transparent 1px), linear-gradient(90deg, rgba(20, 26, 43, 0.06) 1px, transparent 1px);
+}
+html:not(.dark) .night-divider {
+  background: linear-gradient(90deg, transparent, rgba(20, 26, 43, 0.12), rgba(250, 83, 48, 0.45), rgba(194, 107, 255, 0.4), rgba(20, 26, 43, 0.12), transparent);
+}
+html:not(.dark) .aurora {
+  opacity: 0.22;
+}

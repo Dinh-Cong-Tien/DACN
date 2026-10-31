@@ -63,7 +63,7 @@ export const CoursesPage: React.FC = () => {
   const totalStudents = MOCK_COURSES.reduce((a, c) => a + c.studentsCount, 0);
 
   return (
-    <div className="bg-white">
+    <div className="bg-page">
       <PageHeader
         crumbs={[{ label: 'Trang chủ', to: '/' }, { label: 'Khoá học' }]}
         title="Khoá học TOEIC và VSTEP"

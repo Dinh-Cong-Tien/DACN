@@ -136,3 +136,13 @@
     transform: scale(0.96, 1.06) rotate(2deg);
   }
 }
+
+/* Chế độ sáng: vòng quỹ đạo nét tối, cung vàng đậm hơn để thấy trên nền kem */
+html:not(.dark) .hero-orbit--outer {
+  border-color: rgba(20, 26, 43, 0.16);
+}
+html:not(.dark) .hero-orbit--arc {
+  border-color: rgba(20, 26, 43, 0.08);
+  border-top-color: rgba(212, 143, 0, 0.85);
+  border-right-color: rgba(212, 143, 0, 0.3);
+}

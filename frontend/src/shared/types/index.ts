@@ -7,6 +7,10 @@ import type { ExamType, IQuestion, ReviewStatus, SkillType } from '@toeic-vstep/
 export type { ExamType, IQuestion, ReviewStatus, SkillType };
 
 export type AppRole = 'GUEST' | 'STUDENT' | 'TEACHER' | 'HEAD_TEACHER' | 'ADMIN';
+
+/** Chế độ màu giao diện: sáng, tối hoặc theo cài đặt hệ điều hành */
+export type ThemeMode = 'light' | 'dark' | 'system';
+export type ResolvedTheme = 'light' | 'dark';
 export type UserStatus = 'ACTIVE' | 'LOCKED' | 'PENDING';
 export type PlanType = 'FREE' | 'VIP';
 

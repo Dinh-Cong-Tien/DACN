@@ -29,7 +29,7 @@ export const MockTestsPage: React.FC = () => {
   );
 
   return (
-    <div className="bg-white">
+    <div className="bg-page">
       <PageHeader
         crumbs={[{ label: 'Trang chủ', to: '/' }, { label: 'Đề thi thử' }]}
         title="Đề thi thử TOEIC và VSTEP"

@@ -54,7 +54,7 @@ export const ScoreConverterPage: React.FC = () => {
   const row = useMemo(() => findRow(source, value), [source, value]);
 
   return (
-    <div className="bg-white">
+    <div className="bg-page">
       <PageHeader
         crumbs={[{ label: 'Trang chủ', to: '/' }, { label: 'Công cụ' }, { label: 'Quy đổi điểm' }]}
         title="Quy đổi điểm TOEIC, VSTEP, IELTS, CEFR"

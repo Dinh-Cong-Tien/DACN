@@ -7,24 +7,24 @@ import { cn } from '@/shared/utils';
 import type { ExamTrack } from '@/shared/types';
 
 // indigo/violet đã được đổi sang teal/coral trong tailwind.config
-const LINK = { toeic: 'text-indigo-300 hover:text-indigo-200', vstep: 'text-violet-300 hover:text-violet-200' } as const;
+const LINK = { toeic: 'text-indigo-300 hover:text-indigo-200 light:text-indigo-700 light:hover:text-indigo-800', vstep: 'text-violet-300 hover:text-violet-200 light:text-violet-600 light:hover:text-violet-700' } as const;
 
 /** Thẻ giới thiệu một kỳ thi: ảnh, mô tả ngắn, bảng thông tin thực tế (dữ liệu từ HOME_EXAM_TRACKS) */
 export const ExamTrackCard: React.FC<{ track: ExamTrack }> = ({ track: t }) => (
-  <article className="group h-full flex flex-col overflow-hidden rounded-2xl border border-white/10 bg-slate-900">
+  <article className="group h-full flex flex-col overflow-hidden rounded-2xl border border-white/10 bg-slate-900 light:border-slate-200 light:bg-white">
     <div className="overflow-hidden">
       <RevealPhoto direction={t.id === 'toeic' ? 'left' : 'right'} parallax>
         <Img src={t.photo} alt={t.photoAlt} ratio="video" fallbackClass="bg-slate-800" className="transition-transform duration-700 ease-out group-hover:scale-[1.03]" />
       </RevealPhoto>
     </div>
     <div className="flex-1 flex flex-col p-6 md:p-8">
-      <h3 className="font-display text-2xl md:text-[1.75rem] font-bold text-white">{t.name}</h3>
-      <p className="mt-2 text-slate-400 leading-relaxed">{t.desc}</p>
-      <dl className="mt-6 divide-y divide-white/10 border-y border-white/10 text-sm">
+      <h3 className="font-display text-2xl md:text-[1.75rem] font-bold text-white light:text-slate-900">{t.name}</h3>
+      <p className="mt-2 text-slate-400 light:text-slate-600 leading-relaxed">{t.desc}</p>
+      <dl className="mt-6 divide-y divide-white/10 border-y border-white/10 light:divide-slate-200 light:border-slate-200 text-sm">
         {t.facts.map((f) => (
           <div key={f.label} className="grid grid-cols-[6rem_1fr] sm:grid-cols-[7.5rem_1fr] gap-4 py-3">
             <dt className="text-slate-500">{f.label}</dt>
-            <dd className="text-slate-200">{f.value}</dd>
+            <dd className="text-slate-200 light:text-slate-800">{f.value}</dd>
           </div>
         ))}
       </dl>

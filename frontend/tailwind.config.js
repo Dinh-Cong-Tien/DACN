@@ -1,4 +1,5 @@
 /** @type {import('tailwindcss').Config} */
+import plugin from 'tailwindcss/plugin';
 // Bảng màu thương hiệu OrbiLingo:
 //  - indigo  → "Ocean" teal (màu chính: học tập, tin cậy)
 //  - violet  → "Coral" cam san hô (CTA, năng lượng)
@@ -6,6 +7,8 @@
 //  - amber   → vàng nghệ (streak, highlight)
 // Các page dùng class indigo/violet/slate sẽ tự nhận palette mới.
 export default {
+  // Chế độ tối bật bằng class `dark` trên <html> (themeStore); `light:` dùng cho trang vốn thiết kế nền tối (trang chủ)
+  darkMode: 'class',
   content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}'],
   safelist: [
     { pattern: /animate-(fade-up|fade-in|fade-down|scale-in|slide-in-left|slide-in-right|pop|tilt-in)/ },
@@ -58,21 +61,10 @@ export default {
           900: '#70440D',
           950: '#412402',
         },
-        slate: {
-          50: '#FAF7F1',
-          100: '#F3EEE5',
-          200: '#E6DFD3',
-          300: '#D1C8B9',
-          400: '#9E9586',
-          500: '#716A5E',
-          600: '#514C44',
-          700: '#3A3733',
-          800: '#242A38',
-          900: '#141A2B',
-          950: '#0B0F1C',
-        },
+        // slate dùng biến CSS (src/styles/theme.css): chế độ tối đảo thang màu để mọi trang tự đổi theo
+        slate: Object.fromEntries([50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 950].map((k) => [k, `rgb(var(--slate-${k}) / <alpha-value>)`])),
         ink: '#141A2B',
-        cream: '#FAF7F1',
+        cream: 'rgb(var(--cream) / <alpha-value>)',
         lavender: {
           100: '#ECE8FF',
           300: '#C9BEFF',
@@ -143,5 +135,5 @@ export default {
       },
     },
   },
-  plugins: [],
+  plugins: [plugin(({ addVariant }) => addVariant('light', ':is(html:not(.dark)) &'))],
 };

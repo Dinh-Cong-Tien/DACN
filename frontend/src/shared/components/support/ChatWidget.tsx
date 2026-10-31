@@ -246,7 +246,7 @@ export const ChatWidget: React.FC<{ raised?: 'md' | 'lg'; preferChat?: boolean }
                       <p
                         className={cn(
                           'support-chat__bubble whitespace-pre-line px-3 py-2 text-[14px] leading-[1.45]',
-                          mine ? 'support-chat__bubble--mine bg-[#1D5FC0] text-white' : 'bg-[#F0F2F5] text-[#1c1e21]',
+                          mine ? 'support-chat__bubble--mine bg-[#1D5FC0] text-white' : 'bg-slate-100 text-slate-900',
                           i === 0 && 'is-first',
                           i === g.length - 1 && 'is-last',
                           isNew(m.id) && 'is-new'
@@ -287,7 +287,7 @@ export const ChatWidget: React.FC<{ raised?: 'md' | 'lg'; preferChat?: boolean }
           {typingAgent && (
             <div className="support-chat__fade mb-3 flex items-end gap-2" aria-label={`${agentOf(typingAgent).name} đang soạn tin`}>
               <Avatar id={typingAgent} className="w-7 h-7" />
-              <div className="support-chat__typing flex items-center gap-1 rounded-2xl bg-[#F0F2F5] px-3.5 py-3">
+              <div className="support-chat__typing flex items-center gap-1 rounded-2xl bg-slate-100 px-3.5 py-3">
                 <span />
                 <span />
                 <span />
@@ -349,7 +349,7 @@ export const ChatWidget: React.FC<{ raised?: 'md' | 'lg'; preferChat?: boolean }
               {teaserReady ? (
                 <span className="support-chat__fade block">{SUPPORT_INFO.teaser}</span>
               ) : (
-                <span className="support-chat__typing mt-1.5 flex w-fit items-center gap-1 rounded-full bg-[#F0F2F5] px-2.5 py-2" aria-label="Đang soạn tin">
+                <span className="support-chat__typing mt-1.5 flex w-fit items-center gap-1 rounded-full bg-slate-100 px-2.5 py-2" aria-label="Đang soạn tin">
                   <span />
                   <span />
                   <span />

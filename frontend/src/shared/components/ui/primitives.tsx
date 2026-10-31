@@ -253,7 +253,7 @@ export const Logo: React.FC<{ size?: 'sm' | 'md' | 'lg'; dark?: boolean; tagline
   const text = { sm: 'text-base', md: 'text-xl', lg: 'text-2xl' }[size];
   return (
     <Link to={to} className="flex items-center gap-2.5 group">
-      <div className={cn('shrink-0 bg-white shadow-sm ring-1 ring-slate-900/10 transition-transform duration-300 group-hover:-rotate-6', dims)}>
+      <div className={cn('keep-palette shrink-0 bg-white shadow-sm ring-1 ring-slate-900/10 transition-transform duration-300 group-hover:-rotate-6', dims)}>
         <BrandMark className="w-full h-full" />
       </div>
       <div className="leading-tight">

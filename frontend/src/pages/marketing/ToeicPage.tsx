@@ -59,7 +59,7 @@ export const ToeicPage: React.FC = () => {
   const tests = MOCK_TESTS.filter((t) => t.examType === 'TOEIC').slice(0, 6);
 
   return (
-    <div className="bg-white">
+    <div className="bg-page">
       <PageHeader
         crumbs={[{ label: 'Trang chủ', to: '/' }, { label: 'Luyện thi TOEIC' }]}
         title="Luyện thi TOEIC Listening & Reading"
@@ -90,7 +90,7 @@ export const ToeicPage: React.FC = () => {
           <div className="overflow-hidden rounded-xl border border-slate-200">
             {(['Listening', 'Reading'] as const).map((skill) => (
               <div key={skill}>
-                <p className="flex items-center gap-2 bg-[#F6F7F9] px-4 py-2.5 text-[13px] font-medium text-slate-600">
+                <p className="flex items-center gap-2 bg-slate-100/60 px-4 py-2.5 text-[13px] font-medium text-slate-600">
                   {skill === 'Listening' ? <Headphones className="w-4 h-4" /> : <BookOpen className="w-4 h-4" />}
                   {skill} · {skill === 'Listening' ? '100 câu · ~45 phút' : '100 câu · 75 phút'}
                 </p>

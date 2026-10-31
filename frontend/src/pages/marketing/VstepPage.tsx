@@ -52,7 +52,7 @@ export const VstepPage: React.FC = () => {
   const tests = MOCK_TESTS.filter((t) => t.examType === 'VSTEP');
 
   return (
-    <div className="bg-white">
+    <div className="bg-page">
       <PageHeader
         crumbs={[{ label: 'Trang chủ', to: '/' }, { label: 'Luyện thi VSTEP' }]}
         title="Luyện thi VSTEP bậc 3–5 (B1, B2, C1)"
@@ -81,7 +81,7 @@ export const VstepPage: React.FC = () => {
         <SectionHead title="Bạn cần bậc nào?" desc="Điểm VSTEP là trung bình 4 kỹ năng, làm tròn 0.5. Dưới 4.0 không được cấp chứng chỉ." />
         <div className="overflow-x-auto rounded-xl border border-slate-200">
           <table className="w-full min-w-[720px] text-sm">
-            <thead className="bg-[#F6F7F9] text-left text-[13px] text-slate-500">
+            <thead className="bg-slate-100/60 text-left text-[13px] text-slate-500">
               <tr>
                 <th className="px-5 py-3 font-medium">Bậc</th>
                 <th className="px-4 py-3 font-medium">Điểm trung bình</th>

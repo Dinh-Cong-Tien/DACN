@@ -33,7 +33,7 @@ export const LeaderboardPage: React.FC = () => {
   }, [period, exam]);
 
   return (
-    <div className="bg-white">
+    <div className="bg-page">
       <PageHeader
         crumbs={[{ label: 'Trang chủ', to: '/' }, { label: 'Bảng vinh danh' }]}
         title="Bảng vinh danh học viên chuyên cần"
@@ -62,7 +62,7 @@ export const LeaderboardPage: React.FC = () => {
 
             <div className="mt-5 overflow-hidden rounded-xl border border-slate-200">
               <table className="w-full text-sm">
-                <thead className="bg-[#F6F7F9] text-left text-[13px] text-slate-500">
+                <thead className="bg-slate-100/60 text-left text-[13px] text-slate-500">
                   <tr>
                     <th className="w-16 px-4 py-3 font-medium">Hạng</th>
                     <th className="px-4 py-3 font-medium">Học viên</th>

@@ -7,6 +7,7 @@ import { useAuthStore } from '@/shared/stores/authStore';
 import { useUiStore, toast } from '@/shared/stores/uiStore';
 import { Avatar, Badge, Dropdown, Logo, CommandPalette } from '@/shared/components/ui';
 import { PageTransition } from '@/shared/components/motion';
+import { ThemeToggle } from './ThemeToggle';
 import { RouteProgress, BackToTop } from '@/shared/components/layout/ScrollExtras';
 import { ChatWidget } from '@/shared/components/support';
 import { MOCK_NOTIFICATIONS } from '@/shared/mocks';
@@ -73,7 +74,7 @@ export const AppShell: React.FC<AppShellProps> = ({ groups, brandTagline, accent
   const isGroupActive = (g: NavGroup) => g.items.some((it) => location.pathname.startsWith(it.to));
 
   return (
-    <div className="portal min-h-screen flex flex-col font-sans bg-cream text-slate-800">
+    <div className="portal min-h-screen flex flex-col font-sans bg-cream dark:bg-transparent text-slate-800">
       {/* ===== Header một hàng (giống GuestLayout) ===== */}
       <header className={cn('sticky top-0 z-40 transition-all duration-300 border-b-2', scrolled ? 'bg-cream/90 backdrop-blur-xl border-slate-900/10' : 'bg-cream border-transparent')}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-[72px] flex items-center justify-between gap-4">
@@ -132,6 +133,7 @@ export const AppShell: React.FC<AppShellProps> = ({ groups, brandTagline, accent
                 {user.streak} ngày
               </div>
             )}
+            <ThemeToggle />
             <button onClick={() => setPalette(true)} className="p-2 rounded-xl text-slate-700 hover:bg-slate-900/5 transition" aria-label="Tìm kiếm (⌘K)" title="Tìm kiếm (⌘K)">
               <Search className="w-5 h-5" />
             </button>

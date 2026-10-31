@@ -10,6 +10,8 @@ import { PageTransition } from '@/shared/components/motion';
 import { ScrollProgress, BackToTop, RouteProgress } from '@/shared/components/layout/ScrollExtras';
 import { ChatWidget } from '@/shared/components/support';
 import { PUBLIC_NAV, STUDENT_NAV, type MenuLink } from '@/shared/components/layout/navConfig';
+import { ThemeToggle } from '@/shared/components/layout/ThemeToggle';
+import { useResolvedTheme } from '@/shared/stores/themeStore';
 import { MOCK_NOTIFICATIONS } from '@/shared/mocks';
 
 interface GuestLayoutProps {
@@ -46,18 +48,20 @@ export const GuestLayout: React.FC<GuestLayoutProps> = ({ contained }) => {
     navigate('/');
   };
 
-  // Trang chủ có hero nền tối → header trong suốt, chữ trắng khi chưa cuộn
-  // Trang chủ dùng nền tối toàn trang → header luôn chữ sáng; khi cuộn chuyển kính tối
-  const onDarkHero = location.pathname === '/';
+  // Trang chủ: header nằm đè lên hero (trong suốt khi chưa cuộn, kính mờ khi cuộn).
+  // Chế độ tối → chữ sáng + giữ bảng màu gốc; chế độ sáng → header sáng như các trang khác.
+  const isDark = useResolvedTheme() === 'dark';
+  const overHero = location.pathname === '/';
+  const onDarkHero = overHero && isDark;
   const linkCls = ({ isActive }: { isActive: boolean }) =>
     cn(
-      'shrink-0 px-2.5 py-2 rounded-xl text-sm font-bold whitespace-nowrap transition-all duration-200 inline-flex items-center gap-1.5',
+      'shrink-0 px-2 py-2 rounded-xl text-sm font-bold whitespace-nowrap transition-all duration-200 inline-flex items-center gap-1',
       isActive ? (onDarkHero ? 'bg-white/10 text-amber-300' : 'bg-slate-900 text-amber-300') : onDarkHero ? 'text-slate-200 hover:bg-white/10 hover:text-white' : 'text-slate-700 hover:bg-slate-900/5 hover:text-slate-900'
     );
 
   const dropdown = (label: string, img: string | undefined, items: MenuLink[], active = false, className?: string) => (
     <div key={label} className={cn('relative shrink-0 group/menu', className)}>
-      <button className={cn('px-2.5 py-2 rounded-xl text-sm font-bold flex items-center gap-1.5 transition whitespace-nowrap', active ? (onDarkHero ? 'bg-white/10 text-amber-300' : 'bg-slate-900 text-amber-300') : onDarkHero ? 'text-slate-200 hover:bg-white/10 hover:text-white' : 'text-slate-700 hover:bg-slate-900/5 hover:text-slate-900')}>
+      <button className={cn('px-2 py-2 rounded-xl text-sm font-bold flex items-center gap-1 transition whitespace-nowrap', active ? (onDarkHero ? 'bg-white/10 text-amber-300' : 'bg-slate-900 text-amber-300') : onDarkHero ? 'text-slate-200 hover:bg-white/10 hover:text-white' : 'text-slate-700 hover:bg-slate-900/5 hover:text-slate-900')}>
         {img && <img src={img} alt="" className="w-5 h-5 hidden xl:block" />}
         {label}
         {items.some((i) => i.badge) && !active && <span className="w-1.5 h-1.5 rounded-full bg-violet-500" />}
@@ -123,7 +127,7 @@ export const GuestLayout: React.FC<GuestLayoutProps> = ({ contained }) => {
   const bottomItems = isStudent ? studentPrimary.items.slice(0, 4) : [];
 
   return (
-    <div className={cn('relative min-h-screen flex flex-col bg-cream font-sans text-slate-800', contained && 'portal')}>
+    <div className={cn('relative min-h-screen flex flex-col bg-cream dark:bg-transparent font-sans text-slate-800', contained && 'portal')}>
       {/* Thanh thông báo trên cùng: chỉ cho khách */}
       {!isAuth && location.pathname !== '/' && (
         <div className="bg-slate-900 text-white text-xs font-semibold">
@@ -137,7 +141,19 @@ export const GuestLayout: React.FC<GuestLayoutProps> = ({ contained }) => {
         </div>
       )}
 
-      <header className={cn('top-0 z-40 transition-all duration-300 border-b', onDarkHero ? (scrolled ? 'fixed inset-x-0 bg-slate-950/75 backdrop-blur-xl border-white/10' : 'absolute inset-x-0 bg-transparent border-transparent') : scrolled ? 'sticky bg-cream/90 backdrop-blur-xl border-slate-900/10' : 'sticky bg-cream border-transparent')}>
+      <header
+        className={cn(
+          'top-0 z-40 transition-all duration-300 border-b',
+          onDarkHero && 'keep-palette',
+          overHero
+            ? scrolled
+              ? cn('fixed inset-x-0 backdrop-blur-xl', isDark ? 'bg-slate-950/75 border-white/10' : 'bg-cream/90 border-slate-900/10')
+              : 'absolute inset-x-0 bg-transparent border-transparent'
+            : scrolled
+              ? 'sticky bg-cream/90 backdrop-blur-xl border-slate-900/10'
+              : 'sticky bg-cream border-transparent'
+        )}
+      >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-[72px] flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <button onClick={() => setOpen((o) => !o)} className={cn('lg:hidden p-2 rounded-xl border-2', onDarkHero ? 'border-white/30 bg-white/10 text-white' : 'border-slate-900 bg-white')} aria-label="Menu">
@@ -149,6 +165,7 @@ export const GuestLayout: React.FC<GuestLayoutProps> = ({ contained }) => {
           <nav className="hidden lg:flex items-center gap-0.5">{desktopNav}</nav>
 
           <div className="flex items-center gap-1.5 md:gap-2">
+            <ThemeToggle onDark={onDarkHero} />
             {isAuth && user ? (
               <>
                 <button onClick={() => setPalette(true)} className={cn('p-2 rounded-xl transition', onDarkHero ? 'text-slate-200 hover:bg-white/10' : 'text-slate-700 hover:bg-slate-900/5')} aria-label="Tìm kiếm (⌘K)" title="Tìm kiếm (⌘K)">

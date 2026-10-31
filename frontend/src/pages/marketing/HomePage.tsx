@@ -8,6 +8,7 @@ import { Img, PHOTOS, pravatar } from '@/shared/components/media/Img';
 import { HOME_STATS, HOME_EXAM_TRACKS, TESTIMONIALS, PRICING_PLANS, MOCK_COURSES } from '@/shared/mocks';
 import { useDocumentTitle, useGate, useInView } from '@/shared/hooks';
 import { formatCurrency, cn } from '@/shared/utils';
+import { useResolvedTheme } from '@/shared/stores/themeStore';
 import { LoopConnector } from './home/LoopConnector';
 import { ExamTrackCard } from './home/ExamTrackCard';
 import { CourseTile } from './home/CourseTile';
@@ -97,12 +98,12 @@ const StepRow: React.FC<{ index: number; step: (typeof LOOP)[number]; photoRef: 
       <div className="space-y-4">
         <div className={cn('flex items-center gap-4', base, state)} style={show(0)}>
           <span className="font-display text-6xl md:text-7xl font-extrabold leading-[1.1] bg-gradient-to-br from-amber-200 via-amber-300 to-orange-500 bg-clip-text text-transparent">{step.n}</span>
-          <span className="px-3 py-1 rounded-full border border-white/15 bg-white/5 text-xs font-bold text-amber-300">{step.tag}</span>
+          <span className="px-3 py-1 rounded-full border border-white/15 bg-white/5 text-xs font-bold text-amber-300 light:border-slate-200 light:bg-white light:text-amber-700">{step.tag}</span>
         </div>
-        <h3 className={cn('font-display text-2xl md:text-3xl font-extrabold text-white', base, state)} style={show(80)}>
+        <h3 className={cn('font-display text-2xl md:text-3xl font-extrabold text-white light:text-slate-900', base, state)} style={show(80)}>
           {step.title}
         </h3>
-        <p className={cn('text-slate-400 leading-relaxed text-lg', base, state)} style={show(160)}>
+        <p className={cn('text-slate-400 light:text-slate-600 leading-relaxed text-lg', base, state)} style={show(160)}>
           {step.text}
         </p>
       </div>
@@ -129,13 +130,15 @@ export const HomePage: React.FC = () => {
   }, []);
   useDocumentTitle('Trang chủ');
   const gate = useGate();
+  const isDark = useResolvedTheme() === 'dark';
 
+  // Trang chủ thiết kế cho nền tối: giữ bảng màu gốc ở chế độ tối (keep-palette), chế độ sáng dùng biến thể light:
   return (
-    <div className="relative overflow-hidden night-bg text-white">
+    <div className="keep-palette relative overflow-hidden night-bg text-white light:text-slate-900">
       {/* Nền đêm xuyên suốt trang: sao + quầng sáng tím-hồng-cam rải dọc trang */}
       <div aria-hidden className="pointer-events-none absolute inset-0">
-        <div className="absolute inset-0 bg-stars opacity-60" />
-        <div className="absolute inset-0 bg-stars-2 animate-twinkle" />
+        <div className="absolute inset-0 bg-stars opacity-60 light:hidden" />
+        <div className="absolute inset-0 bg-stars-2 animate-twinkle light:hidden" />
         <div className="absolute top-[18%] -left-40 w-[620px] h-[620px] rounded-full bg-violet-500/20 blur-[140px]" />
         <div className="absolute top-[34%] -right-40 w-[560px] h-[560px] rounded-full bg-fuchsia-600/20 blur-[140px]" />
         <div className="absolute top-[52%] left-1/4 w-[520px] h-[520px] rounded-full bg-indigo-500/15 blur-[140px]" />
@@ -143,8 +146,8 @@ export const HomePage: React.FC = () => {
         <div className="absolute bottom-[4%] -left-32 w-[560px] h-[560px] rounded-full bg-violet-600/20 blur-[140px]" />
       </div>
       {/* ================= HERO (nền tối, chữ khổng lồ gradient, ảnh người bên phải) ================= */}
-      <section className="hero-dark relative text-white overflow-hidden pt-[72px]">
-        <ThreeBackground variant="particles" dark className="opacity-50" />
+      <section className="hero-dark relative text-white light:text-slate-900 overflow-hidden pt-[72px]">
+        <ThreeBackground variant="particles" dark={isDark} className="opacity-50" />
         {/* Quầng sáng gradient hồng-cam phía sau chữ và ảnh */}
         <div aria-hidden className="absolute -top-40 -left-40 w-[640px] h-[640px] rounded-full bg-violet-500/30 blur-[140px] animate-float-slow" />
         <div aria-hidden className="absolute top-1/3 -right-32 w-[560px] h-[560px] rounded-full bg-fuchsia-500/25 blur-[140px] animate-float" />
@@ -157,13 +160,13 @@ export const HomePage: React.FC = () => {
               <span className="block text-[3rem] sm:text-[5.1rem] lg:text-[7rem] leading-[1.15] pt-[0.05em] pb-[0.12em] -mb-[0.1em] hero-type-word">
                 <TypeLoop words={HERO_WORDS} />
               </span>
-              <span className="block mt-3 text-2xl sm:text-3xl lg:text-4xl text-white font-bold">
-                <span className="text-amber-300 mr-2">điểm số</span>
+              <span className="block mt-3 text-2xl sm:text-3xl lg:text-4xl text-white light:text-slate-900 font-bold">
+                <span className="text-amber-300 light:text-amber-600 mr-2">điểm số</span>
                 TOEIC &amp; VSTEP của bạn
               </span>
             </h1>
 
-            <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-base sm:text-lg font-semibold text-slate-300 animate-fade-up delay-100">
+            <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-base sm:text-lg font-semibold text-slate-300 light:text-slate-600 animate-fade-up delay-100">
               <span>Nỗ Lực</span>
               <span className="text-violet-400">—</span>
               <span>Kiên Trì</span>
@@ -175,7 +178,7 @@ export const HomePage: React.FC = () => {
               <Button to={gate('/onboarding/goal', '/try')} size="xl" variant="gradient" rightIcon={<ArrowRight className="w-5 h-5" />}>
                 Học thử miễn phí ngay
               </Button>
-              <Button to="/mock-tests" size="xl" variant="white" leftIcon={<Play className="w-5 h-5" />} className="!border-white/20 !bg-white/10 !text-white hover:!bg-white hover:!text-slate-900">
+              <Button to="/mock-tests" size="xl" variant="white" leftIcon={<Play className="w-5 h-5" />} className="!border-white/20 !bg-white/10 !text-white hover:!bg-white hover:!text-slate-900 light:!border-slate-300 light:!bg-white light:!text-slate-900 light:hover:!bg-slate-100">
                 Xem kho đề thi thử
               </Button>
             </div>
@@ -183,7 +186,7 @@ export const HomePage: React.FC = () => {
             <div className="flex items-center gap-4 animate-fade-up delay-300">
               <div className="flex -space-x-3">
                 {[21, 22, 23, 24, 25].map((n) => (
-                  <img key={n} src={pravatar(n)} alt="" className="w-10 h-10 rounded-full border-2 border-slate-950 object-cover" />
+                  <img key={n} src={pravatar(n)} alt="" className="w-10 h-10 rounded-full border-2 border-slate-950 light:border-white object-cover" />
                 ))}
               </div>
               <div>
@@ -191,10 +194,10 @@ export const HomePage: React.FC = () => {
                   {Array.from({ length: 5 }).map((_, i) => (
                     <Star key={i} className="w-4 h-4 fill-current" />
                   ))}
-                  <span className="text-xs font-bold text-white ml-1">4.9/5</span>
+                  <span className="text-xs font-bold text-white light:text-slate-900 ml-1">4.9/5</span>
                 </div>
-                <p className="text-xs text-slate-400 font-semibold">
-                  <b className="text-white">24.837</b> học viên đang học mỗi ngày
+                <p className="text-xs text-slate-400 light:text-slate-500 font-semibold">
+                  <b className="text-white light:text-slate-900">24.837</b> học viên đang học mỗi ngày
                 </p>
               </div>
             </div>
@@ -244,14 +247,14 @@ export const HomePage: React.FC = () => {
       </section>
 
       {/* ================= MARQUEE ================= */}
-      <section className="relative isolate border-y border-white/10 bg-white/[0.02] py-5 space-y-3">
+      <section className="relative isolate border-y border-white/10 bg-white/[0.02] light:border-slate-900/10 light:bg-white/50 py-5 space-y-3">
         <div aria-hidden className="pointer-events-none absolute -z-10 rounded-full -left-40 -top-24 w-[520px] h-[260px] bg-violet-500/20 blur-[100px]" />
         <div aria-hidden className="pointer-events-none absolute -z-10 rounded-full -right-40 -bottom-24 w-[520px] h-[260px] bg-indigo-500/20 blur-[100px]" />
-        <p className="text-center text-[11px] font-extrabold uppercase tracking-[0.2em] text-slate-400">Học viên đến từ</p>
+        <p className="text-center text-[11px] font-extrabold uppercase tracking-[0.2em] text-slate-400 light:text-slate-500">Học viên đến từ</p>
         <div className="marquee">
           <div className="marquee-track whitespace-nowrap">
             {[...PARTNERS, ...PARTNERS].map((p, i) => (
-              <span key={i} aria-hidden={i >= PARTNERS.length || undefined} className="mx-3 inline-flex items-center gap-2.5 pl-1.5 pr-4 py-1.5 rounded-xl border border-white/10 bg-white/5 font-display font-bold text-sm md:text-base text-slate-100 transition-colors hover:bg-amber-300 hover:text-slate-900 hover:border-amber-300">
+              <span key={i} aria-hidden={i >= PARTNERS.length || undefined} className="mx-3 inline-flex items-center gap-2.5 pl-1.5 pr-4 py-1.5 rounded-xl border border-white/10 bg-white/5 font-display font-bold text-sm md:text-base text-slate-100 light:border-slate-200 light:bg-white light:text-slate-800 transition-colors hover:bg-amber-300 hover:text-slate-900 hover:border-amber-300">
                 {/* nền trắng để logo trong suốt / màu tối vẫn rõ trên nền đêm */}
                 <span className="w-9 h-9 rounded-lg bg-white p-1 flex items-center justify-center shrink-0">
                   <img src={`/images/universities/${p.logo}.webp`} alt={`Logo ${p.name}`} loading="lazy" decoding="async" className="max-w-full max-h-full object-contain" />
@@ -264,7 +267,7 @@ export const HomePage: React.FC = () => {
         <div className="marquee">
           <div className="marquee-track reverse whitespace-nowrap">
             {[...MARQUEE_POINTS, ...MARQUEE_POINTS].map((t, i) => (
-              <span key={i} className="mx-6 inline-flex items-center gap-4 text-xs md:text-sm font-semibold text-slate-400">
+              <span key={i} className="mx-6 inline-flex items-center gap-4 text-xs md:text-sm font-semibold text-slate-400 light:text-slate-500">
                 {t}
                 <span className="w-1.5 h-1.5 rounded-full bg-violet-500" />
               </span>
@@ -277,7 +280,7 @@ export const HomePage: React.FC = () => {
       {/* Hàng số liệu kiểu báo cáo: chữ trắng, đường kẻ mảnh, không thẻ kính / không gradient */}
       <section className="relative isolate max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14 md:py-16">
         <p className="text-xs font-medium text-slate-500 mb-4">Số liệu OrbiLingo tính đến tháng 10/2026</p>
-        <Stagger className="grid grid-cols-2 lg:grid-cols-4 border-y border-white/10">
+        <Stagger className="grid grid-cols-2 lg:grid-cols-4 border-y border-white/10 light:border-slate-900/10">
           {HOME_STATS.map((s, i) => {
             const plus = s.suffix.trim() === '+';
             return (
@@ -285,16 +288,16 @@ export const HomePage: React.FC = () => {
                 key={s.label}
                 className={cn(
                   'py-7 md:py-9 pr-4 md:pr-8',
-                  i % 2 === 1 ? 'pl-5 md:pl-8 border-l border-white/10' : 'pl-0',
-                  i === 2 && 'lg:pl-8 lg:border-l lg:border-white/10',
-                  i >= 2 && 'border-t border-white/10 lg:border-t-0'
+                  i % 2 === 1 ? 'pl-5 md:pl-8 border-l border-white/10 light:border-slate-900/10' : 'pl-0',
+                  i === 2 && 'lg:pl-8 lg:border-l lg:border-white/10 light:lg:border-slate-900/10',
+                  i >= 2 && 'border-t border-white/10 light:border-slate-900/10 lg:border-t-0'
                 )}
               >
-                <p className="font-display text-[2.1rem] md:text-5xl font-bold leading-none tracking-tight text-white tabular-nums">
+                <p className="font-display text-[2.1rem] md:text-5xl font-bold leading-none tracking-tight text-white light:text-slate-900 tabular-nums">
                   <CountUp value={s.value} />
-                  {plus ? <span className="text-amber-300">+</span> : <span className="text-lg md:text-2xl font-semibold text-slate-400 ml-1.5">{s.suffix.trim()}</span>}
+                  {plus ? <span className="text-amber-300">+</span> : <span className="text-lg md:text-2xl font-semibold text-slate-400 light:text-slate-500 ml-1.5">{s.suffix.trim()}</span>}
                 </p>
-                <p className="text-sm text-slate-400 mt-3">{s.label}</p>
+                <p className="text-sm text-slate-400 light:text-slate-500 mt-3">{s.label}</p>
               </div>
             );
           })}
@@ -310,10 +313,10 @@ export const HomePage: React.FC = () => {
         <div aria-hidden className="pointer-events-none absolute -z-10 rounded-full -right-[18vw] top-[60%] w-[560px] h-[560px] bg-indigo-500/20 blur-[140px]" />
         <div aria-hidden className="pointer-events-none absolute -z-10 rounded-full -left-[18vw] top-[80%] w-[560px] h-[560px] bg-violet-500/20 blur-[140px]" />
         <Reveal>
-          <SectionTitle dark eyebrow="Cách OrbiLingo hoạt động" title={<>Không làm đề vô định. <span className="hero-gradient-text">Làm đúng</span> việc cần làm.</>} description="Năm bước lặp lại mỗi tuần. Dữ liệu từ bài làm của bạn quyết định bước tiếp theo." />
+          <SectionTitle dark={isDark} eyebrow="Cách OrbiLingo hoạt động" title={<>Không làm đề vô định. <span className="hero-gradient-text">Làm đúng</span> việc cần làm.</>} description="Năm bước lặp lại mỗi tuần. Dữ liệu từ bài làm của bạn quyết định bước tiếp theo." />
         </Reveal>
         <div ref={loopBoxRef} className="relative space-y-14 md:space-y-28">
-          <LoopConnector containerRef={loopBoxRef} photoRefs={loopPhotoRefs} rowsOn={rowsOn} dark />
+          <LoopConnector containerRef={loopBoxRef} photoRefs={loopPhotoRefs} rowsOn={rowsOn} dark={isDark} />
           {LOOP.map((step, i) => (
             <StepRow key={step.n} index={i} step={step} photoRef={(el) => (loopPhotoRefs.current[i] = el)} onToggle={toggleRow} />
           ))}
@@ -326,7 +329,7 @@ export const HomePage: React.FC = () => {
         <div aria-hidden className="aurora -z-10" />
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
           <Reveal>
-            <SectionTitle dark eyebrow="Tính năng" title={<>Mọi thứ cho một kỳ thi, <span className="hero-gradient-text">trong một chỗ.</span></>} description="Từ đề thi tới lớp học với giáo viên. Không cần cài thêm ứng dụng nào." />
+            <SectionTitle dark={isDark} eyebrow="Tính năng" title={<>Mọi thứ cho một kỳ thi, <span className="hero-gradient-text">trong một chỗ.</span></>} description="Từ đề thi tới lớp học với giáo viên. Không cần cài thêm ứng dụng nào." />
           </Reveal>
           <div className="grid md:grid-cols-3 gap-4 md:gap-5">
             <Reveal className="md:col-span-2 md:row-span-2">
@@ -362,7 +365,7 @@ export const HomePage: React.FC = () => {
         <div aria-hidden className="pointer-events-none absolute -z-10 rounded-full -left-[15vw] top-1/3 w-[600px] h-[500px] bg-indigo-500/10 blur-[150px]" />
         <div aria-hidden className="pointer-events-none absolute -z-10 rounded-full -right-[15vw] top-1/3 w-[600px] h-[500px] bg-violet-500/10 blur-[150px]" />
         <Reveal>
-          <SectionTitle dark eyebrow="Hai kỳ thi, một nền tảng" title={<>Bạn thi <span className="text-indigo-300">TOEIC</span> hay <span className="text-violet-400">VSTEP</span>?</>} description="Chọn kỳ thi khi bắt đầu, có thể đổi bất kỳ lúc nào. Mọi tiến độ được giữ nguyên." />
+          <SectionTitle dark={isDark} eyebrow="Hai kỳ thi, một nền tảng" title={<>Bạn thi <span className="text-indigo-300 light:text-indigo-700">TOEIC</span> hay <span className="text-violet-400 light:text-violet-600">VSTEP</span>?</>} description="Chọn kỳ thi khi bắt đầu, có thể đổi bất kỳ lúc nào. Mọi tiến độ được giữ nguyên." />
         </Reveal>
         <div className="grid md:grid-cols-2 gap-6">
           {HOME_EXAM_TRACKS.map((t, i) => (
@@ -379,8 +382,8 @@ export const HomePage: React.FC = () => {
         <div aria-hidden className="night-grid -z-10" />
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
           <Reveal className="flex flex-col md:flex-row md:items-end justify-between gap-4">
-            <SectionTitle dark align="left" eyebrow="Khoá học" title={<>Lộ trình học, <span className="hero-gradient-text">video có bản ghi.</span></>} description="Nhấn vào từ trong transcript để tra nghĩa. Mỗi bài có quiz củng cố." />
-            <Link to="/courses" className="group inline-flex shrink-0 items-center gap-1.5 font-semibold text-slate-200 hover:text-white">
+            <SectionTitle dark={isDark} align="left" eyebrow="Khoá học" title={<>Lộ trình học, <span className="hero-gradient-text">video có bản ghi.</span></>} description="Nhấn vào từ trong transcript để tra nghĩa. Mỗi bài có quiz củng cố." />
+            <Link to="/courses" className="group inline-flex shrink-0 items-center gap-1.5 font-semibold text-slate-200 hover:text-white light:text-slate-700 light:hover:text-slate-900">
               Xem tất cả {MOCK_COURSES.length} khoá học <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" />
             </Link>
           </Reveal>
@@ -396,7 +399,7 @@ export const HomePage: React.FC = () => {
       <section className="relative isolate max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24 space-y-12">
         <div aria-hidden className="night-divider -z-10" />
         <Reveal>
-          <SectionTitle dark eyebrow="Học viên nói gì" title={<>Điểm số thật, <span className="hero-gradient-text">người thật.</span></>} description="Ba trong số hàng nghìn học viên đã tăng điểm trong năm nay." />
+          <SectionTitle dark={isDark} eyebrow="Học viên nói gì" title={<>Điểm số thật, <span className="hero-gradient-text">người thật.</span></>} description="Ba trong số hàng nghìn học viên đã tăng điểm trong năm nay." />
         </Reveal>
         <Stagger className="grid md:grid-cols-3 gap-10 md:gap-8">
           {TESTIMONIALS.map((t) => (
@@ -412,18 +415,18 @@ export const HomePage: React.FC = () => {
         <Reveal>
           <div className="glass-night rounded-3xl p-7 md:p-10 grid lg:grid-cols-[1fr_auto] gap-8 items-center">
             <div>
-              <span className="inline-block text-[11px] font-extrabold uppercase tracking-[0.16em] text-amber-300">Bảng giá</span>
-              <h3 className="font-display text-3xl md:text-4xl font-extrabold text-white mt-3">
+              <span className="inline-block text-[11px] font-extrabold uppercase tracking-[0.16em] text-amber-300 light:text-amber-700">Bảng giá</span>
+              <h3 className="font-display text-3xl md:text-4xl font-extrabold text-white light:text-slate-900 mt-3">
                 Bắt đầu miễn phí. <span className="hero-gradient-text">Nâng cấp khi cần.</span>
               </h3>
-              <p className="text-slate-400 mt-3 max-w-xl">Gói Free đủ để thi xếp lớp, luyện Part và dùng sổ tay lỗi sai. Gói VIP mở kho đề 2025 và không giới hạn flashcard.</p>
+              <p className="text-slate-400 light:text-slate-600 mt-3 max-w-xl">Gói Free đủ để thi xếp lớp, luyện Part và dùng sổ tay lỗi sai. Gói VIP mở kho đề 2025 và không giới hạn flashcard.</p>
             </div>
             <div className="grid grid-cols-3 gap-3">
               {PRICING_PLANS.map((p) => (
-                <Link key={p.id} to="/pricing" className={cn('rounded-2xl border p-4 text-center hover:-translate-y-1 transition', p.highlight ? 'bg-gradient-to-br from-violet-500 to-fuchsia-600 text-white border-white/20 shadow-[0_20px_40px_-20px_rgba(250,83,48,0.8)]' : 'bg-white/5 border-white/10 text-white')}>
+                <Link key={p.id} to="/pricing" className={cn('rounded-2xl border p-4 text-center hover:-translate-y-1 transition', p.highlight ? 'bg-gradient-to-br from-violet-500 to-fuchsia-600 text-white border-white/20 shadow-[0_20px_40px_-20px_rgba(250,83,48,0.8)]' : 'bg-white/5 border-white/10 text-white light:bg-white light:border-slate-200 light:text-slate-900')}>
                   <p className="text-[10px] font-extrabold uppercase tracking-wider">{p.name}</p>
                   <p className="font-display text-lg font-extrabold mt-1">{p.price === 0 ? '0đ' : formatCurrency(p.price).replace(/\s/g, '')}</p>
-                  <p className={cn('text-[10px] mt-0.5', p.highlight ? 'text-white/80' : 'text-slate-400')}>{p.period}</p>
+                  <p className={cn('text-[10px] mt-0.5', p.highlight ? 'text-white/80' : 'text-slate-400 light:text-slate-500')}>{p.period}</p>
                 </Link>
               ))}
             </div>
@@ -432,33 +435,33 @@ export const HomePage: React.FC = () => {
       </section>
 
       {/* ================= FINAL CTA ================= */}
-      <section className="relative isolate overflow-hidden border-t border-white/10">
+      <section className="relative isolate overflow-hidden border-t border-white/10 light:border-slate-900/10">
         <div aria-hidden className="pointer-events-none absolute -z-10 rounded-full left-1/4 -top-20 w-[700px] h-[500px] bg-violet-600/25 blur-[160px]" />
         <div aria-hidden className="pointer-events-none absolute -z-10 rounded-full -right-20 bottom-0 w-[520px] h-[420px] bg-amber-400/15 blur-[150px]" />
-        <ThreeBackground variant="globe" dark className="opacity-70" offsetX={0.6} />
+        <ThreeBackground variant="globe" dark={isDark} className="opacity-70" offsetX={0.6} />
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 md:py-28 grid lg:grid-cols-[1fr_380px] gap-12 items-center">
           <div className="space-y-6">
-            <h2 className="font-display text-4xl md:text-5xl font-extrabold leading-tight text-balance text-white">
+            <h2 className="font-display text-4xl md:text-5xl font-extrabold leading-tight text-balance text-white light:text-slate-900">
               Kỳ thi tiếp theo của bạn là <span className="hero-gradient-text">khi nào?</span>
             </h2>
-            <p className="text-slate-300 text-lg max-w-xl">Nhập ngày thi, làm bài xếp lớp 15 phút. Bạn sẽ có lộ trình tới ngày đó ngay hôm nay.</p>
+            <p className="text-slate-300 light:text-slate-600 text-lg max-w-xl">Nhập ngày thi, làm bài xếp lớp 15 phút. Bạn sẽ có lộ trình tới ngày đó ngay hôm nay.</p>
             <div className="flex flex-col sm:flex-row gap-3">
               <Button to="/auth/register" size="xl" variant="gradient" rightIcon={<ArrowRight className="w-5 h-5" />}>
                 Tạo tài khoản miễn phí
               </Button>
-              <Button to="/score-converter" size="xl" variant="white" leftIcon={<Target className="w-5 h-5" />} className="!border-white/20 !bg-white/10 !text-white hover:!bg-white hover:!text-slate-900">
+              <Button to="/score-converter" size="xl" variant="white" leftIcon={<Target className="w-5 h-5" />} className="!border-white/20 !bg-white/10 !text-white hover:!bg-white hover:!text-slate-900 light:!border-slate-300 light:!bg-white light:!text-slate-900 light:hover:!bg-slate-100">
                 Quy đổi điểm mục tiêu
               </Button>
             </div>
-            <p className="text-xs text-slate-400 flex items-center gap-3 flex-wrap">
+            <p className="text-xs text-slate-400 light:text-slate-500 flex items-center gap-3 flex-wrap">
               <span className="flex items-center gap-1">
-                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" /> Không cần thẻ
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 light:text-emerald-600" /> Không cần thẻ
               </span>
               <span className="flex items-center gap-1">
-                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" /> Huỷ bất kỳ lúc nào
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 light:text-emerald-600" /> Huỷ bất kỳ lúc nào
               </span>
               <span className="flex items-center gap-1">
-                <Headphones className="w-3.5 h-3.5 text-emerald-400" /> Hỗ trợ 8:00–22:00 mỗi ngày
+                <Headphones className="w-3.5 h-3.5 text-emerald-400 light:text-emerald-600" /> Hỗ trợ 8:00–22:00 mỗi ngày
               </span>
             </p>
           </div>

@@ -216,7 +216,7 @@ export const AuthLayout: React.FC = () => {
   const swap = n === 0 ? '' : n % 2 ? 'a' : 'b';
 
   return (
-    <div className="relative min-h-screen bg-white lg:h-screen lg:overflow-hidden">
+    <div className="relative min-h-screen bg-page lg:h-screen lg:overflow-hidden">
       {/* Cột form */}
       <div
         className={cn(

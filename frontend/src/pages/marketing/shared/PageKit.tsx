@@ -52,7 +52,7 @@ export const PageHeader: React.FC<{
   aside?: React.ReactNode;
   className?: string;
 }> = ({ crumbs, title, lead, facts, actions, aside, className }) => (
-  <section className={cn('border-b border-slate-200 bg-white', className)}>
+  <section className={cn('border-b border-slate-200 bg-page', className)}>
     <div className={cn('max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-12 md:pb-16 grid gap-10 items-center', aside && 'lg:grid-cols-[1.15fr_1fr]')}>
       <div>
         <nav aria-label="Breadcrumb" className="flex items-center gap-1 text-[13px] text-slate-500">
@@ -90,7 +90,7 @@ export const PageHeader: React.FC<{
 
 // ============ Section ============
 export const Section: React.FC<{ muted?: boolean; className?: string; innerClassName?: string; children: React.ReactNode; id?: string }> = ({ muted, className, innerClassName, children, id }) => (
-  <section id={id} className={cn(muted ? 'bg-[#F6F7F9] border-y border-slate-200' : 'bg-white', className)}>
+  <section id={id} className={cn(muted ? 'bg-slate-100/60 border-y border-slate-200' : 'bg-page', className)}>
     <div className={cn('max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14 md:py-20', innerClassName)}>{children}</div>
   </section>
 );

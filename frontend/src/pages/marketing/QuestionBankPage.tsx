@@ -28,7 +28,7 @@ export const QuestionBankPage: React.FC = () => {
   const [answers, setAnswers] = useState<Record<string, string>>({});
 
   return (
-    <div className="bg-white">
+    <div className="bg-page">
       <PageHeader
         crumbs={[{ label: 'Trang chủ', to: '/' }, { label: 'Công cụ' }, { label: 'Ngân hàng câu hỏi' }]}
         title="Ngân hàng câu hỏi TOEIC và VSTEP"
