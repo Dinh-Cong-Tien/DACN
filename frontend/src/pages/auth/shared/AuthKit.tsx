@@ -18,14 +18,14 @@ export function useAfterLogin() {
 }
 
 export const AuthHeading: React.FC<{ title: string; sub?: React.ReactNode }> = ({ title, sub }) => (
-  <div className="mb-7">
-    <h1 className="font-display text-[1.75rem] font-bold tracking-tight text-slate-900">{title}</h1>
+  <div className="mb-8">
+    <h1 className="font-display text-[2rem] font-bold leading-tight tracking-tight text-slate-900">{title}</h1>
     {sub && <p className="mt-1.5 text-[15px] text-slate-600">{sub}</p>}
   </div>
 );
 
 const inputCls =
-  'h-11 w-full rounded-lg border bg-white px-3.5 text-[15px] text-slate-900 placeholder:text-slate-400 transition-[border-color,box-shadow] focus:outline-none focus:ring-[3px]';
+  'h-12 w-full rounded-lg border bg-white px-3.5 text-[15px] text-slate-900 placeholder:text-slate-400 transition-[border-color,box-shadow] focus:outline-none focus:ring-[3px]';
 
 interface TextFieldProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'className'> {
   label: string;
@@ -53,11 +53,11 @@ export const TextField: React.FC<TextFieldProps> = ({ label, labelAside, hint, e
           type={isPw && show ? 'text' : type}
           aria-invalid={!!error}
           aria-describedby={error || hint ? `${id}-msg` : undefined}
-          className={cn(inputCls, isPw && 'pr-11', error ? 'border-red-400 focus:border-red-500 focus:ring-red-500/15' : 'border-slate-300 hover:border-slate-400 focus:border-indigo-600 focus:ring-indigo-600/15')}
+          className={cn(inputCls, isPw && 'pr-12', error ? 'border-red-400 focus:border-red-500 focus:ring-red-500/15' : 'border-slate-300 hover:border-slate-400 focus:border-indigo-600 focus:ring-indigo-600/15')}
           {...rest}
         />
         {isPw && (
-          <button type="button" onClick={() => setShow((s) => !s)} aria-label={show ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'} className="absolute inset-y-0 right-0 flex w-11 items-center justify-center text-slate-400 hover:text-slate-700">
+          <button type="button" onClick={() => setShow((s) => !s)} aria-label={show ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'} className="absolute inset-y-0 right-0 flex w-12 items-center justify-center text-slate-400 hover:text-slate-700">
             {show ? <EyeOff className="h-[18px] w-[18px]" /> : <Eye className="h-[18px] w-[18px]" />}
           </button>
         )}
@@ -76,7 +76,7 @@ export const SubmitButton: React.FC<{ loading?: boolean; children: React.ReactNo
     type={type}
     onClick={onClick}
     disabled={loading}
-    className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-lg bg-indigo-600 text-[15px] font-semibold text-white transition-colors hover:bg-indigo-700 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-indigo-600/30 disabled:cursor-wait disabled:opacity-80"
+    className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-lg bg-indigo-600 shadow-[0_1px_2px_rgba(16,24,40,0.1)] text-[15px] font-semibold text-white transition-colors hover:bg-indigo-700 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-indigo-600/30 disabled:cursor-wait disabled:opacity-80"
   >
     {loading && <Loader2 className="h-4 w-4 animate-spin" />}
     {children}
@@ -124,7 +124,7 @@ export const SocialButtons: React.FC<{ onDone: () => void }> = ({ onDone }) => {
       onDone();
     }, 700);
   };
-  const btn = 'inline-flex h-11 items-center justify-center gap-2.5 rounded-lg border border-slate-300 bg-white text-sm font-medium text-slate-800 transition-colors hover:bg-slate-50 disabled:opacity-60';
+  const btn = 'inline-flex h-12 items-center justify-center gap-2.5 rounded-lg border border-slate-300 bg-white text-sm font-medium text-slate-800 transition-colors hover:bg-slate-50 disabled:opacity-60';
   return (
     <div className="grid grid-cols-2 gap-3">
       <button type="button" className={btn} disabled={!!busy} onClick={() => go('google')}>
