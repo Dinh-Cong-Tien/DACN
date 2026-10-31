@@ -32,7 +32,10 @@ export const TestimonialCard: React.FC<{ item: Testimonial }> = ({ item: t }) =>
             </div>
           ))}
         </dl>
-        <p className="mt-2 text-xs text-slate-500">Thi tại {t.venue}</p>
+        <p className="mt-2 text-xs text-slate-500">
+          Thi tại {t.venue}
+          {t.certificateId && <> · Số phiếu {t.certificateId}</>}
+        </p>
       </figcaption>
     </figure>
   );

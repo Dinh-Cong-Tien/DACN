@@ -488,6 +488,8 @@ export interface Testimonial {
   weeks: number;
   examDate: string;
   venue: string;
+  /** Số phiếu điểm (TOEIC) hoặc số hiệu chứng chỉ (VSTEP) để đối chiếu; nên che bớt, vd "•••• 4821" */
+  certificateId?: string;
   target: string;
   score: string;
   quote: string;
