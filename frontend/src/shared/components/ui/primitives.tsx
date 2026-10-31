@@ -258,7 +258,7 @@ export const Logo: React.FC<{ size?: 'sm' | 'md' | 'lg'; dark?: boolean; tagline
       </div>
       <div className="leading-tight">
         <span className={cn('font-display font-extrabold tracking-tight', text, dark ? 'text-white' : 'text-slate-900')}>
-          Orbi<span className={dark ? 'text-amber-300' : 'text-violet-500'}>Lingo</span>
+          Orbi<span className={dark ? 'text-amber-300' : 'text-amber-500 dark:text-amber-300'}>Lingo</span>
         </span>
         {tagline && <span className={cn('block text-[10px] font-semibold', dark ? 'text-slate-400' : 'text-slate-500')}>{tagline}</span>}
       </div>
