@@ -224,7 +224,7 @@ export const TESTIMONIALS: Testimonial[] = [
     before: '620',
     after: '905',
     weeks: 11,
-    examDate: '14/09/2026',
+    examDate: '22/08/2026', // thứ Bảy, cuối hè — học từ 06/06 sau khi kết thúc học kỳ
     venue: 'IIG Hà Nội',
     target: 'TOEIC 900',
     score: '620 → 905',
@@ -239,7 +239,7 @@ export const TESTIMONIALS: Testimonial[] = [
     before: 'B2',
     after: 'C1',
     weeks: 16,
-    examDate: '21/06/2026',
+    examDate: '21/06/2026', // Chủ nhật, sau khi hết năm học — học từ 01/03, tối sau giờ dạy
     venue: 'ĐH Ngoại ngữ – ĐH Đà Nẵng',
     target: 'VSTEP C1',
     score: 'B2 → C1',
@@ -254,7 +254,7 @@ export const TESTIMONIALS: Testimonial[] = [
     before: '480',
     after: '760',
     weeks: 9,
-    examDate: '03/08/2026',
+    examDate: '01/08/2026', // thứ Bảy, ngoài giờ làm — học từ 30/05
     venue: 'IIG TP.HCM',
     target: 'TOEIC 750',
     score: '480 → 760',
