@@ -4,3 +4,4 @@ export * from './layout';
 export * from './overlay';
 export * from './data';
 export * from './command-palette';
+export * from './brand-mark';

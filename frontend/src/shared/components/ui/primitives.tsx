@@ -2,6 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Loader2, AlertCircle, CheckCircle2, Info, AlertTriangle, X } from 'lucide-react';
 import { cn, initials as toInitials } from '@/shared/utils';
+import { BrandMark } from './brand-mark';
 
 // ============ BUTTON ============
 export type ButtonVariant = 'primary' | 'secondary' | 'outline' | 'ghost' | 'danger' | 'success' | 'gradient' | 'soft' | 'ink' | 'white';
@@ -248,15 +249,12 @@ export const Kbd: React.FC<{ children: React.ReactNode }> = ({ children }) => (
 
 // ============ LOGO ============
 export const Logo: React.FC<{ size?: 'sm' | 'md' | 'lg'; dark?: boolean; tagline?: string; to?: string }> = ({ size = 'md', dark, tagline, to = '/' }) => {
-  const dims = { sm: 'w-8 h-8 rounded-lg', md: 'w-10 h-10 rounded-xl', lg: 'w-12 h-12 rounded-2xl' }[size];
+  const dims = { sm: 'w-8 h-8 rounded-lg p-0.5', md: 'w-10 h-10 rounded-xl p-[3px]', lg: 'w-12 h-12 rounded-2xl p-1' }[size];
   const text = { sm: 'text-base', md: 'text-xl', lg: 'text-2xl' }[size];
   return (
     <Link to={to} className="flex items-center gap-2.5 group">
-      <div className={cn('bg-indigo-600 flex items-center justify-center text-white transition-transform duration-300 group-hover:-rotate-6', dims)}>
-        <svg viewBox="0 0 24 24" fill="none" className="w-[58%] h-[58%]" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
-          <circle cx="12" cy="12" r="9" />
-          <path d="M3.5 12h17M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18" />
-        </svg>
+      <div className={cn('shrink-0 bg-white shadow-sm ring-1 ring-slate-900/10 transition-transform duration-300 group-hover:-rotate-6', dims)}>
+        <BrandMark className="w-full h-full" />
       </div>
       <div className="leading-tight">
         <span className={cn('font-display font-extrabold tracking-tight', text, dark ? 'text-white' : 'text-slate-900')}>
