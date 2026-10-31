@@ -11,6 +11,7 @@ import { ScrollProgress, BackToTop, RouteProgress } from '@/shared/components/la
 import { ChatWidget } from '@/shared/components/support';
 import { PUBLIC_NAV, STUDENT_NAV, type MenuLink } from '@/shared/components/layout/navConfig';
 import { ThemeToggle } from '@/shared/components/layout/ThemeToggle';
+import { PageBackdrop } from '@/shared/components/layout/PageBackdrop';
 import { useResolvedTheme } from '@/shared/stores/themeStore';
 import { MOCK_NOTIFICATIONS } from '@/shared/mocks';
 
@@ -56,12 +57,12 @@ export const GuestLayout: React.FC<GuestLayoutProps> = ({ contained }) => {
   const linkCls = ({ isActive }: { isActive: boolean }) =>
     cn(
       'shrink-0 px-2 py-2 rounded-xl text-sm font-bold whitespace-nowrap transition-all duration-200 inline-flex items-center gap-1',
-      isActive ? (onDarkHero ? 'bg-white/10 text-amber-300' : 'bg-slate-900 text-amber-300') : onDarkHero ? 'text-slate-200 hover:bg-white/10 hover:text-white' : 'text-slate-700 hover:bg-slate-900/5 hover:text-slate-900'
+      isActive ? (onDarkHero ? 'bg-white/10 text-amber-300' : 'bg-slate-900/[0.06] text-indigo-700') : onDarkHero ? 'text-slate-200 hover:bg-white/10 hover:text-white' : 'text-slate-700 hover:bg-slate-900/5 hover:text-slate-900'
     );
 
   const dropdown = (label: string, img: string | undefined, items: MenuLink[], active = false, className?: string) => (
     <div key={label} className={cn('relative shrink-0 group/menu', className)}>
-      <button className={cn('px-2 py-2 rounded-xl text-sm font-bold flex items-center gap-1 transition whitespace-nowrap', active ? (onDarkHero ? 'bg-white/10 text-amber-300' : 'bg-slate-900 text-amber-300') : onDarkHero ? 'text-slate-200 hover:bg-white/10 hover:text-white' : 'text-slate-700 hover:bg-slate-900/5 hover:text-slate-900')}>
+      <button className={cn('px-2 py-2 rounded-xl text-sm font-bold flex items-center gap-1 transition whitespace-nowrap', active ? (onDarkHero ? 'bg-white/10 text-amber-300' : 'bg-slate-900/[0.06] text-indigo-700') : onDarkHero ? 'text-slate-200 hover:bg-white/10 hover:text-white' : 'text-slate-700 hover:bg-slate-900/5 hover:text-slate-900')}>
         {img && <img src={img} alt="" className="w-5 h-5 hidden xl:block" />}
         {label}
         {items.some((i) => i.badge) && !active && <span className="w-1.5 h-1.5 rounded-full bg-violet-500" />}
@@ -127,19 +128,9 @@ export const GuestLayout: React.FC<GuestLayoutProps> = ({ contained }) => {
   const bottomItems = isStudent ? studentPrimary.items.slice(0, 4) : [];
 
   return (
-    <div className={cn('relative min-h-screen flex flex-col bg-cream dark:bg-transparent font-sans text-slate-800', contained && 'portal')}>
-      {/* Thanh thông báo trên cùng: chỉ cho khách */}
-      {!isAuth && location.pathname !== '/' && (
-        <div className="bg-slate-900 text-white text-xs font-semibold">
-          <div className="max-w-7xl mx-auto px-4 h-9 flex items-center justify-center gap-2 text-center">
-            <span className="inline-block w-2 h-2 rounded-full bg-amber-300 animate-pulse" />
-            Kho đề ETS 2025 mới cập nhật · Thi thử miễn phí mỗi tuần
-            <Link to="/mock-tests" className="underline underline-offset-2 text-amber-300 hover:text-amber-200 ml-1">
-              Làm đề ngay →
-            </Link>
-          </div>
-        </div>
-      )}
+    <div className={cn('relative min-h-screen flex flex-col font-sans text-slate-800', contained && 'portal')}>
+      {/* Nền giống trang chủ (trang chủ tự vẽ nền đêm riêng) */}
+      {!overHero && <PageBackdrop />}
 
       <header
         className={cn(
@@ -150,8 +141,8 @@ export const GuestLayout: React.FC<GuestLayoutProps> = ({ contained }) => {
               ? cn('fixed inset-x-0 backdrop-blur-xl', isDark ? 'bg-slate-950/75 border-white/10' : 'bg-cream/90 border-slate-900/10')
               : 'absolute inset-x-0 bg-transparent border-transparent'
             : scrolled
-              ? 'sticky bg-cream/90 backdrop-blur-xl border-slate-900/10'
-              : 'sticky bg-cream border-transparent'
+              ? 'sticky bg-cream/80 backdrop-blur-xl border-slate-900/10'
+              : 'sticky bg-transparent border-transparent'
         )}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-[72px] flex items-center justify-between gap-4">
@@ -230,7 +221,7 @@ export const GuestLayout: React.FC<GuestLayoutProps> = ({ contained }) => {
                 <div key={gi} className="space-y-1">
                   {g.title && <p className="px-3 pb-1 text-[10px] font-extrabold uppercase tracking-[0.14em] text-slate-400">{g.title}</p>}
                   {g.items.map((c) => (
-                    <NavLink key={c.to} to={c.to} className={({ isActive }) => cn('flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold', isActive ? 'bg-slate-900 text-amber-300' : 'text-slate-700 hover:bg-slate-900/5')}>
+                    <NavLink key={c.to} to={c.to} className={({ isActive }) => cn('flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold', isActive ? 'bg-slate-900/[0.06] text-indigo-700' : 'text-slate-700 hover:bg-slate-900/5')}>
                       {c.img && <img src={c.img} alt="" className="w-6 h-6 shrink-0" />}
                       <span className="flex-1">{c.label}</span>
                       {c.badge && (
@@ -291,7 +282,7 @@ export const GuestLayout: React.FC<GuestLayoutProps> = ({ contained }) => {
         </nav>
       )}
 
-      <footer className={cn('relative text-slate-300 overflow-hidden', onDarkHero ? 'bg-slate-950 border-t border-white/10' : 'bg-slate-900 border-t-4 border-amber-300')}>
+      <footer className="relative text-slate-300 overflow-hidden bg-slate-950 border-t border-white/10">
         <div aria-hidden className="absolute inset-0 bg-dots opacity-10" />
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-10">
           <div className="lg:col-span-2 space-y-4">

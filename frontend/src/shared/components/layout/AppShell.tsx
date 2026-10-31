@@ -8,6 +8,7 @@ import { useUiStore, toast } from '@/shared/stores/uiStore';
 import { Avatar, Badge, Dropdown, Logo, CommandPalette } from '@/shared/components/ui';
 import { PageTransition } from '@/shared/components/motion';
 import { ThemeToggle } from './ThemeToggle';
+import { PageBackdrop } from './PageBackdrop';
 import { RouteProgress, BackToTop } from '@/shared/components/layout/ScrollExtras';
 import { ChatWidget } from '@/shared/components/support';
 import { MOCK_NOTIFICATIONS } from '@/shared/mocks';
@@ -69,14 +70,15 @@ export const AppShell: React.FC<AppShellProps> = ({ groups, brandTagline, accent
   };
 
   // Link menu giống trang chủ: chữ đậm, active = pill tối
-  const linkCls = ({ isActive }: { isActive: boolean }) => cn('px-3 py-2 rounded-xl text-sm font-bold whitespace-nowrap shrink-0 transition-all duration-200 inline-flex items-center gap-1.5', isActive ? 'bg-slate-900 text-amber-300' : 'text-slate-700 hover:bg-slate-900/5 hover:text-slate-900');
+  const linkCls = ({ isActive }: { isActive: boolean }) => cn('px-3 py-2 rounded-xl text-sm font-bold whitespace-nowrap shrink-0 transition-all duration-200 inline-flex items-center gap-1.5', isActive ? 'bg-slate-900/[0.06] text-indigo-700' : 'text-slate-700 hover:bg-slate-900/5 hover:text-slate-900');
 
   const isGroupActive = (g: NavGroup) => g.items.some((it) => location.pathname.startsWith(it.to));
 
   return (
-    <div className="portal min-h-screen flex flex-col font-sans bg-cream dark:bg-transparent text-slate-800">
+    <div className="portal relative min-h-screen flex flex-col font-sans text-slate-800">
+      <PageBackdrop />
       {/* ===== Header một hàng (giống GuestLayout) ===== */}
-      <header className={cn('sticky top-0 z-40 transition-all duration-300 border-b-2', scrolled ? 'bg-cream/90 backdrop-blur-xl border-slate-900/10' : 'bg-cream border-transparent')}>
+      <header className={cn('sticky top-0 z-40 transition-all duration-300 border-b-2', scrolled ? 'bg-cream/80 backdrop-blur-xl border-slate-900/10' : 'bg-transparent border-transparent')}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-[72px] flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <button onClick={() => setMobileNav(true)} className="md:hidden p-2 rounded-xl border-2 border-slate-900 bg-white" aria-label="Menu">
@@ -97,7 +99,7 @@ export const AppShell: React.FC<AppShellProps> = ({ groups, brandTagline, accent
               const hasBadge = g.items.some((it) => it.badge);
               return (
                 <div key={gi} className="relative group/menu">
-                  <button className={cn('px-3 py-2 rounded-xl text-sm font-bold flex items-center gap-1 transition whitespace-nowrap shrink-0', active ? 'bg-slate-900 text-amber-300' : 'text-slate-700 hover:bg-slate-900/5 hover:text-slate-900')}>
+                  <button className={cn('px-3 py-2 rounded-xl text-sm font-bold flex items-center gap-1 transition whitespace-nowrap shrink-0', active ? 'bg-slate-900/[0.06] text-indigo-700' : 'text-slate-700 hover:bg-slate-900/5 hover:text-slate-900')}>
                     {g.title}
                     {hasBadge && !active && <span className="w-1.5 h-1.5 rounded-full bg-violet-500" />}
                     <ChevronDown className="w-3.5 h-3.5 transition-transform group-hover/menu:rotate-180" />
@@ -195,7 +197,7 @@ export const AppShell: React.FC<AppShellProps> = ({ groups, brandTagline, accent
                   {g.items.map((item) => {
                     const Icon = item.icon;
                     return (
-                      <NavLink key={item.to} to={item.to} end={item.end} className={({ isActive }) => cn('flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition', isActive ? 'bg-slate-900 text-amber-300' : 'text-slate-700 hover:bg-slate-100')}>
+                      <NavLink key={item.to} to={item.to} end={item.end} className={({ isActive }) => cn('flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition', isActive ? 'bg-slate-900/[0.06] text-indigo-700' : 'text-slate-700 hover:bg-slate-100')}>
                         <Icon className="w-[18px] h-[18px]" />
                         <span className="flex-1">{item.label}</span>
                         {item.badge && (
