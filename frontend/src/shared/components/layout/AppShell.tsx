@@ -267,7 +267,7 @@ export const AppShell: React.FC<AppShellProps> = ({ groups, brandTagline, accent
       {user?.role === 'STUDENT' ? (
         <>
           <BackToTop className="bottom-[10.25rem] md:bottom-[5.75rem]" />
-          <ChatWidget raised="md" />
+          <ChatWidget raised="md" preferChat />
         </>
       ) : (
         <BackToTop className="bottom-20 md:bottom-5" />

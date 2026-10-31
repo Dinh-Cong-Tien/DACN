@@ -46,14 +46,25 @@ const groupMessages = (list: ChatMessage[]) =>
     return groups;
   }, []);
 
+const ChatGlyph: React.FC<{ className?: string }> = ({ className }) => (
+  <svg viewBox="0 0 24 24" className={className} aria-hidden>
+    <path fill="currentColor" d="M12 3C6.7 3 2.5 6.8 2.5 11.5c0 2.4 1.1 4.6 2.9 6.1-.2 1.3-.8 2.5-1.7 3.4 2.1-.1 3.9-.9 5.1-1.8 1 .3 2.1.5 3.2.5 5.3 0 9.5-3.8 9.5-8.2S17.3 3 12 3z" />
+  </svg>
+);
+
+type Channel = { key: string; title: string; sub: string; icon: React.ReactNode; href?: string; external?: boolean; onClick?: () => void };
+
 /**
- * Nút chat nổi góc dưới phải + khung hội thoại với đội tư vấn (mock).
+ * Nút liên hệ nổi góc dưới phải: bấm để bung 3 kênh (Zalo · Chat trên web · Gọi), chọn "Chat" mở khung hội thoại (mock).
  * raised: đẩy lên trên thanh điều hướng đáy (thanh này ẩn từ breakpoint md ở AppShell, lg ở GuestLayout).
+ * preferChat: đưa "Chat trên web" lên đầu (học viên đã đăng nhập thường hỏi về bài học/tài khoản).
  */
-export const ChatWidget: React.FC<{ raised?: 'md' | 'lg' }> = ({ raised }) => {
+export const ChatWidget: React.FC<{ raised?: 'md' | 'lg'; preferChat?: boolean }> = ({ raised, preferChat }) => {
   const offset = OFFSET[raised ?? 'none'];
   const [open, setOpen] = useState(false);
+  const [menu, setMenu] = useState(false);
   const [teaser, setTeaser] = useState(false);
+  const rootRef = useRef<HTMLDivElement>(null);
   const [draft, setDraft] = useState('');
   const { messages, typingAgent, unread, send } = useSupportChat(open);
   const listRef = useRef<HTMLDivElement>(null);
@@ -85,13 +96,82 @@ export const ChatWidget: React.FC<{ raised?: 'md' | 'lg' }> = ({ raised }) => {
     return () => window.removeEventListener('keydown', onKey);
   }, [open]);
 
+  // Menu kênh: đóng khi bấm ra ngoài hoặc Esc
+  useEffect(() => {
+    if (!menu) return;
+    const onDown = (e: PointerEvent) => !rootRef.current?.contains(e.target as Node) && setMenu(false);
+    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && setMenu(false);
+    window.addEventListener('pointerdown', onDown);
+    window.addEventListener('keydown', onKey);
+    return () => {
+      window.removeEventListener('pointerdown', onDown);
+      window.removeEventListener('keydown', onKey);
+    };
+  }, [menu]);
+
   const submit = () => {
     send(draft);
     setDraft('');
   };
 
+  const openChat = (prefill?: string) => {
+    setMenu(false);
+    setOpen(true);
+    if (prefill) setDraft(prefill);
+  };
+
+  const zalo: Channel = {
+    key: 'zalo',
+    title: 'Nhắn Zalo',
+    sub: 'Nhắn và nhận trả lời qua app',
+    href: SUPPORT_INFO.zaloUrl,
+    external: true,
+    icon: <span className="text-[11px] font-bold tracking-tight">Zalo</span>,
+  };
+  const chat: Channel = { key: 'chat', title: 'Chat trên web', sub: online ? SUPPORT_INFO.replyTime : 'Để lại tin, sáng mai trả lời', onClick: () => openChat(), icon: <ChatGlyph className="w-5 h-5" /> };
+  const call: Channel = online
+    ? { key: 'call', title: `Gọi ${SUPPORT_INFO.hotline}`, sub: `${SUPPORT_INFO.hours[0]}:00–${SUPPORT_INFO.hours[1]}:00 hằng ngày`, href: `tel:${SUPPORT_INFO.hotline.replace(/\s/g, '')}`, icon: <Phone className="w-[18px] h-[18px]" /> }
+    : { key: 'call', title: 'Để lại số điện thoại', sub: 'Sáng mai tư vấn viên gọi lại', onClick: () => openChat('Số điện thoại của mình: '), icon: <Phone className="w-[18px] h-[18px]" /> };
+  const channels = preferChat ? [chat, zalo, call] : [zalo, chat, call];
+  const ICON_BG: Record<string, string> = { zalo: 'bg-[#0068FF]', chat: 'bg-[#1D5FC0]', call: 'bg-[#1F9D55]' };
+
   return (
-    <>
+    <div ref={rootRef}>
+      {/* Menu kênh liên hệ */}
+      <div
+        role="menu"
+        aria-label="Chọn cách liên hệ"
+        className={cn(
+          'fixed right-4 sm:right-5 z-50 w-[17.5rem] max-w-[calc(100vw-2rem)] overflow-hidden rounded-2xl bg-white shadow-[0_12px_40px_rgba(15,23,42,0.25)] origin-bottom-right transition-[opacity,transform] duration-200',
+          offset.panel,
+          menu && !open ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 translate-y-2 scale-95 pointer-events-none'
+        )}
+      >
+        <p className="px-4 pt-3 pb-1 text-[12px] text-slate-500">Bạn muốn liên hệ qua đâu?</p>
+        {channels.map((c) => {
+          const body = (
+            <>
+              <span className={cn('w-10 h-10 shrink-0 rounded-full text-white flex items-center justify-center', ICON_BG[c.key])}>{c.icon}</span>
+              <span className="min-w-0 leading-tight">
+                <span className="block text-[14px] font-medium text-slate-900">{c.title}</span>
+                <span className="block truncate text-[12px] text-slate-500">{c.sub}</span>
+              </span>
+            </>
+          );
+          const cls = 'flex w-full items-center gap-3 px-4 py-2.5 text-left hover:bg-slate-50 focus-visible:bg-slate-50 focus:outline-none';
+          return c.href ? (
+            <a key={c.key} role="menuitem" href={c.href} target={c.external ? '_blank' : undefined} rel={c.external ? 'noopener noreferrer' : undefined} onClick={() => setMenu(false)} className={cls}>
+              {body}
+            </a>
+          ) : (
+            <button key={c.key} role="menuitem" onClick={c.onClick} className={cls}>
+              {body}
+            </button>
+          );
+        })}
+        <div className="h-1.5" />
+      </div>
+
       {/* Khung hội thoại */}
       <section
         role="dialog"
@@ -237,7 +317,7 @@ export const ChatWidget: React.FC<{ raised?: 'md' | 'lg' }> = ({ raised }) => {
       </section>
 
       {/* Lời mời bật lên cạnh nút chat */}
-      {teaser && !open && (
+      {teaser && !open && !menu && (
         <div className={cn('support-chat__teaser fixed right-4 sm:right-5 z-50 w-[17rem] max-w-[calc(100vw-6rem)]', offset.panel)}>
           <button
             onClick={() => {
@@ -260,25 +340,24 @@ export const ChatWidget: React.FC<{ raised?: 'md' | 'lg' }> = ({ raised }) => {
       )}
 
       {/* Nút mở/đóng */}
+      {/* Nút chính: đóng khung chat nếu đang mở, nếu không thì bung/thu menu kênh */}
       <button
-        onClick={() => setOpen((o) => !o)}
-        aria-label={open ? 'Thu nhỏ khung chat' : 'Mở khung chat hỗ trợ'}
-        aria-expanded={open}
+        onClick={() => (open ? setOpen(false) : setMenu((m) => !m))}
+        aria-label={open ? 'Thu nhỏ khung chat' : menu ? 'Đóng menu liên hệ' : 'Liên hệ tư vấn'}
+        aria-haspopup="menu"
+        aria-expanded={open || menu}
         className={cn(
           'fixed right-4 sm:right-5 z-50 w-14 h-14 rounded-full bg-[#1D5FC0] text-white shadow-[0_6px_20px_rgba(29,95,192,0.45)] flex items-center justify-center transition-[transform,background-color] duration-200 hover:bg-[#174EA0] active:scale-95',
           offset.button
         )}
       >
-        <span className={cn('absolute transition-all duration-200', open ? 'opacity-0 rotate-90 scale-50' : 'opacity-100')}>
-          <svg viewBox="0 0 24 24" className="w-7 h-7" aria-hidden>
-            <path fill="currentColor" d="M12 3C6.7 3 2.5 6.8 2.5 11.5c0 2.4 1.1 4.6 2.9 6.1-.2 1.3-.8 2.5-1.7 3.4 2.1-.1 3.9-.9 5.1-1.8 1 .3 2.1.5 3.2.5 5.3 0 9.5-3.8 9.5-8.2S17.3 3 12 3z" />
-          </svg>
-        </span>
+        <ChatGlyph className={cn('absolute w-7 h-7 transition-all duration-200', open || menu ? 'opacity-0 rotate-90 scale-50' : 'opacity-100')} />
+        <X className={cn('absolute w-6 h-6 transition-all duration-200', menu && !open ? 'opacity-100' : 'opacity-0 -rotate-90 scale-50')} />
         <ChevronDown className={cn('absolute w-7 h-7 transition-all duration-200', open ? 'opacity-100' : 'opacity-0 -rotate-90 scale-50')} />
         {!open && unread > 0 && (
           <span className="absolute -top-1 -right-1 min-w-[20px] h-5 px-1 rounded-full bg-[#E41E3F] text-[11px] font-semibold leading-5 ring-2 ring-white">{unread}</span>
         )}
       </button>
-    </>
+    </div>
   );
 };

@@ -569,6 +569,8 @@ export interface SupportInfo {
   /** Lời mời bật lên cạnh nút chat khi chưa mở lần nào trong phiên */
   teaser: string;
   hotline: string;
+  /** Link nhắn Zalo (Zalo OA hoặc zalo.me/<số điện thoại>) */
+  zaloUrl: string;
   email: string;
   /** Giờ trực, dạng [giờ mở, giờ đóng] theo giờ VN */
   hours: [number, number];

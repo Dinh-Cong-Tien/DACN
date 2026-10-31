@@ -10,6 +10,8 @@ export const SUPPORT_INFO: SupportInfo = {
   replyTime: 'Thường trả lời trong vài phút',
   teaser: 'Bạn đang ôn TOEIC hay VSTEP? Mình tư vấn lộ trình miễn phí nha.',
   hotline: '0236 555 0199',
+  // TODO: thay bằng link Zalo OA / số Zalo thật của trung tâm
+  zaloUrl: 'https://zalo.me/02365550199',
   email: 'hello@orbilingo.vn',
   hours: [8, 22],
   quickTopics: [
