@@ -381,7 +381,7 @@ export const HomePage: React.FC = () => {
         <Reveal>
           <SectionTitle dark eyebrow="Học viên nói gì" title={<>Điểm số thật, <span className="hero-gradient-text">người thật.</span></>} description="Ba trong số hàng nghìn học viên đã tăng điểm trong năm nay." />
         </Reveal>
-        <Stagger className="grid md:grid-cols-3 gap-6">
+        <Stagger className="grid md:grid-cols-3 gap-10 md:gap-8">
           {TESTIMONIALS.map((t) => (
             <TestimonialCard key={t.name} item={t} />
           ))}
