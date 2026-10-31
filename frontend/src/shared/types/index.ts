@@ -531,9 +531,19 @@ export interface ChatLink {
   to: string;
 }
 
+export interface SupportAgent {
+  id: string;
+  name: string;
+  role: string;
+  avatar: string;
+}
+
 export interface ChatMessage {
   id: string;
-  from: 'user' | 'agent';
+  /** system: dòng thông báo giữa khung, vd "Cô Hạnh đã tham gia" */
+  from: 'user' | 'agent' | 'system';
+  /** Người trả lời khi from = 'agent' */
+  agentId?: string;
   text: string;
   /** ISO time */
   at: string;
@@ -544,12 +554,20 @@ export interface ChatMessage {
 export interface SupportReply {
   id: string;
   keywords: string[];
-  text: string;
+  /** Mỗi phần tử là một bóng tin riêng, gửi lần lượt như người gõ thật */
+  texts: string[];
+  /** Người trả lời; bỏ trống = tư vấn viên đang trực */
+  agentId?: string;
   links?: ChatLink[];
 }
 
 export interface SupportInfo {
-  name: string;
+  team: string;
+  agents: SupportAgent[];
+  /** Thời gian phản hồi hiển thị ở đầu khung */
+  replyTime: string;
+  /** Lời mời bật lên cạnh nút chat khi chưa mở lần nào trong phiên */
+  teaser: string;
   hotline: string;
   email: string;
   /** Giờ trực, dạng [giờ mở, giờ đóng] theo giờ VN */

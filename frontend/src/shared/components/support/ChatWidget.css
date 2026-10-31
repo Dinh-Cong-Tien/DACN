@@ -1,0 +1,68 @@
+/* Khung chat hỗ trợ — phần Tailwind khó diễn đạt: góc bóng tin theo nhóm, chấm "đang gõ", lời mời trượt vào */
+
+.support-chat__head {
+  background: #1d5fc0;
+}
+
+/* Bóng tin kiểu Messenger: góc phía người gửi nhỏ lại giữa nhóm, đầu/cuối nhóm bo tròn */
+.support-chat__bubble {
+  border-radius: 6px 18px 18px 6px;
+}
+.support-chat__bubble.is-first {
+  border-top-left-radius: 18px;
+}
+.support-chat__bubble.is-last {
+  border-bottom-left-radius: 18px;
+}
+.support-chat__bubble--mine {
+  border-radius: 18px 6px 6px 18px;
+}
+.support-chat__bubble--mine.is-first {
+  border-top-right-radius: 18px;
+}
+.support-chat__bubble--mine.is-last {
+  border-bottom-right-radius: 18px;
+}
+
+.support-chat__typing span {
+  width: 6px;
+  height: 6px;
+  border-radius: 9999px;
+  background: #90949c;
+  animation: support-typing 1.2s infinite ease-in-out;
+}
+.support-chat__typing span:nth-child(2) {
+  animation-delay: 0.15s;
+}
+.support-chat__typing span:nth-child(3) {
+  animation-delay: 0.3s;
+}
+@keyframes support-typing {
+  0%,
+  60%,
+  100% {
+    opacity: 0.35;
+    transform: translateY(0);
+  }
+  30% {
+    opacity: 1;
+    transform: translateY(-3px);
+  }
+}
+
+.support-chat__teaser {
+  animation: support-teaser-in 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+@keyframes support-teaser-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.97);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .support-chat__typing span,
+  .support-chat__teaser {
+    animation: none;
+  }
+}

@@ -1,24 +1,29 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Send, X, Phone } from 'lucide-react';
+import { ChevronDown, Phone, SendHorizontal, X } from 'lucide-react';
 import { cn } from '@/shared/utils';
 import { SUPPORT_INFO } from '@/shared/mocks';
-import { BrandMark } from '@/shared/components/ui/brand-mark';
-import { isOnline, useSupportChat } from './useSupportChat';
+import type { ChatMessage } from '@/shared/types';
+import { agentOf, isOnline, useSupportChat } from './useSupportChat';
+import './ChatWidget.css';
 
+const TEASER_KEY = 'orbi-support-teaser-seen';
 const time = (iso: string) => new Date(iso).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
 
-/** Bong bóng hội thoại 3 chấm — cùng hình với bong bóng trong logo */
-const BubbleIcon: React.FC<{ className?: string }> = ({ className }) => (
-  <svg viewBox="0 0 24 24" className={className} aria-hidden>
-    <path d="M6 3.5h12a3.5 3.5 0 0 1 3.5 3.5v6.5a3.5 3.5 0 0 1-3.5 3.5h-6.2L7 20.5V17H6a3.5 3.5 0 0 1-3.5-3.5V7A3.5 3.5 0 0 1 6 3.5z" fill="currentColor" />
-    <g fill="#F26B1D">
-      <circle cx="8" cy="10.25" r="1.4" />
-      <circle cx="12" cy="10.25" r="1.4" />
-      <circle cx="16" cy="10.25" r="1.4" />
-    </g>
-  </svg>
-);
+const readFlag = () => {
+  try {
+    return sessionStorage.getItem(TEASER_KEY) === '1';
+  } catch {
+    return false;
+  }
+};
+const writeFlag = () => {
+  try {
+    sessionStorage.setItem(TEASER_KEY, '1');
+  } catch {
+    /* bỏ qua */
+  }
+};
 
 // Vị trí 2 lớp nổi theo việc có thanh điều hướng đáy hay không
 const OFFSET = {
@@ -27,33 +32,60 @@ const OFFSET = {
   lg: { button: 'bottom-20 lg:bottom-5', panel: 'bottom-[9rem] lg:bottom-[5.25rem]' },
 } as const;
 
+const Avatar: React.FC<{ id?: string; className?: string }> = ({ id, className }) => {
+  const a = agentOf(id);
+  return <img src={a.avatar} alt={a.name} className={cn('shrink-0 rounded-full object-cover bg-slate-200', className)} />;
+};
+
+/** Gom các tin liên tiếp cùng người gửi thành một nhóm (tên ở đầu nhóm, avatar + giờ ở cuối nhóm) */
+const groupMessages = (list: ChatMessage[]) =>
+  list.reduce<ChatMessage[][]>((groups, m) => {
+    const last = groups[groups.length - 1];
+    if (last && m.from !== 'system' && last[0].from === m.from && last[0].agentId === m.agentId) last.push(m);
+    else groups.push([m]);
+    return groups;
+  }, []);
+
 /**
- * Nút chat nổi góc dưới phải + khung hội thoại với tư vấn viên (mock).
+ * Nút chat nổi góc dưới phải + khung hội thoại với đội tư vấn (mock).
  * raised: đẩy lên trên thanh điều hướng đáy (thanh này ẩn từ breakpoint md ở AppShell, lg ở GuestLayout).
  */
 export const ChatWidget: React.FC<{ raised?: 'md' | 'lg' }> = ({ raised }) => {
   const offset = OFFSET[raised ?? 'none'];
   const [open, setOpen] = useState(false);
+  const [teaser, setTeaser] = useState(false);
   const [draft, setDraft] = useState('');
-  const { messages, typing, unread, send } = useSupportChat(open);
+  const { messages, typingAgent, unread, send } = useSupportChat(open);
   const listRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
   const online = isOnline();
+  const groups = groupMessages(messages);
+  const lastUserIdx = messages.map((m) => m.from).lastIndexOf('user');
+  const seen = lastUserIdx >= 0 && (typingAgent !== null || messages.slice(lastUserIdx + 1).some((m) => m.from !== 'user'));
+  const onlyGreeting = messages.every((m) => m.from === 'agent');
+
+  // Lời mời bật lên sau vài giây nếu phiên này chưa mở chat
+  useEffect(() => {
+    if (readFlag()) return;
+    const t = window.setTimeout(() => setTeaser(true), 6000);
+    return () => clearTimeout(t);
+  }, []);
 
   useEffect(() => {
     listRef.current?.scrollTo({ top: listRef.current.scrollHeight, behavior: 'smooth' });
-  }, [messages, typing, open]);
+  }, [messages, typingAgent, open]);
 
   useEffect(() => {
     if (!open) return;
+    setTeaser(false);
+    writeFlag();
     inputRef.current?.focus();
     const onKey = (e: KeyboardEvent) => e.key === 'Escape' && setOpen(false);
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, [open]);
 
-  const submit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const submit = () => {
     send(draft);
     setDraft('');
   };
@@ -63,103 +95,188 @@ export const ChatWidget: React.FC<{ raised?: 'md' | 'lg' }> = ({ raised }) => {
       {/* Khung hội thoại */}
       <section
         role="dialog"
-        aria-label={SUPPORT_INFO.name}
+        aria-label={SUPPORT_INFO.team}
         className={cn(
-          'fixed right-4 sm:right-5 z-50 w-[22.5rem] max-w-[calc(100vw-2rem)] h-[34rem] max-h-[calc(100dvh-8rem)] flex flex-col overflow-hidden rounded-2xl bg-white shadow-2xl ring-1 ring-slate-900/10 origin-bottom-right transition-[opacity,transform] duration-200',
+          'support-chat fixed right-4 sm:right-5 z-50 w-[23rem] max-w-[calc(100vw-2rem)] h-[36rem] max-h-[calc(100dvh-8rem)] flex flex-col overflow-hidden rounded-2xl bg-white shadow-[0_12px_48px_rgba(15,23,42,0.28)] origin-bottom-right transition-[opacity,transform] duration-200',
           offset.panel,
-          open ? 'opacity-100 scale-100' : 'opacity-0 scale-95 pointer-events-none'
+          open ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-3 pointer-events-none'
         )}
       >
-        <header className="flex items-center gap-3 bg-slate-900 px-4 py-3 text-white">
-          <span className="w-9 h-9 shrink-0 rounded-xl bg-white p-[3px]">
-            <BrandMark className="w-full h-full" />
-          </span>
-          <div className="min-w-0 flex-1 leading-tight">
-            <p className="font-semibold">{SUPPORT_INFO.name}</p>
-            <p className="flex items-center gap-1.5 text-xs text-slate-400">
-              <span className={cn('w-1.5 h-1.5 rounded-full', online ? 'bg-emerald-400' : 'bg-amber-400')} />
-              {online ? 'Đang trực · trả lời trong 2 phút' : `Ngoài giờ trực · trả lời từ ${SUPPORT_INFO.hours[0]}:00`}
-            </p>
+        <header className="support-chat__head px-4 pt-4 pb-3 text-white">
+          <div className="flex items-start justify-between">
+            <div className="flex -space-x-2">
+              {SUPPORT_INFO.agents.map((a) => (
+                <Avatar key={a.id} id={a.id} className="w-9 h-9 ring-2 ring-[#1D5FC0]" />
+              ))}
+            </div>
+            <div className="flex -mr-1.5">
+              <a href={`tel:${SUPPORT_INFO.hotline.replace(/\s/g, '')}`} aria-label="Gọi hotline" className="p-2 rounded-lg text-white/80 hover:bg-white/10 hover:text-white">
+                <Phone className="w-[18px] h-[18px]" />
+              </a>
+              <button onClick={() => setOpen(false)} aria-label="Thu nhỏ khung chat" className="p-2 rounded-lg text-white/80 hover:bg-white/10 hover:text-white">
+                <ChevronDown className="w-5 h-5" />
+              </button>
+            </div>
           </div>
-          <a href={`tel:${SUPPORT_INFO.hotline.replace(/\s/g, '')}`} aria-label="Gọi hotline" className="p-2 rounded-lg text-slate-300 hover:bg-white/10 hover:text-white">
-            <Phone className="w-4 h-4" />
-          </a>
-          <button onClick={() => setOpen(false)} aria-label="Đóng khung chat" className="p-2 -mr-1 rounded-lg text-slate-300 hover:bg-white/10 hover:text-white">
-            <X className="w-4 h-4" />
-          </button>
+          <p className="mt-2.5 font-semibold text-[15px]">{SUPPORT_INFO.team}</p>
+          <p className="flex items-center gap-1.5 text-[13px] text-white/75">
+            {online ? (
+              <>
+                <span className="w-2 h-2 rounded-full bg-[#3DDC84]" /> {SUPPORT_INFO.replyTime}
+              </>
+            ) : (
+              `Ngoài giờ làm việc · trả lời từ ${SUPPORT_INFO.hours[0]}:00 sáng mai`
+            )}
+          </p>
         </header>
 
-        <div ref={listRef} className="flex-1 overflow-y-auto bg-slate-50 px-4 py-4 space-y-3">
-          {messages.map((m) => (
-            <div key={m.id} className={cn('flex flex-col', m.from === 'user' ? 'items-end' : 'items-start')}>
-              <p
-                className={cn(
-                  'max-w-[85%] whitespace-pre-line rounded-2xl px-3.5 py-2 text-sm leading-relaxed',
-                  m.from === 'user' ? 'rounded-br-md bg-orange-500 text-white' : 'rounded-bl-md border border-slate-200 bg-white text-slate-800'
-                )}
-              >
-                {m.text}
-              </p>
-              {m.links && (
-                <div className="mt-1.5 flex flex-wrap gap-1.5">
-                  {m.links.map((l) => (
-                    <Link key={l.to} to={l.to} onClick={() => setOpen(false)} className="rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-xs font-semibold text-orange-600 hover:border-orange-300 hover:bg-orange-50">
-                      {l.label} →
-                    </Link>
-                  ))}
-                </div>
-              )}
-              <span className="mt-1 text-[10px] text-slate-400">{time(m.at)}</span>
-            </div>
-          ))}
+        <div ref={listRef} className="flex-1 overflow-y-auto px-4 pt-3 pb-2">
+          <p className="mb-3 text-center text-[11px] text-slate-400">Hôm nay</p>
 
-          {messages.length === 1 && !typing && (
-            <div className="space-y-1.5 pt-1">
+          {groups.map((g) => {
+            const first = g[0];
+            if (first.from === 'system')
+              return (
+                <p key={first.id} className="my-3 flex items-center justify-center gap-1.5 text-[11px] text-slate-500">
+                  <Avatar id={first.agentId} className="w-4 h-4" />
+                  {first.text}
+                </p>
+              );
+            const mine = first.from === 'user';
+            const lastMsg = g[g.length - 1];
+            return (
+              <div key={first.id} className={cn('mb-3 flex items-end gap-2', mine && 'justify-end')}>
+                {!mine && <Avatar id={first.agentId} className="w-7 h-7 mb-5" />}
+                <div className={cn('flex max-w-[78%] flex-col gap-0.5', mine ? 'items-end' : 'items-start')}>
+                  {!mine && <span className="mb-0.5 ml-1 text-[11px] text-slate-500">{agentOf(first.agentId).name}</span>}
+                  {g.map((m, i) => (
+                    <React.Fragment key={m.id}>
+                      <p
+                        className={cn(
+                          'support-chat__bubble whitespace-pre-line px-3 py-2 text-[14px] leading-[1.45]',
+                          mine ? 'support-chat__bubble--mine bg-[#1D5FC0] text-white' : 'bg-[#F0F2F5] text-[#1c1e21]',
+                          i === 0 && 'is-first',
+                          i === g.length - 1 && 'is-last'
+                        )}
+                      >
+                        {m.text}
+                      </p>
+                      {m.links && (
+                        <div className="mt-1 flex flex-col gap-1 self-stretch">
+                          {m.links.map((l) => (
+                            <Link key={l.to} to={l.to} onClick={() => setOpen(false)} className="rounded-xl border border-[#1D5FC0]/25 px-3 py-1.5 text-center text-[13px] font-medium text-[#1D5FC0] hover:bg-[#1D5FC0]/5">
+                              {l.label}
+                            </Link>
+                          ))}
+                        </div>
+                      )}
+                    </React.Fragment>
+                  ))}
+                  <span className={cn('mt-0.5 text-[11px] text-slate-400', mine ? 'mr-1' : 'ml-1')}>
+                    {time(lastMsg.at)}
+                    {mine && lastMsg.id === messages[lastUserIdx]?.id && <> · {seen ? 'Đã xem' : 'Đã gửi'}</>}
+                  </span>
+                </div>
+              </div>
+            );
+          })}
+
+          {onlyGreeting && !typingAgent && (
+            <div className="mb-3 flex flex-wrap justify-end gap-1.5 pl-8">
               {SUPPORT_INFO.quickTopics.map((q) => (
-                <button key={q.label} onClick={() => send(q.message)} className="block w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-left text-sm text-slate-700 hover:border-orange-300 hover:text-orange-700">
+                <button key={q.label} onClick={() => send(q.message)} className="rounded-2xl border border-[#1D5FC0]/40 px-3 py-1.5 text-[13px] text-[#1D5FC0] hover:bg-[#1D5FC0] hover:text-white transition-colors">
                   {q.label}
                 </button>
               ))}
             </div>
           )}
 
-          {typing && (
-            <div className="flex w-fit items-center gap-1 rounded-2xl rounded-bl-md border border-slate-200 bg-white px-3.5 py-3" aria-label="Đang trả lời">
-              {[0, 150, 300].map((d) => (
-                <span key={d} className="w-1.5 h-1.5 rounded-full bg-slate-400 animate-bounce" style={{ animationDelay: `${d}ms` }} />
-              ))}
+          {typingAgent && (
+            <div className="mb-3 flex items-end gap-2" aria-label={`${agentOf(typingAgent).name} đang soạn tin`}>
+              <Avatar id={typingAgent} className="w-7 h-7" />
+              <div className="support-chat__typing flex items-center gap-1 rounded-2xl bg-[#F0F2F5] px-3.5 py-3">
+                <span />
+                <span />
+                <span />
+              </div>
             </div>
           )}
         </div>
 
-        <form onSubmit={submit} className="flex items-center gap-2 border-t border-slate-200 bg-white p-3">
-          <input
-            ref={inputRef}
-            value={draft}
-            onChange={(e) => setDraft(e.target.value)}
-            placeholder="Nhập câu hỏi…"
-            aria-label="Nội dung tin nhắn"
-            className="min-w-0 flex-1 rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-orange-400 focus:bg-white focus:outline-none"
-          />
-          <button type="submit" disabled={!draft.trim()} aria-label="Gửi" className="w-10 h-10 shrink-0 rounded-xl bg-orange-500 text-white flex items-center justify-center hover:bg-orange-600 disabled:opacity-40 disabled:hover:bg-orange-500">
-            <Send className="w-4 h-4" />
-          </button>
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            submit();
+          }}
+          className="border-t border-slate-200 px-3 pt-2 pb-2.5"
+        >
+          <div className="flex items-end gap-1.5">
+            <textarea
+              ref={inputRef}
+              rows={1}
+              value={draft}
+              onChange={(e) => setDraft(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault();
+                  submit();
+                }
+              }}
+              placeholder="Nhập tin nhắn…"
+              aria-label="Nội dung tin nhắn"
+              className="max-h-24 min-h-[40px] flex-1 resize-none bg-transparent px-1.5 py-2 text-[14px] text-slate-900 placeholder:text-slate-400 focus:outline-none"
+            />
+            <button type="submit" disabled={!draft.trim()} aria-label="Gửi" className="mb-0.5 w-9 h-9 shrink-0 rounded-full flex items-center justify-center text-[#1D5FC0] hover:bg-[#1D5FC0]/10 disabled:text-slate-300 disabled:hover:bg-transparent">
+              <SendHorizontal className="w-5 h-5" />
+            </button>
+          </div>
+          <p className="px-1.5 text-[11px] text-slate-400">
+            Hotline {SUPPORT_INFO.hotline} · {SUPPORT_INFO.hours[0]}:00–{SUPPORT_INFO.hours[1]}:00 hằng ngày
+          </p>
         </form>
       </section>
+
+      {/* Lời mời bật lên cạnh nút chat */}
+      {teaser && !open && (
+        <div className={cn('support-chat__teaser fixed right-4 sm:right-5 z-50 w-[17rem] max-w-[calc(100vw-6rem)]', offset.panel)}>
+          <button
+            onClick={() => {
+              setTeaser(false);
+              writeFlag();
+            }}
+            aria-label="Ẩn lời mời"
+            className="absolute -top-2 -left-2 w-6 h-6 rounded-full bg-white text-slate-500 shadow ring-1 ring-slate-200 flex items-center justify-center hover:text-slate-800"
+          >
+            <X className="w-3.5 h-3.5" />
+          </button>
+          <button onClick={() => setOpen(true)} className="flex w-full items-start gap-2.5 rounded-2xl bg-white p-3 text-left shadow-[0_8px_30px_rgba(15,23,42,0.22)]">
+            <Avatar className="w-9 h-9" />
+            <span className="text-[13px] leading-snug text-slate-700">
+              <span className="block text-[11px] text-slate-500">{agentOf().name} · OrbiLingo</span>
+              {SUPPORT_INFO.teaser}
+            </span>
+          </button>
+        </div>
+      )}
 
       {/* Nút mở/đóng */}
       <button
         onClick={() => setOpen((o) => !o)}
-        aria-label={open ? 'Đóng khung chat' : 'Mở khung chat hỗ trợ'}
+        aria-label={open ? 'Thu nhỏ khung chat' : 'Mở khung chat hỗ trợ'}
         aria-expanded={open}
         className={cn(
-          'fixed right-4 sm:right-5 z-50 w-14 h-14 rounded-full bg-orange-500 text-white shadow-lg shadow-orange-900/30 flex items-center justify-center transition-transform duration-200 hover:scale-105 hover:bg-orange-600',
+          'fixed right-4 sm:right-5 z-50 w-14 h-14 rounded-full bg-[#1D5FC0] text-white shadow-[0_6px_20px_rgba(29,95,192,0.45)] flex items-center justify-center transition-[transform,background-color] duration-200 hover:bg-[#174EA0] active:scale-95',
           offset.button
         )}
       >
-        {open ? <X className="w-6 h-6" /> : <BubbleIcon className="w-7 h-7" />}
+        <span className={cn('absolute transition-all duration-200', open ? 'opacity-0 rotate-90 scale-50' : 'opacity-100')}>
+          <svg viewBox="0 0 24 24" className="w-7 h-7" aria-hidden>
+            <path fill="currentColor" d="M12 3C6.7 3 2.5 6.8 2.5 11.5c0 2.4 1.1 4.6 2.9 6.1-.2 1.3-.8 2.5-1.7 3.4 2.1-.1 3.9-.9 5.1-1.8 1 .3 2.1.5 3.2.5 5.3 0 9.5-3.8 9.5-8.2S17.3 3 12 3z" />
+          </svg>
+        </span>
+        <ChevronDown className={cn('absolute w-7 h-7 transition-all duration-200', open ? 'opacity-100' : 'opacity-0 -rotate-90 scale-50')} />
         {!open && unread > 0 && (
-          <span className="absolute -top-0.5 -right-0.5 min-w-5 h-5 px-1 rounded-full bg-rose-600 text-[11px] font-bold leading-5 ring-2 ring-white">{unread}</span>
+          <span className="absolute -top-1 -right-1 min-w-[20px] h-5 px-1 rounded-full bg-[#E41E3F] text-[11px] font-semibold leading-5 ring-2 ring-white">{unread}</span>
         )}
       </button>
     </>
