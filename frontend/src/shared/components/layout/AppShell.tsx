@@ -8,6 +8,7 @@ import { useUiStore, toast } from '@/shared/stores/uiStore';
 import { Avatar, Badge, Dropdown, Logo, CommandPalette } from '@/shared/components/ui';
 import { PageTransition } from '@/shared/components/motion';
 import { RouteProgress, BackToTop } from '@/shared/components/layout/ScrollExtras';
+import { ChatWidget } from '@/shared/components/support';
 import { MOCK_NOTIFICATIONS } from '@/shared/mocks';
 
 export interface NavItem {
@@ -262,7 +263,15 @@ export const AppShell: React.FC<AppShellProps> = ({ groups, brandTagline, accent
       </nav>
 
       <RouteProgress />
-      <BackToTop />
+      {/* chỉ học viên có kênh chat hỗ trợ; nút đẩy lên trên thanh điều hướng đáy ở mobile */}
+      {user?.role === 'STUDENT' ? (
+        <>
+          <BackToTop className="bottom-[10.25rem] md:bottom-[5.75rem]" />
+          <ChatWidget raised="md" />
+        </>
+      ) : (
+        <BackToTop className="bottom-20 md:bottom-5" />
+      )}
       <CommandPalette />
     </div>
   );

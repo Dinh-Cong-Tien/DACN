@@ -22,8 +22,8 @@ export const ScrollProgress: React.FC<{ className?: string }> = ({ className }) 
   );
 };
 
-/** Nút lên đầu trang xuất hiện khi cuộn xa */
-export const BackToTop: React.FC = () => {
+/** Nút lên đầu trang xuất hiện khi cuộn xa; mặc định nằm ngay trên nút chat nổi */
+export const BackToTop: React.FC<{ className?: string }> = ({ className = 'bottom-[5.75rem]' }) => {
   const [show, setShow] = useState(false);
   useEffect(() => {
     const onScroll = () => setShow(window.scrollY > 700);
@@ -35,7 +35,8 @@ export const BackToTop: React.FC = () => {
       onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
       aria-label="Lên đầu trang"
       className={cn(
-        'fixed bottom-5 right-5 z-50 w-11 h-11 rounded-xl bg-slate-900 text-amber-300 border-2 border-slate-900 shadow-hard-sm flex items-center justify-center transition-all duration-300 hover:-translate-y-1',
+        'fixed right-[22px] sm:right-[26px] z-50 w-11 h-11 rounded-xl bg-slate-900 text-amber-300 border-2 border-slate-900 shadow-hard-sm flex items-center justify-center transition-all duration-300 hover:-translate-y-1',
+        className,
         show ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 pointer-events-none'
       )}
     >

@@ -6,3 +6,4 @@ export * from './teacher';
 export * from './head';
 export * from './admin';
 export * from './marketing';
+export * from './support';

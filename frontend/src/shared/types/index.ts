@@ -524,3 +524,35 @@ export interface TestPartInfo {
   description: string;
   tips: string[];
 }
+
+// ============ SUPPORT CHAT ============
+export interface ChatLink {
+  label: string;
+  to: string;
+}
+
+export interface ChatMessage {
+  id: string;
+  from: 'user' | 'agent';
+  text: string;
+  /** ISO time */
+  at: string;
+  links?: ChatLink[];
+}
+
+/** Câu trả lời mẫu của tư vấn viên: khớp khi tin nhắn chứa một trong các từ khoá (không dấu, chữ thường) */
+export interface SupportReply {
+  id: string;
+  keywords: string[];
+  text: string;
+  links?: ChatLink[];
+}
+
+export interface SupportInfo {
+  name: string;
+  hotline: string;
+  email: string;
+  /** Giờ trực, dạng [giờ mở, giờ đóng] theo giờ VN */
+  hours: [number, number];
+  quickTopics: { label: string; message: string }[];
+}
