@@ -7,42 +7,42 @@ export const STUDENT_NAV: NavGroup[] = [
   {
     title: 'Học tập',
     items: [
-      { to: '/app/dashboard', label: 'Tổng quan', icon: LayoutDashboard },
-      { to: '/app/learning-path', label: 'Lộ trình', icon: Compass },
-      { to: '/app/courses', label: 'Khoá học', icon: PlayCircle },
-      { to: '/app/practice', label: 'Luyện tập', icon: Layers },
-      { to: '/app/mock-tests', label: 'Thi thử', icon: FileText },
+      { to: '/app/dashboard', label: 'Tổng quan', img: '/images/nav/bar-chart.webp', icon: LayoutDashboard },
+      { to: '/app/learning-path', label: 'Lộ trình', img: '/images/nav/compass.webp', icon: Compass },
+      { to: '/app/courses', label: 'Khoá học', img: '/images/nav/laptop.webp', icon: PlayCircle },
+      { to: '/app/practice', label: 'Luyện tập', img: '/images/nav/pencil.webp', icon: Layers },
+      { to: '/app/mock-tests', label: 'Thi thử', img: '/images/nav/memo.webp', icon: FileText },
     ],
   },
   {
     title: 'Ôn luyện',
     items: [
-      { to: '/app/mistakes', label: 'Sổ tay lỗi sai', icon: AlertTriangle, badge: '5' },
-      { to: '/app/review', label: 'Lịch ôn ngắt quãng', icon: RotateCcw },
-      { to: '/app/drills', label: 'Luyện điểm yếu', icon: Target },
-      { to: '/app/dictation', label: 'Nghe chép chính tả', icon: Headphones },
-      { to: '/app/vocabulary', label: 'Từ vựng & Flashcard', icon: BookOpen },
-      { to: '/app/grammar', label: 'Chủ điểm ngữ pháp', icon: GraduationCap },
-      { to: '/app/writing', label: 'Luyện Viết', icon: PenTool },
-      { to: '/app/speaking', label: 'Luyện Nói', icon: Mic },
+      { to: '/app/mistakes', label: 'Sổ tay lỗi sai', img: '/images/nav/spiral-notepad.webp', icon: AlertTriangle, badge: '5' },
+      { to: '/app/review', label: 'Lịch ôn ngắt quãng', img: '/images/nav/spiral-calendar.webp', icon: RotateCcw },
+      { to: '/app/drills', label: 'Luyện điểm yếu', img: '/images/nav/bullseye.webp', icon: Target },
+      { to: '/app/dictation', label: 'Nghe chép chính tả', img: '/images/nav/headphone.webp', icon: Headphones },
+      { to: '/app/vocabulary', label: 'Từ vựng & Flashcard', img: '/images/nav/open-book.webp', icon: BookOpen },
+      { to: '/app/grammar', label: 'Chủ điểm ngữ pháp', img: '/images/nav/bookmark-tabs.webp', icon: GraduationCap },
+      { to: '/app/writing', label: 'Luyện Viết', img: '/images/nav/fountain-pen.webp', icon: PenTool },
+      { to: '/app/speaking', label: 'Luyện Nói', img: '/images/nav/microphone.webp', icon: Mic },
     ],
   },
   {
     title: 'Thành tích',
     items: [
-      { to: '/app/progress', label: 'Tiến độ & Phân tích', icon: TrendingUp },
-      { to: '/app/achievements', label: 'Huy hiệu', icon: Award },
-      { to: '/app/leaderboard', label: 'Bảng vinh danh', icon: Trophy },
-      { to: '/app/bookmarks', label: 'Đã lưu', icon: Bookmark },
+      { to: '/app/progress', label: 'Tiến độ & Phân tích', img: '/images/nav/chart-increasing.webp', icon: TrendingUp },
+      { to: '/app/achievements', label: 'Huy hiệu', img: '/images/nav/sports-medal.webp', icon: Award },
+      { to: '/app/leaderboard', label: 'Bảng vinh danh', img: '/images/nav/trophy.webp', icon: Trophy },
+      { to: '/app/bookmarks', label: 'Đã lưu', img: '/images/nav/bookmark.webp', icon: Bookmark },
     ],
   },
   {
     title: 'Công cụ',
     items: [
-      { to: '/score-converter', label: 'Quy đổi điểm', icon: Calculator },
-      { to: '/resources', label: 'Kho tài liệu mở', icon: FolderOpen },
-      { to: '/blog', label: 'Kinh nghiệm thi', icon: Newspaper },
-      { to: '/pricing', label: 'Bảng giá', icon: Tag },
+      { to: '/score-converter', label: 'Quy đổi điểm', img: '/images/nav/abacus.webp', icon: Calculator },
+      { to: '/resources', label: 'Kho tài liệu mở', img: '/images/nav/books.webp', icon: FolderOpen },
+      { to: '/blog', label: 'Kinh nghiệm thi', img: '/images/nav/light-bulb.webp', icon: Newspaper },
+      { to: '/pricing', label: 'Bảng giá', img: '/images/nav/label.webp', icon: Tag },
     ],
   },
 ];
@@ -52,6 +52,7 @@ export interface MenuLink {
   to: string;
   label: string;
   icon?: React.ElementType;
+  img?: string;
   desc?: string;
   badge?: string;
 }
@@ -60,25 +61,27 @@ export interface PublicNavItem {
   to?: string;
   label: string;
   icon: React.ElementType;
+  img: string;
   children?: MenuLink[];
 }
 
 /** Menu công khai (khách chưa đăng nhập) */
 export const PUBLIC_NAV: PublicNavItem[] = [
-  { to: '/toeic', label: 'TOEIC', icon: Briefcase },
-  { to: '/vstep', label: 'VSTEP', icon: GraduationCap },
-  { to: '/courses', label: 'Khoá học', icon: PlayCircle },
-  { to: '/mock-tests', label: 'Thi thử', icon: FileText },
+  { to: '/toeic', label: 'TOEIC', img: '/images/nav/briefcase.webp', icon: Briefcase },
+  { to: '/vstep', label: 'VSTEP', img: '/images/nav/graduation-cap.webp', icon: GraduationCap },
+  { to: '/courses', label: 'Khoá học', img: '/images/nav/laptop.webp', icon: PlayCircle },
+  { to: '/mock-tests', label: 'Thi thử', img: '/images/nav/memo.webp', icon: FileText },
   {
     label: 'Công cụ',
     icon: Wrench,
+    img: '/images/nav/toolbox.webp',
     children: [
-      { to: '/score-converter', label: 'Quy đổi điểm', icon: Calculator, desc: 'TOEIC ↔ VSTEP ↔ CEFR theo bảng ETS' },
-      { to: '/resources', label: 'Kho tài liệu mở', icon: FolderOpen, desc: 'Ngữ pháp, từ vựng, bài mẫu Writing' },
-      { to: '/question-bank', label: 'Ngân hàng câu hỏi', icon: Database, desc: '12.614 câu theo từng Part, có giải thích' },
-      { to: '/leaderboard', label: 'Bảng vinh danh', icon: Trophy, desc: 'Học viên chuyên cần nhất tuần này' },
+      { to: '/score-converter', label: 'Quy đổi điểm', img: '/images/nav/abacus.webp', icon: Calculator, desc: 'TOEIC ↔ VSTEP ↔ CEFR theo bảng ETS' },
+      { to: '/resources', label: 'Kho tài liệu mở', img: '/images/nav/books.webp', icon: FolderOpen, desc: 'Ngữ pháp, từ vựng, bài mẫu Writing' },
+      { to: '/question-bank', label: 'Ngân hàng câu hỏi', img: '/images/nav/card-file-box.webp', icon: Database, desc: '12.614 câu theo từng Part, có giải thích' },
+      { to: '/leaderboard', label: 'Bảng vinh danh', img: '/images/nav/trophy.webp', icon: Trophy, desc: 'Học viên chuyên cần nhất tuần này' },
     ],
   },
-  { to: '/pricing', label: 'Bảng giá', icon: Tag },
-  { to: '/blog', label: 'Kinh nghiệm', icon: Newspaper },
+  { to: '/pricing', label: 'Bảng giá', img: '/images/nav/label.webp', icon: Tag },
+  { to: '/blog', label: 'Kinh nghiệm', img: '/images/nav/light-bulb.webp', icon: Newspaper },
 ];

@@ -15,6 +15,8 @@ export interface NavItem {
   to: string;
   label: string;
   icon: React.ElementType;
+  /** Icon 3D màu (Fluent Emoji) cho header/dropdown; icon nét `icon` vẫn dùng ở thanh đáy, sidebar */
+  img?: string;
   badge?: string;
   end?: boolean;
 }

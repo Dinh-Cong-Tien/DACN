@@ -51,14 +51,14 @@ export const GuestLayout: React.FC<GuestLayoutProps> = ({ contained }) => {
   const onDarkHero = location.pathname === '/';
   const linkCls = ({ isActive }: { isActive: boolean }) =>
     cn(
-      'px-2.5 py-2 rounded-xl text-sm font-bold whitespace-nowrap transition-all duration-200 inline-flex items-center gap-1.5',
+      'shrink-0 px-2.5 py-2 rounded-xl text-sm font-bold whitespace-nowrap transition-all duration-200 inline-flex items-center gap-1.5',
       isActive ? (onDarkHero ? 'bg-white/10 text-amber-300' : 'bg-slate-900 text-amber-300') : onDarkHero ? 'text-slate-200 hover:bg-white/10 hover:text-white' : 'text-slate-700 hover:bg-slate-900/5 hover:text-slate-900'
     );
 
-  const dropdown = (label: string, Icon: React.ElementType | undefined, items: MenuLink[], active = false, className?: string) => (
-    <div key={label} className={cn('relative group/menu', className)}>
+  const dropdown = (label: string, img: string | undefined, items: MenuLink[], active = false, className?: string) => (
+    <div key={label} className={cn('relative shrink-0 group/menu', className)}>
       <button className={cn('px-2.5 py-2 rounded-xl text-sm font-bold flex items-center gap-1.5 transition whitespace-nowrap', active ? (onDarkHero ? 'bg-white/10 text-amber-300' : 'bg-slate-900 text-amber-300') : onDarkHero ? 'text-slate-200 hover:bg-white/10 hover:text-white' : 'text-slate-700 hover:bg-slate-900/5 hover:text-slate-900')}>
-        {Icon && <Icon className="w-4 h-4 opacity-70 hidden xl:block" />}
+        {img && <img src={img} alt="" className="w-5 h-5 hidden xl:block" />}
         {label}
         {items.some((i) => i.badge) && !active && <span className="w-1.5 h-1.5 rounded-full bg-violet-500" />}
         <ChevronDown className="w-3.5 h-3.5 transition-transform group-hover/menu:rotate-180" />
@@ -67,11 +67,7 @@ export const GuestLayout: React.FC<GuestLayoutProps> = ({ contained }) => {
         <div className={cn('bg-white rounded-xl border border-slate-200 shadow-[0_12px_32px_-8px_rgba(16,24,40,0.18)] p-1.5', items.some((i) => i.desc) ? 'w-[340px]' : 'w-64')}>
           {items.map((c) => (
             <NavLink key={c.to} to={c.to} className={({ isActive }) => cn('group/item flex items-center gap-3 px-2.5 py-2 rounded-lg text-sm transition-colors', isActive ? 'bg-slate-100 text-slate-900' : 'text-slate-700 hover:bg-slate-50 hover:text-slate-900')}>
-              {c.icon && (
-                <span className={cn('flex shrink-0 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-500 transition-colors group-hover/item:border-indigo-200 group-hover/item:text-indigo-700', c.desc ? 'h-9 w-9' : 'h-7 w-7')}>
-                  <c.icon className="w-4 h-4" />
-                </span>
-              )}
+              {c.img && <img src={c.img} alt="" className={cn('shrink-0 transition-transform duration-200 group-hover/item:scale-110', c.desc ? 'h-9 w-9' : 'h-7 w-7')} />}
               <span className="min-w-0 flex-1">
                 <span className="block font-medium">{c.label}</span>
                 {c.desc && <span className="block truncate text-[12px] text-slate-500">{c.desc}</span>}
@@ -94,7 +90,6 @@ export const GuestLayout: React.FC<GuestLayoutProps> = ({ contained }) => {
     ? [
         ...studentPrimary.items.map((item) => (
           <NavLink key={item.to} to={item.to} className={linkCls}>
-            <item.icon className="w-4 h-4 opacity-70 hidden min-[1440px]:block" />
             {item.label}
           </NavLink>
         )),
@@ -111,10 +106,10 @@ export const GuestLayout: React.FC<GuestLayoutProps> = ({ contained }) => {
       ]
     : PUBLIC_NAV.map((item) =>
         item.children ? (
-          dropdown(item.label, item.icon, item.children)
+          dropdown(item.label, item.img, item.children)
         ) : (
           <NavLink key={item.to} to={item.to!} className={linkCls}>
-            <item.icon className="w-4 h-4 opacity-70 hidden xl:block" />
+            <img src={item.img} alt="" className="w-5 h-5 hidden xl:block" />
             {item.label}
           </NavLink>
         )
@@ -123,7 +118,7 @@ export const GuestLayout: React.FC<GuestLayoutProps> = ({ contained }) => {
   // ===== Menu mobile (phẳng theo nhóm) =====
   const mobileGroups: { title?: string; items: MenuLink[] }[] = isStudent
     ? STUDENT_NAV
-    : [{ items: PUBLIC_NAV.filter((i) => !i.children).map((i) => ({ to: i.to!, label: i.label, icon: i.icon })) }, ...PUBLIC_NAV.filter((i) => i.children).map((i) => ({ title: i.label, items: i.children! }))];
+    : [{ items: PUBLIC_NAV.filter((i) => !i.children).map((i) => ({ to: i.to!, label: i.label, img: i.img })) }, ...PUBLIC_NAV.filter((i) => i.children).map((i) => ({ title: i.label, items: i.children! }))];
 
   const bottomItems = isStudent ? studentPrimary.items.slice(0, 4) : [];
 
@@ -225,7 +220,7 @@ export const GuestLayout: React.FC<GuestLayoutProps> = ({ contained }) => {
                   {g.title && <p className="px-3 pb-1 text-[10px] font-extrabold uppercase tracking-[0.14em] text-slate-400">{g.title}</p>}
                   {g.items.map((c) => (
                     <NavLink key={c.to} to={c.to} className={({ isActive }) => cn('flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold', isActive ? 'bg-slate-900 text-amber-300' : 'text-slate-700 hover:bg-slate-900/5')}>
-                      {c.icon && <c.icon className="w-[18px] h-[18px] shrink-0 opacity-70" />}
+                      {c.img && <img src={c.img} alt="" className="w-6 h-6 shrink-0" />}
                       <span className="flex-1">{c.label}</span>
                       {c.badge && (
                         <Badge tone="violet" solid size="xs">
