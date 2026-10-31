@@ -1,6 +1,9 @@
 import React from 'react';
 import { cn } from '@/shared/utils';
+import { useInView } from '@/shared/hooks';
+import { CountUp } from '@/shared/components/motion';
 import type { Testimonial } from '@/shared/types';
+import './TestimonialCard.css';
 
 // indigo/violet đã được đổi sang teal/coral trong tailwind.config
 const DOME = { TOEIC: 'from-indigo-400 to-indigo-600', VSTEP: 'from-violet-400 to-violet-600' } as const;
@@ -13,14 +16,16 @@ export const TestimonialCard: React.FC<{ item: Testimonial }> = ({ item: t }) =>
     { label: 'Thời gian', value: `${t.weeks} tuần` },
     { label: 'Ngày thi', value: t.examDate },
   ];
+  const { ref, inView } = useInView<HTMLElement>({ threshold: 0.25 });
   return (
-    <figure className="h-full flex flex-col text-center">
+    <figure ref={ref} className={cn('testi-card group h-full flex flex-col text-center', inView && 'is-in')}>
       <div className="relative h-72 md:h-80">
-        <div aria-hidden className={cn('absolute inset-x-6 bottom-0 h-[60%] rounded-[50%_50%_0_0/100%_100%_0_0] bg-gradient-to-b', DOME[t.exam])} />
-        {t.avatar && <img src={t.avatar} alt={t.name} loading="lazy" className="relative mx-auto h-full w-auto object-contain object-bottom [filter:drop-shadow(0_10px_18px_rgba(0,0,0,0.35))]" />}
+        <div aria-hidden className={cn('testi-card__dome absolute inset-x-6 bottom-0 h-[60%] rounded-[50%_50%_0_0/100%_100%_0_0] bg-gradient-to-b', DOME[t.exam])} />
+        {t.avatar && <img src={t.avatar} alt={t.name} loading="lazy" className="testi-card__person relative mx-auto h-full w-auto object-contain object-bottom [filter:drop-shadow(0_10px_18px_rgba(0,0,0,0.35))]" />}
       </div>
-      <figcaption className="flex-1 flex flex-col pt-6">
-        <p className="font-display text-6xl md:text-7xl font-extrabold leading-none tracking-tight text-amber-400 tabular-nums">{t.after}</p>
+      <figcaption className="testi-card__info flex-1 flex flex-col pt-6">
+        {/* điểm dạng số thì đếm tăng dần khi cuộn tới */}
+        <p className="font-display text-6xl md:text-7xl font-extrabold leading-none tracking-tight text-amber-400 tabular-nums">{/^\d+$/.test(t.after) ? <CountUp value={Number(t.after)} duration={1400} format={String} /> : t.after}</p>
         <p className={cn('mt-2 text-sm font-semibold', LABEL[t.exam])}>{t.test}</p>
         <p className="mt-3 font-display text-xl font-bold text-white">{t.name}</p>
         <p className="text-sm text-slate-400">{t.role}</p>

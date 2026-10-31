@@ -2,6 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
 import { Img } from '@/shared/components/media/Img';
+import { RevealPhoto } from '@/shared/components/motion';
 import { cn } from '@/shared/utils';
 import type { ExamTrack } from '@/shared/types';
 
@@ -12,7 +13,9 @@ const LINK = { toeic: 'text-indigo-300 hover:text-indigo-200', vstep: 'text-viol
 export const ExamTrackCard: React.FC<{ track: ExamTrack }> = ({ track: t }) => (
   <article className="group h-full flex flex-col overflow-hidden rounded-2xl border border-white/10 bg-slate-900">
     <div className="overflow-hidden">
-      <Img src={t.photo} alt={t.photoAlt} ratio="video" fallbackClass="bg-slate-800" className="transition-transform duration-700 ease-out group-hover:scale-[1.03]" />
+      <RevealPhoto direction={t.id === 'toeic' ? 'left' : 'right'} parallax>
+        <Img src={t.photo} alt={t.photoAlt} ratio="video" fallbackClass="bg-slate-800" className="transition-transform duration-700 ease-out group-hover:scale-[1.03]" />
+      </RevealPhoto>
     </div>
     <div className="flex-1 flex flex-col p-6 md:p-8">
       <h3 className="font-display text-2xl md:text-[1.75rem] font-bold text-white">{t.name}</h3>

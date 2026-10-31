@@ -1,0 +1,39 @@
+/* Thẻ vinh danh: nửa bầu dục mọc lên từ đáy, người trồi lên sau, thông tin hiện cuối */
+.testi-card__dome {
+  transform: scaleY(0);
+  transform-origin: 50% 100%;
+  transition:
+    transform 0.8s cubic-bezier(0.34, 1.3, 0.64, 1),
+    filter 0.4s ease;
+}
+.testi-card__person {
+  opacity: 0;
+  transform: translateY(48px);
+  transition:
+    opacity 0.6s ease 0.25s,
+    transform 0.9s cubic-bezier(0.16, 1, 0.3, 1) 0.25s;
+}
+.testi-card__info {
+  opacity: 0;
+  transform: translateY(14px);
+  transition:
+    opacity 0.5s ease 0.5s,
+    transform 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.5s;
+}
+.testi-card.is-in .testi-card__dome,
+.testi-card.is-in .testi-card__info {
+  transform: none;
+  opacity: 1;
+}
+.testi-card.is-in .testi-card__person {
+  opacity: 1;
+  transform: none;
+}
+/* Rê chuột: người nhích lên, nền sáng hơn (không trễ) */
+.testi-card.is-in:hover .testi-card__person {
+  transform: translateY(-6px);
+  transition-delay: 0s;
+}
+.testi-card:hover .testi-card__dome {
+  filter: brightness(1.12);
+}

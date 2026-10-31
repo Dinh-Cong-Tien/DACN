@@ -227,3 +227,30 @@ export const Doodles: React.FC<{ className?: string; tone?: 'dark' | 'light'; pa
     </div>
   );
 };
+
+/**
+ * Khung ảnh xuất hiện kiểu "mở màn" khi cuộn tới: lớp che kéo mở theo hướng, ảnh phóng nhẹ rồi thu về;
+ * parallax: sau đó ảnh trôi nhẹ theo cuộn trang (chỉ trình duyệt hỗ trợ scroll-driven animation).
+ * Bọc quanh <Img>; phần tử cha nên có overflow-hidden + bo góc nếu cần.
+ */
+export const RevealPhoto: React.FC<{ children: React.ReactNode; className?: string; direction?: 'up' | 'left' | 'right'; delay?: number; parallax?: boolean; show?: boolean }> = ({
+  children,
+  className,
+  direction = 'up',
+  delay = 0,
+  parallax,
+  show,
+}) => {
+  const { ref, inView } = useInView<HTMLDivElement>({ threshold: 0.15 });
+  const on = show ?? inView;
+  return (
+    <div ref={ref} className={cn('photo-reveal', `photo-reveal--${direction}`, parallax && 'photo-reveal--parallax', on && 'is-in', className)} style={{ '--delay': `${delay}ms` } as React.CSSProperties}>
+      {/* lớp che nằm trong: IntersectionObserver của Chrome coi phần tử bị clip-path che hết là "không thấy" */}
+      <div className="photo-reveal__mask">
+        <div className="photo-reveal__inner">
+          <div className="photo-reveal__para">{children}</div>
+        </div>
+      </div>
+    </div>
+  );
+};

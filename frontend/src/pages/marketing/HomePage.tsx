@@ -3,7 +3,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, Star, CheckCircle2, Play, Flame, Target, BookOpen, Users, FileText, AlertTriangle, RotateCcw, Compass, Headphones } from 'lucide-react';
 import { Button, Card, SectionTitle } from '@/shared/components/ui';
-import { Reveal, Stagger, CountUp, Doodles, TypeLoop } from '@/shared/components/motion';
+import { Reveal, Stagger, CountUp, Doodles, TypeLoop, RevealPhoto } from '@/shared/components/motion';
 import { Img, PHOTOS, pravatar } from '@/shared/components/media/Img';
 import { HOME_STATS, HOME_EXAM_TRACKS, TESTIMONIALS, PRICING_PLANS, MOCK_COURSES } from '@/shared/mocks';
 import { useDocumentTitle, useGate, useInView } from '@/shared/hooks';
@@ -57,7 +57,9 @@ const FeatureCard: React.FC<{
   <Link to={to} className={cn('group relative isolate block h-full overflow-hidden rounded-3xl border border-white/10 bg-slate-900', large ? 'min-h-[420px] md:min-h-[520px]' : 'min-h-[240px]')}>
     {/* bọc riêng vì wrapper của Img luôn có class relative */}
     <div className="absolute inset-0 -z-10">
-      <Img src={photo} alt={title} wrapperClass="h-full" fallbackClass="bg-slate-800" className="transition-[opacity,transform] duration-700 ease-out group-hover:scale-105" />
+      <RevealPhoto parallax>
+        <Img src={photo} alt={title} wrapperClass="h-full" fallbackClass="bg-slate-800" className="transition-[opacity,transform] duration-700 ease-out group-hover:scale-105" />
+      </RevealPhoto>
     </div>
     <div aria-hidden className="absolute inset-0 -z-10 bg-gradient-to-t from-slate-950 via-slate-950/60 to-slate-950/5" />
     <div className="flex h-full flex-col justify-between p-5 md:p-7">
@@ -87,7 +89,7 @@ const StepRow: React.FC<{ index: number; step: (typeof LOOP)[number]; photoRef: 
   const { ref, inView: on } = useInView<HTMLDivElement>({ once: false, threshold: 0.2, rootMargin: '0px 0px -10% 0px' });
   useEffect(() => onToggle?.(i, on), [i, on, onToggle]);
   const textLeft = i % 2 === 0;
-  const base = 'transition-[opacity,transform] duration-700 ease-out motion-reduce:transition-none';
+  const base = 'step-anim transition-[opacity,transform] duration-700 ease-out';
   const show = (delay: number) => ({ transitionDelay: on ? `${delay}ms` : '0ms' });
   const state = on ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6';
   return (
@@ -105,7 +107,9 @@ const StepRow: React.FC<{ index: number; step: (typeof LOOP)[number]; photoRef: 
         </p>
       </div>
       <div ref={photoRef} className={cn('night-photo relative z-10 md:w-[82%]', textLeft && 'md:ml-auto', base, on ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10')} style={show(120)}>
-        <Img src={step.photo} alt={step.title} ratio="4/3" fallbackClass="bg-slate-800" />
+        <RevealPhoto show={on} direction={textLeft ? 'left' : 'right'} delay={150} parallax>
+          <Img src={step.photo} alt={step.title} ratio="4/3" fallbackClass="bg-slate-800" />
+        </RevealPhoto>
       </div>
     </div>
   );
@@ -458,8 +462,12 @@ export const HomePage: React.FC = () => {
               </span>
             </p>
           </div>
-          <div className="night-photo rotate-[-2deg] hidden lg:block">
-            <Img src={PHOTOS.graduation} alt="Tốt nghiệp" ratio="4/3" fallbackClass="bg-slate-800" />
+          <div className="hero-bob hidden lg:block">
+            <div className="night-photo rotate-[-2deg]">
+              <RevealPhoto direction="right" delay={100} parallax>
+                <Img src={PHOTOS.graduation} alt="Tốt nghiệp" ratio="4/3" fallbackClass="bg-slate-800" />
+              </RevealPhoto>
+            </div>
           </div>
         </div>
       </section>

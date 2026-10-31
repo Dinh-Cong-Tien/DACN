@@ -2,6 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Star } from 'lucide-react';
 import { Img } from '@/shared/components/media/Img';
+import { RevealPhoto } from '@/shared/components/motion';
 import { cn } from '@/shared/utils';
 import type { Course } from '@/shared/types';
 
@@ -9,7 +10,9 @@ import type { Course } from '@/shared/types';
 export const CourseTile: React.FC<{ course: Course }> = ({ course: c }) => (
   <Link to={`/courses/${c.id}`} className="group flex flex-col h-full overflow-hidden rounded-xl border border-white/10 bg-slate-900 transition-colors hover:border-white/25">
     <div className="relative overflow-hidden">
-      <Img src={c.coverUrl} alt={c.title} ratio="video" fallbackClass="bg-slate-800" className="transition-transform duration-500 ease-out group-hover:scale-[1.03]" />
+      <RevealPhoto>
+        <Img src={c.coverUrl} alt={c.title} ratio="video" fallbackClass="bg-slate-800" className="transition-transform duration-500 ease-out group-hover:scale-[1.03]" />
+      </RevealPhoto>
       <span className="absolute right-2 bottom-2 rounded bg-black/75 px-1.5 py-0.5 text-[11px] font-semibold text-white tabular-nums">{c.durationHours} giờ</span>
     </div>
     <div className="flex-1 flex flex-col p-4">
