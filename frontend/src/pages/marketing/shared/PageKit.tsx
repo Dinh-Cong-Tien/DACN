@@ -65,7 +65,7 @@ export const PageHeader: React.FC<{
   aside?: React.ReactNode;
   className?: string;
 }> = ({ crumbs, eyebrow, title, lead, facts, actions, aside, className }) => (
-  <section className={cn('relative isolate bg-page', className)}>
+  <section className={cn('relative isolate overflow-x-clip bg-page', className)}>
     {/* Quầng sáng sau tiêu đề như hero trang chủ */}
     <div aria-hidden className="pointer-events-none absolute -top-32 left-[8%] -z-10 h-[420px] w-[620px] rounded-full bg-violet-500/25 opacity-50 blur-[140px] dark:opacity-100" />
     <div aria-hidden className="pointer-events-none absolute right-[4%] top-10 -z-10 h-[360px] w-[480px] rounded-full bg-fuchsia-500/20 opacity-40 blur-[140px] dark:opacity-100" />
@@ -108,7 +108,7 @@ export const PageHeader: React.FC<{
 // ============ Section ============
 /** Một phần của trang: ngăn cách bằng đường kẻ phát sáng như trang chủ; `muted` thêm quầng sáng nhẹ phía sau */
 export const Section: React.FC<{ muted?: boolean; className?: string; innerClassName?: string; children: React.ReactNode; id?: string }> = ({ muted, className, innerClassName, children, id }) => (
-  <section id={id} className={cn('relative isolate bg-page', className)}>
+  <section id={id} className={cn('relative isolate overflow-x-clip bg-page', className)}>
     <Divider />
     {muted && <div aria-hidden className="pointer-events-none absolute left-1/2 top-1/3 -z-10 h-[420px] w-[760px] -translate-x-1/2 rounded-full bg-indigo-500/15 opacity-60 blur-[150px] dark:opacity-100" />}
     <div className={cn('max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24', innerClassName)}>{children}</div>
