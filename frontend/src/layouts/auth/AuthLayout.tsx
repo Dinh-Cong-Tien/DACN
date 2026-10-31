@@ -15,7 +15,7 @@ const VISUAL: Record<AsideVariant, { src: string; pos: string }> = {
   register: { src: '/images/auth/register-listen.webp', pos: '50% 30%' },
 };
 
-const floatCard = 'rounded-2xl bg-white/95 shadow-[0_24px_60px_-20px_rgba(4,20,16,0.55)] ring-1 ring-black/5 backdrop-blur';
+const floatCard = 'rounded-2xl bg-white shadow-[0_24px_60px_-20px_rgba(4,20,16,0.55)] ring-1 ring-black/5';
 
 /** Thẻ kết quả thi thử mẫu (giống màn hình trong app) */
 const ScoreCard: React.FC = () => (
@@ -96,14 +96,16 @@ const Quote: React.FC<{ variant: AsideVariant }> = ({ variant }) => {
 };
 
 /**
- * Khối ảnh: render sẵn cả 2 bộ (ảnh, thẻ nổi, cảm nhận) rồi cross-fade theo trang,
- * nhờ vậy khi khối trượt sang bên kia thì nội dung đổi mượt, không nháy.
+ * Khối ảnh: render sẵn cả 2 bộ (ảnh, thẻ nổi, cảm nhận); ảnh đổi kiểu kéo rèm theo hướng trượt,
+ * thẻ và cảm nhận đổi bằng fade → khi khối trượt sang bên kia nội dung đổi mượt, không nháy.
  */
 const AuthVisual: React.FC<{ variant: AsideVariant; swap: string }> = ({ variant, swap }) => (
   <div className={cn('relative h-full overflow-hidden rounded-[28px] bg-[#0E2A24]', swap && `auth-panel--swap-${swap}`)}>
     <div className="auth-visual__img absolute inset-0">
       {VARIANTS.map((k) => (
-        <img key={k} src={VISUAL[k].src} alt="" className={cn('auth-photo absolute inset-0 h-full w-full object-cover', k === variant && 'is-on')} style={{ objectPosition: VISUAL[k].pos }} />
+        <div key={k} className={cn('auth-photo', `auth-photo--${k}`, k === variant && 'is-on')}>
+          <img src={VISUAL[k].src} alt="" className="auth-photo__img" style={{ objectPosition: VISUAL[k].pos }} />
+        </div>
       ))}
     </div>
     <div aria-hidden className="absolute inset-0 bg-gradient-to-t from-[#06171390] via-transparent to-transparent" />
