@@ -4,7 +4,7 @@ import { Search, Star } from 'lucide-react';
 import { RevealPhoto } from '@/shared/components/motion';
 import { Img } from '@/shared/components/media/Img';
 import { MOCK_COURSES } from '@/shared/mocks';
-import { useDocumentTitle, useGate } from '@/shared/hooks';
+import { useDocumentTitle, useGate, useParamState } from '@/shared/hooks';
 import { cn, formatNumber } from '@/shared/utils';
 import type { Course } from '@/shared/types';
 import { Accent, PageHeader, Section, UnderlineTabs, CtaStrip } from './shared/PageKit';
@@ -43,8 +43,10 @@ const CourseCard: React.FC<{ c: Course }> = ({ c }) => (
 export const CoursesPage: React.FC = () => {
   useDocumentTitle('Khoá học');
   const gate = useGate();
-  const [exam, setExam] = useState<Exam>('ALL');
-  const [freeOnly, setFreeOnly] = useState(false);
+  const [exam, setExam] = useParamState<Exam>('exam', ['ALL', 'TOEIC', 'VSTEP'], 'ALL');
+  const [free, setFree] = useParamState('free', ['1', ''], '');
+  const freeOnly = free === '1';
+  const setFreeOnly = (v: boolean) => setFree(v ? '1' : '');
   const [sort, setSort] = useState<Sort>('popular');
   const [q, setQ] = useState('');
 

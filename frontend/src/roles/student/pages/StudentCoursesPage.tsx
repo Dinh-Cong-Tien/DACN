@@ -4,7 +4,7 @@ import { PlayCircle, Star, Users, Clock, BookOpen, ChevronRight, Lock, Play } fr
 import { MOCK_COURSES } from '@/shared/mocks';
 import type { Course, Lesson } from '@/shared/types';
 import { cn } from '@/shared/utils';
-import { useDocumentTitle } from '@/shared/hooks';
+import { useDocumentTitle, useParamState } from '@/shared/hooks';
 import { Badge, Button, Card, PageHeader, ProgressBar, Tabs, EmptyState, Avatar } from '@/shared/components/ui';
 import { Img, PHOTOS, pravatar } from '@/shared/components/media/Img';
 
@@ -71,7 +71,7 @@ const CourseCard: React.FC<{ course: Course; index: number }> = ({ course, index
 
 export const StudentCoursesPage: React.FC = () => {
   useDocumentTitle('Khoá học & Video');
-  const [tab, setTab] = useState('learning');
+  const [tab, setTab] = useParamState('tab', ['learning', 'all', 'TOEIC', 'VSTEP'], 'learning');
 
   const list = MOCK_COURSES.filter((c) => {
     if (tab === 'learning') return (c.progress ?? 0) > 0;

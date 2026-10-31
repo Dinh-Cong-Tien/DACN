@@ -59,6 +59,8 @@ export interface MenuLink {
   appTo?: string;
   /** Tên nhóm hiển thị trong dropdown (mục đầu tiên của nhóm có nhãn nhỏ phía trên) */
   group?: string;
+  /** Chỉ hiện khi học viên đã đăng nhập */
+  studentOnly?: boolean;
 }
 
 /** Mục học tập cá nhân, hiện đầu menu Công cụ khi học viên đã đăng nhập */
@@ -77,17 +79,58 @@ export interface PublicNavItem {
   children?: MenuLink[];
   /** Đường dẫn khi đã đăng nhập học viên */
   appTo?: string;
+  /** Học viên: chèn nhóm "Học tập của bạn" (STUDENT_TOOLS) vào đầu menu con */
+  withStudentTools?: boolean;
 }
 
 /** Menu chính trên header — dùng chung cho khách và học viên (học viên đi theo appTo nếu có) */
 export const PUBLIC_NAV: PublicNavItem[] = [
-  { to: '/toeic', label: 'TOEIC', img: '/images/nav/briefcase.webp', icon: Briefcase },
-  { to: '/vstep', label: 'VSTEP', img: '/images/nav/graduation-cap.webp', icon: GraduationCap },
-  { to: '/courses', label: 'Khoá học', img: '/images/nav/laptop.webp', icon: PlayCircle, appTo: '/app/courses' },
+  {
+    to: '/toeic',
+    label: 'TOEIC',
+    icon: Briefcase,
+    img: '/images/nav/briefcase.webp',
+    children: [
+      { to: '/toeic', label: 'Giới thiệu kỳ thi TOEIC', img: '/images/nav/briefcase.webp', desc: 'Cấu trúc 7 Part, thang điểm 10–990' },
+      { to: '/practice', appTo: '/app/practice?exam=TOEIC', label: 'Luyện theo Part', img: '/images/nav/pencil.webp', desc: 'Part 1–7, giải thích từng câu' },
+      { to: '/mock-tests?exam=TOEIC', appTo: '/app/mock-tests?exam=TOEIC', label: 'Đề thi thử TOEIC', img: '/images/nav/memo.webp', desc: 'Đề ETS, chấm điểm ngay khi nộp' },
+      { to: '/app/dictation', label: 'Nghe chép chính tả', img: '/images/nav/headphone.webp', desc: 'Luyện nghe Part 2–4 từng câu' },
+      { to: '/app/vocabulary', label: 'Từ vựng TOEIC', img: '/images/nav/open-book.webp', desc: 'Flashcard theo chủ đề, ôn ngắt quãng' },
+      { to: '/app/grammar', label: 'Ngữ pháp Part 5–6', img: '/images/nav/bookmark-tabs.webp', desc: 'Chủ điểm hay ra kèm bài tập' },
+      { to: '/app/drills', label: 'Luyện điểm yếu', img: '/images/nav/bullseye.webp', desc: 'Câu hỏi theo dạng bạn hay sai' },
+    ],
+  },
+  {
+    to: '/vstep',
+    label: 'VSTEP',
+    icon: GraduationCap,
+    img: '/images/nav/graduation-cap.webp',
+    children: [
+      { to: '/vstep', label: 'Giới thiệu kỳ thi VSTEP', img: '/images/nav/graduation-cap.webp', desc: 'Bậc 3–5, cấu trúc 4 kỹ năng' },
+      { to: '/practice', appTo: '/app/practice?exam=VSTEP', label: 'Luyện Nghe & Đọc', img: '/images/nav/pencil.webp', desc: 'Theo dạng bài của đề VSTEP' },
+      { to: '/app/writing', label: 'Luyện Viết', img: '/images/nav/fountain-pen.webp', desc: 'Giáo viên chấm theo 4 tiêu chí' },
+      { to: '/app/speaking', label: 'Luyện Nói', img: '/images/nav/microphone.webp', desc: 'Ghi âm bài nói, giáo viên nhận xét' },
+      { to: '/mock-tests?exam=VSTEP', appTo: '/app/mock-tests?exam=VSTEP', label: 'Đề thi thử VSTEP', img: '/images/nav/memo.webp', desc: 'Đủ 4 kỹ năng như đề thật' },
+    ],
+  },
+  {
+    to: '/courses',
+    appTo: '/app/courses',
+    label: 'Khoá học',
+    icon: PlayCircle,
+    img: '/images/nav/laptop.webp',
+    children: [
+      { to: '/app/courses', label: 'Khoá học của tôi', img: '/images/nav/laptop.webp', desc: 'Tiếp tục bài đang học', studentOnly: true },
+      { to: '/courses?exam=TOEIC', appTo: '/app/courses?tab=TOEIC', label: 'Khoá TOEIC', img: '/images/nav/briefcase.webp', desc: 'Từ mất gốc đến 850+' },
+      { to: '/courses?exam=VSTEP', appTo: '/app/courses?tab=VSTEP', label: 'Khoá VSTEP', img: '/images/nav/graduation-cap.webp', desc: 'B1, B2, C1 có giáo viên chấm bài' },
+      { to: '/courses?free=1', label: 'Khoá miễn phí', img: '/images/nav/label.webp', desc: 'Học thử trước khi nâng cấp' },
+    ],
+  },
   { to: '/mock-tests', label: 'Thi thử', img: '/images/nav/memo.webp', icon: FileText, appTo: '/app/mock-tests' },
   {
     label: 'Công cụ',
     icon: Wrench,
+    withStudentTools: true,
     img: '/images/nav/toolbox.webp',
     children: [
       { to: '/score-converter', label: 'Quy đổi điểm', img: '/images/nav/abacus.webp', icon: Calculator, desc: 'TOEIC ↔ VSTEP ↔ CEFR theo bảng ETS' },

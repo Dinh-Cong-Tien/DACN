@@ -6,6 +6,6 @@ import { useAuthStore } from '@/shared/stores/authStore';
 export const AuthGuard: React.FC = () => {
   const isAuth = useAuthStore((s) => s.isAuthenticated());
   const location = useLocation();
-  if (!isAuth) return <Navigate to="/auth/login" replace state={{ from: location.pathname }} />;
+  if (!isAuth) return <Navigate to="/auth/login" replace state={{ from: location.pathname + location.search }} />;
   return <Outlet />;
 };

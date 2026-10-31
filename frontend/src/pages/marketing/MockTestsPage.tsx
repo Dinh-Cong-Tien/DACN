@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { Timer, Volume2, Flag, ClipboardCheck } from 'lucide-react';
 import { MOCK_TESTS } from '@/shared/mocks';
-import { useDocumentTitle, useGate } from '@/shared/hooks';
+import { useDocumentTitle, useGate, useParamState } from '@/shared/hooks';
 import { cn } from '@/shared/utils';
 import { Accent, PageHeader, Section, SectionHead, UnderlineTabs, CtaStrip } from './shared/PageKit';
 import { TestList } from './shared/TestList';
@@ -21,7 +21,7 @@ const ROOM = [
 export const MockTestsPage: React.FC = () => {
   useDocumentTitle('Đề thi thử');
   const gate = useGate();
-  const [exam, setExam] = useState<Exam>('TOEIC');
+  const [exam, setExam] = useParamState<Exam>('exam', ['TOEIC', 'VSTEP'], 'TOEIC');
   const [kind, setKind] = useState<Kind>('ALL');
   const list = useMemo(
     () => MOCK_TESTS.filter((t) => t.examType === exam).filter((t) => (kind === 'ALL' ? true : kind === 'FREE' ? t.isFree : kind === 'FULL' ? isFull(t) : !isFull(t))),

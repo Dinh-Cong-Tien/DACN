@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { FileText, Clock, Users, Lock, ArrowRight, History, Trophy } from 'lucide-react';
-import { useDocumentTitle } from '@/shared/hooks';
+import { useDocumentTitle, useParamState } from '@/shared/hooks';
 import { Badge, Button, Card, CardHeader, Chip, Column, DataTable, PageHeader, Tabs } from '@/shared/components/ui';
 import { Img } from '@/shared/components/media/Img';
 import { MOCK_TESTS, MOCK_ATTEMPTS } from '@/shared/mocks';
@@ -13,7 +13,7 @@ type Filter = 'ALL' | 'FULL' | 'MINI' | 'FREE';
 export const StudentMockTestsPage: React.FC = () => {
   useDocumentTitle('Thi thử');
   const navigate = useNavigate();
-  const [tab, setTab] = useState('TOEIC');
+  const [tab, setTab] = useParamState('exam', ['TOEIC', 'VSTEP'], 'TOEIC');
   const [filter, setFilter] = useState<Filter>('ALL');
 
   const tests = useMemo(

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useAuthStore } from '@/shared/stores/authStore';
 
 /** Theo dõi phần tử xuất hiện trong viewport (dùng cho scroll reveal) */
@@ -145,4 +146,25 @@ export function useDocumentTitle(title: string) {
       document.title = prev;
     };
   }, [title]);
+}
+
+/**
+ * State đồng bộ với query string (?key=value) để link từ menu mở đúng tab, vd. /mock-tests?exam=VSTEP.
+ * Giá trị không hợp lệ → fallback; chọn lại fallback thì xoá tham số khỏi URL.
+ */
+export function useParamState<T extends string>(key: string, allowed: readonly T[], fallback: T): [T, (v: string) => void] {
+  const [params, setParams] = useSearchParams();
+  const raw = params.get(key);
+  const value = raw !== null && (allowed as readonly string[]).includes(raw) ? (raw as T) : fallback;
+  const set = (v: string) =>
+    setParams(
+      (prev) => {
+        const next = new URLSearchParams(prev);
+        if (v === fallback) next.delete(key);
+        else next.set(key, v);
+        return next;
+      },
+      { replace: true }
+    );
+  return [value, set];
 }

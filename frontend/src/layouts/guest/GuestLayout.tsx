@@ -66,10 +66,10 @@ export const GuestLayout: React.FC<GuestLayoutProps> = ({ contained }) => {
   const dropdown = (label: string, img: string | undefined, items: MenuLink[], active = false, className?: string) => (
     <div key={label} className={cn('relative shrink-0 group/menu', className)}>
       <button className={cn('px-2 py-2 rounded-xl text-sm font-bold flex items-center gap-1 transition whitespace-nowrap', active ? (onDarkHero ? 'bg-white/10 text-amber-300' : 'bg-slate-900/[0.06] text-indigo-700') : onDarkHero ? 'text-slate-200 hover:bg-white/10 hover:text-white' : 'text-slate-700 hover:bg-slate-900/5 hover:text-slate-900')}>
-        {img && <img src={img} alt="" className="w-5 h-5 hidden xl:block" />}
+        {img && <img src={img} alt="" className="w-5 h-5 hidden min-[1440px]:block" />}
         {label}
         {items.some((i) => i.badge) && !active && <span className="w-1.5 h-1.5 rounded-full bg-violet-500" />}
-        <ChevronDown className="w-3.5 h-3.5 transition-transform group-hover/menu:rotate-180" />
+        <ChevronDown className="hidden xl:block w-3.5 h-3.5 transition-transform group-hover/menu:rotate-180" />
       </button>
       <div className="absolute left-0 top-full pt-2 opacity-0 translate-y-1 pointer-events-none group-hover/menu:opacity-100 group-hover/menu:translate-y-0 group-hover/menu:pointer-events-auto transition-all duration-200 z-50">
         <div className={cn('bg-white rounded-xl border border-slate-200 shadow-[0_12px_32px_-8px_rgba(16,24,40,0.18)] p-1.5', items.some((i) => i.desc) ? 'w-[340px]' : 'w-64')}>
@@ -100,17 +100,18 @@ export const GuestLayout: React.FC<GuestLayoutProps> = ({ contained }) => {
   // ===== Menu desktop: menu chính cho mọi người; học viên đi theo appTo (trang của học viên) =====
   const [studentPrimary] = STUDENT_NAV;
   const hrefOf = (i: { to?: string; appTo?: string }) => (isStudent && i.appTo) || i.to!;
+  const here = location.pathname + location.search;
   const mainNav = PUBLIC_NAV.map((i) => {
-    const children = i.children?.map((c) => ({ ...c, to: hrefOf(c) }));
+    const children = i.children?.filter((c) => isStudent || !c.studentOnly).map((c) => ({ ...c, to: hrefOf(c) }));
     // Học viên: Lộ trình / Sổ tay lỗi sai / Lịch ôn / Tiến độ nằm đầu menu Công cụ
-    return { ...i, to: hrefOf(i), children: isStudent && children ? [...STUDENT_TOOLS, ...children.map((c) => ({ ...c, group: i.label }))] : children };
+    return { ...i, to: hrefOf(i), children: isStudent && i.withStudentTools && children ? [...STUDENT_TOOLS, ...children.map((c) => ({ ...c, group: i.label }))] : children };
   });
   const desktopNav = mainNav.map((item) =>
     item.children ? (
-      dropdown(item.label, item.img, item.children, item.children.some((c) => location.pathname.startsWith(c.to)))
+      dropdown(item.label, item.img, item.children, item.children.some((c) => here === c.to || (!c.to.includes('?') && location.pathname.startsWith(c.to))))
     ) : (
       <NavLink key={item.label} to={item.to} className={linkCls}>
-        <img src={item.img} alt="" className="w-5 h-5 hidden xl:block" />
+        <img src={item.img} alt="" className="w-5 h-5 hidden min-[1440px]:block" />
         {item.label}
       </NavLink>
     )
@@ -148,7 +149,7 @@ export const GuestLayout: React.FC<GuestLayoutProps> = ({ contained }) => {
               : 'sticky bg-transparent border-transparent'
         )}
       >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-[72px] flex items-center justify-between gap-4">
+        <div className="max-w-7xl min-[1440px]:max-w-[1360px] mx-auto px-4 sm:px-6 lg:px-8 h-[72px] flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <button onClick={() => setOpen((o) => !o)} className={cn('lg:hidden p-2 rounded-xl border-2', onDarkHero ? 'border-white/30 bg-white/10 text-white' : 'border-slate-900 bg-white')} aria-label="Menu">
               {open ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}

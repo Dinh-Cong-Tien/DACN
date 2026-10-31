@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Layers, ArrowRight, Target, Zap, CheckCircle2, Headphones, BookOpen } from 'lucide-react';
-import { useDocumentTitle } from '@/shared/hooks';
+import { useDocumentTitle, useParamState } from '@/shared/hooks';
 import { Badge, Card, CardHeader, PageHeader, ProgressBar, Tabs, StatCard } from '@/shared/components/ui';
 import { Stagger } from '@/shared/components/motion';
 import { Img, PHOTOS } from '@/shared/components/media/Img';
@@ -17,7 +17,7 @@ const PART_TONE = ['bg-sky-500 text-white', 'bg-indigo-600 text-white', 'bg-viol
 
 export const StudentPracticePage: React.FC = () => {
   useDocumentTitle('Luyện tập kỹ năng');
-  const [tab, setTab] = useState('TOEIC');
+  const [tab, setTab] = useParamState('exam', ['TOEIC', 'VSTEP'], 'TOEIC');
   const totalQ = Object.values(QUESTIONS_BY_PART).reduce((a, q) => a + q.length, 0);
   const avg = Math.round(SKILL_SCORES.reduce((a, s) => a + s.score, 0) / SKILL_SCORES.length);
 

@@ -4,25 +4,8 @@ import { Award, Bookmark, ChevronDown, LayoutDashboard, LogOut, Settings, User }
 import { Avatar, Badge } from '@/shared/components/ui';
 import { cn, ROLE_HOME, ROLE_LABEL } from '@/shared/utils';
 import type { AppUser } from '@/shared/types';
-import { STUDENT_NAV, type MenuLink } from './navConfig';
 
-const ALL = STUDENT_NAV.flatMap((g) => g.items);
-const pick = (to: string, label?: string): MenuLink => {
-  const it = ALL.find((i) => i.to === to);
-  if (!it) throw new Error(`UserMenu: thiếu mục ${to} trong STUDENT_NAV`);
-  return { ...it, label: label ?? it.label };
-};
-
-/** Luyện kỹ năng: lưới 3×2, nhãn ngắn */
-const SKILLS = [
-  pick('/app/vocabulary', 'Từ vựng'),
-  pick('/app/grammar', 'Ngữ pháp'),
-  pick('/app/dictation', 'Nghe chép'),
-  pick('/app/drills', 'Điểm yếu'),
-  pick('/app/writing', 'Viết'),
-  pick('/app/speaking', 'Nói'),
-];
-/** Khoá học / Thi thử / Bảng vinh danh đã có trên menu chính nên không lặp lại ở đây */
+/** Mục cá nhân (các mục học tập đã nằm trong menu chính) */
 const PERSONAL = [
   { to: '/app/achievements', label: 'Huy hiệu', icon: Award },
   { to: '/app/bookmarks', label: 'Đã lưu', icon: Bookmark },
@@ -33,8 +16,8 @@ const PERSONAL = [
 const SectionLabel: React.FC<{ children: React.ReactNode }> = ({ children }) => <p className="px-2 pb-1.5 text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-400">{children}</p>;
 
 /**
- * Menu tài khoản trên header (một cột, 3 khối): thông tin + chỉ số → Luyện kỹ năng → Cá nhân, Đăng xuất tách riêng ở cuối.
- * Lộ trình / Sổ tay lỗi sai / Lịch ôn / Tiến độ nằm trong menu Công cụ; nội dung Tổng quan nằm ở trang chủ.
+ * Menu tài khoản trên header: thông tin + chỉ số → Cá nhân, Đăng xuất tách riêng ở cuối.
+ * Luyện kỹ năng nằm trong menu TOEIC / VSTEP, học tập cá nhân trong menu Công cụ, Tổng quan ở trang chủ.
  * Giáo viên / Trưởng bộ môn / Admin: thông tin + link khu quản lý + Đăng xuất.
  */
 export const UserMenu: React.FC<{ user: AppUser; onLogout: () => void; onDark?: boolean }> = ({ user, onLogout, onDark }) => {
@@ -119,26 +102,8 @@ export const UserMenu: React.FC<{ user: AppUser; onLogout: () => void; onDark?: 
 
           {isStudent ? (
             <>
-              {/* 2. Luyện kỹ năng */}
+              {/* 2. Cá nhân */}
               <div className="px-2 pt-4">
-                <SectionLabel>Luyện kỹ năng</SectionLabel>
-                <div className="grid grid-cols-3 gap-1.5 px-1">
-                  {SKILLS.map((it) => (
-                    <NavLink
-                      key={it.to}
-                      to={it.to}
-                      role="menuitem"
-                      className={({ isActive }) => cn('group/skill flex flex-col items-center gap-1.5 rounded-xl px-1 py-2.5 text-[12px] font-medium ring-1 ring-inset transition-colors', isActive ? 'bg-slate-900/[0.06] text-indigo-700 ring-indigo-600/30' : 'text-slate-700 ring-slate-200 hover:bg-slate-900/[0.04] hover:ring-slate-300')}
-                    >
-                      {it.img && <img src={it.img} alt="" className="h-7 w-7 transition-transform duration-200 group-hover/skill:scale-110" />}
-                      {it.label}
-                    </NavLink>
-                  ))}
-                </div>
-              </div>
-
-              {/* 3. Cá nhân */}
-              <div className="px-2 pt-3">
                 <SectionLabel>Cá nhân</SectionLabel>
                 <div className="grid grid-cols-2 gap-x-1">
                   {PERSONAL.map((a) => (
