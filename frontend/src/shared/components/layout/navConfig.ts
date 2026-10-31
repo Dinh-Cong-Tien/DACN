@@ -55,6 +55,8 @@ export interface MenuLink {
   img?: string;
   desc?: string;
   badge?: string;
+  /** Đường dẫn khi đã đăng nhập học viên (vd. /courses → /app/courses) */
+  appTo?: string;
 }
 
 export interface PublicNavItem {
@@ -63,14 +65,16 @@ export interface PublicNavItem {
   icon: React.ElementType;
   img: string;
   children?: MenuLink[];
+  /** Đường dẫn khi đã đăng nhập học viên */
+  appTo?: string;
 }
 
-/** Menu công khai (khách chưa đăng nhập) */
+/** Menu chính trên header — dùng chung cho khách và học viên (học viên đi theo appTo nếu có) */
 export const PUBLIC_NAV: PublicNavItem[] = [
   { to: '/toeic', label: 'TOEIC', img: '/images/nav/briefcase.webp', icon: Briefcase },
   { to: '/vstep', label: 'VSTEP', img: '/images/nav/graduation-cap.webp', icon: GraduationCap },
-  { to: '/courses', label: 'Khoá học', img: '/images/nav/laptop.webp', icon: PlayCircle },
-  { to: '/mock-tests', label: 'Thi thử', img: '/images/nav/memo.webp', icon: FileText },
+  { to: '/courses', label: 'Khoá học', img: '/images/nav/laptop.webp', icon: PlayCircle, appTo: '/app/courses' },
+  { to: '/mock-tests', label: 'Thi thử', img: '/images/nav/memo.webp', icon: FileText, appTo: '/app/mock-tests' },
   {
     label: 'Công cụ',
     icon: Wrench,
@@ -79,7 +83,7 @@ export const PUBLIC_NAV: PublicNavItem[] = [
       { to: '/score-converter', label: 'Quy đổi điểm', img: '/images/nav/abacus.webp', icon: Calculator, desc: 'TOEIC ↔ VSTEP ↔ CEFR theo bảng ETS' },
       { to: '/resources', label: 'Kho tài liệu mở', img: '/images/nav/books.webp', icon: FolderOpen, desc: 'Ngữ pháp, từ vựng, bài mẫu Writing' },
       { to: '/question-bank', label: 'Ngân hàng câu hỏi', img: '/images/nav/card-file-box.webp', icon: Database, desc: '12.614 câu theo từng Part, có giải thích' },
-      { to: '/leaderboard', label: 'Bảng vinh danh', img: '/images/nav/trophy.webp', icon: Trophy, desc: 'Học viên chuyên cần nhất tuần này' },
+      { to: '/leaderboard', label: 'Bảng vinh danh', img: '/images/nav/trophy.webp', icon: Trophy, desc: 'Học viên chuyên cần nhất tuần này', appTo: '/app/leaderboard' },
     ],
   },
   { to: '/pricing', label: 'Bảng giá', img: '/images/nav/label.webp', icon: Tag },

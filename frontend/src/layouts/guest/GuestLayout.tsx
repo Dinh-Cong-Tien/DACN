@@ -1,16 +1,17 @@
 import React, { useEffect, useState } from 'react';
 import { Outlet, Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
-import { Menu, X, LogIn, ArrowRight, ChevronDown, Facebook, Youtube, Mail, MapPin, Phone, Instagram, Search, Bell, User, Settings, LogOut, Sparkles, LayoutDashboard } from 'lucide-react';
+import { Menu, X, LogIn, ArrowRight, ChevronDown, Facebook, Youtube, Mail, MapPin, Phone, Instagram, Search, Bell } from 'lucide-react';
 import { cn, ROLE_HOME, ROLE_LABEL } from '@/shared/utils';
 import { useScrolled } from '@/shared/hooks';
 import { useAuthStore } from '@/shared/stores/authStore';
 import { useUiStore, toast } from '@/shared/stores/uiStore';
-import { Logo, Button, CommandPalette, Avatar, Dropdown, Badge } from '@/shared/components/ui';
+import { Logo, Button, CommandPalette, Badge } from '@/shared/components/ui';
 import { PageTransition } from '@/shared/components/motion';
 import { ScrollProgress, BackToTop, RouteProgress } from '@/shared/components/layout/ScrollExtras';
 import { ChatWidget } from '@/shared/components/support';
 import { PUBLIC_NAV, STUDENT_NAV, type MenuLink } from '@/shared/components/layout/navConfig';
 import { ThemeToggle } from '@/shared/components/layout/ThemeToggle';
+import { UserMenu } from '@/shared/components/layout/UserMenu';
 import { PageBackdrop } from '@/shared/components/layout/PageBackdrop';
 import { useResolvedTheme } from '@/shared/stores/themeStore';
 import { MOCK_NOTIFICATIONS } from '@/shared/mocks';
@@ -22,9 +23,11 @@ interface GuestLayoutProps {
 
 /**
  * Layout chung của toàn website: khách và học viên dùng cùng một header.
- * - Chưa đăng nhập: menu công khai + Đăng nhập / Học thử miễn phí.
- * - Học viên: menu học tập (Tổng quan, Lộ trình, Khoá học, Luyện tập, Thi thử, Ôn luyện ▾, Thành tích ▾, Công cụ ▾) + tìm kiếm, chuông, avatar.
- * - Giáo viên / Trưởng bộ môn / Admin: menu công khai + avatar có link vào khu vực quản lý.
+ * - Mọi người dùng chung menu chính (TOEIC, VSTEP, Khoá học, Thi thử, Công cụ, Bảng giá, Kinh nghiệm) như Study4/Prep.
+ * - Chưa đăng nhập: Đăng nhập / Học thử miễn phí.
+ * - Học viên: Khoá học / Thi thử / Bảng vinh danh mở trang của học viên (appTo); tìm kiếm, chuông, avatar mở "Góc học tập"
+ *   (toàn bộ mục học tập), nút "Vào học". Mobile có thêm thanh điều hướng đáy.
+ * - Giáo viên / Trưởng bộ môn / Admin: avatar + nút vào trang quản lý.
  */
 export const GuestLayout: React.FC<GuestLayoutProps> = ({ contained }) => {
   const scrolled = useScrolled(12);
@@ -89,41 +92,28 @@ export const GuestLayout: React.FC<GuestLayoutProps> = ({ contained }) => {
     </div>
   );
 
-  // ===== Menu desktop =====
-  const [studentPrimary, ...studentRest] = STUDENT_NAV;
-  const desktopNav = isStudent
-    ? [
-        ...studentPrimary.items.map((item) => (
-          <NavLink key={item.to} to={item.to} className={linkCls}>
-            {item.label}
-          </NavLink>
-        )),
-        ...studentRest.map((g) =>
-          dropdown(
-            g.title ?? '',
-            undefined,
-            g.items,
-            g.items.some((i) => location.pathname.startsWith(i.to)),
-            // 1024–1279px không đủ chỗ: ẩn nhóm Công cụ (vẫn có ở footer và ⌘K)
-            g.title === 'Công cụ' ? 'hidden xl:block' : undefined
-          )
-        ),
-      ]
-    : PUBLIC_NAV.map((item) =>
-        item.children ? (
-          dropdown(item.label, item.img, item.children)
-        ) : (
-          <NavLink key={item.to} to={item.to!} className={linkCls}>
-            <img src={item.img} alt="" className="w-5 h-5 hidden xl:block" />
-            {item.label}
-          </NavLink>
-        )
-      );
+  // ===== Menu desktop: menu chính cho mọi người; học viên đi theo appTo (trang của học viên) =====
+  const [studentPrimary] = STUDENT_NAV;
+  const hrefOf = (i: { to?: string; appTo?: string }) => (isStudent && i.appTo) || i.to!;
+  const mainNav = PUBLIC_NAV.map((i) => ({ ...i, to: hrefOf(i), children: i.children?.map((c) => ({ ...c, to: hrefOf(c) })) }));
+  const desktopNav = mainNav.map((item) =>
+    item.children ? (
+      dropdown(item.label, item.img, item.children, item.children.some((c) => location.pathname.startsWith(c.to)))
+    ) : (
+      <NavLink key={item.label} to={item.to} className={linkCls}>
+        <img src={item.img} alt="" className="w-5 h-5 hidden xl:block" />
+        {item.label}
+      </NavLink>
+    )
+  );
 
   // ===== Menu mobile (phẳng theo nhóm) =====
-  const mobileGroups: { title?: string; items: MenuLink[] }[] = isStudent
-    ? STUDENT_NAV
-    : [{ items: PUBLIC_NAV.filter((i) => !i.children).map((i) => ({ to: i.to!, label: i.label, img: i.img })) }, ...PUBLIC_NAV.filter((i) => i.children).map((i) => ({ title: i.label, items: i.children! }))];
+  const mobileGroups: { title?: string; items: MenuLink[] }[] = [
+    { items: mainNav.filter((i) => !i.children).map((i) => ({ to: i.to, label: i.label, img: i.img })) },
+    ...mainNav.filter((i) => i.children).map((i) => ({ title: i.label, items: i.children! })),
+    // Học viên: thêm các nhóm học tập (nhóm Công cụ đã có ở trên)
+    ...(isStudent ? STUDENT_NAV.filter((g) => g.title !== 'Công cụ') : []),
+  ];
 
   const bottomItems = isStudent ? studentPrimary.items.slice(0, 4) : [];
 
@@ -150,16 +140,16 @@ export const GuestLayout: React.FC<GuestLayoutProps> = ({ contained }) => {
             <button onClick={() => setOpen((o) => !o)} className={cn('lg:hidden p-2 rounded-xl border-2', onDarkHero ? 'border-white/30 bg-white/10 text-white' : 'border-slate-900 bg-white')} aria-label="Menu">
               {open ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </button>
-            <Logo size="md" dark={onDarkHero} to={isStudent ? '/app/dashboard' : '/'} />
+            <Logo size="md" dark={onDarkHero} to="/" />
           </div>
 
           <nav className="hidden lg:flex items-center gap-0.5">{desktopNav}</nav>
 
           <div className="flex items-center gap-1.5 md:gap-2">
-            <ThemeToggle onDark={onDarkHero} />
+            <ThemeToggle onDark={onDarkHero} className={cn(isAuth && 'hidden sm:block')} />
             {isAuth && user ? (
               <>
-                <button onClick={() => setPalette(true)} className={cn('p-2 rounded-xl transition', onDarkHero ? 'text-slate-200 hover:bg-white/10' : 'text-slate-700 hover:bg-slate-900/5')} aria-label="Tìm kiếm (⌘K)" title="Tìm kiếm (⌘K)">
+                <button onClick={() => setPalette(true)} className={cn('hidden sm:inline-flex p-2 rounded-xl transition', onDarkHero ? 'text-slate-200 hover:bg-white/10' : 'text-slate-700 hover:bg-slate-900/5')} aria-label="Tìm kiếm (⌘K)" title="Tìm kiếm (⌘K)">
                   <Search className="w-5 h-5" />
                 </button>
                 {isStudent && (
@@ -168,38 +158,11 @@ export const GuestLayout: React.FC<GuestLayoutProps> = ({ contained }) => {
                     {unread > 0 && <span className="absolute top-1 right-1 min-w-[16px] h-4 px-1 rounded-full bg-violet-500 text-white text-[9px] font-black flex items-center justify-center ring-2 ring-cream">{unread}</span>}
                   </NavLink>
                 )}
-                <Dropdown
-                  align="right"
-                  header={
-                    <div className="flex items-center gap-3">
-                      <Avatar name={user.fullName} src={user.avatarUrl} size="md" />
-                      <div className="min-w-0">
-                        <p className="text-sm font-bold text-slate-900 truncate">{user.fullName}</p>
-                        <p className="text-[11px] text-slate-500 truncate">{user.email}</p>
-                        <Badge tone="indigo" size="xs" className="mt-1">
-                          {ROLE_LABEL[user.role]}
-                        </Badge>
-                      </div>
-                    </div>
-                  }
-                  items={[
-                    ...(isStudent
-                      ? [
-                          { label: 'Hồ sơ cá nhân', icon: <User />, onClick: () => navigate('/app/profile') },
-                          { label: 'Cài đặt', icon: <Settings />, onClick: () => navigate('/app/settings') },
-                          ...(user.plan === 'FREE' ? [{ label: 'Nâng cấp VIP', icon: <Sparkles />, onClick: () => navigate('/pricing') }] : []),
-                        ]
-                      : [{ label: `Khu vực ${ROLE_LABEL[user.role].toLowerCase()}`, icon: <LayoutDashboard />, onClick: () => navigate(ROLE_HOME[user.role]) }]),
-                    { divider: true, label: '' },
-                    { label: 'Đăng xuất', icon: <LogOut />, danger: true, onClick: handleLogout },
-                  ]}
-                  trigger={
-                    <button className="flex items-center gap-2 pl-1 pr-2 py-1 rounded-xl hover:bg-slate-900/5 transition" aria-label="Tài khoản">
-                      <Avatar name={user.fullName} src={user.avatarUrl} size="sm" ring status="online" />
-                      <ChevronDown className="w-3.5 h-3.5 text-slate-500" />
-                    </button>
-                  }
-                />
+                <UserMenu user={user} onLogout={handleLogout} onDark={onDarkHero} />
+                {/* Cùng vị trí nút cam "Học thử miễn phí" của khách */}
+                <Button to={isStudent ? '/app/dashboard' : ROLE_HOME[user.role]} variant="gradient" size="sm" rightIcon={<ArrowRight className="w-4 h-4" />} className="hidden xl:inline-flex">
+                  {isStudent ? 'Vào học' : 'Trang quản lý'}
+                </Button>
               </>
             ) : (
               <div className="hidden lg:flex items-center gap-2">
@@ -233,6 +196,14 @@ export const GuestLayout: React.FC<GuestLayoutProps> = ({ contained }) => {
                   ))}
                 </div>
               ))}
+              {isAuth && (
+                <div className="flex items-center justify-between border-t border-slate-900/10 px-3 pt-3 sm:hidden">
+                  <button type="button" onClick={() => setPalette(true)} className="inline-flex items-center gap-2 text-sm font-bold text-slate-700">
+                    <Search className="w-4 h-4" /> Tìm kiếm
+                  </button>
+                  <ThemeToggle />
+                </div>
+              )}
               {!isAuth && (
                 <div className="pt-3 flex gap-2">
                   <Button to="/auth/login" variant="outline" fullWidth>
