@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Outlet, Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
-import { Menu, X, LogIn, ArrowRight, ChevronDown, Facebook, Youtube, Mail, MapPin, Phone, Instagram, Search, Bell, Flame, User, Settings, LogOut, Sparkles, LayoutDashboard } from 'lucide-react';
+import { Menu, X, LogIn, ArrowRight, ChevronDown, Facebook, Youtube, Mail, MapPin, Phone, Instagram, Search, Bell, User, Settings, LogOut, Sparkles, LayoutDashboard } from 'lucide-react';
 import { cn, ROLE_HOME, ROLE_LABEL } from '@/shared/utils';
 import { useScrolled } from '@/shared/hooks';
 import { useAuthStore } from '@/shared/stores/authStore';
@@ -20,7 +20,7 @@ interface GuestLayoutProps {
 /**
  * Layout chung của toàn website: khách và học viên dùng cùng một header.
  * - Chưa đăng nhập: menu công khai + Đăng nhập / Học thử miễn phí.
- * - Học viên: menu học tập (Tổng quan, Lộ trình, Khoá học, Luyện tập, Thi thử, Ôn luyện ▾, Thành tích ▾, Công cụ ▾) + streak, chuông, avatar.
+ * - Học viên: menu học tập (Tổng quan, Lộ trình, Khoá học, Luyện tập, Thi thử, Ôn luyện ▾, Thành tích ▾, Công cụ ▾) + tìm kiếm, chuông, avatar.
  * - Giáo viên / Trưởng bộ môn / Admin: menu công khai + avatar có link vào khu vực quản lý.
  */
 export const GuestLayout: React.FC<GuestLayoutProps> = ({ contained }) => {
@@ -151,12 +151,6 @@ export const GuestLayout: React.FC<GuestLayoutProps> = ({ contained }) => {
           <div className="flex items-center gap-1.5 md:gap-2">
             {isAuth && user ? (
               <>
-                {isStudent && (
-                  <div className="hidden xl:inline-flex items-center gap-1.5 px-3 h-9 rounded-xl bg-amber-300 text-slate-900 text-xs font-extrabold whitespace-nowrap">
-                    <Flame className="w-4 h-4 text-violet-600 fill-violet-500 animate-bounce-soft" />
-                    {user.streak} ngày
-                  </div>
-                )}
                 <button onClick={() => setPalette(true)} className={cn('p-2 rounded-xl transition', onDarkHero ? 'text-slate-200 hover:bg-white/10' : 'text-slate-700 hover:bg-slate-900/5')} aria-label="Tìm kiếm (⌘K)" title="Tìm kiếm (⌘K)">
                   <Search className="w-5 h-5" />
                 </button>
