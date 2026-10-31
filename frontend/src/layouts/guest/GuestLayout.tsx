@@ -9,7 +9,7 @@ import { Logo, Button, CommandPalette, Avatar, Dropdown, Badge } from '@/shared/
 import { PageTransition } from '@/shared/components/motion';
 import { ScrollProgress, BackToTop, RouteProgress } from '@/shared/components/layout/ScrollExtras';
 import { ChatWidget } from '@/shared/components/support';
-import { PUBLIC_NAV, STUDENT_NAV } from '@/shared/components/layout/navConfig';
+import { PUBLIC_NAV, STUDENT_NAV, type MenuLink } from '@/shared/components/layout/navConfig';
 import { MOCK_NOTIFICATIONS } from '@/shared/mocks';
 
 interface GuestLayoutProps {
@@ -51,22 +51,31 @@ export const GuestLayout: React.FC<GuestLayoutProps> = ({ contained }) => {
   const onDarkHero = location.pathname === '/';
   const linkCls = ({ isActive }: { isActive: boolean }) =>
     cn(
-      'px-3 py-2 rounded-xl text-sm font-bold whitespace-nowrap transition-all duration-200 inline-flex items-center gap-1.5',
+      'px-2.5 py-2 rounded-xl text-sm font-bold whitespace-nowrap transition-all duration-200 inline-flex items-center gap-1.5',
       isActive ? (onDarkHero ? 'bg-white/10 text-amber-300' : 'bg-slate-900 text-amber-300') : onDarkHero ? 'text-slate-200 hover:bg-white/10 hover:text-white' : 'text-slate-700 hover:bg-slate-900/5 hover:text-slate-900'
     );
 
-  const dropdown = (label: string, items: { to: string; label: string; badge?: string }[], active = false) => (
-    <div key={label} className="relative group/menu">
-      <button className={cn('px-3 py-2 rounded-xl text-sm font-bold flex items-center gap-1 transition whitespace-nowrap', active ? (onDarkHero ? 'bg-white/10 text-amber-300' : 'bg-slate-900 text-amber-300') : onDarkHero ? 'text-slate-200 hover:bg-white/10 hover:text-white' : 'text-slate-700 hover:bg-slate-900/5 hover:text-slate-900')}>
+  const dropdown = (label: string, Icon: React.ElementType | undefined, items: MenuLink[], active = false, className?: string) => (
+    <div key={label} className={cn('relative group/menu', className)}>
+      <button className={cn('px-2.5 py-2 rounded-xl text-sm font-bold flex items-center gap-1.5 transition whitespace-nowrap', active ? (onDarkHero ? 'bg-white/10 text-amber-300' : 'bg-slate-900 text-amber-300') : onDarkHero ? 'text-slate-200 hover:bg-white/10 hover:text-white' : 'text-slate-700 hover:bg-slate-900/5 hover:text-slate-900')}>
+        {Icon && <Icon className="w-4 h-4 opacity-70 hidden xl:block" />}
         {label}
         {items.some((i) => i.badge) && !active && <span className="w-1.5 h-1.5 rounded-full bg-violet-500" />}
         <ChevronDown className="w-3.5 h-3.5 transition-transform group-hover/menu:rotate-180" />
       </button>
       <div className="absolute left-0 top-full pt-2 opacity-0 translate-y-1 pointer-events-none group-hover/menu:opacity-100 group-hover/menu:translate-y-0 group-hover/menu:pointer-events-auto transition-all duration-200 z-50">
-        <div className="w-72 bg-white rounded-2xl border-2 border-slate-900 shadow-hard p-2">
+        <div className={cn('bg-white rounded-xl border border-slate-200 shadow-[0_12px_32px_-8px_rgba(16,24,40,0.18)] p-1.5', items.some((i) => i.desc) ? 'w-[340px]' : 'w-64')}>
           {items.map((c) => (
-            <NavLink key={c.to} to={c.to} className={({ isActive }) => cn('flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm font-semibold transition', isActive ? 'bg-amber-100 text-slate-900' : 'text-slate-700 hover:bg-amber-100 hover:text-slate-900')}>
-              <span className="flex-1">{c.label}</span>
+            <NavLink key={c.to} to={c.to} className={({ isActive }) => cn('group/item flex items-center gap-3 px-2.5 py-2 rounded-lg text-sm transition-colors', isActive ? 'bg-slate-100 text-slate-900' : 'text-slate-700 hover:bg-slate-50 hover:text-slate-900')}>
+              {c.icon && (
+                <span className={cn('flex shrink-0 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-500 transition-colors group-hover/item:border-indigo-200 group-hover/item:text-indigo-700', c.desc ? 'h-9 w-9' : 'h-7 w-7')}>
+                  <c.icon className="w-4 h-4" />
+                </span>
+              )}
+              <span className="min-w-0 flex-1">
+                <span className="block font-medium">{c.label}</span>
+                {c.desc && <span className="block truncate text-[12px] text-slate-500">{c.desc}</span>}
+              </span>
               {c.badge && (
                 <Badge tone="violet" solid size="xs">
                   {c.badge}
@@ -85,31 +94,36 @@ export const GuestLayout: React.FC<GuestLayoutProps> = ({ contained }) => {
     ? [
         ...studentPrimary.items.map((item) => (
           <NavLink key={item.to} to={item.to} className={linkCls}>
+            <item.icon className="w-4 h-4 opacity-70 hidden min-[1440px]:block" />
             {item.label}
           </NavLink>
         )),
         ...studentRest.map((g) =>
           dropdown(
             g.title ?? '',
-            g.items.map((i) => ({ to: i.to, label: i.label, badge: i.badge })),
-            g.items.some((i) => location.pathname.startsWith(i.to))
+            undefined,
+            g.items,
+            g.items.some((i) => location.pathname.startsWith(i.to)),
+            // 1024–1279px không đủ chỗ: ẩn nhóm Công cụ (vẫn có ở footer và ⌘K)
+            g.title === 'Công cụ' ? 'hidden xl:block' : undefined
           )
         ),
       ]
     : PUBLIC_NAV.map((item) =>
         item.children ? (
-          dropdown(item.label, item.children)
+          dropdown(item.label, item.icon, item.children)
         ) : (
           <NavLink key={item.to} to={item.to!} className={linkCls}>
+            <item.icon className="w-4 h-4 opacity-70 hidden xl:block" />
             {item.label}
           </NavLink>
         )
       );
 
   // ===== Menu mobile (phẳng theo nhóm) =====
-  const mobileGroups: { title?: string; items: { to: string; label: string; badge?: string }[] }[] = isStudent
-    ? STUDENT_NAV.map((g) => ({ title: g.title, items: g.items.map((i) => ({ to: i.to, label: i.label, badge: i.badge })) }))
-    : [{ items: PUBLIC_NAV.flatMap((i) => (i.children ? i.children : [{ to: i.to!, label: i.label }])) }];
+  const mobileGroups: { title?: string; items: MenuLink[] }[] = isStudent
+    ? STUDENT_NAV
+    : [{ items: PUBLIC_NAV.filter((i) => !i.children).map((i) => ({ to: i.to!, label: i.label, icon: i.icon })) }, ...PUBLIC_NAV.filter((i) => i.children).map((i) => ({ title: i.label, items: i.children! }))];
 
   const bottomItems = isStudent ? studentPrimary.items.slice(0, 4) : [];
 
@@ -193,10 +207,10 @@ export const GuestLayout: React.FC<GuestLayoutProps> = ({ contained }) => {
             ) : (
               <div className="hidden lg:flex items-center gap-2">
                 <Button to="/auth/login" variant="ghost" size="sm" leftIcon={<LogIn className="w-4 h-4" />} className={cn(onDarkHero && '!text-slate-200 hover:!bg-white/10 hover:!text-white')}>
-                  Đăng nhập
+                  <span className="sr-only xl:not-sr-only xl:whitespace-nowrap">Đăng nhập</span>
                 </Button>
                 <Button to="/try" variant="gradient" size="sm" rightIcon={<ArrowRight className="w-4 h-4" />}>
-                  Học thử miễn phí
+                  Học thử<span className="hidden xl:inline"> miễn phí</span>
                 </Button>
               </div>
             )}
@@ -210,7 +224,8 @@ export const GuestLayout: React.FC<GuestLayoutProps> = ({ contained }) => {
                 <div key={gi} className="space-y-1">
                   {g.title && <p className="px-3 pb-1 text-[10px] font-extrabold uppercase tracking-[0.14em] text-slate-400">{g.title}</p>}
                   {g.items.map((c) => (
-                    <NavLink key={c.to} to={c.to} className={({ isActive }) => cn('flex items-center px-3 py-2.5 rounded-xl text-sm font-bold', isActive ? 'bg-slate-900 text-amber-300' : 'text-slate-700 hover:bg-slate-900/5')}>
+                    <NavLink key={c.to} to={c.to} className={({ isActive }) => cn('flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold', isActive ? 'bg-slate-900 text-amber-300' : 'text-slate-700 hover:bg-slate-900/5')}>
+                      {c.icon && <c.icon className="w-[18px] h-[18px] shrink-0 opacity-70" />}
                       <span className="flex-1">{c.label}</span>
                       {c.badge && (
                         <Badge tone="violet" solid size="xs">

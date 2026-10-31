@@ -1,4 +1,5 @@
-import { LayoutDashboard, Compass, Layers, FileText, AlertTriangle, RotateCcw, BookOpen, GraduationCap, PlayCircle, Headphones, Target, TrendingUp, Bookmark, Trophy, Award, PenTool, Mic, Calculator, FolderOpen, Newspaper, Tag } from 'lucide-react';
+import { LayoutDashboard, Compass, Layers, FileText, AlertTriangle, RotateCcw, BookOpen, GraduationCap, PlayCircle, Headphones, Target, TrendingUp, Bookmark, Trophy, Award, PenTool, Mic, Calculator, FolderOpen, Newspaper, Tag, Briefcase, Wrench, Database } from 'lucide-react';
+import type React from 'react';
 import type { NavGroup } from './AppShell';
 
 /** Menu của học viên khi đã đăng nhập (hiển thị ngay trên header chung của website) */
@@ -46,21 +47,38 @@ export const STUDENT_NAV: NavGroup[] = [
   },
 ];
 
+/** Mục con trong dropdown header: có icon + mô tả ngắn một dòng */
+export interface MenuLink {
+  to: string;
+  label: string;
+  icon?: React.ElementType;
+  desc?: string;
+  badge?: string;
+}
+
+export interface PublicNavItem {
+  to?: string;
+  label: string;
+  icon: React.ElementType;
+  children?: MenuLink[];
+}
+
 /** Menu công khai (khách chưa đăng nhập) */
-export const PUBLIC_NAV: { to?: string; label: string; children?: { to: string; label: string }[] }[] = [
-  { to: '/toeic', label: 'TOEIC' },
-  { to: '/vstep', label: 'VSTEP' },
-  { to: '/courses', label: 'Khoá học' },
-  { to: '/mock-tests', label: 'Thi thử' },
+export const PUBLIC_NAV: PublicNavItem[] = [
+  { to: '/toeic', label: 'TOEIC', icon: Briefcase },
+  { to: '/vstep', label: 'VSTEP', icon: GraduationCap },
+  { to: '/courses', label: 'Khoá học', icon: PlayCircle },
+  { to: '/mock-tests', label: 'Thi thử', icon: FileText },
   {
     label: 'Công cụ',
+    icon: Wrench,
     children: [
-      { to: '/score-converter', label: 'Quy đổi điểm TOEIC ↔ VSTEP ↔ CEFR' },
-      { to: '/resources', label: 'Kho tài liệu mở' },
-      { to: '/question-bank', label: 'Ngân hàng câu hỏi' },
-      { to: '/leaderboard', label: 'Bảng vinh danh' },
+      { to: '/score-converter', label: 'Quy đổi điểm', icon: Calculator, desc: 'TOEIC ↔ VSTEP ↔ CEFR theo bảng ETS' },
+      { to: '/resources', label: 'Kho tài liệu mở', icon: FolderOpen, desc: 'Ngữ pháp, từ vựng, bài mẫu Writing' },
+      { to: '/question-bank', label: 'Ngân hàng câu hỏi', icon: Database, desc: '12.614 câu theo từng Part, có giải thích' },
+      { to: '/leaderboard', label: 'Bảng vinh danh', icon: Trophy, desc: 'Học viên chuyên cần nhất tuần này' },
     ],
   },
-  { to: '/pricing', label: 'Bảng giá' },
-  { to: '/blog', label: 'Kinh nghiệm' },
+  { to: '/pricing', label: 'Bảng giá', icon: Tag },
+  { to: '/blog', label: 'Kinh nghiệm', icon: Newspaper },
 ];
