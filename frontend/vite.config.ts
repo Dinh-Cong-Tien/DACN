@@ -11,5 +11,7 @@ export default defineConfig({
   },
   server: {
     port: 3000,
+    // Cổng 3000 đang bận thì báo lỗi thay vì tự mở server thứ hai ở 3001
+    strictPort: true,
   },
 });
