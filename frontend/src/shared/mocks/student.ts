@@ -130,16 +130,16 @@ export const MOCK_ACHIEVEMENTS: Achievement[] = [
 ];
 
 export const MOCK_LEADERBOARD: LeaderboardEntry[] = [
-  { rank: 1, name: 'Phạm Hoàng Long', initials: 'HL', avatarUrl: pravatar(11), points: 5420, streak: 61, delta: 0, target: 'TOEIC 900' },
-  { rank: 2, name: 'Đỗ Thị Mai', initials: 'TM', avatarUrl: pravatar(12), points: 5180, streak: 44, delta: 1, target: 'VSTEP C1' },
-  { rank: 3, name: 'Vũ Đức Thành', initials: 'ĐT', avatarUrl: pravatar(13), points: 4960, streak: 38, delta: -1, target: 'TOEIC 850' },
-  { rank: 4, name: 'Nguyễn Khánh Vy', initials: 'KV', avatarUrl: pravatar(14), points: 4310, streak: 29, delta: 2, target: 'TOEIC 800' },
-  { rank: 5, name: 'Trần Gia Huy', initials: 'GH', avatarUrl: pravatar(15), points: 4120, streak: 33, delta: 0, target: 'VSTEP B2' },
-  { rank: 6, name: 'Lý Bảo Ngọc', initials: 'BN', avatarUrl: pravatar(16), points: 3880, streak: 21, delta: 3, target: 'TOEIC 750' },
-  { rank: 7, name: 'Hoàng Minh Quân', initials: 'MQ', avatarUrl: pravatar(17), points: 3540, streak: 18, delta: -2, target: 'VSTEP B2' },
-  { rank: 8, name: 'Nguyễn Minh Anh', initials: 'MA', avatarUrl: pravatar(18), points: 2480, streak: 12, delta: 4, target: 'TOEIC 750', isMe: true },
-  { rank: 9, name: 'Bùi Thanh Tùng', initials: 'TT', avatarUrl: pravatar(19), points: 2310, streak: 9, delta: -1, target: 'TOEIC 650' },
-  { rank: 10, name: 'Đặng Hải Yến', initials: 'HY', avatarUrl: pravatar(20), points: 2190, streak: 15, delta: 0, target: 'VSTEP B1' },
+  { rank: 1, name: 'Phạm Hoàng Long', initials: 'HL', avatarUrl: pravatar(11), points: 5417, streak: 61, delta: 0, target: 'TOEIC 900' },
+  { rank: 2, name: 'Đỗ Thị Mai', initials: 'TM', avatarUrl: pravatar(12), points: 5183, streak: 44, delta: 1, target: 'VSTEP C1' },
+  { rank: 3, name: 'Vũ Đức Thành', initials: 'ĐT', avatarUrl: pravatar(13), points: 4962, streak: 38, delta: -1, target: 'TOEIC 850' },
+  { rank: 4, name: 'Nguyễn Khánh Vy', initials: 'KV', avatarUrl: pravatar(14), points: 4309, streak: 29, delta: 2, target: 'TOEIC 800' },
+  { rank: 5, name: 'Trần Gia Huy', initials: 'GH', avatarUrl: pravatar(15), points: 4126, streak: 33, delta: 0, target: 'VSTEP B2' },
+  { rank: 6, name: 'Lý Bảo Ngọc', initials: 'BN', avatarUrl: pravatar(16), points: 3881, streak: 21, delta: 3, target: 'TOEIC 750' },
+  { rank: 7, name: 'Hoàng Minh Quân', initials: 'MQ', avatarUrl: pravatar(17), points: 3547, streak: 18, delta: -2, target: 'VSTEP B2' },
+  { rank: 8, name: 'Nguyễn Minh Anh', initials: 'MA', avatarUrl: pravatar(18), points: 2486, streak: 12, delta: 4, target: 'TOEIC 750', isMe: true },
+  { rank: 9, name: 'Bùi Thanh Tùng', initials: 'TT', avatarUrl: pravatar(19), points: 2313, streak: 9, delta: -1, target: 'TOEIC 650' },
+  { rank: 10, name: 'Đặng Hải Yến', initials: 'HY', avatarUrl: pravatar(20), points: 2194, streak: 15, delta: 0, target: 'VSTEP B1' },
 ];
 
 export const MOCK_NOTIFICATIONS: AppNotification[] = [

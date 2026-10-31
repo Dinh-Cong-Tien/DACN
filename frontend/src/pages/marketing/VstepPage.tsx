@@ -1,21 +1,50 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
-import { ArrowRight, Clock, Headphones, BookOpen, PenTool, Mic, Lightbulb, CheckCircle2 } from 'lucide-react';
-import { Button, Card, SectionTitle, Badge, Accordion } from '@/shared/components/ui';
-import { Reveal, Stagger, Doodles } from '@/shared/components/motion';
-import { Img, PHOTOS, pravatar } from '@/shared/components/media/Img';
 import { VSTEP_PARTS_INFO, MOCK_TESTS } from '@/shared/mocks';
 import { useDocumentTitle, useGate } from '@/shared/hooks';
-import { cn, formatNumber } from '@/shared/utils';
+import { PageHeader, Section, SectionHead, ActionLink, CtaStrip } from './shared/PageKit';
+import { TestList } from './shared/TestList';
 
-const VSTEP_LEVELS_UI = [
-  { level: 'B1', bac: 3, score: '4.0 – 5.5', who: 'Chuẩn đầu ra tốt nghiệp đại học tại hầu hết trường. Giao tiếp được trong tình huống quen thuộc.', need: ['Nghe hiểu thông báo, hội thoại ngắn', 'Viết email 120 từ đúng bố cục', 'Nói 2–3 phút về chủ đề đời sống'] },
-  { level: 'B2', bac: 4, score: '6.0 – 8.0', who: 'Yêu cầu với cao học, giáo viên tiếng Anh THCS/THPT và nhiều vị trí doanh nghiệp.', need: ['Đọc bài học thuật 600–800 từ', 'Viết luận 250 từ có lập luận', 'Thảo luận giải pháp, phản biện'] },
-  { level: 'C1', bac: 5, score: '8.5 – 10', who: 'Giảng viên, nghiên cứu sinh, chuyên ngành ngôn ngữ Anh. Sử dụng linh hoạt trong học thuật.', need: ['Từ vựng học thuật nâng cao', 'Bài viết mạch lạc, cấu trúc phức', 'Phát triển chủ đề trừu tượng 5 phút'] },
+const LEVELS = [
+  { level: 'B1', bac: 'Bậc 3', score: '4.0 – 5.5', who: 'Chuẩn đầu ra tốt nghiệp đại học ở hầu hết các trường', can: 'Nghe thông báo, hội thoại quen thuộc; viết email 120 từ; nói 2–3 phút về đời sống' },
+  { level: 'B2', bac: 'Bậc 4', score: '6.0 – 8.0', who: 'Đầu vào/đầu ra thạc sĩ, giáo viên tiếng Anh tiểu học – THCS, nhiều vị trí doanh nghiệp', can: 'Đọc bài học thuật 600–800 từ; viết luận 250 từ có lập luận; thảo luận, phản biện' },
+  { level: 'C1', bac: 'Bậc 5', score: '8.5 – 10', who: 'Giáo viên tiếng Anh THPT, giảng viên, nghiên cứu sinh', can: 'Dùng từ vựng học thuật linh hoạt; bài viết mạch lạc, cấu trúc phức; phát triển chủ đề trừu tượng' },
 ];
 
-const ICONS: Record<string, React.ElementType> = { Listening: Headphones, Reading: BookOpen, Writing: PenTool, Speaking: Mic };
-const TONES = ['bg-indigo-100 text-indigo-800', 'bg-violet-100 text-violet-800', 'bg-amber-200 text-slate-900', 'bg-sky-100 text-sky-800'];
+const GRADING: Record<string, string> = { Listening: 'Chấm tự động', Reading: 'Chấm tự động', Writing: 'Giáo viên chấm theo 4 tiêu chí', Speaking: 'Giáo viên chấm bản ghi âm' };
+
+/** Bản xem trước phiếu chấm Writing của giáo viên (nội dung mẫu) */
+const WritingFeedbackPreview: React.FC = () => (
+  <figure className="rounded-xl border border-slate-200 bg-white shadow-[0_1px_2px_rgba(16,24,40,0.04),0_12px_32px_-12px_rgba(16,24,40,0.14)]">
+    <div className="flex items-center justify-between border-b border-slate-200 px-5 py-3.5">
+      <div>
+        <p className="text-sm font-semibold text-slate-900">Writing Task 2 · Đề mẫu B2 số 1</p>
+        <p className="text-[12px] text-slate-500">256 từ · nộp 19/10/2026 · chấm sau 31 giờ</p>
+      </div>
+      <p className="text-right">
+        <span className="block text-2xl font-semibold tabular-nums text-slate-900">6.0</span>
+        <span className="text-[12px] text-slate-500">/10 · B2</span>
+      </p>
+    </div>
+    <dl className="divide-y divide-slate-200 text-sm">
+      {[
+        ['Hoàn thành nhiệm vụ', '6.5', 'Đủ ba ý, ví dụ ở đoạn 2 còn chung chung.'],
+        ['Tổ chức bài', '6.0', 'Thiếu câu chuyển giữa đoạn 2 và 3.'],
+        ['Từ vựng', '5.5', 'Lặp "important" 5 lần; thử "crucial", "vital".'],
+        ['Ngữ pháp', '6.0', 'Sai mạo từ ở 4 chỗ, đã gạch chân trong bài.'],
+      ].map(([c, s, n]) => (
+        <div key={c} className="grid grid-cols-[1fr_auto] gap-x-4 px-5 py-3">
+          <dt className="text-slate-700">{c}</dt>
+          <dd className="font-semibold tabular-nums text-slate-900">{s}</dd>
+          <dd className="col-span-2 mt-0.5 text-[13px] text-slate-500">{n}</dd>
+        </div>
+      ))}
+    </dl>
+    <figcaption className="flex items-center gap-2.5 border-t border-slate-200 px-5 py-3 text-[12px] text-slate-500">
+      <img src="/images/support/co-hanh.webp" alt="" className="w-7 h-7 rounded-full object-cover" />
+      Chấm bởi cô Nguyễn Thu Hạnh · giảng viên VSTEP
+    </figcaption>
+  </figure>
+);
 
 export const VstepPage: React.FC = () => {
   useDocumentTitle('Luyện thi VSTEP');
@@ -23,152 +52,97 @@ export const VstepPage: React.FC = () => {
   const tests = MOCK_TESTS.filter((t) => t.examType === 'VSTEP');
 
   return (
-    <div>
-      <section className="relative bg-violet-500 text-white overflow-hidden border-b-2 border-slate-900">
-        <Doodles tone="light" />
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24 grid lg:grid-cols-[1fr_1fr] gap-12 items-center">
-          <div className="space-y-6">
-            <span className="sticker tilt-1 !bg-amber-300">VSTEP · Khung năng lực 6 bậc</span>
-            <h1 className="font-display text-5xl md:text-6xl font-extrabold leading-[1.02]">
-              Bốn kỹ năng, <br />
-              một kế hoạch <span className="mark mark-full">rõ ràng</span>.
-            </h1>
-            <p className="text-violet-100 text-lg max-w-xl leading-relaxed">Nghe, Đọc chấm tự động. Viết, Nói ghi lại rồi giáo viên chấm theo rubric 4 tiêu chí của Bộ GD&ĐT. Mục tiêu B1, B2 hay C1 đều có lộ trình riêng.</p>
-            <div className="flex flex-col sm:flex-row gap-3">
-              <Button to="/auth/register" size="lg" variant="ink" rightIcon={<ArrowRight className="w-4 h-4" />}>
-                Thi xếp lớp VSTEP
-              </Button>
-              <Button to="/mock-tests" size="lg" variant="white">
-                Đề mẫu Bộ GD&ĐT
-              </Button>
-            </div>
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="photo-frame tilt-1 mt-8">
-              <Img src={PHOTOS.writing} alt="Luyện viết VSTEP" ratio="3/4" fallbackClass="bg-violet-300" />
-            </div>
-            <div className="photo-frame tilt-2">
-              <Img src={PHOTOS.discussion} alt="Luyện nói VSTEP" ratio="3/4" fallbackClass="bg-amber-200" />
-            </div>
-          </div>
-        </div>
-      </section>
+    <div className="bg-white">
+      <PageHeader
+        crumbs={[{ label: 'Trang chủ', to: '/' }, { label: 'Luyện thi VSTEP' }]}
+        title="Luyện thi VSTEP bậc 3–5 (B1, B2, C1)"
+        lead="Nghe và Đọc chấm tự động ngay khi nộp. Viết và Nói được giáo viên chấm theo tiêu chí của Bộ GD&ĐT, có nhận xét từng lỗi để biết lần sau sửa gì."
+        actions={
+          <>
+            <ActionLink to={gate('/onboarding/goal', '/try')} size="lg">
+              Làm bài xếp lớp miễn phí
+            </ActionLink>
+            <ActionLink to="/mock-tests" variant="secondary" size="lg">
+              Xem đề mẫu
+            </ActionLink>
+          </>
+        }
+        facts={[
+          { value: '4 kỹ năng', label: 'Nghe · Đọc · Viết · Nói' },
+          { value: '172 phút', label: 'Thời gian' },
+          { value: '0 – 10', label: 'Thang điểm' },
+          { value: '87 đề', label: 'Đề mẫu trên OrbiLingo' },
+        ]}
+        aside={<WritingFeedbackPreview />}
+      />
 
-      {/* Levels */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24 space-y-10">
-        <Reveal>
-          <SectionTitle align="left" eyebrow="Bậc năng lực" title={<>Bạn cần <span className="mark-coral mark">bậc mấy</span>?</>} description="Hầu hết trường đại học yêu cầu B1 để tốt nghiệp; cao học và giáo viên tiếng Anh cần B2 trở lên." />
-        </Reveal>
-        <Stagger className="grid md:grid-cols-3 gap-5">
-          {VSTEP_LEVELS_UI.map((l, i) => (
-            <div key={l.level} className={cn('rounded-3xl border-2 border-slate-900 shadow-hard p-6 md:p-7', ['bg-white', 'bg-amber-200', 'bg-indigo-600 text-white'][i])}>
-              <p className="font-display text-5xl font-extrabold">{l.level}</p>
-              <p className={cn('text-sm font-bold mt-1', i === 2 ? 'text-indigo-100' : 'text-slate-600')}>Bậc {l.bac} · {l.score} điểm</p>
-              <p className={cn('mt-4 leading-relaxed text-sm', i === 2 ? 'text-indigo-50' : 'text-slate-700')}>{l.who}</p>
-              <ul className="mt-5 space-y-1.5 text-sm">
-                {l.need.map((n) => (
-                  <li key={n} className="flex items-center gap-2">
-                    <CheckCircle2 className={cn('w-4 h-4', i === 2 ? 'text-amber-300' : 'text-emerald-600')} /> {n}
+      {/* Bậc năng lực */}
+      <Section>
+        <SectionHead title="Bạn cần bậc nào?" desc="Điểm VSTEP là trung bình 4 kỹ năng, làm tròn 0.5. Dưới 4.0 không được cấp chứng chỉ." />
+        <div className="overflow-x-auto rounded-xl border border-slate-200">
+          <table className="w-full min-w-[720px] text-sm">
+            <thead className="bg-[#F6F7F9] text-left text-[13px] text-slate-500">
+              <tr>
+                <th className="px-5 py-3 font-medium">Bậc</th>
+                <th className="px-4 py-3 font-medium">Điểm trung bình</th>
+                <th className="px-4 py-3 font-medium">Thường được yêu cầu cho</th>
+                <th className="px-5 py-3 font-medium">Cần làm được</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-200">
+              {LEVELS.map((l) => (
+                <tr key={l.level} className="align-top">
+                  <td className="px-5 py-4">
+                    <span className="font-semibold text-slate-900 whitespace-nowrap">{l.level}</span>
+                    <span className="block whitespace-nowrap text-[13px] text-slate-500">{l.bac}</span>
+                  </td>
+                  <td className="px-4 py-4 tabular-nums text-slate-900">{l.score}</td>
+                  <td className="px-4 py-4 text-slate-700">{l.who}</td>
+                  <td className="px-5 py-4 text-slate-600">{l.can}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </Section>
+
+      {/* Cấu trúc đề */}
+      <Section muted>
+        <SectionHead title="Cấu trúc bài thi" desc="Theo định dạng đề thi VSTEP.3-5 ban hành kèm Quyết định 729/QĐ-BGDĐT. Thi trên máy tính hoặc giấy tuỳ đơn vị tổ chức." />
+        <div className="grid gap-4 md:grid-cols-2">
+          {VSTEP_PARTS_INFO.map((p) => (
+            <article key={p.id} className="rounded-xl border border-slate-200 bg-white p-6">
+              <div className="flex items-baseline justify-between gap-4">
+                <h3 className="text-lg font-semibold text-slate-900">
+                  {p.nameVi} <span className="font-normal text-slate-500">({p.name})</span>
+                </h3>
+                <p className="shrink-0 text-sm tabular-nums text-slate-600">{p.minutes} phút</p>
+              </div>
+              <p className="mt-1 text-[13px] text-slate-500">
+                {p.questions} {p.skill === 'Writing' || p.skill === 'Speaking' ? 'phần' : 'câu'} · {GRADING[p.skill]}
+              </p>
+              <p className="mt-3 text-slate-700 leading-relaxed">{p.description}</p>
+              <ul className="mt-4 space-y-1.5 border-t border-slate-200 pt-4 text-[14px] text-slate-600">
+                {p.tips.map((t) => (
+                  <li key={t} className="flex gap-2">
+                    <span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-slate-400" />
+                    {t}
                   </li>
                 ))}
               </ul>
-            </div>
+            </article>
           ))}
-        </Stagger>
-      </section>
-
-      {/* Skills */}
-      <section className="bg-slate-900 text-white py-16 md:py-24 border-y-2 border-slate-900">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
-          <Reveal>
-            <SectionTitle dark eyebrow="Cấu trúc đề" title="Bốn phần thi, gần 3 giờ." description="Thời gian và số câu theo đề mẫu chính thức. Nhấn vào từng phần để xem mẹo." />
-          </Reveal>
-          <div className="grid lg:grid-cols-[1fr_380px] gap-8 items-start">
-            <Accordion
-              defaultOpen={VSTEP_PARTS_INFO[0].id}
-              items={VSTEP_PARTS_INFO.map((p, i) => {
-                const Icon = ICONS[p.skill] ?? BookOpen;
-                return {
-                  id: p.id,
-                  icon: <Icon />,
-                  title: (
-                    <span className="flex items-center gap-3 flex-wrap">
-                      <span className={cn('px-2 py-0.5 rounded-md text-[11px] font-extrabold uppercase', TONES[i])}>{p.nameVi}</span>
-                      <span className="text-slate-900">
-                        {p.questions} {p.skill === 'Writing' || p.skill === 'Speaking' ? 'phần' : 'câu'} · {p.minutes} phút
-                      </span>
-                    </span>
-                  ),
-                  content: (
-                    <div className="space-y-3">
-                      <p>{p.description}</p>
-                      <div className="rounded-xl bg-amber-100 border-2 border-slate-900 p-4">
-                        <p className="font-bold text-slate-900 flex items-center gap-2 mb-2 text-sm">
-                          <Lightbulb className="w-4 h-4 text-amber-600" /> Mẹo
-                        </p>
-                        <ul className="space-y-1 text-sm text-slate-800">
-                          {p.tips.map((t) => (
-                            <li key={t}>• {t}</li>
-                          ))}
-                        </ul>
-                      </div>
-                    </div>
-                  ),
-                };
-              })}
-            />
-            <div className="space-y-4">
-              <Card hard tone="yellow" padding="md">
-                <p className="text-[10px] font-extrabold uppercase tracking-wider">Tổng thời gian</p>
-                <p className="font-display text-4xl font-extrabold mt-1 flex items-center gap-2">
-                  <Clock className="w-7 h-7" /> 172 phút
-                </p>
-                <p className="text-sm mt-2 text-slate-800">Nghe 40 · Đọc 60 · Viết 60 · Nói 12</p>
-              </Card>
-              <Card hard padding="md" className="flex items-center gap-4">
-                <img src={pravatar(42)} alt="" className="w-14 h-14 rounded-full border-2 border-slate-900 object-cover" />
-                <div>
-                  <p className="font-bold text-slate-900">Cô Phạm Ngọc Linh</p>
-                  <p className="text-xs text-slate-500">Giảng viên VSTEP · chấm 1.200+ bài Writing</p>
-                </div>
-              </Card>
-            </div>
-          </div>
         </div>
-      </section>
+      </Section>
 
-      {/* Tests */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24 space-y-10">
-        <Reveal className="flex flex-col md:flex-row md:items-end justify-between gap-4">
-          <SectionTitle align="left" eyebrow="Đề mẫu" title="Đề VSTEP theo format chính thức" />
-          <Button to="/mock-tests" variant="outline" rightIcon={<ArrowRight className="w-4 h-4" />}>
-            Xem tất cả
-          </Button>
-        </Reveal>
-        <Stagger className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
-          {tests.map((t) => (
-            <Link key={t.id} to={gate(`/app/mock-tests/${t.id}`)} className="block bg-white rounded-3xl border-2 border-slate-900 shadow-hard overflow-hidden card-hard-hover">
-              <Img src={t.coverUrl} alt="" ratio="video" fallbackClass="bg-violet-200" />
-              <div className="p-4 space-y-2">
-                <div className="flex gap-1.5 flex-wrap">
-                  <Badge tone="violet" size="xs">
-                    {t.level}
-                  </Badge>
-                  {t.tags?.map((tag) => (
-                    <Badge key={tag} tone={tag === 'VIP' ? 'amber' : 'slate'} size="xs">
-                      {tag}
-                    </Badge>
-                  ))}
-                </div>
-                <h3 className="font-display font-bold text-slate-900 leading-snug">{t.title}</h3>
-                <p className="text-xs text-slate-500 font-semibold">
-                  {t.parts.join(' · ')} · {formatNumber(t.attempts)} lượt
-                </p>
-              </div>
-            </Link>
-          ))}
-        </Stagger>
-      </section>
+      {/* Đề mẫu */}
+      <Section>
+        <SectionHead title="Đề VSTEP trên OrbiLingo" desc="Đề mẫu theo định dạng chính thức và đề luyện tập theo từng bậc." action={{ label: 'Tất cả đề thi', to: '/mock-tests' }} />
+        <TestList tests={tests} />
+        <div className="mt-12">
+          <CtaStrip title="Không chắc nên thi B1 hay B2?" text="Bài xếp lớp khoảng 15 phút cho biết bậc hiện tại và số tuần cần để lên bậc mục tiêu." action={{ label: 'Làm bài xếp lớp', to: gate('/onboarding/goal', '/try') }} />
+        </div>
+      </Section>
     </div>
   );
 };

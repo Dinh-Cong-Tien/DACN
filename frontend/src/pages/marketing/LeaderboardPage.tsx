@@ -1,91 +1,131 @@
-import React, { useState } from 'react';
-import { Trophy, Flame, TrendingUp, TrendingDown, Minus, ArrowRight, Crown } from 'lucide-react';
-import { Button, SectionTitle, Segmented, Avatar, Badge, Card } from '@/shared/components/ui';
-import { Reveal, Stagger } from '@/shared/components/motion';
+import React, { useMemo, useState } from 'react';
+import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
 import { MOCK_LEADERBOARD } from '@/shared/mocks';
-import { useDocumentTitle } from '@/shared/hooks';
+import { useDocumentTitle, useGate } from '@/shared/hooks';
 import { cn, formatNumber } from '@/shared/utils';
+import { PageHeader, Section, UnderlineTabs, ActionLink } from './shared/PageKit';
+
+type Period = 'week' | 'month';
+type Exam = 'ALL' | 'TOEIC' | 'VSTEP';
+
+// Huy chương top 3: vàng, bạc, đồng
+const MEDAL = ['bg-[#F2C94C] text-[#5C4300]', 'bg-[#D5D9DE] text-[#3D444D]', 'bg-[#E3A778] text-[#5A2E0E]'];
+
+const RULES = [
+  ['1 câu luyện tập làm đúng', '2 điểm'],
+  ['1 câu làm sai rồi ôn lại đúng', '3 điểm'],
+  ['1 đề full test nộp đủ giờ', '150 điểm'],
+  ['Mỗi ngày giữ chuỗi học', '20 điểm'],
+];
 
 export const LeaderboardPage: React.FC = () => {
   useDocumentTitle('Bảng vinh danh');
-  const [period, setPeriod] = useState('week');
-  const top3 = MOCK_LEADERBOARD.slice(0, 3);
-  const rest = MOCK_LEADERBOARD.slice(3);
-  const podium = [top3[1], top3[0], top3[2]];
-  const H = ['h-28', 'h-40', 'h-20'];
-  const BG = ['bg-slate-200', 'bg-amber-300', 'bg-violet-200'];
+  const gate = useGate();
+  const [period, setPeriod] = useState<Period>('week');
+  const [exam, setExam] = useState<Exam>('ALL');
+
+  const rows = useMemo(() => {
+    const base = MOCK_LEADERBOARD.map((u) => ({ ...u, score: period === 'week' ? u.points : Math.round(u.points * 4.3 + u.streak * 7) }));
+    return base
+      .filter((u) => exam === 'ALL' || u.target.startsWith(exam))
+      .sort((a, b) => b.score - a.score)
+      .map((u, i) => ({ ...u, place: i + 1 }));
+  }, [period, exam]);
 
   return (
-    <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-14 md:py-20 space-y-12">
-      <Reveal className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-        <SectionTitle align="left" eyebrow="Bảng vinh danh" title={<>Top học viên <span className="mark">chuyên cần</span> tuần này</>} description="Điểm nỗ lực tính theo số câu luyện tập, đề thi thử và ngày học liên tục. Làm mới 0h thứ Hai hằng tuần." />
-        <Segmented
-          value={period}
-          onChange={setPeriod}
-          options={[
-            { value: 'week', label: 'Tuần' },
-            { value: 'month', label: 'Tháng' },
-          ]}
-        />
-      </Reveal>
+    <div className="bg-white">
+      <PageHeader
+        crumbs={[{ label: 'Trang chủ', to: '/' }, { label: 'Bảng vinh danh' }]}
+        title="Bảng vinh danh học viên chuyên cần"
+        lead="Xếp theo điểm nỗ lực: số câu luyện tập, đề thi thử đã nộp và chuỗi ngày học liên tục. Bảng tuần làm mới lúc 0:00 thứ Hai."
+      />
 
-      <Reveal>
-        <div className="grid grid-cols-3 gap-3 items-end">
-          {podium.map((u, i) => (
-            <div key={u.rank} className="flex flex-col items-center gap-3 animate-fade-up" style={{ animationDelay: `${i * 120}ms` }}>
-              <div className="relative">
-                {u.rank === 1 && <Crown className="w-7 h-7 text-amber-500 fill-amber-300 absolute -top-7 left-1/2 -translate-x-1/2 animate-bounce-soft" />}
-                <Avatar name={u.name} src={u.avatarUrl} size={u.rank === 1 ? 'xl' : 'lg'} ring />
-              </div>
-              <p className="font-bold text-slate-900 text-sm text-center leading-tight">{u.name}</p>
-              <p className="text-xs text-slate-500">{u.target}</p>
-              <div className={cn('w-full rounded-t-2xl border-2 border-b-0 border-slate-900 flex flex-col items-center justify-start pt-3', H[i], BG[i])}>
-                <span className="font-display text-3xl font-extrabold text-slate-900">#{u.rank}</span>
-                <span className="text-xs font-bold text-slate-700">{formatNumber(u.points)} điểm</span>
-              </div>
+      <Section innerClassName="pt-8 md:pt-10">
+        <div className="grid gap-10 lg:grid-cols-[1fr_300px]">
+          <div>
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+              <UnderlineTabs
+                className="sm:flex-1"
+                value={exam}
+                onChange={setExam}
+                items={[
+                  { value: 'ALL', label: 'Tất cả' },
+                  { value: 'TOEIC', label: 'TOEIC' },
+                  { value: 'VSTEP', label: 'VSTEP' },
+                ]}
+              />
+              <select value={period} onChange={(e) => setPeriod(e.target.value as Period)} aria-label="Khoảng thời gian" className="mb-1 h-9 self-start rounded-lg border border-slate-300 bg-white px-2.5 text-sm text-slate-700 focus:border-indigo-600 focus:outline-none">
+                <option value="week">Tuần 27/10 – 02/11</option>
+                <option value="month">Tháng 10/2026</option>
+              </select>
             </div>
-          ))}
-        </div>
-        <div className="h-1 bg-slate-900 rounded-full" />
-      </Reveal>
 
-      <Stagger className="space-y-2">
-        {rest.map((u) => (
-          <div key={u.rank} className={cn('flex items-center gap-4 p-3 md:p-4 rounded-2xl border-2 bg-white', u.isMe ? 'border-slate-900 shadow-hard bg-amber-100' : 'border-slate-200 hover:border-slate-900 transition')}>
-            <span className="w-8 text-center font-display font-extrabold text-slate-500">{u.rank}</span>
-            <Avatar name={u.name} src={u.avatarUrl} size="md" />
-            <div className="flex-1 min-w-0">
-              <p className="font-bold text-slate-900 truncate">
-                {u.name} {u.isMe && <Badge tone="violet" size="xs">Bạn</Badge>}
-              </p>
-              <p className="text-xs text-slate-500">{u.target}</p>
+            <div className="mt-5 overflow-hidden rounded-xl border border-slate-200">
+              <table className="w-full text-sm">
+                <thead className="bg-[#F6F7F9] text-left text-[13px] text-slate-500">
+                  <tr>
+                    <th className="w-16 px-4 py-3 font-medium">Hạng</th>
+                    <th className="px-4 py-3 font-medium">Học viên</th>
+                    <th className="hidden px-4 py-3 text-right font-medium sm:table-cell">Chuỗi ngày</th>
+                    <th className="px-4 py-3 text-right font-medium">Điểm</th>
+                    <th className="hidden px-4 py-3 text-right font-medium sm:table-cell">Thay đổi</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-200">
+                  {rows.map((u) => (
+                    <tr key={u.name}>
+                      <td className="px-4 py-3">
+                        {u.place <= 3 ? (
+                          <span className={cn('inline-flex h-7 w-7 items-center justify-center rounded-full text-[13px] font-semibold', MEDAL[u.place - 1])}>{u.place}</span>
+                        ) : (
+                          <span className="inline-block w-7 text-center tabular-nums text-slate-500">{u.place}</span>
+                        )}
+                      </td>
+                      <td className="px-4 py-3">
+                        <p className="font-medium text-slate-900">{u.name}</p>
+                        <p className="text-[12px] text-slate-500">Mục tiêu {u.target}</p>
+                      </td>
+                      <td className="hidden px-4 py-3 text-right tabular-nums text-slate-600 sm:table-cell">{u.streak} ngày</td>
+                      <td className="px-4 py-3 text-right font-semibold tabular-nums text-slate-900">{formatNumber(u.score)}</td>
+                      <td className="hidden px-4 py-3 text-right sm:table-cell">
+                        <span className={cn('inline-flex items-center gap-0.5 text-[13px] tabular-nums', u.delta > 0 ? 'text-emerald-700' : u.delta < 0 ? 'text-violet-700' : 'text-slate-400')}>
+                          {u.delta > 0 ? <TrendingUp className="h-3.5 w-3.5" /> : u.delta < 0 ? <TrendingDown className="h-3.5 w-3.5" /> : <Minus className="h-3.5 w-3.5" />}
+                          {u.delta !== 0 && Math.abs(u.delta)}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
-            <span className="hidden sm:flex items-center gap-1 text-xs font-bold text-amber-700">
-              <Flame className="w-4 h-4 text-violet-600 fill-violet-500" /> {u.streak} ngày
-            </span>
-            <span className="font-display font-extrabold text-slate-900 w-24 text-right">{formatNumber(u.points)}</span>
-            <span className={cn('w-12 flex items-center justify-end gap-0.5 text-xs font-bold', u.delta > 0 ? 'text-emerald-600' : u.delta < 0 ? 'text-rose-600' : 'text-slate-400')}>
-              {u.delta > 0 ? <TrendingUp className="w-3.5 h-3.5" /> : u.delta < 0 ? <TrendingDown className="w-3.5 h-3.5" /> : <Minus className="w-3.5 h-3.5" />}
-              {Math.abs(u.delta) || ''}
-            </span>
+            <p className="mt-3 text-[12px] text-slate-500">Hiển thị 10 học viên đầu bảng. Tên được hiển thị khi học viên bật chế độ công khai trong phần cài đặt.</p>
           </div>
-        ))}
-      </Stagger>
 
-      <Reveal>
-        <Card hard tone="teal" padding="lg" className="flex flex-col md:flex-row items-center justify-between gap-5">
-          <div className="flex items-center gap-4">
-            <Trophy className="w-10 h-10 text-amber-300" />
+          <aside className="space-y-8 lg:sticky lg:top-24 lg:self-start">
             <div>
-              <h3 className="font-display text-2xl font-extrabold">Muốn có tên ở đây?</h3>
-              <p className="text-indigo-100 text-sm">Học 20 phút mỗi ngày là đủ vào top 50.</p>
+              <h2 className="text-base font-semibold text-slate-900">Cách tính điểm</h2>
+              <table className="mt-3 w-full text-sm">
+                <tbody className="divide-y divide-slate-200 border-y border-slate-200">
+                  {RULES.map(([r, p]) => (
+                    <tr key={r}>
+                      <td className="py-2.5 pr-3 text-slate-600">{r}</td>
+                      <td className="py-2.5 text-right tabular-nums text-slate-900">{p}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              <p className="mt-3 text-[13px] text-slate-500">Làm lại đề cũ không được tính thêm điểm. Bài nộp dưới 30% thời gian bị loại.</p>
             </div>
-          </div>
-          <Button to="/auth/register" variant="white" size="lg" rightIcon={<ArrowRight className="w-4 h-4" />}>
-            Bắt đầu
-          </Button>
-        </Card>
-      </Reveal>
+            <div className="rounded-xl border border-slate-200 p-5">
+              <p className="font-medium text-slate-900">Muốn có tên trên bảng?</p>
+              <p className="mt-1 text-sm text-slate-600">Học khoảng 20 phút mỗi ngày trong một tuần thường đủ vào top 50.</p>
+              <ActionLink to={gate('/app/leaderboard', '/auth/register')} className="mt-4 w-full">
+                Bắt đầu học
+              </ActionLink>
+            </div>
+          </aside>
+        </div>
+      </Section>
     </div>
   );
 };

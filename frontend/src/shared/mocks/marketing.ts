@@ -60,7 +60,7 @@ export const PRICING_PLANS: PricingPlan[] = [
       { text: '2 lượt chấm Speaking / tháng', included: true },
       { text: 'Lớp học online với giáo viên', included: true },
       { text: 'Báo cáo tiến độ hàng tuần qua email', included: true },
-      { text: 'Hỗ trợ ưu tiên 24/7', included: true },
+      { text: 'Hỗ trợ ưu tiên 8:00–22:00 hằng ngày', included: true },
       { text: 'Chứng nhận hoàn thành lộ trình', included: true },
     ],
   },
@@ -78,14 +78,14 @@ export const FAQS: FaqItem[] = [
 ];
 
 export const RESOURCES: ResourceDoc[] = [
-  { id: 'r-1', title: 'Tóm tắt 24 chủ điểm ngữ pháp TOEIC & VSTEP', type: 'PDF', category: 'Ngữ pháp', pages: 48, downloads: 15420, size: '3.2 MB', description: 'Bảng công thức, dấu hiệu nhận biết và bẫy thường gặp cho từng chủ điểm.' },
-  { id: 'r-2', title: '600 từ vựng TOEIC theo chủ đề (có phiên âm)', type: 'PDF', category: 'Từ vựng', pages: 72, downloads: 21300, size: '4.8 MB', description: 'Phân loại 20 chủ đề Business, mỗi từ kèm ví dụ ngữ cảnh đề thi.' },
-  { id: 'r-3', title: 'Cẩm nang Writing VSTEP — Task 1 & Task 2', type: 'PDF', category: 'VSTEP', pages: 36, downloads: 8900, size: '2.1 MB', description: 'Bố cục, mẫu câu mở bài/kết bài và 10 bài mẫu band 7+.' },
-  { id: 'r-4', title: 'Bộ câu hỏi Speaking VSTEP Part 1–3 kèm gợi ý', type: 'DOCX', category: 'VSTEP', pages: 24, downloads: 6700, size: '860 KB', description: '60 chủ đề thường gặp cùng khung trả lời mẫu.' },
-  { id: 'r-5', title: 'Chiến thuật TOEIC Listening Part 1–4', type: 'PDF', category: 'TOEIC', pages: 30, downloads: 12800, size: '2.6 MB', description: 'Nhận diện bẫy đồng âm, bẫy lặp từ và paraphrase.' },
-  { id: 'r-6', title: 'Audio luyện nghe chép chính tả — 50 câu', type: 'AUDIO', category: 'Listening', pages: 0, downloads: 5400, size: '38 MB', description: 'Giọng Mỹ/Anh/Úc, tốc độ chuẩn thi thật.' },
-  { id: 'r-7', title: 'Bảng quy đổi điểm TOEIC ↔ VSTEP ↔ CEFR ↔ IELTS', type: 'PDF', category: 'Tham khảo', pages: 4, downloads: 9100, size: '420 KB', description: 'Bản in A4 tiện tra cứu.' },
-  { id: 'r-8', title: 'Checklist 30 ngày trước kỳ thi', type: 'PDF', category: 'Kế hoạch', pages: 8, downloads: 7300, size: '1.0 MB', description: 'Lịch ôn mẫu theo tuần kèm mục tiêu từng ngày.' },
+  { id: 'r-1', title: 'Tóm tắt 24 chủ điểm ngữ pháp TOEIC & VSTEP', type: 'PDF', category: 'Ngữ pháp', pages: 48, downloads: 15417, size: '3.2 MB', description: 'Bảng công thức, dấu hiệu nhận biết và bẫy thường gặp cho từng chủ điểm.' },
+  { id: 'r-2', title: '600 từ vựng TOEIC theo chủ đề (có phiên âm)', type: 'PDF', category: 'Từ vựng', pages: 72, downloads: 21268, size: '4.8 MB', description: 'Phân loại 20 chủ đề Business, mỗi từ kèm ví dụ ngữ cảnh đề thi.' },
+  { id: 'r-3', title: 'Cẩm nang Writing VSTEP — Task 1 & Task 2', type: 'PDF', category: 'VSTEP', pages: 36, downloads: 8893, size: '2.1 MB', description: 'Bố cục, mẫu câu mở bài/kết bài và 10 bài mẫu đạt 8.0 trở lên.' },
+  { id: 'r-4', title: 'Bộ câu hỏi Speaking VSTEP Part 1–3 kèm gợi ý', type: 'DOCX', category: 'VSTEP', pages: 24, downloads: 6712, size: '860 KB', description: '60 chủ đề thường gặp cùng khung trả lời mẫu.' },
+  { id: 'r-5', title: 'Chiến thuật TOEIC Listening Part 1–4', type: 'PDF', category: 'TOEIC', pages: 30, downloads: 12781, size: '2.6 MB', description: 'Nhận diện bẫy đồng âm, bẫy lặp từ và paraphrase.' },
+  { id: 'r-6', title: 'Audio luyện nghe chép chính tả — 50 câu', type: 'AUDIO', category: 'Listening', pages: 0, downloads: 5394, size: '38 MB', description: 'Giọng Mỹ/Anh/Úc, tốc độ chuẩn thi thật.' },
+  { id: 'r-7', title: 'Bảng quy đổi điểm TOEIC ↔ VSTEP ↔ CEFR ↔ IELTS', type: 'PDF', category: 'Tham khảo', pages: 4, downloads: 9106, size: '420 KB', description: 'Bản in A4 tiện tra cứu.' },
+  { id: 'r-8', title: 'Checklist 30 ngày trước kỳ thi', type: 'PDF', category: 'Kế hoạch', pages: 8, downloads: 7329, size: '1.0 MB', description: 'Lịch ôn mẫu theo tuần kèm mục tiêu từng ngày.' },
 ];
 
 export const BLOG_POSTS: BlogPost[] = [
@@ -100,7 +100,7 @@ export const BLOG_POSTS: BlogPost[] = [
     categorySlug: 'toeic',
     author: 'Nguyễn Văn Dũng',
     date: '2026-10-25',
-    readMin: 6,
+    readMin: 6, views: 18427,
     gradient: 'from-indigo-500 to-violet-600',
     tags: ['Listening', 'Part 2', 'Chiến thuật'],
     content: [
@@ -123,7 +123,7 @@ export const BLOG_POSTS: BlogPost[] = [
     categorySlug: 'lo-trinh',
     author: 'Trần Thu Hà',
     date: '2026-10-18',
-    readMin: 9,
+    readMin: 9, views: 9361,
     gradient: 'from-emerald-500 to-teal-600',
     tags: ['Lộ trình', 'Tự học'],
     content: [
@@ -144,7 +144,7 @@ export const BLOG_POSTS: BlogPost[] = [
     categorySlug: 'vstep',
     author: 'Phạm Ngọc Linh',
     date: '2026-10-10',
-    readMin: 7,
+    readMin: 7, views: 6218,
     gradient: 'from-amber-400 to-orange-500',
     tags: ['Writing', 'VSTEP', 'Task 2'],
     content: [
@@ -164,7 +164,7 @@ export const BLOG_POSTS: BlogPost[] = [
     categorySlug: 'phuong-phap',
     author: 'Lê Quốc Bảo',
     date: '2026-09-28',
-    readMin: 5,
+    readMin: 5, views: 11834,
     gradient: 'from-rose-500 to-pink-600',
     tags: ['SRS', 'Từ vựng', 'Khoa học'],
     content: [
@@ -184,7 +184,7 @@ export const BLOG_POSTS: BlogPost[] = [
     categorySlug: 'toeic',
     author: 'Trần Thu Hà',
     date: '2026-09-15',
-    readMin: 8,
+    readMin: 8, views: 7562,
     gradient: 'from-sky-500 to-cyan-600',
     tags: ['Reading', 'Part 7'],
     content: ['Với đoạn kép/ba, luôn có 1–2 câu hỏi yêu cầu kết hợp thông tin từ hai đoạn khác nhau. Dấu hiệu: câu hỏi nhắc tên người/ngày tháng ở đoạn này nhưng chi tiết nằm ở đoạn kia.', 'Thứ tự khuyến nghị: đọc tiêu đề các đoạn → đọc 5 câu hỏi → scan từng đoạn theo keyword.'],
@@ -200,7 +200,7 @@ export const BLOG_POSTS: BlogPost[] = [
     categorySlug: 'vstep',
     author: 'Phạm Ngọc Linh',
     date: '2026-09-02',
-    readMin: 6,
+    readMin: 6, views: 4907,
     gradient: 'from-fuchsia-500 to-purple-600',
     tags: ['Speaking', 'VSTEP'],
     content: ['Mỗi nhánh của sơ đồ nên triển khai theo công thức: Nêu ý → Giải thích → Ví dụ cá nhân. Sau 3 nhánh, dành 20 giây kết luận.', 'Hãy ghi âm và nghe lại; OrbiLingo cho phép bạn nộp bản ghi âm để giáo viên nhận xét.'],

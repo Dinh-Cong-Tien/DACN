@@ -1,12 +1,10 @@
 import React, { useMemo, useState } from 'react';
-import { Calculator, ArrowRightLeft, Info, ArrowRight } from 'lucide-react';
-import { Badge, Card, Input, Select, SectionTitle, Button } from '@/shared/components/ui';
-import { Reveal, Doodles } from '@/shared/components/motion';
-import { Img, PHOTOS } from '@/shared/components/media/Img';
+import { ArrowRightLeft } from 'lucide-react';
 import { SCORE_TABLE } from '@/shared/mocks';
 import type { ScoreRow } from '@/shared/types';
 import { useDocumentTitle } from '@/shared/hooks';
 import { cn } from '@/shared/utils';
+import { PageHeader, Section, SectionHead, CtaStrip } from './shared/PageKit';
 
 type Source = 'TOEIC' | 'VSTEP' | 'IELTS' | 'CEFR';
 
@@ -37,8 +35,17 @@ function findRow(source: Source, value: string): ScoreRow | null {
   return best;
 }
 
-const HINT: Record<Source, string> = { TOEIC: 'Nhập điểm 10 – 990', VSTEP: 'Nhập điểm 0 – 10', IELTS: 'Nhập band 1.0 – 9.0', CEFR: 'Nhập A1, A2, B1, B2, C1, C2' };
-const BG = ['bg-slate-100', 'bg-sky-100', 'bg-indigo-100', 'bg-amber-200', 'bg-violet-100', 'bg-emerald-100'];
+const HINT: Record<Source, string> = { TOEIC: 'Điểm từ 10 đến 990', VSTEP: 'Điểm từ 0 đến 10', IELTS: 'Band từ 1.0 đến 9.0', CEFR: 'A1, A2, B1, B2, C1 hoặc C2' };
+const DEFAULT: Record<Source, string> = { TOEIC: '650', VSTEP: '6.0', IELTS: '6.0', CEFR: 'B1' };
+
+const NOTES = [
+  'Bậc VSTEP theo Khung năng lực ngoại ngữ 6 bậc (Thông tư 01/2014/TT-BGDĐT), tương ứng CEFR A1–C2.',
+  'Mức TOEIC theo tài liệu ánh xạ TOEIC – CEFR của ETS, tính trên tổng điểm Listening + Reading.',
+  'TOEIC Listening & Reading không đo Viết và Nói, nên nhiều nơi yêu cầu thêm chứng chỉ 4 kỹ năng.',
+  'Mỗi trường, mỗi cơ quan có bảng quy đổi riêng. Hãy đối chiếu văn bản của nơi bạn nộp chứng chỉ.',
+];
+
+const inputCls = 'h-11 w-full rounded-lg border border-slate-300 bg-white px-3 text-[15px] text-slate-900 focus:border-indigo-600 focus:outline-none focus:ring-2 focus:ring-indigo-600/15';
 
 export const ScoreConverterPage: React.FC = () => {
   useDocumentTitle('Quy đổi điểm');
@@ -47,114 +54,119 @@ export const ScoreConverterPage: React.FC = () => {
   const row = useMemo(() => findRow(source, value), [source, value]);
 
   return (
-    <div>
-      <section className="relative bg-paper border-b-2 border-slate-900 overflow-hidden">
-        <Doodles />
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14 md:py-20 grid lg:grid-cols-[1fr_1fr] gap-10 items-start">
-          <div className="space-y-6">
-            <SectionTitle align="left" eyebrow="Công cụ miễn phí" title={<>TOEIC của bạn bằng <span className="mark">VSTEP</span> bao nhiêu?</>} description="Quy đổi TOEIC ↔ VSTEP ↔ CEFR ↔ IELTS theo Khung năng lực ngoại ngữ 6 bậc Việt Nam. Nhập điểm, xem bậc tương đương ngay." />
-            <div className="photo-frame tilt-1 max-w-sm">
-              <Img src={PHOTOS.notes} alt="" ratio="video" fallbackClass="bg-amber-200" />
-            </div>
-          </div>
-          <Reveal animation="scale-in">
-            <Card hard padding="lg" className="space-y-5">
-              <div className="grid sm:grid-cols-[1fr_auto_1fr] gap-4 items-end">
-                <Select
-                  label="Loại điểm nguồn"
+    <div className="bg-white">
+      <PageHeader
+        crumbs={[{ label: 'Trang chủ', to: '/' }, { label: 'Công cụ' }, { label: 'Quy đổi điểm' }]}
+        title="Quy đổi điểm TOEIC, VSTEP, IELTS, CEFR"
+        lead="Nhập điểm bạn đang có, xem bậc tương đương ở các thang điểm khác. Công cụ miễn phí, không cần đăng nhập."
+      />
+
+      <Section innerClassName="pt-10 md:pt-12">
+        <div className="grid gap-10 lg:grid-cols-[1.2fr_1fr]">
+          {/* Công cụ */}
+          <div className="rounded-xl border border-slate-200">
+            <div className="grid items-start gap-4 border-b border-slate-200 p-5 sm:grid-cols-[1fr_auto_1fr] md:p-6">
+              <label className="block">
+                <span className="mb-1.5 block text-sm font-medium text-slate-700">Bạn đang có</span>
+                <select
                   value={source}
                   onChange={(e) => {
-                    setSource(e.target.value as Source);
-                    setValue(e.target.value === 'CEFR' ? 'B1' : e.target.value === 'TOEIC' ? '650' : '6.0');
+                    const s = e.target.value as Source;
+                    setSource(s);
+                    setValue(DEFAULT[s]);
                   }}
-                  options={[
-                    { value: 'TOEIC', label: 'TOEIC (10 – 990)' },
-                    { value: 'VSTEP', label: 'VSTEP (0 – 10)' },
-                    { value: 'IELTS', label: 'IELTS (1 – 9)' },
-                    { value: 'CEFR', label: 'CEFR (A1 – C2)' },
-                  ]}
-                />
-                <div className="hidden sm:flex w-11 h-11 rounded-xl bg-amber-300 border-2 border-slate-900 text-slate-900 items-center justify-center mb-0.5">
-                  <ArrowRightLeft className="w-5 h-5" />
-                </div>
-                <Input label="Điểm của bạn" value={value} onChange={(e) => setValue(e.target.value)} hint={HINT[source]} leftIcon={<Calculator />} />
-              </div>
+                  className={inputCls}
+                >
+                  <option value="TOEIC">Điểm TOEIC (10 – 990)</option>
+                  <option value="VSTEP">Điểm VSTEP (0 – 10)</option>
+                  <option value="IELTS">Band IELTS (1 – 9)</option>
+                  <option value="CEFR">Trình độ CEFR (A1 – C2)</option>
+                </select>
+              </label>
+              <ArrowRightLeft className="mx-auto mt-10 hidden h-5 w-5 text-slate-400 sm:block" />
+              <label className="block">
+                <span className="mb-1.5 block text-sm font-medium text-slate-700">Điểm</span>
+                <input value={value} onChange={(e) => setValue(e.target.value)} inputMode={source === 'CEFR' ? 'text' : 'decimal'} className={cn(inputCls, 'tabular-nums')} />
+                <span className="mt-1 block text-[12px] text-slate-500">{HINT[source]}</span>
+              </label>
+            </div>
+
+            <div className="p-5 md:p-6" aria-live="polite">
               {row ? (
-                <div key={row.cefr} className="rounded-2xl bg-slate-900 text-white border-2 border-slate-900 p-5 animate-pop">
-                  <div className="flex items-center justify-between mb-4">
-                    <p className="text-[11px] font-extrabold uppercase tracking-wider text-slate-400">Kết quả tương đương</p>
-                    <Badge tone="amber" solid size="md">
-                      CEFR {row.cefr}
-                    </Badge>
+                <>
+                  <div className="flex items-baseline justify-between">
+                    <p className="text-sm text-slate-500">Tương đương</p>
+                    <p className="text-sm text-slate-500">
+                      CEFR <span className="text-lg font-semibold text-slate-900">{row.cefr}</span>
+                    </p>
                   </div>
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                  <dl className="mt-3 grid grid-cols-2 overflow-hidden rounded-lg border border-slate-200 sm:grid-cols-4">
                     {[
                       ['TOEIC', row.toeic],
                       ['VSTEP', row.vstep],
                       ['IELTS', row.ielts],
                       ['TOEFL iBT', row.toefl],
-                    ].map(([l, v]) => (
-                      <div key={l} className="rounded-xl bg-white/10 border border-white/15 p-3">
-                        <p className="text-[10px] font-extrabold uppercase text-slate-400">{l}</p>
-                        <p className="font-display text-lg font-extrabold leading-tight mt-1">{v}</p>
+                    ].map(([l, v], i) => (
+                      <div key={l} className={cn('p-3.5', i % 2 === 1 && 'border-l border-slate-200', i >= 2 && 'border-t border-slate-200 sm:border-t-0', i === 2 && 'sm:border-l')}>
+                        <dt className="text-[12px] text-slate-500">{l}</dt>
+                        <dd className="mt-1 font-semibold leading-snug text-slate-900 tabular-nums">{v}</dd>
                       </div>
                     ))}
-                  </div>
-                  <p className="text-sm text-slate-300 mt-4 flex items-start gap-2">
-                    <Info className="w-4 h-4 shrink-0 mt-0.5 text-amber-300" /> {row.description}
-                  </p>
-                </div>
+                  </dl>
+                  <p className="mt-4 text-[15px] text-slate-600">{row.description}</p>
+                </>
               ) : (
-                <p className="text-sm text-rose-600 font-semibold">Giá trị không hợp lệ. {HINT[source]}.</p>
+                <p className="text-sm text-violet-700">Giá trị chưa hợp lệ. {HINT[source]}.</p>
               )}
-            </Card>
-          </Reveal>
-        </div>
-      </section>
+            </div>
+          </div>
 
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14 md:py-20 space-y-8">
-        <Reveal>
-          <SectionTitle align="left" eyebrow="Bảng đầy đủ" title="Sáu bậc, năm thang điểm" description="Tham chiếu theo Thông tư 01/2014/TT-BGDĐT và khuyến nghị của ETS. Chỉ mang tính tương đối." />
-        </Reveal>
-        <Reveal>
-          <div className="rounded-3xl border-2 border-slate-900 bg-white shadow-hard overflow-x-auto">
-            <table className="w-full text-sm min-w-[720px]">
-              <thead className="bg-slate-900 text-white">
-                <tr>
-                  {['CEFR', 'VSTEP (KNLNNVN)', 'TOEIC', 'IELTS', 'TOEFL iBT', 'Mô tả'].map((h) => (
-                    <th key={h} className="px-4 py-3 text-left text-[11px] font-extrabold uppercase tracking-wider">
-                      {h}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {SCORE_TABLE.map((r, i) => (
-                  <tr key={r.cefr} className={cn('border-t-2 border-slate-200 transition', row?.cefr === r.cefr ? 'bg-amber-100' : '')}>
-                    <td className="px-4 py-3">
-                      <span className={cn('inline-flex w-10 h-10 rounded-xl border-2 border-slate-900 items-center justify-center font-display font-extrabold', BG[i])}>{r.cefr}</span>
-                    </td>
-                    <td className="px-4 py-3 font-bold text-slate-900">{r.vstep}</td>
-                    <td className="px-4 py-3 font-bold text-indigo-700">{r.toeic}</td>
-                    <td className="px-4 py-3 text-slate-700">{r.ielts}</td>
-                    <td className="px-4 py-3 text-slate-700">{r.toefl}</td>
-                    <td className="px-4 py-3 text-slate-500 text-xs">{r.description}</td>
-                  </tr>
+          {/* Lưu ý */}
+          <aside className="text-[15px] leading-relaxed text-slate-600">
+            <h2 className="text-base font-semibold text-slate-900">Lưu ý khi dùng bảng quy đổi</h2>
+            <ol className="mt-3 space-y-3">
+              {NOTES.map((n, i) => (
+                <li key={n} className="flex gap-3">
+                  <span className="tabular-nums text-slate-400">{i + 1}.</span>
+                  {n}
+                </li>
+              ))}
+            </ol>
+          </aside>
+        </div>
+      </Section>
+
+      <Section muted>
+        <SectionHead title="Bảng quy đổi đầy đủ" desc="Dòng tô nền ứng với điểm bạn vừa nhập." />
+        <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white">
+          <table className="w-full min-w-[760px] text-sm">
+            <thead className="text-left text-[13px] text-slate-500">
+              <tr className="border-b border-slate-200">
+                {['CEFR', 'VSTEP (KNLNN Việt Nam)', 'TOEIC (L+R)', 'IELTS', 'TOEFL iBT', 'Mô tả'].map((h) => (
+                  <th key={h} className="px-4 py-3 font-medium first:pl-5">
+                    {h}
+                  </th>
                 ))}
-              </tbody>
-            </table>
-          </div>
-        </Reveal>
-        <Reveal className="rounded-3xl bg-indigo-600 text-white border-2 border-slate-900 shadow-hard p-8 grid md:grid-cols-[1fr_auto] gap-6 items-center">
-          <div>
-            <h3 className="font-display text-2xl font-extrabold">Biết bậc rồi, giờ biết mình đang ở đâu.</h3>
-            <p className="text-indigo-100 mt-1">Thi xếp lớp 15 phút để có điểm ước lượng và lộ trình tới mục tiêu.</p>
-          </div>
-          <Button to="/auth/register" variant="white" size="lg" rightIcon={<ArrowRight className="w-4 h-4" />}>
-            Thi xếp lớp
-          </Button>
-        </Reveal>
-      </section>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-200">
+              {SCORE_TABLE.map((r) => (
+                <tr key={r.cefr} className={cn('transition-colors', row?.cefr === r.cefr && 'bg-indigo-50')}>
+                  <td className="px-5 py-3 font-semibold text-slate-900">{r.cefr}</td>
+                  <td className="px-4 py-3 text-slate-800">{r.vstep}</td>
+                  <td className="px-4 py-3 tabular-nums text-slate-800">{r.toeic}</td>
+                  <td className="px-4 py-3 tabular-nums text-slate-700">{r.ielts}</td>
+                  <td className="px-4 py-3 tabular-nums text-slate-700">{r.toefl}</td>
+                  <td className="px-4 py-3 text-slate-500">{r.description}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <div className="mt-12">
+          <CtaStrip title="Biết bậc mục tiêu rồi, còn bậc hiện tại?" text="Bài xếp lớp khoảng 15 phút cho điểm ước lượng và lộ trình tới mục tiêu." action={{ label: 'Làm bài xếp lớp', to: '/try' }} />
+        </div>
+      </Section>
     </div>
   );
 };

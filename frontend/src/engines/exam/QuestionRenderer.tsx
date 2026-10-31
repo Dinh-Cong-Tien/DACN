@@ -16,6 +16,8 @@ export interface QuestionRendererProps {
   examMode?: boolean; // audio chỉ phát 1 lần, không tua
   hidePassage?: boolean; // khi passage đã render ở ngoài (nhóm câu)
   allowFlagReport?: boolean;
+  /** plain: viền mảnh, không bóng cứng (trang marketing); mặc định giữ kiểu của khu luyện tập */
+  variant?: 'default' | 'plain';
   className?: string;
 }
 
@@ -63,8 +65,10 @@ export const QuestionRenderer: React.FC<QuestionRendererProps> = ({
   examMode = false,
   hidePassage = false,
   allowFlagReport = true,
+  variant = 'default',
   className,
 }) => {
+  const plain = variant === 'plain';
   const correctKey = getCorrectKey(question);
   const isCorrect = selectedAnswer === correctKey;
   const [reported, setReported] = useState(false);
@@ -75,12 +79,12 @@ export const QuestionRenderer: React.FC<QuestionRendererProps> = ({
   };
 
   return (
-    <div className={cn('bg-white rounded-3xl border-2 border-slate-900 p-5 md:p-7 shadow-hard space-y-5', className)} key={question.id}>
+    <div className={cn(plain ? 'bg-white rounded-xl border border-slate-200 p-5 md:p-6 space-y-5' : 'bg-white rounded-3xl border-2 border-slate-900 p-5 md:p-7 shadow-hard space-y-5', className)} key={question.id}>
       {!hidePassage && question.passage && <PassageBlock passage={question.passage} examMode={examMode} />}
 
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-start gap-3 min-w-0">
-          {index !== undefined && <span className="w-9 h-9 rounded-xl bg-slate-900 text-amber-300 font-black text-sm flex items-center justify-center shrink-0 border-2 border-slate-900">{index + 1}</span>}
+          {index !== undefined && (plain ? <span className="pt-1.5 text-base md:text-lg font-semibold tabular-nums text-slate-400 shrink-0">{index + 1}.</span> : <span className="w-9 h-9 rounded-xl bg-slate-900 text-amber-300 font-black text-sm flex items-center justify-center shrink-0 border-2 border-slate-900">{index + 1}</span>)}
           <h3 className="text-base md:text-lg font-bold text-slate-900 leading-snug pt-1.5">{question.stem}</h3>
         </div>
         <div className="flex flex-col items-end gap-1.5 shrink-0">
@@ -100,9 +104,13 @@ export const QuestionRenderer: React.FC<QuestionRendererProps> = ({
           const isSelected = selectedAnswer === opt.key;
           let style = 'border-slate-200 hover:border-indigo-300 hover:bg-indigo-50/40 text-slate-700 hover:translate-x-0.5';
           let circle = 'bg-slate-100 text-slate-600 group-hover:bg-indigo-100 group-hover:text-indigo-700';
+          if (plain) {
+            style = 'border-slate-200 hover:border-slate-400 text-slate-800';
+            circle = 'border border-slate-300 text-slate-600';
+          }
           if (isSelected) {
-            style = 'border-slate-900 bg-amber-100 text-slate-900 font-semibold shadow-hard-sm';
-            circle = 'bg-slate-900 text-amber-300';
+            style = plain ? 'border-indigo-600 bg-indigo-50 text-slate-900' : 'border-slate-900 bg-amber-100 text-slate-900 font-semibold shadow-hard-sm';
+            circle = plain ? 'bg-indigo-600 text-white' : 'bg-slate-900 text-amber-300';
           }
           if (showExplanation) {
             if (opt.key === correctKey) {
@@ -120,11 +128,11 @@ export const QuestionRenderer: React.FC<QuestionRendererProps> = ({
               key={opt.key}
               disabled={isReadOnly}
               onClick={() => onSelectAnswer(opt.key)}
-              className={cn('group w-full flex items-center justify-between gap-3 p-3.5 md:p-4 rounded-2xl border-2 text-sm text-left transition-all duration-300 ease-spring animate-fade-up disabled:cursor-default', style)}
+              className={cn('group w-full flex items-center justify-between gap-3 text-sm text-left transition-all duration-300 ease-spring animate-fade-up disabled:cursor-default', plain ? 'px-3.5 py-3 rounded-lg border' : 'p-3.5 md:p-4 rounded-2xl border-2', style)}
               style={{ animationDelay: `${i * 50}ms` }}
             >
               <div className="flex items-center gap-3 min-w-0">
-                <span className={cn('w-8 h-8 rounded-full flex items-center justify-center text-xs font-black shrink-0 transition-all duration-300', circle)}>{opt.key}</span>
+                <span className={cn('rounded-full flex items-center justify-center text-xs shrink-0 transition-all duration-300', plain ? 'w-7 h-7 font-semibold' : 'w-8 h-8 font-black', circle)}>{opt.key}</span>
                 <span className="leading-snug">{opt.text}</span>
               </div>
               {showExplanation && opt.key === correctKey && <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0 animate-pop" />}

@@ -437,6 +437,8 @@ export interface BlogPost {
   author: string;
   date: string;
   readMin: number;
+  /** Lượt xem */
+  views?: number;
   gradient: string;
   coverUrl?: string;
   authorAvatar?: string;

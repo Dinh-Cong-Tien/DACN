@@ -1,99 +1,113 @@
 import React, { useMemo, useState } from 'react';
-import { Download, FileText, FileAudio, File, ArrowRight } from 'lucide-react';
-import { Badge, Chip, SectionTitle, Button, EmptyState } from '@/shared/components/ui';
-import { Reveal, Stagger, CountUp } from '@/shared/components/motion';
-import { Img, PHOTOS } from '@/shared/components/media/Img';
+import { Download, Search } from 'lucide-react';
 import { RESOURCES } from '@/shared/mocks';
-import { useDocumentTitle } from '@/shared/hooks';
+import { useDocumentTitle, useGate } from '@/shared/hooks';
 import { toast } from '@/shared/stores/uiStore';
 import { cn, formatNumber } from '@/shared/utils';
+import type { ResourceDoc } from '@/shared/types';
+import { PageHeader, Section, CtaStrip } from './shared/PageKit';
 
-const ICON = { PDF: FileText, DOCX: File, AUDIO: FileAudio } as const;
-const TILE = ['bg-white', 'bg-amber-200', 'bg-white', 'bg-indigo-100', 'bg-white', 'bg-violet-100', 'bg-white', 'bg-sky-100'];
+/** Ô nhãn loại tệp kiểu trình quản lý tài liệu */
+const TYPE_TAG: Record<ResourceDoc['type'], { label: string; cls: string }> = {
+  PDF: { label: 'PDF', cls: 'bg-red-50 text-red-700 border-red-200' },
+  DOCX: { label: 'DOC', cls: 'bg-blue-50 text-blue-700 border-blue-200' },
+  AUDIO: { label: 'MP3', cls: 'bg-purple-50 text-purple-700 border-purple-200' },
+};
 
 export const ResourcesPage: React.FC = () => {
   useDocumentTitle('Kho tài liệu mở');
+  const gate = useGate();
   const [cat, setCat] = useState('Tất cả');
+  const [q, setQ] = useState('');
   const cats = ['Tất cả', ...Array.from(new Set(RESOURCES.map((r) => r.category)))];
-  const list = useMemo(() => RESOURCES.filter((r) => cat === 'Tất cả' || r.category === cat), [cat]);
+  const list = useMemo(() => {
+    const key = q.trim().toLowerCase();
+    return RESOURCES.filter((r) => (cat === 'Tất cả' || r.category === cat) && (!key || r.title.toLowerCase().includes(key))).sort((a, b) => b.downloads - a.downloads);
+  }, [cat, q]);
   const total = RESOURCES.reduce((a, r) => a + r.downloads, 0);
 
   return (
-    <div>
-      <section className="bg-amber-200 border-b-2 border-slate-900">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14 md:py-20 grid lg:grid-cols-[1fr_380px] gap-10 items-center">
-          <div className="space-y-6">
-            <SectionTitle align="left" eyebrow="Kho tài liệu mở" title={<>Tải về, in ra, <span className="mark-teal mark">học offline</span>.</>} description="PDF tóm tắt ngữ pháp, từ vựng theo chủ đề, bài mẫu Writing và audio luyện nghe. Miễn phí, không cần đăng nhập." />
-            <div className="flex gap-6">
-              <div>
-                <p className="font-display text-4xl font-extrabold text-slate-900">{RESOURCES.length}</p>
-                <p className="text-xs font-bold uppercase tracking-wider text-slate-700">tài liệu</p>
-              </div>
-              <div>
-                <p className="font-display text-4xl font-extrabold text-slate-900">
-                  <CountUp value={total} />
-                </p>
-                <p className="text-xs font-bold uppercase tracking-wider text-slate-700">lượt tải</p>
-              </div>
+    <div className="bg-white">
+      <PageHeader
+        crumbs={[{ label: 'Trang chủ', to: '/' }, { label: 'Công cụ' }, { label: 'Kho tài liệu' }]}
+        title="Kho tài liệu ôn thi"
+        lead="Tóm tắt ngữ pháp, từ vựng theo chủ đề, bài mẫu Writing và audio luyện nghe do giáo viên OrbiLingo biên soạn. Tải miễn phí, in ra học được."
+        facts={[
+          { value: String(RESOURCES.length), label: 'Tài liệu' },
+          { value: formatNumber(total), label: 'Lượt tải' },
+          { value: '09/2026', label: 'Cập nhật gần nhất' },
+        ]}
+      />
+
+      <Section innerClassName="pt-10 md:pt-12">
+        <div className="grid gap-8 lg:grid-cols-[220px_1fr]">
+          {/* Danh mục */}
+          <nav aria-label="Danh mục" className="min-w-0 lg:sticky lg:top-24 lg:self-start">
+            <p className="mb-2 text-[13px] font-medium text-slate-500">Danh mục</p>
+            <ul className="flex gap-1 overflow-x-auto no-scrollbar lg:flex-col">
+              {cats.map((c) => {
+                const n = c === 'Tất cả' ? RESOURCES.length : RESOURCES.filter((r) => r.category === c).length;
+                return (
+                  <li key={c} className="shrink-0">
+                    <button
+                      onClick={() => setCat(c)}
+                      className={cn('flex w-full items-center justify-between gap-3 rounded-lg px-3 py-2 text-left text-sm transition-colors', cat === c ? 'bg-slate-100 font-medium text-slate-900' : 'text-slate-600 hover:bg-slate-50')}
+                    >
+                      {c}
+                      <span className="text-xs tabular-nums text-slate-400">{n}</span>
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          </nav>
+
+          {/* Danh sách tệp */}
+          <div className="min-w-0">
+            <div className="mb-4 flex items-center justify-between gap-4">
+              <p className="text-[13px] text-slate-500">{list.length} tài liệu · sắp theo lượt tải</p>
+              <label className="relative">
+                <Search className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Tìm tài liệu" className="h-9 w-52 rounded-lg border border-slate-300 bg-white pl-8 pr-3 text-sm placeholder:text-slate-400 focus:border-indigo-600 focus:outline-none" />
+              </label>
             </div>
-          </div>
-          <div className="photo-frame tilt-2">
-            <Img src={PHOTOS.books} alt="" ratio="4/3" fallbackClass="bg-indigo-200" />
+
+            {list.length === 0 ? (
+              <div className="rounded-xl border border-dashed border-slate-300 px-6 py-14 text-center text-sm text-slate-500">Không tìm thấy tài liệu phù hợp.</div>
+            ) : (
+              <ul className="divide-y divide-slate-200 rounded-xl border border-slate-200">
+                {list.map((r) => {
+                  const t = TYPE_TAG[r.type];
+                  return (
+                    <li key={r.id} className="flex items-start gap-4 px-4 py-4 hover:bg-[#FAFBFC] sm:px-5">
+                      <span className={cn('mt-0.5 flex h-11 w-9 shrink-0 items-end justify-center rounded-md border pb-1 text-[10px] font-semibold', t.cls)}>{t.label}</span>
+                      <div className="min-w-0 flex-1">
+                        <p className="font-medium text-slate-900">{r.title}</p>
+                        <p className="mt-0.5 text-[14px] text-slate-600">{r.description}</p>
+                        <p className="mt-1.5 text-[12px] text-slate-500">
+                          {r.category} · {r.pages ? `${r.pages} trang · ` : ''}
+                          {r.size} · {formatNumber(r.downloads)} lượt tải
+                        </p>
+                      </div>
+                      <button
+                        onClick={() => toast.info('Đang tải xuống', `${r.title} (${r.size})`)}
+                        className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-lg border border-slate-300 px-3 text-[13px] font-semibold text-slate-800 hover:border-indigo-600 hover:text-indigo-700"
+                      >
+                        <Download className="h-4 w-4" />
+                        <span className="hidden sm:inline">Tải về</span>
+                      </button>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
           </div>
         </div>
-      </section>
 
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-8">
-        <div className="flex gap-2 flex-wrap">
-          {cats.map((c) => (
-            <Chip key={c} active={cat === c} onClick={() => setCat(c)}>
-              {c}
-            </Chip>
-          ))}
+        <div className="mt-14">
+          <CtaStrip title="Đọc xong thì luyện ngay" text="Mỗi chủ điểm trong tài liệu có bộ câu hỏi tương ứng trên hệ thống, sai câu nào được lưu lại để ôn." action={{ label: 'Luyện tập miễn phí', to: gate('/app/practice', '/auth/register') }} />
         </div>
-        {list.length === 0 ? (
-          <EmptyState title="Chưa có tài liệu" />
-        ) : (
-          <Stagger key={cat} className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
-            {list.map((r, i) => {
-              const Icon = ICON[r.type];
-              return (
-                <div key={r.id} className={cn('rounded-3xl border-2 border-slate-900 shadow-hard p-5 flex flex-col card-hard-hover', TILE[i % TILE.length])}>
-                  <div className="flex items-start justify-between">
-                    <span className="w-11 h-11 rounded-xl bg-slate-900 text-amber-300 flex items-center justify-center">
-                      <Icon className="w-5 h-5" />
-                    </span>
-                    <Badge tone="slate" size="xs">
-                      {r.type} · {r.size}
-                    </Badge>
-                  </div>
-                  <h3 className="font-display font-bold text-slate-900 mt-4 leading-snug">{r.title}</h3>
-                  <p className="text-xs text-slate-600 mt-2 flex-1">{r.description}</p>
-                  <div className="flex items-center justify-between mt-4 text-[11px] font-bold text-slate-500">
-                    <span>{r.pages ? `${r.pages} trang` : 'Audio'}</span>
-                    <span>{formatNumber(r.downloads)} lượt</span>
-                  </div>
-                  <Button size="sm" variant="outline" fullWidth className="mt-3" leftIcon={<Download className="w-4 h-4" />} onClick={() => toast.info('Đang tải xuống', `${r.title} (${r.size})`)}>
-                    Tải xuống
-                  </Button>
-                </div>
-              );
-            })}
-          </Stagger>
-        )}
-      </section>
-
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-20">
-        <Reveal className="rounded-3xl bg-slate-900 text-white border-2 border-slate-900 shadow-hard p-8 grid md:grid-cols-[1fr_auto] gap-6 items-center">
-          <div>
-            <h3 className="font-display text-2xl font-extrabold">Tài liệu là để đọc. Điểm là để luyện.</h3>
-            <p className="text-slate-300 mt-1">Mỗi chủ điểm trong PDF đều có bộ 20 câu luyện tập trên hệ thống.</p>
-          </div>
-          <Button to="/auth/register" variant="gradient" size="lg" rightIcon={<ArrowRight className="w-4 h-4" />}>
-            Luyện ngay
-          </Button>
-        </Reveal>
-      </section>
+      </Section>
     </div>
   );
 };
