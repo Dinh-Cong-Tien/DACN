@@ -216,7 +216,7 @@ export const BLOG_CATEGORIES = [
 
 export const TESTIMONIALS: Testimonial[] = [
   {
-    avatar: '/images/students/hv-hoang-lan.webp?v=2',
+    avatar: '/images/students/hv-hoang-lan.webp?v=3',
     name: 'Phạm Hoàng Lan',
     role: 'Sinh viên ĐH Bách khoa Hà Nội',
     exam: 'TOEIC',
@@ -231,7 +231,7 @@ export const TESTIMONIALS: Testimonial[] = [
     quote: 'Trước mình làm đề xong là thôi, câu sai lần sau vẫn sai. Từ hồi dùng sổ tay lỗi sai thì Part 5 lên rõ, riêng Reading tăng hơn 150 điểm.',
   },
   {
-    avatar: '/images/students/hv-minh-khoa.webp?v=2',
+    avatar: '/images/students/hv-minh-khoa.webp?v=3',
     name: 'Lê Minh Khoa',
     role: 'Giáo viên tiếng Anh THPT, Đà Nẵng',
     exam: 'VSTEP',
@@ -246,7 +246,7 @@ export const TESTIMONIALS: Testimonial[] = [
     quote: 'Giáo viên THPT cần chứng chỉ C1 nên mình phải thi lại. Đi dạy cả ngày, tối chỉ học được khoảng 45 phút, nhưng bài Writing nào cũng được chấm theo từng tiêu chí nên biết mình mất điểm ở đâu.',
   },
   {
-    avatar: '/images/students/hv-gia-han.webp?v=2',
+    avatar: '/images/students/hv-gia-han.webp?v=3',
     name: 'Trần Gia Hân',
     role: 'Nhân viên kinh doanh, TP.HCM',
     exam: 'TOEIC',
