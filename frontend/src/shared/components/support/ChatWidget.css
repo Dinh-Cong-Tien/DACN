@@ -1,12 +1,111 @@
-/* Khung chat hỗ trợ — phần Tailwind khó diễn đạt: góc bóng tin theo nhóm, chấm "đang gõ", lời mời trượt vào */
+/* Khung chat hỗ trợ — phần Tailwind khó diễn đạt: góc bóng tin theo nhóm, hiệu ứng mở/đóng, tin trượt vào */
 
 .support-chat__head {
   background: #1d5fc0;
 }
 
+/* ---------- Nút chính ---------- */
+/* Hiện ra sau khi trang tải: nảy nhẹ từ dưới lên (fill backwards để hover/active vẫn đổi transform được) */
+.support-chat__launcher {
+  animation: support-launch-in 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) 0.8s backwards;
+}
+/* Biểu tượng lắc nhẹ một lần khi lời mời bật lên (đặt trên icon để không phát lại hiệu ứng hiện nút) */
+.support-chat__launcher.is-nudge > svg:first-child {
+  animation: support-nudge 0.7s ease-in-out 0.15s;
+}
+.support-chat__badge {
+  animation: support-pop 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+@keyframes support-launch-in {
+  from {
+    opacity: 0;
+    transform: translateY(18px) scale(0.6);
+  }
+}
+@keyframes support-nudge {
+  0%,
+  100% {
+    transform: rotate(0);
+  }
+  20% {
+    transform: rotate(-12deg);
+  }
+  40% {
+    transform: rotate(10deg);
+  }
+  60% {
+    transform: rotate(-6deg);
+  }
+  80% {
+    transform: rotate(3deg);
+  }
+}
+@keyframes support-pop {
+  from {
+    transform: scale(0);
+  }
+}
+
+/* ---------- Menu kênh ---------- */
+.support-chat__menu {
+  opacity: 0;
+  transform: translateY(10px) scale(0.92);
+  transition:
+    opacity 0.18s ease,
+    transform 0.18s ease;
+}
+.support-chat__menu.is-open {
+  opacity: 1;
+  transform: none;
+  transition:
+    opacity 0.22s ease,
+    transform 0.38s cubic-bezier(0.34, 1.4, 0.64, 1);
+}
+/* Các dòng trượt lên lần lượt, icon nảy nhẹ */
+.support-chat__menu.is-open .support-chat__item {
+  animation: support-rise 0.36s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: calc(var(--i) * 55ms + 60ms);
+}
+.support-chat__menu.is-open .support-chat__icon {
+  animation: support-pop 0.42s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  animation-delay: calc(var(--i) * 55ms + 110ms);
+}
+.support-chat__icon {
+  transition: transform 0.2s ease;
+}
+.support-chat__item:hover .support-chat__icon {
+  transform: scale(1.08);
+}
+
+/* ---------- Khung chat ---------- */
+.support-chat {
+  opacity: 0;
+  transform: translateY(16px) scale(0.94);
+  transition:
+    opacity 0.18s ease,
+    transform 0.2s ease;
+}
+.support-chat.is-open {
+  opacity: 1;
+  transform: none;
+  transition:
+    opacity 0.25s ease,
+    transform 0.45s cubic-bezier(0.34, 1.3, 0.64, 1);
+}
+.support-chat.is-open .support-chat__ava {
+  display: inline-block;
+  animation: support-pop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  animation-delay: calc(var(--i) * 70ms + 120ms);
+}
+.support-chat.is-open .support-chat__chip {
+  animation: support-rise 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: calc(var(--i) * 60ms + 250ms);
+}
+
 /* Bóng tin kiểu Messenger: góc phía người gửi nhỏ lại giữa nhóm, đầu/cuối nhóm bo tròn */
 .support-chat__bubble {
   border-radius: 6px 18px 18px 6px;
+  transform-origin: bottom left;
 }
 .support-chat__bubble.is-first {
   border-top-left-radius: 18px;
@@ -16,6 +115,7 @@
 }
 .support-chat__bubble--mine {
   border-radius: 18px 6px 6px 18px;
+  transform-origin: bottom right;
 }
 .support-chat__bubble--mine.is-first {
   border-top-right-radius: 18px;
@@ -23,7 +123,37 @@
 .support-chat__bubble--mine.is-last {
   border-bottom-right-radius: 18px;
 }
+/* Tin mới: phóng nhẹ từ góc người gửi */
+.support-chat__bubble.is-new {
+  animation: support-bubble-in 0.32s cubic-bezier(0.34, 1.3, 0.64, 1) both;
+}
+@keyframes support-bubble-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px) scale(0.85);
+  }
+}
 
+.support-chat__fade {
+  animation: support-fade 0.3s ease both;
+}
+.support-chat__fade--late {
+  animation-delay: 0.15s;
+}
+@keyframes support-fade {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+}
+@keyframes support-rise {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+/* Chấm "đang soạn tin" */
 .support-chat__typing span {
   width: 6px;
   height: 6px;
@@ -50,17 +180,35 @@
   }
 }
 
+/* Lời mời trượt vào */
 .support-chat__teaser {
-  animation: support-teaser-in 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: support-teaser-in 0.45s cubic-bezier(0.34, 1.4, 0.64, 1) both;
+  transform-origin: bottom right;
 }
 @keyframes support-teaser-in {
   from {
     opacity: 0;
-    transform: translateY(10px) scale(0.97);
+    transform: translateY(12px) scale(0.9);
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .support-chat,
+  .support-chat.is-open,
+  .support-chat__menu,
+  .support-chat__menu.is-open {
+    transform: none;
+    transition: opacity 0.15s ease;
+  }
+  .support-chat__launcher,
+  .support-chat__launcher.is-nudge > svg:first-child,
+  .support-chat__badge,
+  .support-chat__menu.is-open .support-chat__item,
+  .support-chat__menu.is-open .support-chat__icon,
+  .support-chat.is-open .support-chat__ava,
+  .support-chat.is-open .support-chat__chip,
+  .support-chat__bubble.is-new,
+  .support-chat__fade,
   .support-chat__typing span,
   .support-chat__teaser {
     animation: none;

@@ -64,6 +64,7 @@ export const ChatWidget: React.FC<{ raised?: 'md' | 'lg'; preferChat?: boolean }
   const [open, setOpen] = useState(false);
   const [menu, setMenu] = useState(false);
   const [teaser, setTeaser] = useState(false);
+  const [teaserReady, setTeaserReady] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
   const [draft, setDraft] = useState('');
   const { messages, typingAgent, unread, send } = useSupportChat(open);
@@ -74,12 +75,20 @@ export const ChatWidget: React.FC<{ raised?: 'md' | 'lg'; preferChat?: boolean }
   const lastUserIdx = messages.map((m) => m.from).lastIndexOf('user');
   const seen = lastUserIdx >= 0 && (typingAgent !== null || messages.slice(lastUserIdx + 1).some((m) => m.from !== 'user'));
   const onlyGreeting = messages.every((m) => m.from === 'agent');
+  // Chỉ tin đến sau khi mở trang mới có hiệu ứng trượt vào (tin khôi phục từ phiên trước thì không)
+  const initialCount = useRef(messages.length);
+  const isNew = (id: string) => messages.findIndex((m) => m.id === id) >= initialCount.current;
 
   // Lời mời bật lên sau vài giây nếu phiên này chưa mở chat
   useEffect(() => {
     if (readFlag()) return;
     const t = window.setTimeout(() => setTeaser(true), 6000);
-    return () => clearTimeout(t);
+    // hiện "đang soạn tin" một lúc rồi mới ra nội dung lời mời
+    const t2 = window.setTimeout(() => setTeaserReady(true), 7400);
+    return () => {
+      clearTimeout(t);
+      clearTimeout(t2);
+    };
   }, []);
 
   useEffect(() => {
@@ -142,29 +151,30 @@ export const ChatWidget: React.FC<{ raised?: 'md' | 'lg'; preferChat?: boolean }
         role="menu"
         aria-label="Chọn cách liên hệ"
         className={cn(
-          'fixed right-4 sm:right-5 z-50 w-[17.5rem] max-w-[calc(100vw-2rem)] overflow-hidden rounded-2xl bg-white shadow-[0_12px_40px_rgba(15,23,42,0.25)] origin-bottom-right transition-[opacity,transform] duration-200',
+          'support-chat__menu fixed right-4 sm:right-5 z-50 w-[17.5rem] max-w-[calc(100vw-2rem)] overflow-hidden rounded-2xl bg-white shadow-[0_12px_40px_rgba(15,23,42,0.25)] origin-bottom-right',
           offset.panel,
-          menu && !open ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 translate-y-2 scale-95 pointer-events-none'
+          menu && !open ? 'is-open' : 'pointer-events-none'
         )}
       >
         <p className="px-4 pt-3 pb-1 text-[12px] text-slate-500">Bạn muốn liên hệ qua đâu?</p>
-        {channels.map((c) => {
+        {channels.map((c, i) => {
           const body = (
             <>
-              <span className={cn('w-10 h-10 shrink-0 rounded-full text-white flex items-center justify-center', ICON_BG[c.key])}>{c.icon}</span>
+              <span className={cn('support-chat__icon w-10 h-10 shrink-0 rounded-full text-white flex items-center justify-center', ICON_BG[c.key])}>{c.icon}</span>
               <span className="min-w-0 leading-tight">
                 <span className="block text-[14px] font-medium text-slate-900">{c.title}</span>
                 <span className="block truncate text-[12px] text-slate-500">{c.sub}</span>
               </span>
             </>
           );
-          const cls = 'flex w-full items-center gap-3 px-4 py-2.5 text-left hover:bg-slate-50 focus-visible:bg-slate-50 focus:outline-none';
+          const cls = 'support-chat__item flex w-full items-center gap-3 px-4 py-2.5 text-left hover:bg-slate-50 focus-visible:bg-slate-50 focus:outline-none';
+          const style = { '--i': i } as React.CSSProperties;
           return c.href ? (
-            <a key={c.key} role="menuitem" href={c.href} target={c.external ? '_blank' : undefined} rel={c.external ? 'noopener noreferrer' : undefined} onClick={() => setMenu(false)} className={cls}>
+            <a key={c.key} role="menuitem" href={c.href} target={c.external ? '_blank' : undefined} rel={c.external ? 'noopener noreferrer' : undefined} onClick={() => setMenu(false)} className={cls} style={style}>
               {body}
             </a>
           ) : (
-            <button key={c.key} role="menuitem" onClick={c.onClick} className={cls}>
+            <button key={c.key} role="menuitem" onClick={c.onClick} className={cls} style={style}>
               {body}
             </button>
           );
@@ -177,16 +187,18 @@ export const ChatWidget: React.FC<{ raised?: 'md' | 'lg'; preferChat?: boolean }
         role="dialog"
         aria-label={SUPPORT_INFO.team}
         className={cn(
-          'support-chat fixed right-4 sm:right-5 z-50 w-[23rem] max-w-[calc(100vw-2rem)] h-[36rem] max-h-[calc(100dvh-8rem)] flex flex-col overflow-hidden rounded-2xl bg-white shadow-[0_12px_48px_rgba(15,23,42,0.28)] origin-bottom-right transition-[opacity,transform] duration-200',
+          'support-chat fixed right-4 sm:right-5 z-50 w-[23rem] max-w-[calc(100vw-2rem)] h-[36rem] max-h-[calc(100dvh-8rem)] flex flex-col overflow-hidden rounded-2xl bg-white shadow-[0_12px_48px_rgba(15,23,42,0.28)] origin-bottom-right',
           offset.panel,
-          open ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-3 pointer-events-none'
+          open ? 'is-open' : 'pointer-events-none'
         )}
       >
         <header className="support-chat__head px-4 pt-4 pb-3 text-white">
           <div className="flex items-start justify-between">
             <div className="flex -space-x-2">
-              {SUPPORT_INFO.agents.map((a) => (
-                <Avatar key={a.id} id={a.id} className="w-9 h-9 ring-2 ring-[#1D5FC0]" />
+              {SUPPORT_INFO.agents.map((a, i) => (
+                <span key={`${a.id}-${open}`} className="support-chat__ava" style={{ '--i': i } as React.CSSProperties}>
+                  <Avatar id={a.id} className="w-9 h-9 ring-2 ring-[#1D5FC0]" />
+                </span>
               ))}
             </div>
             <div className="flex -mr-1.5">
@@ -217,7 +229,7 @@ export const ChatWidget: React.FC<{ raised?: 'md' | 'lg'; preferChat?: boolean }
             const first = g[0];
             if (first.from === 'system')
               return (
-                <p key={first.id} className="my-3 flex items-center justify-center gap-1.5 text-[11px] text-slate-500">
+                <p key={first.id} className={cn('my-3 flex items-center justify-center gap-1.5 text-[11px] text-slate-500', isNew(first.id) && 'support-chat__fade')}>
                   <Avatar id={first.agentId} className="w-4 h-4" />
                   {first.text}
                 </p>
@@ -236,13 +248,14 @@ export const ChatWidget: React.FC<{ raised?: 'md' | 'lg'; preferChat?: boolean }
                           'support-chat__bubble whitespace-pre-line px-3 py-2 text-[14px] leading-[1.45]',
                           mine ? 'support-chat__bubble--mine bg-[#1D5FC0] text-white' : 'bg-[#F0F2F5] text-[#1c1e21]',
                           i === 0 && 'is-first',
-                          i === g.length - 1 && 'is-last'
+                          i === g.length - 1 && 'is-last',
+                          isNew(m.id) && 'is-new'
                         )}
                       >
                         {m.text}
                       </p>
                       {m.links && (
-                        <div className="mt-1 flex flex-col gap-1 self-stretch">
+                        <div className={cn('mt-1 flex flex-col gap-1 self-stretch', isNew(m.id) && 'support-chat__fade support-chat__fade--late')}>
                           {m.links.map((l) => (
                             <Link key={l.to} to={l.to} onClick={() => setOpen(false)} className="rounded-xl border border-[#1D5FC0]/25 px-3 py-1.5 text-center text-[13px] font-medium text-[#1D5FC0] hover:bg-[#1D5FC0]/5">
                               {l.label}
@@ -263,8 +276,8 @@ export const ChatWidget: React.FC<{ raised?: 'md' | 'lg'; preferChat?: boolean }
 
           {onlyGreeting && !typingAgent && (
             <div className="mb-3 flex flex-wrap justify-end gap-1.5 pl-8">
-              {SUPPORT_INFO.quickTopics.map((q) => (
-                <button key={q.label} onClick={() => send(q.message)} className="rounded-2xl border border-[#1D5FC0]/40 px-3 py-1.5 text-[13px] text-[#1D5FC0] hover:bg-[#1D5FC0] hover:text-white transition-colors">
+              {SUPPORT_INFO.quickTopics.map((q, i) => (
+                <button key={`${q.label}-${open}`} onClick={() => send(q.message)} style={{ '--i': i } as React.CSSProperties} className="support-chat__chip rounded-2xl border border-[#1D5FC0]/40 px-3 py-1.5 text-[13px] text-[#1D5FC0] hover:bg-[#1D5FC0] hover:text-white transition-colors">
                   {q.label}
                 </button>
               ))}
@@ -272,7 +285,7 @@ export const ChatWidget: React.FC<{ raised?: 'md' | 'lg'; preferChat?: boolean }
           )}
 
           {typingAgent && (
-            <div className="mb-3 flex items-end gap-2" aria-label={`${agentOf(typingAgent).name} đang soạn tin`}>
+            <div className="support-chat__fade mb-3 flex items-end gap-2" aria-label={`${agentOf(typingAgent).name} đang soạn tin`}>
               <Avatar id={typingAgent} className="w-7 h-7" />
               <div className="support-chat__typing flex items-center gap-1 rounded-2xl bg-[#F0F2F5] px-3.5 py-3">
                 <span />
@@ -306,7 +319,7 @@ export const ChatWidget: React.FC<{ raised?: 'md' | 'lg'; preferChat?: boolean }
               aria-label="Nội dung tin nhắn"
               className="max-h-24 min-h-[40px] flex-1 resize-none bg-transparent px-1.5 py-2 text-[14px] text-slate-900 placeholder:text-slate-400 focus:outline-none"
             />
-            <button type="submit" disabled={!draft.trim()} aria-label="Gửi" className="mb-0.5 w-9 h-9 shrink-0 rounded-full flex items-center justify-center text-[#1D5FC0] hover:bg-[#1D5FC0]/10 disabled:text-slate-300 disabled:hover:bg-transparent">
+            <button type="submit" disabled={!draft.trim()} aria-label="Gửi" className="mb-0.5 w-9 h-9 shrink-0 rounded-full flex items-center justify-center text-[#1D5FC0] transition-[color,transform] duration-150 hover:bg-[#1D5FC0]/10 enabled:active:scale-90 disabled:text-slate-300 disabled:hover:bg-transparent">
               <SendHorizontal className="w-5 h-5" />
             </button>
           </div>
@@ -333,13 +346,20 @@ export const ChatWidget: React.FC<{ raised?: 'md' | 'lg'; preferChat?: boolean }
             <Avatar className="w-9 h-9" />
             <span className="text-[13px] leading-snug text-slate-700">
               <span className="block text-[11px] text-slate-500">{agentOf().name} · OrbiLingo</span>
-              {SUPPORT_INFO.teaser}
+              {teaserReady ? (
+                <span className="support-chat__fade block">{SUPPORT_INFO.teaser}</span>
+              ) : (
+                <span className="support-chat__typing mt-1.5 flex w-fit items-center gap-1 rounded-full bg-[#F0F2F5] px-2.5 py-2" aria-label="Đang soạn tin">
+                  <span />
+                  <span />
+                  <span />
+                </span>
+              )}
             </span>
           </button>
         </div>
       )}
 
-      {/* Nút mở/đóng */}
       {/* Nút chính: đóng khung chat nếu đang mở, nếu không thì bung/thu menu kênh */}
       <button
         onClick={() => (open ? setOpen(false) : setMenu((m) => !m))}
@@ -347,15 +367,16 @@ export const ChatWidget: React.FC<{ raised?: 'md' | 'lg'; preferChat?: boolean }
         aria-haspopup="menu"
         aria-expanded={open || menu}
         className={cn(
-          'fixed right-4 sm:right-5 z-50 w-14 h-14 rounded-full bg-[#1D5FC0] text-white shadow-[0_6px_20px_rgba(29,95,192,0.45)] flex items-center justify-center transition-[transform,background-color] duration-200 hover:bg-[#174EA0] active:scale-95',
-          offset.button
+          'support-chat__launcher fixed right-4 sm:right-5 z-50 w-14 h-14 rounded-full bg-[#1D5FC0] text-white shadow-[0_6px_20px_rgba(29,95,192,0.45)] flex items-center justify-center transition-[transform,background-color,box-shadow] duration-200 hover:bg-[#174EA0] hover:-translate-y-0.5 hover:shadow-[0_10px_26px_rgba(29,95,192,0.5)] active:scale-95',
+          offset.button,
+          teaser && !open && !menu && 'is-nudge'
         )}
       >
         <ChatGlyph className={cn('absolute w-7 h-7 transition-all duration-200', open || menu ? 'opacity-0 rotate-90 scale-50' : 'opacity-100')} />
         <X className={cn('absolute w-6 h-6 transition-all duration-200', menu && !open ? 'opacity-100' : 'opacity-0 -rotate-90 scale-50')} />
         <ChevronDown className={cn('absolute w-7 h-7 transition-all duration-200', open ? 'opacity-100' : 'opacity-0 -rotate-90 scale-50')} />
         {!open && unread > 0 && (
-          <span className="absolute -top-1 -right-1 min-w-[20px] h-5 px-1 rounded-full bg-[#E41E3F] text-[11px] font-semibold leading-5 ring-2 ring-white">{unread}</span>
+          <span key={unread} className="support-chat__badge absolute -top-1 -right-1 min-w-[20px] h-5 px-1 rounded-full bg-[#E41E3F] text-[11px] font-semibold leading-5 ring-2 ring-white">{unread}</span>
         )}
       </button>
     </div>
