@@ -123,7 +123,6 @@ export const PUBLIC_NAV: PublicNavItem[] = [
       { to: '/app/courses', label: 'Khoá học của tôi', img: '/images/nav/laptop.webp', desc: 'Tiếp tục bài đang học', studentOnly: true },
       { to: '/courses?exam=TOEIC', appTo: '/app/courses?tab=TOEIC', label: 'Khoá TOEIC', img: '/images/nav/briefcase.webp', desc: 'Từ mất gốc đến 850+' },
       { to: '/courses?exam=VSTEP', appTo: '/app/courses?tab=VSTEP', label: 'Khoá VSTEP', img: '/images/nav/graduation-cap.webp', desc: 'B1, B2, C1 có giáo viên chấm bài' },
-      { to: '/courses?free=1', label: 'Khoá miễn phí', img: '/images/nav/label.webp', desc: 'Học thử trước khi nâng cấp' },
     ],
   },
   { to: '/mock-tests', label: 'Thi thử', img: '/images/nav/memo.webp', icon: FileText, appTo: '/app/mock-tests' },
