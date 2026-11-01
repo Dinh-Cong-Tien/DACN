@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link, Navigate, useParams } from 'react-router-dom';
 import { ArrowRight, Check, ChevronRight, Lock } from 'lucide-react';
-import { MOCK_COURSES, courseHref } from '@/shared/mocks';
+import { COURSE_PART_NOTE, MOCK_COURSES, courseHref } from '@/shared/mocks';
 import { useDocumentTitle, useGate } from '@/shared/hooks';
 import { useAuthStore } from '@/shared/stores/authStore';
 import { cn } from '@/shared/utils';
@@ -44,6 +44,7 @@ const PathView: React.FC<{ course: Course }> = ({ course }) => {
   const totalMin = all.reduce((a, l) => a + l.durationMin, 0);
   const lessonUrl = (l: Lesson) => `/app/courses/${course.id}/lessons/${l.id}`;
   const numberOf = (l: Lesson) => all.indexOf(l) + 1;
+  const parts = [...new Set(course.sections.map((s) => s.part).filter(Boolean))];
 
   const primary = isStudent ? (
     <ActionLink to={lessonUrl(current)} size="lg" icon={<ArrowRight className="w-4 h-4" />}>
@@ -119,8 +120,17 @@ const PathView: React.FC<{ course: Course }> = ({ course }) => {
           <div className="space-y-12">
             {course.sections.map((sec, si) => {
               const secDone = sec.lessons.filter((l) => l.isCompleted).length;
+              const partStart = sec.part && sec.part !== course.sections[si - 1]?.part;
               return (
-                <section key={sec.id} aria-labelledby={sec.id}>
+                <React.Fragment key={sec.id}>
+                {partStart && (
+                  <div className="rounded-2xl bg-slate-900/[0.035] px-5 py-4 ring-1 ring-inset ring-slate-200">
+                    <p className="text-[12px] font-semibold uppercase tracking-[0.14em] text-amber-700 dark:text-amber-300">Phần {parts.indexOf(sec.part!) + 1}</p>
+                    <p className="mt-1 font-display text-2xl font-extrabold tracking-tight text-slate-900 md:text-[1.75rem]">{sec.part}</p>
+                    {COURSE_PART_NOTE[sec.part!] && <p className="mt-1 text-[14px] text-slate-600">{COURSE_PART_NOTE[sec.part!]}</p>}
+                  </div>
+                )}
+                <section aria-labelledby={sec.id}>
                   <div className="flex flex-col gap-1 border-b border-slate-200 pb-3 sm:flex-row sm:items-end sm:justify-between">
                     <div>
                       <p className="text-[12px] font-semibold uppercase tracking-[0.14em] text-slate-500">Chặng {si + 1}</p>
@@ -146,6 +156,7 @@ const PathView: React.FC<{ course: Course }> = ({ course }) => {
                     ))}
                   </ol>
                 </section>
+                </React.Fragment>
               );
             })}
           </div>

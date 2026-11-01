@@ -31,11 +31,12 @@ const mkLesson = (id: string, title: string, type: Lesson['type'], durationMin: 
 type PathLesson = [title: string, type: Lesson['type'], durationMin: number, summary: string];
 
 /** Dựng các chặng: `done` bài đầu đã học, bài kế tiếp đang mở, các bài sau khoá; `free` bài đầu cho học thử */
-const mkPath = (prefix: string, chapters: [title: string, lessons: PathLesson[]][], done: number, free: number): CourseSection[] => {
+const mkPath = (prefix: string, chapters: [title: string, lessons: PathLesson[], part?: string][], done: number, free: number): CourseSection[] => {
   let n = 0;
-  return chapters.map(([title, lessons], si) => ({
+  return chapters.map(([title, lessons, part], si) => ({
     id: `${prefix}-s${si + 1}`,
     title,
+    part,
     lessons: lessons.map(([t, type, min, summary]) => {
       const i = n++;
       return { ...mkLesson(`${prefix}-${String(i + 1).padStart(2, '0')}`, t, type, min, i < done, i > done), summary, isFree: i < free };
@@ -219,100 +220,121 @@ const VOCAB_PATH = mkPath(
   2,
 );
 
+const REVIEW = 'Ôn kiến thức chung';
+const TOPICS = 'Luyện theo chủ đề';
+
 /**
- * Nền tảng TOEIC: giáo trình tiếng Anh công việc (B1 → B2), mỗi chặng một chủ đề nơi làm việc,
- * mỗi bài dạy một mảng kiến thức (từ vựng, ngữ pháp, phát âm, mẫu câu, đọc / nghe / viết). Nặng hơn VSTEP.
+ * Nền tảng TOEIC (B1 → B2), nặng hơn VSTEP.
+ * Phần 1 ôn lại kiến thức chung (phát âm, từ loại, thì, cấu trúc câu, từ vựng thông dụng) và chốt bằng bài kiểm tra giữa khoá;
+ * Phần 2 mới đưa từng chủ đề công việc để áp dụng và luyện sơ bộ.
  */
 const TOEIC_PATH = mkPath(
   'tp',
   [
     [
+      'Phát âm và từ loại',
+      [
+        ['Bảng phiên âm và âm cuối', 'VIDEO', 15, 'Ôn nguyên âm, phụ âm và các âm cuối hay bị bỏ khi nói.'],
+        ['Trọng âm của từ', 'VIDEO', 13, 'Quy tắc trọng âm cho từ hai âm tiết và nhiều âm tiết.'],
+        ['8 từ loại và vị trí trong câu', 'VIDEO', 16, 'Danh từ, động từ, tính từ, trạng từ… đứng ở đâu trong câu.'],
+        ['Hậu tố nhận biết từ loại', 'VIDEO', 14, '-tion, -ment, -ive, -al, -ly: nhìn đuôi đoán từ loại.'],
+        ['Ôn tập chặng 1', 'QUIZ', 15, '25 câu phát âm và từ loại.'],
+      ],
+      REVIEW,
+    ],
+    [
+      'Câu và các thì',
+      [
+        ['Cấu trúc câu: chủ ngữ, động từ, tân ngữ, bổ ngữ', 'VIDEO', 14, 'Tách một câu dài thành các thành phần chính.'],
+        ['Các thì hiện tại', 'VIDEO', 17, 'Hiện tại đơn, tiếp diễn, hoàn thành, hoàn thành tiếp diễn.'],
+        ['Các thì quá khứ', 'VIDEO', 16, 'Quá khứ đơn, tiếp diễn, hoàn thành; động từ bất quy tắc.'],
+        ['Các thì tương lai', 'VIDEO', 14, 'will, be going to, hiện tại tiếp diễn chỉ tương lai, tương lai hoàn thành.'],
+        ['Ôn tập chặng 2', 'QUIZ', 15, '25 câu chia thì theo ngữ cảnh.'],
+      ],
+      REVIEW,
+    ],
+    [
+      'Các cấu trúc câu quan trọng',
+      [
+        ['Câu bị động', 'VIDEO', 16, 'be + V3 ở các thì và với động từ khuyết thiếu.'],
+        ['So sánh', 'VIDEO', 14, 'So sánh bằng, hơn, nhất và các dạng bất quy tắc.'],
+        ['Mệnh đề quan hệ và rút gọn', 'VIDEO', 16, 'who, which, that, whose; rút gọn bằng V-ing, V3.'],
+        ['Câu điều kiện', 'VIDEO', 15, 'Loại 1, 2, 3 và câu điều kiện hỗn hợp.'],
+        ['V-ing và to V', 'VIDEO', 14, 'Động từ đi với V-ing, đi với to V, đi được cả hai.'],
+        ['Ôn tập chặng 3', 'QUIZ', 18, '30 câu tổng hợp các cấu trúc.'],
+      ],
+      REVIEW,
+    ],
+    [
+      'Từ vựng và mẫu câu thông dụng',
+      [
+        ['300 từ thông dụng nhất', 'VIDEO', 16, 'Danh từ, động từ, tính từ gặp nhiều nhất trong văn bản và hội thoại.'],
+        ['Giới từ và cụm giới từ', 'VIDEO', 15, 'Giới từ thời gian, nơi chốn và cụm động từ + giới từ.'],
+        ['Liên từ và từ nối', 'VIDEO', 14, 'and, but, because, although, however, therefore, as a result.'],
+        ['Mẫu câu hỏi và đáp thông dụng', 'VIDEO', 13, 'Hỏi thông tin, đề nghị, xin phép, cảm ơn, xin lỗi.'],
+        ['Kiểm tra giữa khoá', 'QUIZ', 35, '60 câu tổng hợp Phần 1; đạt từ 60% để mở Phần 2.'],
+      ],
+      REVIEW,
+    ],
+    [
       'Công ty và đồng nghiệp',
       [
-        ['Từ vựng: phòng ban và chức danh', 'VIDEO', 14, 'Human Resources, Accounting, Sales; manager, supervisor, assistant, intern.'],
-        ['Hiện tại đơn và hiện tại tiếp diễn khi nói về công việc', 'VIDEO', 16, 'Việc làm thường ngày và dự án đang thực hiện.'],
-        ['Phát âm: đuôi -s và trọng âm của chức danh', 'VIDEO', 12, 'manager, director, receptionist, accountant.'],
-        ['Mẫu câu giới thiệu bản thân và đồng nghiệp', 'VIDEO', 13, "I'm in charge of…, I'd like you to meet…, She works closely with…"],
-        ['Đọc hiểu: trang giới thiệu một công ty', 'VIDEO', 15, 'Lịch sử, sản phẩm, quy mô và các văn phòng của công ty.'],
-        ['Ôn tập chặng 1', 'QUIZ', 15, '25 câu từ vựng, ngữ pháp và đọc hiểu của chặng.'],
+        ['Từ vựng: phòng ban và chức danh', 'VIDEO', 13, 'Human Resources, Accounting, Sales; manager, supervisor, intern.'],
+        ['Áp dụng: các thì hiện tại khi nói về công việc', 'VIDEO', 13, 'Dùng lại kiến thức chặng 2 để nói về việc thường ngày và dự án.'],
+        ['Đọc hiểu: trang giới thiệu một công ty', 'VIDEO', 14, 'Lịch sử, sản phẩm, quy mô và các văn phòng.'],
+        ['Luyện tập chủ đề', 'QUIZ', 12, '20 câu từ vựng và ngữ pháp trong ngữ cảnh công ty.'],
       ],
+      TOPICS,
     ],
     [
       'Lịch làm việc và cuộc hẹn',
       [
-        ['Từ vựng: lịch, hạn chót, cuộc hẹn', 'VIDEO', 13, 'schedule, deadline, postpone, reschedule, available, fully booked.'],
-        ['Giới từ thời gian và cách nói ngày giờ', 'VIDEO', 14, 'by, until, within, prior to; đọc ngày tháng kiểu Anh và kiểu Mỹ.'],
-        ['Tương lai: will, be going to và hiện tại tiếp diễn', 'VIDEO', 16, 'Hứa hẹn, dự định và lịch hẹn đã chốt.'],
-        ['Mẫu câu đặt, dời và huỷ cuộc hẹn', 'VIDEO', 13, 'Would Tuesday suit you?, I\'m afraid I have to cancel…'],
-        ['Nghe hiểu: tin nhắn thoại về lịch hẹn', 'VIDEO', 15, 'Nghe ra người gọi, lý do gọi, thời gian mới.'],
-        ['Ôn tập chặng 2', 'QUIZ', 15, '25 câu tổng hợp của chặng.'],
+        ['Từ vựng: lịch, hạn chót, cuộc hẹn', 'VIDEO', 12, 'schedule, deadline, postpone, reschedule, available.'],
+        ['Áp dụng: thì tương lai và giới từ thời gian', 'VIDEO', 13, 'Đặt, dời, huỷ cuộc hẹn; by, until, within, prior to.'],
+        ['Nghe hiểu: tin nhắn thoại về lịch hẹn', 'VIDEO', 14, 'Nghe ra người gọi, lý do gọi, thời gian mới.'],
+        ['Luyện tập chủ đề', 'QUIZ', 12, '20 câu trong ngữ cảnh lịch hẹn.'],
       ],
-    ],
-    [
-      'Văn phòng và thiết bị',
-      [
-        ['Từ vựng: đồ dùng và thiết bị văn phòng', 'VIDEO', 13, 'photocopier, projector, supplies, cabinet, extension.'],
-        ['There is / there are và giới từ nơi chốn', 'VIDEO', 13, 'Mô tả vị trí đồ vật, sơ đồ văn phòng.'],
-        ['Câu bị động ở các thì', 'VIDEO', 17, 'The printer is being repaired. The room has been booked.'],
-        ['Mẫu câu báo sự cố và nhờ hỗ trợ', 'VIDEO', 12, "The scanner isn't working. Could someone take a look?"],
-        ['Đọc hiểu: thông báo bảo trì và hướng dẫn sử dụng', 'VIDEO', 15, 'Thời gian, khu vực bị ảnh hưởng, việc nhân viên cần làm.'],
-        ['Ôn tập chặng 3', 'QUIZ', 15, '25 câu tổng hợp của chặng.'],
-      ],
+      TOPICS,
     ],
     [
       'Email và thư từ công việc',
       [
-        ['Từ vựng thư từ', 'VIDEO', 13, 'regarding, attached, forward, reply, enclose, confirm.'],
-        ['Văn phong trang trọng và thân mật', 'VIDEO', 14, 'Dear Mr Lee / Hi Tom; Kind regards / Cheers.'],
-        ['Câu yêu cầu lịch sự', 'VIDEO', 13, 'Could you…?, Would you mind…?, I would appreciate it if…'],
-        ['Liên từ và từ nối trong thư', 'VIDEO', 14, 'however, therefore, in addition, as a result, although.'],
-        ['Viết email hỏi thông tin và trả lời', 'VIDEO', 17, 'Bố cục: lý do viết, nội dung chính, lời kết.'],
-        ['Ôn tập chặng 4', 'QUIZ', 18, '20 câu và một email ngắn để giáo viên nhận xét.'],
+        ['Từ vựng thư từ', 'VIDEO', 12, 'regarding, attached, forward, confirm, enclose.'],
+        ['Áp dụng: câu yêu cầu lịch sự và từ nối', 'VIDEO', 14, 'Could you…?, I would appreciate it if…; however, in addition.'],
+        ['Viết email hỏi thông tin và trả lời', 'VIDEO', 16, 'Bố cục: lý do viết, nội dung chính, lời kết.'],
+        ['Luyện tập chủ đề', 'QUIZ', 15, '15 câu và một email ngắn để giáo viên nhận xét.'],
       ],
+      TOPICS,
     ],
     [
-      'Hội họp và trình bày số liệu',
+      'Hội họp và số liệu',
       [
-        ['Từ vựng cuộc họp', 'VIDEO', 13, 'agenda, minutes, chair, item, action point, attendee.'],
-        ['Đưa ý kiến, đồng ý và phản đối', 'VIDEO', 14, 'In my view…, I see your point, but…, I couldn\'t agree more.'],
-        ['So sánh hơn và so sánh nhất với số liệu', 'VIDEO', 15, 'Sales were 20% higher than…, the lowest figure since…'],
-        ['Mô tả biểu đồ: tăng, giảm, ổn định', 'VIDEO', 16, 'rise sharply, decline slightly, remain stable, peak at.'],
-        ['Nghe hiểu: một cuộc họp ngắn', 'VIDEO', 16, 'Ai đề xuất gì, quyết định cuối cùng là gì.'],
-        ['Ôn tập chặng 5', 'QUIZ', 15, '25 câu tổng hợp của chặng.'],
+        ['Từ vựng cuộc họp và số liệu', 'VIDEO', 13, 'agenda, minutes, figure, rise, decline, remain stable.'],
+        ['Áp dụng: so sánh khi trình bày số liệu', 'VIDEO', 14, 'Sales were 20% higher than…, the lowest figure since…'],
+        ['Nghe hiểu: một cuộc họp ngắn', 'VIDEO', 15, 'Ai đề xuất gì, quyết định cuối cùng là gì.'],
+        ['Luyện tập chủ đề', 'QUIZ', 12, '20 câu trong ngữ cảnh họp và báo cáo.'],
       ],
+      TOPICS,
     ],
     [
-      'Mua bán và chăm sóc khách hàng',
+      'Mua bán và khách hàng',
       [
-        ['Từ vựng: báo giá, đơn hàng, hoá đơn', 'VIDEO', 14, 'quote, invoice, order, discount, refund, warranty.'],
-        ['Câu điều kiện loại 1 và loại 2 khi thương lượng', 'VIDEO', 16, 'If you order 500 units, we will…, If we lowered the price…'],
-        ['Mệnh đề quan hệ khi mô tả sản phẩm', 'VIDEO', 15, 'The model, which was launched last year, …'],
-        ['Mẫu câu xử lý khiếu nại', 'VIDEO', 13, "I'm sorry to hear that…, We will send a replacement…"],
-        ['Đọc hiểu: quảng cáo, hoá đơn, chính sách đổi trả', 'VIDEO', 16, 'Đối chiếu thông tin giữa quảng cáo và hoá đơn.'],
-        ['Ôn tập chặng 6', 'QUIZ', 15, '25 câu tổng hợp của chặng.'],
+        ['Từ vựng: báo giá, đơn hàng, hoá đơn', 'VIDEO', 13, 'quote, invoice, discount, refund, warranty.'],
+        ['Áp dụng: câu điều kiện và mệnh đề quan hệ', 'VIDEO', 15, 'If you order 500 units…; the model, which was launched last year…'],
+        ['Đọc hiểu: quảng cáo, hoá đơn, chính sách đổi trả', 'VIDEO', 15, 'Đối chiếu thông tin giữa các văn bản.'],
+        ['Luyện tập chủ đề', 'QUIZ', 12, '20 câu trong ngữ cảnh mua bán.'],
       ],
+      TOPICS,
     ],
     [
-      'Tuyển dụng và nhân sự',
+      'Tuyển dụng và đi công tác',
       [
-        ['Từ vựng tuyển dụng', 'VIDEO', 13, 'applicant, qualification, position, résumé, benefits, promotion.'],
-        ['Hiện tại hoàn thành khi nói về kinh nghiệm', 'VIDEO', 15, "I've worked in sales for five years. She has just been promoted."],
-        ['V-ing và to V sau động từ', 'VIDEO', 14, 'consider applying, decide to hire, look forward to meeting.'],
-        ['Đọc hiểu: tin tuyển dụng và hồ sơ ứng viên', 'VIDEO', 16, 'Yêu cầu công việc, quyền lợi, cách nộp hồ sơ.'],
-        ['Mẫu câu phỏng vấn xin việc', 'VIDEO', 14, 'Tell me about yourself, What are your strengths?…'],
-        ['Ôn tập chặng 7', 'QUIZ', 15, '25 câu tổng hợp của chặng.'],
+        ['Từ vựng: tuyển dụng, sân bay, khách sạn', 'VIDEO', 14, 'applicant, position, benefits; itinerary, boarding pass, venue.'],
+        ['Áp dụng: hiện tại hoàn thành và câu tường thuật', 'VIDEO', 15, "I've worked in sales for five years.; The manager said that…"],
+        ['Đọc hiểu: tin tuyển dụng và lịch trình công tác', 'VIDEO', 15, 'Yêu cầu công việc, quyền lợi; thời gian và địa điểm.'],
+        ['Kiểm tra cuối khoá', 'QUIZ', 45, '100 câu tổng hợp cả hai phần kèm một email; có bảng điểm từng mảng kiến thức.'],
       ],
-    ],
-    [
-      'Đi công tác và sự kiện',
-      [
-        ['Từ vựng: sân bay, khách sạn, hội nghị', 'VIDEO', 14, 'boarding pass, itinerary, check-in, venue, registration.'],
-        ['Quá khứ đơn và quá khứ hoàn thành khi kể lại chuyến đi', 'VIDEO', 16, 'By the time we arrived, the session had started.'],
-        ['Câu tường thuật khi truyền đạt lại thông tin', 'VIDEO', 15, 'The manager said that…, She asked whether…'],
-        ['Nghe hiểu: thông báo ở sân bay và nhà ga', 'VIDEO', 14, 'Số hiệu chuyến bay, cửa ra máy bay, thay đổi giờ.'],
-        ['Viết lịch trình và báo cáo công tác ngắn', 'VIDEO', 17, 'Liệt kê theo thời gian, tóm tắt kết quả chuyến đi.'],
-        ['Kiểm tra cuối khoá', 'QUIZ', 45, '100 câu tổng hợp tám chặng kèm một email; có bảng điểm từng mảng kiến thức.'],
-      ],
+      TOPICS,
     ],
   ],
   0,
@@ -320,77 +342,100 @@ const TOEIC_PATH = mkPath(
 );
 
 /**
- * Nền tảng VSTEP: giáo trình tiếng Anh tổng quát (A2 → B1), mỗi chặng một chủ đề đời sống,
- * mỗi bài dạy một mảng kiến thức. Nhẹ hơn TOEIC: ít chặng, bài ngắn, ngữ pháp và từ vựng cơ bản hơn.
+ * Nền tảng VSTEP (A2 → B1), nhẹ hơn TOEIC.
+ * Phần 1 ôn kiến thức chung cơ bản và chốt bằng bài kiểm tra giữa khoá; Phần 2 đưa chủ đề đời sống để luyện sơ bộ.
  */
 const VSTEP_PATH = mkPath(
   'sp',
   [
     [
+      'Phát âm và từ loại cơ bản',
+      [
+        ['Bảng phiên âm cơ bản và âm cuối', 'VIDEO', 12, 'Các âm dễ sai và âm cuối /s/, /t/, /d/.'],
+        ['Trọng âm cơ bản', 'VIDEO', 10, 'Trọng âm từ hai âm tiết thường gặp.'],
+        ['Từ loại và vị trí trong câu', 'VIDEO', 12, 'Danh từ, động từ, tính từ, trạng từ.'],
+        ['Ôn tập chặng 1', 'QUIZ', 10, '20 câu phát âm và từ loại.'],
+      ],
+      REVIEW,
+    ],
+    [
+      'Câu và các thì cơ bản',
+      [
+        ['Câu đơn và câu hỏi', 'VIDEO', 11, 'Câu khẳng định, phủ định, câu hỏi Yes/No và Wh-.'],
+        ['Hiện tại đơn và hiện tại tiếp diễn', 'VIDEO', 12, 'Thói quen và việc đang diễn ra.'],
+        ['Quá khứ đơn', 'VIDEO', 12, 'Động từ có quy tắc và bất quy tắc thường dùng.'],
+        ['Tương lai: will và be going to', 'VIDEO', 11, 'Quyết định tức thời và dự định có sẵn.'],
+        ['Ôn tập chặng 2', 'QUIZ', 10, '20 câu chia thì.'],
+      ],
+      REVIEW,
+    ],
+    [
+      'Từ vựng và cấu trúc thông dụng',
+      [
+        ['300 từ thông dụng nhất', 'VIDEO', 12, 'Những từ gặp nhiều nhất trong đời sống hằng ngày.'],
+        ['Giới từ thời gian và nơi chốn', 'VIDEO', 11, 'in, on, at, next to, between, opposite.'],
+        ['So sánh hơn và so sánh nhất', 'VIDEO', 11, 'Tính từ ngắn, tính từ dài, dạng bất quy tắc.'],
+        ['Liên từ: and, but, because, so', 'VIDEO', 10, 'Nối hai ý thành một câu.'],
+        ['Kiểm tra giữa khoá', 'QUIZ', 25, '40 câu tổng hợp Phần 1; đạt từ 60% để mở Phần 2.'],
+      ],
+      REVIEW,
+    ],
+    [
       'Bản thân và gia đình',
       [
         ['Từ vựng: gia đình, ngoại hình, tính cách', 'VIDEO', 10, 'parents, siblings, tall, friendly, hard-working.'],
-        ['Động từ to be và hiện tại đơn', 'VIDEO', 12, 'Nói về bản thân, thói quen và sở thích.'],
-        ['Phát âm: âm cuối và đuôi -s', 'VIDEO', 9, 'works /s/, lives /z/, watches /ɪz/.'],
-        ['Mẫu câu giới thiệu và hỏi thông tin cá nhân', 'VIDEO', 10, 'Where are you from?, What do you do in your free time?'],
-        ['Ôn tập chặng 1', 'QUIZ', 10, '20 câu tổng hợp của chặng.'],
+        ['Áp dụng: hiện tại đơn khi giới thiệu bản thân', 'VIDEO', 10, 'Where are you from?, What do you do in your free time?'],
+        ['Luyện tập chủ đề', 'QUIZ', 8, '15 câu trong ngữ cảnh gia đình.'],
       ],
+      TOPICS,
     ],
     [
       'Học tập và trường lớp',
       [
-        ['Từ vựng: môn học và hoạt động ở trường', 'VIDEO', 10, 'subject, lecture, assignment, semester, scholarship.'],
-        ['Hiện tại tiếp diễn và trạng từ tần suất', 'VIDEO', 11, 'I usually study in the library, but today I am working at home.'],
-        ['Đọc hiểu: thông báo của nhà trường', 'VIDEO', 11, 'Thời gian, địa điểm, đối tượng, việc cần làm.'],
-        ['Viết email cho giảng viên', 'VIDEO', 12, 'Xin phép nghỉ học, hỏi về bài tập; lời chào và lời kết phù hợp.'],
-        ['Ôn tập chặng 2', 'QUIZ', 10, '20 câu và một email ngắn.'],
+        ['Từ vựng: môn học và hoạt động ở trường', 'VIDEO', 10, 'subject, lecture, assignment, semester.'],
+        ['Áp dụng: viết email cho giảng viên', 'VIDEO', 12, 'Xin phép nghỉ học, hỏi bài tập; lời chào và lời kết.'],
+        ['Luyện tập chủ đề', 'QUIZ', 8, '15 câu và một email ngắn.'],
       ],
+      TOPICS,
     ],
     [
       'Nhà ở và thành phố',
       [
-        ['Từ vựng: nhà cửa và địa điểm', 'VIDEO', 10, 'apartment, neighbourhood, crossroads, post office, market.'],
-        ['There is / there are và giới từ nơi chốn', 'VIDEO', 10, 'next to, opposite, between, at the end of the street.'],
-        ['So sánh hơn và so sánh nhất', 'VIDEO', 11, 'My city is bigger than…, the most crowded place.'],
-        ['Nghe hiểu: hỏi và chỉ đường', 'VIDEO', 11, 'Go straight, turn left, it\'s on your right.'],
-        ['Ôn tập chặng 3', 'QUIZ', 10, '20 câu tổng hợp của chặng.'],
+        ['Từ vựng: nhà cửa và địa điểm', 'VIDEO', 10, 'apartment, neighbourhood, crossroads, market.'],
+        ['Áp dụng: giới từ nơi chốn và so sánh', 'VIDEO', 11, 'Chỉ đường, so sánh hai nơi ở.'],
+        ['Luyện tập chủ đề', 'QUIZ', 8, '15 câu trong ngữ cảnh nhà ở.'],
       ],
+      TOPICS,
     ],
     [
       'Sức khoẻ và lối sống',
       [
-        ['Từ vựng: sức khoẻ và thói quen', 'VIDEO', 10, 'headache, exercise, diet, stressed, get enough sleep.'],
-        ['should, must, have to khi đưa lời khuyên', 'VIDEO', 11, 'You should drink more water. You must not smoke here.'],
-        ['Quá khứ đơn khi kể lại trải nghiệm', 'VIDEO', 12, 'Động từ có quy tắc và bất quy tắc thường dùng.'],
-        ['Mẫu câu nêu ý kiến và lý do', 'VIDEO', 10, 'I think…, because…, For example…'],
-        ['Ôn tập chặng 4', 'QUIZ', 10, '20 câu tổng hợp của chặng.'],
+        ['Từ vựng: sức khoẻ và thói quen', 'VIDEO', 10, 'headache, exercise, diet, get enough sleep.'],
+        ['Áp dụng: should, must khi đưa lời khuyên', 'VIDEO', 11, 'You should drink more water.'],
+        ['Luyện tập chủ đề', 'QUIZ', 8, '15 câu trong ngữ cảnh sức khoẻ.'],
       ],
+      TOPICS,
     ],
     [
-      'Du lịch và văn hoá',
+      'Du lịch và môi trường',
       [
-        ['Từ vựng: du lịch và lễ hội', 'VIDEO', 10, 'destination, sightseeing, souvenir, festival, tradition.'],
-        ['Tương lai: will và be going to', 'VIDEO', 11, 'Kế hoạch cho kỳ nghỉ và dự đoán.'],
-        ['Hiện tại hoàn thành khi nói về trải nghiệm', 'VIDEO', 12, 'Have you ever been to…?, I have never tried…'],
-        ['Viết thư kể về một chuyến đi', 'VIDEO', 12, 'Mở đầu, kể theo thứ tự thời gian, cảm nhận.'],
-        ['Ôn tập chặng 5', 'QUIZ', 10, '20 câu và một lá thư ngắn.'],
+        ['Từ vựng: du lịch, lễ hội, môi trường', 'VIDEO', 11, 'destination, souvenir, festival, pollution, recycle.'],
+        ['Áp dụng: quá khứ đơn và tương lai khi kể chuyến đi', 'VIDEO', 12, 'Kể lại chuyến đi đã qua và kế hoạch sắp tới.'],
+        ['Viết đoạn văn ngắn theo chủ đề', 'VIDEO', 12, 'Câu chủ đề, hai ý kèm ví dụ, câu kết.'],
+        ['Kiểm tra cuối khoá', 'QUIZ', 30, '60 câu tổng hợp cả hai phần kèm một đoạn văn; giáo viên chấm phần viết.'],
       ],
-    ],
-    [
-      'Môi trường và công nghệ',
-      [
-        ['Từ vựng: môi trường và công nghệ', 'VIDEO', 10, 'pollution, recycle, climate change, device, social media.'],
-        ['Câu điều kiện loại 1 và loại 2', 'VIDEO', 12, 'If we recycle more, …; If I had more time, …'],
-        ['Câu bị động đơn giản', 'VIDEO', 11, 'Plastic is thrown away every day. The app was released in 2020.'],
-        ['Đọc hiểu: một bài báo ngắn', 'VIDEO', 12, 'Ý chính, chi tiết và ý kiến của người viết.'],
-        ['Viết đoạn văn nêu ý kiến', 'VIDEO', 12, 'Câu chủ đề, hai lý do kèm ví dụ, câu kết.'],
-        ['Kiểm tra cuối khoá', 'QUIZ', 30, '60 câu tổng hợp sáu chặng kèm một đoạn văn; giáo viên chấm phần viết.'],
-      ],
+      TOPICS,
     ],
   ],
   0,
   2,
 );
+
+/** Ghi chú hiển thị dưới tiêu đề mỗi phần */
+export const COURSE_PART_NOTE: Record<string, string> = {
+  [REVIEW]: 'Ôn lại kiến thức chung trước khi vào chủ đề. Kết thúc bằng bài kiểm tra giữa khoá.',
+  [TOPICS]: 'Mở sau bài kiểm tra giữa khoá. Mỗi chủ đề dùng lại kiến thức đã ôn ở Phần 1 để luyện sơ bộ.',
+};
 
 /** Số bài, số giờ và % đã học của một lộ trình */
 const pathStats = (sections: CourseSection[]) => {
@@ -444,7 +489,7 @@ export const MOCK_COURSES: Course[] = [
     coverUrl: PHOTOS.office,
     title: 'Nền tảng TOEIC',
     level: 'B1 → B2',
-    description: 'Giáo trình tiếng Anh công việc: mỗi chặng một chủ đề nơi làm việc, mỗi bài dạy từ vựng, ngữ pháp, phát âm, mẫu câu hoặc kỹ năng đọc, nghe, viết của chủ đề đó. Nặng hơn VSTEP, nên học sau khi đã qua vài chặng Ngữ pháp và Từ vựng.',
+    description: 'Phần 1 ôn lại kiến thức chung: phát âm, từ loại, các thì, cấu trúc câu, từ vựng thông dụng. Qua bài kiểm tra giữa khoá mới sang Phần 2, luyện theo từng chủ đề công việc. Nặng hơn VSTEP.',
     gradient: 'from-indigo-500 to-violet-600',
     ...pathStats(TOEIC_PATH),
     studentsCount: 6208,
@@ -461,7 +506,7 @@ export const MOCK_COURSES: Course[] = [
     coverUrl: PHOTOS.library,
     title: 'Nền tảng VSTEP',
     level: 'A2 → B1',
-    description: 'Giáo trình tiếng Anh tổng quát theo chủ đề đời sống: mỗi chặng gồm từ vựng, ngữ pháp, phát âm, mẫu câu và bài đọc, nghe, viết của chủ đề. Nhẹ hơn TOEIC, mục tiêu bậc 3 (B1).',
+    description: 'Phần 1 ôn kiến thức chung cơ bản: phát âm, từ loại, các thì cơ bản, từ vựng và cấu trúc thông dụng. Qua bài kiểm tra giữa khoá mới sang Phần 2, luyện theo chủ đề đời sống. Nhẹ hơn TOEIC, mục tiêu B1.',
     gradient: 'from-emerald-500 to-teal-600',
     ...pathStats(VSTEP_PATH),
     studentsCount: 4126,

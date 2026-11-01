@@ -6,7 +6,7 @@ import { Img } from '@/shared/components/media/Img';
 import { MOCK_COURSES, courseHref } from '@/shared/mocks';
 import { useDocumentTitle, useGate } from '@/shared/hooks';
 import { useAuthStore } from '@/shared/stores/authStore';
-import type { Course } from '@/shared/types';
+import type { Course, CourseSection } from '@/shared/types';
 import { Accent, ActionLink, PageHeader, Section } from './shared/PageKit';
 
 /** Một mục Khoá học: ảnh, mô tả, các chặng theo thứ tự; học viên thấy tiến độ và bài đang học */
@@ -16,6 +16,13 @@ const TrackRow: React.FC<{ course: Course; isStudent: boolean }> = ({ course: c,
   const done = all.filter((l) => l.isCompleted).length;
   const current = all.find((l) => !l.isCompleted && !l.isLocked) ?? all[0];
   const lessonUrl = `/app/courses/${c.id}/lessons/${current.id}`;
+  // Gom các chặng liền nhau cùng phần (Ôn kiến thức chung / Luyện theo chủ đề)
+  const groups = c.sections.reduce<{ part?: string; items: { s: CourseSection; i: number }[] }[]>((acc, s, i) => {
+    const last = acc[acc.length - 1];
+    if (last && last.part === s.part) last.items.push({ s, i });
+    else acc.push({ part: s.part, items: [{ s, i }] });
+    return acc;
+  }, []);
 
   return (
     <article className="grid gap-6 rounded-2xl border border-slate-200 bg-white p-4 md:grid-cols-[minmax(0,380px)_1fr] md:gap-8 md:p-5">
@@ -36,14 +43,23 @@ const TrackRow: React.FC<{ course: Course; isStudent: boolean }> = ({ course: c,
           {all.length} bài · {c.sections.length} chặng · {c.durationHours} giờ · {c.level}
         </p>
 
-        <ol className="mt-4 gap-x-6 text-[14px] text-slate-700 sm:columns-2">
-          {c.sections.map((s, i) => (
-            <li key={s.id} className="flex break-inside-avoid gap-2 py-[3px]">
-              <span className="w-16 shrink-0 text-slate-400">Chặng {i + 1}</span>
-              <span className="min-w-0">{s.title}</span>
-            </li>
-          ))}
-        </ol>
+        {groups.map((g, gi) => (
+          <div key={gi} className="mt-4">
+            {g.part && (
+              <p className="mb-1.5 text-[12px] font-semibold uppercase tracking-[0.12em] text-slate-500">
+                Phần {gi + 1} · {g.part}
+              </p>
+            )}
+            <ol className="gap-x-6 text-[14px] text-slate-700 sm:columns-2">
+              {g.items.map(({ s, i }) => (
+                <li key={s.id} className="flex break-inside-avoid gap-2 py-[3px]">
+                  <span className="w-16 shrink-0 text-slate-400">Chặng {i + 1}</span>
+                  <span className="min-w-0">{s.title}</span>
+                </li>
+              ))}
+            </ol>
+          </div>
+        ))}
 
         <div className="mt-auto flex flex-wrap items-center gap-x-5 gap-y-3 pt-6">
           {isStudent ? (

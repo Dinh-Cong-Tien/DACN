@@ -62,6 +62,8 @@ export interface Lesson {
 export interface CourseSection {
   id: string;
   title: string;
+  /** Phần lớn chứa chặng này (vd. 'Ôn kiến thức chung', 'Luyện theo chủ đề'); các chặng liền nhau cùng phần được gom lại */
+  part?: string;
   lessons: Lesson[];
 }
 
