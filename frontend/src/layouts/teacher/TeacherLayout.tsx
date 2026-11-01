@@ -1,5 +1,5 @@
 import React from 'react';
-import { LayoutDashboard, Users, ClipboardList, ClipboardCheck, CalendarDays, PenTool, FolderOpen, BarChart3, Video, FileText, GraduationCap, BookOpen, Mic, Sheet, UserRound } from 'lucide-react';
+import { LayoutDashboard, Users, ClipboardList, ClipboardCheck, CalendarDays, PenTool, FolderOpen, BarChart3, Video, FileText, BookOpen, Sheet, UserRound } from 'lucide-react';
 import { AppShell, NavGroup } from '@/shared/components/layout/AppShell';
 import { TeacherNav } from './TeacherNav';
 
@@ -27,11 +27,9 @@ const GROUPS: NavGroup[] = [
   {
     title: 'Học liệu',
     items: [
-      { to: '/teacher/library/courses', label: 'Khoá học', icon: Video },
-      { to: '/teacher/library/tests', label: 'Ngân hàng đề thi', icon: FileText },
-      { to: '/teacher/library/grammar', label: 'Ngữ pháp', icon: GraduationCap },
-      { to: '/teacher/library/vocabulary', label: 'Từ vựng', icon: BookOpen },
-      { to: '/teacher/library/writing-speaking', label: 'Đề Viết & Nói', icon: Mic },
+      { to: '/teacher/library/courses', label: 'Khoá học & bài giảng', icon: Video },
+      { to: '/teacher/library/tests', label: 'Ngân hàng đề', icon: FileText },
+      { to: '/teacher/library/practice', label: 'Ngữ pháp & Từ vựng', icon: BookOpen },
       { to: '/teacher/materials', label: 'Tài liệu lớp', icon: FolderOpen },
     ],
   },

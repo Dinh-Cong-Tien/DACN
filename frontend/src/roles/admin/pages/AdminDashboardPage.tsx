@@ -6,7 +6,8 @@ import type { AppRole } from '@/shared/types';
 import { cn, formatDate, timeAgo, ROLE_LABEL, formatNumber } from '@/shared/utils';
 import { useDocumentTitle } from '@/shared/hooks';
 import { useAuthStore } from '@/shared/stores/authStore';
-import { Avatar, Badge, Button, Card, MiniBars, ProgressBar, Sparkline, Timeline, Tone } from '@/shared/components/ui';
+import { Avatar, Badge, Button, Card, ProgressBar, Timeline, Tone } from '@/shared/components/ui';
+import { BarChart, LineChart } from '@/shared/components/charts/Charts';
 import { CountUp, Reveal, Stagger } from '@/shared/components/motion';
 import { Img, PHOTOS } from '@/shared/components/media/Img';
 
@@ -123,7 +124,7 @@ export const AdminDashboardPage: React.FC = () => {
               </div>
               <Badge tone="emerald">12 tháng</Badge>
             </div>
-            <Sparkline data={ADMIN_SIGNUPS} width={320} height={90} tone="violet" className="w-full mt-4 [&>svg]:w-full" />
+            <LineChart ariaLabel="Đăng ký mới 12 tháng" labels={ADMIN_SIGNUPS.map((_, i) => `T${((i + 11) % 12) + 1}`)} series={[{ name: 'Đăng ký mới', values: ADMIN_SIGNUPS }]} height={150} className="mt-4" />
             <Link to="/admin/analytics" className="inline-flex items-center gap-1 text-sm font-bold text-indigo-700 hover:gap-2 transition-all mt-3">
               Xem thống kê truy cập <ChevronRight className="w-4 h-4" />
             </Link>
@@ -151,7 +152,7 @@ export const AdminDashboardPage: React.FC = () => {
               </div>
               <Activity className="w-5 h-5 text-slate-400" />
             </div>
-            <MiniBars data={ADMIN_TRAFFIC.map((t) => ({ ...t, tone: t.value === Math.max(...ADMIN_TRAFFIC.map((x) => x.value)) ? 'violet' : 'indigo' }))} height={130} />
+            <BarChart ariaLabel="Lượt truy cập 7 ngày" data={ADMIN_TRAFFIC} height={170} unit=" lượt" format={(v) => formatNumber(v)} />
             <p className="text-sm text-slate-600 mt-4">
               Tổng <b className="text-slate-900">{formatNumber(traffic)}</b> · TB/ngày {formatNumber(Math.round(traffic / ADMIN_TRAFFIC.length))}
             </p>

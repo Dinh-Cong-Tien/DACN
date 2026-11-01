@@ -1,5 +1,5 @@
 import { PHOTOS, pravatar, unsplash } from '@/shared/components/media/Img';
-import type { AppUser, AuditLog, CourseTreeNode, ServiceStatus, SkillTag, SystemSetting } from '@/shared/types';
+import type { AppNotification, AppUser, AuditLog, CourseTreeNode, ServiceStatus, SkillTag, SystemSetting } from '@/shared/types';
 
 const u = (id: string, fullName: string, email: string, role: AppUser['role'], status: AppUser['status'], plan: AppUser['plan'], joinedAt: string, lastActiveAt: string, streak = 0, effortPoints = 0): AppUser => ({
   id,
@@ -123,3 +123,10 @@ export const ADMIN_TRAFFIC = [
 ];
 
 export const ADMIN_SIGNUPS = [42, 58, 51, 77, 69, 95, 88, 102, 97, 120, 131, 128];
+
+export const ADMIN_NOTIFICATIONS: AppNotification[] = [
+  { id: 'an-1', title: 'Dịch vụ chấm Speaking phản hồi chậm', message: 'Thời gian xử lý trung bình 4,2 giây, vượt ngưỡng 3 giây.', type: 'SYSTEM', isRead: false, createdAt: '2026-11-02T07:15:00.000Z', link: '/admin/system' },
+  { id: 'an-2', title: '28 tài khoản mới hôm qua', message: 'Tăng 18% so với trung bình tuần, 6 tài khoản nâng cấp VIP.', type: 'SYSTEM', isRead: false, createdAt: '2026-11-02T00:05:00.000Z', link: '/admin/analytics' },
+  { id: 'an-3', title: 'Đăng nhập bất thường', message: '5 lần đăng nhập sai liên tiếp vào tài khoản head@orbi.edu.vn.', type: 'SYSTEM', isRead: false, createdAt: '2026-11-01T22:40:00.000Z', link: '/admin/audit-logs' },
+  { id: 'an-4', title: 'Sao lưu dữ liệu hoàn tất', message: 'Bản sao lưu 01/11 lúc 03:00, dung lượng 2,4 GB.', type: 'SYSTEM', isRead: true, createdAt: '2026-11-01T03:10:00.000Z' },
+];

@@ -3,7 +3,7 @@ import { GRAMMAR_TOPICS, MOCK_COURSES } from './courses';
 import { VOCAB_TOPICS } from './student';
 import { VSTEP_SPEAKING_PARTS, VSTEP_WRITING_TASKS } from './questions';
 import { MOCK_TESTS, TOEIC_PARTS_INFO, VSTEP_PARTS_INFO } from './tests';
-import type { Assignment, AssignmentTarget, AssignmentType, AttendanceMark, ClassAnnouncement, ClassRoom, ClassSession, ClassStudent, Material, MyAssignmentState, StudentNote, Submission } from '@/shared/types';
+import type { AppNotification, Assignment, AssignmentTarget, AssignmentType, AttendanceMark, ClassAnnouncement, ClassRoom, ClassSession, ClassStudent, Material, MyAssignmentState, StudentNote, Submission } from '@/shared/types';
 
 export const MOCK_CLASSES: ClassRoom[] = [
   { id: 'cl-1', coverUrl: PHOTOS.classroom, name: 'TOEIC 650+ K12', code: 'ORB-7K2P', room: 'Phòng 302', examType: 'TOEIC', teacherName: 'Trần Thu Hà', studentsCount: 28, assignmentsCount: 14, avgScore: 642, completionRate: 86, attendanceRate: 91, createdAt: '2026-08-05', schedule: 'T2 – T4 – T6 · 19:00', gradient: 'from-indigo-500 to-violet-600' },
@@ -289,3 +289,19 @@ export const GRADEBOOK: Record<string, Record<string, number | null>> = Object.f
     ];
   })
 );
+
+// ---------- Thông báo theo vai trò quản lý (giáo viên, giáo viên bậc cao, quản trị) ----------
+
+export const TEACHER_NOTIFICATIONS: AppNotification[] = [
+  { id: 'tn-1', title: 'Lý Bảo Ngọc nộp bài muộn', message: 'Speaking Part 2 — Solution Discussion, lớp VSTEP B2 Khoá 5.', type: 'ASSIGNMENT', isRead: false, createdAt: '2026-10-30T01:20:00.000Z', link: '/teacher/grading/sb-5' },
+  { id: 'tn-2', title: '2 bài Writing chờ chấm', message: 'Writing Task 2 — Education & Career, hạn trả bài 07/11.', type: 'ASSIGNMENT', isRead: false, createdAt: '2026-10-29T07:40:00.000Z', link: '/teacher/grading' },
+  { id: 'tn-3', title: 'Nguyễn Khánh Vy vắng 2 buổi liền', message: 'Lớp TOEIC 650+ K12 · chuyên cần còn 50%. Nên liên hệ học viên.', type: 'CLASS', isRead: false, createdAt: '2026-10-28T21:00:00.000Z', link: '/teacher/students?id=s-5' },
+  { id: 'tn-4', title: 'Tổ trưởng đã duyệt tài liệu', message: '"Part 7 Double Passage Strategy.pdf" được duyệt, học viên đã tải được.', type: 'SYSTEM', isRead: true, createdAt: '2026-10-24T16:00:00.000Z', link: '/teacher/materials' },
+  { id: 'tn-5', title: 'Lịch dạy bù đã cập nhật', message: 'TOEIC Foundation Sáng dạy bù Chủ nhật 01/11, 14:00 tại phòng 105.', type: 'CLASS', isRead: true, createdAt: '2026-10-24T08:00:00.000Z', link: '/teacher/schedule' },
+];
+
+/** Điểm thi thử trung bình của lớp theo tháng */
+export const CLASS_SCORE_TREND: Record<string, { labels: string[]; values: number[]; min: number }> = {
+  TOEIC: { labels: ['Th5', 'Th6', 'Th7', 'Th8', 'Th9', 'Th10'], values: [548, 571, 590, 604, 626, 642], min: 500 },
+  VSTEP: { labels: ['Th5', 'Th6', 'Th7', 'Th8', 'Th9', 'Th10'], values: [5.2, 5.5, 5.9, 6.1, 6.4, 6.8], min: 4 },
+};

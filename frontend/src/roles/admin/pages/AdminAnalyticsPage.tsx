@@ -3,7 +3,8 @@ import { BarChart3, Activity, Users, FileText, Clock, Monitor, Smartphone, Table
 import { ADMIN_TRAFFIC, ADMIN_SIGNUPS } from '@/shared/mocks';
 import { formatNumber } from '@/shared/utils';
 import { useDocumentTitle } from '@/shared/hooks';
-import { Card, CardHeader, Column, DataTable, MiniBars, PageHeader, ProgressBar, RingProgress, Segmented, Sparkline, StatCard, Tone } from '@/shared/components/ui';
+import { Card, CardHeader, Column, DataTable, PageHeader, Segmented, StatCard, Tone } from '@/shared/components/ui';
+import { BarChart, HBarChart, LineChart } from '@/shared/components/charts/Charts';
 
 interface PageRow {
   id: string;
@@ -70,52 +71,37 @@ export const AdminAnalyticsPage: React.FC = () => {
 
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
         <Card hard className="xl:col-span-2 animate-fade-up">
-          <CardHeader title="Lượt truy cập theo ngày" subtitle={range === '7' ? 'Tuần hiện tại' : '30 ngày gần nhất (theo tuần)'} />
-          <MiniBars data={ADMIN_TRAFFIC.map((d) => ({ ...d, value: Math.round(d.value * mult), tone: 'indigo' as Tone }))} height={170} />
+          <CardHeader title="Lượt truy cập theo ngày" subtitle={range === '7' ? 'Tuần hiện tại, so với tuần trước' : '30 ngày gần nhất (theo tuần), so với kỳ trước'} />
+          <LineChart
+            ariaLabel="Lượt truy cập theo ngày"
+            labels={ADMIN_TRAFFIC.map((d) => d.label)}
+            series={[
+              { name: range === '7' ? 'Tuần này' : 'Kỳ này', values: ADMIN_TRAFFIC.map((d) => Math.round(d.value * mult)) },
+              { name: range === '7' ? 'Tuần trước' : 'Kỳ trước', values: ADMIN_TRAFFIC.map((d, i) => Math.round(d.value * mult * (0.86 + (i % 3) * 0.04))) },
+            ]}
+            height={250}
+            format={(v) => formatNumber(v)}
+          />
         </Card>
-        <Card hard tone="yellow" className="animate-fade-up" style={{ animationDelay: '80ms' }}>
-          <CardHeader title="Đăng ký mới" subtitle="12 tháng gần nhất" />
-          <Sparkline data={ADMIN_SIGNUPS} width={280} height={90} tone="violet" className="w-full" />
-          <div className="mt-4 pt-4 border-t-2 border-dashed border-slate-900/20 space-y-3">
-            <p className="text-[11px] font-extrabold uppercase tracking-wider text-slate-700">Thiết bị</p>
-            {devices.map((d) => (
-              <div key={d.label}>
-                <div className="flex items-center justify-between text-xs mb-1">
-                  <span className="flex items-center gap-1.5 font-bold text-slate-800">
-                    {d.icon} {d.label}
-                  </span>
-                  <span className="font-mono font-bold">{d.value}%</span>
-                </div>
-                <ProgressBar value={d.value} size="sm" tone={d.tone} />
-              </div>
-            ))}
+        <Card hard className="animate-fade-up" style={{ animationDelay: '80ms' }}>
+          <CardHeader title="Thiết bị truy cập" subtitle="% phiên theo loại thiết bị" />
+          <HBarChart ariaLabel="Tỷ lệ thiết bị truy cập" data={devices.map((d) => ({ label: d.label, value: d.value }))} max={100} unit="%" labelWidth={80} />
+          <div className="mt-6 border-t border-slate-200 pt-4">
+            <CardHeader title="Lượt làm đề theo kỳ thi" subtitle="% số lượt làm đề" />
+            <HBarChart ariaLabel="Tỷ lệ lượt làm đề theo kỳ thi" data={[{ label: 'TOEIC', value: 68 }, { label: 'VSTEP', value: 32 }]} max={100} unit="%" labelWidth={80} />
           </div>
         </Card>
       </div>
 
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
-        <Card hard className="xl:col-span-2 animate-fade-up" style={{ animationDelay: '120ms' }}>
-          <CardHeader title="Trang được xem nhiều nhất" subtitle="Theo lượt xem trong kỳ" />
-          <DataTable<PageRow> columns={columns} rows={TOP_PAGES} dense />
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+        <Card hard className="animate-fade-up" style={{ animationDelay: '120ms' }}>
+          <CardHeader title="Đăng ký mới theo tháng" subtitle="12 tháng gần nhất" />
+          <BarChart ariaLabel="Số tài khoản đăng ký mới theo tháng" data={ADMIN_SIGNUPS.map((v, i) => ({ label: `T${((i + 11) % 12) + 1}`, value: v }))} height={240} unit=" tài khoản" />
         </Card>
-        <Card hard tone="ink" className="animate-fade-up" style={{ animationDelay: '160ms' }}>
-          <p className="font-display font-bold">Tỷ lệ kỳ thi</p>
-          <p className="text-xs text-slate-400">Theo số lượt làm đề</p>
-          <div className="flex items-center justify-around py-5">
-            <div className="text-center">
-              <RingProgress value={68} size={110} tone="amber" trackClass="stroke-white/10">
-                <p className="font-display text-xl font-extrabold">68%</p>
-              </RingProgress>
-              <p className="text-xs font-bold text-amber-300 mt-2">TOEIC</p>
-            </div>
-            <div className="text-center">
-              <RingProgress value={32} size={110} tone="emerald" trackClass="stroke-white/10">
-                <p className="font-display text-xl font-extrabold">32%</p>
-              </RingProgress>
-              <p className="text-xs font-bold text-emerald-300 mt-2">VSTEP</p>
-            </div>
-          </div>
-          <p className="text-[11px] text-slate-400 font-mono">Cập nhật {new Date().toLocaleTimeString('vi-VN')}</p>
+        <Card hard className="animate-fade-up" style={{ animationDelay: '160ms' }}>
+          <CardHeader title="Trang được xem nhiều nhất" subtitle="Lượt xem trong kỳ" />
+          <HBarChart ariaLabel="Trang được xem nhiều nhất" data={TOP_PAGES.map((p) => ({ label: p.path, value: Math.round(p.views * mult) }))} format={(v) => formatNumber(v)} labelWidth={130} />
+          <DataTable<PageRow> columns={columns} rows={TOP_PAGES} dense className="mt-5" />
         </Card>
       </div>
     </div>

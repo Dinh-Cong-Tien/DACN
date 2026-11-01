@@ -1,10 +1,10 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
-import { Search, FileText, PlayCircle, BookOpen, Compass, AlertTriangle, Trophy, Settings, LayoutDashboard, CornerDownLeft, ArrowUp, ArrowDown, Users, ClipboardList, PenTool, Sparkles } from 'lucide-react';
+import { Search, FileText, PlayCircle, BookOpen, Compass, AlertTriangle, Trophy, Settings, LayoutDashboard, CornerDownLeft, ArrowUp, ArrowDown, Users, ClipboardList, PenTool, Sparkles, CalendarDays, ClipboardCheck, Sheet, BarChart3, FolderOpen } from 'lucide-react';
 import { useUiStore } from '@/shared/stores/uiStore';
 import { useAuthStore } from '@/shared/stores/authStore';
-import { MOCK_COURSES, MOCK_TESTS, GRAMMAR_TOPICS, courseHref } from '@/shared/mocks';
+import { MOCK_ASSIGNMENTS, MOCK_CLASSES, MOCK_CLASS_STUDENTS, MOCK_COURSES, MOCK_TESTS, GRAMMAR_TOPICS, courseHref } from '@/shared/mocks';
 import { cn } from '@/shared/utils';
 
 interface Cmd {
@@ -28,21 +28,43 @@ const STUDENT: Cmd[] = [
   { id: 'settings', label: 'Cài đặt', group: 'Điều hướng', to: '/app/settings', icon: Settings },
 ];
 const TEACHER: Cmd[] = [
-  { id: 'tdash', label: 'Tổng quan giáo viên', group: 'Điều hướng', to: '/teacher/dashboard', icon: LayoutDashboard },
-  { id: 'classes', label: 'Lớp học của tôi', group: 'Điều hướng', to: '/teacher/classes', icon: Users },
-  { id: 'assign', label: 'Bài tập & Đề thi', group: 'Điều hướng', to: '/teacher/assignments', icon: ClipboardList },
-  { id: 'grading', label: 'Bàn chấm bài', group: 'Điều hướng', to: '/teacher/grading', icon: PenTool },
+  { id: 'tdash', label: 'Tổng quan', group: 'Trang', to: '/teacher/dashboard', icon: LayoutDashboard },
+  { id: 'classes', label: 'Lớp học của tôi', group: 'Trang', to: '/teacher/classes', icon: Users },
+  { id: 'schedule', label: 'Lịch dạy', group: 'Trang', to: '/teacher/schedule', icon: CalendarDays, keywords: 'giao an buoi hoc' },
+  { id: 'attendance', label: 'Điểm danh', group: 'Trang', to: '/teacher/attendance', icon: ClipboardCheck, keywords: 'so diem danh vang' },
+  { id: 'assign', label: 'Bài tập', group: 'Trang', to: '/teacher/assignments', icon: ClipboardList },
+  { id: 'assign-new', label: 'Giao bài mới', group: 'Trang', to: '/teacher/assignments?new=1', icon: ClipboardList },
+  { id: 'grading', label: 'Bàn chấm bài', group: 'Trang', to: '/teacher/grading', icon: PenTool },
+  { id: 'students', label: 'Hồ sơ học viên', group: 'Trang', to: '/teacher/students', icon: Users },
+  { id: 'gradebook', label: 'Bảng điểm', group: 'Trang', to: '/teacher/gradebook', icon: Sheet, keywords: 'diem qua trinh xuat excel' },
+  { id: 'analytics', label: 'Thống kê lớp học', group: 'Trang', to: '/teacher/analytics', icon: BarChart3 },
+  { id: 'lib-courses', label: 'Khoá học & bài giảng', group: 'Trang', to: '/teacher/library/courses', icon: PlayCircle },
+  { id: 'lib-tests', label: 'Ngân hàng đề', group: 'Trang', to: '/teacher/library/tests', icon: FileText },
+  { id: 'lib-practice', label: 'Ngữ pháp & Từ vựng', group: 'Trang', to: '/teacher/library/practice', icon: BookOpen },
+  { id: 'materials', label: 'Tài liệu lớp', group: 'Trang', to: '/teacher/materials', icon: FolderOpen },
 ];
 const HEAD: Cmd[] = [
-  { id: 'hdash', label: 'Tổng quan bộ môn', group: 'Điều hướng', to: '/head/dashboard', icon: LayoutDashboard },
-  { id: 'approvals', label: 'Phê duyệt học liệu', group: 'Điều hướng', to: '/head/approvals', icon: ClipboardList },
-  { id: 'teachers', label: 'Giáo viên', group: 'Điều hướng', to: '/head/teachers', icon: Users },
+  { id: 'hdash', label: 'Tổng quan bộ môn', group: 'Trang', to: '/head/dashboard', icon: LayoutDashboard },
+  { id: 'subjects', label: 'Môn học', group: 'Trang', to: '/head/subjects', icon: BookOpen },
+  { id: 'teachers', label: 'Giáo viên', group: 'Trang', to: '/head/teachers', icon: Users },
+  { id: 'hclasses', label: 'Lớp học', group: 'Trang', to: '/head/classes', icon: Users },
+  { id: 'qbank', label: 'Ngân hàng câu hỏi', group: 'Trang', to: '/head/question-bank', icon: FileText },
+  { id: 'approvals', label: 'Phê duyệt học liệu', group: 'Trang', to: '/head/approvals', icon: ClipboardList },
+  { id: 'reports', label: 'Báo cáo', group: 'Trang', to: '/head/reports', icon: BarChart3 },
+  { id: 'complaints', label: 'Khiếu nại', group: 'Trang', to: '/head/complaints', icon: AlertTriangle },
 ];
 const ADMIN: Cmd[] = [
-  { id: 'adash', label: 'Tổng quan hệ thống', group: 'Điều hướng', to: '/admin/dashboard', icon: LayoutDashboard },
-  { id: 'users', label: 'Người dùng & Phân quyền', group: 'Điều hướng', to: '/admin/users', icon: Users },
-  { id: 'system', label: 'Trạng thái dịch vụ', group: 'Điều hướng', to: '/admin/system', icon: Sparkles },
-  { id: 'asettings', label: 'Cấu hình tham số', group: 'Điều hướng', to: '/admin/settings', icon: Settings },
+  { id: 'adash', label: 'Tổng quan hệ thống', group: 'Trang', to: '/admin/dashboard', icon: LayoutDashboard },
+  { id: 'users', label: 'Người dùng & Phân quyền', group: 'Trang', to: '/admin/users', icon: Users },
+  { id: 'acourses', label: 'Khoá học', group: 'Trang', to: '/admin/courses', icon: PlayCircle },
+  { id: 'atests', label: 'Đề thi', group: 'Trang', to: '/admin/tests', icon: FileText },
+  { id: 'aquestions', label: 'Câu hỏi', group: 'Trang', to: '/admin/questions', icon: ClipboardList },
+  { id: 'tags', label: 'Nhãn kỹ năng', group: 'Trang', to: '/admin/skill-tags', icon: BookOpen },
+  { id: 'ablog', label: 'Bài viết', group: 'Trang', to: '/admin/blog', icon: FileText },
+  { id: 'aanalytics', label: 'Thống kê', group: 'Trang', to: '/admin/analytics', icon: BarChart3 },
+  { id: 'system', label: 'Trạng thái dịch vụ', group: 'Trang', to: '/admin/system', icon: Sparkles },
+  { id: 'audit', label: 'Nhật ký hệ thống', group: 'Trang', to: '/admin/audit-logs', icon: ClipboardList },
+  { id: 'asettings', label: 'Cấu hình tham số', group: 'Trang', to: '/admin/settings', icon: Settings },
 ];
 const GUEST: Cmd[] = [
   { id: 'home', label: 'Trang chủ', group: 'Điều hướng', to: '/', icon: LayoutDashboard },
@@ -92,19 +114,31 @@ export const CommandPalette: React.FC = () => {
     }
   }, [open]);
 
+  const role = user?.role ?? 'GUEST';
+  const staff = role === 'TEACHER' || role === 'HEAD_TEACHER' || role === 'ADMIN';
   const all = useMemo<Cmd[]>(() => {
-    const role = user?.role ?? 'GUEST';
-    const nav = role === 'ADMIN' ? [...ADMIN, ...HEAD, ...TEACHER, ...STUDENT] : role === 'HEAD_TEACHER' ? [...HEAD, ...TEACHER, ...STUDENT] : role === 'TEACHER' ? [...TEACHER, ...STUDENT] : role === 'STUDENT' ? STUDENT : GUEST;
+    // Mỗi vai trò chỉ tìm trong phần việc của mình
+    if (role === 'TEACHER') {
+      const classes: Cmd[] = MOCK_CLASSES.map((c) => ({ id: `cl-${c.id}`, label: c.name, hint: `${c.examType} · ${c.schedule} · ${c.studentsCount} học viên`, group: 'Lớp học', to: `/teacher/classes/${c.id}`, icon: Users, keywords: c.code }));
+      const students: Cmd[] = MOCK_CLASS_STUDENTS.map((s) => ({ id: `st-${s.id}`, label: s.name, hint: `${s.email} · điểm ${s.avgScore}`, group: 'Học viên', to: `/teacher/students?id=${s.id}`, icon: Users }));
+      const assignments: Cmd[] = MOCK_ASSIGNMENTS.map((a) => ({ id: `as-${a.id}`, label: a.title, hint: `${a.className} · đã nộp ${a.submitted}/${a.total}`, group: 'Bài tập', to: `/teacher/assignments${a.status === 'DRAFT' ? '?status=DRAFT' : ''}`, icon: ClipboardList }));
+      const tests: Cmd[] = MOCK_TESTS.map((t) => ({ id: `t-${t.id}`, label: t.title, hint: `${t.examType} · ${t.totalQuestions} câu · ${t.durationMinutes} phút`, group: 'Ngân hàng đề', to: `/teacher/library/tests?tab=${t.examType}`, icon: FileText }));
+      const courses: Cmd[] = MOCK_COURSES.map((c) => ({ id: `c-${c.id}`, label: c.title, hint: `${c.lessonsCount} bài giảng`, group: 'Khoá học', to: `/teacher/library/courses?open=${c.id}`, icon: PlayCircle }));
+      return [...TEACHER, ...classes, ...students, ...assignments, ...tests, ...courses];
+    }
+    if (role === 'HEAD_TEACHER') return HEAD;
+    if (role === 'ADMIN') return ADMIN;
+    const nav = role === 'STUDENT' ? STUDENT : GUEST;
     const isAuth = role !== 'GUEST';
     const tests: Cmd[] = MOCK_TESTS.map((t) => ({ id: `t-${t.id}`, label: t.title, hint: `${t.examType} · ${t.durationMinutes} phút · ${t.totalQuestions} câu`, group: 'Đề thi thử', to: isAuth ? `/app/mock-tests/${t.id}` : '/mock-tests', icon: FileText, keywords: t.tags?.join(' ') }));
     const courses: Cmd[] = MOCK_COURSES.map((c) => ({ id: `c-${c.id}`, label: c.title, hint: `${c.lessonsCount} bài · ${c.durationHours} giờ`, group: 'Khoá học', to: courseHref(c), icon: PlayCircle }));
     const grammar: Cmd[] = isAuth ? GRAMMAR_TOPICS.map((g) => ({ id: `g-${g.id}`, label: g.title, hint: `${g.category} · ${g.level}`, group: 'Ngữ pháp', to: `/app/grammar/${g.slug}`, icon: BookOpen })) : [];
     return [...nav, ...tests, ...courses, ...grammar];
-  }, [user]);
+  }, [role]);
 
   const results = useMemo(() => {
     const n = normalize(q.trim());
-    if (!n) return all.slice(0, 12);
+    if (!n) return staff ? all.filter((c) => c.group === 'Trang').slice(0, 10) : all.slice(0, 12);
     return all.filter((c) => normalize(`${c.label} ${c.hint ?? ''} ${c.keywords ?? ''}`).includes(n)).slice(0, 14);
   }, [all, q]);
 
@@ -130,6 +164,8 @@ export const CommandPalette: React.FC = () => {
   if (!open) return null;
 
   const groups = Array.from(new Set(results.map((r) => r.group)));
+
+  if (staff) return createPortal(<StaffPalette q={q} setQ={setQ} inputRef={inputRef} onKeyDown={onKeyDown} results={results} groups={groups} idx={idx} setIdx={setIdx} go={go} close={() => setOpen(false)} placeholder={role === 'TEACHER' ? 'Tìm lớp, học viên, bài tập, đề thi, khoá học…' : 'Tìm trang…'} />, document.body);
 
   return createPortal(
     <div className="fixed inset-0 z-[150] flex items-start justify-center p-4 pt-[12vh] animate-fade-in" role="dialog" aria-modal>
@@ -193,3 +229,70 @@ export const CommandPalette: React.FC = () => {
     document.body
   );
 };
+
+/** Bảng tìm kiếm của giáo viên / quản lý: nền sáng, viền mảnh, dòng đang chọn tô nhạt */
+const StaffPalette: React.FC<{
+  q: string;
+  setQ: (v: string) => void;
+  inputRef: React.RefObject<HTMLInputElement>;
+  onKeyDown: (e: React.KeyboardEvent) => void;
+  results: Cmd[];
+  groups: string[];
+  idx: number;
+  setIdx: (i: number) => void;
+  go: (c: Cmd) => void;
+  close: () => void;
+  placeholder: string;
+}> = ({ q, setQ, inputRef, onKeyDown, results, groups, idx, setIdx, go, close, placeholder }) => (
+  <div className="fixed inset-0 z-[150] flex items-start justify-center p-4 pt-[10vh] animate-fade-in" role="dialog" aria-modal aria-label="Tìm kiếm">
+    <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-[2px]" onClick={close} />
+    <div className="relative w-full max-w-2xl overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_30px_80px_-20px_rgba(16,24,40,0.45)] animate-scale-in">
+      <div className="flex h-14 items-center gap-3 border-b border-slate-100 px-5">
+        <Search className="h-5 w-5 text-indigo-500" />
+        <input ref={inputRef} value={q} onChange={(e) => setQ(e.target.value)} onKeyDown={onKeyDown} placeholder={placeholder} className="h-full flex-1 bg-transparent text-[15px] text-slate-900 outline-none placeholder:text-slate-400" />
+        <button type="button" onClick={close} className="rounded-md border border-slate-200 px-1.5 py-0.5 text-[11px] font-semibold text-slate-500 hover:text-slate-900">
+          Esc
+        </button>
+      </div>
+      <div className="max-h-[60vh] overflow-y-auto px-2 py-2">
+        {results.length === 0 && <p className="px-4 py-10 text-center text-sm text-slate-500">Không tìm thấy kết quả cho “{q}”.</p>}
+        {!q.trim() && results.length > 0 && <p className="px-3 pb-1 pt-1 text-[12px] text-slate-400">Gõ tên lớp, học viên, bài tập hoặc đề thi để tìm nhanh</p>}
+        {groups.map((g) => (
+          <div key={g} className="mb-1">
+            <p className="px-3 pb-1 pt-2.5 text-[12px] font-semibold text-slate-500">{g}</p>
+            {results
+              .filter((r) => r.group === g)
+              .map((r) => {
+                const i = results.indexOf(r);
+                const Icon = r.icon;
+                const on = i === idx;
+                return (
+                  <button key={r.id} type="button" onMouseEnter={() => setIdx(i)} onClick={() => go(r)} className={cn('flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left transition-colors', on ? 'bg-indigo-500/[0.08]' : 'hover:bg-slate-50')}>
+                    <span className={cn('flex h-8 w-8 shrink-0 items-center justify-center rounded-lg', on ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-500')}>
+                      <Icon className="h-4 w-4" />
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className={cn('block truncate text-sm font-semibold', on ? 'text-indigo-700' : 'text-slate-900')}>{r.label}</span>
+                      {r.hint && <span className="block truncate text-[12px] text-slate-500">{r.hint}</span>}
+                    </span>
+                    {on && <CornerDownLeft className="h-4 w-4 text-indigo-400" />}
+                  </button>
+                );
+              })}
+          </div>
+        ))}
+      </div>
+      <div className="flex h-10 items-center gap-4 border-t border-slate-100 bg-slate-50/70 px-5 text-[12px] text-slate-500">
+        <span className="flex items-center gap-1">
+          <ArrowUp className="h-3 w-3" />
+          <ArrowDown className="h-3 w-3" /> chọn
+        </span>
+        <span className="flex items-center gap-1">
+          <CornerDownLeft className="h-3 w-3" /> mở
+        </span>
+        <span className="flex items-center gap-1">Ctrl K mở nhanh</span>
+        <span className="ml-auto tabular-nums">{results.length} kết quả</span>
+      </div>
+    </div>
+  </div>
+);

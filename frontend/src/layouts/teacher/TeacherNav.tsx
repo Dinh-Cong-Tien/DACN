@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, NavLink, useLocation } from 'react-router-dom';
-import { BarChart3, BookOpen, Briefcase, Calculator, CalendarDays, ChevronDown, ClipboardCheck, ClipboardList, Database, FileEdit, FileText, FolderOpen, GraduationCap, Languages, PenTool, Plus, Presentation, Sheet, UserRoundX, Users, type LucideIcon } from 'lucide-react';
+import { BarChart3, Briefcase, Calculator, CalendarDays, ChevronDown, ClipboardCheck, ClipboardList, Database, FileEdit, FileText, FolderOpen, GraduationCap, Languages, Plus, Presentation, Sheet, UserRoundX, Users, type LucideIcon } from 'lucide-react';
 import { MOCK_ASSIGNMENTS, MOCK_CLASSES, MOCK_SUBMISSIONS } from '@/shared/mocks';
 import { cn } from '@/shared/utils';
 
@@ -69,11 +69,9 @@ export const TEACHER_MENUS: TeacherMenu[] = [
     label: 'Học liệu',
     to: '/teacher/library',
     children: [
-      { to: '/teacher/library/courses', label: 'Khoá học', icon: Presentation, desc: 'Bài giảng video để giao theo lộ trình' },
-      { to: '/teacher/library/tests', label: 'Ngân hàng đề thi', icon: FileText, desc: 'Đề thi thử TOEIC, VSTEP để giao và kiểm tra' },
-      { to: '/teacher/library/grammar', label: 'Ngữ pháp', icon: Languages, desc: 'Chủ điểm kèm bài tập chấm tự động' },
-      { to: '/teacher/library/vocabulary', label: 'Từ vựng', icon: BookOpen, desc: 'Bộ flashcard theo chủ đề' },
-      { to: '/teacher/library/writing-speaking', label: 'Đề Viết & Nói', icon: PenTool, desc: 'Đề tự luận, bài nộp về bàn chấm' },
+      { to: '/teacher/library/courses', label: 'Khoá học & bài giảng', icon: Presentation, desc: '8 khoá, giao từng bài giảng theo lộ trình' },
+      { to: '/teacher/library/tests', label: 'Ngân hàng đề', icon: FileText, desc: 'Thi thử TOEIC, VSTEP · đề Viết, đề Nói' },
+      { to: '/teacher/library/practice', label: 'Ngữ pháp & Từ vựng', icon: Languages, desc: 'Chủ điểm ngữ pháp, bộ flashcard' },
       { to: '/teacher/materials', label: 'Tài liệu lớp', icon: FolderOpen, desc: 'Slide, audio, bài mẫu của riêng lớp' },
       { to: '/score-converter', label: 'Quy đổi điểm', icon: Calculator, desc: 'TOEIC ↔ VSTEP ↔ CEFR', group: 'Tra cứu' },
       { to: '/question-bank', label: 'Ngân hàng câu hỏi', icon: Database, desc: 'Câu hỏi theo từng Part, có giải thích', group: 'Tra cứu' },
@@ -108,22 +106,21 @@ export const TeacherNav: React.FC = () => {
             </NavLink>
           );
         const active = (m.to && pathname.startsWith(m.to.split('?')[0])) || m.children.some((c) => isHere(c.to, pathname, search));
-        const wide = m.children.length > 6;
         return (
           <div key={m.label} className="group/menu relative">
             <button type="button" className={topCls(Boolean(active))} aria-haspopup="true">
               {m.label}
               <ChevronDown className="h-3.5 w-3.5 text-slate-400 transition-transform group-hover/menu:rotate-180" />
             </button>
-            <div className={cn('pointer-events-none absolute top-full z-50 pt-2 opacity-0 transition-opacity duration-150 group-focus-within/menu:pointer-events-auto group-focus-within/menu:opacity-100 group-hover/menu:pointer-events-auto group-hover/menu:opacity-100', mi >= TEACHER_MENUS.length - 2 ? 'right-0' : wide ? 'left-1/2 -translate-x-1/2' : 'left-0')}>
-              <div className={cn('rounded-lg border border-slate-200 bg-white p-1.5 shadow-[0_12px_32px_-12px_rgba(16,24,40,0.25)]', wide ? 'grid w-[620px] grid-cols-2 gap-x-1' : 'w-[330px]')}>
+            <div className={cn('pointer-events-none absolute top-full z-50 pt-2 opacity-0 transition-opacity duration-150 group-focus-within/menu:pointer-events-auto group-focus-within/menu:opacity-100 group-hover/menu:pointer-events-auto group-hover/menu:opacity-100', mi === TEACHER_MENUS.length - 1 ? 'right-0' : 'left-0')}>
+              <div className={cn('rounded-lg border border-slate-200 bg-white p-1.5 shadow-[0_12px_32px_-12px_rgba(16,24,40,0.25)]', 'w-[320px]')}>
                 {m.children.map((c, i) => {
                   const here = isHere(c.to, pathname, search);
                   const Icon = c.icon;
                   const head = c.group && c.group !== m.children![i - 1]?.group;
                   return (
                     <React.Fragment key={c.to + c.label}>
-                      {head && <p className={cn('px-2.5 pb-1 pt-2 text-[12px] font-medium text-slate-400', wide ? 'col-span-2 mt-1 border-t border-slate-100' : i > 0 && 'mt-1 border-t border-slate-100')}>{c.group}</p>}
+                      {head && <p className={cn('px-2.5 pb-1 pt-2 text-[12px] font-medium text-slate-400', i > 0 && 'mt-1 border-t border-slate-100')}>{c.group}</p>}
                       <Link to={c.to} className={cn('flex items-start gap-3 rounded-md px-2.5 py-2 transition-colors', here ? 'bg-slate-100' : 'hover:bg-slate-50')}>
                         <Icon className={cn('mt-0.5 h-4 w-4 shrink-0', here ? 'text-indigo-700' : 'text-slate-400')} />
                         <span className="min-w-0 flex-1">

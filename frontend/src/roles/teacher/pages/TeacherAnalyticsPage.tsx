@@ -1,10 +1,12 @@
 import React from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useDocumentTitle } from '@/shared/hooks';
-import { CLASS_MISTAKE_CAUSES, CLASS_PART_ACCURACY, CLASS_SCORE_DIST, MISTAKE_CAUSE_LABEL, MOCK_ASSIGNMENTS, MOCK_CLASSES, MOCK_CLASS_STUDENTS, MOCK_TESTS, TOEIC_PARTS_INFO, VSTEP_PARTS_INFO } from '@/shared/mocks';
+import { CLASS_SCORE_TREND, CLASS_WEEKLY_PROGRESS, CLASS_MISTAKE_CAUSES, CLASS_PART_ACCURACY, CLASS_SCORE_DIST, MISTAKE_CAUSE_LABEL, MOCK_ASSIGNMENTS, MOCK_CLASSES, MOCK_CLASS_STUDENTS, MOCK_TESTS, TOEIC_PARTS_INFO, VSTEP_PARTS_INFO } from '@/shared/mocks';
 import type { AssignmentTarget } from '@/shared/types';
 import { cn, timeAgo } from '@/shared/utils';
 import { Avatar } from '@/shared/components/ui';
+import { BarChart, HBarChart, LineChart } from '@/shared/components/charts/Charts';
+import { BarChart3, CalendarCheck, Target, TrendingUp } from 'lucide-react';
 import { Figures, Meter, Panel, Status, TBtn, TPageHead, inputCls, tbl } from '../components/TeacherKit';
 
 const PART_INFO = [...TOEIC_PARTS_INFO, ...VSTEP_PARTS_INFO];
@@ -19,7 +21,7 @@ export const TeacherAnalyticsPage: React.FC = () => {
   const cls = MOCK_CLASSES.find((c) => c.id === classId) ?? MOCK_CLASSES[0];
   const accuracy = CLASS_PART_ACCURACY[cls.examType];
   const dist = CLASS_SCORE_DIST[cls.examType];
-  const distMax = Math.max(...dist.map((d) => d.value));
+  const trend = CLASS_SCORE_TREND[cls.examType];
   const causeTotal = CLASS_MISTAKE_CAUSES.reduce((a, c) => a + c.count, 0);
   const weakest = [...accuracy].sort((a, b) => a.value - b.value)[0];
   const assignments = MOCK_ASSIGNMENTS.filter((a) => a.classId === cls.id && a.status !== 'DRAFT');
@@ -60,36 +62,45 @@ export const TeacherAnalyticsPage: React.FC = () => {
       />
 
       <div className="grid items-start gap-6 lg:grid-cols-2">
-        <Panel title="Tỷ lệ đúng theo phần thi" sub="Trung bình cả lớp, bài thi thử gần nhất">
-          <ul className="space-y-1">
-            {accuracy.map((a) => {
+        <Panel title="Tỷ lệ đúng theo phần thi" sub="Trung bình cả lớp, bài thi thử gần nhất · phần dưới 70% nên giao luyện thêm" icon={Target} tone="indigo">
+          <HBarChart
+            ariaLabel="Tỷ lệ đúng theo phần thi"
+            max={100}
+            unit="%"
+            labelWidth={170}
+            data={accuracy.map((a) => {
               const info = PART_INFO.find((p) => p.id === a.partId);
-              return (
-                <li key={a.partId} className="grid grid-cols-[minmax(0,210px)_1fr_44px_auto] items-center gap-3 py-1 text-sm">
-                  <span className="truncate text-slate-700">
-                    {info?.name} <span className="text-slate-400">· {info?.nameVi}</span>
-                  </span>
-                  <Meter value={a.value} tone={a.value < 60 ? 'red' : a.value < 70 ? 'amber' : 'indigo'} className="h-2" />
-                  <span className="text-right tabular-nums text-slate-800">{a.value}%</span>
-                  <TBtn size="sm" variant="ghost" onClick={() => assignPart(a.partId)} className={a.value >= 70 ? 'invisible' : undefined}>
-                    Giao luyện
-                  </TBtn>
-                </li>
-              );
+              return { label: `${info?.name} · ${info?.nameVi}`, value: a.value };
             })}
-          </ul>
+            action={(d, i) => (
+              <TBtn size="sm" variant="ghost" onClick={() => assignPart(accuracy[i].partId)} className={d.value >= 70 ? 'invisible' : undefined}>
+                Giao luyện
+              </TBtn>
+            )}
+          />
         </Panel>
 
-        <Panel title="Phân bố điểm" sub={`Số học viên theo khoảng điểm · ${dist.reduce((a, d) => a + d.value, 0)} bài`}>
-          <ul className="space-y-1">
-            {dist.map((d) => (
-              <li key={d.label} className="grid grid-cols-[minmax(0,150px)_1fr_32px] items-center gap-3 py-1 text-sm">
-                <span className="text-slate-700">{d.label}</span>
-                <Meter value={(d.value / distMax) * 100} className="h-2" />
-                <span className="text-right tabular-nums text-slate-800">{d.value}</span>
-              </li>
-            ))}
-          </ul>
+        <Panel title="Phân bố điểm" sub={`Số học viên theo khoảng điểm · ${dist.reduce((a, d) => a + d.value, 0)} bài thi thử gần nhất`} icon={BarChart3} tone="violet">
+          <BarChart ariaLabel="Phân bố điểm thi thử" data={dist.map((d) => ({ label: d.label.replace(/ \(.*\)/, ''), value: d.value }))} unit=" học viên" height={240} />
+        </Panel>
+      </div>
+
+      <div className="grid items-start gap-6 lg:grid-cols-2">
+        <Panel title="Điểm thi thử trung bình theo tháng" sub={cls.examType === 'TOEIC' ? 'Thang 990' : 'Thang 10'} icon={TrendingUp} tone="emerald">
+          <LineChart ariaLabel="Điểm thi thử trung bình theo tháng" labels={trend.labels} series={[{ name: 'Điểm TB', values: trend.values }]} min={trend.min} format={(v) => v.toLocaleString('vi-VN')} />
+        </Panel>
+        <Panel title="Nộp bài đúng hạn theo tuần" sub="% học viên nộp bài đúng hạn, so với trung bình bộ môn" icon={CalendarCheck} tone="sky">
+          <LineChart
+            ariaLabel="Tỷ lệ nộp bài đúng hạn theo tuần"
+            labels={CLASS_WEEKLY_PROGRESS.map((_, i) => `Tuần ${i + 1}`)}
+            series={[
+              { name: cls.name, values: CLASS_WEEKLY_PROGRESS.map((w) => w.value) },
+              { name: 'Trung bình bộ môn', values: CLASS_WEEKLY_PROGRESS.map((w, i) => Math.round(w.value * 0.9 + 4 - (i % 2))) },
+            ]}
+            min={40}
+            max={100}
+            unit="%"
+          />
         </Panel>
       </div>
 

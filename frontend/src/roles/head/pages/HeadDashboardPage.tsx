@@ -6,7 +6,8 @@ import { useAuthStore } from '@/shared/stores/authStore';
 import { MOCK_SUBJECTS, MOCK_TEACHERS, MOCK_APPROVALS, MOCK_COMPLAINTS, MOCK_CLASS_REPORTS } from '@/shared/mocks';
 import type { ApprovalRequest, ClassReport } from '@/shared/types';
 import { cn, timeAgo, formatNumber } from '@/shared/utils';
-import { Avatar, AvatarGroup, Badge, Button, Card, MiniBars } from '@/shared/components/ui';
+import { Avatar, AvatarGroup, Badge, Button, Card } from '@/shared/components/ui';
+import { BarChart } from '@/shared/components/charts/Charts';
 import { CountUp, Reveal, Stagger } from '@/shared/components/motion';
 import { Img, PHOTOS, pravatar } from '@/shared/components/media/Img';
 
@@ -156,7 +157,7 @@ export const HeadDashboardPage: React.FC = () => {
                 <p className="text-sm text-slate-500">TOEIC quy đổi</p>
               </div>
             </div>
-            <MiniBars data={toeicReports.map((r) => ({ label: r.className.replace('TOEIC ', '').replace('Ngữ pháp nền tảng ', 'NP '), value: r.avgScore, tone: r.grade === 'A' ? 'indigo' : r.grade === 'B' ? 'sky' : r.grade === 'C' ? 'amber' : 'rose' }))} height={130} />
+            <BarChart ariaLabel="Điểm trung bình các lớp TOEIC" data={toeicReports.map((r) => ({ label: r.className.replace('TOEIC ', '').replace('Ngữ pháp nền tảng ', 'NP ').slice(0, 10), value: r.avgScore }))} height={180} unit=" điểm" />
             <p className="text-sm text-slate-600 mt-4">
               Cao nhất <b className="text-slate-900">{Math.max(...toeicReports.map((r) => r.avgScore))}</b> · thấp nhất {Math.min(...toeicReports.map((r) => r.avgScore))}
             </p>

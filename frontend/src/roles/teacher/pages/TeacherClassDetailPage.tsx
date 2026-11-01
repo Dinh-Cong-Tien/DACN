@@ -6,6 +6,7 @@ import { toast } from '@/shared/stores/uiStore';
 import { MOCK_CLASSES, MOCK_CLASS_STUDENTS, MOCK_ASSIGNMENTS, MOCK_MATERIALS, MOCK_TESTS, MOCK_SESSIONS, MOCK_ANNOUNCEMENTS, CLASS_WEEKLY_PROGRESS, ASSIGNMENT_TYPE_LABEL, describeTarget } from '@/shared/mocks';
 import type { ClassAnnouncement, ClassStudent, Material } from '@/shared/types';
 import { Img, PHOTOS } from '@/shared/components/media/Img';
+import { LineChart } from '@/shared/components/charts/Charts';
 import { presentRate } from './TeacherSchedulePage';
 import { cn, formatDate, formatDateTime, timeAgo } from '@/shared/utils';
 import { Avatar, Input, Modal, Select, Textarea } from '@/shared/components/ui';
@@ -373,15 +374,7 @@ export const TeacherClassDetailPage: React.FC = () => {
 
       {tab === 'progress' && (
         <Panel title="Tỷ lệ học viên nộp bài đúng hạn theo tuần" sub={`Từ tuần 1 đến tuần ${CLASS_WEEKLY_PROGRESS.length} của khoá`}>
-          <ul className="space-y-2.5">
-            {CLASS_WEEKLY_PROGRESS.map((w, i) => (
-              <li key={w.label} className="grid grid-cols-[64px_1fr_48px] items-center gap-3 text-sm">
-                <span className="text-slate-600">Tuần {i + 1}</span>
-                <Meter value={w.value} className="h-2" />
-                <span className="text-right tabular-nums text-slate-800">{w.value}%</span>
-              </li>
-            ))}
-          </ul>
+          <LineChart ariaLabel="Tỷ lệ nộp bài đúng hạn theo tuần" labels={CLASS_WEEKLY_PROGRESS.map((_, i) => `Tuần ${i + 1}`)} series={[{ name: 'Nộp đúng hạn', values: CLASS_WEEKLY_PROGRESS.map((w) => w.value) }]} min={40} max={100} unit="%" height={260} />
         </Panel>
       )}
 

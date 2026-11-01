@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Bell, CheckCheck, RotateCcw, ClipboardList, Award, Settings2, Users, Trash2 } from 'lucide-react';
-import { MOCK_NOTIFICATIONS } from '@/shared/mocks';
+import { useAuthStore } from '@/shared/stores/authStore';
+import { notificationsFor } from '@/shared/components/layout/NotificationBell';
 import type { AppNotification } from '@/shared/types';
 import { cn, timeAgo } from '@/shared/utils';
 import { Badge, Button, Card, EmptyState, PageHeader, Tabs } from '@/shared/components/ui';
@@ -18,7 +19,8 @@ const META: Record<AppNotification['type'], { icon: React.ElementType; cls: stri
 
 export const NotificationsPage: React.FC = () => {
   useDocumentTitle('Thông báo');
-  const [items, setItems] = useState(MOCK_NOTIFICATIONS);
+  const role = useAuthStore((st) => st.user?.role);
+  const [items, setItems] = useState(() => notificationsFor(role));
   const [tab, setTab] = useState('all');
   const list = items.filter((n) => (tab === 'all' ? true : tab === 'unread' ? !n.isRead : n.type === tab));
   const unread = items.filter((n) => !n.isRead).length;

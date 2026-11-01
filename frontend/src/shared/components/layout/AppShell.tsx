@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { Bell, ChevronDown, LogOut, Menu, Search, Settings, User, X, Flame, Sparkles } from 'lucide-react';
+import { ChevronDown, LogOut, Menu, Search, Settings, User, X, Flame, Sparkles } from 'lucide-react';
 import { cn, ROLE_LABEL } from '@/shared/utils';
 import { useScrolled } from '@/shared/hooks';
 import { useAuthStore } from '@/shared/stores/authStore';
@@ -8,10 +8,10 @@ import { useUiStore, toast } from '@/shared/stores/uiStore';
 import { Avatar, Badge, Dropdown, Logo, CommandPalette } from '@/shared/components/ui';
 import { PageTransition } from '@/shared/components/motion';
 import { ThemeToggle } from './ThemeToggle';
+import { NotificationBell } from './NotificationBell';
 import { PageBackdrop } from './PageBackdrop';
 import { RouteProgress, BackToTop } from '@/shared/components/layout/ScrollExtras';
 import { ChatWidget } from '@/shared/components/support';
-import { MOCK_NOTIFICATIONS } from '@/shared/mocks';
 
 export interface NavItem {
   to: string;
@@ -57,7 +57,6 @@ export const AppShell: React.FC<AppShellProps> = ({ groups, brandTagline, accent
   const mobileOpen = useUiStore((s) => s.mobileNavOpen);
   const setMobileNav = useUiStore((s) => s.setMobileNav);
   const setPalette = useUiStore((s) => s.setPalette);
-  const unread = MOCK_NOTIFICATIONS.filter((n) => !n.isRead).length;
   const [primary, ...rest] = groups;
   const bottomItems = groups.flatMap((g) => g.items).slice(0, 4);
   const home = primary?.items[0]?.to ?? '/';
@@ -151,12 +150,7 @@ export const AppShell: React.FC<AppShellProps> = ({ groups, brandTagline, accent
             <button onClick={() => setPalette(true)} className="p-2 rounded-xl text-slate-700 hover:bg-slate-900/5 transition" aria-label="Tìm kiếm (⌘K)" title="Tìm kiếm (⌘K)">
               <Search className="w-5 h-5" />
             </button>
-            {notificationsTo && (
-              <NavLink to={notificationsTo} className="relative p-2 rounded-xl text-slate-700 hover:bg-slate-900/5 transition" aria-label="Thông báo">
-                <Bell className={cn('w-5 h-5', unread > 0 && 'animate-ring-bell')} />
-                {unread > 0 && <span className="absolute top-1 right-1 min-w-[16px] h-4 px-1 rounded-full bg-violet-500 text-white text-[9px] font-black flex items-center justify-center ring-2 ring-cream">{unread}</span>}
-              </NavLink>
-            )}
+            {notificationsTo && <NotificationBell allTo={notificationsTo} />}
             {user && (
               <Dropdown
                 align="right"

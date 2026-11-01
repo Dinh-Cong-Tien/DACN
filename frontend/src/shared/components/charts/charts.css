@@ -1,0 +1,15 @@
+/* Biểu đồ dùng chung: màu theo vai trò (đã kiểm tra CVD bằng validate_palette), chế độ tối có bước màu riêng */
+.viz {
+  --viz-series-1: #2a78d6;
+  --viz-series-2: #eb6834;
+  --viz-grid: rgba(20, 26, 43, 0.08);
+  --viz-axis: rgba(20, 26, 43, 0.22);
+  --viz-surface: #ffffff;
+}
+.dark .viz {
+  --viz-series-1: #3987e5;
+  --viz-series-2: #d95926;
+  --viz-grid: rgba(255, 255, 255, 0.08);
+  --viz-axis: rgba(255, 255, 255, 0.22);
+  --viz-surface: #151a2c;
+}

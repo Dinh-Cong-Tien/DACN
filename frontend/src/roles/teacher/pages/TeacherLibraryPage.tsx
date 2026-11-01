@@ -6,17 +6,41 @@ import { useAuthStore } from '@/shared/stores/authStore';
 import { GRAMMAR_TOPICS, MOCK_ASSIGNMENTS, MOCK_COURSES, MOCK_TESTS, VOCAB_TOPICS, VSTEP_SPEAKING_PARTS, VSTEP_WRITING_TASKS, courseHref } from '@/shared/mocks';
 import type { AssignmentTarget, Course, ExamType } from '@/shared/types';
 import { cn } from '@/shared/utils';
-import { Panel, TBtn, TPageHead, TTabs, tbl } from '../components/TeacherKit';
+import { Panel, TBtn, TPageHead, tbl } from '../components/TeacherKit';
 
-type Kind = 'courses' | 'tests' | 'grammar' | 'vocabulary' | 'writing-speaking';
+type Kind = 'courses' | 'tests' | 'practice';
 
 const COPY: Record<Kind, { title: string; sub: string }> = {
-  courses: { title: 'Khoá học', sub: 'Các khoá học viên đang học trên hệ thống. Giao từng bài giảng cho lớp, xem bài như học viên thấy.' },
-  tests: { title: 'Đề thi thử', sub: 'Kho đề học viên làm ở mục Thi thử. Giao full đề hoặc chọn Part và đặt thời gian cho lớp.' },
-  grammar: { title: 'Ngữ pháp', sub: 'Chủ điểm ngữ pháp kèm bài tập. Học viên làm xong được chấm tự động.' },
-  vocabulary: { title: 'Từ vựng', sub: 'Bộ flashcard theo chủ đề, học viên ôn bằng lịch ôn ngắt quãng.' },
-  'writing-speaking': { title: 'Đề Viết & Nói', sub: 'Đề ở trang Luyện Viết và Luyện Nói. Bài nộp về Bàn chấm bài của giáo viên.' },
+  courses: { title: 'Khoá học & bài giảng', sub: 'Các khoá học viên đang học trên hệ thống. Tích chọn bài giảng để giao cho lớp, xem bài như học viên thấy.' },
+  tests: { title: 'Ngân hàng đề', sub: 'Đề trắc nghiệm (thi thử TOEIC, VSTEP) chấm tự động và đề tự luận (Viết, Nói) nộp về bàn chấm của giáo viên.' },
+  practice: { title: 'Ngữ pháp & Từ vựng', sub: 'Chủ điểm ngữ pháp kèm bài tập chấm tự động và bộ flashcard từ vựng ôn theo lịch ngắt quãng.' },
 };
+
+/** Đường dẫn cũ (trước khi gộp mục) → trang mới */
+const LEGACY: Record<string, string> = {
+  grammar: '/teacher/library/practice?tab=grammar',
+  vocabulary: '/teacher/library/practice?tab=vocab',
+  'writing-speaking': '/teacher/library/tests?tab=writing',
+};
+
+/** Thanh tab có nhóm: mỗi nhóm một nhãn nhỏ, các tab trong nhóm đứng cạnh nhau */
+const GroupTabs: React.FC<{ groups: { label: string; tabs: { key: string; label: string; count?: number }[] }[]; value: string; onChange: (k: string) => void }> = ({ groups, value, onChange }) => (
+  <div className="flex flex-wrap gap-3">
+    {groups.map((g) => (
+      <div key={g.label} className="rounded-2xl border border-slate-200/80 bg-white p-1.5 shadow-sm">
+        <p className="px-2 pb-1 pt-0.5 text-[11px] font-bold uppercase tracking-[0.12em] text-slate-400">{g.label}</p>
+        <div className="flex gap-1" role="tablist">
+          {g.tabs.map((t) => (
+            <button key={t.key} type="button" role="tab" aria-selected={value === t.key} onClick={() => onChange(t.key)} className={cn('inline-flex h-9 items-center gap-1.5 rounded-xl px-3.5 text-sm font-semibold transition-colors', value === t.key ? 'bg-indigo-600 text-white shadow-[0_6px_14px_-8px_rgba(79,70,229,0.8)]' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900')}>
+              {t.label}
+              {t.count !== undefined && <span className={cn('text-[11px] tabular-nums', value === t.key ? 'text-white/80' : 'text-slate-400')}>{t.count}</span>}
+            </button>
+          ))}
+        </div>
+      </div>
+    ))}
+  </div>
+);
 
 const GROUP_LABEL: Record<Course['category'], string> = { GRAMMAR: 'Kiến thức chung', VOCABULARY: 'Kiến thức chung', SKILL: 'Kỹ năng tiếng Anh', FOUNDATION: 'Nền tảng theo kỳ thi' };
 const LESSON_TYPE: Record<string, string> = { VIDEO: 'Video', READING: 'Bài đọc', QUIZ: 'Kiểm tra' };
@@ -30,26 +54,54 @@ const PreviewLink: React.FC<{ href: string }> = ({ href }) => (
   </a>
 );
 
+type Assign = (t: AssignmentTarget) => void;
+
 /** Kho học liệu của giáo viên: cùng nội dung học viên đang dùng, mỗi mục có "Xem như học viên" và "Giao bài" */
 export const TeacherLibraryPage: React.FC = () => {
   const { kind = 'courses' } = useParams();
   const copy = COPY[kind as Kind];
   useDocumentTitle(copy?.title ?? 'Học liệu');
   const navigate = useNavigate();
-  const [params, setParams] = useSearchParams();
+  if (LEGACY[kind]) return <Navigate to={LEGACY[kind]} replace />;
   if (!copy) return <Navigate to="/teacher/library/courses" replace />;
 
-  const assign = (target: AssignmentTarget) => navigate('/teacher/assignments', { state: { assign: target } });
-  const vocabExam = params.get('exam');
-  const wsTab = params.get('tab') ?? 'all';
+  const assign: Assign = (target) => navigate('/teacher/assignments', { state: { assign: target } });
 
   return (
     <div className="space-y-6">
       <TPageHead crumbs={[{ label: 'Học liệu' }, { label: copy.title }]} title={copy.title} sub={copy.sub} />
       {kind === 'courses' && <CoursesView assign={assign} />}
       {kind === 'tests' && <TestsView assign={assign} />}
-      {kind === 'grammar' && (
-        <Panel flush>
+      {kind === 'practice' && <PracticeView assign={assign} />}
+    </div>
+  );
+};
+
+/** Ngữ pháp & Từ vựng: hai tab, tab Từ vựng lọc thêm theo kỳ thi */
+const PracticeView: React.FC<{ assign: Assign }> = ({ assign }) => {
+  const [params, setParams] = useSearchParams();
+  const tab = params.get('tab') === 'vocab' ? 'vocab' : 'grammar';
+  const vocabExam = params.get('exam');
+  const vocab = VOCAB_TOPICS.filter((v) => !vocabExam || (v.name.startsWith('VSTEP') ? 'VSTEP' : 'TOEIC') === vocabExam);
+  return (
+    <div className="space-y-5">
+      <GroupTabs
+        value={tab === 'vocab' ? `vocab-${vocabExam ?? 'all'}` : 'grammar'}
+        onChange={(k) => setParams(k === 'grammar' ? { tab: 'grammar' } : k === 'vocab-all' ? { tab: 'vocab' } : { tab: 'vocab', exam: k.slice(6) }, { replace: true })}
+        groups={[
+          { label: 'Ngữ pháp', tabs: [{ key: 'grammar', label: 'Chủ điểm ngữ pháp', count: GRAMMAR_TOPICS.length }] },
+          {
+            label: 'Từ vựng',
+            tabs: [
+              { key: 'vocab-all', label: 'Tất cả bộ từ', count: VOCAB_TOPICS.length },
+              { key: 'vocab-TOEIC', label: 'TOEIC' },
+              { key: 'vocab-VSTEP', label: 'VSTEP' },
+            ],
+          },
+        ]}
+      />
+      {tab === 'grammar' ? (
+        <Panel title="Chủ điểm ngữ pháp" sub="Học viên làm bài tập sau mỗi chủ điểm, chấm tự động" flush>
           <div className="overflow-x-auto">
             <table className={tbl.table}>
               <thead className={tbl.thead}>
@@ -85,11 +137,8 @@ export const TeacherLibraryPage: React.FC = () => {
             </table>
           </div>
         </Panel>
-      )}
-      {kind === 'vocabulary' && (
-        <>
-        <TTabs value={vocabExam ?? 'all'} onChange={(k) => setParams(k === 'all' ? {} : { exam: k }, { replace: true })} items={[{ key: 'all', label: 'Tất cả' }, { key: 'TOEIC', label: 'TOEIC' }, { key: 'VSTEP', label: 'VSTEP' }]} />
-        <Panel flush>
+      ) : (
+        <Panel title="Bộ flashcard từ vựng" sub="Học viên ôn theo lịch ngắt quãng, giáo viên theo dõi số từ đã thuộc" flush>
           <div className="overflow-x-auto">
             <table className={tbl.table}>
               <thead className={tbl.thead}>
@@ -102,7 +151,7 @@ export const TeacherLibraryPage: React.FC = () => {
                 </tr>
               </thead>
               <tbody>
-                {VOCAB_TOPICS.filter((v) => !vocabExam || (v.name.startsWith('VSTEP') ? 'VSTEP' : 'TOEIC') === vocabExam).map((v) => (
+                {vocab.map((v) => (
                   <tr key={v.id} className={tbl.tr}>
                     <td className={cn(tbl.td, 'font-medium text-slate-900')}>{v.name}</td>
                     <td className={cn(tbl.td, 'text-slate-600')}>{v.name.startsWith('VSTEP') ? 'VSTEP' : 'TOEIC'}</td>
@@ -120,39 +169,38 @@ export const TeacherLibraryPage: React.FC = () => {
             </table>
           </div>
         </Panel>
-        </>
-      )}
-      {kind === 'writing-speaking' && (
-        <div className="space-y-6">
-          <TTabs value={wsTab} onChange={(k) => setParams(k === 'all' ? {} : { tab: k }, { replace: true })} items={[{ key: 'all', label: 'Tất cả' }, { key: 'writing', label: 'Đề Viết' }, { key: 'speaking', label: 'Đề Nói' }]} />
-          {[
-            { key: 'writing', title: 'Đề Viết', rows: VSTEP_WRITING_TASKS.map((w) => ({ id: w.id, name: w.task, meta: `${w.minutes} phút · tối thiểu ${w.minWords} từ`, prompt: w.prompt, href: `/app/writing?task=${w.id}`, target: { kind: 'WRITING', taskId: w.id } as AssignmentTarget })) },
-            { key: 'speaking', title: 'Đề Nói', rows: VSTEP_SPEAKING_PARTS.map((p) => ({ id: p.id, name: p.part, meta: `${p.minutes} phút`, prompt: p.prompt, href: `/app/speaking?part=${p.id}`, target: { kind: 'SPEAKING', partId: p.id } as AssignmentTarget })) },
-          ].filter((g) => wsTab === 'all' || g.key === wsTab).map((g) => (
-            <Panel key={g.title} title={g.title} sub="Chấm theo 4 tiêu chí, thang 10" flush>
-              <ul className="divide-y divide-slate-100">
-                {g.rows.map((r) => (
-                  <li key={r.id} className="flex flex-col gap-3 px-4 py-3.5 sm:flex-row sm:items-start">
-                    <div className="min-w-0 flex-1">
-                      <p className="font-medium text-slate-900">
-                        {r.name} <span className="font-normal text-slate-500">· {r.meta}</span>
-                      </p>
-                      <p className="mt-1 text-sm leading-relaxed text-slate-600">{r.prompt}</p>
-                    </div>
-                    <div className="flex shrink-0 items-center gap-1">
-                      <PreviewLink href={r.href} />
-                      <TBtn size="sm" onClick={() => assign(r.target)}>
-                        Giao bài
-                      </TBtn>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            </Panel>
-          ))}
-        </div>
       )}
     </div>
+  );
+};
+
+/** Đề tự luận Viết / Nói */
+const EssayList: React.FC<{ kind: 'writing' | 'speaking'; assign: Assign }> = ({ kind, assign }) => {
+  const rows =
+    kind === 'writing'
+      ? VSTEP_WRITING_TASKS.map((w) => ({ id: w.id, name: w.task, meta: `${w.minutes} phút · tối thiểu ${w.minWords} từ`, prompt: w.prompt, href: `/app/writing?task=${w.id}`, target: { kind: 'WRITING', taskId: w.id } as AssignmentTarget }))
+      : VSTEP_SPEAKING_PARTS.map((p) => ({ id: p.id, name: p.part, meta: `${p.minutes} phút`, prompt: p.prompt, href: `/app/speaking?part=${p.id}`, target: { kind: 'SPEAKING', partId: p.id } as AssignmentTarget }));
+  return (
+    <Panel title={kind === 'writing' ? 'Đề Viết' : 'Đề Nói'} sub="Bài nộp về Bàn chấm bài · chấm theo 4 tiêu chí, thang 10" flush>
+      <ul className="divide-y divide-slate-100">
+        {rows.map((r) => (
+          <li key={r.id} className="flex flex-col gap-3 px-5 py-4 sm:flex-row sm:items-start">
+            <div className="min-w-0 flex-1">
+              <p className="font-semibold text-slate-900">
+                {r.name} <span className="font-normal text-slate-500">· {r.meta}</span>
+              </p>
+              <p className="mt-1 text-sm leading-relaxed text-slate-600">{r.prompt}</p>
+            </div>
+            <div className="flex shrink-0 items-center gap-1">
+              <PreviewLink href={r.href} />
+              <TBtn size="sm" onClick={() => assign(r.target)}>
+                Giao bài
+              </TBtn>
+            </div>
+          </li>
+        ))}
+      </ul>
+    </Panel>
   );
 };
 
@@ -254,20 +302,36 @@ const CoursesView: React.FC<{ assign: (t: AssignmentTarget) => void }> = ({ assi
 
 const TestsView: React.FC<{ assign: (t: AssignmentTarget) => void }> = ({ assign }) => {
   const [params, setParams] = useSearchParams();
-  const exam: ExamType = params.get('exam') === 'VSTEP' ? 'VSTEP' : 'TOEIC';
-  const setExam = (e: ExamType) => setParams({ exam: e }, { replace: true });
+  const raw = params.get('tab') ?? params.get('exam');
+  const tab = raw === 'VSTEP' || raw === 'writing' || raw === 'speaking' ? raw : 'TOEIC';
+  const exam: ExamType = tab === 'VSTEP' ? 'VSTEP' : 'TOEIC';
   const tests = MOCK_TESTS.filter((t) => t.examType === exam);
   return (
-    <div className="space-y-4">
-      <TTabs
-        value={exam}
-        onChange={(k) => setExam(k as ExamType)}
-        items={[
-          { key: 'TOEIC', label: 'TOEIC', count: MOCK_TESTS.filter((t) => t.examType === 'TOEIC').length },
-          { key: 'VSTEP', label: 'VSTEP', count: MOCK_TESTS.filter((t) => t.examType === 'VSTEP').length },
+    <div className="space-y-5">
+      <GroupTabs
+        value={tab}
+        onChange={(k) => setParams({ tab: k }, { replace: true })}
+        groups={[
+          {
+            label: 'Đề trắc nghiệm · chấm tự động',
+            tabs: [
+              { key: 'TOEIC', label: 'Thi thử TOEIC', count: MOCK_TESTS.filter((t) => t.examType === 'TOEIC').length },
+              { key: 'VSTEP', label: 'Thi thử VSTEP', count: MOCK_TESTS.filter((t) => t.examType === 'VSTEP').length },
+            ],
+          },
+          {
+            label: 'Đề tự luận · giáo viên chấm',
+            tabs: [
+              { key: 'writing', label: 'Đề Viết', count: VSTEP_WRITING_TASKS.length },
+              { key: 'speaking', label: 'Đề Nói', count: VSTEP_SPEAKING_PARTS.length },
+            ],
+          },
         ]}
       />
-      <Panel flush>
+      {tab === 'writing' || tab === 'speaking' ? (
+        <EssayList kind={tab} assign={assign} />
+      ) : (
+      <Panel title={`Đề thi thử ${exam}`} sub="Giao full đề hoặc chọn Part và đặt thời gian khi giao" flush>
         <div className="overflow-x-auto">
           <table className={tbl.table}>
             <thead className={tbl.thead}>
@@ -307,6 +371,7 @@ const TestsView: React.FC<{ assign: (t: AssignmentTarget) => void }> = ({ assign
           </table>
         </div>
       </Panel>
+      )}
     </div>
   );
 };

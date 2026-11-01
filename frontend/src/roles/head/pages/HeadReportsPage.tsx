@@ -2,14 +2,14 @@ import React, { useState } from 'react';
 import { BarChart3, Download, School, Users, TrendingUp, CheckCircle2 } from 'lucide-react';
 import { useDocumentTitle } from '@/shared/hooks';
 import { toast } from '@/shared/stores/uiStore';
-import { MOCK_CLASS_REPORTS, MOCK_SUBJECTS } from '@/shared/mocks';
+import { HEAD_MONTHLY, MOCK_CLASS_REPORTS, MOCK_SUBJECTS } from '@/shared/mocks';
+import { BarChart, HBarChart, LineChart } from '@/shared/components/charts/Charts';
 import type { ClassReport } from '@/shared/types';
 import { cn } from '@/shared/utils';
-import { Badge, Button, Card, CardHeader, Column, DataTable, MiniBars, PageHeader, ProgressBar, Select, StatCard } from '@/shared/components/ui';
+import { Badge, Button, Card, CardHeader, Column, DataTable, PageHeader, ProgressBar, Select, StatCard } from '@/shared/components/ui';
 
 const GRADE_TONE: Record<ClassReport['grade'], 'emerald' | 'sky' | 'amber' | 'rose'> = { A: 'emerald', B: 'sky', C: 'amber', D: 'rose' };
 const GRADE_LABEL: Record<ClassReport['grade'], string> = { A: 'Xuất sắc', B: 'Khá', C: 'Trung bình', D: 'Cần cải thiện' };
-const GRADE_BOX: Record<ClassReport['grade'], string> = { A: 'bg-emerald-200 text-emerald-900', B: 'bg-sky-200 text-sky-900', C: 'bg-amber-200 text-amber-900', D: 'bg-violet-200 text-violet-900' };
 
 type Row = ClassReport & { id: string };
 
@@ -88,20 +88,33 @@ export const HeadReportsPage: React.FC = () => {
 
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-5">
         <Card hard className="xl:col-span-2 animate-fade-up">
-          <CardHeader title="Điểm trung bình theo lớp" subtitle="TOEIC quy đổi / VSTEP thang 10" />
-          <MiniBars data={rows.map((r) => ({ label: r.className.replace('TOEIC ', '').slice(0, 10), value: r.avgScore, tone: GRADE_TONE[r.grade] }))} height={170} />
+          <CardHeader title="Điểm TOEIC trung bình theo lớp" subtitle="Bài thi thử gần nhất · thang 990 (lớp VSTEP xem ở bảng bên dưới)" />
+          <BarChart ariaLabel="Điểm TOEIC trung bình theo lớp" data={rows.filter((r) => r.avgScore > 10).map((r) => ({ label: r.className.replace('TOEIC ', ''), value: r.avgScore }))} height={240} unit=" điểm" />
         </Card>
-        <Card hard tone="cream" className="animate-fade-up" style={{ animationDelay: '80ms' }}>
-          <CardHeader title="Phân bố xếp loại" subtitle={`${rows.length} lớp`} />
-          <div className="grid grid-cols-2 gap-3">
-            {grades.map(({ g, n }, i) => (
-              <div key={g} className={cn('p-4 rounded-2xl border-2 border-slate-900 text-center animate-pop', GRADE_BOX[g])} style={{ animationDelay: `${i * 80}ms` }}>
-                <p className="font-display text-4xl font-extrabold leading-none">{n}</p>
-                <p className="text-xs font-extrabold mt-2">Loại {g}</p>
-                <p className="text-[10px] opacity-80">{GRADE_LABEL[g]}</p>
-              </div>
-            ))}
-          </div>
+        <Card hard className="animate-fade-up" style={{ animationDelay: '80ms' }}>
+          <CardHeader title="Phân bố xếp loại" subtitle={`Số lớp theo xếp loại · ${rows.length} lớp`} />
+          <BarChart ariaLabel="Phân bố xếp loại lớp" data={grades.map(({ g, n }) => ({ label: `${g} · ${GRADE_LABEL[g]}`.replace('Cần cải thiện', 'Yếu').replace('Trung bình', 'TB'), value: n }))} height={240} unit=" lớp" />
+        </Card>
+      </div>
+
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-5">
+        <Card hard className="animate-fade-up">
+          <CardHeader title="Chuyên cần theo lớp" subtitle="% buổi có mặt từ đầu học kỳ" />
+          <HBarChart ariaLabel="Chuyên cần theo lớp" data={[...rows].sort((a, b) => b.attendance - a.attendance).map((r) => ({ label: r.className, value: r.attendance }))} max={100} unit="%" labelWidth={170} />
+        </Card>
+        <Card hard className="animate-fade-up">
+          <CardHeader title="Chuyên cần và hoàn thành bài tập theo tháng" subtitle="Trung bình toàn bộ môn" />
+          <LineChart
+            ariaLabel="Chuyên cần và hoàn thành bài tập theo tháng"
+            labels={HEAD_MONTHLY.labels}
+            series={[
+              { name: 'Chuyên cần', values: HEAD_MONTHLY.attendance },
+              { name: 'Hoàn thành bài tập', values: HEAD_MONTHLY.completion },
+            ]}
+            min={50}
+            max={100}
+            unit="%"
+          />
         </Card>
       </div>
 
