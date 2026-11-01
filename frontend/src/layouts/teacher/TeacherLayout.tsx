@@ -1,8 +1,9 @@
 import React from 'react';
 import { LayoutDashboard, Users, ClipboardList, PenTool, FolderOpen, BarChart3, Video, FileText, GraduationCap, BookOpen, Mic } from 'lucide-react';
 import { AppShell, NavGroup } from '@/shared/components/layout/AppShell';
+import { TeacherNav } from './TeacherNav';
 
-/** Menu giáo viên: khớp với chức năng học viên — học viên học / làm gì thì giáo viên giao, theo dõi, chấm cái đó */
+/** Menu ngăn kéo (điện thoại) và thanh đáy; header máy tính dùng TeacherNav */
 const GROUPS: NavGroup[] = [
   {
     title: 'Giảng dạy',
@@ -28,5 +29,5 @@ const GROUPS: NavGroup[] = [
 ];
 
 export const TeacherLayout: React.FC = () => (
-  <AppShell groups={GROUPS} brandTagline="Khu vực giáo viên" headerLabel="Khu vực giáo viên" accent="emerald" settingsTo="/teacher/settings" profileTo="/teacher/settings" notificationsTo="/teacher/notifications" workspace />
+  <AppShell groups={GROUPS} brandTagline="Khu vực giáo viên" headerLabel="Khu vực giáo viên" accent="emerald" settingsTo="/teacher/settings" profileTo="/teacher/settings" notificationsTo="/teacher/notifications" workspace headerNav={<TeacherNav />} />
 );

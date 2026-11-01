@@ -41,12 +41,14 @@ export interface AppShellProps {
   topExtra?: React.ReactNode;
   /** Giao diện làm việc (giáo viên): nền phẳng, header có viền, menu thả xuống viền mảnh */
   workspace?: boolean;
+  /** Thay menu chữ mặc định trên header bằng menu riêng của vai trò (giáo viên) */
+  headerNav?: React.ReactNode;
 }
 
 const accentBadge = { indigo: 'indigo', emerald: 'emerald', amber: 'amber', rose: 'violet' } as const;
 
 /** Khung portal: header MỘT HÀNG giống trang chủ (logo · menu chữ · icon + avatar) */
-export const AppShell: React.FC<AppShellProps> = ({ groups, brandTagline, accent = 'indigo', headerLabel, settingsTo, profileTo, notificationsTo, showStreak, topExtra, workspace }) => {
+export const AppShell: React.FC<AppShellProps> = ({ groups, brandTagline, accent = 'indigo', headerLabel, settingsTo, profileTo, notificationsTo, showStreak, topExtra, workspace, headerNav }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const scrolled = useScrolled(12);
@@ -89,6 +91,7 @@ export const AppShell: React.FC<AppShellProps> = ({ groups, brandTagline, accent
             <Logo size="md" to={home} />
           </div>
 
+          {headerNav ?? (
           <nav className="hidden md:flex items-center gap-0.5 overflow-x-auto no-scrollbar">
             {primary?.items.map((item) => (
               <NavLink key={item.to} to={item.to} end={item.end} className={linkCls}>
@@ -128,6 +131,7 @@ export const AppShell: React.FC<AppShellProps> = ({ groups, brandTagline, accent
               );
             })}
           </nav>
+          )}
 
           <div className="flex items-center gap-1.5 md:gap-2">
             {topExtra}

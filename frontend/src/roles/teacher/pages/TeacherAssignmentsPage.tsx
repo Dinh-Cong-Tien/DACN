@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { ExternalLink, Plus } from 'lucide-react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useSearchParams } from 'react-router-dom';
 import { useDocumentTitle } from '@/shared/hooks';
 import { toast } from '@/shared/stores/uiStore';
 import { ASSIGNMENT_TYPE_LABEL, MOCK_ASSIGNMENTS, MOCK_CLASSES, describeTarget } from '@/shared/mocks';
@@ -20,10 +20,16 @@ export const TeacherAssignmentsPage: React.FC = () => {
   // Mở từ trang Học liệu: state.assign mang sẵn nội dung cần giao
   const location = useLocation();
   const preset = (location.state as { assign?: AssignmentTarget; classId?: string } | null) ?? null;
+  const [params, setParams] = useSearchParams();
   const [rows, setRows] = useState<Assignment[]>(MOCK_ASSIGNMENTS);
-  const [status, setStatus] = useState<'ALL' | Assignment['status']>('ALL');
+  const status = (['OPEN', 'CLOSED', 'DRAFT'].includes(params.get('status') ?? '') ? params.get('status') : 'ALL') as 'ALL' | Assignment['status'];
+  const setStatus = (k: string) => setParams(k === 'ALL' ? {} : { status: k }, { replace: true });
   const [classId, setClassId] = useState('');
-  const [open, setOpen] = useState(Boolean(preset?.assign));
+  const [open, setOpen] = useState(Boolean(preset?.assign) || params.get('new') === '1');
+  // Menu "Giao bài mới": ?new=1 mở hộp thoại
+  useEffect(() => {
+    if (params.get('new') === '1') setOpen(true);
+  }, [params]);
   const [deleting, setDeleting] = useState<Assignment | null>(null);
 
   const now = Date.now();
@@ -38,9 +44,14 @@ export const TeacherAssignmentsPage: React.FC = () => {
     toast.info(s === 'CLOSED' ? 'Đã đóng bài tập' : 'Đã mở bài tập', a.title);
   };
 
+  const close = () => {
+    setOpen(false);
+    if (params.get('new')) setParams({}, { replace: true });
+  };
+
   const save = (a: Assignment) => {
     setRows((s) => [a, ...s]);
-    setOpen(false);
+    close();
     toast.success(a.status === 'DRAFT' ? 'Đã lưu nháp' : 'Đã giao bài', a.status === 'DRAFT' ? a.title : `${a.total} học viên lớp ${a.className} nhận được thông báo.`);
   };
 
@@ -69,7 +80,7 @@ export const TeacherAssignmentsPage: React.FC = () => {
         <TTabs
           className="flex-1"
           value={status}
-          onChange={(k) => setStatus(k as typeof status)}
+          onChange={setStatus}
           items={[
             { key: 'ALL', label: 'Tất cả', count: byClass.length },
             { key: 'OPEN', label: 'Đang mở', count: openRows.length },
@@ -159,7 +170,7 @@ export const TeacherAssignmentsPage: React.FC = () => {
         )}
       </Panel>
 
-      <AssignDialog open={open} onClose={() => setOpen(false)} onSave={save} initial={preset?.assign ? { target: preset.assign, classId: preset.classId } : undefined} />
+      <AssignDialog open={open} onClose={close} onSave={save} initial={preset?.assign ? { target: preset.assign, classId: preset.classId } : undefined} />
 
       <ConfirmDialog
         open={!!deleting}

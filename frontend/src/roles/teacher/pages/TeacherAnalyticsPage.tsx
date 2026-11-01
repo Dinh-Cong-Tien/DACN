@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useDocumentTitle } from '@/shared/hooks';
 import { CLASS_MISTAKE_CAUSES, CLASS_PART_ACCURACY, CLASS_SCORE_DIST, MISTAKE_CAUSE_LABEL, MOCK_ASSIGNMENTS, MOCK_CLASSES, MOCK_CLASS_STUDENTS, MOCK_TESTS, TOEIC_PARTS_INFO, VSTEP_PARTS_INFO } from '@/shared/mocks';
 import type { AssignmentTarget } from '@/shared/types';
@@ -13,7 +13,9 @@ const PART_INFO = [...TOEIC_PARTS_INFO, ...VSTEP_PARTS_INFO];
 export const TeacherAnalyticsPage: React.FC = () => {
   useDocumentTitle('Thống kê lớp học');
   const navigate = useNavigate();
-  const [classId, setClassId] = useState(MOCK_CLASSES[0].id);
+  const [params, setParams] = useSearchParams();
+  const classId = MOCK_CLASSES.find((c) => c.id === params.get('class'))?.id ?? MOCK_CLASSES[0].id;
+  const setClassId = (id: string) => setParams({ class: id }, { replace: true });
   const cls = MOCK_CLASSES.find((c) => c.id === classId) ?? MOCK_CLASSES[0];
   const accuracy = CLASS_PART_ACCURACY[cls.examType];
   const dist = CLASS_SCORE_DIST[cls.examType];

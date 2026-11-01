@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Navigate, useNavigate, useParams } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import { Navigate, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { ChevronDown, ChevronRight, ExternalLink } from 'lucide-react';
 import { useDocumentTitle } from '@/shared/hooks';
 import { useAuthStore } from '@/shared/stores/authStore';
@@ -36,9 +36,12 @@ export const TeacherLibraryPage: React.FC = () => {
   const copy = COPY[kind as Kind];
   useDocumentTitle(copy?.title ?? 'Học liệu');
   const navigate = useNavigate();
+  const [params, setParams] = useSearchParams();
   if (!copy) return <Navigate to="/teacher/library/courses" replace />;
 
   const assign = (target: AssignmentTarget) => navigate('/teacher/assignments', { state: { assign: target } });
+  const vocabExam = params.get('exam');
+  const wsTab = params.get('tab') ?? 'all';
 
   return (
     <div className="space-y-6">
@@ -84,6 +87,8 @@ export const TeacherLibraryPage: React.FC = () => {
         </Panel>
       )}
       {kind === 'vocabulary' && (
+        <>
+        <TTabs value={vocabExam ?? 'all'} onChange={(k) => setParams(k === 'all' ? {} : { exam: k }, { replace: true })} items={[{ key: 'all', label: 'Tất cả' }, { key: 'TOEIC', label: 'TOEIC' }, { key: 'VSTEP', label: 'VSTEP' }]} />
         <Panel flush>
           <div className="overflow-x-auto">
             <table className={tbl.table}>
@@ -97,7 +102,7 @@ export const TeacherLibraryPage: React.FC = () => {
                 </tr>
               </thead>
               <tbody>
-                {VOCAB_TOPICS.map((v) => (
+                {VOCAB_TOPICS.filter((v) => !vocabExam || (v.name.startsWith('VSTEP') ? 'VSTEP' : 'TOEIC') === vocabExam).map((v) => (
                   <tr key={v.id} className={tbl.tr}>
                     <td className={cn(tbl.td, 'font-medium text-slate-900')}>{v.name}</td>
                     <td className={cn(tbl.td, 'text-slate-600')}>{v.name.startsWith('VSTEP') ? 'VSTEP' : 'TOEIC'}</td>
@@ -115,13 +120,15 @@ export const TeacherLibraryPage: React.FC = () => {
             </table>
           </div>
         </Panel>
+        </>
       )}
       {kind === 'writing-speaking' && (
         <div className="space-y-6">
+          <TTabs value={wsTab} onChange={(k) => setParams(k === 'all' ? {} : { tab: k }, { replace: true })} items={[{ key: 'all', label: 'Tất cả' }, { key: 'writing', label: 'Đề Viết' }, { key: 'speaking', label: 'Đề Nói' }]} />
           {[
-            { title: 'Đề Viết', rows: VSTEP_WRITING_TASKS.map((w) => ({ id: w.id, name: w.task, meta: `${w.minutes} phút · tối thiểu ${w.minWords} từ`, prompt: w.prompt, href: `/app/writing?task=${w.id}`, target: { kind: 'WRITING', taskId: w.id } as AssignmentTarget })) },
-            { title: 'Đề Nói', rows: VSTEP_SPEAKING_PARTS.map((p) => ({ id: p.id, name: p.part, meta: `${p.minutes} phút`, prompt: p.prompt, href: `/app/speaking?part=${p.id}`, target: { kind: 'SPEAKING', partId: p.id } as AssignmentTarget })) },
-          ].map((g) => (
+            { key: 'writing', title: 'Đề Viết', rows: VSTEP_WRITING_TASKS.map((w) => ({ id: w.id, name: w.task, meta: `${w.minutes} phút · tối thiểu ${w.minWords} từ`, prompt: w.prompt, href: `/app/writing?task=${w.id}`, target: { kind: 'WRITING', taskId: w.id } as AssignmentTarget })) },
+            { key: 'speaking', title: 'Đề Nói', rows: VSTEP_SPEAKING_PARTS.map((p) => ({ id: p.id, name: p.part, meta: `${p.minutes} phút`, prompt: p.prompt, href: `/app/speaking?part=${p.id}`, target: { kind: 'SPEAKING', partId: p.id } as AssignmentTarget })) },
+          ].filter((g) => wsTab === 'all' || g.key === wsTab).map((g) => (
             <Panel key={g.title} title={g.title} sub="Chấm theo 4 tiêu chí, thang 10" flush>
               <ul className="divide-y divide-slate-100">
                 {g.rows.map((r) => (
@@ -151,7 +158,13 @@ export const TeacherLibraryPage: React.FC = () => {
 
 const CoursesView: React.FC<{ assign: (t: AssignmentTarget) => void }> = ({ assign }) => {
   const me = useAuthStore((s) => s.user?.fullName);
-  const [openId, setOpenId] = useState<string | null>(null);
+  const [params] = useSearchParams();
+  const [openId, setOpenId] = useState<string | null>(params.get('open'));
+  useEffect(() => {
+    const id = params.get('open');
+    setOpenId(id);
+    if (id) requestAnimationFrame(() => document.getElementById(`course-${id}`)?.scrollIntoView({ block: 'start', behavior: 'smooth' }));
+  }, [params]);
   const [picked, setPicked] = useState<string[]>([]);
 
   return (
@@ -175,7 +188,7 @@ const CoursesView: React.FC<{ assign: (t: AssignmentTarget) => void }> = ({ assi
               const lessons = c.sections.flatMap((s) => s.lessons);
               return (
                 <React.Fragment key={c.id}>
-                  <tr className={cn(tbl.tr, 'cursor-pointer', open && 'bg-slate-50')} onClick={() => (setOpenId(open ? null : c.id), setPicked([]))}>
+                  <tr id={`course-${c.id}`} className={cn(tbl.tr, 'cursor-pointer scroll-mt-24', open && 'bg-slate-50')} onClick={() => (setOpenId(open ? null : c.id), setPicked([]))}>
                     <td className={tbl.td}>
                       <span className="flex items-center gap-2">
                         {open ? <ChevronDown className="h-4 w-4 text-slate-400" /> : <ChevronRight className="h-4 w-4 text-slate-400" />}
@@ -240,7 +253,9 @@ const CoursesView: React.FC<{ assign: (t: AssignmentTarget) => void }> = ({ assi
 };
 
 const TestsView: React.FC<{ assign: (t: AssignmentTarget) => void }> = ({ assign }) => {
-  const [exam, setExam] = useState<ExamType>('TOEIC');
+  const [params, setParams] = useSearchParams();
+  const exam: ExamType = params.get('exam') === 'VSTEP' ? 'VSTEP' : 'TOEIC';
+  const setExam = (e: ExamType) => setParams({ exam: e }, { replace: true });
   const tests = MOCK_TESTS.filter((t) => t.examType === exam);
   return (
     <div className="space-y-4">
