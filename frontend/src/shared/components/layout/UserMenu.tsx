@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Link, NavLink, useLocation } from 'react-router-dom';
-import { Award, Bookmark, ChevronDown, LayoutDashboard, LogOut, Settings, User } from 'lucide-react';
+import { Award, ChevronDown, LayoutDashboard, LogOut, Settings, User } from 'lucide-react';
 import { Avatar, Badge } from '@/shared/components/ui';
 import { cn, ROLE_HOME, ROLE_LABEL } from '@/shared/utils';
 import type { AppUser } from '@/shared/types';
@@ -8,7 +8,6 @@ import type { AppUser } from '@/shared/types';
 /** Mục cá nhân (các mục học tập đã nằm trong menu chính) */
 const PERSONAL = [
   { to: '/app/achievements', label: 'Huy hiệu', icon: Award },
-  { to: '/app/bookmarks', label: 'Đã lưu', icon: Bookmark },
   { to: '/app/profile', label: 'Hồ sơ', icon: User },
   { to: '/app/settings', label: 'Cài đặt', icon: Settings },
 ];
@@ -16,7 +15,7 @@ const PERSONAL = [
 const SectionLabel: React.FC<{ children: React.ReactNode }> = ({ children }) => <p className="px-2 pb-1.5 text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-400">{children}</p>;
 
 /**
- * Menu tài khoản trên header: thông tin + chỉ số → Cá nhân, Đăng xuất tách riêng ở cuối.
+ * Menu tài khoản trên header (một cột dọc): thông tin + gói → Cá nhân, Đăng xuất tách riêng ở cuối.
  * Luyện kỹ năng nằm trong menu TOEIC / VSTEP, học tập cá nhân trong menu Công cụ, Tổng quan ở trang chủ.
  * Giáo viên / Trưởng bộ môn / Admin: thông tin + link khu quản lý + Đăng xuất.
  */
@@ -71,28 +70,16 @@ export const UserMenu: React.FC<{ user: AppUser; onLogout: () => void; onDark?: 
               </div>
             </div>
             {isStudent ? (
-              <dl className="mt-3.5 grid grid-cols-3 divide-x divide-slate-200 rounded-xl bg-slate-900/[0.03] py-2.5 text-center ring-1 ring-inset ring-slate-200">
-                <div>
-                  <dt className="text-[11px] text-slate-500">Chuỗi học</dt>
-                  <dd className="mt-0.5 text-sm font-bold tabular-nums text-slate-900">{user.streak} ngày</dd>
-                </div>
-                <div>
-                  <dt className="text-[11px] text-slate-500">Mục tiêu</dt>
-                  <dd className="mt-0.5 text-sm font-bold text-slate-900">{user.target ? `${user.target.examType} ${user.target.score}` : '—'}</dd>
-                </div>
-                <div>
-                  <dt className="text-[11px] text-slate-500">{user.plan === 'FREE' ? 'Gói Free' : 'Gói'}</dt>
-                  <dd className="mt-0.5 text-sm font-bold">
-                    {user.plan === 'FREE' ? (
-                      <Link to="/pricing" className="text-violet-600 hover:underline underline-offset-2">
-                        Nâng cấp
-                      </Link>
-                    ) : (
-                      <span className="text-slate-900">{user.plan}</span>
-                    )}
-                  </dd>
-                </div>
-              </dl>
+              <div className="mt-3.5 flex items-center justify-between rounded-xl bg-slate-900/[0.03] px-3 py-2.5 ring-1 ring-inset ring-slate-200">
+                <span className="text-[13px] text-slate-600">
+                  Gói hiện tại: <span className="font-semibold text-slate-900">{user.plan === 'FREE' ? 'Free' : user.plan}</span>
+                </span>
+                {user.plan === 'FREE' && (
+                  <Link to="/pricing" className="text-[13px] font-bold text-violet-600 hover:underline underline-offset-2">
+                    Nâng cấp
+                  </Link>
+                )}
+              </div>
             ) : (
               <Badge tone="indigo" size="xs" className="mt-3">
                 {ROLE_LABEL[user.role]}
@@ -105,7 +92,7 @@ export const UserMenu: React.FC<{ user: AppUser; onLogout: () => void; onDark?: 
               {/* 2. Cá nhân */}
               <div className="px-2 pt-4">
                 <SectionLabel>Cá nhân</SectionLabel>
-                <div className="grid grid-cols-2 gap-x-1">
+                <div className="flex flex-col">
                   {PERSONAL.map((a) => (
                     <NavLink key={a.to} to={a.to} role="menuitem" className={rowCls}>
                       <a.icon className="h-4 w-4 shrink-0 text-slate-400" />
