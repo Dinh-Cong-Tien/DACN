@@ -93,13 +93,27 @@ export const StudentMockTestDetailPage: React.FC = () => {
 
       <div className="grid items-start gap-6 xl:grid-cols-[1fr_340px]">
         <section className="rounded-2xl border border-slate-200 bg-white p-5 md:p-6">
-          <div className="flex items-start justify-between gap-4">
-            <div>
-              <h2 className="font-display text-xl font-bold text-slate-900">Chọn phần thi</h2>
-              <p className="mt-1 text-[14px] text-slate-600">Để nguyên tất cả và thời gian thi thật là làm full test. Bỏ bớt Part hoặc đổi thời gian để luyện riêng.</p>
-            </div>
+          <h2 className="font-display text-xl font-bold text-slate-900">Chọn phần thi</h2>
+          <p className="mt-1 text-[14px] text-slate-600">Để nguyên tất cả và thời gian thi thật là làm full test. Bỏ bớt Part hoặc đổi thời gian để luyện riêng.</p>
+          <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+              <label className="block">
+                <span className="text-sm font-medium text-slate-700">Thời gian làm bài</span>
+                <select
+                  value={String(time)}
+                  onChange={(e) => setTime(e.target.value === 'auto' || e.target.value === 'none' ? e.target.value : Number(e.target.value))}
+                  className="mt-1.5 block h-10 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-900 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 sm:w-64"
+                >
+                  <option value="auto">{allPicked ? `Thời gian thi thật (${test.durationMinutes} phút)` : `Theo thời gian gợi ý${chosen.length ? ` (${suggested} phút)` : ''}`}</option>
+                  <option value="none">Không giới hạn</option>
+                  {TIME_CHOICES.map((m) => (
+                    <option key={m} value={m}>
+                      {m} phút
+                    </option>
+                  ))}
+                </select>
+              </label>
             {selectable.length > 1 && (
-              <button type="button" onClick={() => setPicked(allPicked ? [] : selectable.map((p) => p.id))} className="shrink-0 pt-1 text-sm font-semibold text-indigo-700 hover:underline underline-offset-2">
+              <button type="button" onClick={() => setPicked(allPicked ? [] : selectable.map((p) => p.id))} className="shrink-0 self-start text-sm font-semibold text-indigo-700 hover:underline underline-offset-2 sm:self-auto sm:pb-2.5">
                 {allPicked ? 'Bỏ chọn tất cả' : 'Chọn tất cả'}
               </button>
             )}
@@ -151,24 +165,8 @@ export const StudentMockTestDetailPage: React.FC = () => {
             })}
           </ul>
 
-          <div className="mt-6 flex flex-col gap-4 border-t border-slate-200 pt-5 sm:flex-row sm:items-end sm:justify-between">
-            <label className="block">
-              <span className="text-sm font-medium text-slate-700">Thời gian làm bài</span>
-              <select
-                value={String(time)}
-                onChange={(e) => setTime(e.target.value === 'auto' || e.target.value === 'none' ? e.target.value : Number(e.target.value))}
-                className="mt-1.5 block h-10 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-900 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 sm:w-64"
-              >
-                <option value="auto">{allPicked ? `Thời gian thi thật (${test.durationMinutes} phút)` : `Theo thời gian gợi ý${chosen.length ? ` (${suggested} phút)` : ''}`}</option>
-                <option value="none">Không giới hạn</option>
-                {TIME_CHOICES.map((m) => (
-                  <option key={m} value={m}>
-                    {m} phút
-                  </option>
-                ))}
-              </select>
-            </label>
-            <ActionButton size="lg" disabled={!chosen.length} onClick={start}>
+          <div className="mt-6 flex justify-end border-t border-slate-200 pt-5">
+            <ActionButton size="lg" disabled={!chosen.length} onClick={start} className="w-full sm:w-auto">
               {locked ? <Lock className="h-4 w-4" /> : <Play className="h-4 w-4 fill-current" />}
               {!chosen.length ? 'Chọn ít nhất một Part' : `${full ? 'Làm full test' : 'Bắt đầu luyện'} · ${questionCount} câu · ${minutes ? `${minutes} phút` : 'không giới hạn'}`}
             </ActionButton>
