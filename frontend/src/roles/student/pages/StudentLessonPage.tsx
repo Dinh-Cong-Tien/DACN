@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Video, FileText, HelpCircle } from 'lucide-react';
-import { MOCK_COURSES } from '@/shared/mocks';
+import { MOCK_COURSES, courseHref } from '@/shared/mocks';
 import { useDocumentTitle } from '@/shared/hooks';
 import { Breadcrumb, Badge } from '@/shared/components/ui';
 import { LessonEngine } from '@/engines';
@@ -22,7 +22,7 @@ export const StudentLessonPage: React.FC = () => {
     <div className="space-y-5">
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-3 animate-fade-down">
         <div className="space-y-2">
-          <Breadcrumb items={[{ label: 'Khoá học', to: '/app/courses' }, { label: course.title, to: `/app/courses/${course.id}` }, { label: lesson.title }]} />
+          <Breadcrumb items={[{ label: 'Khoá học', to: '/app/courses' }, { label: course.title, to: courseHref(course, true) }, { label: lesson.title }]} />
           <div className="flex items-center gap-2 flex-wrap">
             <span className="sticker tilt-3 !text-[10px] !py-1">
               <t.Icon className="w-3.5 h-3.5" /> {t.label}
@@ -31,7 +31,7 @@ export const StudentLessonPage: React.FC = () => {
               Bài {idx + 1}/{all.length}
             </Badge>
             <Badge tone="indigo" size="xs">
-              {course.examType} · {course.level}
+              {course.category && course.category !== 'EXAM' ? course.level : `${course.examType} · ${course.level}`}
             </Badge>
           </div>
         </div>

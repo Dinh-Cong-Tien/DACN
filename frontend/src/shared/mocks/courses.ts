@@ -1,5 +1,5 @@
 import { PHOTOS, pravatar, unsplash } from '@/shared/components/media/Img';
-import type { Course, DictionaryEntry, GrammarTopic, Lesson, TranscriptLine } from '@/shared/types';
+import type { Course, CourseCategory, CourseSection, DictionaryEntry, GrammarTopic, Lesson, TranscriptLine } from '@/shared/types';
 
 export const SAMPLE_VIDEO_URL = 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4';
 
@@ -157,6 +157,191 @@ export const MOCK_COURSES: Course[] = [
     sections: [{ id: 's1', title: 'Chủ đề 1–5', lessons: [mkLesson('l-1-1', 'Office & Administration', 'VIDEO', 10), mkLesson('l-1-2', 'Human Resources', 'VIDEO', 10)] }],
   },
 ];
+
+// ---------- Lộ trình nền tảng: học lần lượt từ Bài 1, bài sau mở khi xong bài trước ----------
+type PathLesson = [title: string, type: Lesson['type'], durationMin: number, summary: string];
+
+/** Dựng các chặng của lộ trình: `done` bài đầu đã học, bài kế tiếp đang mở, các bài sau khoá; `free` bài đầu cho học thử */
+const mkPath = (prefix: string, chapters: [title: string, lessons: PathLesson[]][], done: number, free: number): CourseSection[] => {
+  let n = 0;
+  return chapters.map(([title, lessons], si) => ({
+    id: `${prefix}-s${si + 1}`,
+    title,
+    lessons: lessons.map(([t, type, min, summary]) => {
+      const i = n++;
+      return { ...mkLesson(`${prefix}-${String(i + 1).padStart(2, '0')}`, t, type, min, i < done, i > done), summary, isFree: i < free };
+    }),
+  }));
+};
+
+const GRAMMAR_PATH = mkPath(
+  'gp',
+  [
+    [
+      'Nền móng của câu tiếng Anh',
+      [
+        ['Một câu tiếng Anh gồm những gì: chủ ngữ, động từ, tân ngữ', 'VIDEO', 12, 'Nhìn một câu bất kỳ và chỉ ra đâu là chủ ngữ, đâu là động từ chính.'],
+        ['8 từ loại và cách nhận ra từng loại', 'VIDEO', 14, 'Danh từ, động từ, tính từ, trạng từ… và vị trí quen thuộc của chúng trong câu.'],
+        ['Danh từ đếm được, không đếm được và số nhiều', 'VIDEO', 13, 'Thêm -s/-es thế nào, khi nào dùng much, many, a lot of.'],
+        ['Mạo từ a, an, the', 'VIDEO', 12, 'Ba từ nhỏ nhưng sai nhiều nhất: dùng khi nào và khi nào bỏ đi.'],
+        ['Đại từ nhân xưng, tân ngữ và sở hữu', 'VIDEO', 11, 'I – me – my – mine: chọn đúng dạng theo vị trí trong câu.'],
+        ['Kiểm tra chặng 1', 'QUIZ', 10, '15 câu trắc nghiệm, đúng từ 10 câu để mở chặng tiếp theo.'],
+      ],
+    ],
+    [
+      'Động từ và các thì cơ bản',
+      [
+        ['Động từ to be: am, is, are, was, were', 'VIDEO', 12, 'Câu khẳng định, phủ định, câu hỏi với to be.'],
+        ['Thì hiện tại đơn', 'VIDEO', 15, 'Thói quen, sự thật, lịch trình. Quy tắc thêm -s/-es cho ngôi thứ ba.'],
+        ['Thì hiện tại tiếp diễn', 'VIDEO', 13, 'Việc đang diễn ra lúc nói và kế hoạch đã sắp xếp.'],
+        ['Thì quá khứ đơn và động từ bất quy tắc', 'VIDEO', 16, 'Kể lại việc đã xong; 50 động từ bất quy tắc hay gặp nhất.'],
+        ['Tương lai đơn và be going to', 'VIDEO', 12, 'Quyết định tức thời khác dự định có sẵn thế nào.'],
+        ['Kiểm tra chặng 2', 'QUIZ', 12, '20 câu chia động từ theo ngữ cảnh.'],
+      ],
+    ],
+    [
+      'Mở rộng câu',
+      [
+        ['Tính từ và trạng từ', 'VIDEO', 13, 'Tính từ đứng trước danh từ, trạng từ bổ nghĩa cho động từ; đuôi -ly.'],
+        ['Giới từ chỉ thời gian: in, on, at', 'VIDEO', 11, 'in May, on Monday, at 7 a.m. và các trường hợp ngoại lệ.'],
+        ['Giới từ chỉ nơi chốn và phương hướng', 'VIDEO', 12, 'in, on, at, next to, between, across from… qua tranh minh hoạ.'],
+        ['So sánh hơn và so sánh nhất', 'VIDEO', 14, 'Tính từ ngắn, tính từ dài và các dạng bất quy tắc good – better – best.'],
+        ['Câu hỏi Yes/No và câu hỏi Wh-', 'VIDEO', 13, 'Đảo trợ động từ lên trước; what, where, when, why, how.'],
+        ['Kiểm tra chặng 3', 'QUIZ', 12, '20 câu tổng hợp từ loại, giới từ và so sánh.'],
+      ],
+    ],
+    [
+      'Các thì hoàn thành và động từ khuyết thiếu',
+      [
+        ['Thì hiện tại hoàn thành', 'VIDEO', 15, 'have/has + V3; dấu hiệu since, for, already, yet, just.'],
+        ['Hiện tại hoàn thành hay quá khứ đơn?', 'VIDEO', 14, 'Cặp thì hay nhầm nhất trong Part 5 và VSTEP Reading.'],
+        ['Quá khứ tiếp diễn và quá khứ hoàn thành', 'VIDEO', 15, 'Việc đang xảy ra thì có việc khác xen vào; việc xảy ra trước một mốc quá khứ.'],
+        ['Động từ khuyết thiếu: can, could, must, should, may', 'VIDEO', 13, 'Khả năng, nghĩa vụ, lời khuyên, sự cho phép.'],
+        ['Kiểm tra chặng 4', 'QUIZ', 12, '20 câu chọn thì và động từ khuyết thiếu.'],
+      ],
+    ],
+    [
+      'Cấu trúc hay gặp trong đề TOEIC và VSTEP',
+      [
+        ['Câu bị động', 'VIDEO', 16, 'be + V3 ở các thì đã học; khi nào cần dùng bị động.'],
+        ['Câu điều kiện loại 1, 2, 3', 'VIDEO', 16, 'Điều kiện có thật, không có thật ở hiện tại và trong quá khứ.'],
+        ['Mệnh đề quan hệ: who, which, that, whose', 'VIDEO', 15, 'Nối hai câu thành một và cách rút gọn mệnh đề quan hệ.'],
+        ['V-ing hay to V sau động từ', 'VIDEO', 13, 'enjoy doing, decide to do và nhóm động từ đi được cả hai.'],
+        ['Liên từ và từ nối', 'VIDEO', 14, 'although, because, however, therefore; phân biệt với despite, because of.'],
+        ['Câu tường thuật', 'VIDEO', 13, 'Lùi thì, đổi đại từ và trạng từ khi kể lại lời người khác.'],
+        ['Bài kiểm tra cuối khoá', 'QUIZ', 25, '40 câu theo dạng Part 5 TOEIC; có bảng điểm từng chủ điểm sau khi nộp.'],
+      ],
+    ],
+  ],
+  5,
+  2,
+);
+
+const VOCAB_PATH = mkPath(
+  'vp',
+  [
+    [
+      'Cách học từ và phát âm',
+      [
+        ['Học từ vựng thế nào để nhớ lâu', 'VIDEO', 10, 'Học theo cụm, ôn ngắt quãng và cách dùng sổ từ trên OrbiLingo.'],
+        ['Bảng phiên âm IPA: nguyên âm', 'VIDEO', 14, '20 nguyên âm, so sánh cặp âm dễ nhầm như /ɪ/ và /iː/.'],
+        ['Bảng phiên âm IPA: phụ âm', 'VIDEO', 14, '24 phụ âm, chú ý âm cuối /s/, /z/, /t/, /d/ người Việt hay bỏ.'],
+        ['Trọng âm và cách tra từ điển', 'VIDEO', 12, 'Đọc ký hiệu trọng âm, từ loại và ví dụ trong từ điển Cambridge.'],
+        ['Kiểm tra chặng 1', 'QUIZ', 8, 'Nghe và chọn phiên âm đúng cho 15 từ.'],
+      ],
+    ],
+    [
+      'Từ vựng thông dụng hằng ngày',
+      [
+        ['Số đếm, ngày tháng và giờ giấc', 'VIDEO', 12, 'Đọc số tiền, số điện thoại, ngày tháng như người bản xứ.'],
+        ['Gia đình và con người', 'VIDEO', 11, 'Quan hệ gia đình, ngoại hình, tính cách.'],
+        ['Nhà cửa và sinh hoạt hằng ngày', 'VIDEO', 11, 'Các phòng, đồ dùng và hoạt động trong ngày.'],
+        ['Ăn uống và mua sắm', 'VIDEO', 12, 'Gọi món, hỏi giá, đổi trả hàng.'],
+        ['Đi lại và hỏi đường', 'VIDEO', 11, 'Phương tiện, biển báo, chỉ đường.'],
+        ['Sức khoẻ và thời tiết', 'VIDEO', 11, 'Triệu chứng thường gặp, đi khám, mô tả thời tiết.'],
+        ['Kiểm tra chặng 2', 'QUIZ', 10, '25 câu điền từ theo tranh và theo ngữ cảnh.'],
+      ],
+    ],
+    [
+      'Cấu tạo từ',
+      [
+        ['Tiền tố hay gặp: un-, re-, dis-, pre-, over-', 'VIDEO', 12, 'Đoán nghĩa từ mới từ phần đầu của từ.'],
+        ['Hậu tố danh từ: -tion, -ment, -ness, -er', 'VIDEO', 12, 'Nhận ra danh từ để làm câu hỏi từ loại.'],
+        ['Hậu tố tính từ và trạng từ: -ful, -ive, -al, -ly', 'VIDEO', 12, 'Một gốc từ, bốn từ loại: success – succeed – successful – successfully.'],
+        ['Cụm động từ cơ bản', 'VIDEO', 14, '30 phrasal verb hay gặp: set up, carry out, look forward to…'],
+        ['Collocation: những từ hay đi cùng nhau', 'VIDEO', 13, 'make a decision, take part in, meet a deadline…'],
+        ['Kiểm tra chặng 3', 'QUIZ', 10, '20 câu chọn dạng từ đúng.'],
+      ],
+    ],
+    [
+      'Từ vựng theo chủ đề đề thi',
+      [
+        ['Văn phòng và công việc', 'VIDEO', 13, 'Thiết bị, giấy tờ, giao việc; chủ đề xuất hiện nhiều nhất trong TOEIC.'],
+        ['Tuyển dụng và nhân sự', 'VIDEO', 12, 'Hồ sơ, phỏng vấn, thăng chức, phúc lợi.'],
+        ['Hội họp và sự kiện', 'VIDEO', 12, 'Lên lịch, hoãn họp, tổ chức hội thảo.'],
+        ['Du lịch và khách sạn', 'VIDEO', 12, 'Đặt phòng, sân bay, hành lý, lịch trình.'],
+        ['Giáo dục và môi trường', 'VIDEO', 13, 'Hai chủ đề quen thuộc của bài đọc và bài viết VSTEP.'],
+        ['Bài kiểm tra cuối khoá', 'QUIZ', 20, '50 câu tổng hợp; từ sai được đưa vào sổ từ để ôn lại.'],
+      ],
+    ],
+  ],
+  0,
+  2,
+);
+
+/** Số bài, số giờ và % đã học của một lộ trình */
+const pathStats = (sections: CourseSection[]) => {
+  const all = sections.flatMap((s) => s.lessons);
+  return {
+    lessonsCount: all.length,
+    durationHours: Math.round(all.reduce((a, l) => a + l.durationMin, 0) / 60),
+    progress: Math.round((all.filter((l) => l.isCompleted).length / all.length) * 100),
+  };
+};
+
+MOCK_COURSES.push(
+  {
+    id: 'c-path-grammar',
+    category: 'GRAMMAR',
+    coverUrl: PHOTOS.notes,
+    slug: 'ngu-phap-tu-dau',
+    title: 'Ngữ pháp tiếng Anh từ đầu',
+    examType: 'TOEIC',
+    level: 'Mất gốc → B1',
+    description: 'Học lại ngữ pháp từ câu đơn giản nhất đến các cấu trúc hay gặp trong đề TOEIC và VSTEP. Mỗi bài một video ngắn, học xong bài trước mới mở bài sau.',
+    gradient: 'from-indigo-500 to-violet-600',
+    ...pathStats(GRAMMAR_PATH),
+    studentsCount: 7412,
+    rating: 4.8,
+    isFree: true,
+    teacherName: 'Trần Thu Hà',
+    sections: GRAMMAR_PATH,
+  },
+  {
+    id: 'c-path-vocab',
+    category: 'VOCABULARY',
+    coverUrl: PHOTOS.flatlay,
+    slug: 'tu-vung-tu-dau',
+    title: 'Từ vựng tiếng Anh từ đầu',
+    examType: 'TOEIC',
+    level: 'Mất gốc → B1',
+    description: 'Bắt đầu từ phát âm và cách học từ, sau đó đi qua từ vựng hằng ngày, cấu tạo từ và các chủ đề hay ra trong đề thi.',
+    gradient: 'from-rose-500 to-pink-600',
+    ...pathStats(VOCAB_PATH),
+    studentsCount: 5389,
+    rating: 4.7,
+    isFree: true,
+    teacherName: 'Phạm Ngọc Linh',
+    sections: VOCAB_PATH,
+  },
+);
+
+/** Đường dẫn trang lộ trình theo loại khoá */
+export const LESSON_PATH_SLUG: Record<Exclude<CourseCategory, 'EXAM'>, string> = { GRAMMAR: 'ngu-phap', VOCABULARY: 'tu-vung' };
+
+/** Link mở một khoá: lộ trình nền tảng → trang danh sách bài; khoá luyện thi → trang giới thiệu / học (học viên) */
+export const courseHref = (c: Course, student = false) =>
+  c.category && c.category !== 'EXAM' ? `/courses/${LESSON_PATH_SLUG[c.category]}` : student ? `/app/courses/${c.id}` : `/courses/${c.id}`;
 
 export const DICTIONARY: Record<string, DictionaryEntry> = {
   economical: { word: 'economical', ipa: '/ˌiː.kəˈnɒm.ɪ.kəl/', pos: 'adjective', meaningVi: 'tiết kiệm, không lãng phí', meaningEn: 'not using more of something than is necessary', example: 'This car is very economical to run.' },

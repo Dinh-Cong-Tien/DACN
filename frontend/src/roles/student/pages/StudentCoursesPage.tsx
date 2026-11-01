@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { PlayCircle, Star, Users, Clock, BookOpen, ChevronRight, Lock, Play } from 'lucide-react';
-import { MOCK_COURSES } from '@/shared/mocks';
+import { MOCK_COURSES, courseHref } from '@/shared/mocks';
 import type { Course, Lesson } from '@/shared/types';
 import { cn } from '@/shared/utils';
 import { useDocumentTitle, useParamState } from '@/shared/hooks';
@@ -60,7 +60,7 @@ const CourseCard: React.FC<{ course: Course; index: number }> = ({ course, index
         </div>
         {started && <ProgressBar value={course.progress ?? 0} size="sm" tone="emerald" showValue label="Tiến độ" />}
         <div className="mt-auto pt-2">
-          <Button to={`/app/courses/${course.id}`} fullWidth size="sm" variant={started ? 'primary' : 'outline'} rightIcon={<ChevronRight className="w-4 h-4" />}>
+          <Button to={courseHref(course, true)} fullWidth size="sm" variant={started ? 'primary' : 'outline'} rightIcon={<ChevronRight className="w-4 h-4" />}>
             {started ? 'Tiếp tục học' : 'Bắt đầu học'}
           </Button>
         </div>

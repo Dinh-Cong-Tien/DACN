@@ -31,6 +31,8 @@ export interface AppUser {
 
 // ---------- COURSES / LESSONS ----------
 export type LessonType = 'VIDEO' | 'READING' | 'QUIZ';
+/** EXAM: khoá luyện thi; GRAMMAR / VOCABULARY: lộ trình nền tảng học lần lượt từ Bài 1 (bài sau mở khi xong bài trước) */
+export type CourseCategory = 'EXAM' | 'GRAMMAR' | 'VOCABULARY';
 
 export interface TranscriptLine {
   start: number;
@@ -47,6 +49,8 @@ export interface Lesson {
   videoUrl?: string;
   transcript?: TranscriptLine[];
   content?: string;
+  /** Mô tả ngắn hiển thị trong danh sách bài của lộ trình */
+  summary?: string;
   isCompleted: boolean;
   isLocked: boolean;
   isFree?: boolean;
@@ -63,6 +67,8 @@ export interface Course {
   slug: string;
   title: string;
   examType: ExamType;
+  /** Mặc định EXAM */
+  category?: CourseCategory;
   level: string;
   description: string;
   gradient: string; // tailwind gradient classes cho thumbnail

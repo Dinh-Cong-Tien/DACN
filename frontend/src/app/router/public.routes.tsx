@@ -5,6 +5,7 @@ import { ToeicPage } from '@/pages/marketing/ToeicPage';
 import { VstepPage } from '@/pages/marketing/VstepPage';
 import { CoursesPage } from '@/pages/marketing/CoursesPage';
 import { CourseDetailPage } from '@/pages/marketing/CourseDetailPage';
+import { LessonPathPage } from '@/pages/marketing/LessonPathPage';
 import { PracticePage } from '@/pages/marketing/PracticePage';
 import { MockTestsPage } from '@/pages/marketing/MockTestsPage';
 import { QuestionBankPage } from '@/pages/marketing/QuestionBankPage';
@@ -32,6 +33,9 @@ export const publicRoutes: RouteObject[] = [
       { path: 'toeic', element: <ToeicPage /> },
       { path: 'vstep', element: <VstepPage /> },
       { path: 'courses', element: <CoursesPage /> },
+      // Lộ trình nền tảng (đường tĩnh, ưu tiên hơn courses/:id)
+      { path: 'courses/ngu-phap', element: <LessonPathPage category="GRAMMAR" /> },
+      { path: 'courses/tu-vung', element: <LessonPathPage category="VOCABULARY" /> },
       { path: 'courses/:id', element: <CourseDetailPage /> },
       { path: 'practice', element: <PracticePage /> },
       { path: 'mock-tests', element: <MockTestsPage /> },

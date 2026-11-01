@@ -249,7 +249,9 @@ export const LessonEngine: React.FC<LessonEngineProps> = ({ course, lesson, onSe
                         </span>
                         <span className="flex-1 min-w-0">
                           <span className={cn('block text-sm truncate', isActive ? 'font-bold text-indigo-900' : 'font-medium text-slate-700')}>{l.title}</span>
-                          <span className="block text-[11px] text-slate-400">{l.durationMin} phút</span>
+                          <span className="block text-[11px] text-slate-400">
+                            Bài {allLessons.indexOf(l) + 1} · {l.durationMin} phút
+                          </span>
                         </span>
                       </button>
                     </li>

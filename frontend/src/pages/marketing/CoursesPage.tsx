@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { Search, Star } from 'lucide-react';
 import { RevealPhoto } from '@/shared/components/motion';
 import { Img } from '@/shared/components/media/Img';
-import { MOCK_COURSES } from '@/shared/mocks';
+import { MOCK_COURSES, courseHref } from '@/shared/mocks';
 import { useDocumentTitle, useGate, useParamState } from '@/shared/hooks';
 import { cn, formatNumber } from '@/shared/utils';
 import type { Course } from '@/shared/types';
@@ -14,7 +14,7 @@ type Sort = 'popular' | 'rating' | 'short';
 
 /** Thẻ khoá học nền sáng kiểu catalog LMS */
 const CourseCard: React.FC<{ c: Course }> = ({ c }) => (
-  <Link to={`/courses/${c.id}`} className="group flex h-full flex-col overflow-hidden rounded-xl border border-slate-200 bg-white transition-shadow hover:shadow-[0_8px_24px_-12px_rgba(16,24,40,0.25)]">
+  <Link to={courseHref(c)} className="group flex h-full flex-col overflow-hidden rounded-xl border border-slate-200 bg-white transition-shadow hover:shadow-[0_8px_24px_-12px_rgba(16,24,40,0.25)]">
     <div className="relative overflow-hidden">
       <RevealPhoto>
         <Img src={c.coverUrl} alt={c.title} ratio="video" fallbackClass="bg-slate-200" className="transition-transform duration-500 group-hover:scale-[1.03]" />

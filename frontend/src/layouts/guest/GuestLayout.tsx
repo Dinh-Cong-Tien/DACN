@@ -63,6 +63,12 @@ export const GuestLayout: React.FC<GuestLayoutProps> = ({ contained }) => {
       isActive ? (onDarkHero ? 'bg-white/10 text-amber-300' : 'bg-slate-900/[0.06] text-indigo-700') : onDarkHero ? 'text-slate-200 hover:bg-white/10 hover:text-white' : 'text-slate-700 hover:bg-slate-900/5 hover:text-slate-900'
     );
 
+  // Mục con đang mở: khớp đúng đường dẫn, link có query thì khớp cả query (tránh /courses?exam=TOEIC sáng khi ở /courses/ngu-phap)
+  const isHere = (to: string) => {
+    const [path, query] = to.split('?');
+    return location.pathname === path && (!query || location.search === `?${query}`);
+  };
+
   const dropdown = (label: string, img: string | undefined, items: MenuLink[], active = false, className?: string) => (
     <div key={label} className={cn('relative shrink-0 group/menu', className)}>
       <button className={cn('px-2 py-2 rounded-xl text-sm font-bold flex items-center gap-1 transition whitespace-nowrap', active ? (onDarkHero ? 'bg-white/10 text-amber-300' : 'bg-slate-900/[0.06] text-indigo-700') : onDarkHero ? 'text-slate-200 hover:bg-white/10 hover:text-white' : 'text-slate-700 hover:bg-slate-900/5 hover:text-slate-900')}>
@@ -78,7 +84,7 @@ export const GuestLayout: React.FC<GuestLayoutProps> = ({ contained }) => {
             {c.group && c.group !== items[ci - 1]?.group && (
               <p className={cn('px-2.5 pb-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-400', ci > 0 ? 'mt-1.5 border-t border-slate-200 pt-2.5' : 'pt-1')}>{c.group}</p>
             )}
-            <NavLink to={c.to} className={({ isActive }) => cn('group/item flex items-center gap-3 px-2.5 py-2 rounded-lg text-sm transition-colors', isActive ? 'bg-slate-100 text-slate-900' : 'text-slate-700 hover:bg-slate-50 hover:text-slate-900')}>
+            <NavLink to={c.to} end className={() => cn('group/item flex items-center gap-3 px-2.5 py-2 rounded-lg text-sm transition-colors', isHere(c.to) ? 'bg-slate-100 text-slate-900' : 'text-slate-700 hover:bg-slate-50 hover:text-slate-900')}>
               {c.img && <img src={c.img} alt="" className={cn('shrink-0 transition-transform duration-200 group-hover/item:scale-110', c.desc ? 'h-9 w-9' : 'h-7 w-7')} />}
               <span className="min-w-0 flex-1">
                 <span className="block font-medium">{c.label}</span>
