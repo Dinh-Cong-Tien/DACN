@@ -32,7 +32,7 @@ const TrackRow: React.FC<{ course: Course; isStudent: boolean }> = ({ course: c,
         </RevealPhoto>
       </Link>
       <div className="flex min-w-0 flex-col py-1">
-        <p className="text-[12px] font-semibold uppercase tracking-[0.14em] text-slate-500">{c.category === 'FOUNDATION' ? `Nền tảng · ${c.examType}` : 'Kiến thức chung'}</p>
+        <p className="text-[12px] font-semibold uppercase tracking-[0.14em] text-slate-500">{c.category === 'FOUNDATION' ? `Nền tảng · ${c.examType}` : c.category === 'SKILL' ? 'Kỹ năng tiếng Anh' : 'Kiến thức chung'}</p>
         <h3 className="mt-1 font-display text-2xl font-bold text-slate-900 md:text-[1.7rem]">
           <Link to={courseHref(c)} className="hover:text-indigo-700">
             {c.title}
@@ -93,11 +93,13 @@ const TrackRow: React.FC<{ course: Course; isStudent: boolean }> = ({ course: c,
 /**
  * Khoá học, học từ đầu theo thứ tự bài:
  * - Kiến thức chung: Ngữ pháp, Từ vựng và Phát âm (dùng cho cả hai kỳ thi)
+ * - Kỹ năng tiếng Anh: giao tiếp, nghe, viết, công sở; học để dùng, không gắn kỳ thi
  * - Kiến thức nền tảng: tách riêng TOEIC (nặng hơn, tiếng Anh công việc) và VSTEP (nhẹ hơn, bốn kỹ năng, B1)
  * Luyện đề theo kỳ thi nằm ở menu TOEIC / VSTEP.
  */
 const GROUPS = [
-  { key: 'general', title: 'Kiến thức chung', desc: 'Dùng cho cả TOEIC và VSTEP. Nên học song song hai khoá này trước.', match: (c: Course) => c.category !== 'FOUNDATION' },
+  { key: 'general', title: 'Kiến thức chung', desc: 'Dùng cho cả TOEIC và VSTEP. Nên học song song hai khoá này trước.', match: (c: Course) => c.category === 'GRAMMAR' || c.category === 'VOCABULARY' },
+  { key: 'skill', title: 'Kỹ năng tiếng Anh', desc: 'Học để dùng tiếng Anh hằng ngày và trong công việc, không bám đề thi. Nên học sau khi đã đi được nửa khoá Ngữ pháp.', match: (c: Course) => c.category === 'SKILL' },
   { key: 'exam', title: 'Kiến thức nền tảng theo kỳ thi', desc: 'Tách riêng hai kỳ thi. TOEIC nặng hơn VSTEP: văn bản dài hơn, ngữ cảnh công việc, nhiều bài hơn.', match: (c: Course) => c.category === 'FOUNDATION' },
 ];
 
@@ -117,7 +119,7 @@ export const CoursesPage: React.FC = () => {
             Học tiếng Anh <Accent>từ đầu</Accent>
           </>
         }
-        lead="Mỗi khoá là một chuỗi video bài giảng đánh số từ Bài 1, học xong bài trước mới mở bài sau. Bắt đầu với Ngữ pháp và Từ vựng, sau đó chọn khoá nền tảng của kỳ thi bạn sẽ thi."
+        lead="Mỗi khoá là một chuỗi video bài giảng đánh số từ Bài 1, học xong bài trước mới mở bài sau. Bắt đầu với Ngữ pháp và Từ vựng, sau đó chọn khoá kỹ năng để dùng tiếng Anh, hoặc khoá nền tảng của kỳ thi bạn sẽ thi."
         facts={[
           { value: String(MOCK_COURSES.length), label: 'Khoá học' },
           { value: String(lessons), label: 'Bài giảng' },

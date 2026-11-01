@@ -431,6 +431,196 @@ const VSTEP_PATH = mkPath(
   2,
 );
 
+// ---------- Kỹ năng tiếng Anh: học để dùng, không gắn với kỳ thi ----------
+const SPEAKING_PATH = mkPath(
+  'sp',
+  [
+    [
+      'Làm quen',
+      [
+        ['Chào hỏi và giới thiệu bản thân', 'VIDEO', 10, "Hi, I'm…, Nice to meet you; nói tên, quê, công việc trong 30 giây."],
+        ['Hỏi lại khi chưa nghe rõ', 'VIDEO', 8, 'Sorry, could you say that again?, What does … mean?'],
+        ['Nói về sở thích và thời gian rảnh', 'VIDEO', 10, 'I really enjoy…, I’m into…, How about you?'],
+        ['Giữ cuộc trò chuyện tiếp tục', 'VIDEO', 11, 'Hỏi thêm một câu, phản hồi ngắn: Really?, That sounds fun.'],
+        ['Luyện nói: giới thiệu bản thân', 'QUIZ', 10, 'Ghi âm 1 phút giới thiệu bản thân; giáo viên nhận xét phát âm và độ trôi chảy.'],
+      ],
+    ],
+    [
+      'Sinh hoạt hằng ngày',
+      [
+        ['Gọi món ở quán cà phê, nhà hàng', 'VIDEO', 11, "I'd like…, Can I get…?, Could we have the bill, please?"],
+        ['Mua sắm, hỏi giá và đổi trả', 'VIDEO', 11, 'How much is this?, Do you have it in a smaller size?'],
+        ['Hỏi đường và chỉ đường', 'VIDEO', 10, 'Go straight, turn left at…, It’s opposite the bank.'],
+        ['Gọi điện và để lại lời nhắn', 'VIDEO', 10, 'Could I speak to…?, Can I leave a message?'],
+        ['Đặt lịch hẹn, hoãn và huỷ hẹn', 'VIDEO', 10, 'Are you free on…?, Something came up, can we reschedule?'],
+        ['Luyện nói: đóng vai theo tình huống', 'QUIZ', 12, 'Đóng vai khách hàng ở 3 tình huống, ghi âm câu trả lời.'],
+      ],
+    ],
+    [
+      'Du lịch',
+      [
+        ['Ở sân bay: làm thủ tục, an ninh, hải quan', 'VIDEO', 12, 'Window or aisle?, Anything to declare?'],
+        ['Khách sạn: nhận phòng, báo sự cố, trả phòng', 'VIDEO', 11, 'I have a reservation under…, The air conditioner isn’t working.'],
+        ['Đi taxi, xe buýt, tàu', 'VIDEO', 9, 'How long does it take to…?, Does this bus go to…?'],
+        ['Khi gặp sự cố: lạc đồ, ốm, nhờ giúp đỡ', 'VIDEO', 10, "I've lost my passport. I need to see a doctor."],
+        ['Luyện nói: một ngày đi du lịch', 'QUIZ', 12, 'Nói liền mạch qua 4 tình huống từ sân bay đến khách sạn.'],
+      ],
+    ],
+    [
+      'Bày tỏ ý kiến',
+      [
+        ['Đồng ý, không đồng ý một cách lịch sự', 'VIDEO', 11, "I see your point, but…, I'm not so sure about that."],
+        ['Đưa lời khuyên và gợi ý', 'VIDEO', 10, 'If I were you…, Have you thought about…?'],
+        ['Kể chuyện: một trải nghiệm đáng nhớ', 'VIDEO', 12, 'Mở đầu, diễn biến, kết thúc; từ nối first, then, in the end.'],
+        ['Nói về một chủ đề trong 2 phút', 'VIDEO', 12, 'Lên ý nhanh, nói theo dàn ý, tự sửa khi nói sai.'],
+        ['Bài nói cuối khoá', 'QUIZ', 20, 'Trò chuyện 5 phút với giáo viên qua video; chấm theo phát âm, từ vựng, độ trôi chảy.'],
+      ],
+    ],
+  ],
+  1,
+  2,
+);
+
+const LISTENING_PATH = mkPath(
+  'lp',
+  [
+    [
+      'Nghe từng âm, từng từ',
+      [
+        ['Vì sao nghe không ra dù biết từ', 'VIDEO', 10, 'Chữ viết khác âm thanh: âm yếu, nối âm, nuốt âm.'],
+        ['Nối âm giữa phụ âm và nguyên âm', 'VIDEO', 11, 'turn_off, pick_it_up: nghe cả cụm thay vì từng từ.'],
+        ['Âm yếu: to, of, can, and khi nói nhanh', 'VIDEO', 11, 'Dạng yếu /tə/, /əv/, /kən/ của các từ chức năng.'],
+        ['Số đếm, ngày tháng, giá tiền', 'VIDEO', 10, 'fifteen hay fifty; nghe số điện thoại, giờ, giá.'],
+        ['Nghe chép chính tả ngắn', 'QUIZ', 10, '10 câu ngắn, gõ lại đúng từng từ.'],
+      ],
+    ],
+    [
+      'Nghe hội thoại ngắn',
+      [
+        ['Nghe ý chính trước, chi tiết sau', 'VIDEO', 11, 'Ai nói với ai, ở đâu, về việc gì.'],
+        ['Hội thoại ở cửa hàng và nhà hàng', 'VIDEO', 10, 'Tốc độ chậm, sau đó nghe lại ở tốc độ thật.'],
+        ['Hội thoại qua điện thoại', 'VIDEO', 10, 'Không có hình ảnh hỗ trợ; chú ý tên, số, thời gian.'],
+        ['Phân biệt giọng Anh – Mỹ – Úc', 'VIDEO', 12, 'Cùng một câu nói bằng ba giọng; các âm khác nhau rõ nhất.'],
+        ['Kiểm tra chặng 2', 'QUIZ', 12, '15 câu nghe hội thoại ngắn.'],
+      ],
+    ],
+    [
+      'Nghe bài nói dài',
+      [
+        ['Thông báo nơi công cộng', 'VIDEO', 10, 'Sân bay, nhà ga, siêu thị: nắm thông tin cần làm theo.'],
+        ['Ghi chú khi nghe', 'VIDEO', 11, 'Viết tắt, kí hiệu, chỉ ghi từ khoá.'],
+        ['Nghe podcast tốc độ vừa', 'VIDEO', 14, 'Một đoạn podcast 5 phút về đời sống, có bản ghi chữ.'],
+        ['Nghe bài giảng ngắn', 'VIDEO', 14, 'Nhận ra cấu trúc: mở đầu, các ý chính, kết luận.'],
+        ['Kiểm tra chặng 3', 'QUIZ', 12, '15 câu nghe đoạn dài.'],
+      ],
+    ],
+    [
+      'Nghe tốc độ thật',
+      [
+        ['Phim và chương trình truyền hình', 'VIDEO', 13, 'Nghe có phụ đề tiếng Anh, sau đó tắt phụ đề.'],
+        ['Tin tức', 'VIDEO', 13, 'Từ vựng thời sự thường gặp, câu dài, tốc độ nhanh.'],
+        ['Shadowing: nghe và nói đuổi', 'VIDEO', 12, 'Nhại theo người nói để quen nhịp và ngữ điệu.'],
+        ['Bài kiểm tra cuối khoá', 'QUIZ', 25, '30 câu từ hội thoại ngắn đến bài nói dài, tốc độ thật.'],
+      ],
+    ],
+  ],
+  0,
+  2,
+);
+
+const WRITING_PATH = mkPath(
+  'wp',
+  [
+    [
+      'Viết câu đúng',
+      [
+        ['Câu đơn: chủ ngữ + động từ', 'VIDEO', 10, 'Lỗi thiếu động từ, thiếu chủ ngữ hay gặp ở người Việt.'],
+        ['Câu ghép và câu phức', 'VIDEO', 12, 'Nối ý bằng and, but, because, when, although.'],
+        ['Dấu câu và viết hoa', 'VIDEO', 9, 'Dấu phẩy, dấu chấm phẩy, dấu nháy; viết hoa tên riêng.'],
+        ['Lỗi dịch từng chữ từ tiếng Việt', 'VIDEO', 11, 'I very like → I really like; các lỗi điển hình và cách sửa.'],
+        ['Kiểm tra chặng 1', 'QUIZ', 10, 'Tìm và sửa lỗi trong 15 câu.'],
+      ],
+    ],
+    [
+      'Viết đoạn văn',
+      [
+        ['Câu chủ đề và câu triển khai', 'VIDEO', 11, 'Một đoạn chỉ nói một ý; câu đầu nêu ý đó.'],
+        ['Từ nối để đoạn văn liền mạch', 'VIDEO', 10, 'First, In addition, For example, As a result.'],
+        ['Đoạn văn miêu tả', 'VIDEO', 11, 'Tả người, nơi chốn bằng tính từ và so sánh.'],
+        ['Đoạn văn kể chuyện', 'VIDEO', 11, 'Dùng các thì quá khứ và từ chỉ thời gian.'],
+        ['Bài viết: một đoạn văn 120 từ', 'QUIZ', 15, 'Viết theo đề cho sẵn; giáo viên chấm và sửa chi tiết.'],
+      ],
+    ],
+    [
+      'Viết email và tin nhắn',
+      [
+        ['Email thân mật cho bạn bè', 'VIDEO', 10, 'Mở thư, hỏi thăm, kể chuyện, kết thư.'],
+        ['Email trang trọng: xin thông tin, đặt lịch', 'VIDEO', 12, 'Dear Mr…, I am writing to…, I look forward to…'],
+        ['Email phàn nàn và xin lỗi', 'VIDEO', 11, 'Nêu vấn đề, đề nghị cách giải quyết, giữ giọng lịch sự.'],
+        ['Bài viết: email trả lời', 'QUIZ', 15, 'Trả lời một email cho sẵn, 150 từ.'],
+      ],
+    ],
+    [
+      'Viết bài luận ngắn',
+      [
+        ['Lập dàn ý trong 5 phút', 'VIDEO', 11, 'Mở bài – 2 thân bài – kết bài; chọn ý và ví dụ.'],
+        ['Mở bài và kết bài', 'VIDEO', 10, 'Diễn đạt lại đề, nêu quan điểm, tóm tắt.'],
+        ['Bài luận nêu ý kiến', 'VIDEO', 13, 'Đưa lý do, ví dụ, và phản biện ý ngược lại.'],
+        ['Tự sửa bài trước khi nộp', 'VIDEO', 9, 'Danh sách kiểm tra: thì, mạo từ, số nhiều, chính tả.'],
+        ['Bài viết cuối khoá', 'QUIZ', 30, 'Một bài luận 250 từ; giáo viên chấm theo nội dung, bố cục, từ vựng, ngữ pháp.'],
+      ],
+    ],
+  ],
+  0,
+  2,
+);
+
+const OFFICE_PATH = mkPath(
+  'op',
+  [
+    [
+      'Ở văn phòng',
+      [
+        ['Giới thiệu bản thân và công việc', 'VIDEO', 11, 'What do you do?, I work in the marketing department.'],
+        ['Nói chuyện với đồng nghiệp', 'VIDEO', 10, 'Small talk giờ nghỉ, hỏi thăm cuối tuần.'],
+        ['Nhờ giúp đỡ và giao việc', 'VIDEO', 10, 'Could you give me a hand with…?, Would you mind…?'],
+        ['Gọi điện công việc', 'VIDEO', 11, 'Chuyển máy, hẹn gọi lại, xác nhận thông tin.'],
+        ['Kiểm tra chặng 1', 'QUIZ', 10, '15 câu theo tình huống văn phòng.'],
+      ],
+    ],
+    [
+      'Email và văn bản công việc',
+      [
+        ['Cấu trúc một email công việc', 'VIDEO', 11, 'Tiêu đề, lời chào, mục đích, hành động cần làm, lời kết.'],
+        ['Email nhắc việc và theo dõi tiến độ', 'VIDEO', 10, 'Just a quick reminder…, Could you update me on…?'],
+        ['Viết biên bản cuộc họp', 'VIDEO', 11, 'Ghi quyết định, người phụ trách, hạn chót.'],
+        ['Bài viết: email gửi khách hàng', 'QUIZ', 15, 'Viết email báo chậm tiến độ và đề xuất lịch mới.'],
+      ],
+    ],
+    [
+      'Họp và thuyết trình',
+      [
+        ['Tham gia cuộc họp', 'VIDEO', 12, 'Xin phát biểu, ngắt lời lịch sự, xin làm rõ.'],
+        ['Mở đầu và kết thúc bài thuyết trình', 'VIDEO', 12, 'Today I’d like to talk about…, To sum up…'],
+        ['Mô tả biểu đồ và số liệu', 'VIDEO', 12, 'rise, fall, remain stable; sharply, slightly.'],
+        ['Trả lời câu hỏi sau thuyết trình', 'VIDEO', 10, "That's a good question. Let me get back to you on that."],
+        ['Bài nói: thuyết trình 3 phút', 'QUIZ', 15, 'Ghi hình bài thuyết trình có slide; giáo viên nhận xét.'],
+      ],
+    ],
+    [
+      'Phỏng vấn xin việc',
+      [
+        ['Viết CV và thư xin việc bằng tiếng Anh', 'VIDEO', 13, 'Động từ mạnh, mô tả thành tích bằng số liệu.'],
+        ['Câu hỏi phỏng vấn thường gặp', 'VIDEO', 14, 'Tell me about yourself, strengths and weaknesses, why us?'],
+        ['Kể kinh nghiệm theo cấu trúc STAR', 'VIDEO', 12, 'Situation, Task, Action, Result.'],
+        ['Phỏng vấn thử cuối khoá', 'QUIZ', 20, 'Phỏng vấn 10 phút với giáo viên, có nhận xét chi tiết.'],
+      ],
+    ],
+  ],
+  0,
+  2,
+);
+
 /** Ghi chú hiển thị dưới tiêu đề mỗi phần */
 export const COURSE_PART_NOTE: Record<string, string> = {
   [REVIEW]: 'Ôn lại kiến thức chung trước khi vào chủ đề. Kết thúc bằng bài kiểm tra giữa khoá.',
@@ -447,7 +637,7 @@ const pathStats = (sections: CourseSection[]) => {
   };
 };
 
-/** Mục Khoá học: 2 lộ trình kiến thức chung (Ngữ pháp, Từ vựng và Phát âm) + Kiến thức nền tảng tách riêng TOEIC và VSTEP */
+/** Mục Khoá học: kiến thức chung (Ngữ pháp, Từ vựng và Phát âm) + kỹ năng tiếng Anh không gắn kỳ thi + Kiến thức nền tảng tách riêng TOEIC và VSTEP */
 export const MOCK_COURSES: Course[] = [
   {
     id: 'c-grammar',
@@ -480,6 +670,70 @@ export const MOCK_COURSES: Course[] = [
     isFree: true,
     teacherName: 'Phạm Ngọc Linh',
     sections: VOCAB_PATH,
+  },
+  {
+    id: 'c-speaking',
+    category: 'SKILL',
+    slug: 'giao-tiep-hang-ngay',
+    coverUrl: PHOTOS.discussion,
+    title: 'Giao tiếp hằng ngày',
+    level: 'A1 → B1',
+    description: 'Nói được tiếng Anh trong những tình huống quen thuộc: làm quen, mua sắm, gọi món, hỏi đường, đi du lịch, bày tỏ ý kiến. Mỗi chặng kết thúc bằng một bài ghi âm có giáo viên nhận xét.',
+    gradient: 'from-amber-500 to-orange-600',
+    ...pathStats(SPEAKING_PATH),
+    studentsCount: 3874,
+    rating: 4.8,
+    isFree: true,
+    teacherName: 'Nguyễn Minh Anh',
+    sections: SPEAKING_PATH,
+  },
+  {
+    id: 'c-listening',
+    category: 'SKILL',
+    slug: 'luyen-nghe',
+    coverUrl: PHOTOS.headphones,
+    title: 'Luyện nghe hiểu',
+    level: 'A2 → B2',
+    description: 'Đi từ nghe từng âm, nối âm, âm yếu đến hội thoại ngắn, podcast, tin tức và phim ở tốc độ thật. Có bản ghi chữ song ngữ và bài nghe chép chính tả.',
+    gradient: 'from-sky-500 to-blue-600',
+    ...pathStats(LISTENING_PATH),
+    studentsCount: 2967,
+    rating: 4.7,
+    isFree: true,
+    teacherName: 'Lê Quốc Bảo',
+    sections: LISTENING_PATH,
+  },
+  {
+    id: 'c-writing',
+    category: 'SKILL',
+    slug: 'viet-tieng-anh',
+    coverUrl: PHOTOS.writing,
+    title: 'Viết tiếng Anh',
+    level: 'A2 → B2',
+    description: 'Viết câu đúng, rồi đoạn văn, email và bài luận ngắn. Các bài viết cuối chặng được giáo viên chấm và sửa từng lỗi.',
+    gradient: 'from-teal-500 to-emerald-600',
+    ...pathStats(WRITING_PATH),
+    studentsCount: 2241,
+    rating: 4.7,
+    isFree: true,
+    teacherName: 'Trần Thu Hà',
+    sections: WRITING_PATH,
+  },
+  {
+    id: 'c-office',
+    category: 'SKILL',
+    slug: 'tieng-anh-cong-so',
+    coverUrl: PHOTOS.meeting,
+    title: 'Tiếng Anh công sở',
+    level: 'B1 → B2',
+    description: 'Tiếng Anh dùng ở nơi làm việc: nói chuyện với đồng nghiệp, gọi điện, viết email, họp, thuyết trình và phỏng vấn xin việc.',
+    gradient: 'from-slate-600 to-slate-800',
+    ...pathStats(OFFICE_PATH),
+    studentsCount: 3105,
+    rating: 4.8,
+    isFree: true,
+    teacherName: 'Nguyễn Minh Anh',
+    sections: OFFICE_PATH,
   },
   {
     id: 'c-toeic-basic',

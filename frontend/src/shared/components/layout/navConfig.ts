@@ -120,6 +120,10 @@ export const PUBLIC_NAV: PublicNavItem[] = [
     children: [
       { to: '/courses/ngu-phap', label: 'Ngữ pháp', img: '/images/nav/open-book.webp', desc: 'Toàn bộ ngữ pháp, từ câu đơn đến nâng cao' },
       { to: '/courses/tu-vung-phat-am', label: 'Từ vựng và Phát âm', img: '/images/nav/microphone.webp', desc: 'Phiên âm IPA, trọng âm, từ vựng theo chủ đề' },
+      { to: '/courses/giao-tiep-hang-ngay', label: 'Giao tiếp hằng ngày', img: '/images/nav/compass.webp', desc: 'Nói trong các tình huống đời sống, du lịch', group: 'Kỹ năng tiếng Anh' },
+      { to: '/courses/luyen-nghe', label: 'Luyện nghe hiểu', img: '/images/nav/headphone.webp', desc: 'Từ nối âm, âm yếu đến phim, tin tức', group: 'Kỹ năng tiếng Anh' },
+      { to: '/courses/viet-tieng-anh', label: 'Viết tiếng Anh', img: '/images/nav/fountain-pen.webp', desc: 'Câu, đoạn văn, email, bài luận', group: 'Kỹ năng tiếng Anh' },
+      { to: '/courses/tieng-anh-cong-so', label: 'Tiếng Anh công sở', img: '/images/nav/laptop.webp', desc: 'Email, họp, thuyết trình, phỏng vấn', group: 'Kỹ năng tiếng Anh' },
       { to: '/courses/nen-tang-toeic', label: 'Nền tảng TOEIC', img: '/images/nav/briefcase.webp', desc: 'Giáo trình tiếng Anh công việc B1 → B2', group: 'Kiến thức nền tảng' },
       { to: '/courses/nen-tang-vstep', label: 'Nền tảng VSTEP', img: '/images/nav/graduation-cap.webp', desc: 'Giáo trình tiếng Anh đời sống A2 → B1', group: 'Kiến thức nền tảng' },
     ],

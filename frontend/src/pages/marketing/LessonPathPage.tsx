@@ -14,7 +14,9 @@ const copyOf = (c: Course): { eyebrow: string; title: React.ReactNode } =>
     ? { eyebrow: 'Ngữ pháp', title: <>Ngữ pháp tiếng Anh <Accent>từ đầu</Accent></> }
     : c.category === 'VOCABULARY'
       ? { eyebrow: 'Từ vựng và Phát âm', title: <>Từ vựng và <Accent>Phát âm</Accent></> }
-      : { eyebrow: `Kiến thức nền tảng · ${c.examType}`, title: <>Nền tảng <Accent>{c.examType}</Accent></> };
+      : c.category === 'SKILL'
+        ? { eyebrow: 'Kỹ năng tiếng Anh', title: c.title }
+        : { eyebrow: `Kiến thức nền tảng · ${c.examType}`, title: <>Nền tảng <Accent>{c.examType}</Accent></> };
 
 const TYPE_LABEL: Record<Lesson['type'], string> = { VIDEO: 'Video', READING: 'Bài đọc', QUIZ: 'Bài kiểm tra' };
 
@@ -32,8 +34,9 @@ export const LessonPathPage: React.FC = () => {
 
 const PathView: React.FC<{ course: Course }> = ({ course }) => {
   const copy = copyOf(course);
-  // Học song song: khoá nền tảng chỉ gợi ý 2 khoá kiến thức chung, không gợi ý khoá của kỳ thi kia
-  const others = MOCK_COURSES.filter((c) => c.id !== course.id && (course.category !== 'FOUNDATION' || c.category !== 'FOUNDATION'));
+  // Học song song: luôn gợi ý 2 khoá kiến thức chung; khoá kỹ năng gợi ý thêm các khoá kỹ năng khác, không gợi ý khoá nền tảng kỳ thi
+  const general = (c: Course) => c.category === 'GRAMMAR' || c.category === 'VOCABULARY';
+  const others = MOCK_COURSES.filter((c) => c.id !== course.id && (general(c) || (course.category === 'SKILL' ? c.category === 'SKILL' : general(course) && c.category === 'FOUNDATION')));
   useDocumentTitle(course.title);
   const gate = useGate();
   const isStudent = useAuthStore((s) => s.user?.role === 'STUDENT');

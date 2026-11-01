@@ -35,7 +35,8 @@ export type LessonType = 'VIDEO' | 'READING' | 'QUIZ';
  * Mục Khoá học chỉ gồm 3 lộ trình kiến thức chung, học lần lượt từ Bài 1 (bài sau mở khi xong bài trước).
  * Luyện thi theo đề nằm ở TOEIC / VSTEP, không nằm trong Khoá học.
  */
-export type CourseCategory = 'GRAMMAR' | 'VOCABULARY' | 'FOUNDATION';
+/** SKILL: khoá kỹ năng dùng tiếng Anh (giao tiếp, nghe, viết, công sở), không gắn với kỳ thi */
+export type CourseCategory = 'GRAMMAR' | 'VOCABULARY' | 'SKILL' | 'FOUNDATION';
 
 export interface TranscriptLine {
   start: number;
