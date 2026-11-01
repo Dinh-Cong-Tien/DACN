@@ -121,8 +121,8 @@ export const PUBLIC_NAV: PublicNavItem[] = [
     children: [
       { to: '/courses/ngu-phap', label: 'Ngữ pháp', img: '/images/nav/open-book.webp', desc: 'Toàn bộ ngữ pháp, từ câu đơn đến nâng cao' },
       { to: '/courses/tu-vung-phat-am', label: 'Từ vựng và Phát âm', img: '/images/nav/microphone.webp', desc: 'Phiên âm IPA, trọng âm, từ vựng theo chủ đề' },
-      { to: '/courses/nen-tang-toeic', label: 'Nền tảng TOEIC', img: '/images/nav/briefcase.webp', desc: 'Tiếng Anh môi trường công việc, nặng hơn', group: 'Kiến thức nền tảng' },
-      { to: '/courses/nen-tang-vstep', label: 'Nền tảng VSTEP', img: '/images/nav/graduation-cap.webp', desc: 'Bốn kỹ năng, chủ đề đời sống, mục tiêu B1', group: 'Kiến thức nền tảng' },
+      { to: '/courses/nen-tang-toeic', label: 'Nền tảng TOEIC', img: '/images/nav/briefcase.webp', desc: 'Giáo trình tiếng Anh công việc B1 → B2', group: 'Kiến thức nền tảng' },
+      { to: '/courses/nen-tang-vstep', label: 'Nền tảng VSTEP', img: '/images/nav/graduation-cap.webp', desc: 'Giáo trình tiếng Anh đời sống A2 → B1', group: 'Kiến thức nền tảng' },
     ],
   },
   { to: '/mock-tests', label: 'Thi thử', img: '/images/nav/memo.webp', icon: FileText, appTo: '/app/mock-tests' },
