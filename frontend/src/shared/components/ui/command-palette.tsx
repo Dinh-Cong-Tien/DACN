@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { Search, FileText, PlayCircle, BookOpen, Compass, AlertTriangle, Trophy, Settings, LayoutDashboard, CornerDownLeft, ArrowUp, ArrowDown, Users, ClipboardList, PenTool, Sparkles } from 'lucide-react';
 import { useUiStore } from '@/shared/stores/uiStore';
 import { useAuthStore } from '@/shared/stores/authStore';
-import { MOCK_COURSES, MOCK_TESTS, GRAMMAR_TOPICS } from '@/shared/mocks';
+import { MOCK_COURSES, MOCK_TESTS, GRAMMAR_TOPICS, courseHref } from '@/shared/mocks';
 import { cn } from '@/shared/utils';
 
 interface Cmd {
@@ -97,7 +97,7 @@ export const CommandPalette: React.FC = () => {
     const nav = role === 'ADMIN' ? [...ADMIN, ...HEAD, ...TEACHER, ...STUDENT] : role === 'HEAD_TEACHER' ? [...HEAD, ...TEACHER, ...STUDENT] : role === 'TEACHER' ? [...TEACHER, ...STUDENT] : role === 'STUDENT' ? STUDENT : GUEST;
     const isAuth = role !== 'GUEST';
     const tests: Cmd[] = MOCK_TESTS.map((t) => ({ id: `t-${t.id}`, label: t.title, hint: `${t.examType} · ${t.durationMinutes} phút · ${t.totalQuestions} câu`, group: 'Đề thi thử', to: isAuth ? `/app/mock-tests/${t.id}` : '/mock-tests', icon: FileText, keywords: t.tags?.join(' ') }));
-    const courses: Cmd[] = MOCK_COURSES.map((c) => ({ id: `c-${c.id}`, label: c.title, hint: `${c.examType} · ${c.lessonsCount} bài · ${c.teacherName}`, group: 'Khoá học', to: isAuth ? `/app/courses/${c.id}` : `/courses/${c.id}`, icon: PlayCircle }));
+    const courses: Cmd[] = MOCK_COURSES.map((c) => ({ id: `c-${c.id}`, label: c.title, hint: `${c.lessonsCount} bài · ${c.durationHours} giờ`, group: 'Khoá học', to: courseHref(c), icon: PlayCircle }));
     const grammar: Cmd[] = isAuth ? GRAMMAR_TOPICS.map((g) => ({ id: `g-${g.id}`, label: g.title, hint: `${g.category} · ${g.level}`, group: 'Ngữ pháp', to: `/app/grammar/${g.slug}`, icon: BookOpen })) : [];
     return [...nav, ...tests, ...courses, ...grammar];
   }, [user]);

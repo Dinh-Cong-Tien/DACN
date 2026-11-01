@@ -31,8 +31,11 @@ export interface AppUser {
 
 // ---------- COURSES / LESSONS ----------
 export type LessonType = 'VIDEO' | 'READING' | 'QUIZ';
-/** EXAM: khoá luyện thi; GRAMMAR / VOCABULARY: lộ trình nền tảng học lần lượt từ Bài 1 (bài sau mở khi xong bài trước) */
-export type CourseCategory = 'EXAM' | 'GRAMMAR' | 'VOCABULARY';
+/**
+ * Mục Khoá học chỉ gồm 3 lộ trình kiến thức chung, học lần lượt từ Bài 1 (bài sau mở khi xong bài trước).
+ * Luyện thi theo đề nằm ở TOEIC / VSTEP, không nằm trong Khoá học.
+ */
+export type CourseCategory = 'GRAMMAR' | 'VOCABULARY' | 'FOUNDATION';
 
 export interface TranscriptLine {
   start: number;
@@ -66,9 +69,9 @@ export interface Course {
   id: string;
   slug: string;
   title: string;
-  examType: ExamType;
-  /** Mặc định EXAM */
-  category?: CourseCategory;
+  category: CourseCategory;
+  /** Chỉ dùng cho khoá gắn với một kỳ thi (dữ liệu giáo viên / admin) */
+  examType?: ExamType;
   level: string;
   description: string;
   gradient: string; // tailwind gradient classes cho thumbnail

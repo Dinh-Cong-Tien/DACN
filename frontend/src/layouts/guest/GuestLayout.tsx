@@ -114,7 +114,7 @@ export const GuestLayout: React.FC<GuestLayoutProps> = ({ contained }) => {
   });
   const desktopNav = mainNav.map((item) =>
     item.children ? (
-      dropdown(item.label, item.img, item.children, item.children.some((c) => here === c.to || (!c.to.includes('?') && location.pathname.startsWith(c.to))))
+      dropdown(item.label, item.img, item.children, location.pathname === item.to || item.children.some((c) => here === c.to || (!c.to.includes('?') && location.pathname.startsWith(c.to))))
     ) : (
       <NavLink key={item.label} to={item.to} className={linkCls}>
         <img src={item.img} alt="" className="w-5 h-5 hidden min-[1440px]:block" />

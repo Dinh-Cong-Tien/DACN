@@ -1,18 +1,17 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, Navigate, useParams } from 'react-router-dom';
 import { ArrowRight, Check, ChevronRight, Lock } from 'lucide-react';
-import { LESSON_PATH_SLUG, MOCK_COURSES } from '@/shared/mocks';
+import { MOCK_COURSES, courseHref } from '@/shared/mocks';
 import { useDocumentTitle, useGate } from '@/shared/hooks';
 import { useAuthStore } from '@/shared/stores/authStore';
 import { cn } from '@/shared/utils';
-import type { CourseCategory, Lesson } from '@/shared/types';
+import type { Course, CourseCategory, Lesson } from '@/shared/types';
 import { Accent, ActionLink, PageHeader, Section } from './shared/PageKit';
 
-type PathCategory = Exclude<CourseCategory, 'EXAM'>;
-
-const COPY: Record<PathCategory, { eyebrow: string; title: React.ReactNode; crumb: string; other: PathCategory; otherLabel: string }> = {
-  GRAMMAR: { eyebrow: 'Lộ trình ngữ pháp', title: <>Ngữ pháp tiếng Anh <Accent>từ đầu</Accent></>, crumb: 'Ngữ pháp', other: 'VOCABULARY', otherLabel: 'Từ vựng tiếng Anh từ đầu' },
-  VOCABULARY: { eyebrow: 'Lộ trình từ vựng', title: <>Từ vựng tiếng Anh <Accent>từ đầu</Accent></>, crumb: 'Từ vựng', other: 'GRAMMAR', otherLabel: 'Ngữ pháp tiếng Anh từ đầu' },
+const COPY: Record<CourseCategory, { eyebrow: string; title: React.ReactNode }> = {
+  GRAMMAR: { eyebrow: 'Ngữ pháp', title: <>Ngữ pháp tiếng Anh <Accent>từ đầu</Accent></> },
+  VOCABULARY: { eyebrow: 'Từ vựng và Phát âm', title: <>Từ vựng và <Accent>Phát âm</Accent></> },
+  FOUNDATION: { eyebrow: 'Kiến thức nền tảng', title: <>Kiến thức <Accent>nền tảng</Accent></> },
 };
 
 const TYPE_LABEL: Record<Lesson['type'], string> = { VIDEO: 'Video', READING: 'Bài đọc', QUIZ: 'Bài kiểm tra' };
@@ -20,13 +19,18 @@ const TYPE_LABEL: Record<Lesson['type'], string> = { VIDEO: 'Video', READING: 'B
 const STEPS = ['Xem video bài giảng, có bản ghi chữ song ngữ và tra từ khi bấm vào chữ.', 'Trả lời 5 câu hỏi cuối bài để chắc là đã hiểu.', 'Bài tiếp theo tự mở. Cuối mỗi chặng có một bài kiểm tra ngắn.'];
 
 /**
- * Lộ trình nền tảng (Ngữ pháp / Từ vựng): danh sách bài đánh số từ Bài 1, chia theo chặng.
+ * Trang một mục Khoá học (/courses/:slug): danh sách bài đánh số từ Bài 1, chia theo chặng.
  * Học viên thấy bài đã học / đang học / còn khoá; khách bấm bài sẽ được đưa tới đăng ký hoặc đăng nhập.
  */
-export const LessonPathPage: React.FC<{ category: PathCategory }> = ({ category }) => {
-  const course = MOCK_COURSES.find((c) => c.category === category)!;
-  const copy = COPY[category];
-  const other = MOCK_COURSES.find((c) => c.category === copy.other)!;
+export const LessonPathPage: React.FC = () => {
+  const { slug } = useParams();
+  const course = MOCK_COURSES.find((c) => c.slug === slug);
+  return course ? <PathView key={course.id} course={course} /> : <Navigate to="/courses" replace />;
+};
+
+const PathView: React.FC<{ course: Course }> = ({ course }) => {
+  const copy = COPY[course.category];
+  const others = MOCK_COURSES.filter((c) => c.id !== course.id);
   useDocumentTitle(course.title);
   const gate = useGate();
   const isStudent = useAuthStore((s) => s.user?.role === 'STUDENT');
@@ -51,7 +55,7 @@ export const LessonPathPage: React.FC<{ category: PathCategory }> = ({ category 
   return (
     <div className="bg-page">
       <PageHeader
-        crumbs={[{ label: 'Trang chủ', to: '/' }, { label: 'Khoá học', to: isStudent ? '/app/courses' : '/courses' }, { label: copy.crumb }]}
+        crumbs={[{ label: 'Trang chủ', to: '/' }, { label: 'Khoá học', to: '/courses' }, { label: copy.eyebrow }]}
         eyebrow={copy.eyebrow}
         title={copy.title}
         lead={course.description}
@@ -64,8 +68,8 @@ export const LessonPathPage: React.FC<{ category: PathCategory }> = ({ category 
         actions={
           <>
             {primary}
-            <ActionLink to={`/courses/${LESSON_PATH_SLUG[copy.other]}`} variant="secondary" size="lg">
-              Xem lộ trình {COPY[copy.other].crumb.toLowerCase()}
+            <ActionLink to="/courses" variant="secondary" size="lg">
+              Các mục khác
             </ActionLink>
           </>
         }
@@ -144,23 +148,27 @@ export const LessonPathPage: React.FC<{ category: PathCategory }> = ({ category 
           </div>
 
           <aside className="space-y-4 lg:sticky lg:top-24">
-            <Link to={`/courses/${LESSON_PATH_SLUG[copy.other]}`} className="group block rounded-2xl border border-slate-200 bg-white p-5 transition-shadow hover:shadow-[0_12px_32px_-18px_rgba(16,24,40,0.35)]">
-              <p className="text-[12px] text-slate-500">Học song song</p>
-              <p className="mt-1 font-semibold text-slate-900 group-hover:text-indigo-700">{copy.otherLabel}</p>
-              <p className="mt-1 text-[13px] text-slate-500">
-                {other.lessonsCount} bài · {other.level}
-              </p>
-              <span className="mt-3 inline-flex items-center gap-1 text-[13px] font-semibold text-indigo-700">
-                Xem danh sách bài <ChevronRight className="w-4 h-4" />
-              </span>
-            </Link>
+            <div className="rounded-2xl border border-slate-200 bg-white p-2">
+              <p className="px-3 pb-1 pt-2 text-[12px] text-slate-500">Học song song</p>
+              {others.map((o) => (
+                <Link key={o.id} to={courseHref(o)} className="group flex items-center gap-3 rounded-xl px-3 py-2.5 transition-colors hover:bg-slate-900/[0.03]">
+                  <span className="min-w-0 flex-1">
+                    <span className="block font-semibold text-slate-900 group-hover:text-indigo-700">{o.title}</span>
+                    <span className="block text-[13px] text-slate-500">
+                      {o.lessonsCount} bài · {o.durationHours} giờ
+                    </span>
+                  </span>
+                  <ChevronRight className="h-4 w-4 shrink-0 text-slate-400" />
+                </Link>
+              ))}
+            </div>
             <div className="rounded-2xl border border-slate-200 bg-white p-5">
-              <p className="text-[12px] text-slate-500">Học xong lộ trình này</p>
-              <p className="mt-1 text-[14px] leading-relaxed text-slate-600">Chuyển sang khoá luyện thi để học chiến thuật làm bài theo từng Part / kỹ năng.</p>
+              <p className="text-[12px] text-slate-500">Khi đã vững kiến thức chung</p>
+              <p className="mt-1 text-[14px] leading-relaxed text-slate-600">Chuyển sang luyện đề theo kỳ thi bạn chọn.</p>
               <div className="mt-3 flex flex-col gap-1.5">
                 {(['TOEIC', 'VSTEP'] as const).map((e) => (
-                  <Link key={e} to={isStudent ? `/app/courses?tab=${e}` : `/courses?exam=${e}`} className="inline-flex items-center gap-1 text-[13px] font-semibold text-indigo-700 hover:underline underline-offset-2">
-                    Khoá {e} <ChevronRight className="w-4 h-4" />
+                  <Link key={e} to={`/${e.toLowerCase()}`} className="inline-flex items-center gap-1 text-[13px] font-semibold text-indigo-700 hover:underline underline-offset-2">
+                    Luyện thi {e} <ChevronRight className="w-4 h-4" />
                   </Link>
                 ))}
               </div>

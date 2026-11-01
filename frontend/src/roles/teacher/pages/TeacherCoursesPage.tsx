@@ -66,8 +66,8 @@ export const TeacherCoursesPage: React.FC = () => {
           <Card key={c.id} hard hover padding="none" onClick={() => setActive(c)} className={cn('overflow-hidden animate-fade-up', active.id === c.id ? '!shadow-hard-coral !border-violet-600' : '')} style={{ animationDelay: `${i * 60}ms` }}>
             <div className="relative">
               <Img src={c.coverUrl} alt={c.title} ratio="video" fallbackClass="bg-indigo-200" wrapperClass="border-b-2 border-slate-900" />
-              <Badge tone={c.examType === 'TOEIC' ? 'indigo' : 'emerald'} solid className="absolute top-3 left-3">
-                {c.examType} · {c.level}
+              <Badge tone="indigo" solid className="absolute top-3 left-3">
+                {c.examType ? `${c.examType} · ${c.level}` : c.level}
               </Badge>
               {active.id === c.id && <span className="sticker tilt-2 absolute -bottom-3 right-3 !bg-violet-500 !text-white">Đang chọn</span>}
             </div>

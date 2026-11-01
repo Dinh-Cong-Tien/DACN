@@ -9,7 +9,7 @@ export const STUDENT_NAV: NavGroup[] = [
     items: [
       { to: '/', label: 'Trang chủ', img: '/images/nav/bar-chart.webp', icon: Home, end: true },
       { to: '/app/learning-path', label: 'Lộ trình', img: '/images/nav/compass.webp', icon: Compass },
-      { to: '/app/courses', label: 'Khoá học', img: '/images/nav/laptop.webp', icon: PlayCircle },
+      { to: '/courses', label: 'Khoá học', img: '/images/nav/laptop.webp', icon: PlayCircle },
       { to: '/app/practice', label: 'Luyện tập', img: '/images/nav/pencil.webp', icon: Layers },
       { to: '/app/mock-tests', label: 'Thi thử', img: '/images/nav/memo.webp', icon: FileText },
     ],
@@ -115,16 +115,13 @@ export const PUBLIC_NAV: PublicNavItem[] = [
   },
   {
     to: '/courses',
-    appTo: '/app/courses',
     label: 'Khoá học',
     icon: PlayCircle,
     img: '/images/nav/laptop.webp',
     children: [
-      { to: '/app/courses', label: 'Khoá học của tôi', img: '/images/nav/laptop.webp', desc: 'Tiếp tục bài đang học', studentOnly: true },
-      { to: '/courses?exam=TOEIC', appTo: '/app/courses?tab=TOEIC', label: 'Khoá TOEIC', img: '/images/nav/briefcase.webp', desc: 'Từ mất gốc đến 850+' },
-      { to: '/courses?exam=VSTEP', appTo: '/app/courses?tab=VSTEP', label: 'Khoá VSTEP', img: '/images/nav/graduation-cap.webp', desc: 'B1, B2, C1 có giáo viên chấm bài' },
-      { to: '/courses/ngu-phap', label: 'Ngữ pháp từ đầu', img: '/images/nav/open-book.webp', desc: '30 bài video, học lần lượt từ Bài 1', group: 'Lộ trình cho người mới' },
-      { to: '/courses/tu-vung', label: 'Từ vựng từ đầu', img: '/images/nav/card-file-box.webp', desc: '24 bài, từ phát âm đến từ vựng đề thi', group: 'Lộ trình cho người mới' },
+      { to: '/courses/ngu-phap', label: 'Ngữ pháp', img: '/images/nav/open-book.webp', desc: 'Toàn bộ ngữ pháp, từ câu đơn đến nâng cao' },
+      { to: '/courses/tu-vung-phat-am', label: 'Từ vựng và Phát âm', img: '/images/nav/microphone.webp', desc: 'Phiên âm IPA, trọng âm, từ vựng theo chủ đề' },
+      { to: '/courses/kien-thuc-nen-tang', label: 'Kiến thức nền tảng', img: '/images/nav/light-bulb.webp', desc: 'Video cách học và 4 kỹ năng cơ bản' },
     ],
   },
   { to: '/mock-tests', label: 'Thi thử', img: '/images/nav/memo.webp', icon: FileText, appTo: '/app/mock-tests' },

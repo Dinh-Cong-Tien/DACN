@@ -1,17 +1,17 @@
-import { PHOTOS, pravatar, unsplash } from '@/shared/components/media/Img';
-import type { Course, CourseCategory, CourseSection, DictionaryEntry, GrammarTopic, Lesson, TranscriptLine } from '@/shared/types';
+import { PHOTOS } from '@/shared/components/media/Img';
+import type { Course, CourseSection, DictionaryEntry, GrammarTopic, Lesson, TranscriptLine } from '@/shared/types';
 
 export const SAMPLE_VIDEO_URL = 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4';
 
 export const SAMPLE_TRANSCRIPT: TranscriptLine[] = [
-  { start: 0, end: 6, text: 'Welcome back to OrbiLingo. In today\'s lesson we are going to look at TOEIC Part 5 word-form questions.', textVi: 'Chào mừng trở lại OrbiLingo. Hôm nay chúng ta sẽ tìm hiểu dạng câu hỏi từ loại trong TOEIC Part 5.' },
-  { start: 6, end: 13, text: 'Word-form questions are the easiest points to earn, because you rarely need to understand the whole sentence.', textVi: 'Câu hỏi từ loại là điểm dễ ăn nhất, vì bạn hiếm khi cần hiểu toàn bộ câu.' },
-  { start: 13, end: 20, text: 'First, look at the four options. If they share the same root, such as economy, economic and economical, you have a word-form question.', textVi: 'Trước tiên nhìn vào 4 đáp án. Nếu chúng có cùng gốc từ như economy, economic, economical thì đó là câu hỏi từ loại.' },
-  { start: 20, end: 28, text: 'Next, check the words immediately before and after the blank. An article or an adjective before the blank usually signals a noun.', textVi: 'Tiếp theo, kiểm tra từ đứng ngay trước và sau chỗ trống. Mạo từ hoặc tính từ trước chỗ trống thường báo hiệu một danh từ.' },
-  { start: 28, end: 36, text: 'If the blank sits between a subject and a verb, you most likely need an adverb, like "carefully" or "significantly".', textVi: 'Nếu chỗ trống nằm giữa chủ ngữ và động từ, bạn gần như chắc chắn cần một trạng từ, ví dụ "carefully" hay "significantly".' },
+  { start: 0, end: 6, text: 'Welcome back to OrbiLingo. In today\'s lesson we are going to look at word forms in English.', textVi: 'Chào mừng trở lại OrbiLingo. Hôm nay chúng ta sẽ tìm hiểu về từ loại trong tiếng Anh.' },
+  { start: 6, end: 13, text: 'Many English words have a family: a noun, a verb, an adjective and an adverb that share the same root.', textVi: 'Nhiều từ tiếng Anh có một "gia đình": danh từ, động từ, tính từ và trạng từ cùng chung một gốc từ.' },
+  { start: 13, end: 20, text: 'For example, economy, economic and economical all come from the same root, but they do different jobs in a sentence.', textVi: 'Ví dụ economy, economic và economical có cùng gốc từ, nhưng mỗi từ làm một nhiệm vụ khác nhau trong câu.' },
+  { start: 20, end: 28, text: 'Look at the word before the gap. An article or an adjective usually signals a noun.', textVi: 'Hãy nhìn từ đứng trước chỗ trống. Mạo từ hoặc tính từ thường báo hiệu một danh từ.' },
+  { start: 28, end: 36, text: 'If the word describes how an action happens, you need an adverb, like "carefully" or "significantly".', textVi: 'Nếu từ đó mô tả hành động diễn ra thế nào, bạn cần một trạng từ, ví dụ "carefully" hay "significantly".' },
   { start: 36, end: 44, text: 'Remember: adjectives describe nouns, adverbs describe verbs, adjectives and other adverbs.', textVi: 'Hãy nhớ: tính từ bổ nghĩa cho danh từ, trạng từ bổ nghĩa cho động từ, tính từ và trạng từ khác.' },
-  { start: 44, end: 52, text: 'Let\'s practise with a real example. "Sales figures were ______ higher than predicted." Which word form fits?', textVi: 'Cùng luyện với ví dụ thật. "Sales figures were ______ higher than predicted." Từ loại nào phù hợp?' },
-  { start: 52, end: 60, text: 'The blank modifies the comparative adjective "higher", so the answer is the adverb "significantly".', textVi: 'Chỗ trống bổ nghĩa cho tính từ so sánh hơn "higher", nên đáp án là trạng từ "significantly".' },
+  { start: 44, end: 52, text: 'Let\'s practise. "Prices this year are ______ higher than last year." Which word fits?', textVi: 'Cùng luyện tập. "Prices this year are ______ higher than last year." Từ nào phù hợp?' },
+  { start: 52, end: 60, text: 'The gap modifies the comparative adjective "higher", so the answer is the adverb "significantly".', textVi: 'Chỗ trống bổ nghĩa cho tính từ so sánh hơn "higher", nên đáp án là trạng từ "significantly".' },
 ];
 
 const mkLesson = (id: string, title: string, type: Lesson['type'], durationMin: number, isCompleted = false, isLocked = false): Lesson => ({
@@ -27,141 +27,10 @@ const mkLesson = (id: string, title: string, type: Lesson['type'], durationMin: 
   isFree: isCompleted,
 });
 
-export const MOCK_COURSES: Course[] = [
-  {
-    id: 'c-toeic-foundation',
-    coverUrl: PHOTOS.studying,
-    slug: 'toeic-foundation-450-650',
-    title: 'TOEIC Foundation — Nền tảng 450 → 650',
-    examType: 'TOEIC',
-    level: '450–650',
-    description: 'Xây nền ngữ pháp và từ vựng thiết yếu, làm quen 7 Part với chiến thuật cơ bản. Phù hợp người mới bắt đầu hoặc mất gốc.',
-    gradient: 'from-indigo-500 to-violet-600',
-    lessonsCount: 42,
-    durationHours: 28,
-    studentsCount: 8427,
-    rating: 4.8,
-    isFree: true,
-    progress: 62,
-    teacherName: 'Trần Thu Hà',
-    sections: [
-      {
-        id: 's1',
-        title: 'Chương 1 — Làm quen bài thi TOEIC',
-        lessons: [mkLesson('l-1-1', 'Cấu trúc đề thi TOEIC Listening & Reading', 'VIDEO', 12, true), mkLesson('l-1-2', 'Chiến lược phân bổ thời gian 120 phút', 'VIDEO', 9, true), mkLesson('l-1-3', 'Kiểm tra nhanh: Bạn đã hiểu format?', 'QUIZ', 5, true)],
-      },
-      {
-        id: 's2',
-        title: 'Chương 2 — Ngữ pháp trọng tâm Part 5',
-        lessons: [mkLesson('l-2-1', 'Word Form: Nhận diện từ loại trong 10 giây', 'VIDEO', 14, true), mkLesson('l-2-2', 'Thì động từ & dấu hiệu nhận biết', 'VIDEO', 16, false), mkLesson('l-2-3', 'Giới từ – Liên từ: bẫy kinh điển', 'READING', 8, false), mkLesson('l-2-4', 'Luyện tập 30 câu Part 5', 'QUIZ', 15, false)],
-      },
-      {
-        id: 's3',
-        title: 'Chương 3 — Listening Part 1 & 2',
-        lessons: [mkLesson('l-3-1', 'Part 1: Mô tả tranh & bẫy bị động', 'VIDEO', 11, false, true), mkLesson('l-3-2', 'Part 2: 5 dạng câu hỏi Wh- thường gặp', 'VIDEO', 13, false, true), mkLesson('l-3-3', 'Nghe chép chính tả câu ngắn', 'QUIZ', 10, false, true)],
-      },
-    ],
-  },
-  {
-    id: 'c-toeic-intensive',
-    coverUrl: PHOTOS.laptop,
-    slug: 'toeic-intensive-650-850',
-    title: 'TOEIC Intensive — Bứt phá 650 → 850',
-    examType: 'TOEIC',
-    level: '650–850',
-    description: 'Chiến thuật chuyên sâu Part 3, 4, 7; xử lý đoạn kép, đoạn ba và tăng tốc độ đọc. Kèm 10 đề thi thử chuẩn ETS.',
-    gradient: 'from-violet-600 to-fuchsia-600',
-    lessonsCount: 56,
-    durationHours: 40,
-    studentsCount: 5136,
-    rating: 4.9,
-    isFree: false,
-    progress: 15,
-    teacherName: 'Lê Quốc Bảo',
-    sections: [
-      { id: 's1', title: 'Chương 1 — Part 3 & 4 nâng cao', lessons: [mkLesson('l-1-1', 'Paraphrase trong Part 3: nhận diện nhanh', 'VIDEO', 15, true), mkLesson('l-1-2', 'Câu hỏi bảng biểu (Graphic)', 'VIDEO', 12, false)] },
-      { id: 's2', title: 'Chương 2 — Part 7 đoạn kép & ba', lessons: [mkLesson('l-2-1', 'Liên kết thông tin giữa các đoạn', 'VIDEO', 18, false, true), mkLesson('l-2-2', 'Luyện 2 bộ đoạn ba', 'QUIZ', 25, false, true)] },
-    ],
-  },
-  {
-    id: 'c-vstep-b1',
-    coverUrl: PHOTOS.writing,
-    slug: 'vstep-b1-complete',
-    title: 'VSTEP B1 Complete — 4 kỹ năng đạt chuẩn ra trường',
-    examType: 'VSTEP',
-    level: 'B1',
-    description: 'Lộ trình trọn gói Nghe – Đọc – Viết – Nói theo format Bộ GD&ĐT. Mẫu bài viết Task 1/2 và khung trả lời Speaking.',
-    gradient: 'from-emerald-500 to-teal-600',
-    lessonsCount: 48,
-    durationHours: 32,
-    studentsCount: 6743,
-    rating: 4.7,
-    isFree: true,
-    progress: 0,
-    teacherName: 'Phạm Ngọc Linh',
-    sections: [
-      { id: 's1', title: 'Chương 1 — Tổng quan VSTEP', lessons: [mkLesson('l-1-1', 'Format đề thi và cách tính điểm', 'VIDEO', 10), mkLesson('l-1-2', 'Khung năng lực 6 bậc Việt Nam', 'READING', 6)] },
-      { id: 's2', title: 'Chương 2 — Writing Task 1', lessons: [mkLesson('l-2-1', 'Cấu trúc email trang trọng & thân mật', 'VIDEO', 14), mkLesson('l-2-2', 'Bài mẫu band 7 phân tích', 'READING', 9), mkLesson('l-2-3', 'Viết thử & tự chấm theo rubric', 'QUIZ', 20)] },
-    ],
-  },
-  {
-    id: 'c-vstep-b2',
-    coverUrl: PHOTOS.library,
-    slug: 'vstep-b2-master',
-    title: 'VSTEP B2 Master — Chinh phục bậc 4',
-    examType: 'VSTEP',
-    level: 'B2',
-    description: 'Nâng cao kỹ năng lập luận, từ vựng học thuật và xử lý bài đọc dài. Luyện Speaking Part 3 với sơ đồ tư duy.',
-    gradient: 'from-teal-500 to-cyan-600',
-    lessonsCount: 60,
-    durationHours: 45,
-    studentsCount: 3218,
-    rating: 4.8,
-    isFree: false,
-    teacherName: 'Lê Quốc Bảo',
-    sections: [{ id: 's1', title: 'Chương 1 — Reading bậc 4', lessons: [mkLesson('l-1-1', 'Chiến thuật đọc bài 3 & 4', 'VIDEO', 16), mkLesson('l-1-2', 'Vocabulary in context', 'VIDEO', 12)] }],
-  },
-  {
-    id: 'c-grammar-24',
-    coverUrl: PHOTOS.books,
-    slug: '24-chu-diem-ngu-phap',
-    title: '24 Chủ điểm Ngữ pháp Tiếng Anh cốt lõi',
-    examType: 'TOEIC',
-    level: 'Mọi trình độ',
-    description: 'Hệ thống hoá 24 chủ điểm ngữ pháp quan trọng nhất cho cả TOEIC và VSTEP, mỗi bài kèm 20 câu luyện tập.',
-    gradient: 'from-amber-400 to-orange-500',
-    lessonsCount: 24,
-    durationHours: 18,
-    studentsCount: 11264,
-    rating: 4.9,
-    isFree: true,
-    progress: 38,
-    teacherName: 'Trần Thu Hà',
-    sections: [{ id: 's1', title: 'Nhóm 1 — Thì động từ', lessons: [mkLesson('l-1-1', 'Hiện tại đơn & tiếp diễn', 'VIDEO', 12, true), mkLesson('l-1-2', 'Quá khứ đơn & hiện tại hoàn thành', 'VIDEO', 14, true), mkLesson('l-1-3', 'Tương lai & tương lai hoàn thành', 'VIDEO', 11)] }],
-  },
-  {
-    id: 'c-vocab-business',
-    coverUrl: PHOTOS.office,
-    slug: 'tu-vung-toeic-business',
-    title: 'Từ vựng TOEIC theo 20 chủ đề Business',
-    examType: 'TOEIC',
-    level: '450+',
-    description: '600 từ vựng tần suất cao nhất trong đề thi, chia theo chủ đề Office, HR, Marketing, Finance, Travel... Kèm flashcard SRS.',
-    gradient: 'from-rose-500 to-pink-600',
-    lessonsCount: 20,
-    durationHours: 15,
-    studentsCount: 9817,
-    rating: 4.6,
-    isFree: true,
-    teacherName: 'Phạm Ngọc Linh',
-    sections: [{ id: 's1', title: 'Chủ đề 1–5', lessons: [mkLesson('l-1-1', 'Office & Administration', 'VIDEO', 10), mkLesson('l-1-2', 'Human Resources', 'VIDEO', 10)] }],
-  },
-];
-
-// ---------- Lộ trình nền tảng: học lần lượt từ Bài 1, bài sau mở khi xong bài trước ----------
+// ---------- 3 lộ trình kiến thức chung: học lần lượt từ Bài 1, bài sau mở khi xong bài trước ----------
 type PathLesson = [title: string, type: Lesson['type'], durationMin: number, summary: string];
 
-/** Dựng các chặng của lộ trình: `done` bài đầu đã học, bài kế tiếp đang mở, các bài sau khoá; `free` bài đầu cho học thử */
+/** Dựng các chặng: `done` bài đầu đã học, bài kế tiếp đang mở, các bài sau khoá; `free` bài đầu cho học thử */
 const mkPath = (prefix: string, chapters: [title: string, lessons: PathLesson[]][], done: number, free: number): CourseSection[] => {
   let n = 0;
   return chapters.map(([title, lessons], si) => ({
@@ -178,58 +47,95 @@ const GRAMMAR_PATH = mkPath(
   'gp',
   [
     [
-      'Nền móng của câu tiếng Anh',
+      'Nền móng của câu',
       [
-        ['Một câu tiếng Anh gồm những gì: chủ ngữ, động từ, tân ngữ', 'VIDEO', 12, 'Nhìn một câu bất kỳ và chỉ ra đâu là chủ ngữ, đâu là động từ chính.'],
-        ['8 từ loại và cách nhận ra từng loại', 'VIDEO', 14, 'Danh từ, động từ, tính từ, trạng từ… và vị trí quen thuộc của chúng trong câu.'],
-        ['Danh từ đếm được, không đếm được và số nhiều', 'VIDEO', 13, 'Thêm -s/-es thế nào, khi nào dùng much, many, a lot of.'],
-        ['Mạo từ a, an, the', 'VIDEO', 12, 'Ba từ nhỏ nhưng sai nhiều nhất: dùng khi nào và khi nào bỏ đi.'],
-        ['Đại từ nhân xưng, tân ngữ và sở hữu', 'VIDEO', 11, 'I – me – my – mine: chọn đúng dạng theo vị trí trong câu.'],
+        ['Một câu tiếng Anh gồm những gì', 'VIDEO', 12, 'Chủ ngữ, động từ, tân ngữ, bổ ngữ: chỉ ra từng phần trong một câu bất kỳ.'],
+        ['8 từ loại và cách nhận ra từng loại', 'VIDEO', 14, 'Danh từ, động từ, tính từ, trạng từ, đại từ, giới từ, liên từ, thán từ.'],
+        ['Danh từ đếm được, không đếm được và số nhiều', 'VIDEO', 13, 'Quy tắc thêm -s/-es, danh từ số nhiều bất quy tắc.'],
+        ['Mạo từ a, an, the', 'VIDEO', 12, 'Khi nào dùng a/an, khi nào dùng the, khi nào không cần mạo từ.'],
+        ['Đại từ: nhân xưng, tân ngữ, sở hữu, phản thân', 'VIDEO', 13, 'I – me – my – mine – myself: chọn đúng dạng theo vị trí trong câu.'],
+        ['Từ chỉ số lượng: some, any, much, many, a few, a little', 'VIDEO', 12, 'Đi với danh từ đếm được hay không đếm được.'],
         ['Kiểm tra chặng 1', 'QUIZ', 10, '15 câu trắc nghiệm, đúng từ 10 câu để mở chặng tiếp theo.'],
       ],
     ],
     [
-      'Động từ và các thì cơ bản',
+      'Động từ và các thì đơn, tiếp diễn',
       [
-        ['Động từ to be: am, is, are, was, were', 'VIDEO', 12, 'Câu khẳng định, phủ định, câu hỏi với to be.'],
-        ['Thì hiện tại đơn', 'VIDEO', 15, 'Thói quen, sự thật, lịch trình. Quy tắc thêm -s/-es cho ngôi thứ ba.'],
+        ['Động từ to be', 'VIDEO', 12, 'am, is, are, was, were trong câu khẳng định, phủ định, câu hỏi.'],
+        ['Thì hiện tại đơn', 'VIDEO', 15, 'Thói quen, sự thật hiển nhiên; thêm -s/-es cho ngôi thứ ba số ít.'],
         ['Thì hiện tại tiếp diễn', 'VIDEO', 13, 'Việc đang diễn ra lúc nói và kế hoạch đã sắp xếp.'],
-        ['Thì quá khứ đơn và động từ bất quy tắc', 'VIDEO', 16, 'Kể lại việc đã xong; 50 động từ bất quy tắc hay gặp nhất.'],
+        ['Thì quá khứ đơn và động từ bất quy tắc', 'VIDEO', 16, 'Kể lại việc đã xong; 50 động từ bất quy tắc dùng nhiều nhất.'],
+        ['Thì quá khứ tiếp diễn', 'VIDEO', 12, 'Việc đang xảy ra tại một thời điểm trong quá khứ, có việc khác xen vào.'],
         ['Tương lai đơn và be going to', 'VIDEO', 12, 'Quyết định tức thời khác dự định có sẵn thế nào.'],
         ['Kiểm tra chặng 2', 'QUIZ', 12, '20 câu chia động từ theo ngữ cảnh.'],
       ],
     ],
     [
-      'Mở rộng câu',
+      'Các thì hoàn thành',
       [
-        ['Tính từ và trạng từ', 'VIDEO', 13, 'Tính từ đứng trước danh từ, trạng từ bổ nghĩa cho động từ; đuôi -ly.'],
-        ['Giới từ chỉ thời gian: in, on, at', 'VIDEO', 11, 'in May, on Monday, at 7 a.m. và các trường hợp ngoại lệ.'],
-        ['Giới từ chỉ nơi chốn và phương hướng', 'VIDEO', 12, 'in, on, at, next to, between, across from… qua tranh minh hoạ.'],
-        ['So sánh hơn và so sánh nhất', 'VIDEO', 14, 'Tính từ ngắn, tính từ dài và các dạng bất quy tắc good – better – best.'],
-        ['Câu hỏi Yes/No và câu hỏi Wh-', 'VIDEO', 13, 'Đảo trợ động từ lên trước; what, where, when, why, how.'],
-        ['Kiểm tra chặng 3', 'QUIZ', 12, '20 câu tổng hợp từ loại, giới từ và so sánh.'],
+        ['Thì hiện tại hoàn thành', 'VIDEO', 15, 'have/has + V3; since, for, already, yet, just, ever, never.'],
+        ['Hiện tại hoàn thành tiếp diễn', 'VIDEO', 12, 'Nhấn mạnh việc kéo dài liên tục đến hiện tại.'],
+        ['Hiện tại hoàn thành hay quá khứ đơn?', 'VIDEO', 14, 'Cặp thì người học hay nhầm nhất, so sánh qua ví dụ.'],
+        ['Thì quá khứ hoàn thành', 'VIDEO', 13, 'Việc xảy ra trước một mốc hoặc một việc khác trong quá khứ.'],
+        ['Tương lai tiếp diễn và tương lai hoàn thành', 'VIDEO', 13, 'Việc sẽ đang diễn ra, việc sẽ xong trước một mốc tương lai.'],
+        ['Tổng hợp 12 thì trong một bảng', 'READING', 10, 'Công thức, cách dùng và dấu hiệu nhận biết đặt cạnh nhau.'],
+        ['Kiểm tra chặng 3', 'QUIZ', 12, '20 câu chọn thì đúng.'],
       ],
     ],
     [
-      'Các thì hoàn thành và động từ khuyết thiếu',
+      'Tính từ, trạng từ và giới từ',
       [
-        ['Thì hiện tại hoàn thành', 'VIDEO', 15, 'have/has + V3; dấu hiệu since, for, already, yet, just.'],
-        ['Hiện tại hoàn thành hay quá khứ đơn?', 'VIDEO', 14, 'Cặp thì hay nhầm nhất trong Part 5 và VSTEP Reading.'],
-        ['Quá khứ tiếp diễn và quá khứ hoàn thành', 'VIDEO', 15, 'Việc đang xảy ra thì có việc khác xen vào; việc xảy ra trước một mốc quá khứ.'],
-        ['Động từ khuyết thiếu: can, could, must, should, may', 'VIDEO', 13, 'Khả năng, nghĩa vụ, lời khuyên, sự cho phép.'],
-        ['Kiểm tra chặng 4', 'QUIZ', 12, '20 câu chọn thì và động từ khuyết thiếu.'],
+        ['Tính từ và trật tự tính từ', 'VIDEO', 13, 'Vị trí của tính từ; a beautiful old wooden house.'],
+        ['Trạng từ và trạng từ chỉ tần suất', 'VIDEO', 12, 'Đuôi -ly, vị trí của always, usually, often, never.'],
+        ['So sánh bằng, so sánh hơn, so sánh nhất', 'VIDEO', 15, 'Tính từ ngắn, tính từ dài và các dạng bất quy tắc.'],
+        ['Giới từ chỉ thời gian: in, on, at', 'VIDEO', 11, 'in May, on Monday, at 7 a.m. và các ngoại lệ.'],
+        ['Giới từ chỉ nơi chốn và phương hướng', 'VIDEO', 12, 'in, on, at, under, between, next to, through, across.'],
+        ['Giới từ đi sau động từ và tính từ', 'VIDEO', 13, 'depend on, interested in, good at, afraid of…'],
+        ['Kiểm tra chặng 4', 'QUIZ', 12, '20 câu tổng hợp tính từ, trạng từ, giới từ.'],
       ],
     ],
     [
-      'Cấu trúc hay gặp trong đề TOEIC và VSTEP',
+      'Các kiểu câu',
       [
-        ['Câu bị động', 'VIDEO', 16, 'be + V3 ở các thì đã học; khi nào cần dùng bị động.'],
-        ['Câu điều kiện loại 1, 2, 3', 'VIDEO', 16, 'Điều kiện có thật, không có thật ở hiện tại và trong quá khứ.'],
-        ['Mệnh đề quan hệ: who, which, that, whose', 'VIDEO', 15, 'Nối hai câu thành một và cách rút gọn mệnh đề quan hệ.'],
-        ['V-ing hay to V sau động từ', 'VIDEO', 13, 'enjoy doing, decide to do và nhóm động từ đi được cả hai.'],
-        ['Liên từ và từ nối', 'VIDEO', 14, 'although, because, however, therefore; phân biệt với despite, because of.'],
-        ['Câu tường thuật', 'VIDEO', 13, 'Lùi thì, đổi đại từ và trạng từ khi kể lại lời người khác.'],
-        ['Bài kiểm tra cuối khoá', 'QUIZ', 25, '40 câu theo dạng Part 5 TOEIC; có bảng điểm từng chủ điểm sau khi nộp.'],
+        ['Câu hỏi Yes/No và câu hỏi Wh-', 'VIDEO', 13, 'Đảo trợ động từ; what, where, when, why, who, how.'],
+        ['Câu hỏi đuôi', 'VIDEO', 11, "You're a student, aren't you? và các trường hợp đặc biệt."],
+        ['There is / There are', 'VIDEO', 10, 'Nói về sự tồn tại của người, vật ở hiện tại và quá khứ.'],
+        ['Câu mệnh lệnh, lời mời và lời đề nghị', 'VIDEO', 11, "Let's, Why don't we, Would you like, Could you…"],
+        ['Động từ khuyết thiếu: can, could, must, should, may, might', 'VIDEO', 15, 'Khả năng, nghĩa vụ, lời khuyên, sự cho phép, phỏng đoán.'],
+        ['Kiểm tra chặng 5', 'QUIZ', 12, '20 câu đặt câu hỏi và chọn động từ khuyết thiếu.'],
+      ],
+    ],
+    [
+      'Động từ nâng cao',
+      [
+        ['V-ing hay to V sau động từ', 'VIDEO', 14, 'enjoy doing, decide to do, và nhóm động từ đi được cả hai.'],
+        ['Câu bị động', 'VIDEO', 16, 'be + V3 ở các thì đã học; khi nào nên dùng bị động.'],
+        ['Câu nhờ vả: have / get something done', 'VIDEO', 10, 'I had my hair cut. She got her car repaired.'],
+        ['used to, be used to, get used to', 'VIDEO', 11, 'Thói quen trong quá khứ khác với việc đã quen làm gì.'],
+        ['Kiểm tra chặng 6', 'QUIZ', 12, '20 câu chọn dạng động từ.'],
+      ],
+    ],
+    [
+      'Mệnh đề và câu phức',
+      [
+        ['Liên từ và từ nối', 'VIDEO', 14, 'and, but, so, because, although, however, therefore.'],
+        ['Mệnh đề quan hệ: who, which, that, whose, where', 'VIDEO', 15, 'Nối hai câu thành một; mệnh đề xác định và không xác định.'],
+        ['Rút gọn mệnh đề quan hệ', 'VIDEO', 11, 'Dùng V-ing, V3 và to V để câu gọn hơn.'],
+        ['Câu điều kiện loại 0, 1, 2, 3 và hỗn hợp', 'VIDEO', 17, 'Điều kiện có thật, không có thật ở hiện tại và trong quá khứ.'],
+        ['Câu ước: wish, if only', 'VIDEO', 11, 'Ước cho hiện tại, quá khứ và tương lai.'],
+        ['Câu tường thuật', 'VIDEO', 14, 'Lùi thì, đổi đại từ và trạng từ; tường thuật câu hỏi, mệnh lệnh.'],
+        ['Mệnh đề danh từ: that, what, whether', 'VIDEO', 12, 'Dùng cả một mệnh đề làm chủ ngữ hoặc tân ngữ.'],
+        ['Kiểm tra chặng 7', 'QUIZ', 15, '25 câu nối câu và viết lại câu.'],
+      ],
+    ],
+    [
+      'Cấu trúc nâng cao',
+      [
+        ['so … that, such … that, too, enough', 'VIDEO', 11, 'Diễn tả mức độ và kết quả.'],
+        ['Câu chẻ: It is … that …', 'VIDEO', 10, 'Nhấn mạnh một thành phần trong câu.'],
+        ['Câu giả định: suggest, recommend, it is important that', 'VIDEO', 11, 'Động từ nguyên mẫu sau các động từ, tính từ chỉ đề nghị.'],
+        ['Đảo ngữ', 'VIDEO', 13, 'Never have I…, Not only … but also…, Should you…'],
+        ['Bài kiểm tra cuối khoá', 'QUIZ', 30, '50 câu tổng hợp; có bảng điểm từng chủ điểm sau khi nộp để biết cần ôn lại phần nào.'],
       ],
     ],
   ],
@@ -241,47 +147,131 @@ const VOCAB_PATH = mkPath(
   'vp',
   [
     [
-      'Cách học từ và phát âm',
+      'Phát âm nền tảng',
       [
-        ['Học từ vựng thế nào để nhớ lâu', 'VIDEO', 10, 'Học theo cụm, ôn ngắt quãng và cách dùng sổ từ trên OrbiLingo.'],
-        ['Bảng phiên âm IPA: nguyên âm', 'VIDEO', 14, '20 nguyên âm, so sánh cặp âm dễ nhầm như /ɪ/ và /iː/.'],
-        ['Bảng phiên âm IPA: phụ âm', 'VIDEO', 14, '24 phụ âm, chú ý âm cuối /s/, /z/, /t/, /d/ người Việt hay bỏ.'],
-        ['Trọng âm và cách tra từ điển', 'VIDEO', 12, 'Đọc ký hiệu trọng âm, từ loại và ví dụ trong từ điển Cambridge.'],
+        ['Học phát âm bắt đầu từ đâu', 'VIDEO', 10, 'Vì sao nên học bảng IPA trước khi học từ mới.'],
+        ['Nguyên âm đơn', 'VIDEO', 14, '12 nguyên âm đơn, so sánh cặp ngắn – dài như /ɪ/ và /iː/.'],
+        ['Nguyên âm đôi', 'VIDEO', 12, '8 nguyên âm đôi: /eɪ/, /aɪ/, /ɔɪ/, /əʊ/, /aʊ/…'],
+        ['Phụ âm vô thanh và hữu thanh', 'VIDEO', 14, '24 phụ âm, đặt tay lên cổ để cảm nhận độ rung.'],
+        ['Các cặp âm người Việt hay nhầm', 'VIDEO', 13, '/θ/ – /ð/, /ʃ/ – /s/, /l/ – /n/, /v/ – /w/.'],
+        ['Âm cuối, đuôi -s/-es và -ed', 'VIDEO', 13, 'Đọc đúng /s/, /z/, /ɪz/ và /t/, /d/, /ɪd/.'],
         ['Kiểm tra chặng 1', 'QUIZ', 8, 'Nghe và chọn phiên âm đúng cho 15 từ.'],
       ],
     ],
     [
-      'Từ vựng thông dụng hằng ngày',
+      'Trọng âm và ngữ điệu',
       [
-        ['Số đếm, ngày tháng và giờ giấc', 'VIDEO', 12, 'Đọc số tiền, số điện thoại, ngày tháng như người bản xứ.'],
-        ['Gia đình và con người', 'VIDEO', 11, 'Quan hệ gia đình, ngoại hình, tính cách.'],
-        ['Nhà cửa và sinh hoạt hằng ngày', 'VIDEO', 11, 'Các phòng, đồ dùng và hoạt động trong ngày.'],
-        ['Ăn uống và mua sắm', 'VIDEO', 12, 'Gọi món, hỏi giá, đổi trả hàng.'],
-        ['Đi lại và hỏi đường', 'VIDEO', 11, 'Phương tiện, biển báo, chỉ đường.'],
-        ['Sức khoẻ và thời tiết', 'VIDEO', 11, 'Triệu chứng thường gặp, đi khám, mô tả thời tiết.'],
-        ['Kiểm tra chặng 2', 'QUIZ', 10, '25 câu điền từ theo tranh và theo ngữ cảnh.'],
+        ['Trọng âm của từ hai âm tiết', 'VIDEO', 12, 'Quy tắc cho danh từ, động từ, tính từ hai âm tiết.'],
+        ['Trọng âm của từ nhiều âm tiết', 'VIDEO', 13, 'Trọng âm theo đuôi: -tion, -ic, -ity, -ical…'],
+        ['Trọng âm câu: từ nội dung và từ chức năng', 'VIDEO', 12, 'Nhấn từ mang nghĩa, đọc lướt từ chức năng.'],
+        ['Nối âm và nuốt âm', 'VIDEO', 12, 'Vì sao người bản xứ nói nhanh, và cách nghe ra.'],
+        ['Ngữ điệu lên và xuống', 'VIDEO', 11, 'Câu hỏi, câu khẳng định, câu liệt kê.'],
+        ['Kiểm tra chặng 2', 'QUIZ', 8, 'Chọn trọng âm đúng và nghe ngữ điệu.'],
       ],
     ],
     [
-      'Cấu tạo từ',
+      'Cách học từ và cấu tạo từ',
       [
-        ['Tiền tố hay gặp: un-, re-, dis-, pre-, over-', 'VIDEO', 12, 'Đoán nghĩa từ mới từ phần đầu của từ.'],
-        ['Hậu tố danh từ: -tion, -ment, -ness, -er', 'VIDEO', 12, 'Nhận ra danh từ để làm câu hỏi từ loại.'],
-        ['Hậu tố tính từ và trạng từ: -ful, -ive, -al, -ly', 'VIDEO', 12, 'Một gốc từ, bốn từ loại: success – succeed – successful – successfully.'],
-        ['Cụm động từ cơ bản', 'VIDEO', 14, '30 phrasal verb hay gặp: set up, carry out, look forward to…'],
-        ['Collocation: những từ hay đi cùng nhau', 'VIDEO', 13, 'make a decision, take part in, meet a deadline…'],
+        ['Học từ vựng thế nào để nhớ lâu', 'VIDEO', 10, 'Học theo cụm, ôn ngắt quãng và cách dùng sổ từ trên OrbiLingo.'],
+        ['Đọc hiểu một mục từ trong từ điển', 'VIDEO', 11, 'Phiên âm, từ loại, nghĩa, ví dụ, từ đi kèm.'],
+        ['Tiền tố: un-, re-, dis-, pre-, over-, mis-', 'VIDEO', 12, 'Đoán nghĩa từ mới từ phần đầu của từ.'],
+        ['Hậu tố tạo danh từ: -tion, -ment, -ness, -er, -ity', 'VIDEO', 12, 'Nhận ra danh từ chỉ qua phần đuôi.'],
+        ['Hậu tố tạo tính từ và trạng từ: -ful, -less, -ive, -al, -ly', 'VIDEO', 12, 'Một gốc từ, bốn từ loại: success – succeed – successful – successfully.'],
+        ['Từ ghép', 'VIDEO', 10, 'Danh từ ghép, tính từ ghép và cách viết.'],
         ['Kiểm tra chặng 3', 'QUIZ', 10, '20 câu chọn dạng từ đúng.'],
       ],
     ],
     [
-      'Từ vựng theo chủ đề đề thi',
+      'Từ vựng đời sống hằng ngày',
       [
-        ['Văn phòng và công việc', 'VIDEO', 13, 'Thiết bị, giấy tờ, giao việc; chủ đề xuất hiện nhiều nhất trong TOEIC.'],
-        ['Tuyển dụng và nhân sự', 'VIDEO', 12, 'Hồ sơ, phỏng vấn, thăng chức, phúc lợi.'],
-        ['Hội họp và sự kiện', 'VIDEO', 12, 'Lên lịch, hoãn họp, tổ chức hội thảo.'],
-        ['Du lịch và khách sạn', 'VIDEO', 12, 'Đặt phòng, sân bay, hành lý, lịch trình.'],
-        ['Giáo dục và môi trường', 'VIDEO', 13, 'Hai chủ đề quen thuộc của bài đọc và bài viết VSTEP.'],
-        ['Bài kiểm tra cuối khoá', 'QUIZ', 20, '50 câu tổng hợp; từ sai được đưa vào sổ từ để ôn lại.'],
+        ['Số đếm, ngày tháng và giờ giấc', 'VIDEO', 12, 'Đọc số tiền, số điện thoại, năm, ngày tháng.'],
+        ['Gia đình và con người', 'VIDEO', 11, 'Quan hệ gia đình, ngoại hình, tính cách.'],
+        ['Nhà cửa và sinh hoạt', 'VIDEO', 11, 'Các phòng, đồ dùng và hoạt động trong ngày.'],
+        ['Ăn uống và mua sắm', 'VIDEO', 12, 'Món ăn, gọi món, hỏi giá, đổi trả hàng.'],
+        ['Đi lại và hỏi đường', 'VIDEO', 11, 'Phương tiện, biển báo, chỉ đường.'],
+        ['Sức khoẻ và thời tiết', 'VIDEO', 11, 'Triệu chứng thường gặp, đi khám, mô tả thời tiết.'],
+        ['Kiểm tra chặng 4', 'QUIZ', 10, '25 câu điền từ theo tranh và theo ngữ cảnh.'],
+      ],
+    ],
+    [
+      'Từ vựng học tập, công việc và xã hội',
+      [
+        ['Trường lớp và học tập', 'VIDEO', 12, 'Môn học, bằng cấp, thi cử.'],
+        ['Công việc và nghề nghiệp', 'VIDEO', 12, 'Tên nghề, nơi làm việc, xin việc.'],
+        ['Công nghệ và mạng xã hội', 'VIDEO', 11, 'Thiết bị, ứng dụng, an toàn trên mạng.'],
+        ['Môi trường và thiên nhiên', 'VIDEO', 12, 'Ô nhiễm, biến đổi khí hậu, bảo vệ môi trường.'],
+        ['Du lịch và văn hoá', 'VIDEO', 12, 'Đặt phòng, sân bay, lễ hội, phong tục.'],
+        ['Kiểm tra chặng 5', 'QUIZ', 10, '25 câu theo chủ đề.'],
+      ],
+    ],
+    [
+      'Dùng từ tự nhiên',
+      [
+        ['Collocation: những từ hay đi cùng nhau', 'VIDEO', 13, 'make a decision, take a break, heavy rain…'],
+        ['Cụm động từ thông dụng', 'VIDEO', 14, '40 phrasal verb hay dùng: give up, look after, find out…'],
+        ['Những cặp từ dễ nhầm', 'VIDEO', 12, 'make – do, say – tell, borrow – lend, lose – miss.'],
+        ['Thành ngữ thông dụng', 'VIDEO', 11, '20 thành ngữ người bản xứ hay dùng trong giao tiếp.'],
+        ['Bài kiểm tra cuối khoá', 'QUIZ', 25, '50 câu phát âm và từ vựng; từ sai được đưa vào sổ từ để ôn lại.'],
+      ],
+    ],
+  ],
+  2,
+  2,
+);
+
+const FOUNDATION_PATH = mkPath(
+  'fp',
+  [
+    [
+      'Bắt đầu học tiếng Anh',
+      [
+        ['Học tiếng Anh từ đầu nên bắt đầu từ đâu', 'VIDEO', 10, 'Thứ tự nên học: phát âm, từ vựng, ngữ pháp, rồi đến bốn kỹ năng.'],
+        ['Bốn kỹ năng Nghe, Nói, Đọc, Viết hỗ trợ nhau thế nào', 'VIDEO', 9, 'Nghe và đọc là đầu vào, nói và viết là đầu ra.'],
+        ['Lập thời gian biểu tự học 30 phút mỗi ngày', 'VIDEO', 8, 'Chia thời gian cho từng phần và giữ thói quen học đều.'],
+        ['Học với video có bản ghi chữ', 'VIDEO', 7, 'Bật phụ đề song ngữ, bấm vào từ để tra nghĩa và lưu vào sổ từ.'],
+      ],
+    ],
+    [
+      'Nghe hiểu cơ bản',
+      [
+        ['Nghe chủ động và nghe thụ động', 'VIDEO', 10, 'Khi nào nên nghe kỹ từng câu, khi nào chỉ cần nghe hiểu ý.'],
+        ['Nghe lấy ý chính', 'VIDEO', 12, 'Chú ý từ được nhấn mạnh và câu mở đầu, câu kết.'],
+        ['Nghe số, tên riêng và chi tiết', 'VIDEO', 12, 'Phân biệt fifteen – fifty, đánh vần tên, địa chỉ.'],
+        ['Nghe chép chính tả', 'VIDEO', 11, 'Cách luyện chép từng câu ngắn để nghe ra từng từ.'],
+        ['Shadowing: nghe và nói đuổi theo', 'VIDEO', 11, 'Bắt chước người nói để cải thiện cả nghe và phát âm.'],
+        ['Kiểm tra chặng 2', 'QUIZ', 10, '15 câu nghe đoạn hội thoại ngắn.'],
+      ],
+    ],
+    [
+      'Nói cơ bản',
+      [
+        ['Giới thiệu bản thân', 'VIDEO', 11, 'Tên, tuổi, quê quán, công việc, sở thích.'],
+        ['Hỏi và trả lời thông tin cá nhân', 'VIDEO', 11, 'Các mẫu câu hỏi quen thuộc và cách trả lời tự nhiên.'],
+        ['Mô tả người, đồ vật và nơi chốn', 'VIDEO', 13, 'Dùng tính từ và giới từ để mô tả rõ ràng.'],
+        ['Kể lại một trải nghiệm', 'VIDEO', 13, 'Dùng quá khứ đơn và từ nối first, then, after that, finally.'],
+        ['Nêu ý kiến và lý do', 'VIDEO', 12, 'I think…, In my opinion…, because…, for example…'],
+        ['Kiểm tra chặng 3', 'QUIZ', 10, 'Ghi âm câu trả lời cho 5 câu hỏi, giáo viên nhận xét.'],
+      ],
+    ],
+    [
+      'Đọc hiểu cơ bản',
+      [
+        ['Đọc lướt tìm ý chính', 'VIDEO', 11, 'Đọc tiêu đề, câu đầu mỗi đoạn để nắm nội dung.'],
+        ['Đọc quét tìm thông tin', 'VIDEO', 11, 'Tìm nhanh tên, số, ngày tháng mà không đọc hết bài.'],
+        ['Đoán nghĩa từ qua ngữ cảnh', 'VIDEO', 12, 'Dựa vào câu xung quanh, ví dụ và từ trái nghĩa.'],
+        ['Từ nối và mạch văn', 'VIDEO', 11, 'Nhận ra quan hệ nguyên nhân, đối lập, bổ sung giữa các câu.'],
+        ['Kiểm tra chặng 4', 'QUIZ', 12, '3 đoạn văn ngắn, 15 câu hỏi.'],
+      ],
+    ],
+    [
+      'Viết cơ bản',
+      [
+        ['Viết một câu đúng', 'VIDEO', 11, 'Đủ chủ ngữ, động từ; viết hoa, dấu câu.'],
+        ['Nối câu thành câu ghép và câu phức', 'VIDEO', 12, 'Dùng and, but, because, when, although.'],
+        ['Viết một đoạn văn', 'VIDEO', 13, 'Câu chủ đề, câu triển khai, câu kết.'],
+        ['Viết email và tin nhắn ngắn', 'VIDEO', 12, 'Mở đầu, nội dung, kết thư; trang trọng và thân mật.'],
+        ['Tự sửa lỗi bài viết', 'VIDEO', 10, 'Danh sách 10 lỗi hay gặp để tự kiểm tra trước khi nộp.'],
+        ['Bài kiểm tra cuối khoá', 'QUIZ', 25, 'Nghe, đọc và viết một đoạn văn 100 từ; giáo viên chấm phần viết.'],
       ],
     ],
   ],
@@ -299,16 +289,16 @@ const pathStats = (sections: CourseSection[]) => {
   };
 };
 
-MOCK_COURSES.push(
+/** Mục Khoá học: đúng 3 lộ trình kiến thức chung (luyện thi theo đề nằm ở menu TOEIC / VSTEP) */
+export const MOCK_COURSES: Course[] = [
   {
-    id: 'c-path-grammar',
+    id: 'c-grammar',
     category: 'GRAMMAR',
+    slug: 'ngu-phap',
     coverUrl: PHOTOS.notes,
-    slug: 'ngu-phap-tu-dau',
-    title: 'Ngữ pháp tiếng Anh từ đầu',
-    examType: 'TOEIC',
-    level: 'Mất gốc → B1',
-    description: 'Học lại ngữ pháp từ câu đơn giản nhất đến các cấu trúc hay gặp trong đề TOEIC và VSTEP. Mỗi bài một video ngắn, học xong bài trước mới mở bài sau.',
+    title: 'Ngữ pháp tiếng Anh',
+    level: 'Từ mất gốc',
+    description: 'Toàn bộ ngữ pháp tiếng Anh, đi từ thành phần của một câu đến các cấu trúc nâng cao. Mỗi bài một video ngắn, học xong bài trước mới mở bài sau.',
     gradient: 'from-indigo-500 to-violet-600',
     ...pathStats(GRAMMAR_PATH),
     studentsCount: 7412,
@@ -318,14 +308,13 @@ MOCK_COURSES.push(
     sections: GRAMMAR_PATH,
   },
   {
-    id: 'c-path-vocab',
+    id: 'c-vocab',
     category: 'VOCABULARY',
+    slug: 'tu-vung-phat-am',
     coverUrl: PHOTOS.flatlay,
-    slug: 'tu-vung-tu-dau',
-    title: 'Từ vựng tiếng Anh từ đầu',
-    examType: 'TOEIC',
-    level: 'Mất gốc → B1',
-    description: 'Bắt đầu từ phát âm và cách học từ, sau đó đi qua từ vựng hằng ngày, cấu tạo từ và các chủ đề hay ra trong đề thi.',
+    title: 'Từ vựng và Phát âm',
+    level: 'Từ mất gốc',
+    description: 'Bắt đầu từ bảng phiên âm IPA, trọng âm và ngữ điệu, sau đó học cách ghi nhớ từ, cấu tạo từ và từ vựng theo chủ đề đời sống.',
     gradient: 'from-rose-500 to-pink-600',
     ...pathStats(VOCAB_PATH),
     studentsCount: 5389,
@@ -334,14 +323,26 @@ MOCK_COURSES.push(
     teacherName: 'Phạm Ngọc Linh',
     sections: VOCAB_PATH,
   },
-);
+  {
+    id: 'c-foundation',
+    category: 'FOUNDATION',
+    slug: 'kien-thuc-nen-tang',
+    coverUrl: PHOTOS.lecture,
+    title: 'Kiến thức nền tảng',
+    level: 'Từ mất gốc',
+    description: 'Video bài giảng cách học tiếng Anh và bốn kỹ năng Nghe, Nói, Đọc, Viết ở mức cơ bản, dành cho người bắt đầu lại từ đầu.',
+    gradient: 'from-emerald-500 to-teal-600',
+    ...pathStats(FOUNDATION_PATH),
+    studentsCount: 4126,
+    rating: 4.8,
+    isFree: true,
+    teacherName: 'Lê Quốc Bảo',
+    sections: FOUNDATION_PATH,
+  },
+];
 
-/** Đường dẫn trang lộ trình theo loại khoá */
-export const LESSON_PATH_SLUG: Record<Exclude<CourseCategory, 'EXAM'>, string> = { GRAMMAR: 'ngu-phap', VOCABULARY: 'tu-vung' };
-
-/** Link mở một khoá: lộ trình nền tảng → trang danh sách bài; khoá luyện thi → trang giới thiệu / học (học viên) */
-export const courseHref = (c: Course, student = false) =>
-  c.category && c.category !== 'EXAM' ? `/courses/${LESSON_PATH_SLUG[c.category]}` : student ? `/app/courses/${c.id}` : `/courses/${c.id}`;
+/** Link trang danh sách bài của một khoá */
+export const courseHref = (c: Course) => `/courses/${c.slug}`;
 
 export const DICTIONARY: Record<string, DictionaryEntry> = {
   economical: { word: 'economical', ipa: '/ˌiː.kəˈnɒm.ɪ.kəl/', pos: 'adjective', meaningVi: 'tiết kiệm, không lãng phí', meaningEn: 'not using more of something than is necessary', example: 'This car is very economical to run.' },

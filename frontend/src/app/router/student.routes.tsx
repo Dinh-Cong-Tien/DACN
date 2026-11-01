@@ -3,7 +3,6 @@ import { AuthGuard } from '../guards/AuthGuard';
 import { RoleGuard } from '../guards/RoleGuard';
 import { StudentLayout } from '@/layouts/student/StudentLayout';
 import { StudentLearningPathPage } from '@/roles/student/pages/StudentLearningPathPage';
-import { StudentCoursesPage } from '@/roles/student/pages/StudentCoursesPage';
 import { StudentLessonPage } from '@/roles/student/pages/StudentLessonPage';
 import { StudentPracticePage } from '@/roles/student/pages/StudentPracticePage';
 import { StudentPracticeSessionPage } from '@/roles/student/pages/StudentPracticeSessionPage';
@@ -45,7 +44,8 @@ export const studentRoutes: RouteObject[] = [
               // Trang Tổng quan đã gộp vào trang chủ (khối "Góc học tập")
               { path: 'dashboard', element: <Navigate to="/" replace /> },
               { path: 'learning-path', element: <StudentLearningPathPage /> },
-              { path: 'courses', element: <StudentCoursesPage /> },
+              // Danh sách khoá học dùng chung trang /courses (học viên thấy tiến độ ngay trên đó)
+              { path: 'courses', element: <Navigate to="/courses" replace /> },
               { path: 'courses/:id', element: <StudentLessonPage /> },
               { path: 'courses/:id/lessons/:lessonId', element: <StudentLessonPage /> },
               { path: 'practice', element: <StudentPracticePage /> },
