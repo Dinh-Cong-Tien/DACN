@@ -1,129 +1,187 @@
 import React, { useState } from 'react';
-import { BarChart3, Users, TrendingUp, CheckCircle2, Clock } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { useDocumentTitle } from '@/shared/hooks';
-import { MOCK_CLASSES, MOCK_CLASS_STUDENTS, MOCK_ASSIGNMENTS, CLASS_WEEKLY_PROGRESS } from '@/shared/mocks';
-import type { ClassStudent } from '@/shared/types';
-import { Avatar, Badge, Card, CardHeader, Column, DataTable, MiniBars, PageHeader, ProgressBar, RadarChart, Select, StatCard } from '@/shared/components/ui';
-import { Img } from '@/shared/components/media/Img';
+import { CLASS_MISTAKE_CAUSES, CLASS_PART_ACCURACY, CLASS_SCORE_DIST, MISTAKE_CAUSE_LABEL, MOCK_ASSIGNMENTS, MOCK_CLASSES, MOCK_CLASS_STUDENTS, MOCK_TESTS, TOEIC_PARTS_INFO, VSTEP_PARTS_INFO } from '@/shared/mocks';
+import type { AssignmentTarget } from '@/shared/types';
+import { cn, timeAgo } from '@/shared/utils';
+import { Avatar } from '@/shared/components/ui';
+import { Figures, Meter, Panel, Status, TBtn, TPageHead, inputCls, tbl } from '../components/TeacherKit';
 
-const SCORE_DIST = [
-  { label: '<450', value: 2, tone: 'rose' as const },
-  { label: '450–549', value: 4, tone: 'orange' as const },
-  { label: '550–649', value: 7, tone: 'amber' as const },
-  { label: '650–749', value: 9, tone: 'emerald' as const },
-  { label: '750–849', value: 4, tone: 'teal' as const },
-  { label: '850+', value: 2, tone: 'indigo' as const },
-];
+const PART_INFO = [...TOEIC_PARTS_INFO, ...VSTEP_PARTS_INFO];
 
-const CLASS_RADAR = [
-  { label: 'Listening', value: 71 },
-  { label: 'Reading', value: 64 },
-  { label: 'Grammar', value: 76 },
-  { label: 'Vocabulary', value: 59 },
-  { label: 'Speed', value: 62 },
-];
-
+/** Thống kê một lớp: cùng chỉ số học viên thấy ở trang Tiến độ (điểm thi thử, % đúng từng Part, lỗi sai), giáo viên giao bài bù ngay từ chỗ yếu */
 export const TeacherAnalyticsPage: React.FC = () => {
   useDocumentTitle('Thống kê lớp học');
+  const navigate = useNavigate();
   const [classId, setClassId] = useState(MOCK_CLASSES[0].id);
   const cls = MOCK_CLASSES.find((c) => c.id === classId) ?? MOCK_CLASSES[0];
-  const sorted = [...MOCK_CLASS_STUDENTS].sort((a, b) => b.avgScore - a.avgScore);
-  const top = sorted.slice(0, 3);
-  const bottom = sorted.slice(-3).reverse();
-  const assignments = MOCK_ASSIGNMENTS.filter((a) => a.classId === cls.id);
+  const accuracy = CLASS_PART_ACCURACY[cls.examType];
+  const dist = CLASS_SCORE_DIST[cls.examType];
+  const distMax = Math.max(...dist.map((d) => d.value));
+  const causeTotal = CLASS_MISTAKE_CAUSES.reduce((a, c) => a + c.count, 0);
+  const weakest = [...accuracy].sort((a, b) => a.value - b.value)[0];
+  const assignments = MOCK_ASSIGNMENTS.filter((a) => a.classId === cls.id && a.status !== 'DRAFT');
+  const students = [...MOCK_CLASS_STUDENTS].sort((a, b) => b.avgScore - a.avgScore);
+  const practiceTest = MOCK_TESTS.find((t) => t.examType === cls.examType)!;
 
-  const cols: Column<ClassStudent>[] = [
-    {
-      key: 'name',
-      header: 'Học viên',
-      render: (r) => (
-        <div className="flex items-center gap-2">
-          <Avatar name={r.name} src={r.avatarUrl} size="xs" />
-          <span className="font-bold">{r.name}</span>
-        </div>
-      ),
-    },
-    { key: 'avgScore', header: 'Điểm TB', align: 'center', render: (r) => <span className="font-display font-extrabold">{r.avgScore}</span> },
-    { key: 'completion', header: 'Hoàn thành', align: 'center', render: (r) => <span>{r.completion}%</span> },
-    {
-      key: 'status',
-      header: '',
-      render: (r) => (
-        <Badge tone={r.status === 'GOOD' ? 'emerald' : r.status === 'WARNING' ? 'amber' : 'rose'} size="xs" dot>
-          {r.status === 'GOOD' ? 'Tốt' : r.status === 'WARNING' ? 'Cảnh báo' : 'Nguy cơ'}
-        </Badge>
-      ),
-    },
-  ];
+  /** Giao luyện riêng một phần thi đang yếu (Viết / Nói của VSTEP giao bằng đề Viết / Nói) */
+  const assignPart = (partId: string) => {
+    const target: AssignmentTarget =
+      partId === 'VSTEP_WRITING' ? { kind: 'WRITING', taskId: 'vs-w-2' } : partId === 'VSTEP_SPEAKING' ? { kind: 'SPEAKING', partId: 'vs-s-2' } : { kind: 'EXAM', testId: practiceTest.id, setup: { mode: 'PRACTICE', parts: [partId], minutes: PART_INFO.find((p) => p.id === partId)?.minutes ?? null } };
+    navigate('/teacher/assignments', { state: { assign: target, classId: cls.id } });
+  };
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        title={
-          <>
-            Thống kê <span className="mark">lớp học</span>
-          </>
-        }
-        description="Tiến độ hoàn thành, phân bố điểm và hồ sơ kỹ năng của lớp."
-        icon={<BarChart3 />}
+      <TPageHead
+        title="Thống kê lớp học"
+        sub={`${cls.name} · ${cls.examType} · ${cls.studentsCount} học viên`}
         actions={
-          <div className="w-64">
-            <Select options={MOCK_CLASSES.map((c) => ({ value: c.id, label: c.name }))} value={classId} onChange={(e) => setClassId(e.target.value)} />
-          </div>
+          <select value={classId} onChange={(e) => setClassId(e.target.value)} className={cn(inputCls, 'w-60')} aria-label="Chọn lớp">
+            {MOCK_CLASSES.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.name}
+              </option>
+            ))}
+          </select>
         }
       />
 
-      <div className="grid grid-cols-1 xl:grid-cols-[280px_1fr] gap-4" key={cls.id}>
-        <div className="photo-frame relative min-h-[150px] tilt-3">
-          <Img src={cls.coverUrl} alt={cls.name} wrapperClass="absolute inset-0" fallbackClass="bg-indigo-200" />
-          <div className="absolute inset-x-0 bottom-0 p-3 bg-slate-900/80 text-white">
-            <p className="font-display font-bold text-sm truncate">{cls.name}</p>
-            <p className="text-[11px] text-slate-300">{cls.schedule}</p>
-          </div>
-        </div>
-        <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
-          <StatCard label="Học viên" value={cls.studentsCount} icon={<Users />} tone="emerald" />
-          <StatCard label="Điểm TB" value={cls.avgScore} icon={<TrendingUp />} tone="indigo" delta={3} deltaLabel="so với tháng trước" />
-          <StatCard label="Hoàn thành" value={cls.completionRate} suffix="%" icon={<CheckCircle2 />} tone="sky" />
-          <StatCard label="Chuyên cần" value={cls.attendanceRate} suffix="%" icon={<Clock />} tone="amber" />
-        </div>
-      </div>
+      <Figures
+        items={[
+          { label: 'Điểm thi thử trung bình', value: cls.avgScore, note: cls.examType === 'TOEIC' ? 'thang 990' : 'thang 10' },
+          { label: 'Hoàn thành bài tập', value: `${cls.completionRate}%`, note: `${assignments.length} bài đã giao` },
+          { label: 'Chuyên cần', value: `${cls.attendanceRate}%`, note: 'tỷ lệ có mặt các buổi học' },
+          { label: 'Phần yếu nhất', value: PART_INFO.find((p) => p.id === weakest.partId)?.name ?? '', note: `đúng ${weakest.value}%` },
+        ]}
+      />
 
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-5">
-        <Card hard className="animate-fade-up">
-          <CardHeader title="Hoàn thành bài tập theo tuần" subtitle="% học viên nộp đúng hạn" />
-          <MiniBars data={CLASS_WEEKLY_PROGRESS.map((d) => ({ ...d, tone: 'indigo' as const }))} max={100} height={150} />
-        </Card>
-        <Card hard className="animate-fade-up" style={{ animationDelay: '60ms' }}>
-          <CardHeader title="Phân bố điểm thi thử gần nhất" subtitle={`${cls.studentsCount} học viên · ETS 2024 Test 2`} />
-          <MiniBars data={SCORE_DIST} height={150} />
-        </Card>
-      </div>
+      <div className="grid items-start gap-6 lg:grid-cols-2">
+        <Panel title="Tỷ lệ đúng theo phần thi" sub="Trung bình cả lớp, bài thi thử gần nhất">
+          <ul className="space-y-1">
+            {accuracy.map((a) => {
+              const info = PART_INFO.find((p) => p.id === a.partId);
+              return (
+                <li key={a.partId} className="grid grid-cols-[minmax(0,210px)_1fr_44px_auto] items-center gap-3 py-1 text-sm">
+                  <span className="truncate text-slate-700">
+                    {info?.name} <span className="text-slate-400">· {info?.nameVi}</span>
+                  </span>
+                  <Meter value={a.value} tone={a.value < 60 ? 'red' : a.value < 70 ? 'amber' : 'indigo'} className="h-2" />
+                  <span className="text-right tabular-nums text-slate-800">{a.value}%</span>
+                  <TBtn size="sm" variant="ghost" onClick={() => assignPart(a.partId)} className={a.value >= 70 ? 'invisible' : undefined}>
+                    Giao luyện
+                  </TBtn>
+                </li>
+              );
+            })}
+          </ul>
+        </Panel>
 
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-5">
-        <Card hard tone="cream" className="flex flex-col items-center animate-fade-up" style={{ animationDelay: '100ms' }}>
-          <CardHeader title="Hồ sơ kỹ năng lớp" subtitle="Trung bình (%)" className="w-full" />
-          <RadarChart data={CLASS_RADAR} tone="indigo" size={240} />
-        </Card>
-        <Card hard className="animate-fade-up" style={{ animationDelay: '140ms' }}>
-          <CardHeader title="Tỷ lệ nộp bài" subtitle="Theo từng bài tập" />
-          <div className="space-y-4">
-            {(assignments.length ? assignments : MOCK_ASSIGNMENTS.slice(0, 4)).map((a) => (
-              <ProgressBar key={a.id} value={a.total ? (a.submitted / a.total) * 100 : 0} label={a.title} showValue size="sm" tone={a.submitted / a.total > 0.7 ? 'indigo' : 'amber'} />
+        <Panel title="Phân bố điểm" sub={`Số học viên theo khoảng điểm · ${dist.reduce((a, d) => a + d.value, 0)} bài`}>
+          <ul className="space-y-1">
+            {dist.map((d) => (
+              <li key={d.label} className="grid grid-cols-[minmax(0,150px)_1fr_32px] items-center gap-3 py-1 text-sm">
+                <span className="text-slate-700">{d.label}</span>
+                <Meter value={(d.value / distMax) * 100} className="h-2" />
+                <span className="text-right tabular-nums text-slate-800">{d.value}</span>
+              </li>
             ))}
-          </div>
-        </Card>
-        <div className="space-y-4 animate-fade-up" style={{ animationDelay: '180ms' }}>
-          <Card hard tone="yellow" padding="sm">
-            <p className="text-xs font-extrabold uppercase tracking-wider text-slate-900 mb-2 px-1">🏆 Top học viên</p>
-            <DataTable columns={cols} rows={top} dense />
-          </Card>
-          <Card hard tone="coral" padding="sm">
-            <p className="text-xs font-extrabold uppercase tracking-wider text-white mb-2 px-1">⚠️ Cần hỗ trợ</p>
-            <DataTable columns={cols} rows={bottom} dense />
-          </Card>
-        </div>
+          </ul>
+        </Panel>
       </div>
+
+      <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_380px]">
+        <Panel title="Tình hình nộp bài" sub="Các bài đã giao cho lớp" flush>
+          {assignments.length === 0 ? (
+            <p className="px-4 py-10 text-center text-sm text-slate-500">Lớp chưa có bài tập nào.</p>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className={tbl.table}>
+                <thead className={tbl.thead}>
+                  <tr>
+                    <th className={tbl.th}>Bài tập</th>
+                    <th className={cn(tbl.th, 'w-48')}>Đã nộp</th>
+                    <th className={cn(tbl.th, 'text-right')}>Điểm TB</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {assignments.map((a) => (
+                    <tr key={a.id} className={tbl.tr}>
+                      <td className={cn(tbl.td, 'text-slate-800')}>{a.title}</td>
+                      <td className={tbl.td}>
+                        <span className="flex items-center gap-2">
+                          <Meter value={(a.submitted / a.total) * 100} className="flex-1" />
+                          <span className="w-12 text-right text-[13px] tabular-nums text-slate-600">
+                            {a.submitted}/{a.total}
+                          </span>
+                        </span>
+                      </td>
+                      <td className={cn(tbl.td, 'text-right tabular-nums')}>{a.avgScore ?? '—'}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </Panel>
+
+        <Panel title="Nguyên nhân lỗi sai" sub="Gom từ Sổ tay lỗi sai của học viên trong lớp" flush>
+          <table className={tbl.table}>
+            <tbody>
+              {CLASS_MISTAKE_CAUSES.map((c) => (
+                <tr key={c.cause} className={tbl.tr}>
+                  <td className={cn(tbl.td, 'text-slate-800')}>{MISTAKE_CAUSE_LABEL[c.cause]?.label}</td>
+                  <td className={cn(tbl.td, 'text-right tabular-nums')}>{c.count} câu</td>
+                  <td className={cn(tbl.td, 'w-16 text-right tabular-nums text-slate-500')}>{Math.round((c.count / causeTotal) * 100)}%</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </Panel>
+      </div>
+
+      <Panel title="Kết quả từng học viên" sub="Sắp theo điểm trung bình" flush>
+        <div className="overflow-x-auto">
+          <table className={tbl.table}>
+            <thead className={tbl.thead}>
+              <tr>
+                <th className={cn(tbl.th, 'w-12 text-right')}>Hạng</th>
+                <th className={tbl.th}>Học viên</th>
+                <th className={cn(tbl.th, 'text-right')}>Điểm TB</th>
+                <th className={cn(tbl.th, 'w-48')}>Hoàn thành bài tập</th>
+                <th className={cn(tbl.th, 'text-right')}>Số ngày học liên tục</th>
+                <th className={tbl.th}>Hoạt động gần nhất</th>
+                <th className={tbl.th}>Tình trạng</th>
+              </tr>
+            </thead>
+            <tbody>
+              {students.map((s, i) => (
+                <tr key={s.id} className={tbl.tr}>
+                  <td className={cn(tbl.td, 'text-right tabular-nums text-slate-400')}>{i + 1}</td>
+                  <td className={tbl.td}>
+                    <span className="flex items-center gap-2.5">
+                      <Avatar name={s.name} src={s.avatarUrl} size="xs" />
+                      <span className="whitespace-nowrap font-medium text-slate-900">{s.name}</span>
+                    </span>
+                  </td>
+                  <td className={cn(tbl.td, 'text-right tabular-nums')}>{s.avgScore}</td>
+                  <td className={tbl.td}>
+                    <span className="flex items-center gap-2">
+                      <Meter value={s.completion} tone={s.completion < 65 ? 'red' : s.completion < 80 ? 'amber' : 'indigo'} className="flex-1" />
+                      <span className="w-10 text-right text-[13px] tabular-nums text-slate-600">{s.completion}%</span>
+                    </span>
+                  </td>
+                  <td className={cn(tbl.td, 'text-right tabular-nums')}>{s.streak}</td>
+                  <td className={cn(tbl.td, 'whitespace-nowrap text-slate-600')}>{timeAgo(s.lastActive)}</td>
+                  <td className={tbl.td}>
+                    <Status tone={s.status === 'GOOD' ? 'green' : s.status === 'WARNING' ? 'amber' : 'red'}>{s.status === 'GOOD' ? 'Ổn định' : s.status === 'WARNING' ? 'Cần nhắc' : 'Nguy cơ bỏ học'}</Status>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </Panel>
     </div>
   );
 };

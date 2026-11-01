@@ -1,7 +1,8 @@
 import React from 'react';
-import { LayoutDashboard, Users, ClipboardList, PenTool, FolderOpen, BarChart3, Video } from 'lucide-react';
+import { LayoutDashboard, Users, ClipboardList, PenTool, FolderOpen, BarChart3, Video, FileText, GraduationCap, BookOpen, Mic } from 'lucide-react';
 import { AppShell, NavGroup } from '@/shared/components/layout/AppShell';
 
+/** Menu giáo viên: khớp với chức năng học viên — học viên học / làm gì thì giáo viên giao, theo dõi, chấm cái đó */
 const GROUPS: NavGroup[] = [
   {
     title: 'Giảng dạy',
@@ -9,19 +10,23 @@ const GROUPS: NavGroup[] = [
       { to: '/teacher/dashboard', label: 'Tổng quan', icon: LayoutDashboard },
       { to: '/teacher/classes', label: 'Lớp học', icon: Users },
       { to: '/teacher/assignments', label: 'Bài tập', icon: ClipboardList },
-      { to: '/teacher/grading', label: 'Chấm bài', icon: PenTool, badge: '3' },
+      { to: '/teacher/grading', label: 'Chấm bài', icon: PenTool, badge: '4' },
+      { to: '/teacher/analytics', label: 'Thống kê', icon: BarChart3 },
     ],
   },
   {
     title: 'Học liệu',
     items: [
-      { to: '/teacher/courses', label: 'Khoá học & Bài giảng', icon: Video },
+      { to: '/teacher/library/courses', label: 'Khoá học', icon: Video },
+      { to: '/teacher/library/tests', label: 'Đề thi thử TOEIC / VSTEP', icon: FileText },
+      { to: '/teacher/library/grammar', label: 'Ngữ pháp', icon: GraduationCap },
+      { to: '/teacher/library/vocabulary', label: 'Từ vựng', icon: BookOpen },
+      { to: '/teacher/library/writing-speaking', label: 'Đề Viết & Nói', icon: Mic },
       { to: '/teacher/materials', label: 'Tài liệu lớp', icon: FolderOpen },
-      { to: '/teacher/analytics', label: 'Thống kê lớp học', icon: BarChart3 },
     ],
   },
 ];
 
 export const TeacherLayout: React.FC = () => (
-  <AppShell groups={GROUPS} brandTagline="Khu vực giáo viên" headerLabel="Khu vực giáo viên" accent="emerald" settingsTo="/teacher/settings" profileTo="/teacher/settings" notificationsTo="/teacher/notifications" />
+  <AppShell groups={GROUPS} brandTagline="Khu vực giáo viên" headerLabel="Khu vực giáo viên" accent="emerald" settingsTo="/teacher/settings" profileTo="/teacher/settings" notificationsTo="/teacher/notifications" workspace />
 );

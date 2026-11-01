@@ -1,19 +1,20 @@
 import React, { useState } from 'react';
-import { useParams } from 'react-router-dom';
-import { Copy, Users, ClipboardList, FolderOpen, TrendingUp, UserPlus, Upload, FileText, Video, Music, File, Calendar } from 'lucide-react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { Copy, ClipboardList, UserPlus, Upload, FileText, Video, Music, File } from 'lucide-react';
 import { useDocumentTitle } from '@/shared/hooks';
 import { toast } from '@/shared/stores/uiStore';
-import { MOCK_CLASSES, MOCK_CLASS_STUDENTS, MOCK_ASSIGNMENTS, MOCK_MATERIALS, CLASS_WEEKLY_PROGRESS } from '@/shared/mocks';
+import { MOCK_CLASSES, MOCK_CLASS_STUDENTS, MOCK_ASSIGNMENTS, MOCK_MATERIALS, MOCK_TESTS, CLASS_WEEKLY_PROGRESS, ASSIGNMENT_TYPE_LABEL, describeTarget } from '@/shared/mocks';
 import type { ClassStudent, Material } from '@/shared/types';
 import { cn, formatDate, timeAgo } from '@/shared/utils';
-import { Avatar, AvatarGroup, Badge, Button, Card, CardHeader, Column, DataTable, Input, MiniBars, Modal, PageHeader, ProgressBar, RingProgress, Select, StatCard, Tabs, Textarea } from '@/shared/components/ui';
-import { Img } from '@/shared/components/media/Img';
+import { Avatar, Input, Modal, Select, Textarea } from '@/shared/components/ui';
+import { Figures, Meter, Panel, Status, TBtn, TPageHead, TTabs, tbl, type StatusTone } from '../components/TeacherKit';
 
-const STATUS: Record<ClassStudent['status'], { label: string; tone: 'emerald' | 'amber' | 'rose' }> = {
-  GOOD: { label: 'Tốt', tone: 'emerald' },
-  WARNING: { label: 'Cảnh báo', tone: 'amber' },
-  RISK: { label: 'Nguy cơ', tone: 'rose' },
+const STATUS: Record<ClassStudent['status'], { label: string; tone: StatusTone }> = {
+  GOOD: { label: 'Ổn định', tone: 'green' },
+  WARNING: { label: 'Cần nhắc', tone: 'amber' },
+  RISK: { label: 'Nguy cơ bỏ học', tone: 'red' },
 };
+const MAT_LABEL: Record<Material['type'], string> = { VIDEO: 'Video', PDF: 'PDF', DOC: 'Word', AUDIO: 'Audio' };
 
 const MAT_ICON: Record<Material['type'], React.ElementType> = { VIDEO: Video, PDF: FileText, DOC: File, AUDIO: Music };
 
@@ -21,6 +22,7 @@ export const TeacherClassDetailPage: React.FC = () => {
   const { id } = useParams();
   const cls = MOCK_CLASSES.find((c) => c.id === id) ?? MOCK_CLASSES[0];
   useDocumentTitle(cls.name);
+  const navigate = useNavigate();
   const [tab, setTab] = useState('students');
   const [inviteOpen, setInviteOpen] = useState(false);
   const [uploadOpen, setUploadOpen] = useState(false);
@@ -52,178 +54,213 @@ export const TeacherClassDetailPage: React.FC = () => {
     toast.success('Đã tải lên tài liệu', 'Học viên trong lớp có thể tải xuống ngay.');
   };
 
-  const studentCols: Column<ClassStudent>[] = [
-    {
-      key: 'name',
-      header: 'Học viên',
-      render: (r) => (
-        <div className="flex items-center gap-3">
-          <Avatar name={r.name} src={r.avatarUrl} size="sm" ring />
-          <div>
-            <p className="font-bold text-slate-900">{r.name}</p>
-            <p className="text-[11px] text-slate-500">{r.email}</p>
-          </div>
-        </div>
-      ),
-    },
-    { key: 'avgScore', header: 'Điểm TB', align: 'center', render: (r) => <span className="font-display font-extrabold text-slate-900">{r.avgScore}</span> },
-    { key: 'completion', header: 'Hoàn thành', width: '160px', render: (r) => <ProgressBar value={r.completion} size="sm" showValue tone={r.completion >= 80 ? 'emerald' : r.completion >= 60 ? 'amber' : 'rose'} /> },
-    { key: 'streak', header: 'Chuỗi', align: 'center', render: (r) => <span className="font-semibold">🔥 {r.streak}</span> },
-    { key: 'lastActive', header: 'Hoạt động', render: (r) => <span className="text-xs text-slate-500">{timeAgo(r.lastActive)}</span> },
-    {
-      key: 'status',
-      header: 'Trạng thái',
-      render: (r) => (
-        <Badge tone={STATUS[r.status].tone} dot>
-          {STATUS[r.status].label}
-        </Badge>
-      ),
-    },
-  ];
+  const A_STATUS: Record<string, [StatusTone, string]> = { OPEN: ['green', 'Đang mở'], CLOSED: ['gray', 'Đã đóng'], DRAFT: ['amber', 'Bản nháp'] };
 
   return (
     <div className="space-y-6">
-      <PageHeader crumbs={[{ label: 'Lớp học', to: '/teacher/classes' }, { label: cls.name }]} title={cls.name} description={`${cls.examType} · Tạo ngày ${formatDate(cls.createdAt)} · ${cls.schedule}`} actions={<Button variant="outline" leftIcon={<UserPlus className="w-4 h-4" />} onClick={() => setInviteOpen(true)}>Mời học viên</Button>} />
+      <TPageHead
+        crumbs={[{ label: 'Lớp học', to: '/teacher/classes' }, { label: cls.name }]}
+        title={cls.name}
+        sub={[cls.examType, cls.schedule, cls.room, `mở ngày ${formatDate(cls.createdAt)}`].filter(Boolean).join(' · ')}
+        actions={
+          <>
+            <TBtn icon={<UserPlus />} onClick={() => setInviteOpen(true)}>
+              Mời học viên
+            </TBtn>
+            <TBtn variant="primary" icon={<ClipboardList />} onClick={() => navigate('/teacher/assignments', { state: { assign: { kind: 'EXAM', testId: MOCK_TESTS.find((t) => t.examType === cls.examType)!.id, setup: { mode: 'FULL', parts: [], minutes: null } }, classId: cls.id } })}>
+              Giao bài tập
+            </TBtn>
+          </>
+        }
+      />
 
-      {/* Banner ảnh lớp + mã mời */}
-      <section className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-5 animate-scale-in">
-        <div className="photo-frame relative min-h-[220px]">
-          <Img src={cls.coverUrl} alt={cls.name} wrapperClass="absolute inset-0" fallbackClass="bg-indigo-200" />
-          <div className="absolute inset-x-0 bottom-0 p-5 bg-slate-900/75 border-t-2 border-slate-900 text-white flex items-end justify-between gap-3">
-            <div>
-              <Badge tone={cls.examType === 'TOEIC' ? 'indigo' : 'emerald'} solid>
-                {cls.examType}
-              </Badge>
-              <p className="font-display text-2xl font-extrabold mt-1">{cls.name}</p>
-              <p className="text-xs text-slate-200 flex items-center gap-1">
-                <Calendar className="w-3.5 h-3.5" /> {cls.schedule}
-              </p>
-            </div>
-            <AvatarGroup names={students.map((s) => s.name)} srcs={students.map((s) => s.avatarUrl)} max={5} size="md" />
+      <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_260px]">
+        <Figures
+          items={[
+            { label: 'Sĩ số', value: cls.studentsCount, note: `${students.filter((x) => x.status !== 'GOOD').length} học viên cần theo dõi` },
+            { label: 'Điểm trung bình', value: cls.avgScore, note: 'bài thi thử gần nhất' },
+            { label: 'Hoàn thành bài tập', value: `${cls.completionRate}%`, note: `${cls.assignmentsCount} bài đã giao` },
+            { label: 'Chuyên cần', value: `${cls.attendanceRate}%`, note: 'từ đầu khoá' },
+          ]}
+        />
+        <div className="rounded-lg border border-slate-200 bg-white px-4 py-3.5">
+          <p className="text-[13px] text-slate-500">Mã mời vào lớp</p>
+          <div className="mt-1 flex items-center justify-between gap-2">
+            <span className="font-mono text-[1.3rem] font-semibold tracking-wide text-slate-900">{cls.code}</span>
+            <TBtn size="sm" variant="ghost" icon={<Copy />} onClick={copy}>
+              Sao chép
+            </TBtn>
           </div>
+          <p className="mt-0.5 text-xs text-slate-500">Hiệu lực đến hết học kỳ</p>
         </div>
-        <Card hard tone="yellow" className="flex flex-col justify-between">
-          <div>
-            <p className="text-xs font-extrabold uppercase tracking-wider text-slate-700">Mã mời lớp học</p>
-            <div className="flex items-center gap-3 mt-2">
-              <span className="font-mono text-4xl font-extrabold tracking-wider text-slate-900">{cls.code}</span>
-              <button onClick={copy} className="p-2 rounded-xl bg-white border-2 border-slate-900 shadow-hard-sm hover:-translate-y-0.5 transition" title="Sao chép">
-                <Copy className="w-5 h-5" />
-              </button>
-            </div>
-            <p className="text-sm text-slate-800 mt-3 leading-relaxed">Học viên nhập mã này trong Cài đặt → Tham gia lớp học. Mã có hiệu lực tới hết học kỳ.</p>
-          </div>
-          <p className="text-[11px] font-bold text-slate-700 mt-4">{cls.studentsCount} học viên đã tham gia · GV {cls.teacherName}</p>
-        </Card>
-      </section>
-
-      <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
-        <StatCard label="Học viên" value={cls.studentsCount} icon={<Users />} tone="emerald" />
-        <StatCard label="Bài tập" value={cls.assignmentsCount} icon={<ClipboardList />} tone="indigo" />
-        <StatCard label="Điểm TB" value={cls.avgScore} icon={<TrendingUp />} tone="amber" />
-        <StatCard label="Chuyên cần" value={cls.attendanceRate} suffix="%" icon={<Users />} tone="sky" />
       </div>
 
-      <Tabs
-        variant="pill"
+      <TTabs
         value={tab}
         onChange={setTab}
         items={[
-          { key: 'students', label: 'Học viên', icon: <Users />, count: students.length },
-          { key: 'assignments', label: 'Bài tập', icon: <ClipboardList />, count: assignments.length },
-          { key: 'materials', label: 'Tài liệu', icon: <FolderOpen />, count: materials.length },
-          { key: 'progress', label: 'Tiến độ', icon: <TrendingUp /> },
+          { key: 'students', label: 'Học viên', count: students.length },
+          { key: 'assignments', label: 'Bài tập', count: assignments.length },
+          { key: 'materials', label: 'Tài liệu', count: materials.length },
+          { key: 'progress', label: 'Tiến độ theo tuần' },
         ]}
       />
 
-      {tab === 'students' && <DataTable columns={studentCols} rows={students} className="animate-fade-up" />}
+      {tab === 'students' && (
+        <Panel flush>
+          <div className="overflow-x-auto">
+            <table className={tbl.table}>
+              <thead className={tbl.thead}>
+                <tr>
+                  <th className={cn(tbl.th, 'w-12 text-right')}>STT</th>
+                  <th className={tbl.th}>Học viên</th>
+                  <th className={cn(tbl.th, 'text-right')}>Điểm TB</th>
+                  <th className={cn(tbl.th, 'w-48')}>Hoàn thành bài tập</th>
+                  <th className={tbl.th}>Hoạt động gần nhất</th>
+                  <th className={tbl.th}>Tình trạng</th>
+                </tr>
+              </thead>
+              <tbody>
+                {students.map((r, i) => (
+                  <tr key={r.id} className={tbl.tr}>
+                    <td className={cn(tbl.td, 'text-right tabular-nums text-slate-400')}>{i + 1}</td>
+                    <td className={tbl.td}>
+                      <span className="flex items-center gap-2.5">
+                        <Avatar name={r.name} src={r.avatarUrl} size="sm" />
+                        <span className="min-w-0">
+                          <span className="block whitespace-nowrap font-medium text-slate-900">{r.name}</span>
+                          <span className="block text-[12px] text-slate-500">{r.email}</span>
+                        </span>
+                      </span>
+                    </td>
+                    <td className={cn(tbl.td, 'text-right tabular-nums')}>{r.avgScore}</td>
+                    <td className={tbl.td}>
+                      <span className="flex items-center gap-2">
+                        <Meter value={r.completion} tone={r.completion < 65 ? 'red' : r.completion < 80 ? 'amber' : 'indigo'} className="flex-1" />
+                        <span className="w-10 text-right text-[13px] tabular-nums text-slate-600">{r.completion}%</span>
+                      </span>
+                    </td>
+                    <td className={cn(tbl.td, 'whitespace-nowrap text-slate-600')}>{timeAgo(r.lastActive)}</td>
+                    <td className={tbl.td}>
+                      <Status tone={STATUS[r.status].tone}>{STATUS[r.status].label}</Status>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </Panel>
+      )}
 
       {tab === 'assignments' && (
-        <div className="space-y-3 animate-fade-up">
-          {assignments.length === 0 && (
-            <Card hard>
-              <p className="text-sm text-slate-500 text-center py-6">Lớp chưa có bài tập nào.</p>
-            </Card>
+        <Panel flush>
+          {assignments.length === 0 ? (
+            <p className="px-4 py-10 text-center text-sm text-slate-500">Lớp chưa có bài tập nào.</p>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className={tbl.table}>
+                <thead className={tbl.thead}>
+                  <tr>
+                    <th className={tbl.th}>Bài tập</th>
+                    <th className={tbl.th}>Hạn nộp</th>
+                    <th className={cn(tbl.th, 'w-48')}>Đã nộp</th>
+                    <th className={cn(tbl.th, 'text-right')}>Điểm TB</th>
+                    <th className={tbl.th}>Trạng thái</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {assignments.map((a) => (
+                    <tr key={a.id} className={tbl.tr}>
+                      <td className={tbl.td}>
+                        <p className="font-medium text-slate-900">{a.title}</p>
+                        <p className="text-[12px] text-slate-500">
+                          {ASSIGNMENT_TYPE_LABEL[a.type]} · {describeTarget(a.target)}
+                        </p>
+                      </td>
+                      <td className={cn(tbl.td, 'whitespace-nowrap tabular-nums text-slate-700')}>{formatDate(a.dueDate)}</td>
+                      <td className={tbl.td}>
+                        <span className="flex items-center gap-2">
+                          <Meter value={(a.submitted / a.total) * 100} className="flex-1" />
+                          <span className="w-12 text-right text-[13px] tabular-nums text-slate-600">
+                            {a.submitted}/{a.total}
+                          </span>
+                        </span>
+                      </td>
+                      <td className={cn(tbl.td, 'text-right tabular-nums')}>{a.avgScore ?? '—'}</td>
+                      <td className={tbl.td}>
+                        <Status tone={A_STATUS[a.status][0]}>{A_STATUS[a.status][1]}</Status>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           )}
-          {assignments.map((a, i) => (
-            <Card key={a.id} hard padding="sm" className="animate-fade-up" style={{ animationDelay: `${i * 50}ms` }}>
-              <div className="flex flex-col md:flex-row md:items-center gap-4">
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <p className="font-bold text-slate-900">{a.title}</p>
-                    <Badge tone="violet" size="xs">
-                      {a.type}
-                    </Badge>
-                    <Badge tone={a.status === 'OPEN' ? 'emerald' : a.status === 'CLOSED' ? 'slate' : 'amber'} size="xs">
-                      {a.status}
-                    </Badge>
-                  </div>
-                  <p className="text-xs text-slate-500 mt-1">
-                    Hạn nộp {formatDate(a.dueDate)}
-                    {a.avgScore ? ` · Điểm TB ${a.avgScore}` : ''}
-                  </p>
-                </div>
-                <div className="md:w-56">
-                  <ProgressBar value={(a.submitted / a.total) * 100} size="sm" label={`${a.submitted}/${a.total} đã nộp`} showValue tone="indigo" />
-                </div>
-              </div>
-            </Card>
-          ))}
-        </div>
+        </Panel>
       )}
 
       {tab === 'materials' && (
-        <Card hard className="animate-fade-up">
-          <CardHeader title="Tài liệu lớp học" subtitle="Video bài giảng, PDF, audio" action={<Button size="sm" leftIcon={<Upload className="w-4 h-4" />} onClick={() => setUploadOpen(true)}>Tải lên</Button>} />
-          <div className="space-y-2">
-            {materials.map((m, i) => {
-              const Icon = MAT_ICON[m.type];
-              return (
-                <div key={m.id} className="flex items-center gap-3 p-3 rounded-2xl border-2 border-slate-200 hover:border-slate-900 transition animate-fade-up" style={{ animationDelay: `${i * 40}ms` }}>
-                  <span className={cn('w-10 h-10 rounded-xl border-2 border-slate-900 flex items-center justify-center', m.type === 'VIDEO' ? 'bg-violet-200 text-violet-800' : m.type === 'AUDIO' ? 'bg-amber-200 text-amber-900' : 'bg-indigo-200 text-indigo-900')}>
-                    <Icon className="w-5 h-5" />
-                  </span>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-bold text-slate-900 truncate">{m.title}</p>
-                    <p className="text-[11px] text-slate-500">
-                      {m.size} · {formatDate(m.uploadedAt)} · {m.downloads} lượt tải
-                    </p>
-                  </div>
-                  <Badge tone="slate" size="xs">
-                    {m.type}
-                  </Badge>
-                </div>
-              );
-            })}
-          </div>
-        </Card>
+        <Panel
+          title="Tài liệu của lớp"
+          sub="Học viên trong lớp xem và tải được"
+          action={
+            <TBtn size="sm" icon={<Upload />} onClick={() => setUploadOpen(true)}>
+              Tải lên
+            </TBtn>
+          }
+          flush
+        >
+          {materials.length === 0 ? (
+            <p className="px-4 py-10 text-center text-sm text-slate-500">Chưa có tài liệu nào.</p>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className={tbl.table}>
+                <thead className={tbl.thead}>
+                  <tr>
+                    <th className={tbl.th}>Tên tài liệu</th>
+                    <th className={tbl.th}>Loại</th>
+                    <th className={cn(tbl.th, 'text-right')}>Dung lượng</th>
+                    <th className={tbl.th}>Ngày tải lên</th>
+                    <th className={cn(tbl.th, 'text-right')}>Lượt tải</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {materials.map((m) => {
+                    const Icon = MAT_ICON[m.type];
+                    return (
+                      <tr key={m.id} className={tbl.tr}>
+                        <td className={tbl.td}>
+                          <span className="flex items-center gap-2.5">
+                            <Icon className="h-4 w-4 shrink-0 text-slate-400" />
+                            <span className="font-medium text-slate-900">{m.title}</span>
+                          </span>
+                        </td>
+                        <td className={cn(tbl.td, 'text-slate-600')}>{MAT_LABEL[m.type]}</td>
+                        <td className={cn(tbl.td, 'text-right tabular-nums text-slate-600')}>{m.size}</td>
+                        <td className={cn(tbl.td, 'tabular-nums text-slate-600')}>{formatDate(m.uploadedAt)}</td>
+                        <td className={cn(tbl.td, 'text-right tabular-nums')}>{m.downloads}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </Panel>
       )}
 
       {tab === 'progress' && (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 animate-fade-up">
-          <Card hard className="lg:col-span-2">
-            <CardHeader title="Hoàn thành bài tập theo tuần" subtitle="%" />
-            <MiniBars data={CLASS_WEEKLY_PROGRESS.map((d) => ({ ...d, tone: 'indigo' as const }))} max={100} height={160} />
-          </Card>
-          <Card hard tone="cream" className="flex flex-col items-center justify-center gap-6">
-            <div className="text-center">
-              <RingProgress value={cls.completionRate} tone="indigo" size={110}>
-                <div>
-                  <p className="font-display text-xl font-extrabold">{cls.completionRate}%</p>
-                </div>
-              </RingProgress>
-              <p className="text-xs font-bold text-slate-600 mt-2">Hoàn thành</p>
-            </div>
-            <div className="text-center">
-              <RingProgress value={cls.attendanceRate} tone="violet" size={110}>
-                <div>
-                  <p className="font-display text-xl font-extrabold">{cls.attendanceRate}%</p>
-                </div>
-              </RingProgress>
-              <p className="text-xs font-bold text-slate-600 mt-2">Chuyên cần</p>
-            </div>
-          </Card>
-        </div>
+        <Panel title="Tỷ lệ học viên nộp bài đúng hạn theo tuần" sub={`Từ tuần 1 đến tuần ${CLASS_WEEKLY_PROGRESS.length} của khoá`}>
+          <ul className="space-y-2.5">
+            {CLASS_WEEKLY_PROGRESS.map((w, i) => (
+              <li key={w.label} className="grid grid-cols-[64px_1fr_48px] items-center gap-3 text-sm">
+                <span className="text-slate-600">Tuần {i + 1}</span>
+                <Meter value={w.value} className="h-2" />
+                <span className="text-right tabular-nums text-slate-800">{w.value}%</span>
+              </li>
+            ))}
+          </ul>
+        </Panel>
       )}
 
       <Modal
@@ -234,10 +271,12 @@ export const TeacherClassDetailPage: React.FC = () => {
         icon={<UserPlus />}
         footer={
           <>
-            <Button variant="ghost" onClick={() => setInviteOpen(false)}>
+            <TBtn variant="ghost" onClick={() => setInviteOpen(false)}>
               Huỷ
-            </Button>
-            <Button onClick={invite}>Gửi lời mời</Button>
+            </TBtn>
+            <TBtn variant="primary" onClick={invite}>
+              Gửi lời mời
+            </TBtn>
           </>
         }
       >
@@ -251,17 +290,19 @@ export const TeacherClassDetailPage: React.FC = () => {
         icon={<Upload />}
         footer={
           <>
-            <Button variant="ghost" onClick={() => setUploadOpen(false)}>
+            <TBtn variant="ghost" onClick={() => setUploadOpen(false)}>
               Huỷ
-            </Button>
-            <Button onClick={upload}>Tải lên</Button>
+            </TBtn>
+            <TBtn variant="primary" onClick={upload}>
+              Tải lên
+            </TBtn>
           </>
         }
       >
         <div className="space-y-4">
-          <div className="border-2 border-dashed border-slate-400 rounded-2xl p-8 text-center text-slate-500 hover:border-slate-900 hover:bg-amber-50 transition cursor-pointer bg-paper">
-            <Upload className="w-8 h-8 mx-auto mb-2 text-slate-500" />
-            <p className="text-sm font-bold text-slate-800">Kéo thả file vào đây hoặc nhấn để chọn</p>
+          <div className="cursor-pointer rounded-lg border border-dashed border-slate-300 p-6 text-center text-slate-500 transition hover:border-indigo-400 hover:bg-slate-50">
+            <Upload className="mx-auto mb-2 h-6 w-6 text-slate-400" />
+            <p className="text-sm font-medium text-slate-800">Kéo thả file vào đây hoặc bấm để chọn</p>
             <p className="text-[11px] mt-1">MP4, PDF, DOCX, MP3 · tối đa 500 MB</p>
           </div>
           <Input label="Tên tài liệu" required value={matForm.title} onChange={(e) => setMatForm((f) => ({ ...f, title: e.target.value }))} />

@@ -1,212 +1,197 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { PenTool, Play, Save, Send, Sparkles, FileText, Mic, CheckCircle2 } from 'lucide-react';
+import { Pause, Play } from 'lucide-react';
 import { useDocumentTitle } from '@/shared/hooks';
 import { toast } from '@/shared/stores/uiStore';
-import { MOCK_SUBMISSIONS } from '@/shared/mocks';
+import { MOCK_ASSIGNMENTS, MOCK_SUBMISSIONS, SPEAKING_CRITERIA, VSTEP_SPEAKING_PARTS, VSTEP_WRITING_TASKS, WRITING_CRITERIA } from '@/shared/mocks';
 import type { Submission } from '@/shared/types';
-import { cn, timeAgo, formatDateTime } from '@/shared/utils';
-import { Avatar, Badge, Button, Card, CardHeader, Chip, EmptyState, PageHeader, Tabs, Textarea } from '@/shared/components/ui';
+import { cn, formatDateTime } from '@/shared/utils';
+import { Avatar } from '@/shared/components/ui';
+import { Panel, Status, TBtn, TPageHead, TTabs, inputCls } from '../components/TeacherKit';
 
-const CRITERIA = [
-  { key: 'task', label: 'Task Fulfilment', desc: 'Đáp ứng yêu cầu đề bài' },
-  { key: 'coherence', label: 'Coherence', desc: 'Mạch lạc, liên kết' },
-  { key: 'lexical', label: 'Lexical Resource', desc: 'Từ vựng' },
-  { key: 'grammar', label: 'Grammar', desc: 'Ngữ pháp & độ chính xác' },
-] as const;
+const FEEDBACK_BANK = {
+  ESSAY: ['Bố cục rõ, đủ mở bài – thân bài – kết bài.', 'Cần thêm ví dụ cụ thể cho mỗi luận điểm.', 'Chú ý chia động từ và mạo từ.', 'Dùng câu phức nhiều hơn để tăng điểm ngữ pháp.'],
+  SPEAKING: ['Nói khá trôi chảy, ít ngập ngừng.', 'Chú ý âm cuối /s/, /t/, /d/.', 'Nên đưa lý do rồi mới so sánh các phương án.', 'Từ vựng còn lặp, thử dùng từ đồng nghĩa.'],
+} as const;
 
-const FEEDBACK_BANK = ['Lập luận rõ ràng, bố cục đủ 4 đoạn.', 'Cần đa dạng cấu trúc câu phức hơn.', 'Chú ý chia động từ và mạo từ.', 'Từ vựng học thuật tốt, ví dụ cụ thể.'];
+const SCORE_STEPS = Array.from({ length: 21 }, (_, i) => i / 2);
+const STATUS_TEXT: Record<Submission['status'], [ 'amber' | 'red' | 'green', string]> = { PENDING: ['amber', 'Chờ chấm'], LATE: ['red', 'Nộp muộn'], GRADED: ['green', 'Đã chấm'] };
 
-const TYPE_LABEL: Record<Submission['type'], string> = { ESSAY: 'Writing', SPEAKING: 'Speaking', MOCK_TEST: 'Thi thử', PRACTICE: 'Luyện tập' };
-
+/** Bàn chấm bài tự luận: đề bài đúng như học viên đã làm (Luyện Viết / Luyện Nói), chấm theo cùng bộ tiêu chí học viên nhìn thấy */
 export const TeacherGradingPage: React.FC = () => {
-  useDocumentTitle('Bàn chấm bài');
+  useDocumentTitle('Chấm bài');
   const { submissionId } = useParams();
   const navigate = useNavigate();
-  const [subs, setSubs] = useState<Submission[]>(MOCK_SUBMISSIONS);
-  const [tab, setTab] = useState<Submission['status']>('PENDING');
-  const [scores, setScores] = useState<Record<string, number>>({ task: 6, coherence: 6, lexical: 6, grammar: 6 });
+  const [subs, setSubs] = useState<Submission[]>(MOCK_SUBMISSIONS.filter((s) => s.type === 'ESSAY' || s.type === 'SPEAKING'));
+  const [tab, setTab] = useState<'TODO' | 'GRADED'>('TODO');
+  const [scores, setScores] = useState<Record<string, number>>({});
   const [feedback, setFeedback] = useState('');
+  const [playing, setPlaying] = useState(false);
 
-  const selected = useMemo(() => subs.find((s) => s.id === submissionId) ?? subs.find((s) => s.status === tab) ?? subs[0], [subs, submissionId, tab]);
-  const list = subs.filter((s) => s.status === tab);
-  const avg = Math.round((Object.values(scores).reduce((a, b) => a + b, 0) / 4) * 10) / 10;
-  const wordCount = selected?.content ? selected.content.trim().split(/\s+/).length : 0;
+  const inTab = (s: Submission) => (tab === 'GRADED' ? s.status === 'GRADED' : s.status !== 'GRADED');
+  const list = subs.filter(inTab).sort((a, b) => a.submittedAt.localeCompare(b.submittedAt));
+  const selected = useMemo(() => subs.find((s) => s.id === submissionId) ?? list[0], [subs, submissionId, list]);
+  const assignment = MOCK_ASSIGNMENTS.find((a) => a.id === selected?.assignmentId);
+  const criteria = selected?.type === 'SPEAKING' ? SPEAKING_CRITERIA : WRITING_CRITERIA;
+  const task = assignment?.target.kind === 'WRITING' ? VSTEP_WRITING_TASKS.find((t) => t.id === (assignment.target as { taskId: string }).taskId) : undefined;
+  const part = assignment?.target.kind === 'SPEAKING' ? VSTEP_SPEAKING_PARTS.find((p) => p.id === (assignment.target as { partId: string }).partId) : undefined;
+  const wordCount = selected?.type === 'ESSAY' && selected.content ? selected.content.trim().split(/\s+/).length : 0;
+  const filled = criteria.every((c) => scores[c.key] !== undefined);
+  const avg = filled ? Math.round((criteria.reduce((a, c) => a + scores[c.key], 0) / criteria.length) * 2) / 2 : null;
 
-  const select = (s: Submission) => {
-    navigate(`/teacher/grading/${s.id}`);
-    setFeedback(s.feedback ?? '');
-  };
+  // Đổi bài: nạp lại điểm / nhận xét đã lưu
+  useEffect(() => {
+    setFeedback(selected?.feedback ?? '');
+    setScores(selected?.score !== undefined ? Object.fromEntries(criteria.map((c) => [c.key, selected.score as number])) : {});
+    setPlaying(false);
+  }, [selected?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const save = (release = false) => {
-    if (!selected) return;
-    setSubs((all) => all.map((s) => (s.id === selected.id ? { ...s, score: avg, feedback, status: 'GRADED' } : s)));
-    toast.success(release ? 'Đã trả bài cho học viên' : 'Đã lưu điểm', `${selected.studentName} · ${avg}/10`);
-    if (release) setTab('GRADED');
+  const save = (release: boolean) => {
+    if (!selected || avg === null) return toast.error('Chưa chấm đủ tiêu chí', 'Chọn điểm cho cả 4 tiêu chí.');
+    if (release) setSubs((all) => all.map((s) => (s.id === selected.id ? { ...s, score: avg, feedback, status: 'GRADED' } : s)));
+    toast.success(release ? 'Đã trả bài' : 'Đã lưu nháp điểm', `${selected.studentName} · ${avg}/10${release ? ' · học viên nhận được thông báo' : ''}`);
+    if (release) {
+      const nextSub = list.find((s) => s.id !== selected.id);
+      if (nextSub) navigate(`/teacher/grading/${nextSub.id}`);
+    }
   };
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        title={
-          <>
-            Bàn <span className="mark">chấm bài</span>
-          </>
-        }
-        description="Chấm bài tự luận Writing/Speaking theo 4 tiêu chí; bài trắc nghiệm được chấm tự động."
-        icon={<PenTool />}
-      />
+      <TPageHead title="Chấm bài" sub="Bài Viết và bài Nói học viên nộp từ bài tập được giao. Bài trắc nghiệm, ngữ pháp, từ vựng được chấm tự động." />
 
-      <div className="grid grid-cols-1 lg:grid-cols-[360px_1fr] gap-5">
-        <Card hard padding="none" className="overflow-hidden animate-slide-in-left self-start">
-          <div className="p-3 border-b-2 border-slate-900 bg-slate-50">
-            <Tabs
-              variant="pill"
+      <div className="grid items-start gap-6 lg:grid-cols-[320px_minmax(0,1fr)]">
+        <Panel flush className="lg:sticky lg:top-20">
+          <div className="px-4 pt-2">
+            <TTabs
               value={tab}
-              onChange={(k) => setTab(k as Submission['status'])}
+              onChange={(k) => setTab(k as typeof tab)}
               items={[
-                { key: 'PENDING', label: 'Chờ chấm', count: subs.filter((s) => s.status === 'PENDING').length },
+                { key: 'TODO', label: 'Cần chấm', count: subs.filter((s) => s.status !== 'GRADED').length },
                 { key: 'GRADED', label: 'Đã chấm', count: subs.filter((s) => s.status === 'GRADED').length },
-                { key: 'LATE', label: 'Nộp muộn', count: subs.filter((s) => s.status === 'LATE').length },
               ]}
-              className="w-full"
             />
           </div>
-          <div className="max-h-[60vh] overflow-y-auto">
-            {list.length === 0 && <EmptyState compact title="Không có bài nộp" />}
-            {list.map((s, i) => (
-              <button
-                key={s.id}
-                onClick={() => select(s)}
-                className={cn('w-full flex items-center gap-3 p-4 text-left border-b border-slate-200 last:border-0 transition-all animate-fade-up border-l-4', selected?.id === s.id ? 'bg-amber-100 border-l-violet-500' : 'border-l-transparent hover:bg-slate-50')}
-                style={{ animationDelay: `${i * 40}ms` }}
-              >
-                <Avatar name={s.studentName} src={s.avatarUrl} size="md" ring />
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-bold text-slate-900 truncate">{s.studentName}</p>
-                  <p className="text-[11px] text-slate-600 truncate">{s.assignmentTitle}</p>
-                  <p className="text-[10px] text-slate-500 mt-0.5">{timeAgo(s.submittedAt)}</p>
-                </div>
-                <div className="text-right">
-                  <Badge tone={s.type === 'ESSAY' ? 'violet' : s.type === 'SPEAKING' ? 'sky' : 'indigo'} size="xs">
-                    {TYPE_LABEL[s.type]}
-                  </Badge>
-                  {s.score !== undefined && <p className="font-display text-base font-extrabold text-indigo-700 mt-1">{s.score}</p>}
-                </div>
-              </button>
-            ))}
-          </div>
-        </Card>
+          {list.length === 0 ? (
+            <p className="px-4 py-10 text-center text-sm text-slate-500">Không còn bài nào.</p>
+          ) : (
+            <ul className="max-h-[65vh] divide-y divide-slate-100 overflow-y-auto">
+              {list.map((s) => (
+                <li key={s.id}>
+                  <button type="button" onClick={() => navigate(`/teacher/grading/${s.id}`)} className={cn('flex w-full items-start gap-3 px-4 py-3 text-left transition-colors', selected?.id === s.id ? 'bg-indigo-500/[0.06]' : 'hover:bg-slate-50')}>
+                    <Avatar name={s.studentName} src={s.avatarUrl} size="sm" />
+                    <span className="min-w-0 flex-1">
+                      <span className="flex items-baseline justify-between gap-2">
+                        <span className="truncate text-sm font-medium text-slate-900">{s.studentName}</span>
+                        {s.score !== undefined ? <span className="text-[13px] tabular-nums text-slate-700">{s.score}</span> : <span className="shrink-0 text-[12px] text-slate-500">{s.type === 'ESSAY' ? 'Viết' : 'Nói'}</span>}
+                      </span>
+                      <span className="block truncate text-[12px] text-slate-500">{s.assignmentTitle}</span>
+                      <span className={cn('block text-[12px]', s.status === 'LATE' ? 'text-rose-600' : 'text-slate-400')}>
+                        {s.status === 'LATE' ? 'Nộp muộn · ' : ''}
+                        {formatDateTime(s.submittedAt)}
+                      </span>
+                    </span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </Panel>
 
         {selected ? (
-          <div className="space-y-5" key={selected.id}>
-            <Card hard className="animate-fade-up">
-              <CardHeader
-                title={selected.assignmentTitle}
-                subtitle={`${selected.studentName} · nộp lúc ${formatDateTime(selected.submittedAt)}`}
-                icon={selected.type === 'ESSAY' ? <FileText /> : selected.type === 'SPEAKING' ? <Mic /> : <CheckCircle2 />}
-                action={
-                  <Badge tone={selected.status === 'GRADED' ? 'emerald' : selected.status === 'LATE' ? 'rose' : 'amber'} dot>
-                    {selected.status === 'GRADED' ? 'Đã chấm' : selected.status === 'LATE' ? 'Nộp muộn' : 'Chờ chấm'}
-                  </Badge>
-                }
-              />
-              {selected.type === 'ESSAY' && (
-                <div>
-                  <div className="flex items-center justify-between text-xs text-slate-500 mb-2">
-                    <span className="flex items-center gap-2">
-                      <Avatar name={selected.studentName} src={selected.avatarUrl} size="xs" /> Bài viết của {selected.studentName}
-                    </span>
-                    <span className="sticker !text-[10px] !py-0.5 tilt-2">{wordCount} từ</span>
-                  </div>
-                  <div className="relative p-6 rounded-2xl bg-paper border-2 border-slate-900 shadow-hard-sm text-[15px] text-slate-800 leading-[1.9] whitespace-pre-line max-h-80 overflow-y-auto font-serif">
-                    <span aria-hidden className="absolute left-10 top-0 bottom-0 w-px bg-violet-300/70" />
-                    <div className="pl-6">{selected.content}</div>
-                  </div>
+          <div className="min-w-0 space-y-6" key={selected.id}>
+            <Panel
+              title={selected.assignmentTitle}
+              sub={`${selected.studentName} · ${assignment?.className ?? ''} · nộp lúc ${formatDateTime(selected.submittedAt)}`}
+              action={<Status tone={STATUS_TEXT[selected.status][0]}>{STATUS_TEXT[selected.status][1]}</Status>}
+            >
+              {(task || part) && (
+                <div className="mb-4 rounded-md bg-slate-50 px-4 py-3">
+                  <p className="text-[12px] font-medium text-slate-500">
+                    Đề bài · {task ? `${task.task} · ${task.minutes} phút · tối thiểu ${task.minWords} từ` : `${part!.part} · ${part!.minutes} phút`}
+                  </p>
+                  <p className="mt-1 text-sm leading-relaxed text-slate-800">{task?.prompt ?? part?.prompt}</p>
                 </div>
               )}
-              {selected.type === 'SPEAKING' && (
-                <div className="flex items-center gap-4 p-4 rounded-2xl border-2 border-slate-900 bg-sky-100">
-                  <button className="btn-3d w-12 h-12 rounded-full bg-sky-500 border-sky-700 text-white flex items-center justify-center">
-                    <Play className="w-5 h-5 ml-0.5" />
+
+              {selected.type === 'ESSAY' ? (
+                <div>
+                  <div className="mb-2 flex items-center justify-between text-[13px] text-slate-500">
+                    <span>Bài làm</span>
+                    <span className={cn('tabular-nums', task && wordCount < task.minWords && 'text-rose-600')}>
+                      {wordCount} từ{task && wordCount < task.minWords ? ` · thiếu ${task.minWords - wordCount} từ` : ''}
+                    </span>
+                  </div>
+                  <div className="max-h-96 overflow-y-auto whitespace-pre-line rounded-md border border-slate-200 px-5 py-4 font-serif text-[15px] leading-[1.85] text-slate-800">{selected.content}</div>
+                </div>
+              ) : (
+                <div className="flex items-center gap-4 rounded-md border border-slate-200 px-4 py-3">
+                  <button type="button" onClick={() => setPlaying((p) => !p)} aria-label={playing ? 'Tạm dừng' : 'Phát'} className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-indigo-600 text-white hover:bg-indigo-700">
+                    {playing ? <Pause className="h-4 w-4" /> : <Play className="ml-0.5 h-4 w-4" />}
                   </button>
-                  <div className="flex-1">
-                    <div className="flex items-end gap-0.5 h-8">
-                      {Array.from({ length: 48 }).map((_, i) => (
-                        <span key={i} className="flex-1 bg-slate-900/70 rounded-sm" style={{ height: `${20 + ((i * 37) % 80)}%` }} />
+                  <div className="min-w-0 flex-1">
+                    <div className="flex h-8 items-center gap-[2px]">
+                      {Array.from({ length: 64 }).map((_, i) => (
+                        <span key={i} className="flex-1 rounded-sm bg-slate-300" style={{ height: `${25 + ((i * 37) % 75)}%` }} />
                       ))}
                     </div>
-                    <p className="text-[11px] text-slate-700 mt-1 font-mono">{selected.content}</p>
+                    <p className="mt-1 font-mono text-[12px] text-slate-500">{selected.content}</p>
                   </div>
                 </div>
               )}
-              {selected.type === 'MOCK_TEST' && (
-                <div className="p-5 rounded-2xl bg-emerald-100 border-2 border-slate-900 text-center">
-                  <CheckCircle2 className="w-8 h-8 text-emerald-700 mx-auto mb-2" />
-                  <p className="font-bold text-emerald-900">Bài trắc nghiệm đã được chấm tự động</p>
-                  <p className="font-display text-4xl font-extrabold text-emerald-800 mt-1">
-                    {selected.score} <span className="text-base text-emerald-700/70">/ {selected.maxScore}</span>
-                  </p>
-                </div>
-              )}
-            </Card>
+            </Panel>
 
-            {selected.type !== 'MOCK_TEST' && (
-              <Card hard className="animate-fade-up" style={{ animationDelay: '80ms' }}>
-                <CardHeader
-                  title="Chấm điểm theo rubric"
-                  subtitle="Thang 0–10 cho từng tiêu chí · Barem Bộ GD&ĐT"
-                  action={
-                    <div className="w-16 h-16 rounded-2xl bg-amber-300 border-2 border-slate-900 shadow-hard-sm flex flex-col items-center justify-center">
-                      <p className="font-display text-2xl font-extrabold text-slate-900 leading-none animate-pop" key={avg}>
-                        {avg}
-                      </p>
-                      <p className="text-[9px] font-extrabold uppercase text-slate-700">Điểm TB</p>
+            <Panel title="Chấm điểm" sub={`Thang 0–10 cho mỗi tiêu chí, điểm bài là trung bình 4 tiêu chí (làm tròn 0,5). Học viên thấy đúng các tiêu chí này ở trang Luyện ${selected.type === 'ESSAY' ? 'Viết' : 'Nói'}.`}>
+              <div className="overflow-hidden rounded-md border border-slate-200">
+                {criteria.map((c, i) => (
+                  <div key={c.key} className={cn('flex items-center justify-between gap-4 px-4 py-2.5', i > 0 && 'border-t border-slate-100')}>
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-slate-900">{c.label}</p>
+                      <p className="text-[12px] text-slate-500">{c.desc}</p>
                     </div>
-                  }
-                />
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {CRITERIA.map((c) => (
-                    <div key={c.key} className="p-4 rounded-2xl border-2 border-slate-200 bg-white">
-                      <div className="flex items-center justify-between mb-2">
-                        <div>
-                          <p className="text-sm font-bold text-slate-900">{c.label}</p>
-                          <p className="text-[11px] text-slate-500">{c.desc}</p>
-                        </div>
-                        <span className="font-display text-xl font-extrabold text-indigo-700">{scores[c.key]}</span>
-                      </div>
-                      <input type="range" min={0} max={10} step={0.5} value={scores[c.key]} onChange={(e) => setScores((s) => ({ ...s, [c.key]: Number(e.target.value) }))} className="w-full" />
-                    </div>
-                  ))}
-                </div>
-                <div className="mt-5 space-y-3">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span className="text-xs font-bold text-slate-500 flex items-center gap-1">
-                      <Sparkles className="w-3.5 h-3.5" /> Nhận xét mẫu:
-                    </span>
-                    {FEEDBACK_BANK.map((f) => (
-                      <Chip key={f} onClick={() => setFeedback((v) => (v ? `${v} ${f}` : f))}>
-                        {f}
-                      </Chip>
-                    ))}
+                    <select value={scores[c.key] ?? ''} onChange={(e) => setScores((s) => ({ ...s, [c.key]: Number(e.target.value) }))} className={cn(inputCls, 'w-24 text-right tabular-nums')} aria-label={c.label}>
+                      <option value="" disabled>
+                        —
+                      </option>
+                      {SCORE_STEPS.map((v) => (
+                        <option key={v} value={v}>
+                          {v.toFixed(1)}
+                        </option>
+                      ))}
+                    </select>
                   </div>
-                  <Textarea label="Nhận xét cho học viên" value={feedback} onChange={(e) => setFeedback(e.target.value)} placeholder="Điểm mạnh, điểm cần cải thiện, gợi ý luyện tập..." />
+                ))}
+                <div className="flex items-center justify-between border-t border-slate-200 bg-slate-50 px-4 py-2.5">
+                  <p className="text-sm font-medium text-slate-900">Điểm bài</p>
+                  <p className="w-24 pr-3 text-right text-lg font-semibold tabular-nums text-slate-900">{avg === null ? '—' : avg.toFixed(1)}</p>
                 </div>
-                <div className="flex justify-end gap-2 mt-5">
-                  <Button variant="outline" leftIcon={<Save className="w-4 h-4" />} onClick={() => save(false)}>
-                    Lưu điểm
-                  </Button>
-                  <Button variant="success" leftIcon={<Send className="w-4 h-4" />} onClick={() => save(true)}>
-                    Trả bài
-                  </Button>
-                </div>
-              </Card>
-            )}
+              </div>
+
+              <label className="mt-5 block">
+                <span className="mb-1.5 block text-[13px] font-medium text-slate-700">Nhận xét cho học viên</span>
+                <textarea value={feedback} onChange={(e) => setFeedback(e.target.value)} rows={4} placeholder="Điểm làm tốt, lỗi cần sửa, việc nên luyện thêm" className={cn(inputCls, 'h-auto w-full py-2 leading-relaxed')} />
+              </label>
+              <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1">
+                <span className="text-[12px] text-slate-500">Chèn nhanh:</span>
+                {FEEDBACK_BANK[selected.type === 'SPEAKING' ? 'SPEAKING' : 'ESSAY'].map((f) => (
+                  <button key={f} type="button" onClick={() => setFeedback((v) => (v ? `${v} ${f}` : f))} className="text-[12px] text-indigo-700 hover:underline">
+                    {f}
+                  </button>
+                ))}
+              </div>
+
+              <div className="mt-5 flex justify-end gap-2 border-t border-slate-200 pt-4">
+                <TBtn onClick={() => save(false)}>Lưu nháp</TBtn>
+                <TBtn variant="primary" onClick={() => save(true)}>
+                  {selected.status === 'GRADED' ? 'Cập nhật điểm' : 'Trả bài'}
+                </TBtn>
+              </div>
+            </Panel>
           </div>
         ) : (
-          <Card hard>
-            <EmptyState icon={<PenTool />} title="Chọn một bài nộp để chấm" />
-          </Card>
+          <Panel>
+            <p className="py-10 text-center text-sm text-slate-500">Chọn một bài ở danh sách bên trái để chấm.</p>
+          </Panel>
         )}
       </div>
     </div>

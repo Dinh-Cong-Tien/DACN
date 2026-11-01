@@ -1,12 +1,13 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Link, NavLink, useLocation } from 'react-router-dom';
-import { Award, ChevronDown, LayoutDashboard, LogOut, Settings, User } from 'lucide-react';
+import { Award, ChevronDown, LayoutDashboard, LogOut, Settings, User, Users } from 'lucide-react';
 import { Avatar, Badge } from '@/shared/components/ui';
 import { cn, ROLE_HOME, ROLE_LABEL } from '@/shared/utils';
 import type { AppUser } from '@/shared/types';
 
 /** Mục cá nhân (các mục học tập đã nằm trong menu chính) */
 const PERSONAL = [
+  { to: '/app/classes', label: 'Lớp của tôi', icon: Users },
   { to: '/app/achievements', label: 'Huy hiệu', icon: Award },
   { to: '/app/profile', label: 'Hồ sơ', icon: User },
   { to: '/app/settings', label: 'Cài đặt', icon: Settings },

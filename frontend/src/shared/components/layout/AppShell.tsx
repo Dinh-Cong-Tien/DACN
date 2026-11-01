@@ -39,12 +39,14 @@ export interface AppShellProps {
   notificationsTo?: string;
   showStreak?: boolean;
   topExtra?: React.ReactNode;
+  /** Giao diện làm việc (giáo viên): nền phẳng, header có viền, menu thả xuống viền mảnh */
+  workspace?: boolean;
 }
 
 const accentBadge = { indigo: 'indigo', emerald: 'emerald', amber: 'amber', rose: 'violet' } as const;
 
 /** Khung portal: header MỘT HÀNG giống trang chủ (logo · menu chữ · icon + avatar) */
-export const AppShell: React.FC<AppShellProps> = ({ groups, brandTagline, accent = 'indigo', headerLabel, settingsTo, profileTo, notificationsTo, showStreak, topExtra }) => {
+export const AppShell: React.FC<AppShellProps> = ({ groups, brandTagline, accent = 'indigo', headerLabel, settingsTo, profileTo, notificationsTo, showStreak, topExtra, workspace }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const scrolled = useScrolled(12);
@@ -70,16 +72,16 @@ export const AppShell: React.FC<AppShellProps> = ({ groups, brandTagline, accent
   };
 
   // Link menu giống trang chủ: chữ đậm, active = pill tối
-  const linkCls = ({ isActive }: { isActive: boolean }) => cn('px-3 py-2 rounded-xl text-sm font-bold whitespace-nowrap shrink-0 transition-all duration-200 inline-flex items-center gap-1.5', isActive ? 'bg-slate-900/[0.06] text-indigo-700' : 'text-slate-700 hover:bg-slate-900/5 hover:text-slate-900');
+  const linkCls = ({ isActive }: { isActive: boolean }) => cn('px-3 py-2 text-sm whitespace-nowrap shrink-0 transition-all duration-200 inline-flex items-center gap-1.5', workspace ? 'rounded-md font-medium' : 'rounded-xl font-bold', isActive ? 'bg-slate-900/[0.06] text-indigo-700' : 'text-slate-700 hover:bg-slate-900/5 hover:text-slate-900');
 
   const isGroupActive = (g: NavGroup) => g.items.some((it) => location.pathname.startsWith(it.to));
 
   return (
-    <div className="portal relative min-h-screen flex flex-col font-sans text-slate-800">
-      <PageBackdrop />
+    <div className={cn('portal relative min-h-screen flex flex-col font-sans text-slate-800', workspace && 'bg-slate-50')}>
+      {!workspace && <PageBackdrop />}
       {/* ===== Header một hàng (giống GuestLayout) ===== */}
-      <header className={cn('sticky top-0 z-40 transition-all duration-300 border-b-2', scrolled ? 'bg-cream/80 backdrop-blur-xl border-slate-900/10' : 'bg-transparent border-transparent')}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-[72px] flex items-center justify-between gap-4">
+      <header className={cn('sticky top-0 z-40 transition-all duration-300', workspace ? 'border-b border-slate-200 bg-white' : cn('border-b-2', scrolled ? 'bg-cream/80 backdrop-blur-xl border-slate-900/10' : 'bg-transparent border-transparent'))}>
+        <div className={cn('max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between gap-4', workspace ? 'h-16' : 'h-[72px]')}>
           <div className="flex items-center gap-3">
             <button onClick={() => setMobileNav(true)} className="md:hidden p-2 rounded-xl border-2 border-slate-900 bg-white" aria-label="Menu">
               <Menu className="w-5 h-5" />
@@ -99,17 +101,17 @@ export const AppShell: React.FC<AppShellProps> = ({ groups, brandTagline, accent
               const hasBadge = g.items.some((it) => it.badge);
               return (
                 <div key={gi} className="relative group/menu">
-                  <button className={cn('px-3 py-2 rounded-xl text-sm font-bold flex items-center gap-1 transition whitespace-nowrap shrink-0', active ? 'bg-slate-900/[0.06] text-indigo-700' : 'text-slate-700 hover:bg-slate-900/5 hover:text-slate-900')}>
+                  <button className={cn('px-3 py-2 text-sm flex items-center gap-1 transition whitespace-nowrap shrink-0', workspace ? 'rounded-md font-medium' : 'rounded-xl font-bold', active ? 'bg-slate-900/[0.06] text-indigo-700' : 'text-slate-700 hover:bg-slate-900/5 hover:text-slate-900')}>
                     {g.title}
                     {hasBadge && !active && <span className="w-1.5 h-1.5 rounded-full bg-violet-500" />}
                     <ChevronDown className="w-3.5 h-3.5 transition-transform group-hover/menu:rotate-180" />
                   </button>
                   <div className="absolute left-0 top-full pt-2 opacity-0 translate-y-1 pointer-events-none group-hover/menu:opacity-100 group-hover/menu:translate-y-0 group-hover/menu:pointer-events-auto transition-all duration-200 z-50">
-                    <div className="w-72 bg-white rounded-2xl border-2 border-slate-900 shadow-hard p-2">
+                    <div className={cn('w-72 bg-white p-2', workspace ? 'rounded-lg border border-slate-200 shadow-[0_10px_28px_-10px_rgba(16,24,40,0.2)]' : 'rounded-2xl border-2 border-slate-900 shadow-hard')}>
                       {g.items.map((item) => {
                         const Icon = item.icon;
                         return (
-                          <NavLink key={item.to} to={item.to} end={item.end} className={({ isActive }) => cn('flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition', isActive ? 'bg-amber-100 text-slate-900' : 'text-slate-700 hover:bg-amber-100 hover:text-slate-900')}>
+                          <NavLink key={item.to} to={item.to} end={item.end} className={({ isActive }) => cn('flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition', workspace ? (isActive ? 'bg-slate-100 text-slate-900' : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900') : isActive ? 'bg-amber-100 text-slate-900' : 'text-slate-700 hover:bg-amber-100 hover:text-slate-900')}>
                             <Icon className="w-4 h-4 text-slate-500" />
                             <span className="flex-1">{item.label}</span>
                             {item.badge && (
@@ -135,7 +137,13 @@ export const AppShell: React.FC<AppShellProps> = ({ groups, brandTagline, accent
                 {user.streak} ngày
               </div>
             )}
-            <ThemeToggle />
+            {workspace ? (
+              <span className="max-[400px]:hidden">
+                <ThemeToggle />
+              </span>
+            ) : (
+              <ThemeToggle />
+            )}
             <button onClick={() => setPalette(true)} className="p-2 rounded-xl text-slate-700 hover:bg-slate-900/5 transition" aria-label="Tìm kiếm (⌘K)" title="Tìm kiếm (⌘K)">
               <Search className="w-5 h-5" />
             </button>
@@ -170,7 +178,7 @@ export const AppShell: React.FC<AppShellProps> = ({ groups, brandTagline, accent
                 trigger={
                   <button className="flex items-center gap-2 pl-1 pr-2 py-1 rounded-xl hover:bg-slate-900/5 transition" aria-label="Tài khoản">
                     <Avatar name={user.fullName} src={user.avatarUrl} size="sm" ring status="online" />
-                    <ChevronDown className="w-3.5 h-3.5 text-slate-500" />
+                    <ChevronDown className={cn('w-3.5 h-3.5 text-slate-500', workspace && 'max-sm:hidden')} />
                   </button>
                 }
               />

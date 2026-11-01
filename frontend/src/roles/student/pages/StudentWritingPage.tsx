@@ -1,21 +1,20 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { PenTool, Clock, Play, Send, Save, FileText, CheckCircle2, Pause } from 'lucide-react';
-import { VSTEP_WRITING_TASKS } from '@/shared/mocks';
+import { useSearchParams } from 'react-router-dom';
+import { VSTEP_WRITING_TASKS, WRITING_CRITERIA } from '@/shared/mocks';
 import { cn, formatClock } from '@/shared/utils';
 import { useDocumentTitle, useLocalStorage } from '@/shared/hooks';
 import { toast } from '@/shared/stores/uiStore';
 import { Badge, Button, Card, CardHeader, Modal, PageHeader, ProgressBar, Switch, Tabs, Textarea } from '@/shared/components/ui';
 
-const CRITERIA = [
-  { key: 'task', label: 'Task Fulfilment', desc: 'Trả lời đủ các ý của đề, đúng số từ' },
-  { key: 'coherence', label: 'Coherence & Cohesion', desc: 'Bố cục rõ, dùng từ nối hợp lý' },
-  { key: 'lexical', label: 'Lexical Resource', desc: 'Từ vựng đa dạng, đúng ngữ cảnh' },
-  { key: 'grammar', label: 'Grammatical Range', desc: 'Đa dạng cấu trúc, ít lỗi' },
-];
+/** Cùng bộ tiêu chí giáo viên dùng ở bàn chấm */
+const CRITERIA = WRITING_CRITERIA;
 
 export const StudentWritingPage: React.FC = () => {
   useDocumentTitle('Luyện Viết VSTEP');
-  const [taskId, setTaskId] = useState(VSTEP_WRITING_TASKS[0].id);
+  // Mở từ bài được giao: ?task=<id> chọn sẵn đề giáo viên giao
+  const [params] = useSearchParams();
+  const [taskId, setTaskId] = useState(VSTEP_WRITING_TASKS.find((t) => t.id === params.get('task'))?.id ?? VSTEP_WRITING_TASKS[0].id);
   const task = VSTEP_WRITING_TASKS.find((t) => t.id === taskId) ?? VSTEP_WRITING_TASKS[0];
   const [drafts, setDrafts] = useLocalStorage<Record<string, string>>('orbi-writing-draft', {});
   const text = drafts[task.id] ?? '';

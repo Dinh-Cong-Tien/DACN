@@ -25,6 +25,7 @@ import { StudentLeaderboardPage } from '@/roles/student/pages/StudentLeaderboard
 import { StudentBookmarksPage } from '@/roles/student/pages/StudentBookmarksPage';
 import { StudentProfilePage } from '@/roles/student/pages/StudentProfilePage';
 import { StudentSettingsPage } from '@/roles/student/pages/StudentSettingsPage';
+import { StudentClassesPage } from '@/roles/student/pages/StudentClassesPage';
 import { NotificationsPage } from '@/roles/common/NotificationsPage';
 
 export const studentRoutes: RouteObject[] = [
@@ -44,6 +45,7 @@ export const studentRoutes: RouteObject[] = [
               // Trang Tổng quan đã gộp vào trang chủ (khối "Góc học tập")
               { path: 'dashboard', element: <Navigate to="/" replace /> },
               { path: 'learning-path', element: <StudentLearningPathPage /> },
+              { path: 'classes', element: <StudentClassesPage /> },
               // Danh sách khoá học dùng chung trang /courses (học viên thấy tiến độ ngay trên đó)
               { path: 'courses', element: <Navigate to="/courses" replace /> },
               { path: 'courses/:id', element: <StudentLessonPage /> },

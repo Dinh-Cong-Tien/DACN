@@ -1,4 +1,4 @@
-import { RouteObject } from 'react-router-dom';
+import { Navigate, RouteObject } from 'react-router-dom';
 import { AuthGuard } from '../guards/AuthGuard';
 import { RoleGuard } from '../guards/RoleGuard';
 import { TeacherLayout } from '@/layouts/teacher/TeacherLayout';
@@ -7,7 +7,7 @@ import { TeacherClassesPage } from '@/roles/teacher/pages/TeacherClassesPage';
 import { TeacherClassDetailPage } from '@/roles/teacher/pages/TeacherClassDetailPage';
 import { TeacherAssignmentsPage } from '@/roles/teacher/pages/TeacherAssignmentsPage';
 import { TeacherGradingPage } from '@/roles/teacher/pages/TeacherGradingPage';
-import { TeacherCoursesPage } from '@/roles/teacher/pages/TeacherCoursesPage';
+import { TeacherLibraryPage } from '@/roles/teacher/pages/TeacherLibraryPage';
 import { TeacherMaterialsPage } from '@/roles/teacher/pages/TeacherMaterialsPage';
 import { TeacherAnalyticsPage } from '@/roles/teacher/pages/TeacherAnalyticsPage';
 import { NotificationsPage } from '@/roles/common/NotificationsPage';
@@ -31,7 +31,8 @@ export const teacherRoutes: RouteObject[] = [
               { path: 'assignments', element: <TeacherAssignmentsPage /> },
               { path: 'grading', element: <TeacherGradingPage /> },
               { path: 'grading/:submissionId', element: <TeacherGradingPage /> },
-              { path: 'courses', element: <TeacherCoursesPage /> },
+              { path: 'library/:kind', element: <TeacherLibraryPage /> },
+              { path: 'courses', element: <Navigate to="/teacher/library/courses" replace /> },
               { path: 'materials', element: <TeacherMaterialsPage /> },
               { path: 'analytics', element: <TeacherAnalyticsPage /> },
               { path: 'notifications', element: <NotificationsPage /> },

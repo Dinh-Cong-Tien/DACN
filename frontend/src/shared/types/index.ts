@@ -291,6 +291,8 @@ export interface ClassRoom {
   attendanceRate: number;
   createdAt: string;
   schedule: string;
+  /** Phòng học hoặc hình thức online */
+  room?: string;
   gradient: string;
   coverUrl?: string;
 }
@@ -308,8 +310,33 @@ export interface ClassStudent {
   status: 'GOOD' | 'WARNING' | 'RISK';
 }
 
-export type AssignmentType = 'MOCK_TEST' | 'PRACTICE' | 'ESSAY' | 'SPEAKING';
+/** MOCK_TEST: full đề thi thử · PRACTICE: một số Part của đề · LESSON: bài giảng trong Khoá học · GRAMMAR: chủ điểm ngữ pháp · VOCAB: bộ flashcard từ vựng · ESSAY / SPEAKING: đề Luyện Viết / Luyện Nói */
+export type AssignmentType = 'MOCK_TEST' | 'PRACTICE' | 'LESSON' | 'GRAMMAR' | 'VOCAB' | 'ESSAY' | 'SPEAKING';
 export type AssignmentStatus = 'OPEN' | 'CLOSED' | 'DRAFT';
+
+/** Nội dung bài giao trỏ thẳng tới chức năng học viên đang dùng, để học viên bấm là làm được ngay */
+export type AssignmentTarget =
+  | { kind: 'EXAM'; testId: string; setup: ExamSetup }
+  | { kind: 'LESSON'; courseId: string; lessonIds: string[] }
+  | { kind: 'GRAMMAR'; slug: string }
+  | { kind: 'VOCAB'; topicId: string }
+  | { kind: 'WRITING'; taskId: string }
+  | { kind: 'SPEAKING'; partId: string };
+
+/** Tình trạng một bài được giao, nhìn từ phía học viên */
+export interface MyAssignmentState {
+  status: 'TODO' | 'SUBMITTED' | 'GRADED' | 'MISSED';
+  submittedAt?: string;
+  score?: number;
+  feedback?: string;
+}
+
+/** Tiêu chí chấm bài tự luận: dùng chung cho trang Luyện Viết / Luyện Nói của học viên và bàn chấm của giáo viên */
+export interface RubricCriterion {
+  key: string;
+  label: string;
+  desc: string;
+}
 
 export interface Assignment {
   id: string;
@@ -323,6 +350,9 @@ export interface Assignment {
   status: AssignmentStatus;
   avgScore?: number;
   createdAt: string;
+  target: AssignmentTarget;
+  /** Lời dặn của giáo viên, hiện cho học viên */
+  note?: string;
 }
 
 export interface Submission {

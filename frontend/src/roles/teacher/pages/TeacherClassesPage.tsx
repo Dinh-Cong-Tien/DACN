@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Plus, Copy, Users, ClipboardList, Calendar, ArrowRight } from 'lucide-react';
+import { Plus, Copy, Search, Users } from 'lucide-react';
 import { useDocumentTitle } from '@/shared/hooks';
 import { useAuthStore } from '@/shared/stores/authStore';
 import { toast } from '@/shared/stores/uiStore';
 import { MOCK_CLASSES } from '@/shared/mocks';
 import type { ClassRoom, ExamType } from '@/shared/types';
-import { Badge, Button, Card, EmptyState, Input, Modal, PageHeader, ProgressBar, SearchInput, Select } from '@/shared/components/ui';
+import { Input, Modal, Select } from '@/shared/components/ui';
+import { cn, formatDate } from '@/shared/utils';
+import { Meter, Panel, TBtn, TPageHead, inputCls, tbl } from '../components/TeacherKit';
 import { Img, PHOTOS } from '@/shared/components/media/Img';
 
 const COVERS = [PHOTOS.classroom, PHOTOS.discussion, PHOTOS.lecture, PHOTOS.team, PHOTOS.students2];
@@ -60,88 +62,104 @@ export const TeacherClassesPage: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        title={
-          <>
-            Lớp học <span className="mark">của tôi</span>
-          </>
-        }
-        description="Tạo lớp, cấp mã mời cho học viên, theo dõi tiến độ và giao bài tập."
+      <TPageHead
+        title="Lớp học"
+        sub="Tạo lớp, gửi mã mời cho học viên, theo dõi tiến độ từng lớp."
         actions={
-          <Button variant="gradient" leftIcon={<Plus className="w-4 h-4" />} onClick={() => setOpen(true)}>
-            Tạo lớp mới
-          </Button>
+          <TBtn variant="primary" icon={<Plus />} onClick={() => setOpen(true)}>
+            Tạo lớp
+          </TBtn>
         }
       />
-      <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-        <div className="sm:w-80">
-          <SearchInput placeholder="Tìm theo tên hoặc mã lớp..." value={search} onChange={(e) => setSearch(e.target.value)} />
+
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="relative sm:w-80">
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+          <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Tìm theo tên hoặc mã lớp" className={cn(inputCls, 'w-full pl-9')} />
         </div>
-        <p className="text-xs font-bold text-slate-500">
+        <p className="text-[13px] text-slate-500">
           {list.length} lớp · {list.reduce((a, c) => a + c.studentsCount, 0)} học viên
         </p>
       </div>
 
-      {list.length === 0 ? (
-        <Card hard>
-          <EmptyState icon={<Users />} title="Chưa có lớp nào" description="Tạo lớp đầu tiên và chia sẻ mã mời cho học viên." action={<Button onClick={() => setOpen(true)}>Tạo lớp</Button>} />
-        </Card>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-          {list.map((c, i) => (
-            <Card key={c.id} hard hover padding="none" className="overflow-hidden animate-fade-up" style={{ animationDelay: `${i * 60}ms` }}>
-              <div className="relative">
-                <Img src={c.coverUrl} alt={c.name} ratio="video" fallbackClass="bg-indigo-200" wrapperClass="border-b-2 border-slate-900" />
-                <div className="absolute top-3 left-3 flex gap-2">
-                  <Badge tone={c.examType === 'TOEIC' ? 'indigo' : 'emerald'} solid>
-                    {c.examType}
-                  </Badge>
-                </div>
-                <button onClick={() => copy(c.code)} className="sticker tilt-2 absolute -bottom-3 right-4 !bg-amber-300 hover:!bg-amber-200 font-mono !tracking-wider" title="Sao chép mã mời">
-                  {c.code} <Copy className="w-3 h-3" />
-                </button>
-              </div>
-              <div className="p-5 space-y-4">
-                <div>
-                  <h3 className="font-display font-extrabold text-lg text-slate-900 leading-tight">{c.name}</h3>
-                  <p className="text-[11px] font-semibold text-slate-500 flex items-center gap-1 mt-1">
-                    <Calendar className="w-3.5 h-3.5" /> {c.schedule} · tạo {c.createdAt}
-                  </p>
-                </div>
-                <div className="grid grid-cols-3 gap-2 text-center">
-                  {[
-                    [c.studentsCount, 'Học viên'],
-                    [c.assignmentsCount, 'Bài tập'],
-                    [c.avgScore || '—', 'Điểm TB'],
-                  ].map(([v, l]) => (
-                    <div key={l as string} className="p-2 rounded-xl bg-slate-50 border-2 border-slate-200">
-                      <p className="font-display text-xl font-extrabold text-slate-900 leading-none">{v as React.ReactNode}</p>
-                      <p className="text-[10px] font-bold uppercase text-slate-500 mt-1">{l as string}</p>
-                    </div>
-                  ))}
-                </div>
-                <ProgressBar value={c.completionRate} label="Hoàn thành bài tập" showValue size="sm" tone="indigo" />
-                <Link to={`/teacher/classes/${c.id}`} className="btn-3d flex items-center justify-center gap-1.5 h-11 rounded-xl bg-slate-900 border-black text-amber-300 text-sm font-bold">
-                  Quản lý lớp <ArrowRight className="w-4 h-4" />
-                </Link>
-              </div>
-            </Card>
-          ))}
-        </div>
-      )}
+      <Panel flush>
+        {list.length === 0 ? (
+          <div className="px-4 py-12 text-center">
+            <p className="font-medium text-slate-900">Không tìm thấy lớp nào</p>
+            <p className="mt-1 text-sm text-slate-500">Thử tìm bằng mã lớp, hoặc tạo lớp mới.</p>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className={tbl.table}>
+              <thead className={tbl.thead}>
+                <tr>
+                  <th className={tbl.th}>Tên lớp</th>
+                  <th className={tbl.th}>Mã mời</th>
+                  <th className={tbl.th}>Lịch học</th>
+                  <th className={cn(tbl.th, 'text-right')}>Sĩ số</th>
+                  <th className={cn(tbl.th, 'text-right')}>Bài tập</th>
+                  <th className={cn(tbl.th, 'text-right')}>Điểm TB</th>
+                  <th className={cn(tbl.th, 'w-44')}>Hoàn thành</th>
+                  <th className={tbl.th} />
+                </tr>
+              </thead>
+              <tbody>
+                {list.map((c) => (
+                  <tr key={c.id} className={tbl.tr}>
+                    <td className={tbl.td}>
+                      <Link to={`/teacher/classes/${c.id}`} className="font-medium text-slate-900 hover:text-indigo-700 hover:underline underline-offset-2">
+                        {c.name}
+                      </Link>
+                      <p className="text-[12px] text-slate-500">
+                        {c.examType} · mở ngày {formatDate(c.createdAt)}
+                      </p>
+                    </td>
+                    <td className={tbl.td}>
+                      <button type="button" onClick={() => copy(c.code)} title="Sao chép mã mời" className="group inline-flex items-center gap-1.5 font-mono text-[13px] text-slate-700 hover:text-indigo-700">
+                        {c.code}
+                        <Copy className="h-3.5 w-3.5 text-slate-400 group-hover:text-indigo-600" />
+                      </button>
+                    </td>
+                    <td className={tbl.td}>
+                      <p className="whitespace-nowrap text-slate-700">{c.schedule}</p>
+                      {c.room && <p className="text-[12px] text-slate-500">{c.room}</p>}
+                    </td>
+                    <td className={cn(tbl.td, 'text-right tabular-nums')}>{c.studentsCount}</td>
+                    <td className={cn(tbl.td, 'text-right tabular-nums')}>{c.assignmentsCount}</td>
+                    <td className={cn(tbl.td, 'text-right tabular-nums')}>{c.avgScore || '—'}</td>
+                    <td className={tbl.td}>
+                      <span className="flex items-center gap-2">
+                        <Meter value={c.completionRate} className="flex-1" />
+                        <span className="w-9 text-right text-[13px] tabular-nums text-slate-600">{c.completionRate}%</span>
+                      </span>
+                    </td>
+                    <td className={cn(tbl.td, 'text-right')}>
+                      <TBtn to={`/teacher/classes/${c.id}`} size="sm">
+                        Mở lớp
+                      </TBtn>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </Panel>
 
       <Modal
         open={open}
         onClose={() => setOpen(false)}
         title="Tạo lớp học mới"
-        description="Hệ thống sẽ tự sinh mã mời 8 ký tự cho học viên."
+        description="Mã mời 8 ký tự được tạo tự động sau khi lưu."
         icon={<Users />}
         footer={
           <>
-            <Button variant="ghost" onClick={() => setOpen(false)}>
+            <TBtn variant="ghost" onClick={() => setOpen(false)}>
               Huỷ
-            </Button>
-            <Button onClick={create}>Tạo lớp</Button>
+            </TBtn>
+            <TBtn variant="primary" onClick={create}>
+              Tạo lớp
+            </TBtn>
           </>
         }
       >

@@ -1,5 +1,5 @@
 import type { IMockTest, IQuestion } from '@toeic-vstep/shared';
-import type { ExamSetup } from '@/shared/types';
+import type { ExamSetup, RubricCriterion } from '@/shared/types';
 import { TOEIC_PARTS_INFO, VSTEP_PARTS_INFO } from './tests';
 
 const AUDIO_SAMPLE = 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3';
@@ -598,6 +598,22 @@ export const VSTEP_LISTENING: IQuestion[] = [
     difficulty: 4,
     passage: { id: 'ps-vs-l2', examType: 'VSTEP', partOrSkill: 'LISTENING_PART_2', content: '', audioUrl: AUDIO_SAMPLE },
   }),
+];
+
+/** 4 tiêu chí chấm Viết: học viên thấy ở trang Luyện Viết, giáo viên chấm đúng theo đây */
+export const WRITING_CRITERIA: RubricCriterion[] = [
+  { key: 'task', label: 'Task Fulfilment', desc: 'Trả lời đủ các ý của đề, đúng số từ' },
+  { key: 'coherence', label: 'Coherence & Cohesion', desc: 'Bố cục rõ, dùng từ nối hợp lý' },
+  { key: 'lexical', label: 'Lexical Resource', desc: 'Từ vựng đa dạng, đúng ngữ cảnh' },
+  { key: 'grammar', label: 'Grammatical Range', desc: 'Đa dạng cấu trúc, ít lỗi' },
+];
+
+/** 4 tiêu chí chấm Nói */
+export const SPEAKING_CRITERIA: RubricCriterion[] = [
+  { key: 'fluency', label: 'Fluency & Coherence', desc: 'Nói liền mạch, ý có liên kết' },
+  { key: 'pronunciation', label: 'Pronunciation', desc: 'Phát âm, trọng âm, ngữ điệu' },
+  { key: 'lexical', label: 'Lexical Resource', desc: 'Từ vựng phù hợp chủ đề' },
+  { key: 'grammar', label: 'Grammatical Range', desc: 'Đa dạng cấu trúc, ít lỗi' },
 ];
 
 export const VSTEP_WRITING_TASKS = [

@@ -1,4 +1,4 @@
-import type { ExamSetup } from '@/shared/types';
+import type { AssignmentTarget, ExamSetup } from '@/shared/types';
 
 export function cn(...classes: Array<string | false | null | undefined | 0>): string {
   return classes.filter(Boolean).join(' ');
@@ -103,6 +103,24 @@ export function sleep(ms: number): Promise<void> {
 /** ExamSetup → query phòng thi: ?parts=PART_1,PART_5&time=20 (time=none: không giới hạn). Full test không cần query */
 export function examSetupQuery(s: ExamSetup): string {
   return s.mode === 'FULL' ? '' : `?parts=${s.parts.join(',')}&time=${s.minutes ?? 'none'}`;
+}
+
+/** Link học viên bấm để làm bài được giao: phòng thi (đúng Part + thời gian giáo viên đặt), bài giảng, đề Viết / Nói */
+export function assignmentHref(t: AssignmentTarget): string {
+  switch (t.kind) {
+    case 'EXAM':
+      return `/app/exam/${t.testId}${examSetupQuery(t.setup)}`;
+    case 'LESSON':
+      return `/app/courses/${t.courseId}/lessons/${t.lessonIds[0]}`;
+    case 'GRAMMAR':
+      return `/app/grammar/${t.slug}`;
+    case 'VOCAB':
+      return `/app/vocabulary/flashcards/${t.topicId}`;
+    case 'WRITING':
+      return `/app/writing?task=${t.taskId}`;
+    case 'SPEAKING':
+      return `/app/speaking?part=${t.partId}`;
+  }
 }
 
 /** Đọc lại ExamSetup từ query; không có Part hợp lệ = full test */

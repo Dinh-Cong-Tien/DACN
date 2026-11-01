@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Mic, Square, Play, Send, Clock, CheckCircle2, RotateCcw, MessageSquare } from 'lucide-react';
+import { useSearchParams } from 'react-router-dom';
 import { VSTEP_SPEAKING_PARTS } from '@/shared/mocks';
 import { cn, formatClock } from '@/shared/utils';
 import { useDocumentTitle } from '@/shared/hooks';
@@ -30,7 +31,9 @@ const BAR_COUNT = 28;
 
 export const StudentSpeakingPage: React.FC = () => {
   useDocumentTitle('Luyện Nói VSTEP');
-  const [partId, setPartId] = useState<string | null>(null);
+  // Mở từ bài được giao: ?part=<id> vào thẳng phần giáo viên giao
+  const [params] = useSearchParams();
+  const [partId, setPartId] = useState<string | null>(VSTEP_SPEAKING_PARTS.find((p) => p.id === params.get('part'))?.id ?? null);
   const part = VSTEP_SPEAKING_PARTS.find((p) => p.id === partId);
   const partIdx = VSTEP_SPEAKING_PARTS.findIndex((p) => p.id === partId);
   const [phase, setPhase] = useState<Phase>('IDLE');
