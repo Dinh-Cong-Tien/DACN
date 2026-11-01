@@ -5,14 +5,16 @@ import { MOCK_COURSES, courseHref } from '@/shared/mocks';
 import { useDocumentTitle, useGate } from '@/shared/hooks';
 import { useAuthStore } from '@/shared/stores/authStore';
 import { cn } from '@/shared/utils';
-import type { Course, CourseCategory, Lesson } from '@/shared/types';
+import type { Course, Lesson } from '@/shared/types';
 import { Accent, ActionLink, PageHeader, Section } from './shared/PageKit';
 
-const COPY: Record<CourseCategory, { eyebrow: string; title: React.ReactNode }> = {
-  GRAMMAR: { eyebrow: 'Ngữ pháp', title: <>Ngữ pháp tiếng Anh <Accent>từ đầu</Accent></> },
-  VOCABULARY: { eyebrow: 'Từ vựng và Phát âm', title: <>Từ vựng và <Accent>Phát âm</Accent></> },
-  FOUNDATION: { eyebrow: 'Kiến thức nền tảng', title: <>Kiến thức <Accent>nền tảng</Accent></> },
-};
+/** Nhãn và tiêu đề đầu trang; Kiến thức nền tảng tách riêng theo kỳ thi (TOEIC / VSTEP) */
+const copyOf = (c: Course): { eyebrow: string; title: React.ReactNode } =>
+  c.category === 'GRAMMAR'
+    ? { eyebrow: 'Ngữ pháp', title: <>Ngữ pháp tiếng Anh <Accent>từ đầu</Accent></> }
+    : c.category === 'VOCABULARY'
+      ? { eyebrow: 'Từ vựng và Phát âm', title: <>Từ vựng và <Accent>Phát âm</Accent></> }
+      : { eyebrow: `Kiến thức nền tảng · ${c.examType}`, title: <>Nền tảng <Accent>{c.examType}</Accent></> };
 
 const TYPE_LABEL: Record<Lesson['type'], string> = { VIDEO: 'Video', READING: 'Bài đọc', QUIZ: 'Bài kiểm tra' };
 
@@ -29,8 +31,9 @@ export const LessonPathPage: React.FC = () => {
 };
 
 const PathView: React.FC<{ course: Course }> = ({ course }) => {
-  const copy = COPY[course.category];
-  const others = MOCK_COURSES.filter((c) => c.id !== course.id);
+  const copy = copyOf(course);
+  // Học song song: khoá nền tảng chỉ gợi ý 2 khoá kiến thức chung, không gợi ý khoá của kỳ thi kia
+  const others = MOCK_COURSES.filter((c) => c.id !== course.id && (course.category !== 'FOUNDATION' || c.category !== 'FOUNDATION'));
   useDocumentTitle(course.title);
   const gate = useGate();
   const isStudent = useAuthStore((s) => s.user?.role === 'STUDENT');
@@ -69,7 +72,7 @@ const PathView: React.FC<{ course: Course }> = ({ course }) => {
           <>
             {primary}
             <ActionLink to="/courses" variant="secondary" size="lg">
-              Các mục khác
+              Các khoá khác
             </ActionLink>
           </>
         }

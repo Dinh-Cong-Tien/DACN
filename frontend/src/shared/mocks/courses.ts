@@ -219,59 +219,141 @@ const VOCAB_PATH = mkPath(
   2,
 );
 
-const FOUNDATION_PATH = mkPath(
-  'fp',
+/** Nền tảng TOEIC: tiếng Anh môi trường công việc, nặng hơn VSTEP (nhiều chặng, văn bản dài, ngữ cảnh kinh doanh) */
+const TOEIC_PATH = mkPath(
+  'tp',
   [
     [
-      'Bắt đầu học tiếng Anh',
+      'Tiếng Anh trong môi trường công việc',
       [
-        ['Học tiếng Anh từ đầu nên bắt đầu từ đâu', 'VIDEO', 10, 'Thứ tự nên học: phát âm, từ vựng, ngữ pháp, rồi đến bốn kỹ năng.'],
-        ['Bốn kỹ năng Nghe, Nói, Đọc, Viết hỗ trợ nhau thế nào', 'VIDEO', 9, 'Nghe và đọc là đầu vào, nói và viết là đầu ra.'],
-        ['Lập thời gian biểu tự học 30 phút mỗi ngày', 'VIDEO', 8, 'Chia thời gian cho từng phần và giữ thói quen học đều.'],
-        ['Học với video có bản ghi chữ', 'VIDEO', 7, 'Bật phụ đề song ngữ, bấm vào từ để tra nghĩa và lưu vào sổ từ.'],
+        ['TOEIC đánh giá điều gì', 'VIDEO', 12, 'Bài thi đo khả năng dùng tiếng Anh ở nơi làm việc: nghe, đọc, nói, viết trong tình huống công sở.'],
+        ['Tiếng Anh công sở khác tiếng Anh giao tiếp thế nào', 'VIDEO', 11, 'Văn phong trang trọng, câu dài hơn, nhiều danh từ và cụm giới từ.'],
+        ['Những bối cảnh hay gặp', 'VIDEO', 10, 'Văn phòng, nhà hàng, cửa hàng, sân bay, nhà máy, hội nghị.'],
       ],
     ],
     [
-      'Nghe hiểu cơ bản',
+      'Nghe nền tảng',
       [
-        ['Nghe chủ động và nghe thụ động', 'VIDEO', 10, 'Khi nào nên nghe kỹ từng câu, khi nào chỉ cần nghe hiểu ý.'],
-        ['Nghe lấy ý chính', 'VIDEO', 12, 'Chú ý từ được nhấn mạnh và câu mở đầu, câu kết.'],
-        ['Nghe số, tên riêng và chi tiết', 'VIDEO', 12, 'Phân biệt fifteen – fifty, đánh vần tên, địa chỉ.'],
-        ['Nghe chép chính tả', 'VIDEO', 11, 'Cách luyện chép từng câu ngắn để nghe ra từng từ.'],
-        ['Shadowing: nghe và nói đuổi theo', 'VIDEO', 11, 'Bắt chước người nói để cải thiện cả nghe và phát âm.'],
-        ['Kiểm tra chặng 2', 'QUIZ', 10, '15 câu nghe đoạn hội thoại ngắn.'],
+        ['Âm cuối và nối âm khi nói nhanh', 'VIDEO', 15, 'Vì sao nghe từng từ thì biết mà nghe cả câu lại không ra.'],
+        ['Làm quen giọng Mỹ, Anh, Úc, Canada', 'VIDEO', 14, 'Khác biệt về nguyên âm, âm /r/ và ngữ điệu giữa bốn giọng.'],
+        ['Từ vựng mô tả người, vật và vị trí', 'VIDEO', 15, 'Động tác, tư thế, đồ vật văn phòng, giới từ vị trí.'],
+        ['Câu hỏi và cách đáp gián tiếp', 'VIDEO', 14, 'Người bản xứ hiếm khi trả lời thẳng Yes/No; nghe ra ý thật của câu đáp.'],
+        ['Hội thoại ngắn nơi công sở', 'VIDEO', 16, 'Đặt lịch, báo sự cố, hỏi tiến độ, đổi kế hoạch.'],
+        ['Thông báo, tin nhắn thoại và bài nói ngắn', 'VIDEO', 16, 'Bố cục quen thuộc: ai nói, nói với ai, vì sao, cần làm gì.'],
+        ['Kiểm tra chặng 2', 'QUIZ', 20, '30 câu nghe ở cả bốn giọng.'],
       ],
     ],
     [
-      'Nói cơ bản',
+      'Ngữ pháp trong văn bản công việc',
       [
-        ['Giới thiệu bản thân', 'VIDEO', 11, 'Tên, tuổi, quê quán, công việc, sở thích.'],
-        ['Hỏi và trả lời thông tin cá nhân', 'VIDEO', 11, 'Các mẫu câu hỏi quen thuộc và cách trả lời tự nhiên.'],
-        ['Mô tả người, đồ vật và nơi chốn', 'VIDEO', 13, 'Dùng tính từ và giới từ để mô tả rõ ràng.'],
-        ['Kể lại một trải nghiệm', 'VIDEO', 13, 'Dùng quá khứ đơn và từ nối first, then, after that, finally.'],
-        ['Nêu ý kiến và lý do', 'VIDEO', 12, 'I think…, In my opinion…, because…, for example…'],
-        ['Kiểm tra chặng 3', 'QUIZ', 10, 'Ghi âm câu trả lời cho 5 câu hỏi, giáo viên nhận xét.'],
+        ['Từ loại trong câu dài', 'VIDEO', 15, 'Tìm chủ ngữ, động từ chính trong câu nhiều cụm bổ nghĩa.'],
+        ['Thì và câu bị động trong thông báo', 'VIDEO', 14, 'Vì sao văn bản công việc dùng bị động nhiều đến vậy.'],
+        ['Đại từ và từ hạn định', 'VIDEO', 12, 'its / their, each / every, another / other trong ngữ cảnh.'],
+        ['Giới từ và liên từ trong email', 'VIDEO', 14, 'by, until, within, prior to; although, unless, provided that.'],
+        ['Mệnh đề quan hệ và rút gọn', 'VIDEO', 14, 'Đọc nhanh câu có mệnh đề lồng nhau.'],
+        ['Kiểm tra chặng 3', 'QUIZ', 20, '30 câu điền vào câu và đoạn văn.'],
       ],
     ],
     [
-      'Đọc hiểu cơ bản',
+      'Từ vựng công việc',
       [
-        ['Đọc lướt tìm ý chính', 'VIDEO', 11, 'Đọc tiêu đề, câu đầu mỗi đoạn để nắm nội dung.'],
-        ['Đọc quét tìm thông tin', 'VIDEO', 11, 'Tìm nhanh tên, số, ngày tháng mà không đọc hết bài.'],
-        ['Đoán nghĩa từ qua ngữ cảnh', 'VIDEO', 12, 'Dựa vào câu xung quanh, ví dụ và từ trái nghĩa.'],
-        ['Từ nối và mạch văn', 'VIDEO', 11, 'Nhận ra quan hệ nguyên nhân, đối lập, bổ sung giữa các câu.'],
-        ['Kiểm tra chặng 4', 'QUIZ', 12, '3 đoạn văn ngắn, 15 câu hỏi.'],
+        ['Văn phòng và nhân sự', 'VIDEO', 14, 'Tuyển dụng, đào tạo, thăng chức, phúc lợi.'],
+        ['Hội họp và sự kiện', 'VIDEO', 13, 'Lên lịch, hoãn, chủ trì, biên bản, hội thảo.'],
+        ['Mua bán và hợp đồng', 'VIDEO', 14, 'Báo giá, đơn hàng, điều khoản, gia hạn.'],
+        ['Tài chính và ngân hàng', 'VIDEO', 14, 'Ngân sách, hoá đơn, hoàn tiền, chi phí.'],
+        ['Sản xuất và vận chuyển', 'VIDEO', 13, 'Dây chuyền, kho hàng, giao nhận, chậm trễ.'],
+        ['Đi công tác', 'VIDEO', 12, 'Đặt vé, khách sạn, lịch trình, thanh toán công tác phí.'],
+        ['Kiểm tra chặng 4', 'QUIZ', 20, '40 câu từ vựng theo ngữ cảnh.'],
       ],
     ],
     [
-      'Viết cơ bản',
+      'Đọc hiểu văn bản công việc',
       [
-        ['Viết một câu đúng', 'VIDEO', 11, 'Đủ chủ ngữ, động từ; viết hoa, dấu câu.'],
-        ['Nối câu thành câu ghép và câu phức', 'VIDEO', 12, 'Dùng and, but, because, when, although.'],
-        ['Viết một đoạn văn', 'VIDEO', 13, 'Câu chủ đề, câu triển khai, câu kết.'],
-        ['Viết email và tin nhắn ngắn', 'VIDEO', 12, 'Mở đầu, nội dung, kết thư; trang trọng và thân mật.'],
-        ['Tự sửa lỗi bài viết', 'VIDEO', 10, 'Danh sách 10 lỗi hay gặp để tự kiểm tra trước khi nộp.'],
-        ['Bài kiểm tra cuối khoá', 'QUIZ', 25, 'Nghe, đọc và viết một đoạn văn 100 từ; giáo viên chấm phần viết.'],
+        ['Email và thư', 'VIDEO', 15, 'Mục đích thư, yêu cầu, thông tin đính kèm.'],
+        ['Thông báo và bản ghi nhớ nội bộ', 'VIDEO', 14, 'Ai ban hành, áp dụng cho ai, từ khi nào.'],
+        ['Quảng cáo và tin tuyển dụng', 'VIDEO', 13, 'Điều kiện, ưu đãi, yêu cầu ứng viên.'],
+        ['Biểu mẫu, hoá đơn và lịch trình', 'VIDEO', 14, 'Đọc bảng và số liệu, đối chiếu với văn bản đi kèm.'],
+        ['Tin nhắn và chuỗi trò chuyện', 'VIDEO', 12, 'Hiểu ý người viết qua câu ngắn, văn nói.'],
+        ['Bài báo ngắn', 'VIDEO', 15, 'Ý chính, chi tiết và suy luận trong bài báo kinh doanh.'],
+        ['Kiểm tra chặng 5', 'QUIZ', 25, '6 văn bản, 30 câu hỏi.'],
+      ],
+    ],
+    [
+      'Đọc nhiều văn bản và đọc nhanh',
+      [
+        ['Liên kết thông tin giữa hai, ba văn bản', 'VIDEO', 18, 'Thông tin cần tìm thường nằm rải ở nhiều văn bản.'],
+        ['Cùng một ý, khác cách diễn đạt', 'VIDEO', 15, 'Nhận ra paraphrase giữa câu hỏi và văn bản.'],
+        ['Đọc nhanh hơn mà vẫn hiểu', 'VIDEO', 14, 'Đọc theo cụm, bỏ thói quen dịch từng từ.'],
+        ['Kiểm tra chặng 6', 'QUIZ', 25, '3 bộ văn bản kép và ba.'],
+      ],
+    ],
+    [
+      'Nói và Viết nơi công sở',
+      [
+        ['Đọc to một đoạn văn rõ ràng', 'VIDEO', 13, 'Ngắt nghỉ, trọng âm câu, đọc tên riêng và số.'],
+        ['Mô tả một bức ảnh', 'VIDEO', 14, 'Bố cục: tổng quan, người, vật, bối cảnh.'],
+        ['Trả lời câu hỏi về công việc', 'VIDEO', 14, 'Trả lời đủ ý, có ví dụ, trong 15–30 giây.'],
+        ['Viết câu theo tranh', 'VIDEO', 12, 'Dùng đúng từ cho sẵn và đúng ngữ pháp.'],
+        ['Viết email trả lời yêu cầu', 'VIDEO', 16, 'Đáp đủ các yêu cầu, văn phong lịch sự.'],
+        ['Nêu ý kiến có lý do và ví dụ', 'VIDEO', 16, 'Bố cục bài viết và bài nói nêu quan điểm.'],
+        ['Bài kiểm tra cuối khoá', 'QUIZ', 45, 'Đề rút gọn Nghe – Đọc 100 câu kèm 2 bài viết; giáo viên chấm phần viết.'],
+      ],
+    ],
+  ],
+  0,
+  2,
+);
+
+/** Nền tảng VSTEP: bốn kỹ năng với chủ đề đời sống, nhẹ hơn TOEIC (ít chặng, văn bản ngắn, mục tiêu B1) */
+const VSTEP_PATH = mkPath(
+  'sp',
+  [
+    [
+      'Làm quen bốn kỹ năng',
+      [
+        ['VSTEP đánh giá những gì', 'VIDEO', 10, 'Bốn kỹ năng Nghe, Đọc, Viết, Nói và khung năng lực 6 bậc của Việt Nam.'],
+        ['Các chủ đề hay gặp', 'VIDEO', 9, 'Bản thân, gia đình, học tập, công việc, sức khoẻ, môi trường, công nghệ.'],
+        ['Lập kế hoạch tự học bốn kỹ năng', 'VIDEO', 8, 'Chia thời gian mỗi tuần cho từng kỹ năng.'],
+      ],
+    ],
+    [
+      'Nghe',
+      [
+        ['Nghe số, tên riêng và thời gian', 'VIDEO', 11, 'fifteen – fifty, đánh vần tên, ngày giờ.'],
+        ['Nghe thông báo và chỉ dẫn ngắn', 'VIDEO', 11, 'Nghe ra ai, ở đâu, khi nào, cần làm gì.'],
+        ['Nghe hội thoại hằng ngày', 'VIDEO', 12, 'Mua sắm, hỏi đường, hẹn gặp, ở trường.'],
+        ['Nghe bài nói dài và ghi chú', 'VIDEO', 13, 'Ghi từ khoá, ký hiệu viết tắt khi nghe.'],
+        ['Kiểm tra chặng 2', 'QUIZ', 12, '20 câu nghe.'],
+      ],
+    ],
+    [
+      'Đọc',
+      [
+        ['Đọc lấy ý chính', 'VIDEO', 11, 'Tiêu đề, câu chủ đề và câu kết của mỗi đoạn.'],
+        ['Tìm thông tin chi tiết', 'VIDEO', 11, 'Đọc quét tìm tên, số, ngày tháng.'],
+        ['Đoán nghĩa từ trong ngữ cảnh', 'VIDEO', 11, 'Dựa vào ví dụ, từ trái nghĩa và câu xung quanh.'],
+        ['Hiểu ý tác giả và suy luận', 'VIDEO', 12, 'Thái độ, mục đích của người viết.'],
+        ['Kiểm tra chặng 3', 'QUIZ', 15, '2 bài đọc, 20 câu hỏi.'],
+      ],
+    ],
+    [
+      'Viết',
+      [
+        ['Viết câu và đoạn văn', 'VIDEO', 12, 'Câu chủ đề, câu triển khai, câu kết.'],
+        ['Viết thư và email', 'VIDEO', 14, 'Thư thân mật và thư trang trọng: mở đầu, nội dung, kết thư.'],
+        ['Viết đoạn nêu ý kiến', 'VIDEO', 13, 'Nêu quan điểm, đưa lý do và ví dụ.'],
+        ['Bố cục một bài luận ngắn', 'VIDEO', 14, 'Mở bài, hai đoạn thân bài, kết bài.'],
+        ['Kiểm tra chặng 4', 'QUIZ', 20, 'Viết một email 120 từ, giáo viên chấm và nhận xét.'],
+      ],
+    ],
+    [
+      'Nói',
+      [
+        ['Phát âm rõ và ngắt nghỉ', 'VIDEO', 10, 'Nói chậm, rõ, ngắt theo cụm ý.'],
+        ['Trả lời câu hỏi về bản thân', 'VIDEO', 11, 'Trả lời đủ ý, có thêm một chi tiết hoặc ví dụ.'],
+        ['Thảo luận và chọn giải pháp', 'VIDEO', 12, 'So sánh các lựa chọn và nêu lý do chọn.'],
+        ['Trình bày một chủ đề theo dàn ý', 'VIDEO', 13, 'Lập dàn ý trong một phút và nói trong ba phút.'],
+        ['Bài kiểm tra cuối khoá', 'QUIZ', 30, 'Đề rút gọn bốn kỹ năng; giáo viên chấm phần Viết và Nói.'],
       ],
     ],
   ],
@@ -289,7 +371,7 @@ const pathStats = (sections: CourseSection[]) => {
   };
 };
 
-/** Mục Khoá học: đúng 3 lộ trình kiến thức chung (luyện thi theo đề nằm ở menu TOEIC / VSTEP) */
+/** Mục Khoá học: 2 lộ trình kiến thức chung (Ngữ pháp, Từ vựng và Phát âm) + Kiến thức nền tảng tách riêng TOEIC và VSTEP */
 export const MOCK_COURSES: Course[] = [
   {
     id: 'c-grammar',
@@ -324,20 +406,38 @@ export const MOCK_COURSES: Course[] = [
     sections: VOCAB_PATH,
   },
   {
-    id: 'c-foundation',
+    id: 'c-toeic-basic',
     category: 'FOUNDATION',
-    slug: 'kien-thuc-nen-tang',
-    coverUrl: PHOTOS.lecture,
-    title: 'Kiến thức nền tảng',
-    level: 'Từ mất gốc',
-    description: 'Video bài giảng cách học tiếng Anh và bốn kỹ năng Nghe, Nói, Đọc, Viết ở mức cơ bản, dành cho người bắt đầu lại từ đầu.',
-    gradient: 'from-emerald-500 to-teal-600',
-    ...pathStats(FOUNDATION_PATH),
-    studentsCount: 4126,
+    examType: 'TOEIC',
+    slug: 'nen-tang-toeic',
+    coverUrl: PHOTOS.office,
+    title: 'Nền tảng TOEIC',
+    level: 'Từ mất gốc → 550+',
+    description: 'Tiếng Anh trong môi trường công việc: nghe bốn giọng, đọc email, thông báo, hợp đồng, từ vựng kinh doanh và nói, viết nơi công sở. Nặng hơn VSTEP, nên học sau khi đã qua vài chặng Ngữ pháp và Từ vựng.',
+    gradient: 'from-indigo-500 to-violet-600',
+    ...pathStats(TOEIC_PATH),
+    studentsCount: 6208,
     rating: 4.8,
     isFree: true,
     teacherName: 'Lê Quốc Bảo',
-    sections: FOUNDATION_PATH,
+    sections: TOEIC_PATH,
+  },
+  {
+    id: 'c-vstep-basic',
+    category: 'FOUNDATION',
+    examType: 'VSTEP',
+    slug: 'nen-tang-vstep',
+    coverUrl: PHOTOS.library,
+    title: 'Nền tảng VSTEP',
+    level: 'Từ mất gốc → B1',
+    description: 'Bốn kỹ năng Nghe, Đọc, Viết, Nói với các chủ đề đời sống quen thuộc, mục tiêu bậc 3 (B1). Nhẹ hơn TOEIC, phù hợp sinh viên cần chuẩn đầu ra.',
+    gradient: 'from-emerald-500 to-teal-600',
+    ...pathStats(VSTEP_PATH),
+    studentsCount: 4126,
+    rating: 4.7,
+    isFree: true,
+    teacherName: 'Phạm Ngọc Linh',
+    sections: VSTEP_PATH,
   },
 ];
 

@@ -32,7 +32,7 @@ export const publicRoutes: RouteObject[] = [
       { path: 'toeic', element: <ToeicPage /> },
       { path: 'vstep', element: <VstepPage /> },
       { path: 'courses', element: <CoursesPage /> },
-      // 3 mục Khoá học: /courses/ngu-phap, /courses/tu-vung-phat-am, /courses/kien-thuc-nen-tang
+      // Khoá học: /courses/ngu-phap, /courses/tu-vung-phat-am, /courses/nen-tang-toeic, /courses/nen-tang-vstep
       { path: 'courses/:slug', element: <LessonPathPage /> },
       { path: 'practice', element: <PracticePage /> },
       { path: 'mock-tests', element: <MockTestsPage /> },

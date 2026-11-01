@@ -10,7 +10,7 @@ import type { Course } from '@/shared/types';
 import { Accent, ActionLink, PageHeader, Section } from './shared/PageKit';
 
 /** Một mục Khoá học: ảnh, mô tả, các chặng theo thứ tự; học viên thấy tiến độ và bài đang học */
-const TrackRow: React.FC<{ course: Course; index: number; isStudent: boolean }> = ({ course: c, index, isStudent }) => {
+const TrackRow: React.FC<{ course: Course; isStudent: boolean }> = ({ course: c, isStudent }) => {
   const gate = useGate();
   const all = c.sections.flatMap((s) => s.lessons);
   const done = all.filter((l) => l.isCompleted).length;
@@ -25,12 +25,12 @@ const TrackRow: React.FC<{ course: Course; index: number; isStudent: boolean }> 
         </RevealPhoto>
       </Link>
       <div className="flex min-w-0 flex-col py-1">
-        <p className="text-[12px] font-semibold uppercase tracking-[0.14em] text-slate-500">Mục {index + 1}</p>
-        <h2 className="mt-1 font-display text-2xl font-bold text-slate-900 md:text-[1.7rem]">
+        <p className="text-[12px] font-semibold uppercase tracking-[0.14em] text-slate-500">{c.category === 'FOUNDATION' ? `Nền tảng · ${c.examType}` : 'Kiến thức chung'}</p>
+        <h3 className="mt-1 font-display text-2xl font-bold text-slate-900 md:text-[1.7rem]">
           <Link to={courseHref(c)} className="hover:text-indigo-700">
             {c.title}
           </Link>
-        </h2>
+        </h3>
         <p className="mt-2 max-w-2xl leading-relaxed text-slate-600">{c.description}</p>
         <p className="mt-3 text-[13px] tabular-nums text-slate-500">
           {all.length} bài · {c.sections.length} chặng · {c.durationHours} giờ · {c.level}
@@ -75,9 +75,16 @@ const TrackRow: React.FC<{ course: Course; index: number; isStudent: boolean }> 
 };
 
 /**
- * Khoá học: đúng 3 mục kiến thức chung học từ đầu — Ngữ pháp, Từ vựng và Phát âm, Kiến thức nền tảng.
+ * Khoá học, học từ đầu theo thứ tự bài:
+ * - Kiến thức chung: Ngữ pháp, Từ vựng và Phát âm (dùng cho cả hai kỳ thi)
+ * - Kiến thức nền tảng: tách riêng TOEIC (nặng hơn, tiếng Anh công việc) và VSTEP (nhẹ hơn, bốn kỹ năng, B1)
  * Luyện đề theo kỳ thi nằm ở menu TOEIC / VSTEP.
  */
+const GROUPS = [
+  { key: 'general', title: 'Kiến thức chung', desc: 'Dùng cho cả TOEIC và VSTEP. Nên học song song hai khoá này trước.', match: (c: Course) => c.category !== 'FOUNDATION' },
+  { key: 'exam', title: 'Kiến thức nền tảng theo kỳ thi', desc: 'Tách riêng hai kỳ thi. TOEIC nặng hơn VSTEP: văn bản dài hơn, ngữ cảnh công việc, nhiều bài hơn.', match: (c: Course) => c.category === 'FOUNDATION' },
+];
+
 export const CoursesPage: React.FC = () => {
   useDocumentTitle('Khoá học');
   const isStudent = useAuthStore((s) => s.user?.role === 'STUDENT');
@@ -94,17 +101,27 @@ export const CoursesPage: React.FC = () => {
             Học tiếng Anh <Accent>từ đầu</Accent>
           </>
         }
-        lead="Ba mục kiến thức chung cho người mới. Mỗi mục là một chuỗi video bài giảng đánh số từ Bài 1, học xong bài trước mới mở bài sau. Nên học song song Ngữ pháp với Từ vựng và Phát âm."
+        lead="Mỗi khoá là một chuỗi video bài giảng đánh số từ Bài 1, học xong bài trước mới mở bài sau. Bắt đầu với Ngữ pháp và Từ vựng, sau đó chọn khoá nền tảng của kỳ thi bạn sẽ thi."
         facts={[
-          { value: String(MOCK_COURSES.length), label: 'Mục học' },
+          { value: String(MOCK_COURSES.length), label: 'Khoá học' },
           { value: String(lessons), label: 'Bài giảng' },
           { value: `${hours} giờ`, label: 'Tổng thời lượng' },
         ]}
       />
       <Section innerClassName="py-12 md:py-16">
-        <div className="space-y-6">
-          {MOCK_COURSES.map((c, i) => (
-            <TrackRow key={c.id} course={c} index={i} isStudent={isStudent} />
+        <div className="space-y-14">
+          {GROUPS.map((g) => (
+            <section key={g.key} aria-labelledby={`g-${g.key}`}>
+              <h2 id={`g-${g.key}`} className="font-display text-2xl font-extrabold tracking-tight text-slate-900 md:text-[1.9rem]">
+                {g.title}
+              </h2>
+              <p className="mt-2 max-w-2xl text-slate-600">{g.desc}</p>
+              <div className="mt-6 space-y-6">
+                {MOCK_COURSES.filter(g.match).map((c) => (
+                  <TrackRow key={c.id} course={c} isStudent={isStudent} />
+                ))}
+              </div>
+            </section>
           ))}
         </div>
       </Section>

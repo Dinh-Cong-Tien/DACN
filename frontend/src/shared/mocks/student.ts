@@ -14,8 +14,8 @@ export const LEARNING_PATH: Milestone[] = [
     status: 'DONE',
     progress: 100,
     items: [
-      { id: 'p1-1', title: 'Cấu trúc đề thi TOEIC L&R', type: 'LESSON', durationMin: 12, status: 'DONE', link: '/app/courses/c-toeic-foundation/lessons/l-1-1', skill: 'Tổng quan' },
-      { id: 'p1-2', title: 'Word Form: Nhận diện từ loại', type: 'LESSON', durationMin: 14, status: 'DONE', link: '/app/courses/c-toeic-foundation/lessons/l-2-1', skill: 'Grammar' },
+      { id: 'p1-1', title: 'Cấu trúc đề thi TOEIC L&R', type: 'LESSON', durationMin: 12, status: 'DONE', link: '/app/courses/c-toeic-basic/lessons/tp-01', skill: 'Tổng quan' },
+      { id: 'p1-2', title: 'Word Form: Nhận diện từ loại', type: 'LESSON', durationMin: 14, status: 'DONE', link: '/app/courses/c-grammar/lessons/gp-02', skill: 'Grammar' },
       { id: 'p1-3', title: 'Luyện Part 5 — 30 câu', type: 'PRACTICE', durationMin: 15, status: 'DONE', link: '/app/practice/session/PART_5', skill: 'Reading' },
       { id: 'p1-4', title: 'Flashcard: Office & HR (40 từ)', type: 'VOCAB', durationMin: 10, status: 'DONE', link: '/app/vocabulary', skill: 'Vocabulary' },
     ],
@@ -30,9 +30,9 @@ export const LEARNING_PATH: Milestone[] = [
     status: 'CURRENT',
     progress: 46,
     items: [
-      { id: 'p2-1', title: 'Part 2: 5 dạng câu hỏi Wh-', type: 'LESSON', durationMin: 13, status: 'DONE', link: '/app/courses/c-toeic-foundation/lessons/l-3-2', skill: 'Listening' },
+      { id: 'p2-1', title: 'Part 2: 5 dạng câu hỏi Wh-', type: 'LESSON', durationMin: 13, status: 'DONE', link: '/app/courses/c-toeic-basic/lessons/tp-07', skill: 'Listening' },
       { id: 'p2-2', title: 'Luyện Part 2 — 25 câu', type: 'PRACTICE', durationMin: 15, status: 'DONE', link: '/app/practice/session/PART_2', skill: 'Listening' },
-      { id: 'p2-3', title: 'Paraphrase trong Part 3', type: 'LESSON', durationMin: 15, status: 'CURRENT', link: '/app/courses/c-toeic-intensive/lessons/l-1-1', skill: 'Listening' },
+      { id: 'p2-3', title: 'Paraphrase trong Part 3', type: 'LESSON', durationMin: 15, status: 'CURRENT', link: '/app/courses/c-toeic-basic/lessons/tp-31', skill: 'Listening' },
       { id: 'p2-4', title: 'Luyện Part 3 — 3 hội thoại', type: 'PRACTICE', durationMin: 12, status: 'LOCKED', link: '/app/practice/session/PART_3', skill: 'Listening' },
       { id: 'p2-5', title: 'Ôn tập lỗi sai tuần này', type: 'REVIEW', durationMin: 10, status: 'LOCKED', link: '/app/review', skill: 'Review' },
       { id: 'p2-6', title: 'Mini Test Listening #1', type: 'MOCK_TEST', durationMin: 45, status: 'LOCKED', link: '/app/mock-tests/toeic-listening-mini-1', skill: 'Listening' },
