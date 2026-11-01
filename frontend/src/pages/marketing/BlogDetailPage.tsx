@@ -1,106 +1,211 @@
 import React from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { Clock, Bookmark, Share2, ArrowRight, ArrowLeft } from 'lucide-react';
-import { Badge, Breadcrumb, Button, Avatar } from '@/shared/components/ui';
-import { Reveal } from '@/shared/components/motion';
+import { ArrowLeft, ArrowRight, Bookmark, ChevronRight, Share2 } from 'lucide-react';
+import { Avatar } from '@/shared/components/ui';
 import { Img } from '@/shared/components/media/Img';
-import { BLOG_POSTS } from '@/shared/mocks';
+import { BLOG_POSTS, TOEIC_GUIDE_SLUG, VSTEP_GUIDE_SLUG } from '@/shared/mocks';
 import { useDocumentTitle } from '@/shared/hooks';
-import { formatDate } from '@/shared/utils';
+import { cn, formatDate } from '@/shared/utils';
 import { toast } from '@/shared/stores/uiStore';
+import { Eyebrow } from './shared/PageKit';
+
+/** Bộ bài Giới thiệu kỳ thi: trang kỳ thi tương ứng (breadcrumb, liên kết cuối bài) */
+const SERIES: Record<string, { exam: string; to: string }> = {
+  [TOEIC_GUIDE_SLUG]: { exam: 'TOEIC', to: '/toeic' },
+  [VSTEP_GUIDE_SLUG]: { exam: 'VSTEP', to: '/vstep' },
+};
+
+type Block = { kind: 'h2'; text: string; id: string } | { kind: 'p'; text: string } | { kind: 'ul'; items: string[] };
+
+/** content[]: '## ' → tiêu đề mục, '- ' → gạch đầu dòng (gom các dòng liền nhau), còn lại là đoạn văn */
+function toBlocks(content: string[]): Block[] {
+  const out: Block[] = [];
+  content.forEach((line, i) => {
+    if (line.startsWith('## ')) out.push({ kind: 'h2', text: line.slice(3), id: `muc-${i}` });
+    else if (line.startsWith('- ')) {
+      const last = out[out.length - 1];
+      if (last?.kind === 'ul') last.items.push(line.slice(2));
+      else out.push({ kind: 'ul', items: [line.slice(2)] });
+    } else out.push({ kind: 'p', text: line });
+  });
+  return out;
+}
 
 export const BlogDetailPage: React.FC = () => {
   const { slug } = useParams();
   const post = BLOG_POSTS.find((p) => p.slug === slug) ?? BLOG_POSTS[0];
   useDocumentTitle(post.title);
-  const related = BLOG_POSTS.filter((p) => p.id !== post.id && p.categorySlug === post.categorySlug).slice(0, 2);
-  const more = related.length ? related : BLOG_POSTS.filter((p) => p.id !== post.id).slice(0, 2);
+  const series = SERIES[post.categorySlug];
+  const siblings = BLOG_POSTS.filter((p) => p.categorySlug === post.categorySlug);
+  const idx = siblings.findIndex((p) => p.id === post.id);
+  const prev = series ? siblings[idx - 1] : undefined;
+  const next = series ? siblings[idx + 1] : undefined;
+  const related = siblings.filter((p) => p.id !== post.id).slice(0, 3);
+  const blocks = toBlocks(post.content);
+  const headings = blocks.filter((b): b is Extract<Block, { kind: 'h2' }> => b.kind === 'h2');
+
+  const crumbs = series
+    ? [{ label: 'Trang chủ', to: '/' }, { label: `Luyện thi ${series.exam}`, to: series.to }, { label: 'Giới thiệu kỳ thi' }]
+    : [{ label: 'Trang chủ', to: '/' }, { label: 'Kinh nghiệm', to: '/blog' }, { label: post.category, to: `/blog/category/${post.categorySlug}` }];
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16">
-      <Breadcrumb className="mb-6" items={[{ label: 'Trang chủ', to: '/' }, { label: 'Kinh nghiệm', to: '/blog' }, { label: post.category, to: `/blog/category/${post.categorySlug}` }, { label: 'Bài viết' }]} />
-      <div className="grid lg:grid-cols-[1fr_320px] gap-12 items-start">
-        <article className="space-y-8">
-          <Reveal className="space-y-5">
-            <div className="flex gap-2">
-              <Badge tone="violet" solid>
-                {post.category}
-              </Badge>
-              <Badge tone="slate" icon={<Clock className="w-3 h-3" />}>
-                {post.readMin} phút đọc
-              </Badge>
-            </div>
-            <h1 className="font-display text-3xl md:text-5xl font-extrabold text-slate-900 leading-[1.08] text-balance">{post.title}</h1>
-            <p className="text-lg text-slate-600 leading-relaxed">{post.excerpt}</p>
-            <div className="flex items-center justify-between flex-wrap gap-4 py-4 border-y-2 border-slate-200">
+    <div className="bg-page">
+      <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 md:py-14 lg:px-8">
+        <nav aria-label="Breadcrumb" className="flex flex-wrap items-center gap-1 text-[13px] text-slate-500">
+          {crumbs.map((c, i) => (
+            <React.Fragment key={c.label}>
+              {i > 0 && <ChevronRight className="h-3.5 w-3.5 text-slate-400" />}
+              {c.to ? (
+                <Link to={c.to} className="hover:text-slate-900 hover:underline underline-offset-2">
+                  {c.label}
+                </Link>
+              ) : (
+                <span className="text-slate-700">{c.label}</span>
+              )}
+            </React.Fragment>
+          ))}
+        </nav>
+
+        <div className="mt-8 grid items-start gap-12 lg:grid-cols-[minmax(0,1fr)_300px]">
+          <article className="min-w-0">
+            <Eyebrow>{series ? `Giới thiệu kỳ thi ${series.exam} · Bài ${idx + 1}/${siblings.length}` : post.category}</Eyebrow>
+            <h1 className="mt-3 font-display text-[2rem] font-extrabold leading-[1.12] tracking-tight text-slate-900 text-balance md:text-[2.7rem]">{post.title}</h1>
+            <p className="mt-4 text-lg leading-relaxed text-slate-600">{post.excerpt}</p>
+
+            <div className="mt-6 flex flex-wrap items-center justify-between gap-4 border-y border-slate-200 py-4">
               <div className="flex items-center gap-3">
-                <Avatar name={post.author} src={post.authorAvatar} size="md" ring />
+                <Avatar name={post.author} src={post.authorAvatar} size="md" />
                 <div>
-                  <p className="text-sm font-bold text-slate-900">{post.author}</p>
-                  <p className="text-xs text-slate-500">Giáo viên OrbiLingo · {formatDate(post.date)}</p>
+                  <p className="text-sm font-semibold text-slate-900">{post.author}</p>
+                  <p className="text-[13px] text-slate-500">
+                    Giáo viên OrbiLingo · {formatDate(post.date)} · {post.readMin} phút đọc
+                  </p>
                 </div>
               </div>
-              <div className="flex gap-2">
-                <Button size="sm" variant="outline" leftIcon={<Bookmark className="w-4 h-4" />} onClick={() => toast.success('Đã lưu bài viết')}>
-                  Lưu
-                </Button>
-                <Button size="sm" variant="outline" leftIcon={<Share2 className="w-4 h-4" />} onClick={() => toast.info('Đã sao chép liên kết')}>
-                  Chia sẻ
-                </Button>
+              <div className="flex gap-1">
+                <button type="button" onClick={() => toast.success('Đã lưu bài viết')} className="inline-flex h-9 items-center gap-1.5 rounded-lg px-3 text-sm font-medium text-slate-600 hover:bg-slate-900/[0.05] hover:text-slate-900">
+                  <Bookmark className="h-4 w-4" /> Lưu
+                </button>
+                <button type="button" onClick={() => toast.info('Đã sao chép liên kết')} className="inline-flex h-9 items-center gap-1.5 rounded-lg px-3 text-sm font-medium text-slate-600 hover:bg-slate-900/[0.05] hover:text-slate-900">
+                  <Share2 className="h-4 w-4" /> Chia sẻ
+                </button>
               </div>
             </div>
-          </Reveal>
-          <Reveal className="photo-frame">
-            <Img src={post.coverUrl} alt={post.title} ratio="video" fallbackClass="bg-indigo-200" />
-          </Reveal>
-          <Reveal className="space-y-5 max-w-3xl">
-            {post.content.map((para, i) => (
-              <p key={i} className={i === 0 ? 'text-lg text-slate-800 leading-relaxed first-letter:font-display first-letter:text-5xl first-letter:font-extrabold first-letter:text-violet-500 first-letter:mr-1 first-letter:float-left' : 'text-slate-700 leading-relaxed'}>
-                {para}
-              </p>
-            ))}
-            <div className="rounded-2xl bg-amber-100 border-2 border-slate-900 p-5 text-sm text-slate-800">
-              <b>Áp dụng ngay:</b> Mở phần Luyện tập, chọn đúng Part được nhắc trong bài và làm 10 câu với chế độ xem giải thích.
+
+            <div className="mt-8 overflow-hidden rounded-2xl">
+              <Img src={post.coverUrl} alt={post.title} ratio="video" fallbackClass="bg-slate-200" />
             </div>
-            <div className="flex flex-wrap gap-2 pt-2">
+
+            <div className="mt-10 max-w-3xl space-y-5 text-[17px] leading-[1.75] text-slate-700">
+              {blocks.map((b, i) =>
+                b.kind === 'h2' ? (
+                  <h2 key={i} id={b.id} className="scroll-mt-24 pt-4 font-display text-[1.45rem] font-bold leading-snug tracking-tight text-slate-900">
+                    {b.text}
+                  </h2>
+                ) : b.kind === 'ul' ? (
+                  <ul key={i} className="list-disc space-y-2 pl-6 marker:text-slate-400">
+                    {b.items.map((t) => (
+                      <li key={t}>{t}</li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p key={i}>{b.text}</p>
+                )
+              )}
+            </div>
+
+            <div className="mt-8 flex max-w-3xl flex-wrap gap-x-3 gap-y-1 text-[13px] text-slate-500">
               {post.tags.map((t) => (
-                <Badge key={t} tone="slate">
-                  #{t}
-                </Badge>
+                <span key={t}>#{t}</span>
               ))}
             </div>
-          </Reveal>
-          <div className="flex justify-between pt-6 border-t-2 border-slate-200">
-            <Link to="/blog" className="inline-flex items-center gap-1 text-sm font-bold text-slate-700 hover:text-indigo-700">
-              <ArrowLeft className="w-4 h-4" /> Tất cả bài viết
-            </Link>
-            <Button to="/auth/register" size="sm" variant="gradient" rightIcon={<ArrowRight className="w-4 h-4" />}>
-              Luyện ngay
-            </Button>
-          </div>
-        </article>
 
-        <aside className="space-y-5 lg:sticky lg:top-24">
-          <p className="text-[11px] font-extrabold uppercase tracking-wider text-slate-500">Bài liên quan</p>
-          {more.map((p) => (
-            <Link key={p.id} to={`/blog/${p.slug}`} className="block bg-white rounded-2xl border-2 border-slate-900 shadow-hard overflow-hidden card-hard-hover">
-              <Img src={p.coverUrl} alt="" ratio="video" fallbackClass="bg-amber-200" />
-              <div className="p-4">
-                <p className="text-sm font-bold text-slate-900 leading-snug">{p.title}</p>
-                <p className="text-xs text-slate-500 mt-1">
-                  {p.author} · {p.readMin}'
-                </p>
+            {/* Bài trước / bài sau trong bộ Giới thiệu kỳ thi */}
+            {series && (prev || next) && (
+              <nav className="mt-10 grid max-w-3xl gap-3 border-t border-slate-200 pt-6 sm:grid-cols-2">
+                {prev ? (
+                  <Link to={`/blog/${prev.slug}`} className="group rounded-xl border border-slate-200 p-4 hover:bg-slate-900/[0.025]">
+                    <span className="flex items-center gap-1 text-[12px] text-slate-500">
+                      <ArrowLeft className="h-3.5 w-3.5" /> Bài {idx}
+                    </span>
+                    <span className="mt-1 block font-semibold leading-snug text-slate-900 group-hover:text-indigo-700">{prev.title}</span>
+                  </Link>
+                ) : (
+                  <span />
+                )}
+                {next && (
+                  <Link to={`/blog/${next.slug}`} className="group rounded-xl border border-slate-200 p-4 text-right hover:bg-slate-900/[0.025]">
+                    <span className="flex items-center justify-end gap-1 text-[12px] text-slate-500">
+                      Bài {idx + 2} <ArrowRight className="h-3.5 w-3.5" />
+                    </span>
+                    <span className="mt-1 block font-semibold leading-snug text-slate-900 group-hover:text-indigo-700">{next.title}</span>
+                  </Link>
+                )}
+              </nav>
+            )}
+          </article>
+
+          <aside className="space-y-8 lg:sticky lg:top-24">
+            {headings.length > 1 && (
+              <div>
+                <p className="text-[12px] font-semibold uppercase tracking-[0.12em] text-slate-500">Mục lục</p>
+                <ol className="mt-3 space-y-2 border-l border-slate-200">
+                  {headings.map((h) => (
+                    <li key={h.id}>
+                      <a href={`#${h.id}`} className="-ml-px block border-l border-transparent pl-4 text-[14px] text-slate-600 hover:border-indigo-600 hover:text-slate-900">
+                        {h.text}
+                      </a>
+                    </li>
+                  ))}
+                </ol>
               </div>
-            </Link>
-          ))}
-          <div className="bg-indigo-600 text-white rounded-2xl border-2 border-slate-900 shadow-hard p-5">
-            <p className="font-display font-extrabold text-lg">Thử sức với đề thật?</p>
-            <p className="text-xs text-indigo-100 mt-1">Full test ETS 2024 miễn phí, chấm ngay.</p>
-            <Button to="/mock-tests" variant="white" size="sm" fullWidth className="mt-3">
-              Vào phòng thi
-            </Button>
-          </div>
-        </aside>
+            )}
+
+            {series ? (
+              <div>
+                <p className="text-[12px] font-semibold uppercase tracking-[0.12em] text-slate-500">Giới thiệu kỳ thi {series.exam}</p>
+                <ol className="mt-3 space-y-1">
+                  {siblings.map((p, i) => (
+                    <li key={p.id}>
+                      <Link
+                        to={`/blog/${p.slug}`}
+                        aria-current={p.id === post.id ? 'page' : undefined}
+                        className={cn('flex gap-3 rounded-lg px-3 py-2 text-[14px] leading-snug transition-colors', p.id === post.id ? 'bg-indigo-500/[0.08] font-semibold text-slate-900' : 'text-slate-600 hover:bg-slate-900/[0.03] hover:text-slate-900')}
+                      >
+                        <span className="w-4 shrink-0 tabular-nums text-slate-400">{i + 1}</span>
+                        <span>{p.title}</span>
+                      </Link>
+                    </li>
+                  ))}
+                </ol>
+                <Link to={series.to} className="mt-4 inline-flex items-center gap-1 px-3 text-sm font-semibold text-indigo-700 hover:underline underline-offset-2">
+                  Về trang Luyện thi {series.exam} <ChevronRight className="h-4 w-4" />
+                </Link>
+              </div>
+            ) : (
+              related.length > 0 && (
+                <div>
+                  <p className="text-[12px] font-semibold uppercase tracking-[0.12em] text-slate-500">Bài cùng chủ đề</p>
+                  <ul className="mt-3 space-y-4">
+                    {related.map((p) => (
+                      <li key={p.id}>
+                        <Link to={`/blog/${p.slug}`} className="group flex gap-3">
+                          <Img src={p.coverUrl} alt="" ratio="4/3" wrapperClass="w-20 shrink-0 rounded-lg" fallbackClass="bg-slate-200" />
+                          <span className="min-w-0">
+                            <span className="block text-[14px] font-semibold leading-snug text-slate-900 group-hover:text-indigo-700">{p.title}</span>
+                            <span className="mt-1 block text-[12px] text-slate-500">
+                              {p.author} · {p.readMin} phút đọc
+                            </span>
+                          </span>
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )
+            )}
+          </aside>
+        </div>
       </div>
     </div>
   );

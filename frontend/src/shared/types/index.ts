@@ -469,6 +469,7 @@ export interface BlogPost {
   gradient: string;
   coverUrl?: string;
   authorAvatar?: string;
+  /** Từng khối nội dung: dòng bắt đầu '## ' là tiêu đề mục, '- ' là gạch đầu dòng, còn lại là đoạn văn */
   content: string[];
   tags: string[];
 }

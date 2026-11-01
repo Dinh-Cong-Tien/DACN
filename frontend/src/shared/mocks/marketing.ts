@@ -1,5 +1,6 @@
 import { PHOTOS, pravatar, unsplash } from '@/shared/components/media/Img';
 import type { BlogPost, ExamTrack, FaqItem, PricingPlan, ResourceDoc, ScoreRow, Testimonial } from '@/shared/types';
+import { TOEIC_GUIDES, TOEIC_GUIDE_SLUG, VSTEP_GUIDES, VSTEP_GUIDE_SLUG } from './examGuides';
 
 export const SCORE_TABLE: ScoreRow[] = [
   { cefr: 'A1', vstep: 'Bậc 1 (< 4.0)', toeic: '120 – 220', ielts: '1.0 – 2.5', toefl: '< 30', description: 'Sơ cấp — hiểu câu đơn giản, giao tiếp cơ bản.' },
@@ -88,7 +89,7 @@ export const RESOURCES: ResourceDoc[] = [
   { id: 'r-8', title: 'Checklist 30 ngày trước kỳ thi', type: 'PDF', category: 'Kế hoạch', pages: 8, downloads: 7329, size: '1.0 MB', description: 'Lịch ôn mẫu theo tuần kèm mục tiêu từng ngày.' },
 ];
 
-export const BLOG_POSTS: BlogPost[] = [
+const ARTICLES: BlogPost[] = [
   {
     id: 'b-1',
     coverUrl: PHOTOS.headphones,
@@ -207,7 +208,12 @@ export const BLOG_POSTS: BlogPost[] = [
   },
 ];
 
+/** Bài kinh nghiệm + bộ bài Giới thiệu kỳ thi TOEIC / VSTEP */
+export const BLOG_POSTS: BlogPost[] = [...ARTICLES, ...TOEIC_GUIDES, ...VSTEP_GUIDES];
+
 export const BLOG_CATEGORIES = [
+  { slug: TOEIC_GUIDE_SLUG, name: 'Giới thiệu kỳ thi TOEIC' },
+  { slug: VSTEP_GUIDE_SLUG, name: 'Giới thiệu kỳ thi VSTEP' },
   { slug: 'toeic', name: 'Kinh nghiệm thi TOEIC' },
   { slug: 'vstep', name: 'Kinh nghiệm thi VSTEP' },
   { slug: 'lo-trinh', name: 'Lộ trình học' },

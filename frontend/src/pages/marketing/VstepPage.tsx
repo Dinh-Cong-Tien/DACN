@@ -1,8 +1,9 @@
 import React from 'react';
-import { VSTEP_PARTS_INFO, MOCK_TESTS } from '@/shared/mocks';
+import { VSTEP_PARTS_INFO, MOCK_TESTS, VSTEP_GUIDES, VSTEP_GUIDE_SLUG } from '@/shared/mocks';
 import { useDocumentTitle, useGate } from '@/shared/hooks';
 import { Accent, PageHeader, Section, SectionHead, ActionLink, CtaStrip } from './shared/PageKit';
 import { TestList } from './shared/TestList';
+import { ExamGuideList } from './shared/ExamGuideList';
 
 const LEVELS = [
   { level: 'B1', bac: 'Bậc 3', score: '4.0 – 5.5', who: 'Chuẩn đầu ra tốt nghiệp đại học ở hầu hết các trường', can: 'Nghe thông báo, hội thoại quen thuộc; viết email 120 từ; nói 2–3 phút về đời sống' },
@@ -77,8 +78,18 @@ export const VstepPage: React.FC = () => {
         aside={<WritingFeedbackPreview />}
       />
 
-      {/* Bậc năng lực */}
+      {/* Bộ bài giới thiệu kỳ thi */}
       <Section>
+        <SectionHead
+          title="Tìm hiểu kỳ thi VSTEP"
+          desc="8 bài đọc theo thứ tự: VSTEP là gì, cấu trúc đề, cách chấm điểm, đăng ký, quy định phòng thi, chứng chỉ, bậc cần đạt và cách bắt đầu ôn."
+          action={{ label: 'Xem dạng danh sách', to: `/blog/category/${VSTEP_GUIDE_SLUG}` }}
+        />
+        <ExamGuideList posts={VSTEP_GUIDES} />
+      </Section>
+
+      {/* Bậc năng lực */}
+      <Section muted>
         <SectionHead title="Bạn cần bậc nào?" desc="Điểm VSTEP là trung bình 4 kỹ năng, làm tròn 0.5. Dưới 4.0 không được cấp chứng chỉ." />
         <div className="overflow-x-auto rounded-xl border border-slate-200">
           <table className="w-full min-w-[720px] text-sm">
@@ -108,7 +119,7 @@ export const VstepPage: React.FC = () => {
       </Section>
 
       {/* Cấu trúc đề */}
-      <Section muted>
+      <Section>
         <SectionHead title="Cấu trúc bài thi" desc="Theo định dạng đề thi VSTEP.3-5 ban hành kèm Quyết định 729/QĐ-BGDĐT. Thi trên máy tính hoặc giấy tuỳ đơn vị tổ chức." />
         <div className="grid gap-4 md:grid-cols-2">
           {VSTEP_PARTS_INFO.map((p) => (
@@ -137,7 +148,7 @@ export const VstepPage: React.FC = () => {
       </Section>
 
       {/* Đề mẫu */}
-      <Section>
+      <Section muted>
         <SectionHead title="Đề VSTEP trên OrbiLingo" desc="Đề mẫu theo định dạng chính thức và đề luyện tập theo từng bậc." action={{ label: 'Tất cả đề thi', to: '/mock-tests' }} />
         <TestList tests={tests} />
         <div className="mt-12">

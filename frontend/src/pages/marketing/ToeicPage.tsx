@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Headphones, BookOpen } from 'lucide-react';
-import { TOEIC_PARTS_INFO, MOCK_TESTS, SCORE_TABLE, SKILL_SCORES, MOCK_ATTEMPTS } from '@/shared/mocks';
+import { TOEIC_PARTS_INFO, MOCK_TESTS, SCORE_TABLE, SKILL_SCORES, MOCK_ATTEMPTS, TOEIC_GUIDES, TOEIC_GUIDE_SLUG } from '@/shared/mocks';
 import { useDocumentTitle, useGate } from '@/shared/hooks';
 import { cn } from '@/shared/utils';
 import { Accent, PageHeader, Section, SectionHead, ActionLink, CtaStrip } from './shared/PageKit';
 import { TestList } from './shared/TestList';
+import { ExamGuideList } from './shared/ExamGuideList';
 
 /** Bản xem trước phiếu kết quả thi thử (dữ liệu thật của lượt làm gần nhất trong mock) */
 const ScoreReportPreview: React.FC = () => {
@@ -84,8 +85,18 @@ export const ToeicPage: React.FC = () => {
         aside={<ScoreReportPreview />}
       />
 
-      {/* Cấu trúc đề */}
+      {/* Bộ bài giới thiệu kỳ thi */}
       <Section>
+        <SectionHead
+          title="Tìm hiểu kỳ thi TOEIC"
+          desc="8 bài đọc theo thứ tự: kỳ thi là gì, cấu trúc đề, cách tính điểm, đăng ký, quy định ngày thi, chứng chỉ, mức điểm cần đạt và cách bắt đầu ôn."
+          action={{ label: 'Xem dạng danh sách', to: `/blog/category/${TOEIC_GUIDE_SLUG}` }}
+        />
+        <ExamGuideList posts={TOEIC_GUIDES} />
+      </Section>
+
+      {/* Cấu trúc đề */}
+      <Section muted>
         <SectionHead title="Cấu trúc đề thi" desc="7 Part, chia hai kỹ năng. Listening khoảng 45 phút (audio phát một lần), Reading 75 phút tự phân bổ." />
         <div className="grid gap-6 lg:grid-cols-[320px_1fr]">
           <div className="overflow-hidden rounded-xl border border-slate-200">
@@ -132,7 +143,7 @@ export const ToeicPage: React.FC = () => {
               ))}
             </ol>
             <div className="mt-8 flex flex-wrap items-center gap-4">
-              <ActionLink to={gate('/app/practice', '/try')}>Luyện {part.name}</ActionLink>
+              <ActionLink to={gate('/app/mock-tests?exam=TOEIC', '/try')}>Luyện {part.name} trong đề thi thử</ActionLink>
               <Link to="/question-bank" className="text-sm font-medium text-slate-600 hover:text-slate-900 hover:underline underline-offset-4">
                 Xem câu hỏi mẫu
               </Link>
@@ -142,7 +153,7 @@ export const ToeicPage: React.FC = () => {
       </Section>
 
       {/* Thang điểm */}
-      <Section muted>
+      <Section>
         <SectionHead
           title="Điểm TOEIC tương đương bậc mấy?"
           desc="Quy đổi theo CEFR và Khung năng lực ngoại ngữ 6 bậc của Việt Nam. Chỉ mang tính tham khảo, mỗi trường có quy định riêng."
@@ -175,7 +186,7 @@ export const ToeicPage: React.FC = () => {
       </Section>
 
       {/* Đề thi thử */}
-      <Section>
+      <Section muted>
         <SectionHead title="Đề TOEIC trên OrbiLingo" desc="Đề ETS các năm và mini test theo kỹ năng. Đề miễn phí làm được ngay sau khi đăng ký." action={{ label: 'Tất cả đề thi', to: '/mock-tests' }} />
         <TestList tests={tests} />
         <div className="mt-12">
