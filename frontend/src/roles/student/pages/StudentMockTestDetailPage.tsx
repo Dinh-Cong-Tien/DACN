@@ -1,178 +1,241 @@
-import React from 'react';
+import React, { useMemo, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { FileText, Clock, Users, Lock, Play, Headphones, Timer, ShieldCheck, Flag, Sparkles, History, Layers } from 'lucide-react';
-import { useDocumentTitle } from '@/shared/hooks';
+import { Check, ChevronRight, Lock, Play } from 'lucide-react';
+import { useDocumentTitle, useParamState } from '@/shared/hooks';
 import { useAuthStore } from '@/shared/stores/authStore';
-import { Alert, Badge, Button, Card, CardHeader, Breadcrumb, StatCard, Timeline } from '@/shared/components/ui';
-import { Stagger } from '@/shared/components/motion';
+import { Breadcrumb } from '@/shared/components/ui';
 import { Img } from '@/shared/components/media/Img';
 import { MOCK_TESTS, MOCK_ATTEMPTS, TOEIC_PARTS_INFO, VSTEP_PARTS_INFO } from '@/shared/mocks';
-import { cn, formatDate, formatDuration, formatNumber } from '@/shared/utils';
+import { cn, examSetupQuery, formatDate, formatDuration, formatNumber } from '@/shared/utils';
+import type { ExamSetup, TestPartInfo } from '@/shared/types';
+import { ActionButton, UnderlineTabs } from '@/pages/marketing/shared/PageKit';
 
-const RULES = [
-  { icon: Headphones, title: 'Audio phát một lần', desc: 'Không tua lùi, không tạm dừng — mô phỏng phòng thi thật.', cls: 'bg-sky-100' },
-  { icon: Timer, title: 'Tự động nộp bài', desc: 'Hết giờ hệ thống tự nộp. Cảnh báo khi còn 5 phút.', cls: 'bg-amber-100' },
-  { icon: Flag, title: 'Đánh dấu xem lại', desc: 'Phím F để đánh dấu câu cần quay lại trước khi nộp.', cls: 'bg-violet-100' },
-  { icon: ShieldCheck, title: 'Lưu lỗi sai tự động', desc: 'Câu sai được đưa vào Sổ tay và lịch ôn SM-2.', cls: 'bg-emerald-100' },
-];
+/** Phần không làm trong phòng thi (VSTEP Viết / Nói có trang luyện riêng) */
+const OUTSIDE_EXAM: Record<string, { label: string; to: string }> = {
+  VSTEP_WRITING: { label: 'Làm ở trang Luyện Viết', to: '/app/writing' },
+  VSTEP_SPEAKING: { label: 'Làm ở trang Luyện Nói', to: '/app/speaking' },
+};
 
+const TIME_CHOICES = [5, 10, 15, 20, 30, 45, 60, 75, 90, 120];
+
+const RULES_FULL = ['Audio phát một lần, không tua lại.', 'Hết giờ hệ thống tự nộp bài.', 'Phím F để đánh dấu câu cần xem lại.', 'Câu sai được lưu vào Sổ tay lỗi sai.'];
+
+/**
+ * Chi tiết một đề: hai cách làm trên cùng một đề.
+ * - Làm full test: toàn bộ Part, đúng giờ thi thật.
+ * - Luyện tập: chọn Part muốn làm, tự đặt thời gian (hoặc không giới hạn). Thay cho trang "Luyện theo Part" riêng trước đây.
+ */
 export const StudentMockTestDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const user = useAuthStore((s) => s.user);
   const test = MOCK_TESTS.find((t) => t.id === id) ?? MOCK_TESTS[0];
   useDocumentTitle(test.title);
+  const [mode, setMode] = useParamState('mode', ['full', 'practice'], 'full');
+
+  const info = test.examType === 'TOEIC' ? TOEIC_PARTS_INFO : VSTEP_PARTS_INFO;
+  const parts = useMemo(() => test.partIds.map((p) => info.find((x) => x.id === p)).filter(Boolean) as TestPartInfo[], [test, info]);
+  const selectable = parts.filter((p) => !OUTSIDE_EXAM[p.id]);
   const attempts = MOCK_ATTEMPTS.filter((a) => a.testId === test.id);
-  const parts = test.examType === 'TOEIC' ? TOEIC_PARTS_INFO : VSTEP_PARTS_INFO;
   const locked = !test.isFree && user?.plan === 'FREE';
-  const best = attempts.length ? Math.max(...attempts.map((a) => a.score)) : null;
+
+  const [picked, setPicked] = useState<string[]>([]);
+  // 'auto' = tổng thời gian gợi ý của các Part đã chọn; 'none' = không giới hạn
+  const [time, setTime] = useState<'auto' | 'none' | number>('auto');
+  const chosen = selectable.filter((p) => picked.includes(p.id));
+  const suggested = chosen.reduce((a, p) => a + (p.minutes ?? Math.ceil(p.questions / 2)), 0);
+  const minutes = time === 'auto' ? suggested : time === 'none' ? null : time;
+  const questionCount = chosen.reduce((a, p) => a + p.questions, 0);
+
+  const toggle = (pid: string) => setPicked((s) => (s.includes(pid) ? s.filter((x) => x !== pid) : [...s, pid]));
+  const allPicked = selectable.length > 0 && chosen.length === selectable.length;
+  const start = (setup: ExamSetup) => navigate(`/app/exam/${test.id}${examSetupQuery(setup)}`);
 
   return (
-    <div>
-      <Breadcrumb items={[{ label: 'Thi thử', to: '/app/mock-tests' }, { label: test.title }]} className="mb-4 animate-fade-down" />
+    <div className="space-y-6">
+      <Breadcrumb items={[{ label: 'Thi thử', to: `/app/mock-tests?exam=${test.examType}` }, { label: test.title }]} />
 
-      {/* Cover lớn */}
-      <Card hard padding="none" className="overflow-hidden mb-6 animate-scale-in">
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px]">
-          <div className="relative min-h-[240px] lg:min-h-[320px] border-b-2 lg:border-b-0 lg:border-r-2 border-slate-900">
-            <Img src={test.coverUrl} alt={test.title} wrapperClass="absolute inset-0" fallbackClass="bg-indigo-300" />
-            <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-slate-900/10 to-transparent" />
-            <div className="absolute bottom-5 left-5 right-5 text-white">
-              <div className="flex gap-1.5 mb-2 flex-wrap">
-                <Badge tone={test.examType === 'TOEIC' ? 'indigo' : 'emerald'} solid size="xs">
-                  {test.examType}
-                </Badge>
-                {test.tags?.map((t) => (
-                  <Badge key={t} tone="amber" solid size="xs">
-                    {t}
-                  </Badge>
-                ))}
+      {/* Đầu trang */}
+      <div className="grid gap-6 rounded-2xl border border-slate-200 bg-white p-4 md:grid-cols-[280px_1fr] md:p-5">
+        <Img src={test.coverUrl} alt={test.title} ratio="video" wrapperClass="rounded-xl" fallbackClass="bg-slate-200" />
+        <div className="flex flex-col justify-center">
+          <p className="text-[13px] font-medium text-slate-500">
+            {test.examType} · {test.level} · Năm {test.year}
+            {!test.isFree && <span className="ml-2 font-semibold text-amber-700">Gói VIP</span>}
+          </p>
+          <h1 className="mt-1 font-display text-2xl font-extrabold tracking-tight text-slate-900 md:text-[2rem]">{test.title}</h1>
+          <dl className="mt-4 flex flex-wrap gap-x-8 gap-y-3">
+            {[
+              [String(test.totalQuestions), 'câu hỏi'],
+              [`${test.durationMinutes} phút`, 'thời gian thi'],
+              [String(parts.length), 'phần'],
+              [formatNumber(test.attempts), 'lượt làm'],
+            ].map(([v, l]) => (
+              <div key={l} className="flex flex-col-reverse">
+                <dt className="text-[12px] text-slate-500">{l}</dt>
+                <dd className="font-display text-xl font-bold tabular-nums text-slate-900">{v}</dd>
               </div>
-              <h1 className="font-display text-2xl md:text-4xl font-extrabold leading-tight">{test.title}</h1>
-              <p className="text-sm text-slate-200 mt-1 font-semibold">
-                {test.level} · {test.parts.join(', ')} · Năm {test.year} · Mã đề {test.slug}
-              </p>
-            </div>
-          </div>
-          <div className="p-6 flex flex-col justify-center gap-4 bg-amber-50">
-            <div>
-              <p className="font-display text-xl font-extrabold text-slate-900">Sẵn sàng chưa?</p>
-              <p className="text-sm text-slate-600 mt-1">Chuẩn bị tai nghe và {test.durationMinutes} phút không gián đoạn. Bài làm được chấm tự động ngay khi nộp.</p>
-            </div>
-            <div className="grid grid-cols-3 gap-2">
-              {[
-                [test.totalQuestions, 'câu'],
-                [test.durationMinutes, 'phút'],
-                [test.parts.length, 'phần'],
-              ].map(([v, l]) => (
-                <div key={l} className="rounded-xl bg-white border-2 border-slate-900 p-2 text-center">
-                  <p className="font-display text-xl font-extrabold text-slate-900">{v}</p>
-                  <p className="text-[10px] font-extrabold uppercase text-slate-500">{l}</p>
-                </div>
-              ))}
-            </div>
-            <Button fullWidth size="lg" variant="gradient" leftIcon={locked ? <Lock className="w-4 h-4" /> : <Play className="w-4 h-4" />} onClick={() => navigate(`/app/exam/${test.id}`)}>
-              Vào phòng thi
-            </Button>
-            <Button fullWidth size="sm" variant="ghost" to="/app/mock-tests">
-              Chọn đề khác
-            </Button>
-          </div>
+            ))}
+          </dl>
         </div>
-      </Card>
+      </div>
 
       {locked && (
-        <Alert type="warning" title="Đề thi VIP" className="mb-5">
-          Đề này thuộc gói VIP. Tài khoản Free được dùng thử 1 lần trong phiên bản demo.{' '}
-          <Link to="/pricing" className="font-bold underline">
-            Nâng cấp ngay
+        <p className="rounded-xl border border-amber-300/60 bg-amber-500/10 px-4 py-3 text-sm text-slate-700">
+          Đề này thuộc gói VIP.{' '}
+          <Link to="/pricing" className="font-semibold text-indigo-700 underline underline-offset-2">
+            Nâng cấp
           </Link>{' '}
-          để mở toàn bộ kho đề.
-        </Alert>
+          để làm toàn bộ kho đề.
+        </p>
       )}
 
-      <Stagger className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6" step={70}>
-        <StatCard label="Số câu" value={test.totalQuestions} icon={<FileText />} tone="indigo" />
-        <StatCard label="Thời gian" value={test.durationMinutes} suffix="phút" icon={<Clock />} tone="amber" />
-        <StatCard label="Lượt thi" value={test.attempts} icon={<Users />} tone="sky" format={formatNumber} />
-        <StatCard label="Điểm cao nhất của bạn" value={best ?? '--'} icon={<Sparkles />} tone="emerald" hint={best ? 'Cố gắng vượt kỷ lục!' : 'Chưa làm đề này'} />
-      </Stagger>
+      <div className="grid items-start gap-6 xl:grid-cols-[1fr_340px]">
+        <section className="rounded-2xl border border-slate-200 bg-white p-5 md:p-6">
+          <UnderlineTabs
+            value={mode}
+            onChange={setMode}
+            items={[
+              { value: 'full', label: 'Làm full test' },
+              { value: 'practice', label: 'Luyện tập theo Part' },
+            ]}
+          />
 
-      <div className="grid grid-cols-1 xl:grid-cols-[1fr_360px] gap-5">
-        <div className="space-y-5">
-          <Card hard className="animate-fade-up">
-            <CardHeader title="Cấu trúc đề thi" subtitle="Thứ tự các phần trong bài" icon={<Layers />} />
-            <div className="space-y-2">
-              {parts.map((p, i) => (
-                <div key={p.id} className="flex items-center gap-3 p-3 rounded-xl border-2 border-slate-200 hover:border-slate-900 hover:bg-amber-50 transition animate-fade-in" style={{ animationDelay: `${i * 50}ms` }}>
-                  <span className="w-10 h-10 rounded-xl bg-slate-900 text-amber-300 font-display font-extrabold text-sm flex items-center justify-center shrink-0">{String(i + 1).padStart(2, '0')}</span>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-bold text-slate-900">
-                      {p.name} · <span className="font-semibold text-slate-600">{p.nameVi}</span>
-                    </p>
-                    <p className="text-[11px] text-slate-500 truncate">{p.description}</p>
-                  </div>
-                  <div className="text-right shrink-0">
-                    <p className="font-display text-sm font-extrabold text-slate-900">{p.questions} câu</p>
-                    {p.minutes && <p className="text-[11px] text-slate-500 font-semibold">{p.minutes} phút</p>}
-                  </div>
-                </div>
-              ))}
+          {mode === 'full' ? (
+            <div className="pt-5">
+              <p className="text-slate-600">
+                Làm toàn bộ {test.totalQuestions} câu trong {test.durationMinutes} phút, giống phòng thi thật. Điểm được quy đổi theo thang {test.examType === 'TOEIC' ? '10–990' : '0–10'}.
+              </p>
+              <ol className="mt-5 divide-y divide-slate-200 border-y border-slate-200">
+                {parts.map((p) => (
+                  <li key={p.id} className="flex items-center gap-4 py-3">
+                    <span className="w-16 shrink-0 text-sm font-semibold text-slate-900">{p.name}</span>
+                    <span className="min-w-0 flex-1 text-sm text-slate-600">{p.nameVi}</span>
+                    <span className="shrink-0 text-[13px] tabular-nums text-slate-500">{p.questions} câu</span>
+                  </li>
+                ))}
+              </ol>
+              <ul className="mt-5 grid gap-x-6 gap-y-1.5 text-[13px] text-slate-500 sm:grid-cols-2">
+                {RULES_FULL.map((r) => (
+                  <li key={r} className="flex gap-2">
+                    <Check className="mt-0.5 h-3.5 w-3.5 shrink-0 text-emerald-600" />
+                    {r}
+                  </li>
+                ))}
+              </ul>
+              <ActionButton size="lg" className="mt-6 w-full sm:w-auto" onClick={() => start({ mode: 'FULL', parts: test.partIds, minutes: test.durationMinutes })}>
+                {locked ? <Lock className="h-4 w-4" /> : <Play className="h-4 w-4 fill-current" />}
+                Bắt đầu thi · {test.durationMinutes} phút
+              </ActionButton>
             </div>
-          </Card>
+          ) : (
+            <div className="pt-5">
+              <div className="flex items-center justify-between gap-4">
+                <p className="text-slate-600">Chọn Part muốn làm, sau đó đặt thời gian.</p>
+                {selectable.length > 1 && (
+                  <button type="button" onClick={() => setPicked(allPicked ? [] : selectable.map((p) => p.id))} className="shrink-0 text-sm font-semibold text-indigo-700 hover:underline underline-offset-2">
+                    {allPicked ? 'Bỏ chọn tất cả' : 'Chọn tất cả'}
+                  </button>
+                )}
+              </div>
 
-          <Card hard className="animate-fade-up" style={{ animationDelay: '100ms' }}>
-            <CardHeader title="Quy định phòng thi" subtitle="Đọc kỹ trước khi bắt đầu" icon={<ShieldCheck />} />
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              {RULES.map((r, i) => {
-                const Icon = r.icon;
-                return (
-                  <div key={r.title} className={cn('flex items-start gap-3 p-3 rounded-xl border-2 border-slate-900 animate-fade-up', r.cls)} style={{ animationDelay: `${150 + i * 60}ms` }}>
-                    <span className="w-9 h-9 rounded-lg bg-white border-2 border-slate-900 text-slate-900 flex items-center justify-center shrink-0">
-                      <Icon className="w-4 h-4" />
-                    </span>
-                    <div>
-                      <p className="text-sm font-bold text-slate-900">{r.title}</p>
-                      <p className="text-xs text-slate-600">{r.desc}</p>
-                    </div>
-                  </div>
-                );
-              })}
+              <ul className="mt-4 space-y-2">
+                {parts.map((p) => {
+                  const outside = OUTSIDE_EXAM[p.id];
+                  const on = picked.includes(p.id);
+                  const body = (
+                    <>
+                      <span className={cn('mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-md border transition-colors', outside ? 'border-slate-200 bg-slate-100' : on ? 'border-indigo-600 bg-indigo-600 text-white' : 'border-slate-300 bg-white')}>
+                        {on && <Check className="h-3.5 w-3.5" strokeWidth={3} />}
+                      </span>
+                      <span className="min-w-0 flex-1">
+                        <span className="block font-semibold text-slate-900">
+                          {p.name} <span className="font-normal text-slate-500">· {p.nameVi}</span>
+                        </span>
+                        <span className="mt-0.5 block text-[13px] leading-relaxed text-slate-500">{p.description}</span>
+                      </span>
+                      <span className="shrink-0 text-right text-[13px] tabular-nums text-slate-500">
+                        {outside ? (
+                          <span className="inline-flex items-center gap-0.5 font-semibold text-indigo-700">
+                            {outside.label} <ChevronRight className="h-4 w-4" />
+                          </span>
+                        ) : (
+                          <>
+                            {p.questions} câu
+                            <span className="block text-[12px] text-slate-400">~{p.minutes ?? Math.ceil(p.questions / 2)} phút</span>
+                          </>
+                        )}
+                      </span>
+                    </>
+                  );
+                  const cls = cn('flex w-full items-start gap-3 rounded-xl border px-4 py-3 text-left transition-colors', on ? 'border-indigo-500/50 bg-indigo-500/[0.06]' : 'border-slate-200 hover:bg-slate-900/[0.025]');
+                  return (
+                    <li key={p.id}>
+                      {outside ? (
+                        <Link to={outside.to} className={cls}>
+                          {body}
+                        </Link>
+                      ) : (
+                        <button type="button" role="checkbox" aria-checked={on} onClick={() => toggle(p.id)} className={cls}>
+                          {body}
+                        </button>
+                      )}
+                    </li>
+                  );
+                })}
+              </ul>
+
+              <div className="mt-6 flex flex-col gap-4 border-t border-slate-200 pt-5 sm:flex-row sm:items-end sm:justify-between">
+                <label className="block">
+                  <span className="text-sm font-medium text-slate-700">Thời gian làm bài</span>
+                  <select
+                    value={String(time)}
+                    onChange={(e) => setTime(e.target.value === 'auto' || e.target.value === 'none' ? e.target.value : Number(e.target.value))}
+                    className="mt-1.5 block h-10 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-900 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 sm:w-64"
+                  >
+                    <option value="auto">Theo thời gian gợi ý{chosen.length ? ` (${suggested} phút)` : ''}</option>
+                    <option value="none">Không giới hạn</option>
+                    {TIME_CHOICES.map((m) => (
+                      <option key={m} value={m}>
+                        {m} phút
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <ActionButton size="lg" disabled={!chosen.length} onClick={() => start({ mode: 'PRACTICE', parts: chosen.map((p) => p.id), minutes })}>
+                  <Play className="h-4 w-4 fill-current" />
+                  {chosen.length ? `Bắt đầu luyện · ${questionCount} câu · ${minutes ? `${minutes} phút` : 'không giới hạn'}` : 'Chọn ít nhất một Part'}
+                </ActionButton>
+              </div>
             </div>
-          </Card>
-        </div>
+          )}
+        </section>
 
-        <div className="space-y-5">
-          <Card hard className="animate-slide-in-right">
-            <CardHeader title="Lịch sử đề này" icon={<History />} />
-            {attempts.length === 0 ? (
-              <p className="text-sm text-slate-500 text-center py-4 font-semibold">Bạn chưa làm đề này.</p>
-            ) : (
-              <Timeline
-                items={attempts.map((a) => ({
-                  id: a.id,
-                  title: (
+        <aside className="rounded-2xl border border-slate-200 bg-white p-5">
+          <p className="font-semibold text-slate-900">Lịch sử làm đề này</p>
+          {attempts.length === 0 ? (
+            <p className="mt-2 text-sm text-slate-500">Bạn chưa làm đề này.</p>
+          ) : (
+            <ul className="mt-3 divide-y divide-slate-200">
+              {attempts.map((a) => (
+                <li key={a.id}>
+                  <Link to={`/app/mock-tests/${a.testId}/result`} className="flex items-center justify-between gap-3 py-3 hover:text-indigo-700">
                     <span>
-                      {a.score}
-                      <span className="text-slate-400 font-semibold">/{a.maxScore}</span> · {a.correct}/{a.total} đúng
+                      <span className="block font-display text-lg font-bold tabular-nums text-slate-900">
+                        {a.score}
+                        <span className="text-sm font-medium text-slate-400">/{a.maxScore}</span>
+                      </span>
+                      <span className="block text-[12px] text-slate-500">
+                        {formatDate(a.date)} · {formatDuration(a.durationSec)}
+                      </span>
                     </span>
-                  ),
-                  description: (
-                    <Link to={`/app/mock-tests/${a.testId}/result`} className="text-indigo-700 font-bold hover:underline">
-                      Xem kết quả · {formatDuration(a.durationSec)}
-                    </Link>
-                  ),
-                  time: formatDate(a.date),
-                  tone: a.score / a.maxScore >= 0.7 ? 'emerald' : 'amber',
-                }))}
-              />
-            )}
-          </Card>
-          <Card hard tone="ink" className="animate-slide-in-right" style={{ animationDelay: '100ms' }}>
-            <p className="font-display font-extrabold text-amber-300">Mẹo từ giáo viên</p>
-            <p className="text-sm text-slate-300 mt-1 leading-relaxed">Đọc trước câu hỏi Part 3–4 trong lúc audio giới thiệu. Part 7 đừng sa lầy quá 90 giây một câu.</p>
-          </Card>
-        </div>
+                    <ChevronRight className="h-4 w-4 text-slate-400" />
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          )}
+        </aside>
       </div>
     </div>
   );

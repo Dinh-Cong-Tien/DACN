@@ -107,11 +107,23 @@ export interface MockTestSummary {
   durationMinutes: number;
   totalQuestions: number;
   parts: string[];
+  /** Id các phần có trong đề (PART_1…PART_7 hoặc VSTEP_LISTENING…), dùng cho chế độ luyện tập chọn Part */
+  partIds: string[];
   attempts: number;
   isFree: boolean;
   year: number;
   tags?: string[];
   coverUrl?: string;
+}
+
+/** Cách làm một đề: full test theo giờ thi thật, hoặc luyện tập chọn Part và tự đặt thời gian */
+export type ExamMode = 'FULL' | 'PRACTICE';
+export interface ExamSetup {
+  mode: ExamMode;
+  /** Id phần được chọn; FULL = toàn bộ phần của đề */
+  parts: string[];
+  /** Thời gian làm bài (phút); null = không giới hạn (đồng hồ đếm lên, không tự nộp) */
+  minutes: number | null;
 }
 
 export interface AttemptSummary {

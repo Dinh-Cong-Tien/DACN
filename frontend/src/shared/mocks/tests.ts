@@ -1,6 +1,20 @@
 import { PHOTOS, pravatar, unsplash } from '@/shared/components/media/Img';
 import type { AttemptSummary, MockTestSummary, SkillScore, TestPartInfo } from '@/shared/types';
 
+const VSTEP_PART_ID: Record<string, string> = { Nghe: 'VSTEP_LISTENING', Đọc: 'VSTEP_READING', Viết: 'VSTEP_WRITING', Nói: 'VSTEP_SPEAKING' };
+
+/** 'Part 1–7' → PART_1…PART_7, 'Part 5' → PART_5; VSTEP: 'Nghe' → VSTEP_LISTENING… */
+function partIdsOf(examType: MockTestSummary['examType'], parts: string[]): string[] {
+  if (examType === 'VSTEP') return parts.map((p) => VSTEP_PART_ID[p]).filter(Boolean);
+  return parts.flatMap((p) => {
+    const m = p.match(/(\d)(?:\s*[–-]\s*(\d))?/);
+    if (!m) return [];
+    const from = Number(m[1]);
+    const to = Number(m[2] ?? m[1]);
+    return Array.from({ length: to - from + 1 }, (_, i) => `PART_${from + i}`);
+  });
+}
+
 const TEST_COVERS = [PHOTOS.headphones, PHOTOS.notes, PHOTOS.desk, PHOTOS.flatlay, PHOTOS.typing, PHOTOS.classroom];
 export const MOCK_TESTS: MockTestSummary[] = ([
   { id: 'ets-2024-01', slug: 'ets-2024-test-1', title: 'ETS TOEIC 2024 — Test 1', examType: 'TOEIC', level: '550–750', durationMinutes: 120, totalQuestions: 200, parts: ['Part 1–7'], attempts: 12847, isFree: true, year: 2024, tags: ['Full Test', 'Mới'] },
@@ -15,7 +29,7 @@ export const MOCK_TESTS: MockTestSummary[] = ([
   { id: 'vstep-c1-01', slug: 'vstep-c1-mock-1', title: 'VSTEP C1 — Đề nâng cao', examType: 'VSTEP', level: 'C1', durationMinutes: 160, totalQuestions: 75, parts: ['Nghe', 'Đọc', 'Viết', 'Nói'], attempts: 983, isFree: false, year: 2025, tags: ['VIP', 'Khó'] },
   { id: 'ets-2025-01', slug: 'ets-2025-test-1', title: 'ETS TOEIC 2025 — Test 1', examType: 'TOEIC', level: '650–900', durationMinutes: 120, totalQuestions: 200, parts: ['Part 1–7'], attempts: 3106, isFree: false, year: 2025, tags: ['Full Test', 'VIP', 'Mới'] },
   { id: 'toeic-part5-drill', slug: 'toeic-part5-drill', title: 'TOEIC Part 5 — 30 câu tốc độ', examType: 'TOEIC', level: '550+', durationMinutes: 15, totalQuestions: 30, parts: ['Part 5'], attempts: 18893, isFree: true, year: 2024, tags: ['Part Test', 'Phổ biến'] },
-] as MockTestSummary[]).map((t, i) => ({ ...t, coverUrl: TEST_COVERS[i % TEST_COVERS.length] }));
+] as Omit<MockTestSummary, 'partIds'>[]).map((t, i) => ({ ...t, partIds: partIdsOf(t.examType, t.parts), coverUrl: TEST_COVERS[i % TEST_COVERS.length] }));
 
 export const MOCK_ATTEMPTS: AttemptSummary[] = [
   { id: 'at-01', testId: 'ets-2024-01', testTitle: 'ETS TOEIC 2024 — Test 1', examType: 'TOEIC', score: 715, maxScore: 990, correct: 143, total: 200, date: '2026-10-25T09:30:00.000Z', durationSec: 6840, listening: 380, reading: 335 },
@@ -47,10 +61,10 @@ export const RADAR_SKILLS = [
 ];
 
 export const TOEIC_PARTS_INFO: TestPartInfo[] = [
-  { id: 'PART_1', name: 'Part 1', nameVi: 'Mô tả tranh', skill: 'Listening', questions: 6, description: 'Nghe 4 câu mô tả và chọn câu đúng nhất với bức tranh.', tips: ['Quan sát tranh trước khi audio phát', 'Chú ý thì hiện tại tiếp diễn và bị động', 'Cẩn thận bẫy từ liên tưởng'] },
-  { id: 'PART_2', name: 'Part 2', nameVi: 'Hỏi – Đáp', skill: 'Listening', questions: 25, description: 'Nghe một câu hỏi và 3 câu trả lời, chọn câu đáp phù hợp nhất.', tips: ['Bắt từ để hỏi (Wh-word) đầu câu', 'Loại đáp án lặp từ trong câu hỏi', 'Câu trả lời gián tiếp ngày càng phổ biến'] },
-  { id: 'PART_3', name: 'Part 3', nameVi: 'Hội thoại ngắn', skill: 'Listening', questions: 39, description: '13 đoạn hội thoại, mỗi đoạn 3 câu hỏi. Có thể kèm bảng biểu.', tips: ['Đọc trước câu hỏi trong lúc chờ', 'Chú ý paraphrase đáp án', 'Câu hỏi suy luận thường ở cuối'] },
-  { id: 'PART_4', name: 'Part 4', nameVi: 'Bài nói ngắn', skill: 'Listening', questions: 30, description: '10 bài nói đơn thoại (thông báo, quảng cáo, tin nhắn thoại...).', tips: ['Xác định ngữ cảnh ngay 2 câu đầu', 'Chú ý số liệu, thời gian, địa điểm', 'Gạch chân keyword trong câu hỏi'] },
+  { id: 'PART_1', name: 'Part 1', nameVi: 'Mô tả tranh', skill: 'Listening', questions: 6, minutes: 4, description: 'Nghe 4 câu mô tả và chọn câu đúng nhất với bức tranh.', tips: ['Quan sát tranh trước khi audio phát', 'Chú ý thì hiện tại tiếp diễn và bị động', 'Cẩn thận bẫy từ liên tưởng'] },
+  { id: 'PART_2', name: 'Part 2', nameVi: 'Hỏi – Đáp', skill: 'Listening', questions: 25, minutes: 8, description: 'Nghe một câu hỏi và 3 câu trả lời, chọn câu đáp phù hợp nhất.', tips: ['Bắt từ để hỏi (Wh-word) đầu câu', 'Loại đáp án lặp từ trong câu hỏi', 'Câu trả lời gián tiếp ngày càng phổ biến'] },
+  { id: 'PART_3', name: 'Part 3', nameVi: 'Hội thoại ngắn', skill: 'Listening', questions: 39, minutes: 17, description: '13 đoạn hội thoại, mỗi đoạn 3 câu hỏi. Có thể kèm bảng biểu.', tips: ['Đọc trước câu hỏi trong lúc chờ', 'Chú ý paraphrase đáp án', 'Câu hỏi suy luận thường ở cuối'] },
+  { id: 'PART_4', name: 'Part 4', nameVi: 'Bài nói ngắn', skill: 'Listening', questions: 30, minutes: 16, description: '10 bài nói đơn thoại (thông báo, quảng cáo, tin nhắn thoại...).', tips: ['Xác định ngữ cảnh ngay 2 câu đầu', 'Chú ý số liệu, thời gian, địa điểm', 'Gạch chân keyword trong câu hỏi'] },
   { id: 'PART_5', name: 'Part 5', nameVi: 'Hoàn thành câu', skill: 'Reading', questions: 30, minutes: 10, description: 'Chọn từ/cụm từ phù hợp điền vào chỗ trống. Tập trung ngữ pháp & từ vựng.', tips: ['Nhìn 4 đáp án trước để xác định dạng bài', 'Word form: nhìn từ đứng trước/sau chỗ trống', 'Không quá 30 giây mỗi câu'] },
   { id: 'PART_6', name: 'Part 6', nameVi: 'Hoàn thành đoạn văn', skill: 'Reading', questions: 16, minutes: 8, description: '4 đoạn văn, mỗi đoạn 4 chỗ trống (gồm 1 câu chèn).', tips: ['Đọc cả đoạn để nắm ngữ cảnh', 'Câu chèn: chú ý từ nối và đại từ', 'Thì động từ phụ thuộc vào ngữ cảnh toàn đoạn'] },
   { id: 'PART_7', name: 'Part 7', nameVi: 'Đọc hiểu', skill: 'Reading', questions: 54, minutes: 55, description: 'Đoạn đơn, đoạn kép, đoạn ba. Email, quảng cáo, bài báo, tin nhắn...', tips: ['Đọc câu hỏi trước, scan đoạn văn sau', 'Đoạn kép/ba: câu hỏi liên kết thông tin', 'Quản lý thời gian: không sa lầy một đoạn'] },

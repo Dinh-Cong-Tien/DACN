@@ -92,8 +92,7 @@ export const PUBLIC_NAV: PublicNavItem[] = [
     img: '/images/nav/briefcase.webp',
     children: [
       { to: '/toeic', label: 'Giới thiệu kỳ thi TOEIC', img: '/images/nav/briefcase.webp', desc: 'Cấu trúc 7 Part, thang điểm 10–990' },
-      { to: '/practice', appTo: '/app/practice?exam=TOEIC', label: 'Luyện theo Part', img: '/images/nav/pencil.webp', desc: 'Part 1–7, giải thích từng câu' },
-      { to: '/mock-tests?exam=TOEIC', appTo: '/app/mock-tests?exam=TOEIC', label: 'Đề thi thử TOEIC', img: '/images/nav/memo.webp', desc: 'Đề ETS, chấm điểm ngay khi nộp' },
+      { to: '/mock-tests?exam=TOEIC', appTo: '/app/mock-tests?exam=TOEIC', label: 'Đề thi thử TOEIC', img: '/images/nav/memo.webp', desc: 'Làm full đề hoặc chọn Part, tự đặt thời gian' },
       { to: '/app/dictation', label: 'Nghe chép chính tả', img: '/images/nav/headphone.webp', desc: 'Luyện nghe Part 2–4 từng câu' },
       { to: '/app/vocabulary', label: 'Từ vựng TOEIC', img: '/images/nav/open-book.webp', desc: 'Flashcard theo chủ đề, ôn ngắt quãng' },
       { to: '/app/grammar', label: 'Ngữ pháp Part 5–6', img: '/images/nav/bookmark-tabs.webp', desc: 'Chủ điểm hay ra kèm bài tập' },

@@ -1,4 +1,6 @@
 import type { IMockTest, IQuestion } from '@toeic-vstep/shared';
+import type { ExamSetup } from '@/shared/types';
+import { TOEIC_PARTS_INFO, VSTEP_PARTS_INFO } from './tests';
 
 const AUDIO_SAMPLE = 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3';
 const IMG_OFFICE = 'https://images.unsplash.com/photo-1497366216548-37526070297c?w=900&q=70';
@@ -637,8 +639,31 @@ export const QUESTIONS_BY_PART: Record<string, IQuestion[]> = {
   VSTEP_LISTENING,
 };
 
-/** Dựng đề thi đầy đủ từ ngân hàng câu hỏi mẫu */
-export function buildMockTest(id: string, examType: 'TOEIC' | 'VSTEP' = 'TOEIC', title?: string): IMockTest {
+/**
+ * Dựng đề từ ngân hàng câu hỏi mẫu.
+ * `setup` chế độ PRACTICE: chỉ gồm các Part được chọn (mỗi Part một phần), thời gian theo người học đặt; 0 phút = không giới hạn.
+ */
+export function buildMockTest(id: string, examType: 'TOEIC' | 'VSTEP' = 'TOEIC', title?: string, setup?: ExamSetup): IMockTest {
+  if (setup?.mode === 'PRACTICE') {
+    const info = [...TOEIC_PARTS_INFO, ...VSTEP_PARTS_INFO];
+    const sections = setup.parts
+      .filter((p) => QUESTIONS_BY_PART[p]?.length)
+      .map((p, i) => {
+        const part = info.find((x) => x.id === p);
+        const questions = QUESTIONS_BY_PART[p];
+        return { id: `${id}-${p}`, name: part ? `${part.name} · ${part.nameVi}` : p, skillType: questions[0].skillType, orderIndex: i + 1, questions };
+      });
+    const names = setup.parts.map((p) => info.find((x) => x.id === p)?.name ?? p).join(', ');
+    return {
+      id,
+      slug: id,
+      title: `${title ?? id} · Luyện ${names}`,
+      examType,
+      durationMinutes: setup.minutes ?? 0,
+      totalQuestions: sections.reduce((a, s) => a + s.questions.length, 0),
+      sections,
+    };
+  }
   if (examType === 'VSTEP') {
     return {
       id,

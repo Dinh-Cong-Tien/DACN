@@ -1,3 +1,5 @@
+import type { ExamSetup } from '@/shared/types';
+
 export function cn(...classes: Array<string | false | null | undefined | 0>): string {
   return classes.filter(Boolean).join(' ');
 }
@@ -96,4 +98,18 @@ export const ROLE_HOME: Record<string, string> = {
 
 export function sleep(ms: number): Promise<void> {
   return new Promise((r) => setTimeout(r, ms));
+}
+
+/** ExamSetup → query phòng thi: ?parts=PART_1,PART_5&time=20 (time=none: không giới hạn). Full test không cần query */
+export function examSetupQuery(s: ExamSetup): string {
+  return s.mode === 'FULL' ? '' : `?parts=${s.parts.join(',')}&time=${s.minutes ?? 'none'}`;
+}
+
+/** Đọc lại ExamSetup từ query; không có Part hợp lệ = full test */
+export function parseExamSetup(search: string, allParts: string[], fullMinutes: number): ExamSetup {
+  const q = new URLSearchParams(search);
+  const parts = (q.get('parts') ?? '').split(',').filter((p) => allParts.includes(p));
+  if (!parts.length) return { mode: 'FULL', parts: allParts, minutes: fullMinutes };
+  const t = q.get('time');
+  return { mode: 'PRACTICE', parts, minutes: t === 'none' ? null : Math.max(1, Number(t) || fullMinutes) };
 }

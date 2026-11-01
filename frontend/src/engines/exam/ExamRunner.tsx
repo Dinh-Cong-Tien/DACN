@@ -26,12 +26,15 @@ interface ExamRunnerProps {
 export const ExamRunner: React.FC<ExamRunnerProps> = ({ test, onSubmitExam, onExit, onSaveAnswer }) => {
   const sections = test.sections;
   const allQuestions: IQuestion[] = useMemo(() => sections.flatMap((s) => s.questions), [sections]);
+  // durationMinutes <= 0: luyện tập không giới hạn thời gian — đồng hồ đếm lên, không tự nộp
+  const timed = test.durationMinutes > 0;
   const totalSec = test.durationMinutes * 60;
 
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [flagged, setFlagged] = useState<Set<string>>(new Set());
   const [remaining, setRemaining] = useState(totalSec);
+  const [elapsed, setElapsed] = useState(0);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [exitOpen, setExitOpen] = useState(false);
   const [paletteOpen, setPaletteOpen] = useState(false);
@@ -54,25 +57,25 @@ export const ExamRunner: React.FC<ExamRunnerProps> = ({ test, onSubmitExam, onEx
       correct += c;
       return { name: s.name, correct: c, total: s.questions.length };
     });
-    onSubmitExam({ answers, flagged: Array.from(flagged), timeSpentSec: totalSec - Math.max(0, remaining), correctCount: correct, total: allQuestions.length, bySection });
-  }, [answers, flagged, remaining, totalSec, allQuestions.length, sections, onSubmitExam, submitted]);
+    onSubmitExam({ answers, flagged: Array.from(flagged), timeSpentSec: timed ? totalSec - Math.max(0, remaining) : elapsed, correctCount: correct, total: allQuestions.length, bySection });
+  }, [answers, flagged, remaining, elapsed, timed, totalSec, allQuestions.length, sections, onSubmitExam, submitted]);
 
   // Đồng hồ đếm ngược + tự động nộp
   useEffect(() => {
     if (submitted) return;
-    if (remaining <= 0) {
+    if (timed && remaining <= 0) {
       toast.warning('Hết giờ!', 'Hệ thống tự động nộp bài của bạn.');
       finalize();
       return;
     }
-    const id = setInterval(() => setRemaining((r) => r - 1), 1000);
+    const id = setInterval(() => (timed ? setRemaining((r) => r - 1) : setElapsed((e) => e + 1)), 1000);
     return () => clearInterval(id);
-  }, [remaining, submitted, finalize]);
+  }, [remaining, submitted, finalize, timed]);
 
   // Cảnh báo khi còn 5 phút
   useEffect(() => {
-    if (remaining === 300) toast.warning('Còn 5 phút', 'Hãy kiểm tra lại các câu đã đánh dấu.');
-  }, [remaining]);
+    if (timed && remaining === 300) toast.warning('Còn 5 phút', 'Hãy kiểm tra lại các câu đã đánh dấu.');
+  }, [remaining, timed]);
 
   // Phím tắt: ← → chuyển câu, A/B/C/D chọn đáp án, F đánh dấu
   useEffect(() => {
@@ -121,7 +124,7 @@ export const ExamRunner: React.FC<ExamRunnerProps> = ({ test, onSubmitExam, onEx
 
   const answered = Object.keys(answers).length;
   const pct = Math.round((answered / allQuestions.length) * 100);
-  const danger = remaining < 300;
+  const danger = timed && remaining < 300;
 
   // Nhóm câu theo passage: hiển thị passage 1 lần cho cả nhóm
   const groupedPassage = current?.passage && allQuestions.filter((q) => q.passageId === current.passage?.id || q.passage?.id === current.passage?.id).length > 1 ? current.passage : null;
@@ -189,7 +192,7 @@ export const ExamRunner: React.FC<ExamRunnerProps> = ({ test, onSubmitExam, onEx
             <div className="hidden md:block min-w-0">
               <h1 className="font-bold text-slate-900 text-sm truncate">{test.title}</h1>
               <p className="text-[11px] text-slate-500">
-                {test.examType} · {allQuestions.length} câu · {test.durationMinutes} phút
+                {test.examType} · {allQuestions.length} câu · {timed ? `${test.durationMinutes} phút` : 'không giới hạn thời gian'}
               </p>
             </div>
           </div>
@@ -197,7 +200,7 @@ export const ExamRunner: React.FC<ExamRunnerProps> = ({ test, onSubmitExam, onEx
           <div className="flex items-center gap-2 md:gap-3">
             <div className={cn('flex items-center gap-2 px-3 md:px-4 h-10 rounded-xl font-mono font-black text-base md:text-lg transition-colors', danger ? 'bg-rose-100 text-rose-700 border-2 border-rose-500 animate-pulse' : 'bg-slate-900 text-amber-300 border-2 border-slate-900')}>
               <Clock className="w-4 h-4" />
-              <span>{formatClock(Math.max(0, remaining))}</span>
+              <span>{formatClock(timed ? Math.max(0, remaining) : elapsed)}</span>
             </div>
             <button onClick={() => setPaletteOpen(true)} className="lg:hidden h-10 px-3 rounded-xl border border-slate-200 bg-white text-slate-700 text-xs font-bold flex items-center gap-1.5">
               <Grid3X3 className="w-4 h-4" />
@@ -314,7 +317,7 @@ export const ExamRunner: React.FC<ExamRunnerProps> = ({ test, onSubmitExam, onEx
             <p className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 font-semibold text-xs">Còn {allQuestions.length - answered} câu chưa trả lời. Câu bỏ trống sẽ tính là sai.</p>
           )}
           {flagged.size > 0 && <p className="text-xs text-amber-700">Bạn còn {flagged.size} câu đang đánh dấu xem lại.</p>}
-          <p className="text-xs">Thời gian còn lại: {formatClock(Math.max(0, remaining))}</p>
+          <p className="text-xs">{timed ? `Thời gian còn lại: ${formatClock(Math.max(0, remaining))}` : `Đã làm: ${formatClock(elapsed)}`}</p>
         </div>
       </Modal>
 

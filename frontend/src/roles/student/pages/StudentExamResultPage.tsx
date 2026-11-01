@@ -8,7 +8,8 @@ import { Stagger } from '@/shared/components/motion';
 import { QuestionRenderer } from '@/engines';
 import { MOCK_TESTS, buildMockTest } from '@/shared/mocks';
 import { toast } from '@/shared/stores/uiStore';
-import { cn, formatDuration, getCorrectKey } from '@/shared/utils';
+import { cn, examSetupQuery, formatDuration, getCorrectKey } from '@/shared/utils';
+import type { ExamSetup } from '@/shared/types';
 
 interface StoredResult {
   answers: Record<string, string>;
@@ -20,27 +21,33 @@ interface StoredResult {
   testId?: string;
   title?: string;
   examType?: 'TOEIC' | 'VSTEP';
+  setup?: ExamSetup;
+}
+
+function readStored(id: string): StoredResult | null {
+  try {
+    const raw = localStorage.getItem('orbi-last-result');
+    const r = raw ? (JSON.parse(raw) as StoredResult) : null;
+    return r?.testId === id ? r : null;
+  } catch {
+    return null;
+  }
 }
 
 export const StudentExamResultPage: React.FC = () => {
   const { id = 'ets-2024-01' } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const summary = MOCK_TESTS.find((t) => t.id === id);
-  const test = useMemo(() => buildMockTest(id, summary?.examType ?? 'TOEIC', summary?.title), [id, summary]);
+  const stored = useMemo(() => readStored(id), [id]);
+  const setup = stored?.setup;
+  const practice = setup?.mode === 'PRACTICE';
+  const test = useMemo(() => buildMockTest(id, summary?.examType ?? 'TOEIC', summary?.title, setup), [id, summary, setup]);
   const questions = useMemo(() => test.sections.flatMap((s) => s.questions), [test]);
   useDocumentTitle(`Kết quả · ${test.title}`);
   const [tab, setTab] = useState('wrong');
 
   const result = useMemo<StoredResult>(() => {
-    try {
-      const raw = localStorage.getItem('orbi-last-result');
-      if (raw) {
-        const r = JSON.parse(raw) as StoredResult;
-        if (r.testId === id) return r;
-      }
-    } catch {
-      /* ignore */
-    }
+    if (stored) return stored;
     // Demo fallback: giả lập đúng 11/19, sai các câu còn lại
     const answers: Record<string, string> = {};
     questions.forEach((q, i) => {
@@ -49,13 +56,14 @@ export const StudentExamResultPage: React.FC = () => {
     });
     const bySection = test.sections.map((s) => ({ name: s.name, total: s.questions.length, correct: s.questions.filter((q) => answers[q.id] === getCorrectKey(q)).length }));
     return { answers, flagged: [questions[1]?.id, questions[5]?.id].filter(Boolean) as string[], timeSpentSec: 1140, correctCount: bySection.reduce((a, s) => a + s.correct, 0), total: questions.length, bySection };
-  }, [id, questions, test]);
+  }, [stored, questions, test]);
 
   const isVstep = test.examType === 'VSTEP';
   const pct = Math.round((result.correctCount / Math.max(1, result.total)) * 100);
   React.useEffect(() => { if (pct >= 60) fireConfetti(); }, [pct]);
-  const score = isVstep ? Math.round((result.correctCount / result.total) * 10 * 2) / 2 : Math.round(((result.correctCount / result.total) * 990) / 5) * 5;
-  const maxScore = isVstep ? 10 : 990;
+  // Luyện tập theo Part: không quy đổi thang điểm, chỉ tính số câu đúng
+  const score = practice ? result.correctCount : isVstep ? Math.round((result.correctCount / result.total) * 10 * 2) / 2 : Math.round(((result.correctCount / result.total) * 990) / 5) * 5;
+  const maxScore = practice ? result.total : isVstep ? 10 : 990;
   const wrong = questions.filter((q) => result.answers[q.id] !== getCorrectKey(q));
   const flaggedQ = questions.filter((q) => result.flagged.includes(q.id));
   const list = tab === 'all' ? questions : tab === 'wrong' ? wrong : flaggedQ;
@@ -77,7 +85,7 @@ export const StudentExamResultPage: React.FC = () => {
             <Button variant="outline" size="sm" leftIcon={<Share2 className="w-4 h-4" />} onClick={() => toast.info('Đã sao chép liên kết kết quả')}>
               Chia sẻ
             </Button>
-            <Button size="sm" leftIcon={<RotateCcw className="w-4 h-4" />} onClick={() => navigate(`/app/exam/${id}`)}>
+            <Button size="sm" leftIcon={<RotateCcw className="w-4 h-4" />} onClick={() => navigate(`/app/exam/${id}${setup ? examSetupQuery(setup) : ''}`)}>
               Làm lại
             </Button>
           </>
@@ -91,7 +99,7 @@ export const StudentExamResultPage: React.FC = () => {
               <RingProgress value={pct} size={176} stroke={14} tone={tone}>
                 <div className="text-center">
                   <p className="font-display text-4xl font-extrabold text-slate-900">{score}</p>
-                  <p className="text-[11px] font-extrabold uppercase text-slate-500">/{maxScore} điểm</p>
+                  <p className="text-[11px] font-extrabold uppercase text-slate-500">/{maxScore} {practice ? 'câu đúng' : 'điểm'}</p>
                 </div>
               </RingProgress>
             </div>
