@@ -3,7 +3,8 @@ import { Database, Eye } from 'lucide-react';
 import type { IQuestion } from '@toeic-vstep/shared';
 import { useDocumentTitle } from '@/shared/hooks';
 import { ALL_QUESTIONS, QUESTIONS_BY_PART } from '@/shared/mocks';
-import { Badge, Card, CardHeader, Column, MiniBars, Modal, PageHeader, StatCard } from '@/shared/components/ui';
+import { BarChart } from '@/shared/components/charts/Charts';
+import { Badge, Card, CardHeader, Column, Modal, PageHeader, StatCard } from '@/shared/components/ui';
 import { CrudEditor, QuestionRenderer } from '@/engines';
 
 const SKILL_OPTS = ['LISTENING', 'READING', 'WRITING', 'SPEAKING', 'VOCABULARY', 'GRAMMAR'].map((s) => ({ value: s, label: s }));
@@ -82,7 +83,7 @@ export const HeadQuestionBankPage: React.FC = () => {
       <div className="grid grid-cols-1 xl:grid-cols-[1fr_320px] gap-5">
         <Card hard className="animate-fade-up">
           <CardHeader title="Phân bố theo Part / kỹ năng" subtitle="Số câu hỏi mẫu đang có trong ngân hàng" />
-          <MiniBars data={byPart} height={130} />
+          <BarChart ariaLabel="Số câu hỏi theo Part" data={byPart.map(({ label, value }) => ({ label, value }))} height={190} unit=" câu" />
         </Card>
         <div className="grid grid-cols-1 gap-4">
           <StatCard label="Tổng câu hỏi" value={ALL_QUESTIONS.length} tone="amber" hint="Bộ mẫu demo" />

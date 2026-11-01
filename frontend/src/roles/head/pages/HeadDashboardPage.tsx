@@ -25,7 +25,6 @@ export const HeadDashboardPage: React.FC = () => {
   const totalQuestions = MOCK_SUBJECTS.reduce((a, s) => a + s.questionsCount, 0);
   const totalClasses = MOCK_SUBJECTS.reduce((a, s) => a + s.classesCount, 0);
   const activeTeachers = MOCK_TEACHERS.filter((t) => t.status === 'ACTIVE');
-  const firstName = user?.fullName.split(' ').slice(-1)[0] ?? 'Trưởng bộ môn';
   const toeicReports = MOCK_CLASS_REPORTS.filter((r) => r.avgScore > 10);
   const avatarOf = (name: string) => MOCK_TEACHERS.find((t) => t.name === name)?.avatarUrl;
 
@@ -34,12 +33,12 @@ export const HeadDashboardPage: React.FC = () => {
       {/* ===== Chào + dải số liệu ===== */}
       <section className="grid lg:grid-cols-[1.1fr_1fr] gap-8 items-end animate-fade-up">
         <div className="space-y-4">
-          <p className="text-sm font-bold text-indigo-700 capitalize">{today}</p>
+          <p className="text-[12px] font-bold uppercase tracking-[0.16em] text-amber-600">{today} · Học kỳ 1, năm học 2026–2027</p>
           <h1 className="font-display text-4xl md:text-5xl font-extrabold text-slate-900 tracking-tight leading-[1.05]">
-            Xin chào, {firstName}. Có <span className="mark">{pending.length} học liệu</span> chờ duyệt.
+            Tổng quan <span className="hero-gradient-text">bộ môn</span>
           </h1>
           <p className="text-base text-slate-500 max-w-xl">
-            Bộ môn quản lý {MOCK_SUBJECTS.length} môn học, {totalClasses} lớp đang mở và {formatNumber(totalQuestions)} câu hỏi. {newComplaints.length} khiếu nại mới cần tiếp nhận.
+            {user?.fullName} · {pending.length} học liệu chờ duyệt. Bộ môn quản lý {MOCK_SUBJECTS.length} môn học, {totalClasses} lớp đang mở và {formatNumber(totalQuestions)} câu hỏi. {newComplaints.length} khiếu nại mới cần tiếp nhận.
           </p>
           <div className="flex flex-wrap gap-3 pt-1">
             <Button to="/head/approvals" variant="gradient" size="lg" leftIcon={<CheckSquare className="w-4 h-4" />}>
@@ -71,7 +70,7 @@ export const HeadDashboardPage: React.FC = () => {
       </section>
 
       {/* ===== Khối nhấn: chờ phê duyệt + ngân hàng câu hỏi ===== */}
-      <section className="grid lg:grid-cols-[1.6fr_1fr] gap-6">
+      <section className="grid lg:grid-cols-[1.6fr_1fr] gap-6 [&>*]:min-w-0">
         <Reveal>
           <div className="relative overflow-hidden rounded-3xl bg-slate-900 text-white grid md:grid-cols-[1fr_260px] min-h-[320px]">
             <div aria-hidden className="absolute inset-0 bg-dots opacity-10" />

@@ -1,0 +1,101 @@
+/*
+ * Giao diện khu vực quản lý (giáo viên, giáo viên bậc cao, quản trị) — lớp .staff-ui đặt trên khung AppShell.
+ * Thay viền đen dày, bóng lệch, nút 3D, thẻ vàng chói và bút dạ highlight bằng khung bo tròn viền mảnh, bóng mềm,
+ * tiêu đề chữ gradient như trang học viên. Không ảnh hưởng trang học viên / khách (không có .staff-ui).
+ */
+.staff-ui {
+  --staff-border: rgb(var(--slate-200) / 0.9);
+  --staff-shadow: 0 1px 2px rgba(16, 24, 40, 0.04), 0 8px 24px -16px rgba(16, 24, 40, 0.14);
+  --staff-shadow-hover: 0 18px 36px -22px rgba(16, 24, 40, 0.35);
+}
+
+/* Thẻ "sticker" viền đậm + bóng lệch → viền mảnh, bóng mềm */
+.staff-ui .card-hard {
+  border-width: 1px;
+  border-color: var(--staff-border);
+  box-shadow: var(--staff-shadow);
+  border-radius: 1rem;
+}
+.staff-ui .card-hard-hover:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--staff-shadow-hover);
+}
+.staff-ui .shadow-hard,
+.staff-ui .shadow-hard-sm,
+.staff-ui .shadow-hard-lg {
+  box-shadow: var(--staff-shadow);
+}
+.staff-ui .border-2.border-slate-900,
+.staff-ui .border-2.border-slate-900\/10,
+.staff-ui .border-b-2.border-slate-900,
+.staff-ui .border-t-2.border-slate-900 {
+  border-color: var(--staff-border);
+}
+.staff-ui .border-2 {
+  border-width: 1px;
+}
+.staff-ui .border-b-2 {
+  border-bottom-width: 1px;
+}
+.staff-ui .border-t-2 {
+  border-top-width: 1px;
+}
+
+/* Thẻ nền vàng / kem / xanh nhạt → trắng (chữ bên trong vốn là chữ tối) */
+.staff-ui .card-hard.bg-amber-300,
+.staff-ui .card-hard.bg-slate-50,
+.staff-ui .card-hard.bg-sky-100,
+.staff-ui .rounded-3xl.bg-amber-300 {
+  background-color: #fff;
+}
+.dark .staff-ui .card-hard.bg-amber-300,
+.dark .staff-ui .card-hard.bg-slate-50,
+.dark .staff-ui .card-hard.bg-sky-100,
+.dark .staff-ui .rounded-3xl.bg-amber-300 {
+  background-color: rgb(var(--slate-50));
+}
+
+/* Nút 3D (viền dưới đậm, lún khi bấm) → nút phẳng có bóng màu nhẹ */
+.staff-ui .btn-3d {
+  border-bottom-width: 0;
+  box-shadow: 0 6px 16px -10px rgba(16, 24, 40, 0.55);
+}
+.staff-ui .btn-3d:active {
+  transform: none;
+}
+
+/* Bút dạ highlight dưới chữ → chữ gradient như tiêu đề trang học viên */
+.staff-ui .mark {
+  background: linear-gradient(90deg, #ff7352 0%, #ff4fa3 45%, #c26bff 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  padding: 0;
+}
+
+/* Nhãn "sticker" nghiêng → nhãn chữ nhỏ thẳng */
+.staff-ui .sticker {
+  transform: none;
+  border-width: 1px;
+  border-color: var(--staff-border);
+  box-shadow: none;
+}
+.staff-ui .tilt-1,
+.staff-ui .tilt-2,
+.staff-ui .tilt-3 {
+  transform: none;
+}
+
+/* Tiêu đề trang (PageHeader) lớn hơn, font display như trang học viên */
+.staff-ui .page-title {
+  font-size: 2rem;
+  line-height: 1.15;
+  font-weight: 800;
+  white-space: normal;
+}
+@media (min-width: 768px) {
+  .staff-ui .page-title {
+    font-size: 2.4rem;
+  }
+}

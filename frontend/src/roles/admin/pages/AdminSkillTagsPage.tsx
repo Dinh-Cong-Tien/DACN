@@ -3,7 +3,8 @@ import { Tags, Hash } from 'lucide-react';
 import { MOCK_SKILL_TAGS } from '@/shared/mocks';
 import type { SkillTag, SkillType } from '@/shared/types';
 import { useDocumentTitle } from '@/shared/hooks';
-import { Badge, Card, CardHeader, Column, MiniBars, PageHeader, Tone } from '@/shared/components/ui';
+import { Badge, Card, CardHeader, Column, PageHeader, Tone } from '@/shared/components/ui';
+import { BarChart } from '@/shared/components/charts/Charts';
 import { CrudEditor, CrudField } from '@/engines';
 
 const SKILL_META: Record<SkillType, { tone: Tone; label: string }> = {
@@ -59,7 +60,7 @@ export const AdminSkillTagsPage: React.FC = () => {
       <div className="grid grid-cols-1 xl:grid-cols-[1fr_280px] gap-4">
         <Card hard className="animate-fade-up">
           <CardHeader title="Số câu hỏi theo kỹ năng" subtitle={`${total.toLocaleString('vi-VN')} câu được gắn thẻ`} />
-          <MiniBars data={bySkill} height={140} />
+          <BarChart ariaLabel="Số câu hỏi theo kỹ năng" data={bySkill.map(({ label, value }) => ({ label, value }))} height={200} unit=" câu" />
         </Card>
         <Card hard tone="yellow" className="animate-fade-up" style={{ animationDelay: '80ms' }}>
           <p className="text-[11px] font-extrabold uppercase tracking-wider text-slate-700">Tổng số thẻ</p>

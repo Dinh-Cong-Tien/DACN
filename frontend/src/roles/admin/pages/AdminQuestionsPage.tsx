@@ -3,7 +3,8 @@ import { FileQuestion, Eye, Upload } from 'lucide-react';
 import { ALL_QUESTIONS, QUESTIONS_BY_PART } from '@/shared/mocks';
 import type { IQuestion, SkillType } from '@/shared/types';
 import { useDocumentTitle } from '@/shared/hooks';
-import { Badge, Button, Card, CardHeader, Column, MiniBars, Modal, PageHeader, StatCard, Tone } from '@/shared/components/ui';
+import { BarChart } from '@/shared/components/charts/Charts';
+import { Badge, Button, Card, CardHeader, Column, Modal, PageHeader, StatCard, Tone } from '@/shared/components/ui';
 import { CrudEditor, CrudField, QuestionRenderer } from '@/engines';
 import { toast } from '@/shared/stores/uiStore';
 
@@ -96,7 +97,7 @@ export const AdminQuestionsPage: React.FC = () => {
         </div>
         <Card hard className="animate-fade-up">
           <CardHeader title="Phân bố theo Part" subtitle="Số câu mẫu trong từng phần thi" />
-          <MiniBars data={byPart} height={130} />
+          <BarChart ariaLabel="Số câu hỏi theo Part" data={byPart.map(({ label, value }) => ({ label, value }))} height={190} unit=" câu" />
         </Card>
       </div>
 

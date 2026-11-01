@@ -12,6 +12,7 @@ import { AdminBlogPage } from '@/roles/admin/pages/AdminBlogPage';
 import { AdminAnalyticsPage } from '@/roles/admin/pages/AdminAnalyticsPage';
 import { AdminSystemPage } from '@/roles/admin/pages/AdminSystemPage';
 import { AdminAuditLogsPage } from '@/roles/admin/pages/AdminAuditLogsPage';
+import { NotificationsPage } from '@/roles/common/NotificationsPage';
 import { AdminSettingsPage } from '@/roles/admin/pages/AdminSettingsPage';
 
 export const adminRoutes: RouteObject[] = [
@@ -37,6 +38,7 @@ export const adminRoutes: RouteObject[] = [
               { path: 'system', element: <AdminSystemPage /> },
               { path: 'audit-logs', element: <AdminAuditLogsPage /> },
               { path: 'settings', element: <AdminSettingsPage /> },
+              { path: 'notifications', element: <NotificationsPage /> },
             ],
           },
         ],

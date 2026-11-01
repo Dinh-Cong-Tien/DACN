@@ -85,6 +85,9 @@ export const CardHeader: React.FC<{ title: React.ReactNode; subtitle?: React.Rea
   </div>
 );
 
+/** Khu vực quản lý (giáo viên, trưởng bộ môn, quản trị): AppShell bật cờ này để header trang hiện thêm mô tả */
+export const StaffUiContext = React.createContext(false);
+
 // ============ PAGE HEADER ============
 export interface Crumb {
   label: string;
@@ -116,16 +119,20 @@ export const PageHeader: React.FC<{
   eyebrow?: string;
   className?: string;
   icon?: React.ReactNode;
-}> = ({ title, actions, crumbs, className }) => (
-  // Header trang tối giản: chỉ breadcrumb + tiêu đề cỡ vừa + hành động (icon/eyebrow/description bị bỏ qua có chủ ý)
-  <div className={cn('flex items-center justify-between gap-4 mb-6 md:mb-8 animate-fade-down', className)}>
-    <div className="min-w-0">
-      {crumbs && <Breadcrumb items={crumbs} className="mb-1.5" />}
-      <h1 className="page-title font-display text-xl md:text-2xl font-bold text-slate-900 tracking-tight truncate">{title}</h1>
+}> = ({ title, description, actions, crumbs, className }) => {
+  // Header trang tối giản: breadcrumb + tiêu đề + hành động; khu vực quản lý hiện thêm mô tả (icon/eyebrow bỏ qua có chủ ý)
+  const staff = React.useContext(StaffUiContext);
+  return (
+    <div className={cn('flex justify-between gap-4 mb-6 md:mb-8 animate-fade-down', staff ? 'flex-col sm:flex-row sm:items-end' : 'items-center', className)}>
+      <div className="min-w-0">
+        {crumbs && <Breadcrumb items={crumbs} className="mb-1.5" />}
+        <h1 className="page-title font-display text-xl md:text-2xl font-bold text-slate-900 tracking-tight truncate">{title}</h1>
+        {staff && description && <p className="mt-2 max-w-3xl text-[15px] leading-relaxed text-slate-500">{description}</p>}
+      </div>
+      {actions && <div className="flex items-center gap-2 shrink-0 flex-wrap sm:justify-end">{actions}</div>}
     </div>
-    {actions && <div className="flex items-center gap-2 shrink-0 flex-wrap justify-end">{actions}</div>}
-  </div>
-);
+  );
+};
 
 // ============ SECTION TITLE (marketing) ============
 export const SectionTitle: React.FC<{ eyebrow?: string; title: React.ReactNode; description?: React.ReactNode; align?: 'center' | 'left'; className?: string; dark?: boolean }> = ({ eyebrow, title, description, align = 'center', className, dark }) => (
@@ -149,10 +156,12 @@ export const StatCard: React.FC<{
   hint?: string;
   className?: string;
   format?: (n: number) => string;
-}> = ({ label, value, suffix, icon, tone = 'indigo', delta, deltaLabel, hint, className, format }) => (
-  <div className={cn('group rounded-3xl bg-white border border-slate-900/10 p-5 transition-all duration-300 ease-spring hover:-translate-y-0.5 hover:shadow-card', className)}>
+}> = ({ label, value, suffix, icon, tone = 'indigo', delta, deltaLabel, hint, className, format }) => {
+  const staff = React.useContext(StaffUiContext);
+  return (
+  <div className={cn('group bg-white p-5 transition-all duration-300 ease-spring hover:-translate-y-0.5 hover:shadow-card', staff ? 'rounded-2xl border border-slate-200/80 shadow-[0_1px_2px_rgba(16,24,40,0.04)]' : 'rounded-3xl border border-slate-900/10', className)}>
     <div className="flex items-center justify-between gap-3">
-      <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-slate-500">{label}</p>
+      <p className={staff ? 'text-[13px] font-medium text-slate-500' : 'text-[11px] font-bold uppercase tracking-[0.12em] text-slate-500'}>{label}</p>
       {icon && <div className={cn('w-9 h-9 rounded-xl flex items-center justify-center shrink-0 [&>svg]:w-[18px] [&>svg]:h-[18px] transition-transform duration-300 group-hover:scale-110', chipTone[tone])}>{icon}</div>}
     </div>
     <p className="font-display text-3xl md:text-[2.4rem] font-extrabold text-slate-900 mt-3 tracking-tight leading-none">
@@ -173,6 +182,7 @@ export const StatCard: React.FC<{
     )}
   </div>
 );
+};
 
 // ============ EMPTY STATE ============
 export const EmptyState: React.FC<{ icon?: React.ReactNode; title: string; description?: string; action?: React.ReactNode; className?: string; compact?: boolean }> = ({ icon, title, description, action, className, compact }) => (

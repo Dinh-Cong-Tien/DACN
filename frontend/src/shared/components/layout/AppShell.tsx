@@ -5,7 +5,7 @@ import { cn, ROLE_LABEL } from '@/shared/utils';
 import { useScrolled } from '@/shared/hooks';
 import { useAuthStore } from '@/shared/stores/authStore';
 import { useUiStore, toast } from '@/shared/stores/uiStore';
-import { Avatar, Badge, Dropdown, Logo, CommandPalette } from '@/shared/components/ui';
+import { Avatar, Badge, Dropdown, Logo, CommandPalette, StaffUiContext } from '@/shared/components/ui';
 import { PageTransition } from '@/shared/components/motion';
 import { ThemeToggle } from './ThemeToggle';
 import { NotificationBell } from './NotificationBell';
@@ -78,7 +78,7 @@ export const AppShell: React.FC<AppShellProps> = ({ groups, brandTagline, accent
   const isGroupActive = (g: NavGroup) => g.items.some((it) => location.pathname.startsWith(it.to));
 
   return (
-    <div className="portal relative min-h-screen flex flex-col font-sans text-slate-800">
+    <div className={cn('portal relative min-h-screen flex flex-col font-sans text-slate-800', workspace && 'staff-ui')}>
       <PageBackdrop />
       {/* ===== Header một hàng (giống GuestLayout) ===== */}
       <header className={cn('sticky top-0 z-40 transition-all duration-300', workspace ? cn('border-b', scrolled ? 'bg-cream/85 backdrop-blur-xl border-slate-900/10' : 'bg-transparent border-transparent') : cn('border-b-2', scrolled ? 'bg-cream/80 backdrop-blur-xl border-slate-900/10' : 'bg-transparent border-transparent'))}>
@@ -242,9 +242,11 @@ export const AppShell: React.FC<AppShellProps> = ({ groups, brandTagline, accent
 
       {/* ===== Nội dung ===== */}
       <main className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-10 pb-24 md:pb-12 min-w-0">
-        <PageTransition>
-          <Outlet />
-        </PageTransition>
+        <StaffUiContext.Provider value={Boolean(workspace)}>
+          <PageTransition>
+            <Outlet />
+          </PageTransition>
+        </StaffUiContext.Provider>
       </main>
 
       {/* ===== Thanh điều hướng dưới (mobile) ===== */}

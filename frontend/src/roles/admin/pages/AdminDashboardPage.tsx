@@ -25,7 +25,6 @@ export const AdminDashboardPage: React.FC = () => {
   const roles: AppRole[] = ['STUDENT', 'TEACHER', 'HEAD_TEACHER', 'ADMIN'];
   const newest = [...MOCK_USERS].sort((a, b) => new Date(b.joinedAt).getTime() - new Date(a.joinedAt).getTime()).slice(0, 5);
   const logs = [...MOCK_AUDIT_LOGS].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).slice(0, 5);
-  const firstName = user?.fullName.split(' ').slice(-1)[0] ?? 'Admin';
   const today = new Date().toLocaleDateString('vi-VN', { weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric' });
   const signupsThisMonth = ADMIN_SIGNUPS[ADMIN_SIGNUPS.length - 1];
   const signupsPrev = ADMIN_SIGNUPS[ADMIN_SIGNUPS.length - 2];
@@ -35,14 +34,14 @@ export const AdminDashboardPage: React.FC = () => {
       {/* ===== Chào + dải số liệu ===== */}
       <section className="grid lg:grid-cols-[1.1fr_1fr] gap-8 items-end animate-fade-up">
         <div className="space-y-4">
-          <p className="text-sm font-bold text-indigo-700 capitalize">
+          <p className="text-[12px] font-bold uppercase tracking-[0.16em] text-amber-600">
             {today} · máy chủ ap-southeast-1 · API v1.4.2
           </p>
           <h1 className="font-display text-4xl md:text-5xl font-extrabold text-slate-900 tracking-tight leading-[1.05]">
-            Xin chào, {firstName}. Hệ thống <span className="mark">{allUp ? 'ổn định' : 'cần chú ý'}</span>.
+            Tổng quan <span className="hero-gradient-text">hệ thống</span>
           </h1>
           <p className="text-base text-slate-500 max-w-xl">
-            {upCount}/{MOCK_SERVICES.length} dịch vụ đang hoạt động, {formatNumber(traffic)} lượt truy cập trong 7 ngày và {signupsThisMonth} tài khoản mới tháng này.
+            {allUp ? 'Hệ thống ổn định. ' : 'Hệ thống cần chú ý. '}{upCount}/{MOCK_SERVICES.length} dịch vụ đang hoạt động, {formatNumber(traffic)} lượt truy cập trong 7 ngày và {signupsThisMonth} tài khoản mới tháng này.
           </p>
           <div className="flex flex-wrap gap-3 pt-1">
             <Button variant="gradient" size="lg" to="/admin/users" rightIcon={<ArrowRight className="w-4 h-4" />}>
