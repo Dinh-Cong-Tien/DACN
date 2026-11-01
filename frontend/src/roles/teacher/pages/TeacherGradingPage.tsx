@@ -58,7 +58,7 @@ export const TeacherGradingPage: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <TPageHead title="Chấm bài" sub="Bài Viết và bài Nói học viên nộp từ bài tập được giao. Bài trắc nghiệm, ngữ pháp, từ vựng được chấm tự động." />
+      <TPageHead eyebrow="Giảng dạy" title="Bàn chấm bài" sub="Bài Viết và bài Nói học viên nộp từ bài tập được giao. Bài trắc nghiệm, ngữ pháp, từ vựng được chấm tự động." />
 
       <div className="grid items-start gap-6 lg:grid-cols-[320px_minmax(0,1fr)]">
         <Panel flush className="lg:sticky lg:top-20">

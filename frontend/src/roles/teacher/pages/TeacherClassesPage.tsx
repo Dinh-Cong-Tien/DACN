@@ -4,11 +4,11 @@ import { Plus, Copy, Search, Users } from 'lucide-react';
 import { useDocumentTitle } from '@/shared/hooks';
 import { useAuthStore } from '@/shared/stores/authStore';
 import { toast } from '@/shared/stores/uiStore';
-import { MOCK_CLASSES } from '@/shared/mocks';
+import { MOCK_CLASSES, MOCK_SESSIONS } from '@/shared/mocks';
 import type { ClassRoom, ExamType } from '@/shared/types';
 import { Input, Modal, Select } from '@/shared/components/ui';
-import { cn, formatDate } from '@/shared/utils';
-import { Meter, Panel, TBtn, TPageHead, inputCls, tbl } from '../components/TeacherKit';
+import { cn } from '@/shared/utils';
+import { Meter, Panel, TBtn, TPageHead, inputCls } from '../components/TeacherKit';
 import { Img, PHOTOS } from '@/shared/components/media/Img';
 
 const COVERS = [PHOTOS.classroom, PHOTOS.discussion, PHOTOS.lecture, PHOTOS.team, PHOTOS.students2];
@@ -63,7 +63,8 @@ export const TeacherClassesPage: React.FC = () => {
   return (
     <div className="space-y-6">
       <TPageHead
-        title="Lớp học"
+        eyebrow="Giảng dạy"
+        title="Lớp học của tôi"
         sub="Tạo lớp, gửi mã mời cho học viên, theo dõi tiến độ từng lớp."
         actions={
           <TBtn variant="primary" icon={<Plus />} onClick={() => setOpen(true)}>
@@ -82,69 +83,64 @@ export const TeacherClassesPage: React.FC = () => {
         </p>
       </div>
 
-      <Panel flush>
-        {list.length === 0 ? (
-          <div className="px-4 py-12 text-center">
-            <p className="font-medium text-slate-900">Không tìm thấy lớp nào</p>
+      {list.length === 0 ? (
+        <Panel>
+          <div className="py-10 text-center">
+            <p className="font-semibold text-slate-900">Không tìm thấy lớp nào</p>
             <p className="mt-1 text-sm text-slate-500">Thử tìm bằng mã lớp, hoặc tạo lớp mới.</p>
           </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className={tbl.table}>
-              <thead className={tbl.thead}>
-                <tr>
-                  <th className={tbl.th}>Tên lớp</th>
-                  <th className={tbl.th}>Mã mời</th>
-                  <th className={tbl.th}>Lịch học</th>
-                  <th className={cn(tbl.th, 'text-right')}>Sĩ số</th>
-                  <th className={cn(tbl.th, 'text-right')}>Bài tập</th>
-                  <th className={cn(tbl.th, 'text-right')}>Điểm TB</th>
-                  <th className={cn(tbl.th, 'w-44')}>Hoàn thành</th>
-                  <th className={tbl.th} />
-                </tr>
-              </thead>
-              <tbody>
-                {list.map((c) => (
-                  <tr key={c.id} className={tbl.tr}>
-                    <td className={tbl.td}>
-                      <Link to={`/teacher/classes/${c.id}`} className="font-medium text-slate-900 hover:text-indigo-700 hover:underline underline-offset-2">
-                        {c.name}
-                      </Link>
-                      <p className="text-[12px] text-slate-500">
-                        {c.examType} · mở ngày {formatDate(c.createdAt)}
-                      </p>
-                    </td>
-                    <td className={tbl.td}>
-                      <button type="button" onClick={() => copy(c.code)} title="Sao chép mã mời" className="group inline-flex items-center gap-1.5 font-mono text-[13px] text-slate-700 hover:text-indigo-700">
-                        {c.code}
-                        <Copy className="h-3.5 w-3.5 text-slate-400 group-hover:text-indigo-600" />
-                      </button>
-                    </td>
-                    <td className={tbl.td}>
-                      <p className="whitespace-nowrap text-slate-700">{c.schedule}</p>
-                      {c.room && <p className="text-[12px] text-slate-500">{c.room}</p>}
-                    </td>
-                    <td className={cn(tbl.td, 'text-right tabular-nums')}>{c.studentsCount}</td>
-                    <td className={cn(tbl.td, 'text-right tabular-nums')}>{c.assignmentsCount}</td>
-                    <td className={cn(tbl.td, 'text-right tabular-nums')}>{c.avgScore || '—'}</td>
-                    <td className={tbl.td}>
-                      <span className="flex items-center gap-2">
-                        <Meter value={c.completionRate} className="flex-1" />
-                        <span className="w-9 text-right text-[13px] tabular-nums text-slate-600">{c.completionRate}%</span>
-                      </span>
-                    </td>
-                    <td className={cn(tbl.td, 'text-right')}>
-                      <TBtn to={`/teacher/classes/${c.id}`} size="sm">
-                        Mở lớp
-                      </TBtn>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </Panel>
+        </Panel>
+      ) : (
+        <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+          {list.map((c) => {
+            const next = MOCK_SESSIONS.filter((s) => s.classId === c.id && s.status === 'UPCOMING').sort((a, b) => `${a.date}${a.start}`.localeCompare(`${b.date}${b.start}`))[0];
+            return (
+              <article key={c.id} className="group flex flex-col overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-[0_1px_2px_rgba(16,24,40,0.04),0_8px_24px_-16px_rgba(16,24,40,0.15)] transition-shadow hover:shadow-[0_20px_40px_-24px_rgba(16,24,40,0.4)]">
+                <Link to={`/teacher/classes/${c.id}`} className="relative block">
+                  <Img src={c.coverUrl ?? PHOTOS.classroom} alt={c.name} ratio="video" fallbackClass="bg-slate-200" className="transition-transform duration-500 group-hover:scale-[1.04]" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-slate-950/10 to-transparent" />
+                  <span className="absolute left-3 top-3 rounded-md bg-white/90 px-2 py-0.5 text-[11px] font-semibold text-slate-800 backdrop-blur">{c.examType}</span>
+                  <div className="absolute inset-x-4 bottom-3 text-white">
+                    <h3 className="font-display text-xl font-extrabold leading-tight">{c.name}</h3>
+                    <p className="mt-0.5 text-[13px] text-slate-200">
+                      {c.schedule} · {c.room}
+                    </p>
+                  </div>
+                </Link>
+                <div className="flex flex-1 flex-col p-4">
+                  <div className="grid grid-cols-3 gap-2 text-center">
+                    {[
+                      [c.studentsCount, 'Học viên'],
+                      [c.avgScore || '—', 'Điểm TB'],
+                      [`${c.attendanceRate}%`, 'Chuyên cần'],
+                    ].map(([v, l]) => (
+                      <div key={l as string} className="rounded-xl bg-slate-50 py-2">
+                        <p className="font-display text-lg font-bold tabular-nums text-slate-900">{v}</p>
+                        <p className="text-[11px] text-slate-500">{l}</p>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="mt-4 flex items-center gap-2 text-[13px]">
+                    <span className="w-28 shrink-0 text-slate-500">Hoàn thành bài</span>
+                    <Meter value={c.completionRate} className="flex-1" />
+                    <span className="w-10 text-right tabular-nums text-slate-700">{c.completionRate}%</span>
+                  </div>
+                  <p className="mt-3 text-[13px] text-slate-600">{next ? `Buổi tới: ${next.date.slice(8, 10)}/${next.date.slice(5, 7)} lúc ${next.start} · ${next.topic}` : 'Chưa có buổi sắp tới'}</p>
+                  <div className="mt-auto flex items-center justify-between gap-2 border-t border-slate-100 pt-3">
+                    <button type="button" onClick={() => copy(c.code)} title="Sao chép mã mời" className="group/code inline-flex items-center gap-1.5 font-mono text-[13px] text-slate-600 hover:text-indigo-700">
+                      {c.code}
+                      <Copy className="h-3.5 w-3.5 text-slate-400 group-hover/code:text-indigo-600" />
+                    </button>
+                    <TBtn size="sm" variant="primary" to={`/teacher/classes/${c.id}`}>
+                      Vào lớp
+                    </TBtn>
+                  </div>
+                </div>
+              </article>
+            );
+          })}
+        </div>
+      )}
 
       <Modal
         open={open}

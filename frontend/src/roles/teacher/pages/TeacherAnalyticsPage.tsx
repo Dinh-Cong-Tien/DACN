@@ -36,6 +36,7 @@ export const TeacherAnalyticsPage: React.FC = () => {
   return (
     <div className="space-y-6">
       <TPageHead
+        eyebrow="Học viên"
         title="Thống kê lớp học"
         sub={`${cls.name} · ${cls.examType} · ${cls.studentsCount} học viên`}
         actions={

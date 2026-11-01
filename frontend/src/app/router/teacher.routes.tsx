@@ -8,6 +8,10 @@ import { TeacherClassDetailPage } from '@/roles/teacher/pages/TeacherClassDetail
 import { TeacherAssignmentsPage } from '@/roles/teacher/pages/TeacherAssignmentsPage';
 import { TeacherGradingPage } from '@/roles/teacher/pages/TeacherGradingPage';
 import { TeacherLibraryPage } from '@/roles/teacher/pages/TeacherLibraryPage';
+import { TeacherSchedulePage } from '@/roles/teacher/pages/TeacherSchedulePage';
+import { TeacherAttendancePage } from '@/roles/teacher/pages/TeacherAttendancePage';
+import { TeacherGradebookPage } from '@/roles/teacher/pages/TeacherGradebookPage';
+import { TeacherStudentsPage } from '@/roles/teacher/pages/TeacherStudentsPage';
 import { TeacherMaterialsPage } from '@/roles/teacher/pages/TeacherMaterialsPage';
 import { TeacherAnalyticsPage } from '@/roles/teacher/pages/TeacherAnalyticsPage';
 import { NotificationsPage } from '@/roles/common/NotificationsPage';
@@ -31,7 +35,13 @@ export const teacherRoutes: RouteObject[] = [
               { path: 'assignments', element: <TeacherAssignmentsPage /> },
               { path: 'grading', element: <TeacherGradingPage /> },
               { path: 'grading/:submissionId', element: <TeacherGradingPage /> },
+              { path: 'library', element: <Navigate to="/teacher/library/courses" replace /> },
               { path: 'library/:kind', element: <TeacherLibraryPage /> },
+              { path: 'schedule', element: <TeacherSchedulePage /> },
+              { path: 'attendance', element: <TeacherAttendancePage /> },
+              { path: 'attendance/:sessionId', element: <TeacherAttendancePage /> },
+              { path: 'gradebook', element: <TeacherGradebookPage /> },
+              { path: 'students', element: <TeacherStudentsPage /> },
               { path: 'courses', element: <Navigate to="/teacher/library/courses" replace /> },
               { path: 'materials', element: <TeacherMaterialsPage /> },
               { path: 'analytics', element: <TeacherAnalyticsPage /> },

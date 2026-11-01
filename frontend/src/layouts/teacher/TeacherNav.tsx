@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, NavLink, useLocation } from 'react-router-dom';
-import { BarChart3, BookOpen, Briefcase, Calculator, ChevronDown, ClipboardList, Database, FileEdit, FileText, FolderOpen, GraduationCap, Headphones, Languages, Library, ListChecks, Mic, MessagesSquare, PenTool, Plus, Presentation, Users, type LucideIcon } from 'lucide-react';
+import { BarChart3, BookOpen, Briefcase, Calculator, CalendarDays, ChevronDown, ClipboardCheck, ClipboardList, Database, FileEdit, FileText, FolderOpen, GraduationCap, Languages, PenTool, Plus, Presentation, Sheet, UserRoundX, Users, type LucideIcon } from 'lucide-react';
 import { MOCK_ASSIGNMENTS, MOCK_CLASSES, MOCK_SUBMISSIONS } from '@/shared/mocks';
 import { cn } from '@/shared/utils';
 
@@ -23,11 +23,9 @@ export interface TeacherMenu {
 
 const toGrade = String(MOCK_SUBMISSIONS.filter((s) => s.status !== 'GRADED').length);
 const drafts = MOCK_ASSIGNMENTS.filter((a) => a.status === 'DRAFT').length;
-const classOf = (exam: 'TOEIC' | 'VSTEP') => MOCK_CLASSES.find((c) => c.examType === exam)!.id;
 
 /**
- * Menu header giáo viên — cùng khung với menu học viên (TOEIC · VSTEP · Khoá học · Thi thử · Công cụ),
- * mỗi mục là việc của giáo viên trên đúng nội dung đó: giao bài, chấm, theo dõi lớp.
+ * Menu header giáo viên theo quy trình dạy học: lớp → lịch dạy, điểm danh → giao bài → chấm bài → theo dõi học viên, bảng điểm → học liệu.
  */
 export const TEACHER_MENUS: TeacherMenu[] = [
   { to: '/teacher/dashboard', label: 'Tổng quan' },
@@ -40,38 +38,11 @@ export const TEACHER_MENUS: TeacherMenu[] = [
     ],
   },
   {
-    label: 'TOEIC',
+    label: 'Lịch dạy',
+    to: '/teacher/schedule',
     children: [
-      { to: '/teacher/library/tests?exam=TOEIC', label: 'Đề thi thử TOEIC', icon: FileText, desc: 'Giao full đề hoặc chọn Part, đặt thời gian' },
-      { to: '/teacher/library/courses?open=c-toeic-basic', label: 'Nền tảng TOEIC', icon: Presentation, desc: 'Giao bài giảng theo lộ trình B1 → B2' },
-      { to: '/teacher/library/vocabulary?exam=TOEIC', label: 'Từ vựng TOEIC', icon: BookOpen, desc: 'Giao bộ flashcard theo chủ đề công việc' },
-      { to: '/teacher/library/grammar', label: 'Ngữ pháp Part 5–6', icon: Languages, desc: 'Giao chủ điểm kèm bài tập chấm tự động' },
-      { to: `/teacher/analytics?class=${classOf('TOEIC')}`, label: 'Kết quả lớp TOEIC', icon: BarChart3, desc: '% đúng từng Part, giao luyện phần yếu' },
-    ],
-  },
-  {
-    label: 'VSTEP',
-    children: [
-      { to: '/teacher/library/tests?exam=VSTEP', label: 'Đề thi thử VSTEP', icon: FileText, desc: 'Giao đề Nghe – Đọc, chọn kỹ năng và thời gian' },
-      { to: '/teacher/library/writing-speaking?tab=writing', label: 'Đề Viết', icon: PenTool, desc: 'Task 1 thư, Task 2 bài luận · chấm 4 tiêu chí' },
-      { to: '/teacher/library/writing-speaking?tab=speaking', label: 'Đề Nói', icon: Mic, desc: 'Part 1–3 · nghe bài ghi âm và chấm' },
-      { to: '/teacher/library/courses?open=c-vstep-basic', label: 'Nền tảng VSTEP', icon: Presentation, desc: 'Giao bài giảng theo lộ trình A2 → B1' },
-      { to: '/teacher/library/vocabulary?exam=VSTEP', label: 'Từ vựng VSTEP', icon: BookOpen, desc: 'Giao bộ từ học thuật' },
-      { to: `/teacher/analytics?class=${classOf('VSTEP')}`, label: 'Kết quả lớp VSTEP', icon: BarChart3, desc: 'Điểm 4 kỹ năng, quy đổi bậc' },
-    ],
-  },
-  {
-    label: 'Khoá học',
-    to: '/teacher/library/courses',
-    children: [
-      { to: '/teacher/library/courses?open=c-grammar', label: 'Ngữ pháp', icon: Languages, desc: '52 bài, từ câu đơn đến nâng cao' },
-      { to: '/teacher/library/courses?open=c-vocab', label: 'Từ vựng và Phát âm', icon: BookOpen, desc: 'IPA, trọng âm, từ vựng theo chủ đề' },
-      { to: '/teacher/library/courses?open=c-speaking', label: 'Giao tiếp hằng ngày', icon: MessagesSquare, desc: 'Tình huống đời sống, du lịch', group: 'Kỹ năng tiếng Anh' },
-      { to: '/teacher/library/courses?open=c-listening', label: 'Luyện nghe hiểu', icon: Headphones, desc: 'Nối âm, âm yếu đến tốc độ thật', group: 'Kỹ năng tiếng Anh' },
-      { to: '/teacher/library/courses?open=c-writing', label: 'Viết tiếng Anh', icon: PenTool, desc: 'Câu, đoạn văn, email, bài luận', group: 'Kỹ năng tiếng Anh' },
-      { to: '/teacher/library/courses?open=c-office', label: 'Tiếng Anh công sở', icon: Briefcase, desc: 'Email, họp, thuyết trình, phỏng vấn', group: 'Kỹ năng tiếng Anh' },
-      { to: '/teacher/library/courses?open=c-toeic-basic', label: 'Nền tảng TOEIC', icon: Briefcase, desc: 'B1 → B2, tiếng Anh công việc', group: 'Kiến thức nền tảng' },
-      { to: '/teacher/library/courses?open=c-vstep-basic', label: 'Nền tảng VSTEP', icon: GraduationCap, desc: 'A2 → B1, tiếng Anh đời sống', group: 'Kiến thức nền tảng' },
+      { to: '/teacher/schedule', label: 'Lịch dạy tuần', icon: CalendarDays, desc: 'Các buổi dạy, phòng học, giáo án từng buổi' },
+      { to: '/teacher/attendance', label: 'Điểm danh', icon: ClipboardCheck, desc: 'Điểm danh buổi hôm nay, sổ điểm danh cả khoá' },
     ],
   },
   {
@@ -85,14 +56,27 @@ export const TEACHER_MENUS: TeacherMenu[] = [
   },
   { to: '/teacher/grading', label: 'Chấm bài', badge: toGrade },
   {
-    label: 'Công cụ',
+    label: 'Học viên',
+    to: '/teacher/students',
     children: [
-      { to: '/teacher/analytics', label: 'Thống kê lớp học', icon: BarChart3, desc: 'Phân bố điểm, nguyên nhân lỗi sai', group: 'Giảng dạy' },
-      { to: '/teacher/materials', label: 'Tài liệu lớp', icon: FolderOpen, desc: 'Tải slide, audio, bài mẫu cho lớp', group: 'Giảng dạy' },
-      { to: '/teacher/library/grammar', label: 'Chủ điểm ngữ pháp', icon: ListChecks, desc: 'Toàn bộ chủ điểm học viên đang học', group: 'Giảng dạy' },
+      { to: '/teacher/students', label: 'Hồ sơ học viên', icon: Users, desc: 'Điểm, chuyên cần, nhật ký trao đổi' },
+      { to: '/teacher/students?filter=watch', label: 'Cần theo dõi', icon: UserRoundX, desc: 'Vắng nhiều, nộp bài thiếu, điểm giảm' },
+      { to: '/teacher/gradebook', label: 'Bảng điểm', icon: Sheet, desc: 'Điểm quá trình, xét điều kiện thi' },
+      { to: '/teacher/analytics', label: 'Thống kê lớp', icon: BarChart3, desc: '% đúng từng Part, phân bố điểm, lỗi sai' },
+    ],
+  },
+  {
+    label: 'Học liệu',
+    to: '/teacher/library',
+    children: [
+      { to: '/teacher/library/courses', label: 'Khoá học', icon: Presentation, desc: 'Bài giảng video để giao theo lộ trình' },
+      { to: '/teacher/library/tests', label: 'Ngân hàng đề thi', icon: FileText, desc: 'Đề thi thử TOEIC, VSTEP để giao và kiểm tra' },
+      { to: '/teacher/library/grammar', label: 'Ngữ pháp', icon: Languages, desc: 'Chủ điểm kèm bài tập chấm tự động' },
+      { to: '/teacher/library/vocabulary', label: 'Từ vựng', icon: BookOpen, desc: 'Bộ flashcard theo chủ đề' },
+      { to: '/teacher/library/writing-speaking', label: 'Đề Viết & Nói', icon: PenTool, desc: 'Đề tự luận, bài nộp về bàn chấm' },
+      { to: '/teacher/materials', label: 'Tài liệu lớp', icon: FolderOpen, desc: 'Slide, audio, bài mẫu của riêng lớp' },
       { to: '/score-converter', label: 'Quy đổi điểm', icon: Calculator, desc: 'TOEIC ↔ VSTEP ↔ CEFR', group: 'Tra cứu' },
       { to: '/question-bank', label: 'Ngân hàng câu hỏi', icon: Database, desc: 'Câu hỏi theo từng Part, có giải thích', group: 'Tra cứu' },
-      { to: '/resources', label: 'Kho tài liệu mở', icon: Library, desc: 'Ngữ pháp, từ vựng, bài mẫu Writing', group: 'Tra cứu' },
     ],
   },
 ];

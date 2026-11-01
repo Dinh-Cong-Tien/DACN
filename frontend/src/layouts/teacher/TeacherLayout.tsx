@@ -1,5 +1,5 @@
 import React from 'react';
-import { LayoutDashboard, Users, ClipboardList, PenTool, FolderOpen, BarChart3, Video, FileText, GraduationCap, BookOpen, Mic } from 'lucide-react';
+import { LayoutDashboard, Users, ClipboardList, ClipboardCheck, CalendarDays, PenTool, FolderOpen, BarChart3, Video, FileText, GraduationCap, BookOpen, Mic, Sheet, UserRound } from 'lucide-react';
 import { AppShell, NavGroup } from '@/shared/components/layout/AppShell';
 import { TeacherNav } from './TeacherNav';
 
@@ -10,16 +10,25 @@ const GROUPS: NavGroup[] = [
     items: [
       { to: '/teacher/dashboard', label: 'Tổng quan', icon: LayoutDashboard },
       { to: '/teacher/classes', label: 'Lớp học', icon: Users },
-      { to: '/teacher/assignments', label: 'Bài tập', icon: ClipboardList },
+      { to: '/teacher/schedule', label: 'Lịch dạy', icon: CalendarDays },
       { to: '/teacher/grading', label: 'Chấm bài', icon: PenTool, badge: '4' },
-      { to: '/teacher/analytics', label: 'Thống kê', icon: BarChart3 },
+      { to: '/teacher/assignments', label: 'Bài tập', icon: ClipboardList },
+      { to: '/teacher/attendance', label: 'Điểm danh', icon: ClipboardCheck },
+    ],
+  },
+  {
+    title: 'Học viên',
+    items: [
+      { to: '/teacher/students', label: 'Hồ sơ học viên', icon: UserRound },
+      { to: '/teacher/gradebook', label: 'Bảng điểm', icon: Sheet },
+      { to: '/teacher/analytics', label: 'Thống kê lớp', icon: BarChart3 },
     ],
   },
   {
     title: 'Học liệu',
     items: [
       { to: '/teacher/library/courses', label: 'Khoá học', icon: Video },
-      { to: '/teacher/library/tests', label: 'Đề thi thử TOEIC / VSTEP', icon: FileText },
+      { to: '/teacher/library/tests', label: 'Ngân hàng đề thi', icon: FileText },
       { to: '/teacher/library/grammar', label: 'Ngữ pháp', icon: GraduationCap },
       { to: '/teacher/library/vocabulary', label: 'Từ vựng', icon: BookOpen },
       { to: '/teacher/library/writing-speaking', label: 'Đề Viết & Nói', icon: Mic },

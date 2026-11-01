@@ -371,6 +371,45 @@ export interface Submission {
   feedback?: string;
 }
 
+/** Một buổi dạy trên lịch của giáo viên */
+export type AttendanceMark = 'PRESENT' | 'LATE' | 'ABSENT' | 'EXCUSED';
+export interface ClassSession {
+  id: string;
+  classId: string;
+  /** Ngày học, dạng YYYY-MM-DD */
+  date: string;
+  start: string;
+  end: string;
+  room: string;
+  /** Nội dung dự kiến của buổi (giáo án) */
+  topic: string;
+  status: 'DONE' | 'UPCOMING' | 'CANCELLED';
+  /** Điểm danh theo id học viên; chỉ có ở buổi đã dạy */
+  attendance?: Record<string, AttendanceMark>;
+  /** Ghi chú sau buổi dạy */
+  note?: string;
+}
+
+/** Thông báo giáo viên đăng lên bảng tin lớp */
+export interface ClassAnnouncement {
+  id: string;
+  classId: string;
+  title: string;
+  body: string;
+  createdAt: string;
+  pinned?: boolean;
+  readCount: number;
+}
+
+/** Ghi chú của giáo viên về một học viên (trao đổi, nhắc nhở, liên hệ phụ huynh…) */
+export interface StudentNote {
+  id: string;
+  studentId: string;
+  date: string;
+  kind: 'NOTE' | 'REMINDER' | 'CONTACT';
+  text: string;
+}
+
 export interface Material {
   id: string;
   classId: string;

@@ -3,7 +3,7 @@ import { GRAMMAR_TOPICS, MOCK_COURSES } from './courses';
 import { VOCAB_TOPICS } from './student';
 import { VSTEP_SPEAKING_PARTS, VSTEP_WRITING_TASKS } from './questions';
 import { MOCK_TESTS, TOEIC_PARTS_INFO, VSTEP_PARTS_INFO } from './tests';
-import type { Assignment, AssignmentTarget, AssignmentType, ClassRoom, ClassStudent, Material, MyAssignmentState, Submission } from '@/shared/types';
+import type { Assignment, AssignmentTarget, AssignmentType, AttendanceMark, ClassAnnouncement, ClassRoom, ClassSession, ClassStudent, Material, MyAssignmentState, StudentNote, Submission } from '@/shared/types';
 
 export const MOCK_CLASSES: ClassRoom[] = [
   { id: 'cl-1', coverUrl: PHOTOS.classroom, name: 'TOEIC 650+ K12', code: 'ORB-7K2P', room: 'Phòng 302', examType: 'TOEIC', teacherName: 'Trần Thu Hà', studentsCount: 28, assignmentsCount: 14, avgScore: 642, completionRate: 86, attendanceRate: 91, createdAt: '2026-08-05', schedule: 'T2 – T4 – T6 · 19:00', gradient: 'from-indigo-500 to-violet-600' },
@@ -201,3 +201,91 @@ export const CLASS_MISTAKE_CAUSES: { cause: string; count: number }[] = [
   { cause: 'TIME_PRESSURE', count: 52 },
   { cause: 'CARELESS', count: 31 },
 ];
+
+// ---------- Lịch dạy, điểm danh, bảng tin lớp, ghi chú học viên ----------
+
+/** Giáo án theo buổi của từng lớp (lặp lại nếu hết) */
+const SESSION_TOPICS: Record<string, string[]> = {
+  'cl-1': ['Part 3: hội thoại 3 người, câu hỏi suy luận', 'Part 5: từ loại và vị trí trong câu', 'Chữa đề ETS 2024 Test 1 — Listening', 'Part 6: câu chèn và từ nối', 'Part 7: đoạn kép, câu hỏi liên kết', 'Part 4: thông báo, quảng cáo', 'Chữa đề ETS 2024 Test 1 — Reading', 'Part 2: câu hỏi gián tiếp', 'Ôn tập giữa khoá', 'Kiểm tra giữa khoá (full test)', 'Chữa bài kiểm tra giữa khoá', 'Part 7: email và thông báo nội bộ'],
+  'cl-2': ['Writing Task 1: thư phàn nàn', 'Speaking Part 1: giới thiệu bản thân', 'Reading: đọc lướt, đọc tìm ý', 'Writing Task 2: bố cục bài luận', 'Listening Part 3: bài giảng', 'Speaking Part 2: thảo luận giải pháp', 'Chữa bài Writing Task 2', 'Speaking Part 3: phát triển chủ đề'],
+  'cl-3': ['Phát âm: nguyên âm đơn', 'Thì hiện tại đơn và tiếp diễn', 'Part 1: mô tả tranh', 'Từ vựng chủ đề văn phòng', 'Part 2: câu hỏi Wh-', 'Thì quá khứ đơn', 'Part 1–2: luyện tổng hợp', 'Từ vựng chủ đề nhân sự'],
+  'cl-4': ['Part 7: đoạn ba, chiến thuật thời gian', 'Part 3–4: bẫy paraphrase', 'Full test ETS 2025 Test 1', 'Chữa full test — Reading', 'Part 5: từ vựng nâng cao', 'Part 6: câu chèn khó', 'Chữa full test — Listening', 'Đề luyện tốc độ Part 7'],
+};
+
+const DAY_INDEX: Record<string, number> = { CN: 0, T2: 1, T3: 2, T4: 3, T5: 4, T6: 5, T7: 6 };
+const iso = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+const addMin = (hhmm: string, m: number) => {
+  const [h, mm] = hhmm.split(':').map(Number);
+  const t = h * 60 + mm + m;
+  return `${String(Math.floor(t / 60)).padStart(2, '0')}:${String(t % 60).padStart(2, '0')}`;
+};
+
+/** Điểm danh mẫu: học viên "nguy cơ" hay vắng, "cần nhắc" hay đi muộn */
+const markFor = (st: ClassStudent, n: number): AttendanceMark => {
+  const r = (n * 7 + Number(st.id.split('-')[1]) * 13) % 10;
+  if (st.status === 'RISK') return r < 4 ? 'ABSENT' : r < 5 ? 'EXCUSED' : r < 7 ? 'LATE' : 'PRESENT';
+  if (st.status === 'WARNING') return r < 2 ? 'LATE' : r < 3 ? 'ABSENT' : 'PRESENT';
+  return r === 0 ? 'LATE' : 'PRESENT';
+};
+
+/** Các buổi từ 19/10 đến 15/11/2026 theo lịch cố định của từng lớp; buổi trước hôm nay đã dạy và có điểm danh */
+export const MOCK_SESSIONS: ClassSession[] = (() => {
+  const out: ClassSession[] = [];
+  const today = iso(new Date());
+  const counter: Record<string, number> = {};
+  for (let d = new Date(2026, 9, 19); d <= new Date(2026, 10, 15); d.setDate(d.getDate() + 1)) {
+    for (const c of MOCK_CLASSES) {
+      const [days, time = '19:00'] = c.schedule.split('·').map((x) => x.trim());
+      if (!(days.match(/T[2-7]|CN/g) ?? []).some((x) => DAY_INDEX[x] === d.getDay())) continue;
+      const n = (counter[c.id] = (counter[c.id] ?? 0) + 1);
+      const date = iso(d);
+      const done = date < today;
+      out.push({
+        id: `ss-${c.id}-${n}`,
+        classId: c.id,
+        date,
+        start: time,
+        end: addMin(time, c.id === 'cl-3' ? 120 : 90),
+        room: c.room ?? '',
+        topic: SESSION_TOPICS[c.id][(n - 1) % SESSION_TOPICS[c.id].length],
+        status: c.id === 'cl-3' && date === '2026-10-25' ? 'CANCELLED' : done ? 'DONE' : 'UPCOMING',
+        attendance: done ? Object.fromEntries(MOCK_CLASS_STUDENTS.map((st) => [st.id, markFor(st, n)])) : undefined,
+        note: done && n % 3 === 0 ? 'Lớp còn yếu câu hỏi suy luận, buổi sau ôn thêm 15 phút.' : undefined,
+      });
+    }
+  }
+  return out.map((s) => (s.status === 'CANCELLED' ? { ...s, attendance: undefined, note: 'Nghỉ do trùng lịch thi của trường, dạy bù 01/11.' } : s));
+})();
+
+export const ATTENDANCE_LABEL: Record<AttendanceMark, string> = { PRESENT: 'Có mặt', LATE: 'Đi muộn', ABSENT: 'Vắng', EXCUSED: 'Vắng có phép' };
+
+export const MOCK_ANNOUNCEMENTS: ClassAnnouncement[] = [
+  { id: 'an-1', classId: 'cl-1', title: 'Kiểm tra giữa khoá thứ Sáu 06/11', body: 'Cả lớp làm full test 120 phút tại phòng 302, có mặt lúc 18:45. Mang theo tai nghe có dây. Bạn nào vắng cần báo trước để xếp lịch thi bù.', createdAt: '2026-11-01T09:00:00.000Z', pinned: true, readCount: 24 },
+  { id: 'an-2', classId: 'cl-1', title: 'Đã chấm xong bài Part 5, 6', body: 'Điểm và nhận xét đã có trong mục Lớp của tôi. Các bạn sai từ 8 câu trở lên làm lại bài Ngữ pháp — Từ loại trước thứ Tư.', createdAt: '2026-10-30T13:30:00.000Z', readCount: 27 },
+  { id: 'an-3', classId: 'cl-2', title: 'Buổi thứ Năm học online', body: 'Thứ Năm 05/11 lớp học qua Google Meet, link giữ nguyên. Chuẩn bị micro để luyện Speaking Part 2 theo cặp.', createdAt: '2026-10-31T10:15:00.000Z', pinned: true, readCount: 19 },
+  { id: 'an-4', classId: 'cl-3', title: 'Dạy bù buổi 25/10', body: 'Buổi nghỉ ngày 25/10 được dạy bù vào Chủ nhật 01/11, 14:00–16:00 tại phòng 105.', createdAt: '2026-10-24T08:00:00.000Z', readCount: 31 },
+];
+
+export const MOCK_STUDENT_NOTES: StudentNote[] = [
+  { id: 'nt-1', studentId: 's-5', date: '2026-10-30', kind: 'CONTACT', text: 'Gọi điện hỏi lý do vắng 2 buổi liền. Bạn đang thực tập, xin chuyển sang lớp tối thứ Bảy.' },
+  { id: 'nt-2', studentId: 's-7', date: '2026-10-28', kind: 'REMINDER', text: 'Nhắc nộp bài Speaking Part 2 (đã quá hạn). Hẹn nộp trước 31/10.' },
+  { id: 'nt-3', studentId: 's-4', date: '2026-10-27', kind: 'NOTE', text: 'Hay đi muộn 10–15 phút, Listening Part 3 yếu. Gợi ý nghe chép chính tả mỗi ngày.' },
+  { id: 'nt-4', studentId: 's-9', date: '2026-10-25', kind: 'NOTE', text: 'Tiến bộ Part 5 (từ 18 lên 24/30). Cần luyện thêm tốc độ Part 7.' },
+  { id: 'nt-5', studentId: 's-2', date: '2026-10-20', kind: 'NOTE', text: 'Có thể chuyển lên lớp TOEIC 850 Intensive từ tháng 12.' },
+];
+
+/** Bảng điểm: điểm từng học viên ở các bài đã chấm của lớp TOEIC 650+ K12 (null = chưa nộp) */
+export const GRADEBOOK: Record<string, Record<string, number | null>> = Object.fromEntries(
+  MOCK_CLASS_STUDENTS.map((st) => {
+    const k = Number(st.id.split('-')[1]);
+    const miss = (aid: string) => (st.status === 'RISK' && (k + aid.length) % 3 === 0) || (st.status === 'WARNING' && aid === 'as-1');
+    return [
+      st.id,
+      {
+        'as-11': miss('as-11') ? null : Math.min(40, Math.round((st.avgScore / 990) * 40 + ((k * 3) % 7) - 2)),
+        'as-2': miss('as-2') ? null : Math.min(46, Math.round((st.avgScore / 990) * 46 + ((k * 5) % 6) - 2)),
+        'as-1': miss('as-1') ? null : Math.round((st.avgScore + ((k * 17) % 60) - 25) / 5) * 5,
+      },
+    ];
+  })
+);

@@ -58,7 +58,8 @@ export const TeacherAssignmentsPage: React.FC = () => {
   return (
     <div className="space-y-6">
       <TPageHead
-        title="Bài tập"
+        eyebrow="Giảng dạy"
+        title="Bài tập của lớp"
         sub="Giao đề thi thử, bài giảng, chủ điểm ngữ pháp, bộ từ vựng, đề Viết / Nói cho từng lớp và theo dõi tình hình nộp bài."
         actions={
           <TBtn variant="primary" icon={<Plus />} onClick={() => setOpen(true)}>

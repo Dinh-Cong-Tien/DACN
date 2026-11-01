@@ -39,7 +39,7 @@ export interface AppShellProps {
   notificationsTo?: string;
   showStreak?: boolean;
   topExtra?: React.ReactNode;
-  /** Giao diện làm việc (giáo viên): nền phẳng, header có viền, menu thả xuống viền mảnh */
+  /** Giao diện giáo viên: header viền mảnh, menu thả xuống viền mảnh (nền chung như trang học viên) */
   workspace?: boolean;
   /** Thay menu chữ mặc định trên header bằng menu riêng của vai trò (giáo viên) */
   headerNav?: React.ReactNode;
@@ -79,10 +79,10 @@ export const AppShell: React.FC<AppShellProps> = ({ groups, brandTagline, accent
   const isGroupActive = (g: NavGroup) => g.items.some((it) => location.pathname.startsWith(it.to));
 
   return (
-    <div className={cn('portal relative min-h-screen flex flex-col font-sans text-slate-800', workspace && 'bg-slate-50')}>
-      {!workspace && <PageBackdrop />}
+    <div className="portal relative min-h-screen flex flex-col font-sans text-slate-800">
+      <PageBackdrop />
       {/* ===== Header một hàng (giống GuestLayout) ===== */}
-      <header className={cn('sticky top-0 z-40 transition-all duration-300', workspace ? 'border-b border-slate-200 bg-white' : cn('border-b-2', scrolled ? 'bg-cream/80 backdrop-blur-xl border-slate-900/10' : 'bg-transparent border-transparent'))}>
+      <header className={cn('sticky top-0 z-40 transition-all duration-300', workspace ? cn('border-b', scrolled ? 'bg-cream/85 backdrop-blur-xl border-slate-900/10' : 'bg-transparent border-transparent') : cn('border-b-2', scrolled ? 'bg-cream/80 backdrop-blur-xl border-slate-900/10' : 'bg-transparent border-transparent'))}>
         <div className={cn('max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between gap-4', workspace ? 'h-16' : 'h-[72px]')}>
           <div className="flex items-center gap-3">
             <button onClick={() => setMobileNav(true)} className="md:hidden p-2 rounded-xl border-2 border-slate-900 bg-white" aria-label="Menu">
