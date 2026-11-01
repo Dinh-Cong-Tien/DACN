@@ -1,14 +1,14 @@
 import React, { useMemo, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { Check, ChevronRight, Lock, Play } from 'lucide-react';
-import { useDocumentTitle, useParamState } from '@/shared/hooks';
+import { useDocumentTitle } from '@/shared/hooks';
 import { useAuthStore } from '@/shared/stores/authStore';
 import { Breadcrumb } from '@/shared/components/ui';
 import { Img } from '@/shared/components/media/Img';
 import { MOCK_TESTS, MOCK_ATTEMPTS, TOEIC_PARTS_INFO, VSTEP_PARTS_INFO } from '@/shared/mocks';
 import { cn, examSetupQuery, formatDate, formatDuration, formatNumber } from '@/shared/utils';
 import type { ExamSetup, TestPartInfo } from '@/shared/types';
-import { ActionButton, UnderlineTabs } from '@/pages/marketing/shared/PageKit';
+import { ActionButton } from '@/pages/marketing/shared/PageKit';
 
 /** Phần không làm trong phòng thi (VSTEP Viết / Nói có trang luyện riêng) */
 const OUTSIDE_EXAM: Record<string, { label: string; to: string }> = {
@@ -21,9 +21,8 @@ const TIME_CHOICES = [5, 10, 15, 20, 30, 45, 60, 75, 90, 120];
 const RULES_FULL = ['Audio phát một lần, không tua lại.', 'Hết giờ hệ thống tự nộp bài.', 'Phím F để đánh dấu câu cần xem lại.', 'Câu sai được lưu vào Sổ tay lỗi sai.'];
 
 /**
- * Chi tiết một đề: hai cách làm trên cùng một đề.
- * - Làm full test: toàn bộ Part, đúng giờ thi thật.
- * - Luyện tập: chọn Part muốn làm, tự đặt thời gian (hoặc không giới hạn). Thay cho trang "Luyện theo Part" riêng trước đây.
+ * Chi tiết một đề: một khung chọn Part + thời gian (thay cho trang "Luyện theo Part" riêng trước đây).
+ * Mặc định chọn đủ Part và thời gian thi thật → full test (quy đổi điểm); bỏ bớt Part hoặc đổi thời gian → luyện tập.
  */
 export const StudentMockTestDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -31,7 +30,6 @@ export const StudentMockTestDetailPage: React.FC = () => {
   const user = useAuthStore((s) => s.user);
   const test = MOCK_TESTS.find((t) => t.id === id) ?? MOCK_TESTS[0];
   useDocumentTitle(test.title);
-  const [mode, setMode] = useParamState('mode', ['full', 'practice'], 'full');
 
   const info = test.examType === 'TOEIC' ? TOEIC_PARTS_INFO : VSTEP_PARTS_INFO;
   const parts = useMemo(() => test.partIds.map((p) => info.find((x) => x.id === p)).filter(Boolean) as TestPartInfo[], [test, info]);
@@ -39,17 +37,20 @@ export const StudentMockTestDetailPage: React.FC = () => {
   const attempts = MOCK_ATTEMPTS.filter((a) => a.testId === test.id);
   const locked = !test.isFree && user?.plan === 'FREE';
 
-  const [picked, setPicked] = useState<string[]>([]);
-  // 'auto' = tổng thời gian gợi ý của các Part đã chọn; 'none' = không giới hạn
+  // Mặc định chọn đủ Part làm được trong phòng thi
+  const [picked, setPicked] = useState<string[]>(() => selectable.map((p) => p.id));
+  // 'auto' = thời gian thi thật khi chọn đủ Part, còn lại là tổng thời gian gợi ý; 'none' = không giới hạn
   const [time, setTime] = useState<'auto' | 'none' | number>('auto');
   const chosen = selectable.filter((p) => picked.includes(p.id));
-  const suggested = chosen.reduce((a, p) => a + (p.minutes ?? Math.ceil(p.questions / 2)), 0);
+  const allPicked = selectable.length > 0 && chosen.length === selectable.length;
+  const suggested = allPicked ? test.durationMinutes : chosen.reduce((a, p) => a + (p.minutes ?? Math.ceil(p.questions / 2)), 0);
   const minutes = time === 'auto' ? suggested : time === 'none' ? null : time;
-  const questionCount = chosen.reduce((a, p) => a + p.questions, 0);
+  const questionCount = allPicked ? test.totalQuestions : chosen.reduce((a, p) => a + p.questions, 0);
+  const full = allPicked && time === 'auto';
 
   const toggle = (pid: string) => setPicked((s) => (s.includes(pid) ? s.filter((x) => x !== pid) : [...s, pid]));
-  const allPicked = selectable.length > 0 && chosen.length === selectable.length;
-  const start = (setup: ExamSetup) => navigate(`/app/exam/${test.id}${examSetupQuery(setup)}`);
+  const setup: ExamSetup = full ? { mode: 'FULL', parts: test.partIds, minutes: test.durationMinutes } : { mode: 'PRACTICE', parts: chosen.map((p) => p.id), minutes };
+  const start = () => navigate(`/app/exam/${test.id}${examSetupQuery(setup)}`);
 
   return (
     <div className="space-y-6">
@@ -92,122 +93,99 @@ export const StudentMockTestDetailPage: React.FC = () => {
 
       <div className="grid items-start gap-6 xl:grid-cols-[1fr_340px]">
         <section className="rounded-2xl border border-slate-200 bg-white p-5 md:p-6">
-          <UnderlineTabs
-            value={mode}
-            onChange={setMode}
-            items={[
-              { value: 'full', label: 'Làm full test' },
-              { value: 'practice', label: 'Luyện tập theo Part' },
-            ]}
-          />
-
-          {mode === 'full' ? (
-            <div className="pt-5">
-              <p className="text-slate-600">
-                Làm toàn bộ {test.totalQuestions} câu trong {test.durationMinutes} phút, giống phòng thi thật. Điểm được quy đổi theo thang {test.examType === 'TOEIC' ? '10–990' : '0–10'}.
-              </p>
-              <ol className="mt-5 divide-y divide-slate-200 border-y border-slate-200">
-                {parts.map((p) => (
-                  <li key={p.id} className="flex items-center gap-4 py-3">
-                    <span className="w-16 shrink-0 text-sm font-semibold text-slate-900">{p.name}</span>
-                    <span className="min-w-0 flex-1 text-sm text-slate-600">{p.nameVi}</span>
-                    <span className="shrink-0 text-[13px] tabular-nums text-slate-500">{p.questions} câu</span>
-                  </li>
-                ))}
-              </ol>
-              <ul className="mt-5 grid gap-x-6 gap-y-1.5 text-[13px] text-slate-500 sm:grid-cols-2">
-                {RULES_FULL.map((r) => (
-                  <li key={r} className="flex gap-2">
-                    <Check className="mt-0.5 h-3.5 w-3.5 shrink-0 text-emerald-600" />
-                    {r}
-                  </li>
-                ))}
-              </ul>
-              <ActionButton size="lg" className="mt-6 w-full sm:w-auto" onClick={() => start({ mode: 'FULL', parts: test.partIds, minutes: test.durationMinutes })}>
-                {locked ? <Lock className="h-4 w-4" /> : <Play className="h-4 w-4 fill-current" />}
-                Bắt đầu thi · {test.durationMinutes} phút
-              </ActionButton>
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <h2 className="font-display text-xl font-bold text-slate-900">Chọn phần thi</h2>
+              <p className="mt-1 text-[14px] text-slate-600">Để nguyên tất cả và thời gian thi thật là làm full test. Bỏ bớt Part hoặc đổi thời gian để luyện riêng.</p>
             </div>
+            {selectable.length > 1 && (
+              <button type="button" onClick={() => setPicked(allPicked ? [] : selectable.map((p) => p.id))} className="shrink-0 pt-1 text-sm font-semibold text-indigo-700 hover:underline underline-offset-2">
+                {allPicked ? 'Bỏ chọn tất cả' : 'Chọn tất cả'}
+              </button>
+            )}
+          </div>
+
+          <ul className="mt-4 space-y-2">
+            {parts.map((p) => {
+              const outside = OUTSIDE_EXAM[p.id];
+              const on = picked.includes(p.id);
+              const body = (
+                <>
+                  <span className={cn('mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-md border transition-colors', outside ? 'border-slate-200 bg-slate-100' : on ? 'border-indigo-600 bg-indigo-600 text-white' : 'border-slate-300 bg-white')}>
+                    {on && <Check className="h-3.5 w-3.5" strokeWidth={3} />}
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block font-semibold text-slate-900">
+                      {p.name} <span className="font-normal text-slate-500">· {p.nameVi}</span>
+                    </span>
+                    <span className="mt-0.5 block text-[13px] leading-relaxed text-slate-500">{p.description}</span>
+                  </span>
+                  <span className="shrink-0 text-right text-[13px] tabular-nums text-slate-500">
+                    {outside ? (
+                      <span className="inline-flex items-center gap-0.5 font-semibold text-indigo-700">
+                        {outside.label} <ChevronRight className="h-4 w-4" />
+                      </span>
+                    ) : (
+                      <>
+                        {p.questions} câu
+                        <span className="block text-[12px] text-slate-400">~{p.minutes ?? Math.ceil(p.questions / 2)} phút</span>
+                      </>
+                    )}
+                  </span>
+                </>
+              );
+              const cls = cn('flex w-full items-start gap-3 rounded-xl border px-4 py-3 text-left transition-colors', on ? 'border-indigo-500/50 bg-indigo-500/[0.06]' : 'border-slate-200 hover:bg-slate-900/[0.025]');
+              return (
+                <li key={p.id}>
+                  {outside ? (
+                    <Link to={outside.to} className={cls}>
+                      {body}
+                    </Link>
+                  ) : (
+                    <button type="button" role="checkbox" aria-checked={on} onClick={() => toggle(p.id)} className={cls}>
+                      {body}
+                    </button>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
+
+          <div className="mt-6 flex flex-col gap-4 border-t border-slate-200 pt-5 sm:flex-row sm:items-end sm:justify-between">
+            <label className="block">
+              <span className="text-sm font-medium text-slate-700">Thời gian làm bài</span>
+              <select
+                value={String(time)}
+                onChange={(e) => setTime(e.target.value === 'auto' || e.target.value === 'none' ? e.target.value : Number(e.target.value))}
+                className="mt-1.5 block h-10 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-900 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 sm:w-64"
+              >
+                <option value="auto">{allPicked ? `Thời gian thi thật (${test.durationMinutes} phút)` : `Theo thời gian gợi ý${chosen.length ? ` (${suggested} phút)` : ''}`}</option>
+                <option value="none">Không giới hạn</option>
+                {TIME_CHOICES.map((m) => (
+                  <option key={m} value={m}>
+                    {m} phút
+                  </option>
+                ))}
+              </select>
+            </label>
+            <ActionButton size="lg" disabled={!chosen.length} onClick={start}>
+              {locked ? <Lock className="h-4 w-4" /> : <Play className="h-4 w-4 fill-current" />}
+              {!chosen.length ? 'Chọn ít nhất một Part' : `${full ? 'Làm full test' : 'Bắt đầu luyện'} · ${questionCount} câu · ${minutes ? `${minutes} phút` : 'không giới hạn'}`}
+            </ActionButton>
+          </div>
+
+          {/* Full test: nhắc quy định phòng thi; luyện tập: nói rõ cách tính kết quả */}
+          {full ? (
+            <ul className="mt-5 grid gap-x-6 gap-y-1.5 text-[13px] text-slate-500 sm:grid-cols-2">
+              {RULES_FULL.map((r) => (
+                <li key={r} className="flex gap-2">
+                  <Check className="mt-0.5 h-3.5 w-3.5 shrink-0 text-emerald-600" />
+                  {r}
+                </li>
+              ))}
+            </ul>
           ) : (
-            <div className="pt-5">
-              <div className="flex items-center justify-between gap-4">
-                <p className="text-slate-600">Chọn Part muốn làm, sau đó đặt thời gian.</p>
-                {selectable.length > 1 && (
-                  <button type="button" onClick={() => setPicked(allPicked ? [] : selectable.map((p) => p.id))} className="shrink-0 text-sm font-semibold text-indigo-700 hover:underline underline-offset-2">
-                    {allPicked ? 'Bỏ chọn tất cả' : 'Chọn tất cả'}
-                  </button>
-                )}
-              </div>
-
-              <ul className="mt-4 space-y-2">
-                {parts.map((p) => {
-                  const outside = OUTSIDE_EXAM[p.id];
-                  const on = picked.includes(p.id);
-                  const body = (
-                    <>
-                      <span className={cn('mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-md border transition-colors', outside ? 'border-slate-200 bg-slate-100' : on ? 'border-indigo-600 bg-indigo-600 text-white' : 'border-slate-300 bg-white')}>
-                        {on && <Check className="h-3.5 w-3.5" strokeWidth={3} />}
-                      </span>
-                      <span className="min-w-0 flex-1">
-                        <span className="block font-semibold text-slate-900">
-                          {p.name} <span className="font-normal text-slate-500">· {p.nameVi}</span>
-                        </span>
-                        <span className="mt-0.5 block text-[13px] leading-relaxed text-slate-500">{p.description}</span>
-                      </span>
-                      <span className="shrink-0 text-right text-[13px] tabular-nums text-slate-500">
-                        {outside ? (
-                          <span className="inline-flex items-center gap-0.5 font-semibold text-indigo-700">
-                            {outside.label} <ChevronRight className="h-4 w-4" />
-                          </span>
-                        ) : (
-                          <>
-                            {p.questions} câu
-                            <span className="block text-[12px] text-slate-400">~{p.minutes ?? Math.ceil(p.questions / 2)} phút</span>
-                          </>
-                        )}
-                      </span>
-                    </>
-                  );
-                  const cls = cn('flex w-full items-start gap-3 rounded-xl border px-4 py-3 text-left transition-colors', on ? 'border-indigo-500/50 bg-indigo-500/[0.06]' : 'border-slate-200 hover:bg-slate-900/[0.025]');
-                  return (
-                    <li key={p.id}>
-                      {outside ? (
-                        <Link to={outside.to} className={cls}>
-                          {body}
-                        </Link>
-                      ) : (
-                        <button type="button" role="checkbox" aria-checked={on} onClick={() => toggle(p.id)} className={cls}>
-                          {body}
-                        </button>
-                      )}
-                    </li>
-                  );
-                })}
-              </ul>
-
-              <div className="mt-6 flex flex-col gap-4 border-t border-slate-200 pt-5 sm:flex-row sm:items-end sm:justify-between">
-                <label className="block">
-                  <span className="text-sm font-medium text-slate-700">Thời gian làm bài</span>
-                  <select
-                    value={String(time)}
-                    onChange={(e) => setTime(e.target.value === 'auto' || e.target.value === 'none' ? e.target.value : Number(e.target.value))}
-                    className="mt-1.5 block h-10 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-900 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 sm:w-64"
-                  >
-                    <option value="auto">Theo thời gian gợi ý{chosen.length ? ` (${suggested} phút)` : ''}</option>
-                    <option value="none">Không giới hạn</option>
-                    {TIME_CHOICES.map((m) => (
-                      <option key={m} value={m}>
-                        {m} phút
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                <ActionButton size="lg" disabled={!chosen.length} onClick={() => start({ mode: 'PRACTICE', parts: chosen.map((p) => p.id), minutes })}>
-                  <Play className="h-4 w-4 fill-current" />
-                  {chosen.length ? `Bắt đầu luyện · ${questionCount} câu · ${minutes ? `${minutes} phút` : 'không giới hạn'}` : 'Chọn ít nhất một Part'}
-                </ActionButton>
-              </div>
-            </div>
+            chosen.length > 0 && <p className="mt-4 text-[13px] text-slate-500">Bài luyện tập tính theo số câu đúng, không quy đổi thang điểm {test.examType === 'TOEIC' ? '990' : '10'}.</p>
           )}
         </section>
 
