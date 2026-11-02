@@ -237,7 +237,7 @@ export const HeadDashboardPage: React.FC = () => {
                 <li key={r.classId} className="px-5 md:px-6 py-3.5 flex items-center gap-4">
                   <span className={cn('w-9 h-9 rounded-xl flex items-center justify-center font-display font-extrabold text-sm shrink-0', { emerald: 'bg-emerald-50 text-emerald-700', sky: 'bg-sky-50 text-sky-700', amber: 'bg-amber-100 text-amber-800', rose: 'bg-rose-50 text-rose-600' }[GRADE_TONE[r.grade]])}>{r.grade}</span>
                   <div className="min-w-0 flex-1">
-                    <p className="text-sm font-semibold text-slate-800 truncate">{r.className}</p>
+                    <Link to={`/head/classes/${r.classId}`} className="block text-sm font-semibold text-slate-800 truncate hover:text-indigo-700">{r.className}</Link>
                     <p className="text-[11px] text-slate-500 truncate">
                       {r.teacher} · {r.students} HV
                     </p>

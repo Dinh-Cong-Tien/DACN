@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { Search, FileText, PlayCircle, BookOpen, Compass, AlertTriangle, Trophy, Settings, LayoutDashboard, CornerDownLeft, ArrowUp, ArrowDown, Users, ClipboardList, PenTool, Sparkles, CalendarDays, ClipboardCheck, Sheet, BarChart3, FolderOpen } from 'lucide-react';
 import { useUiStore } from '@/shared/stores/uiStore';
 import { useAuthStore } from '@/shared/stores/authStore';
-import { MOCK_ASSIGNMENTS, MOCK_CLASSES, MOCK_CLASS_STUDENTS, MOCK_COURSES, MOCK_TESTS, GRAMMAR_TOPICS, courseHref } from '@/shared/mocks';
+import { MOCK_ASSIGNMENTS, MOCK_CLASSES, MOCK_CLASS_STUDENTS, MOCK_COURSES, MOCK_TESTS, GRAMMAR_TOPICS, DEPT_CLASSES, DEPT_STUDENTS, MOCK_TEACHERS, MOCK_USERS, MOCK_TICKETS, courseHref } from '@/shared/mocks';
 import { cn } from '@/shared/utils';
 
 interface Cmd {
@@ -47,20 +47,37 @@ const HEAD: Cmd[] = [
   { id: 'hdash', label: 'Tổng quan bộ môn', group: 'Trang', to: '/head/dashboard', icon: LayoutDashboard },
   { id: 'subjects', label: 'Môn học', group: 'Trang', to: '/head/subjects', icon: BookOpen },
   { id: 'teachers', label: 'Giáo viên', group: 'Trang', to: '/head/teachers', icon: Users },
-  { id: 'hclasses', label: 'Lớp học', group: 'Trang', to: '/head/classes', icon: Users },
+  { id: 'hclasses', label: 'Lớp học bộ môn', group: 'Trang', to: '/head/classes', icon: Users },
+  { id: 'hstudents', label: 'Học viên bộ môn', group: 'Trang', to: '/head/students', icon: Users, keywords: 'nguy co canh bao' },
+  { id: 'hschedule', label: 'Lịch dạy bộ môn', group: 'Trang', to: '/head/schedule', icon: CalendarDays, keywords: 'trung phong du gio' },
+  { id: 'hreview', label: 'Kiểm định chấm bài', group: 'Trang', to: '/head/grading-review', icon: PenTool, keywords: 'cham lai viet noi' },
+  { id: 'complaints', label: 'Khiếu nại & phúc khảo', group: 'Trang', to: '/head/complaints', icon: AlertTriangle },
+  { id: 'approvals', label: 'Phê duyệt học liệu', group: 'Trang', to: '/head/approvals', icon: ClipboardCheck },
+  { id: 'hlib-courses', label: 'Khoá học & bài giảng', group: 'Trang', to: '/head/library/courses', icon: PlayCircle },
+  { id: 'hlib-tests', label: 'Ngân hàng đề', group: 'Trang', to: '/head/library/tests', icon: FileText },
+  { id: 'hlib-practice', label: 'Ngữ pháp & Từ vựng', group: 'Trang', to: '/head/library/practice', icon: BookOpen },
   { id: 'qbank', label: 'Ngân hàng câu hỏi', group: 'Trang', to: '/head/question-bank', icon: FileText },
-  { id: 'approvals', label: 'Phê duyệt học liệu', group: 'Trang', to: '/head/approvals', icon: ClipboardList },
   { id: 'reports', label: 'Báo cáo', group: 'Trang', to: '/head/reports', icon: BarChart3 },
-  { id: 'complaints', label: 'Khiếu nại', group: 'Trang', to: '/head/complaints', icon: AlertTriangle },
 ];
 const ADMIN: Cmd[] = [
   { id: 'adash', label: 'Tổng quan hệ thống', group: 'Trang', to: '/admin/dashboard', icon: LayoutDashboard },
-  { id: 'users', label: 'Người dùng & Phân quyền', group: 'Trang', to: '/admin/users', icon: Users },
+  { id: 'users', label: 'Tài khoản & phân quyền', group: 'Trang', to: '/admin/users', icon: Users, keywords: 'nguoi dung khoa tai khoan' },
+  { id: 'aclasses', label: 'Lớp học toàn hệ thống', group: 'Trang', to: '/admin/classes', icon: Users, keywords: 'ma moi giao vien' },
+  { id: 'asupport', label: 'Hỗ trợ học viên', group: 'Trang', to: '/admin/support', icon: AlertTriangle, keywords: 'ticket chat email hotline' },
   { id: 'acourses', label: 'Khoá học', group: 'Trang', to: '/admin/courses', icon: PlayCircle },
-  { id: 'atests', label: 'Đề thi', group: 'Trang', to: '/admin/tests', icon: FileText },
-  { id: 'aquestions', label: 'Câu hỏi', group: 'Trang', to: '/admin/questions', icon: ClipboardList },
+  { id: 'aquestions', label: 'Ngân hàng câu hỏi', group: 'Trang', to: '/admin/questions', icon: ClipboardList },
+  { id: 'atests', label: 'Cấu hình đề thi', group: 'Trang', to: '/admin/tests', icon: FileText },
   { id: 'tags', label: 'Nhãn kỹ năng', group: 'Trang', to: '/admin/skill-tags', icon: BookOpen },
-  { id: 'ablog', label: 'Bài viết', group: 'Trang', to: '/admin/blog', icon: FileText },
+  { id: 'agrammar', label: 'Ngữ pháp', group: 'Trang', to: '/admin/learning/grammar', icon: BookOpen },
+  { id: 'avocab', label: 'Bộ từ vựng & flashcard', group: 'Trang', to: '/admin/learning/vocab', icon: BookOpen },
+  { id: 'awords', label: 'Từ vựng', group: 'Trang', to: '/admin/learning/words', icon: BookOpen },
+  { id: 'awriting', label: 'Đề Viết', group: 'Trang', to: '/admin/learning/writing', icon: PenTool },
+  { id: 'aspeaking', label: 'Đề Nói', group: 'Trang', to: '/admin/learning/speaking', icon: PenTool },
+  { id: 'aresources', label: 'Tài liệu mở', group: 'Trang', to: '/admin/learning/resources', icon: FolderOpen },
+  { id: 'afaq', label: 'Câu hỏi thường gặp (FAQ)', group: 'Trang', to: '/admin/learning/faq', icon: FileText },
+  { id: 'ablog', label: 'Tin tức (CMS)', group: 'Trang', to: '/admin/blog', icon: FileText },
+  { id: 'abilling', label: 'Gói VIP & thanh toán', group: 'Trang', to: '/admin/billing', icon: Sheet, keywords: 'doanh thu giao dich hoan tien' },
+  { id: 'abroadcast', label: 'Gửi thông báo', group: 'Trang', to: '/admin/broadcasts', icon: Sparkles },
   { id: 'aanalytics', label: 'Thống kê', group: 'Trang', to: '/admin/analytics', icon: BarChart3 },
   { id: 'system', label: 'Trạng thái dịch vụ', group: 'Trang', to: '/admin/system', icon: Sparkles },
   { id: 'audit', label: 'Nhật ký hệ thống', group: 'Trang', to: '/admin/audit-logs', icon: ClipboardList },
@@ -126,8 +143,19 @@ export const CommandPalette: React.FC = () => {
       const courses: Cmd[] = MOCK_COURSES.map((c) => ({ id: `c-${c.id}`, label: c.title, hint: `${c.lessonsCount} bài giảng`, group: 'Khoá học', to: `/teacher/library/courses?open=${c.id}`, icon: PlayCircle }));
       return [...TEACHER, ...classes, ...students, ...assignments, ...tests, ...courses];
     }
-    if (role === 'HEAD_TEACHER') return HEAD;
-    if (role === 'ADMIN') return ADMIN;
+    if (role === 'HEAD_TEACHER') {
+      const classes: Cmd[] = DEPT_CLASSES.map((c) => ({ id: `cl-${c.id}`, label: c.name, hint: `${c.teacherName} · ${c.schedule} · ${c.studentsCount} học viên`, group: 'Lớp học', to: `/head/classes/${c.id}`, icon: Users, keywords: c.code }));
+      const teachers: Cmd[] = MOCK_TEACHERS.map((t) => ({ id: `tc-${t.id}`, label: t.name, hint: `${t.subject} · ${t.email}`, group: 'Giáo viên', to: `/head/teachers/${t.id}`, icon: Users }));
+      const students: Cmd[] = DEPT_STUDENTS.map((s) => ({ id: `st-${s.id}`, label: s.name, hint: `${DEPT_CLASSES.find((c) => c.id === s.classId)?.name ?? ''} · điểm ${s.avgScore}`, group: 'Học viên', to: `/head/students?q=${encodeURIComponent(s.name)}`, icon: Users }));
+      return [...HEAD, ...classes, ...teachers, ...students];
+    }
+    if (role === 'ADMIN') {
+      const users: Cmd[] = MOCK_USERS.map((u) => ({ id: `u-${u.id}`, label: u.fullName, hint: u.email, group: 'Tài khoản', to: `/admin/users?q=${encodeURIComponent(u.email)}`, icon: Users }));
+      const classes: Cmd[] = DEPT_CLASSES.map((c) => ({ id: `cl-${c.id}`, label: c.name, hint: `${c.teacherName} · mã ${c.code}`, group: 'Lớp học', to: '/admin/classes', icon: Users, keywords: c.code }));
+      const tickets: Cmd[] = MOCK_TICKETS.map((t) => ({ id: `tk-${t.id}`, label: t.subject, hint: `${t.userName} · #${t.id}`, group: 'Yêu cầu hỗ trợ', to: `/admin/support?id=${t.id}`, icon: AlertTriangle }));
+      const courses: Cmd[] = MOCK_COURSES.map((c) => ({ id: `c-${c.id}`, label: c.title, hint: `${c.lessonsCount} bài giảng`, group: 'Khoá học', to: '/admin/courses', icon: PlayCircle }));
+      return [...ADMIN, ...users, ...classes, ...tickets, ...courses];
+    }
     const nav = role === 'STUDENT' ? STUDENT : GUEST;
     const isAuth = role !== 'GUEST';
     const tests: Cmd[] = MOCK_TESTS.map((t) => ({ id: `t-${t.id}`, label: t.title, hint: `${t.examType} · ${t.durationMinutes} phút · ${t.totalQuestions} câu`, group: 'Đề thi thử', to: isAuth ? `/app/mock-tests/${t.id}` : '/mock-tests', icon: FileText, keywords: t.tags?.join(' ') }));

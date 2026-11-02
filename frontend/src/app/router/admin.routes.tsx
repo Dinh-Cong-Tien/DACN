@@ -14,6 +14,11 @@ import { AdminSystemPage } from '@/roles/admin/pages/AdminSystemPage';
 import { AdminAuditLogsPage } from '@/roles/admin/pages/AdminAuditLogsPage';
 import { NotificationsPage } from '@/roles/common/NotificationsPage';
 import { AdminSettingsPage } from '@/roles/admin/pages/AdminSettingsPage';
+import { AdminLearningPage } from '@/roles/admin/pages/AdminLearningPage';
+import { AdminClassesPage } from '@/roles/admin/pages/AdminClassesPage';
+import { AdminSupportPage } from '@/roles/admin/pages/AdminSupportPage';
+import { AdminBillingPage } from '@/roles/admin/pages/AdminBillingPage';
+import { AdminBroadcastsPage } from '@/roles/admin/pages/AdminBroadcastsPage';
 
 export const adminRoutes: RouteObject[] = [
   {
@@ -39,6 +44,12 @@ export const adminRoutes: RouteObject[] = [
               { path: 'audit-logs', element: <AdminAuditLogsPage /> },
               { path: 'settings', element: <AdminSettingsPage /> },
               { path: 'notifications', element: <NotificationsPage /> },
+              { path: 'learning', element: <AdminLearningPage /> },
+              { path: 'learning/:kind', element: <AdminLearningPage /> },
+              { path: 'classes', element: <AdminClassesPage /> },
+              { path: 'support', element: <AdminSupportPage /> },
+              { path: 'billing', element: <AdminBillingPage /> },
+              { path: 'broadcasts', element: <AdminBroadcastsPage /> },
             ],
           },
         ],

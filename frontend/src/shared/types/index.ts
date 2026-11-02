@@ -476,6 +476,48 @@ export interface ClassReport {
   trend: number;
 }
 
+/** Kiểm định chấm bài: trưởng bộ môn chấm lại bài Viết/Nói giáo viên đã chấm, cùng bộ tiêu chí */
+export interface GradingReview {
+  id: string;
+  classId: string;
+  className: string;
+  teacher: string;
+  studentName: string;
+  avatarUrl?: string;
+  type: 'ESSAY' | 'SPEAKING';
+  /** id đề trong VSTEP_WRITING_TASKS / VSTEP_SPEAKING_PARTS */
+  taskId: string;
+  content: string;
+  gradedAt: string;
+  /** Điểm theo tiêu chí (thang 10) giáo viên đã chấm, key = RubricCriterion.key */
+  teacherCriteria: Record<string, number>;
+  teacherFeedback: string;
+  status: 'PENDING' | 'AGREED' | 'ADJUSTED';
+  headCriteria?: Record<string, number>;
+  headNote?: string;
+}
+
+/** Buổi dự giờ của trưởng bộ môn */
+export interface ClassObservation {
+  id: string;
+  classId: string;
+  teacher: string;
+  date: string;
+  start: string;
+  topic: string;
+  status: 'PLANNED' | 'DONE';
+  /** 1–5 */
+  rating?: number;
+  strengths?: string;
+  improvements?: string;
+}
+
+/** Học viên trong phạm vi bộ môn (gắn với lớp đang học) */
+export interface DeptStudent extends ClassStudent {
+  classId: string;
+  attendance: number;
+}
+
 // ---------- ADMIN ----------
 export interface AuditLog {
   id: string;
@@ -675,4 +717,49 @@ export interface SupportInfo {
   /** Giờ trực, dạng [giờ mở, giờ đóng] theo giờ VN */
   hours: [number, number];
   quickTopics: { label: string; message: string }[];
+}
+
+// ---------- ADMIN: vận hành ----------
+export type TicketStatus = 'OPEN' | 'PENDING' | 'RESOLVED';
+/** Yêu cầu hỗ trợ: học viên gửi qua khung chat hỗ trợ, email hoặc hotline */
+export interface SupportTicket {
+  id: string;
+  userName: string;
+  email: string;
+  avatarUrl?: string;
+  plan: PlanType;
+  channel: 'CHAT' | 'EMAIL' | 'PHONE';
+  category: 'ACCOUNT' | 'PAYMENT' | 'EXAM' | 'CONTENT' | 'OTHER';
+  subject: string;
+  status: TicketStatus;
+  priority: 'LOW' | 'NORMAL' | 'HIGH';
+  createdAt: string;
+  assignee?: string;
+  messages: { from: 'USER' | 'STAFF'; text: string; at: string }[];
+}
+
+/** Giao dịch mua gói VIP (khớp bảng giá học viên thấy ở /pricing) */
+export interface PaymentTxn {
+  id: string;
+  userName: string;
+  email: string;
+  planId: string;
+  amount: number;
+  method: 'MOMO' | 'VNPAY' | 'CARD' | 'BANK';
+  status: 'PAID' | 'PENDING' | 'REFUNDED' | 'FAILED';
+  createdAt: string;
+}
+
+/** Thông báo hệ thống gửi tới nhóm người dùng (hiện trong chuông thông báo và/hoặc email) */
+export interface Broadcast {
+  id: string;
+  title: string;
+  body: string;
+  audience: 'ALL' | 'STUDENT' | 'VIP' | 'TEACHER' | 'HEAD_TEACHER';
+  channels: ('IN_APP' | 'EMAIL')[];
+  status: 'SENT' | 'SCHEDULED' | 'DRAFT';
+  at: string;
+  reach: number;
+  /** % đã mở, chỉ có khi đã gửi */
+  openRate?: number;
 }

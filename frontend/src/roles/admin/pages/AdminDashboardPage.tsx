@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, ChevronRight, ShieldAlert, Info, AlertTriangle, Activity } from 'lucide-react';
-import { MOCK_USERS, MOCK_SERVICES, MOCK_AUDIT_LOGS, ADMIN_TRAFFIC, ADMIN_SIGNUPS } from '@/shared/mocks';
+import { ArrowRight, ChevronRight, ShieldAlert, Info, AlertTriangle, Activity, LifeBuoy, CreditCard, Megaphone } from 'lucide-react';
+import { MOCK_USERS, MOCK_SERVICES, MOCK_AUDIT_LOGS, ADMIN_TRAFFIC, ADMIN_SIGNUPS, MOCK_TICKETS, MOCK_PAYMENTS, MOCK_BROADCASTS } from '@/shared/mocks';
 import type { AppRole } from '@/shared/types';
 import { cn, formatDate, timeAgo, ROLE_LABEL, formatNumber } from '@/shared/utils';
 import { useDocumentTitle } from '@/shared/hooks';
@@ -70,6 +70,30 @@ export const AdminDashboardPage: React.FC = () => {
             </div>
           ))}
         </div>
+      </section>
+
+      {/* ===== Việc cần xử lý ===== */}
+      <section aria-label="Việc cần xử lý" className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        {[
+          { to: '/admin/support', icon: LifeBuoy, label: 'Yêu cầu hỗ trợ mới', value: MOCK_TICKETS.filter((t) => t.status === 'OPEN').length, note: `${MOCK_TICKETS.filter((t) => t.status === 'OPEN' && t.priority === 'HIGH').length} yêu cầu gấp từ khung chat học viên`, tone: 'from-rose-500 to-pink-500' },
+          { to: '/admin/billing', icon: CreditCard, label: 'Thanh toán chờ xác nhận', value: MOCK_PAYMENTS.filter((p) => p.status === 'PENDING').length, note: 'Chuyển khoản, cần kích hoạt VIP', tone: 'from-amber-400 to-orange-500' },
+          { to: '/admin/system', icon: Activity, label: 'Dịch vụ cần chú ý', value: MOCK_SERVICES.length - upCount, note: MOCK_SERVICES.filter((s) => s.status !== 'UP').map((s) => s.name).join(', ') || 'Tất cả hoạt động bình thường', tone: 'from-sky-500 to-cyan-500' },
+          { to: '/admin/broadcasts', icon: Megaphone, label: 'Thông báo hẹn giờ', value: MOCK_BROADCASTS.filter((b) => b.status === 'SCHEDULED').length, note: MOCK_BROADCASTS.find((b) => b.status === 'SCHEDULED')?.title ?? 'Không có', tone: 'from-violet-500 to-fuchsia-500' },
+        ].map((t) => (
+          <Link key={t.to} to={t.to} className="group flex items-start gap-3 rounded-2xl border border-slate-200/80 bg-white p-4 shadow-[0_1px_2px_rgba(16,24,40,0.04)] transition hover:-translate-y-0.5 hover:shadow-[0_10px_24px_-14px_rgba(16,24,40,0.25)]">
+            <span className={cn('flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br text-white', t.tone)}>
+              <t.icon className="h-5 w-5" />
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="flex items-center justify-between gap-2 text-[13px] text-slate-500">
+                {t.label}
+                <ChevronRight className="h-4 w-4 shrink-0 text-slate-400 transition group-hover:translate-x-0.5 group-hover:text-slate-700" />
+              </span>
+              <span className="mt-1 block font-display text-[1.65rem] font-extrabold leading-none tabular-nums text-slate-900">{t.value}</span>
+              <span className="mt-1.5 block truncate text-xs text-slate-500">{t.note}</span>
+            </span>
+          </Link>
+        ))}
       </section>
 
       {/* ===== Khối nhấn: trạng thái hệ thống + đăng ký ===== */}

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { BarChart3, Download, School, Users, TrendingUp, CheckCircle2 } from 'lucide-react';
 import { useDocumentTitle } from '@/shared/hooks';
 import { toast } from '@/shared/stores/uiStore';
@@ -19,7 +20,7 @@ const columns: Column<Row>[] = [
     header: 'Lớp',
     render: (r) => (
       <div>
-        <p className="font-bold text-slate-900">{r.className}</p>
+        <Link to={`/head/classes/${r.classId}`} className="block font-bold text-slate-900 hover:text-indigo-700">{r.className}</Link>
         <p className="text-[11px] text-slate-500">{r.teacher}</p>
       </div>
     ),

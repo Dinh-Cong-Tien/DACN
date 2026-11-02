@@ -43,6 +43,8 @@ export interface CrudEditorProps<T extends { id: string }> {
   dense?: boolean;
   selectable?: boolean;
   bulkActions?: (ids: string[], clear: () => void) => React.ReactNode;
+  /** Từ khoá tìm kiếm ban đầu (vd. từ ?q= trên URL) */
+  initialSearch?: string;
 }
 
 /**
@@ -69,9 +71,10 @@ export function CrudEditor<T extends { id: string }>({
   dense,
   selectable,
   bulkActions,
+  initialSearch = '',
 }: CrudEditorProps<T>) {
   const [rows, setRows] = useState<T[]>(initialRows);
-  const [search, setSearch] = useState('');
+  const [search, setSearch] = useState(initialSearch);
   const [filterValues, setFilterValues] = useState<Record<string, string>>({});
   const [page, setPage] = useState(1);
   const [editing, setEditing] = useState<T | null>(null);

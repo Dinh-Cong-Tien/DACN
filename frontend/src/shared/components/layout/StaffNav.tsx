@@ -13,6 +13,8 @@ export interface StaffMenuLink {
   badge?: string;
   /** Chỉ sáng khi đúng đường dẫn (không tính trang con), vd. "Tất cả lớp" */
   exact?: boolean;
+  /** Đường dẫn khác cũng thuộc mục này (vd. các tab con dùng chung một trang) */
+  also?: string[];
 }
 
 export interface StaffMenu {
@@ -24,6 +26,7 @@ export interface StaffMenu {
 
 /** Mục con đang mở: khớp đường dẫn, và khớp cả query nếu link có query */
 const isHere = (link: StaffMenuLink, pathname: string, search: string) => {
+  if (link.also?.some((p) => pathname === p || pathname.startsWith(`${p}/`))) return true;
   const [path, query] = link.to.split('?');
   if (pathname !== path && (link.exact || !pathname.startsWith(`${path}/`))) return false;
   if (!query) return !search || Boolean(link.exact);

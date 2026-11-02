@@ -1,3 +1,4 @@
+import { useSearchParams } from 'react-router-dom';
 import React from 'react';
 import { Users, Lock, Unlock, KeyRound, UserCheck, Mail } from 'lucide-react';
 import { MOCK_USERS } from '@/shared/mocks';
@@ -81,6 +82,7 @@ const fields: CrudField<AppUser>[] = [
 ];
 
 export const AdminUsersPage: React.FC = () => {
+  const [params] = useSearchParams();
   useDocumentTitle('Quản lý người dùng');
   const count = (s: AppUser['status']) => MOCK_USERS.filter((u) => u.status === s).length;
 
@@ -111,6 +113,7 @@ export const AdminUsersPage: React.FC = () => {
         createLabel="Tạo tài khoản"
         idPrefix="u"
         searchKeys={['fullName', 'email']}
+        initialSearch={params.get('q') ?? ''}
         filters={[
           {
             key: 'role',

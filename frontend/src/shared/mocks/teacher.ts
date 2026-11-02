@@ -228,18 +228,21 @@ const markFor = (st: ClassStudent, n: number): AttendanceMark => {
   return r === 0 ? 'LATE' : 'PRESENT';
 };
 
-/** Các buổi từ 19/10 đến 15/11/2026 theo lịch cố định của từng lớp; buổi trước hôm nay đã dạy và có điểm danh */
-export const MOCK_SESSIONS: ClassSession[] = (() => {
+const FALLBACK_TOPICS: Record<string, string[]> = { TOEIC: SESSION_TOPICS['cl-1'], VSTEP: SESSION_TOPICS['cl-2'] };
+
+/** Sinh các buổi từ 19/10 đến 15/11/2026 theo lịch cố định của từng lớp; buổi trước hôm nay đã dạy và có điểm danh */
+export function buildSessions(classes: ClassRoom[]): ClassSession[] {
   const out: ClassSession[] = [];
   const today = iso(new Date());
   const counter: Record<string, number> = {};
   for (let d = new Date(2026, 9, 19); d <= new Date(2026, 10, 15); d.setDate(d.getDate() + 1)) {
-    for (const c of MOCK_CLASSES) {
+    for (const c of classes) {
       const [days, time = '19:00'] = c.schedule.split('·').map((x) => x.trim());
       if (!(days.match(/T[2-7]|CN/g) ?? []).some((x) => DAY_INDEX[x] === d.getDay())) continue;
       const n = (counter[c.id] = (counter[c.id] ?? 0) + 1);
       const date = iso(d);
       const done = date < today;
+      const topics = SESSION_TOPICS[c.id] ?? FALLBACK_TOPICS[c.examType];
       out.push({
         id: `ss-${c.id}-${n}`,
         classId: c.id,
@@ -247,15 +250,17 @@ export const MOCK_SESSIONS: ClassSession[] = (() => {
         start: time,
         end: addMin(time, c.id === 'cl-3' ? 120 : 90),
         room: c.room ?? '',
-        topic: SESSION_TOPICS[c.id][(n - 1) % SESSION_TOPICS[c.id].length],
+        topic: topics[(n - 1) % topics.length],
         status: c.id === 'cl-3' && date === '2026-10-25' ? 'CANCELLED' : done ? 'DONE' : 'UPCOMING',
-        attendance: done ? Object.fromEntries(MOCK_CLASS_STUDENTS.map((st) => [st.id, markFor(st, n)])) : undefined,
+        attendance: done ? Object.fromEntries(MOCK_CLASS_STUDENTS.map((st) => [st.id, markFor(st, SESSION_TOPICS[c.id] ? n : n + Number(c.id.split('-')[1]))])) : undefined,
         note: done && n % 3 === 0 ? 'Lớp còn yếu câu hỏi suy luận, buổi sau ôn thêm 15 phút.' : undefined,
       });
     }
   }
   return out.map((s) => (s.status === 'CANCELLED' ? { ...s, attendance: undefined, note: 'Nghỉ do trùng lịch thi của trường, dạy bù 01/11.' } : s));
-})();
+}
+
+export const MOCK_SESSIONS: ClassSession[] = buildSessions(MOCK_CLASSES);
 
 export const ATTENDANCE_LABEL: Record<AttendanceMark, string> = { PRESENT: 'Có mặt', LATE: 'Đi muộn', ABSENT: 'Vắng', EXCUSED: 'Vắng có phép' };
 

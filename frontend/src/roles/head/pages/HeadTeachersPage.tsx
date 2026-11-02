@@ -1,78 +1,74 @@
 import React from 'react';
-import { Users, Lock, Unlock } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Users, Lock, Unlock, UserRound, UserCheck, Clock, Star } from 'lucide-react';
 import { useDocumentTitle } from '@/shared/hooks';
 import { toast } from '@/shared/stores/uiStore';
-import { MOCK_TEACHERS, MOCK_SUBJECTS } from '@/shared/mocks';
+import { DEPT_CLASSES, MOCK_GRADING_REVIEWS, MOCK_OBSERVATIONS, MOCK_TEACHERS, MOCK_SUBJECTS } from '@/shared/mocks';
 import type { TeacherSummary, UserStatus } from '@/shared/types';
-import { Avatar, Badge, Card, Column, PageHeader, StatCard } from '@/shared/components/ui';
+import { Avatar, Column } from '@/shared/components/ui';
 import { CrudEditor } from '@/engines';
+import { Figures, Status, TPageHead, type StatusTone } from '@/roles/teacher/components/TeacherKit';
 
-const STATUS: Record<UserStatus, { label: string; tone: 'emerald' | 'rose' | 'amber' }> = { ACTIVE: { label: 'Hoạt động', tone: 'emerald' }, LOCKED: { label: 'Đã khoá', tone: 'rose' }, PENDING: { label: 'Chờ duyệt', tone: 'amber' } };
+const STATUS: Record<UserStatus, { label: string; tone: StatusTone }> = { ACTIVE: { label: 'Đang giảng dạy', tone: 'green' }, LOCKED: { label: 'Đã khoá', tone: 'red' }, PENDING: { label: 'Chờ duyệt', tone: 'amber' } };
+
+const rating = (name: string) => {
+  const r = MOCK_OBSERVATIONS.filter((o) => o.teacher === name && o.rating);
+  return r.length ? Math.round((r.reduce((a, o) => a + (o.rating ?? 0), 0) / r.length) * 10) / 10 : null;
+};
 
 const columns: Column<TeacherSummary>[] = [
   {
     key: 'name',
     header: 'Giáo viên',
     render: (r) => (
-      <div className="flex items-center gap-3">
-        <Avatar name={r.name} src={r.avatarUrl} size="md" ring />
+      <Link to={`/head/teachers/${r.id}`} className="group flex items-center gap-3">
+        <Avatar name={r.name} src={r.avatarUrl} size="md" status={r.status === 'ACTIVE' ? 'online' : 'offline'} />
         <div>
-          <p className="font-bold text-slate-900">{r.name}</p>
-          <p className="text-[11px] text-slate-500">{r.email}</p>
+          <p className="font-semibold text-slate-900 group-hover:text-indigo-700">{r.name}</p>
+          <p className="text-[12px] text-slate-500">{r.email}</p>
         </div>
-      </div>
+      </Link>
     ),
   },
-  { key: 'subject', header: 'Môn phụ trách', render: (r) => <span className="text-xs font-bold">{r.subject}</span> },
-  { key: 'classesCount', header: 'Lớp', align: 'center' },
-  { key: 'studentsCount', header: 'Học viên', align: 'center' },
-  { key: 'avgClassScore', header: 'Điểm TB lớp', align: 'center', render: (r) => <span className="font-display font-extrabold">{r.avgClassScore}</span> },
+  { key: 'subject', header: 'Môn phụ trách', render: (r) => <span className="text-[13px] text-slate-700">{r.subject}</span> },
+  { key: 'classesCount', header: 'Lớp', align: 'center', render: (r) => <span className="tabular-nums">{DEPT_CLASSES.filter((c) => c.teacherName === r.name).length}</span> },
+  { key: 'studentsCount', header: 'Học viên', align: 'center', render: (r) => <span className="tabular-nums">{DEPT_CLASSES.filter((c) => c.teacherName === r.name).reduce((a, c) => a + c.studentsCount, 0)}</span> },
+  { key: 'avgClassScore', header: 'Điểm TB lớp', align: 'center', render: (r) => <span className="font-display font-bold tabular-nums">{r.avgClassScore || '—'}</span> },
   {
-    key: 'status',
-    header: 'Trạng thái',
-    render: (r) => (
-      <Badge tone={STATUS[r.status].tone} dot>
-        {STATUS[r.status].label}
-      </Badge>
-    ),
+    key: 'id',
+    header: 'Dự giờ',
+    align: 'center',
+    render: (r) => {
+      const v = rating(r.name);
+      return v ? (
+        <span className="inline-flex items-center gap-1 tabular-nums">
+          <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" /> {v}
+        </span>
+      ) : (
+        <span className="text-slate-400">—</span>
+      );
+    },
   },
+  { key: 'status', header: 'Trạng thái', render: (r) => <Status tone={STATUS[r.status].tone}>{STATUS[r.status].label}</Status> },
 ];
 
 export const HeadTeachersPage: React.FC = () => {
   useDocumentTitle('Giáo viên bộ môn');
-  const active = MOCK_TEACHERS.filter((t) => t.status === 'ACTIVE');
+  const navigate = useNavigate();
+  const pendingReview = MOCK_GRADING_REVIEWS.filter((r) => r.status === 'PENDING').length;
   return (
     <div className="space-y-6">
-      <PageHeader
-        title={
-          <>
-            Giáo viên <span className="mark">bộ môn</span>
-          </>
-        }
-        description="Danh sách giáo viên, môn phụ trách và trạng thái tài khoản."
-        icon={<Users />}
+      <TPageHead eyebrow="Bộ môn" title="Giáo viên bộ môn" sub="Đội ngũ giáo viên, lớp phụ trách, kết quả dự giờ và trạng thái tài khoản. Bấm vào tên để xem hồ sơ chuyên môn." />
+
+      <Figures
+        items={[
+          { label: 'Tổng giáo viên', value: MOCK_TEACHERS.length, icon: Users, tone: 'indigo' },
+          { label: 'Đang giảng dạy', value: MOCK_TEACHERS.filter((t) => t.status === 'ACTIVE').length, icon: UserCheck, tone: 'emerald' },
+          { label: 'Chờ duyệt hồ sơ', value: MOCK_TEACHERS.filter((t) => t.status === 'PENDING').length, icon: Clock, tone: 'amber' },
+          { label: 'Bài chờ kiểm định', value: pendingReview, note: 'bài Viết/Nói GV đã chấm', icon: Star, tone: 'rose' },
+        ]}
       />
 
-      {/* Đội ngũ nổi bật: ảnh thật */}
-      <Card hard tone="cream" padding="sm" className="flex items-center gap-3 overflow-x-auto no-scrollbar animate-fade-up">
-        {MOCK_TEACHERS.map((t, i) => (
-          <div key={t.id} className="flex items-center gap-2.5 px-3 py-2 rounded-xl bg-white border-2 border-slate-900 shadow-hard-sm shrink-0 animate-fade-up" style={{ animationDelay: `${i * 50}ms` }}>
-            <Avatar name={t.name} src={t.avatarUrl} size="sm" ring status={t.status === 'ACTIVE' ? 'online' : 'offline'} />
-            <div className="leading-tight">
-              <p className="text-xs font-bold text-slate-900 whitespace-nowrap">{t.name}</p>
-              <p className="text-[10px] text-slate-500 whitespace-nowrap">
-                {t.classesCount} lớp · {t.studentsCount} HV
-              </p>
-            </div>
-          </div>
-        ))}
-      </Card>
-
-      <div className="grid grid-cols-3 gap-4">
-        <StatCard label="Tổng giáo viên" value={MOCK_TEACHERS.length} tone="amber" />
-        <StatCard label="Đang hoạt động" value={active.length} tone="emerald" />
-        <StatCard label="Chờ duyệt" value={MOCK_TEACHERS.filter((t) => t.status === 'PENDING').length} tone="indigo" />
-      </div>
       <CrudEditor<TeacherSummary>
         rows={MOCK_TEACHERS}
         columns={columns}
@@ -80,7 +76,10 @@ export const HeadTeachersPage: React.FC = () => {
         createLabel="Thêm giáo viên"
         idPrefix="t"
         searchKeys={['name', 'email', 'subject']}
-        filters={[{ key: 'status', label: 'Trạng thái', options: Object.entries(STATUS).map(([v, s]) => ({ value: v, label: s.label })) }]}
+        filters={[
+          { key: 'status', label: 'Trạng thái', options: Object.entries(STATUS).map(([v, s]) => ({ value: v, label: s.label })) },
+          { key: 'subject', label: 'Môn', options: MOCK_SUBJECTS.map((s) => ({ value: s.name, label: s.name })) },
+        ]}
         defaultValues={{ initials: 'GV', classesCount: 0, studentsCount: 0, avgClassScore: 0, status: 'PENDING', subject: MOCK_SUBJECTS[0].name }}
         fields={[
           { key: 'name', label: 'Họ và tên', type: 'text', required: true },
@@ -89,9 +88,10 @@ export const HeadTeachersPage: React.FC = () => {
           { key: 'status', label: 'Trạng thái', type: 'select', options: Object.entries(STATUS).map(([v, s]) => ({ value: v, label: s.label })) },
         ]}
         rowActions={(row) => [
+          { label: 'Xem hồ sơ chuyên môn', icon: <UserRound />, onClick: () => navigate(`/head/teachers/${row.id}`) },
           row.status === 'LOCKED'
             ? { label: 'Mở khoá tài khoản', icon: <Unlock />, onClick: () => toast.success('Đã mở khoá', row.name) }
-            : { label: 'Khoá tài khoản', icon: <Lock />, onClick: () => toast.warning('Đã khoá tài khoản', row.name) },
+            : { label: 'Khoá tài khoản', icon: <Lock />, onClick: () => toast.warning('Đã khoá tài khoản', `${row.name} · các lớp đang phụ trách cần phân công lại`) },
         ]}
       />
     </div>

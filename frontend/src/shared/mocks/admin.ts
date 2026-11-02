@@ -1,5 +1,5 @@
 import { PHOTOS, pravatar, unsplash } from '@/shared/components/media/Img';
-import type { AppNotification, AppUser, AuditLog, CourseTreeNode, ServiceStatus, SkillTag, SystemSetting } from '@/shared/types';
+import type { AppNotification, AppUser, AuditLog, Broadcast, CourseTreeNode, PaymentTxn, ServiceStatus, SkillTag, SupportTicket, SystemSetting } from '@/shared/types';
 
 const u = (id: string, fullName: string, email: string, role: AppUser['role'], status: AppUser['status'], plan: AppUser['plan'], joinedAt: string, lastActiveAt: string, streak = 0, effortPoints = 0): AppUser => ({
   id,
@@ -125,8 +125,86 @@ export const ADMIN_TRAFFIC = [
 export const ADMIN_SIGNUPS = [42, 58, 51, 77, 69, 95, 88, 102, 97, 120, 131, 128];
 
 export const ADMIN_NOTIFICATIONS: AppNotification[] = [
+  { id: 'an-0', title: 'Yêu cầu hỗ trợ gấp: chưa lên VIP', message: 'Nguyễn Minh Anh đã chuyển khoản gói VIP TOEIC nhưng tài khoản vẫn là Free.', type: 'SYSTEM', isRead: false, createdAt: '2026-11-02T08:12:00.000Z', link: '/admin/support' },
+  { id: 'an-5', title: '1 giao dịch chờ xác nhận', message: 'PAY-30418 · chuyển khoản 199.000đ gói VIP TOEIC.', type: 'SYSTEM', isRead: false, createdAt: '2026-11-02T07:56:00.000Z', link: '/admin/billing' },
   { id: 'an-1', title: 'Dịch vụ chấm Speaking phản hồi chậm', message: 'Thời gian xử lý trung bình 4,2 giây, vượt ngưỡng 3 giây.', type: 'SYSTEM', isRead: false, createdAt: '2026-11-02T07:15:00.000Z', link: '/admin/system' },
   { id: 'an-2', title: '28 tài khoản mới hôm qua', message: 'Tăng 18% so với trung bình tuần, 6 tài khoản nâng cấp VIP.', type: 'SYSTEM', isRead: false, createdAt: '2026-11-02T00:05:00.000Z', link: '/admin/analytics' },
   { id: 'an-3', title: 'Đăng nhập bất thường', message: '5 lần đăng nhập sai liên tiếp vào tài khoản head@orbi.edu.vn.', type: 'SYSTEM', isRead: false, createdAt: '2026-11-01T22:40:00.000Z', link: '/admin/audit-logs' },
   { id: 'an-4', title: 'Sao lưu dữ liệu hoàn tất', message: 'Bản sao lưu 01/11 lúc 03:00, dung lượng 2,4 GB.', type: 'SYSTEM', isRead: true, createdAt: '2026-11-01T03:10:00.000Z' },
+];
+
+// ---------- Vận hành: hỗ trợ học viên, thanh toán gói VIP, thông báo hệ thống ----------
+
+/** Yêu cầu hỗ trợ từ khung chat hỗ trợ (học viên), email và hotline */
+export const MOCK_TICKETS: SupportTicket[] = [
+  {
+    id: 'tk-1042', userName: 'Nguyễn Minh Anh', email: 'student@orbi.edu.vn', avatarUrl: pravatar(11), plan: 'FREE', channel: 'CHAT', category: 'PAYMENT', subject: 'Đã chuyển khoản nhưng chưa lên VIP', status: 'OPEN', priority: 'HIGH', createdAt: '2026-11-02T08:12:00.000Z',
+    messages: [
+      { from: 'USER', text: 'Em chuyển khoản gói VIP TOEIC 199.000đ lúc 7h55 sáng nay mà tài khoản vẫn là Free ạ.', at: '2026-11-02T08:12:00.000Z' },
+      { from: 'USER', text: 'Nội dung chuyển khoản: ORBI student@orbi.edu.vn', at: '2026-11-02T08:13:00.000Z' },
+    ],
+  },
+  {
+    id: 'tk-1041', userName: 'Vũ Đức Thành', email: 'ducthanh@gmail.com', avatarUrl: pravatar(17), plan: 'FREE', channel: 'CHAT', category: 'EXAM', subject: 'Bài thi thử bị thoát giữa chừng', status: 'OPEN', priority: 'NORMAL', createdAt: '2026-11-01T21:40:00.000Z',
+    messages: [{ from: 'USER', text: 'Em đang làm ETS 2024 Test 3 tới câu 120 thì trình duyệt bị tắt, vào lại thì mất bài. Có khôi phục được không ạ?', at: '2026-11-01T21:40:00.000Z' }],
+  },
+  {
+    id: 'tk-1039', userName: 'Lý Bảo Ngọc', email: 'baongoc@gmail.com', avatarUrl: pravatar(23), plan: 'FREE', channel: 'EMAIL', category: 'ACCOUNT', subject: 'Không nhận được email đặt lại mật khẩu', status: 'PENDING', priority: 'NORMAL', createdAt: '2026-11-01T10:05:00.000Z', assignee: 'Phạm Quản Trị',
+    messages: [
+      { from: 'USER', text: 'Em bấm quên mật khẩu 3 lần mà không thấy email nào, đã kiểm tra cả thư rác.', at: '2026-11-01T10:05:00.000Z' },
+      { from: 'STAFF', text: 'Chào bạn, bên mình thấy email bị máy chủ Gmail trả về do hộp thư đầy. Bạn dọn bớt hộp thư rồi thử lại giúp mình nhé.', at: '2026-11-01T11:20:00.000Z' },
+    ],
+  },
+  {
+    id: 'tk-1036', userName: 'Hoàng Minh Quân', email: 'minhquan@gmail.com', avatarUrl: pravatar(24), plan: 'VIP', channel: 'CHAT', category: 'CONTENT', subject: 'Audio Part 3 đề Mini Listening bị lỗi', status: 'PENDING', priority: 'LOW', createdAt: '2026-10-31T19:30:00.000Z', assignee: 'Phạm Quản Trị',
+    messages: [
+      { from: 'USER', text: 'Audio câu 41–43 dừng ở giây thứ 12.', at: '2026-10-31T19:30:00.000Z' },
+      { from: 'STAFF', text: 'Cảm ơn bạn, mình đã chuyển cho tổ TOEIC kiểm tra lại file audio.', at: '2026-10-31T20:02:00.000Z' },
+    ],
+  },
+  {
+    id: 'tk-1031', userName: 'Đỗ Thị Mai', email: 'thimai@gmail.com', avatarUrl: pravatar(16), plan: 'VIP', channel: 'PHONE', category: 'PAYMENT', subject: 'Xin xuất hoá đơn VAT gói VSTEP Master', status: 'RESOLVED', priority: 'NORMAL', createdAt: '2026-10-29T09:00:00.000Z', assignee: 'Phạm Quản Trị',
+    messages: [
+      { from: 'USER', text: 'Gọi hotline xin hoá đơn VAT cho công ty, mã số thuế 0401234567.', at: '2026-10-29T09:00:00.000Z' },
+      { from: 'STAFF', text: 'Đã gửi hoá đơn điện tử qua email thimai@gmail.com.', at: '2026-10-29T15:30:00.000Z' },
+    ],
+  },
+  {
+    id: 'tk-1028', userName: 'Trần Gia Huy', email: 'giahuy@gmail.com', avatarUrl: pravatar(22), plan: 'FREE', channel: 'CHAT', category: 'OTHER', subject: 'Muốn đổi mục tiêu từ TOEIC sang VSTEP', status: 'RESOLVED', priority: 'LOW', createdAt: '2026-10-27T20:10:00.000Z', assignee: 'Phạm Quản Trị',
+    messages: [
+      { from: 'USER', text: 'Làm sao để đổi lộ trình sang VSTEP B2 ạ?', at: '2026-10-27T20:10:00.000Z' },
+      { from: 'STAFF', text: 'Bạn vào Cài đặt → Mục tiêu học tập → chọn VSTEP và mức B2, lộ trình sẽ tạo lại sau khi làm bài kiểm tra đầu vào nhé.', at: '2026-10-27T20:25:00.000Z' },
+    ],
+  },
+];
+
+/** Giao dịch mua gói (planId khớp PRICING_PLANS) */
+export const MOCK_PAYMENTS: PaymentTxn[] = [
+  { id: 'PAY-30418', userName: 'Nguyễn Minh Anh', email: 'student@orbi.edu.vn', planId: 'vip-toeic', amount: 199000, method: 'BANK', status: 'PENDING', createdAt: '2026-11-02T07:55:00.000Z' },
+  { id: 'PAY-30417', userName: 'Mai Quốc Việt', email: 'quocviet@gmail.com', planId: 'vstep-master', amount: 499000, method: 'MOMO', status: 'PAID', createdAt: '2026-11-01T22:14:00.000Z' },
+  { id: 'PAY-30416', userName: 'Hoàng Minh Quân', email: 'minhquan@gmail.com', planId: 'vip-toeic', amount: 199000, method: 'VNPAY', status: 'PAID', createdAt: '2026-11-01T20:03:00.000Z' },
+  { id: 'PAY-30415', userName: 'Cao Thị Hồng', email: 'thihong@gmail.com', planId: 'vip-toeic', amount: 199000, method: 'CARD', status: 'FAILED', createdAt: '2026-11-01T18:40:00.000Z' },
+  { id: 'PAY-30414', userName: 'Đỗ Thị Mai', email: 'thimai@gmail.com', planId: 'vstep-master', amount: 499000, method: 'VNPAY', status: 'PAID', createdAt: '2026-10-31T09:12:00.000Z' },
+  { id: 'PAY-30413', userName: 'Phạm Hoàng Long', email: 'hoanglong@gmail.com', planId: 'vip-toeic', amount: 199000, method: 'MOMO', status: 'PAID', createdAt: '2026-10-30T21:30:00.000Z' },
+  { id: 'PAY-30412', userName: 'Lâm Tường Vi', email: 'tuongvi@gmail.com', planId: 'vip-toeic', amount: 199000, method: 'MOMO', status: 'REFUNDED', createdAt: '2026-10-29T13:00:00.000Z' },
+  { id: 'PAY-30411', userName: 'Triệu Hải Đăng', email: 'haidang@gmail.com', planId: 'vstep-master', amount: 499000, method: 'BANK', status: 'PAID', createdAt: '2026-10-28T10:45:00.000Z' },
+  { id: 'PAY-30410', userName: 'Kiều Anh Tuấn', email: 'anhtuan@gmail.com', planId: 'vip-toeic', amount: 199000, method: 'CARD', status: 'PAID', createdAt: '2026-10-27T16:20:00.000Z' },
+  { id: 'PAY-30409', userName: 'Giang Thu Trang', email: 'thutrang@gmail.com', planId: 'vip-toeic', amount: 199000, method: 'VNPAY', status: 'PAID', createdAt: '2026-10-26T08:05:00.000Z' },
+];
+
+/** Doanh thu theo tháng (triệu đồng) và số gói bán ra */
+export const REVENUE_MONTHLY = {
+  labels: ['Th5', 'Th6', 'Th7', 'Th8', 'Th9', 'Th10'],
+  revenue: [18.6, 22.4, 31.9, 27.5, 35.2, 41.8],
+  vipToeic: [62, 74, 103, 88, 112, 131],
+  vstepMaster: [12, 15, 23, 20, 26, 31],
+};
+
+/** Thông báo hệ thống đã gửi / hẹn giờ / nháp */
+export const MOCK_BROADCASTS: Broadcast[] = [
+  { id: 'bc-12', title: 'Bảo trì hệ thống 02:00–04:00 ngày 09/11', body: 'Hệ thống tạm dừng để nâng cấp máy chủ chấm điểm. Bài làm dở sẽ được lưu tự động.', audience: 'ALL', channels: ['IN_APP', 'EMAIL'], status: 'SCHEDULED', at: '2026-11-07T09:00:00.000Z', reach: 1380 },
+  { id: 'bc-11', title: 'Ra mắt 4 khoá kỹ năng mới', body: 'Giao tiếp, Nghe hiểu, Viết học thuật và Tiếng Anh văn phòng đã có trong mục Khoá học.', audience: 'STUDENT', channels: ['IN_APP'], status: 'SENT', at: '2026-10-30T08:00:00.000Z', reach: 1204, openRate: 63 },
+  { id: 'bc-10', title: 'Đề thi thử ETS 2025 Test 2 đã cập nhật', body: 'Thành viên VIP làm full đề và xem giải thích chi tiết ngay hôm nay.', audience: 'VIP', channels: ['IN_APP', 'EMAIL'], status: 'SENT', at: '2026-10-25T19:00:00.000Z', reach: 286, openRate: 71 },
+  { id: 'bc-9', title: 'Hạn nộp báo cáo lớp tháng 10', body: 'Giáo viên hoàn tất điểm danh và chấm bài tháng 10 trước 23:59 ngày 31/10.', audience: 'TEACHER', channels: ['IN_APP', 'EMAIL'], status: 'SENT', at: '2026-10-24T08:00:00.000Z', reach: 6, openRate: 100 },
+  { id: 'bc-8', title: 'Ưu đãi 20% gói VSTEP Master', body: 'Nháp: chờ phòng kinh doanh xác nhận thời gian áp dụng.', audience: 'STUDENT', channels: ['EMAIL'], status: 'DRAFT', at: '2026-10-22T10:00:00.000Z', reach: 0 },
 ];

@@ -54,22 +54,33 @@ const PreviewLink: React.FC<{ href: string }> = ({ href }) => (
   </a>
 );
 
-type Assign = (t: AssignmentTarget) => void;
+/** undefined = chế độ xem/thẩm định (trưởng bộ môn): ẩn mọi nút giao bài */
+type Assign = ((t: AssignmentTarget) => void) | undefined;
 
 /** Kho học liệu của giáo viên: cùng nội dung học viên đang dùng, mỗi mục có "Xem như học viên" và "Giao bài" */
-export const TeacherLibraryPage: React.FC = () => {
+export interface LibraryPageProps {
+  /** Đường dẫn gốc của kho, vd. /teacher/library, /head/library */
+  base?: string;
+  /** false: chế độ thẩm định (trưởng bộ môn), chỉ xem như học viên, không giao bài */
+  canAssign?: boolean;
+  /** Ghi đè tiêu đề / mô tả từng mục */
+  copy?: Partial<Record<Kind, { title: string; sub: string }>>;
+  eyebrow?: string;
+}
+
+export const TeacherLibraryPage: React.FC<LibraryPageProps> = ({ base = '/teacher/library', canAssign = true, copy: copyOverride, eyebrow = 'Học liệu' }) => {
   const { kind = 'courses' } = useParams();
-  const copy = COPY[kind as Kind];
+  const copy = copyOverride?.[kind as Kind] ?? COPY[kind as Kind];
   useDocumentTitle(copy?.title ?? 'Học liệu');
   const navigate = useNavigate();
-  if (LEGACY[kind]) return <Navigate to={LEGACY[kind]} replace />;
-  if (!copy) return <Navigate to="/teacher/library/courses" replace />;
+  if (LEGACY[kind]) return <Navigate to={LEGACY[kind].replace('/teacher/library', base)} replace />;
+  if (!copy) return <Navigate to={`${base}/courses`} replace />;
 
-  const assign: Assign = (target) => navigate('/teacher/assignments', { state: { assign: target } });
+  const assign: Assign = canAssign ? (target) => navigate('/teacher/assignments', { state: { assign: target } }) : undefined;
 
   return (
     <div className="space-y-6">
-      <TPageHead crumbs={[{ label: 'Học liệu' }, { label: copy.title }]} title={copy.title} sub={copy.sub} />
+      <TPageHead crumbs={[{ label: eyebrow }, { label: copy.title }]} title={copy.title} sub={copy.sub} />
       {kind === 'courses' && <CoursesView assign={assign} />}
       {kind === 'tests' && <TestsView assign={assign} />}
       {kind === 'practice' && <PracticeView assign={assign} />}
@@ -127,9 +138,11 @@ const PracticeView: React.FC<{ assign: Assign }> = ({ assign }) => {
                     <td className={cn(tbl.td, 'text-right tabular-nums text-slate-600')}>{usedCount((t) => t.kind === 'GRAMMAR' && t.slug === g.slug)} lần</td>
                     <td className={cn(tbl.td, 'whitespace-nowrap text-right')}>
                       <PreviewLink href={`/app/grammar/${g.slug}`} />
-                      <TBtn size="sm" onClick={() => assign({ kind: 'GRAMMAR', slug: g.slug })}>
-                        Giao bài
-                      </TBtn>
+                      {assign && (
+                        <TBtn size="sm" onClick={() => assign({ kind: 'GRAMMAR', slug: g.slug })}>
+                          Giao bài
+                        </TBtn>
+                      )}
                     </td>
                   </tr>
                 ))}
@@ -159,9 +172,11 @@ const PracticeView: React.FC<{ assign: Assign }> = ({ assign }) => {
                     <td className={cn(tbl.td, 'text-right tabular-nums text-slate-600')}>{usedCount((t) => t.kind === 'VOCAB' && t.topicId === v.id)} lần</td>
                     <td className={cn(tbl.td, 'whitespace-nowrap text-right')}>
                       <PreviewLink href={`/app/vocabulary/flashcards/${v.id}`} />
-                      <TBtn size="sm" onClick={() => assign({ kind: 'VOCAB', topicId: v.id })}>
-                        Giao bài
-                      </TBtn>
+                      {assign && (
+                        <TBtn size="sm" onClick={() => assign({ kind: 'VOCAB', topicId: v.id })}>
+                          Giao bài
+                        </TBtn>
+                      )}
                     </td>
                   </tr>
                 ))}
@@ -193,9 +208,11 @@ const EssayList: React.FC<{ kind: 'writing' | 'speaking'; assign: Assign }> = ({
             </div>
             <div className="flex shrink-0 items-center gap-1">
               <PreviewLink href={r.href} />
-              <TBtn size="sm" onClick={() => assign(r.target)}>
-                Giao bài
-              </TBtn>
+              {assign && (
+                <TBtn size="sm" onClick={() => assign(r.target)}>
+                  Giao bài
+                </TBtn>
+              )}
             </div>
           </li>
         ))}
@@ -204,7 +221,7 @@ const EssayList: React.FC<{ kind: 'writing' | 'speaking'; assign: Assign }> = ({
   );
 };
 
-const CoursesView: React.FC<{ assign: (t: AssignmentTarget) => void }> = ({ assign }) => {
+const CoursesView: React.FC<{ assign: Assign }> = ({ assign }) => {
   const me = useAuthStore((s) => s.user?.fullName);
   const [params] = useSearchParams();
   const [openId, setOpenId] = useState<string | null>(params.get('open'));
@@ -259,10 +276,12 @@ const CoursesView: React.FC<{ assign: (t: AssignmentTarget) => void }> = ({ assi
                     <tr>
                       <td colSpan={7} className="border-b border-slate-200 bg-slate-50/60 px-4 pb-4 pt-1">
                         <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
-                          <p className="text-[13px] text-slate-500">Tích chọn bài rồi giao cho lớp. Học viên thấy bài trong mục Lớp của tôi.</p>
-                          <TBtn size="sm" variant="primary" disabled={!picked.length} onClick={() => assign({ kind: 'LESSON', courseId: c.id, lessonIds: lessons.filter((l) => picked.includes(l.id)).map((l) => l.id) })}>
-                            Giao {picked.length || ''} bài đã chọn
-                          </TBtn>
+                          <p className="text-[13px] text-slate-500">{assign ? 'Tích chọn bài rồi giao cho lớp. Học viên thấy bài trong mục Lớp của tôi.' : `${lessons.length} bài giảng theo đúng thứ tự học viên học.`}</p>
+                          {assign && (
+                            <TBtn size="sm" variant="primary" disabled={!picked.length} onClick={() => assign({ kind: 'LESSON', courseId: c.id, lessonIds: lessons.filter((l) => picked.includes(l.id)).map((l) => l.id) })}>
+                              Giao {picked.length || ''} bài đã chọn
+                            </TBtn>
+                          )}
                         </div>
                         <div className="overflow-hidden rounded-md border border-slate-200 bg-white">
                           {c.sections.map((sec) => (
@@ -276,7 +295,7 @@ const CoursesView: React.FC<{ assign: (t: AssignmentTarget) => void }> = ({ assi
                                 const on = picked.includes(l.id);
                                 return (
                                   <label key={l.id} className="flex cursor-pointer items-center gap-3 border-b border-slate-100 px-3 py-1.5 text-sm last:border-0 hover:bg-slate-50">
-                                    <input type="checkbox" checked={on} onChange={() => setPicked((p) => (on ? p.filter((x) => x !== l.id) : [...p, l.id]))} className="h-4 w-4 rounded border-slate-300 accent-indigo-600" />
+                                    {assign && <input type="checkbox" checked={on} onChange={() => setPicked((p) => (on ? p.filter((x) => x !== l.id) : [...p, l.id]))} className="h-4 w-4 rounded border-slate-300 accent-indigo-600" />}
                                     <span className="w-12 shrink-0 tabular-nums text-[12px] text-slate-400">Bài {n}</span>
                                     <span className="min-w-0 flex-1 truncate text-slate-800">{l.title}</span>
                                     <span className="hidden w-20 text-[12px] text-slate-500 sm:block">{LESSON_TYPE[l.type]}</span>
@@ -300,7 +319,7 @@ const CoursesView: React.FC<{ assign: (t: AssignmentTarget) => void }> = ({ assi
   );
 };
 
-const TestsView: React.FC<{ assign: (t: AssignmentTarget) => void }> = ({ assign }) => {
+const TestsView: React.FC<{ assign: Assign }> = ({ assign }) => {
   const [params, setParams] = useSearchParams();
   const raw = params.get('tab') ?? params.get('exam');
   const tab = raw === 'VSTEP' || raw === 'writing' || raw === 'speaking' ? raw : 'TOEIC';
@@ -361,9 +380,11 @@ const TestsView: React.FC<{ assign: (t: AssignmentTarget) => void }> = ({ assign
                   <td className={cn(tbl.td, 'text-right tabular-nums text-slate-600')}>{t.attempts.toLocaleString('vi-VN')}</td>
                   <td className={cn(tbl.td, 'whitespace-nowrap text-right')}>
                     <PreviewLink href={`/app/mock-tests/${t.id}`} />
-                    <TBtn size="sm" onClick={() => assign({ kind: 'EXAM', testId: t.id, setup: { mode: 'FULL', parts: t.partIds, minutes: t.durationMinutes } })}>
-                      Giao bài
-                    </TBtn>
+                    {assign && (
+                      <TBtn size="sm" onClick={() => assign({ kind: 'EXAM', testId: t.id, setup: { mode: 'FULL', parts: t.partIds, minutes: t.durationMinutes } })}>
+                        Giao bài
+                      </TBtn>
+                    )}
                   </td>
                 </tr>
               ))}
