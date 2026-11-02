@@ -1,18 +1,25 @@
 import { useSearchParams } from 'react-router-dom';
 import React from 'react';
-import { Users, Lock, Unlock, KeyRound, UserCheck, Mail } from 'lucide-react';
+import { Users, Lock, Unlock, KeyRound, UserCheck, Mail, UserPlus, Crown } from 'lucide-react';
 import { MOCK_USERS } from '@/shared/mocks';
 import type { AppRole, AppUser } from '@/shared/types';
 import { formatDate, timeAgo, ROLE_LABEL } from '@/shared/utils';
 import { useDocumentTitle } from '@/shared/hooks';
-import { Avatar, Badge, Button, Column, PageHeader, StatCard, Tone } from '@/shared/components/ui';
+import { Avatar, Button, Column } from '@/shared/components/ui';
+import { Figures, Status, TBtn, TPageHead, type StatusTone } from '@/roles/teacher/components/TeacherKit';
 import { CrudEditor, CrudField } from '@/engines';
 import { toast } from '@/shared/stores/uiStore';
 
-const ROLE_TONE: Record<AppRole, Tone> = { GUEST: 'slate', STUDENT: 'indigo', TEACHER: 'emerald', HEAD_TEACHER: 'amber', ADMIN: 'violet' };
-const STATUS_META: Record<AppUser['status'], { tone: Tone; label: string }> = {
-  ACTIVE: { tone: 'emerald', label: 'Hoạt động' },
-  LOCKED: { tone: 'rose', label: 'Đã khoá' },
+const ROLE_CHIP: Record<AppRole, string> = {
+  GUEST: 'bg-slate-100 text-slate-600 ring-slate-200',
+  STUDENT: 'bg-indigo-50 text-indigo-700 ring-indigo-200/70',
+  TEACHER: 'bg-emerald-50 text-emerald-700 ring-emerald-200/70',
+  HEAD_TEACHER: 'bg-amber-50 text-amber-800 ring-amber-200/70',
+  ADMIN: 'bg-violet-50 text-violet-700 ring-violet-200/70',
+};
+const STATUS_META: Record<AppUser['status'], { tone: StatusTone; label: string }> = {
+  ACTIVE: { tone: 'green', label: 'Hoạt động' },
+  LOCKED: { tone: 'red', label: 'Đã khoá' },
   PENDING: { tone: 'amber', label: 'Chờ kích hoạt' },
 };
 
@@ -24,24 +31,31 @@ const columns: Column<AppUser>[] = [
       <div className="flex items-center gap-3">
         <Avatar name={u.fullName} src={u.avatarUrl} size="md" ring status={u.status === 'ACTIVE' ? 'online' : 'offline'} />
         <div className="min-w-0">
-          <p className="font-bold text-slate-900 truncate">{u.fullName}</p>
-          <p className="text-[11px] text-slate-500 truncate font-mono">{u.email}</p>
+          <p className="font-semibold text-slate-900 truncate">{u.fullName}</p>
+          <p className="text-xs text-slate-500 truncate">{u.email}</p>
         </div>
       </div>
     ),
   },
-  { key: 'role', header: 'Vai trò', render: (u) => <Badge tone={ROLE_TONE[u.role]}>{ROLE_LABEL[u.role]}</Badge> },
+  { key: 'role', header: 'Vai trò', render: (u) => <span className={`inline-flex items-center whitespace-nowrap rounded-lg px-2 py-0.5 text-xs font-semibold ring-1 ring-inset ${ROLE_CHIP[u.role]}`}>{ROLE_LABEL[u.role]}</span> },
   {
     key: 'status',
     header: 'Trạng thái',
-    render: (u) => (
-      <Badge tone={STATUS_META[u.status].tone} dot={u.status === 'ACTIVE'}>
-        {STATUS_META[u.status].label}
-      </Badge>
-    ),
+    render: (u) => <Status tone={STATUS_META[u.status].tone}>{STATUS_META[u.status].label}</Status>,
   },
-  { key: 'plan', header: 'Gói', render: (u) => <Badge tone={u.plan === 'VIP' ? 'amber' : 'slate'} solid={u.plan === 'VIP'} size="xs">{u.plan}</Badge> },
-  { key: 'joinedAt', header: 'Tham gia', render: (u) => <span className="text-xs font-mono text-slate-600">{formatDate(u.joinedAt)}</span> },
+  {
+    key: 'plan',
+    header: 'Gói',
+    render: (u) =>
+      u.plan === 'VIP' ? (
+        <span className="inline-flex items-center gap-1 rounded-lg bg-gradient-to-r from-amber-400 to-orange-500 px-2 py-0.5 text-[11px] font-bold text-white">
+          <Crown className="h-3 w-3" /> VIP
+        </span>
+      ) : (
+        <span className="text-xs font-medium text-slate-500">Free</span>
+      ),
+  },
+  { key: 'joinedAt', header: 'Tham gia', render: (u) => <span className="text-[13px] tabular-nums text-slate-600">{formatDate(u.joinedAt)}</span> },
   { key: 'lastActiveAt', header: 'Hoạt động cuối', render: (u) => <span className="text-xs text-slate-500">{timeAgo(u.lastActiveAt)}</span> },
 ];
 
@@ -88,22 +102,25 @@ export const AdminUsersPage: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        title={
-          <>
-            Người dùng & <span className="mark-teal mark">Phân quyền</span>
-          </>
+      <TPageHead
+        eyebrow="Người dùng"
+        title="Tài khoản & phân quyền"
+        sub="Khởi tạo, kích hoạt, khoá hoặc mở khoá tài khoản và cấp vai trò Học viên · Giáo viên · Trưởng bộ môn · Quản trị viên."
+        actions={
+          <TBtn to="/admin/classes" icon={<Users />}>
+            Lớp học
+          </TBtn>
         }
-        icon={<Users />}
-        description="Khởi tạo, kích hoạt, khoá/mở khoá tài khoản và cấp phát vai trò STUDENT · TEACHER · HEAD_TEACHER · ADMIN."
       />
 
-      <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
-        <StatCard label="Tổng tài khoản" value={MOCK_USERS.length} tone="indigo" icon={<Users />} hint="toàn hệ thống" />
-        <StatCard label="Đang hoạt động" value={count('ACTIVE')} tone="emerald" icon={<UserCheck />} hint="đăng nhập 7 ngày qua" />
-        <StatCard label="Chờ kích hoạt" value={count('PENDING')} tone="amber" icon={<Mail />} hint="chưa xác thực email" />
-        <StatCard label="Đã khoá" value={count('LOCKED')} tone="rose" icon={<Lock />} hint="vi phạm / yêu cầu" />
-      </div>
+      <Figures
+        items={[
+          { label: 'Tổng tài khoản', value: MOCK_USERS.length, note: `${MOCK_USERS.filter((u) => u.plan === 'VIP').length} tài khoản VIP`, icon: Users, tone: 'indigo' },
+          { label: 'Đang hoạt động', value: count('ACTIVE'), note: 'đăng nhập 7 ngày qua', icon: UserCheck, tone: 'emerald' },
+          { label: 'Chờ kích hoạt', value: count('PENDING'), note: 'chưa xác thực email', icon: UserPlus, tone: 'amber' },
+          { label: 'Đã khoá', value: count('LOCKED'), note: 'vi phạm hoặc theo yêu cầu', icon: Lock, tone: 'rose' },
+        ]}
+      />
 
       <CrudEditor<AppUser>
         rows={MOCK_USERS}

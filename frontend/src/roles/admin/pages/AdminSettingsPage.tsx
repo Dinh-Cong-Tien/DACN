@@ -1,13 +1,21 @@
 import React, { useMemo, useState } from 'react';
-import { Sliders, Save, RotateCcw, Settings2, GraduationCap, Flame, Shield } from 'lucide-react';
+import { Save, RotateCcw, Settings2, GraduationCap, Flame, Shield, AlertTriangle, SlidersHorizontal } from 'lucide-react';
 import { MOCK_SETTINGS } from '@/shared/mocks';
 import type { SystemSetting } from '@/shared/types';
 import { cn } from '@/shared/utils';
 import { useDocumentTitle } from '@/shared/hooks';
-import { Alert, Badge, Button, Card, ConfirmDialog, Input, PageHeader, Select, Switch, Tabs } from '@/shared/components/ui';
+import { ConfirmDialog, Switch } from '@/shared/components/ui';
 import { toast } from '@/shared/stores/uiStore';
+import { IconTile, Panel, TBtn, TPageHead, inputCls, type Tone } from '@/roles/teacher/components/TeacherKit';
 
-const GROUP_ICON: Record<string, React.ReactNode> = { Chung: <Settings2 />, 'Học tập': <GraduationCap />, 'Động lực': <Flame />, 'Bảo mật': <Shield /> };
+const GROUP_META: Record<string, { icon: React.ElementType; tone: Tone; sub: string }> = {
+  Chung: { icon: Settings2, tone: 'indigo', sub: 'Tên hệ thống, đăng ký mới, chế độ bảo trì' },
+  'Học tập': { icon: GraduationCap, tone: 'emerald', sub: 'Kỳ thi mặc định, hạn mức gói Free, ôn tập SRS' },
+  'Động lực': { icon: Flame, tone: 'amber', sub: 'Chuỗi ngày học, điểm nỗ lực, bảng xếp hạng' },
+  'Bảo mật': { icon: Shield, tone: 'rose', sub: 'Giới hạn truy cập, xác thực email, phiên đăng nhập' },
+};
+const metaOf = (g: string) => GROUP_META[g] ?? { icon: SlidersHorizontal, tone: 'violet' as Tone, sub: '' };
+const anchor = (g: string) => `grp-${g.normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/\s+/g, '-').toLowerCase()}`;
 
 type Values = Record<string, SystemSetting['value']>;
 const initialValues = (): Values => Object.fromEntries(MOCK_SETTINGS.map((s) => [s.key, s.value]));
@@ -15,13 +23,14 @@ const initialValues = (): Values => Object.fromEntries(MOCK_SETTINGS.map((s) => 
 export const AdminSettingsPage: React.FC = () => {
   useDocumentTitle('Cấu hình tham số');
   const groups = useMemo(() => Array.from(new Set(MOCK_SETTINGS.map((s) => s.group))), []);
-  const [tab, setTab] = useState(groups[0]);
+  const [active, setActive] = useState(groups[0]);
   const [values, setValues] = useState<Values>(initialValues);
   const [saved, setSaved] = useState<Values>(initialValues);
   const [saving, setSaving] = useState(false);
   const [resetOpen, setResetOpen] = useState(false);
 
   const dirty = useMemo(() => MOCK_SETTINGS.filter((s) => values[s.key] !== saved[s.key]).length, [values, saved]);
+  const dirtyIn = (g: string) => MOCK_SETTINGS.filter((s) => s.group === g && values[s.key] !== saved[s.key]).length;
   const set = (key: string, v: SystemSetting['value']) => setValues((s) => ({ ...s, [key]: v }));
   const maintenance = Boolean(values.maintenance_mode);
 
@@ -40,87 +49,133 @@ export const AdminSettingsPage: React.FC = () => {
     toast.info('Đã khôi phục mặc định', 'Nhấn "Lưu cấu hình" để áp dụng.');
   };
 
+  const jump = (g: string) => {
+    setActive(g);
+    document.getElementById(anchor(g))?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+
   const renderField = (s: SystemSetting) => {
     const v = values[s.key];
     switch (s.type) {
       case 'TOGGLE':
         return <Switch checked={Boolean(v)} onChange={(x) => set(s.key, x)} />;
       case 'NUMBER':
-        return <Input type="number" inputSize="sm" value={Number(v)} onChange={(e) => set(s.key, Number(e.target.value))} className="w-32 font-mono" />;
+        return <input type="number" className={cn(inputCls, 'w-32 text-right tabular-nums')} value={Number(v)} onChange={(e) => set(s.key, Number(e.target.value))} />;
       case 'SELECT':
-        return <Select inputSize="sm" value={String(v)} onChange={(e) => set(s.key, e.target.value)} options={(s.options ?? []).map((o) => ({ value: o, label: o }))} className="w-44" />;
+        return (
+          <select className={cn(inputCls, 'w-44')} value={String(v)} onChange={(e) => set(s.key, e.target.value)}>
+            {(s.options ?? []).map((o) => (
+              <option key={o} value={o}>
+                {o}
+              </option>
+            ))}
+          </select>
+        );
       default:
-        return <Input inputSize="sm" value={String(v)} onChange={(e) => set(s.key, e.target.value)} className="w-56" />;
+        return <input className={cn(inputCls, 'w-full sm:w-56')} value={String(v)} onChange={(e) => set(s.key, e.target.value)} />;
     }
   };
 
   return (
     <div className="space-y-6 pb-24">
-      <PageHeader
-        title={
-          <>
-            Cấu hình <span className="mark">tham số</span>
-          </>
+      <TPageHead
+        crumbs={[{ label: 'Hệ thống' }, { label: 'Cấu hình tham số' }]}
+        title="Cấu hình tham số"
+        sub="Thiết lập chung, hạn mức học tập, quy tắc động lực và bảo mật. Mọi thay đổi được ghi vào nhật ký kiểm toán kèm IP người thực hiện."
+        actions={
+          <TBtn icon={<RotateCcw />} onClick={() => setResetOpen(true)}>
+            Khôi phục mặc định
+          </TBtn>
         }
-        icon={<Sliders />}
-        description="Thiết lập chung, hạn mức học tập, quy tắc động lực và bảo mật. Mọi thay đổi được ghi vào nhật ký kiểm toán kèm IP người thực hiện."
       />
 
       {maintenance && (
-        <Alert type="warning" title="Chế độ bảo trì đang BẬT">
-          Người dùng thường sẽ không thể truy cập hệ thống. Chỉ tài khoản Admin đăng nhập được. Nhớ tắt sau khi hoàn tất bảo trì.
-        </Alert>
+        <div className="flex items-start gap-3 rounded-2xl border border-amber-300/60 bg-amber-50 p-4">
+          <IconTile icon={AlertTriangle} tone="amber" size="sm" />
+          <div>
+            <p className="font-display font-bold text-amber-900">Chế độ bảo trì đang bật</p>
+            <p className="text-sm text-amber-800/80">Người dùng thường không thể truy cập hệ thống, chỉ tài khoản quản trị đăng nhập được. Nhớ tắt sau khi bảo trì xong.</p>
+          </div>
+        </div>
       )}
 
-      <Tabs variant="pill" value={tab} onChange={setTab} items={groups.map((g) => ({ key: g, label: g, icon: GROUP_ICON[g], count: MOCK_SETTINGS.filter((s) => s.group === g).length }))} />
+      <div className="grid gap-6 lg:grid-cols-[240px_1fr] lg:items-start">
+        {/* Mục lục */}
+        <nav aria-label="Nhóm cấu hình" className="min-w-0 lg:sticky lg:top-24">
+          <ul className="flex gap-2 overflow-x-auto no-scrollbar lg:flex-col lg:gap-1 lg:rounded-2xl lg:border lg:border-slate-200/80 lg:bg-white lg:p-2 lg:shadow-[0_1px_2px_rgba(16,24,40,0.04)]">
+            {groups.map((g) => {
+              const m = metaOf(g);
+              const n = dirtyIn(g);
+              return (
+                <li key={g} className="shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => jump(g)}
+                    className={cn(
+                      'flex w-full items-center gap-3 rounded-xl border px-3 py-2 text-left text-sm transition-colors lg:border-transparent',
+                      active === g ? 'border-indigo-200 bg-indigo-500/[0.07] font-semibold text-slate-900' : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50 lg:bg-transparent'
+                    )}
+                  >
+                    <IconTile icon={m.icon} tone={m.tone} size="sm" />
+                    <span className="flex-1 whitespace-nowrap">{g}</span>
+                    {n > 0 && <span className="rounded-md bg-indigo-600 px-1.5 text-[11px] font-bold text-white">{n}</span>}
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        </nav>
 
-      <Card hard padding="none" className="animate-fade-up overflow-hidden" key={tab}>
-        <div className="px-5 py-3 bg-amber-100 border-b-2 border-slate-900 flex items-center justify-between">
-          <p className="font-display font-bold text-slate-900 flex items-center gap-2 [&>svg]:w-4 [&>svg]:h-4">
-            {GROUP_ICON[tab]} {tab}
-          </p>
-          <span className="text-[11px] font-mono text-slate-600">{MOCK_SETTINGS.filter((s) => s.group === tab).length} tham số</span>
-        </div>
-        <ul className="divide-y-2 divide-slate-100">
-          {MOCK_SETTINGS.filter((s) => s.group === tab).map((s, i) => {
-            const changed = values[s.key] !== saved[s.key];
-            const isMaint = s.key === 'maintenance_mode';
+        {/* Nội dung */}
+        <div className="min-w-0 space-y-6">
+          {groups.map((g) => {
+            const m = metaOf(g);
+            const items = MOCK_SETTINGS.filter((s) => s.group === g);
             return (
-              <li key={s.key} className={cn('flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-5 transition-colors animate-fade-up', changed && 'bg-indigo-50', isMaint && maintenance && 'bg-amber-50')} style={{ animationDelay: `${i * 40}ms` }}>
-                <div className="min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <p className="text-sm font-bold text-slate-900">{s.label}</p>
-                    <span className="font-mono text-[10px] text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded">{s.key}</span>
-                    {changed && (
-                      <Badge tone="indigo" size="xs" className="animate-pop">
-                        Đã sửa
-                      </Badge>
-                    )}
-                    {isMaint && maintenance && (
-                      <Badge tone="amber" solid size="xs" className="animate-pop">
-                        Đang bật
-                      </Badge>
-                    )}
-                  </div>
-                  <p className="text-xs text-slate-500 mt-0.5">{s.description}</p>
-                </div>
-                <div className="shrink-0">{renderField(s)}</div>
-              </li>
+              <div key={g} id={anchor(g)} className="scroll-mt-24">
+                <Panel flush title={g} sub={m.sub || `${items.length} tham số`} icon={m.icon} tone={m.tone} action={<span className="text-[12px] text-slate-400">{items.length} tham số</span>}>
+                  <ul className="divide-y divide-slate-100">
+                    {items.map((s) => {
+                      const changed = values[s.key] !== saved[s.key];
+                      const isMaint = s.key === 'maintenance_mode';
+                      return (
+                        <li key={s.key} className={cn('relative flex flex-col justify-between gap-3 px-5 py-4 transition-colors sm:flex-row sm:items-center', changed && 'bg-indigo-500/[0.04]', isMaint && maintenance && 'bg-amber-50')}>
+                          {changed && <span className="absolute inset-y-0 left-0 w-[3px] bg-indigo-500" />}
+                          <div className="min-w-0">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <p className="text-sm font-semibold text-slate-900">{s.label}</p>
+                              {changed && <span className="rounded-md bg-indigo-500/10 px-1.5 py-0.5 text-[11px] font-semibold text-indigo-700">Đã sửa</span>}
+                              {isMaint && maintenance && <span className="rounded-md bg-amber-500/15 px-1.5 py-0.5 text-[11px] font-semibold text-amber-700">Đang bật</span>}
+                            </div>
+                            <p className="mt-0.5 text-[13px] text-slate-500">{s.description}</p>
+                            <code className="mt-1 inline-block font-mono text-[11px] text-slate-400">{s.key}</code>
+                          </div>
+                          <div className="shrink-0">{renderField(s)}</div>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </Panel>
+              </div>
             );
           })}
-        </ul>
-      </Card>
+        </div>
+      </div>
 
-      <div className="fixed bottom-4 left-4 right-4 lg:left-auto lg:right-8 lg:w-[480px] z-30">
-        <div className={cn('bg-slate-900 text-white rounded-2xl border-2 border-slate-900 shadow-hard p-3 flex items-center justify-between gap-3 transition-all duration-300', dirty ? 'translate-y-0 opacity-100' : 'translate-y-2 opacity-90')}>
-          <p className="text-xs font-bold pl-2">{dirty ? <span className="text-amber-300">{dirty} thay đổi chưa lưu</span> : <span className="text-slate-400">Không có thay đổi</span>}</p>
+      {/* Thanh lưu */}
+      <div className={cn('fixed inset-x-4 bottom-20 z-30 transition-all duration-300 md:bottom-6 lg:left-auto lg:right-8 lg:w-[460px]', dirty ? 'translate-y-0 opacity-100' : 'pointer-events-none translate-y-4 opacity-0')}>
+        <div className="flex items-center justify-between gap-3 rounded-2xl bg-slate-950 p-3 pl-5 text-white shadow-[0_20px_40px_-16px_rgba(15,23,42,0.6)] ring-1 ring-white/10">
+          <p className="text-sm font-semibold">
+            <span className="text-amber-300">{dirty}</span> thay đổi chưa lưu
+          </p>
           <div className="flex items-center gap-2">
-            <Button size="sm" variant="ghost" className="text-slate-300 hover:bg-white/10 hover:text-white" leftIcon={<RotateCcw className="w-4 h-4" />} onClick={() => setResetOpen(true)}>
-              Mặc định
-            </Button>
-            <Button size="sm" variant="gradient" leftIcon={<Save className="w-4 h-4" />} onClick={save} loading={saving} disabled={!dirty}>
-              Lưu cấu hình
-            </Button>
+            <button type="button" onClick={() => setValues(saved)} className="h-9 rounded-xl px-3 text-[13px] font-semibold text-white/70 hover:bg-white/10 hover:text-white">
+              Huỷ
+            </button>
+            <button type="button" onClick={save} disabled={saving} className="inline-flex h-9 items-center gap-1.5 rounded-xl bg-indigo-500 px-4 text-[13px] font-semibold text-white hover:bg-indigo-400 disabled:opacity-60">
+              <Save className="h-4 w-4" />
+              {saving ? 'Đang lưu…' : 'Lưu cấu hình'}
+            </button>
           </div>
         </div>
       </div>

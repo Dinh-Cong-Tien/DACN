@@ -1,20 +1,26 @@
 import React, { useState } from 'react';
-import { Database, Eye } from 'lucide-react';
+import { BarChart3, CheckCircle2, Database, Eye, Headphones, BookOpenText } from 'lucide-react';
 import type { IQuestion } from '@toeic-vstep/shared';
 import { useDocumentTitle } from '@/shared/hooks';
 import { ALL_QUESTIONS, QUESTIONS_BY_PART } from '@/shared/mocks';
 import { BarChart } from '@/shared/components/charts/Charts';
-import { Badge, Card, CardHeader, Column, Modal, PageHeader, StatCard } from '@/shared/components/ui';
+import { Column, Modal } from '@/shared/components/ui';
+import { cn } from '@/shared/utils';
+import { Figures, Panel, TPageHead } from '@/roles/teacher/components/TeacherKit';
+
+const chip = 'inline-flex items-center whitespace-nowrap rounded-md px-2 py-0.5 text-[11px] font-semibold';
 import { CrudEditor, QuestionRenderer } from '@/engines';
 
 const SKILL_OPTS = ['LISTENING', 'READING', 'WRITING', 'SPEAKING', 'VOCABULARY', 'GRAMMAR'].map((s) => ({ value: s, label: s }));
+
+const SKILL_VI: Record<string, string> = { LISTENING: 'Nghe', READING: 'Đọc', WRITING: 'Viết', SPEAKING: 'Nói', VOCABULARY: 'Từ vựng', GRAMMAR: 'Ngữ pháp' };
 
 const columns: Column<IQuestion>[] = [
   {
     key: 'stem',
     header: 'Câu hỏi',
     render: (r) => (
-      <p className="font-semibold text-slate-800 max-w-md truncate" title={r.stem}>
+      <p className="max-w-md truncate font-medium text-slate-900" title={r.stem}>
         {r.stem}
       </p>
     ),
@@ -23,21 +29,17 @@ const columns: Column<IQuestion>[] = [
     key: 'examType',
     header: 'Kỳ thi',
     render: (r) => (
-      <Badge tone={r.examType === 'TOEIC' ? 'indigo' : 'emerald'} size="xs">
-        {r.examType}
-      </Badge>
+      <span className={cn(chip, r.examType === 'TOEIC' ? 'bg-indigo-500/10 text-indigo-700' : 'bg-emerald-500/10 text-emerald-700')}>{r.examType}</span>
     ),
   },
   {
     key: 'partOrSkill',
     header: 'Part',
     render: (r) => (
-      <Badge tone="violet" size="xs">
-        {r.partOrSkill.replace(/_/g, ' ')}
-      </Badge>
+      <span className={cn(chip, 'bg-slate-100 font-mono text-slate-700')}>{r.partOrSkill.replace(/_/g, ' ')}</span>
     ),
   },
-  { key: 'skillType', header: 'Kỹ năng', render: (r) => <span className="text-xs font-bold text-slate-600">{r.skillType}</span> },
+  { key: 'skillType', header: 'Kỹ năng', render: (r) => <span className="text-[13px] text-slate-600">{SKILL_VI[r.skillType] ?? r.skillType}</span> },
   {
     key: 'difficulty',
     header: 'Độ khó',
@@ -55,9 +57,9 @@ const columns: Column<IQuestion>[] = [
     render: (r) => (
       <div className="flex gap-1 flex-wrap">
         {r.tags.slice(0, 2).map((t) => (
-          <Badge key={t} tone="slate" size="xs">
+          <span key={t} className="text-xs text-slate-500">
             #{t}
-          </Badge>
+          </span>
         ))}
       </div>
     ),
@@ -71,25 +73,22 @@ export const HeadQuestionBankPage: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        title={
-          <>
-            Ngân hàng <span className="mark">câu hỏi</span>
-          </>
-        }
-        description="Quản lý, hiệu đính và phân loại câu hỏi theo Part / kỹ năng thuộc bộ môn."
-        icon={<Database />}
+      <TPageHead
+        eyebrow="Học liệu bộ môn"
+        title="Ngân hàng câu hỏi"
+        sub="Hiệu đính, phân loại câu hỏi theo Part / kỹ năng và xem trước đúng như học viên làm bài."
       />
-      <div className="grid grid-cols-1 xl:grid-cols-[1fr_320px] gap-5">
-        <Card hard className="animate-fade-up">
-          <CardHeader title="Phân bố theo Part / kỹ năng" subtitle="Số câu hỏi mẫu đang có trong ngân hàng" />
-          <BarChart ariaLabel="Số câu hỏi theo Part" data={byPart.map(({ label, value }) => ({ label, value }))} height={190} unit=" câu" />
-        </Card>
-        <div className="grid grid-cols-1 gap-4">
-          <StatCard label="Tổng câu hỏi" value={ALL_QUESTIONS.length} tone="amber" hint="Bộ mẫu demo" />
-          <StatCard label="Có lời giải" value={ALL_QUESTIONS.filter((q) => q.explanation).length} tone="emerald" />
-        </div>
-      </div>
+      <Figures
+        items={[
+          { label: 'Tổng câu hỏi', value: ALL_QUESTIONS.length, note: `${byPart.length} Part / kỹ năng`, icon: Database, tone: 'amber' },
+          { label: 'Có lời giải', value: ALL_QUESTIONS.filter((q) => q.explanation).length, note: `${Math.round((ALL_QUESTIONS.filter((q) => q.explanation).length / Math.max(1, ALL_QUESTIONS.length)) * 100)}% ngân hàng`, icon: CheckCircle2, tone: 'emerald' },
+          { label: 'Câu Nghe', value: ALL_QUESTIONS.filter((q) => q.skillType === 'LISTENING').length, note: 'có audio', icon: Headphones, tone: 'sky' },
+          { label: 'Câu Đọc', value: ALL_QUESTIONS.filter((q) => q.skillType === 'READING').length, note: 'Part 5–7', icon: BookOpenText, tone: 'violet' },
+        ]}
+      />
+      <Panel title="Phân bố theo Part / kỹ năng" sub="Số câu hỏi đang có trong ngân hàng" icon={BarChart3} tone="indigo">
+        <BarChart ariaLabel="Số câu hỏi theo Part" data={byPart} height={200} unit=" câu" />
+      </Panel>
 
       <CrudEditor<IQuestion>
         rows={ALL_QUESTIONS}

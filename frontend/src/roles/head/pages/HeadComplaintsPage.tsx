@@ -1,14 +1,15 @@
 import React, { useState } from 'react';
-import { MessageSquareWarning, Inbox, CheckCircle2, Reply } from 'lucide-react';
+import { CheckCircle2, FileQuestion, Inbox, Reply } from 'lucide-react';
 import { useDocumentTitle } from '@/shared/hooks';
 import { toast } from '@/shared/stores/uiStore';
 import { MOCK_COMPLAINTS } from '@/shared/mocks';
 import type { Complaint } from '@/shared/types';
 import { timeAgo, formatDateTime } from '@/shared/utils';
-import { Avatar, Badge, Button, Card, EmptyState, Modal, PageHeader, StatCard, Tabs, Textarea } from '@/shared/components/ui';
+import { Avatar, Button, EmptyState, Modal, Textarea } from '@/shared/components/ui';
 import { pravatar } from '@/shared/components/media/Img';
+import { Figures, Panel, Status, TBtn, TPageHead, TTabs, type StatusTone } from '@/roles/teacher/components/TeacherKit';
 
-const STATUS: Record<Complaint['status'], { label: string; tone: 'rose' | 'amber' | 'emerald' }> = { NEW: { label: 'Mới', tone: 'rose' }, IN_REVIEW: { label: 'Đang xử lý', tone: 'amber' }, RESOLVED: { label: 'Đã giải quyết', tone: 'emerald' } };
+const STATUS: Record<Complaint['status'], { label: string; tone: StatusTone }> = { NEW: { label: 'Mới', tone: 'red' }, IN_REVIEW: { label: 'Đang xử lý', tone: 'amber' }, RESOLVED: { label: 'Đã giải quyết', tone: 'green' } };
 
 const studentAvatar = (id: string) => pravatar(20 + (Number(id.split('-')[1]) || 1));
 
@@ -37,69 +38,59 @@ export const HeadComplaintsPage: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        title={
-          <>
-            Khiếu nại & <span className="mark">Phản hồi</span>
-          </>
-        }
-        description="Tiếp nhận ý kiến của học viên về câu hỏi, đáp án và điểm số."
-        icon={<MessageSquareWarning />}
+      <TPageHead eyebrow="Giảng dạy" title="Khiếu nại & phúc khảo" sub="Tiếp nhận ý kiến của học viên về câu hỏi, đáp án và điểm số; kết luận chuyên môn rồi phản hồi lại học viên." />
+      <Figures
+        items={[
+          { label: 'Mới', value: count('NEW'), note: 'chưa tiếp nhận', icon: Inbox, tone: 'rose' },
+          { label: 'Đang xử lý', value: count('IN_REVIEW'), note: 'đang phúc khảo', icon: Reply, tone: 'amber' },
+          { label: 'Đã giải quyết', value: count('RESOLVED'), note: 'đã phản hồi học viên', icon: CheckCircle2, tone: 'emerald' },
+        ]}
       />
-      <div className="grid grid-cols-3 gap-4">
-        <StatCard label="Mới" value={count('NEW')} tone="rose" icon={<Inbox />} />
-        <StatCard label="Đang xử lý" value={count('IN_REVIEW')} tone="amber" icon={<Reply />} />
-        <StatCard label="Đã giải quyết" value={count('RESOLVED')} tone="emerald" icon={<CheckCircle2 />} />
-      </div>
-      <Tabs variant="pill" value={tab} onChange={(k) => setTab(k as Complaint['status'])} items={(Object.keys(STATUS) as Complaint['status'][]).map((s) => ({ key: s, label: STATUS[s].label, count: count(s) }))} />
+
+      <TTabs value={tab} onChange={(k) => setTab(k as Complaint['status'])} items={(Object.keys(STATUS) as Complaint['status'][]).map((s) => ({ key: s, label: STATUS[s].label, count: count(s) }))} />
 
       {list.length === 0 ? (
-        <Card hard>
+        <Panel>
           <EmptyState icon={<Inbox />} title="Không có khiếu nại" description="Hộp thư ở trạng thái này đang trống." />
-        </Card>
+        </Panel>
       ) : (
         <div className="space-y-4">
-          {list.map((c, i) => (
-            <Card key={c.id} hard hover className="animate-fade-up" style={{ animationDelay: `${i * 60}ms` }}>
-              <div className="flex flex-col md:flex-row md:items-start gap-4">
-                <Avatar name={c.student} src={studentAvatar(c.id)} size="lg" ring />
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <h3 className="font-display font-bold text-slate-900">{c.subject}</h3>
-                    <Badge tone={STATUS[c.status].tone} dot size="xs">
-                      {STATUS[c.status].label}
-                    </Badge>
+          {list.map((c) => (
+            <Panel key={c.id}>
+              <div className="flex flex-col gap-4 md:flex-row md:items-start">
+                <Avatar name={c.student} src={studentAvatar(c.id)} size="lg" />
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                    <h3 className="font-display text-[17px] font-bold text-slate-900">{c.subject}</h3>
+                    <Status tone={STATUS[c.status].tone}>{STATUS[c.status].label}</Status>
                   </div>
-                  <p className="text-[11px] text-slate-500 mt-1 flex items-center gap-1.5 flex-wrap">
-                    <span className="font-bold text-slate-700">{c.student}</span> · {formatDateTime(c.createdAt)} ({timeAgo(c.createdAt)}) ·
-                    <Badge tone="slate" size="xs">
-                      {c.questionRef}
-                    </Badge>
+                  <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-[13px] text-slate-500">
+                    <span className="font-semibold text-slate-700">{c.student}</span>
+                    <span>·</span>
+                    <span>
+                      {formatDateTime(c.createdAt)} ({timeAgo(c.createdAt)})
+                    </span>
+                    <span className="inline-flex items-center gap-1 rounded-md bg-slate-100 px-2 py-0.5 text-xs text-slate-600">
+                      <FileQuestion className="h-3 w-3" /> {c.questionRef}
+                    </span>
                   </p>
-                  <blockquote className="text-sm text-slate-800 mt-3 p-4 rounded-2xl bg-paper border-2 border-slate-900 leading-relaxed relative">
-                    <span aria-hidden className="absolute -top-3 left-4 font-display text-4xl text-violet-500 leading-none">“</span>
-                    {c.content}
-                  </blockquote>
+                  <blockquote className="mt-3 rounded-xl border-l-4 border-violet-400 bg-violet-500/[0.05] px-4 py-3 text-sm leading-relaxed text-slate-800">{c.content}</blockquote>
                 </div>
-                <div className="flex md:flex-col gap-2 shrink-0">
-                  {c.status === 'NEW' && (
-                    <Button size="sm" variant="outline" onClick={() => accept(c)}>
-                      Tiếp nhận
-                    </Button>
-                  )}
+                <div className="flex shrink-0 gap-2 md:flex-col">
+                  {c.status === 'NEW' && <TBtn onClick={() => accept(c)}>Tiếp nhận</TBtn>}
                   {c.status !== 'RESOLVED' && (
-                    <Button size="sm" leftIcon={<Reply className="w-4 h-4" />} onClick={() => setReplying(c)}>
+                    <TBtn variant="primary" icon={<Reply />} onClick={() => setReplying(c)}>
                       Phản hồi & đóng
-                    </Button>
+                    </TBtn>
                   )}
                   {c.status === 'RESOLVED' && (
-                    <Badge tone="emerald" icon={<CheckCircle2 className="w-3 h-3" />}>
-                      Đã đóng
-                    </Badge>
+                    <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-emerald-700">
+                      <CheckCircle2 className="h-4 w-4" /> Đã đóng
+                    </span>
                   )}
                 </div>
               </div>
-            </Card>
+            </Panel>
           ))}
         </div>
       )}
@@ -121,7 +112,7 @@ export const HeadComplaintsPage: React.FC = () => {
           </>
         }
       >
-        {replying && <p className="text-xs text-slate-600 p-3 rounded-xl bg-paper border-2 border-slate-300 mb-4">"{replying.content}"</p>}
+        {replying && <p className="mb-4 rounded-xl border-l-4 border-violet-400 bg-violet-500/[0.05] p-3 text-xs text-slate-600">"{replying.content}"</p>}
         <Textarea label="Nội dung phản hồi" required value={reply} onChange={(e) => setReply(e.target.value)} placeholder="Giải thích kết luận chuyên môn, kết quả phúc khảo hoặc hướng xử lý..." />
       </Modal>
     </div>

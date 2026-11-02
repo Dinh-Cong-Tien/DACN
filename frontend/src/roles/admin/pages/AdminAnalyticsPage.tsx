@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
-import { BarChart3, Activity, Users, FileText, Clock, Monitor, Smartphone, Tablet } from 'lucide-react';
+import { Activity, Users, FileText, Clock, Monitor, TrendingUp, UserPlus, Eye, PieChart } from 'lucide-react';
 import { ADMIN_TRAFFIC, ADMIN_SIGNUPS } from '@/shared/mocks';
-import { formatNumber } from '@/shared/utils';
+import { cn, formatNumber } from '@/shared/utils';
 import { useDocumentTitle } from '@/shared/hooks';
-import { Card, CardHeader, Column, DataTable, PageHeader, Segmented, StatCard, Tone } from '@/shared/components/ui';
 import { BarChart, HBarChart, LineChart } from '@/shared/components/charts/Charts';
+import { Figures, Panel, TPageHead, tbl } from '@/roles/teacher/components/TeacherKit';
 
 interface PageRow {
   id: string;
@@ -22,56 +22,56 @@ const TOP_PAGES: PageRow[] = [
   { id: 'p6', path: '/blog', views: 2715, avgTime: '3:40' },
 ];
 
-const columns: Column<PageRow>[] = [
-  { key: 'path', header: 'Trang', render: (r) => <span className="font-mono text-xs text-indigo-800 bg-indigo-50 px-1.5 py-0.5 rounded">{r.path}</span> },
-  { key: 'views', header: 'Lượt xem', align: 'right', render: (r) => <span className="font-mono font-bold text-slate-900">{formatNumber(r.views)}</span> },
-  { key: 'avgTime', header: 'TG trung bình', align: 'right', render: (r) => <span className="text-xs font-mono text-slate-600">{r.avgTime}</span> },
-];
+const Delta: React.FC<{ v: number }> = ({ v }) => (
+  <span className="inline-flex items-center gap-1">
+    <span className="inline-flex items-center gap-0.5 rounded-md bg-emerald-500/10 px-1.5 py-0.5 font-semibold text-emerald-700">
+      <TrendingUp className="h-3 w-3" />+{v}%
+    </span>
+    so với kỳ trước
+  </span>
+);
 
 export const AdminAnalyticsPage: React.FC = () => {
   useDocumentTitle('Thống kê truy cập');
-  const [range, setRange] = useState('7');
+  const [range, setRange] = useState<'7' | '30'>('7');
   const mult = range === '30' ? 4.2 : 1;
   const traffic = Math.round(ADMIN_TRAFFIC.reduce((a, b) => a + b.value, 0) * mult);
 
-  const devices: { label: string; value: number; icon: React.ReactNode; tone: Tone }[] = [
-    { label: 'Desktop', value: 54, icon: <Monitor className="w-4 h-4" />, tone: 'indigo' },
-    { label: 'Mobile', value: 38, icon: <Smartphone className="w-4 h-4" />, tone: 'violet' },
-    { label: 'Tablet', value: 8, icon: <Tablet className="w-4 h-4" />, tone: 'amber' },
-  ];
-
   return (
     <div className="space-y-6">
-      <PageHeader
-        title={
-          <>
-            Thống kê <span className="mark">truy cập</span>
-          </>
-        }
-        icon={<BarChart3 />}
-        description="Lưu lượng, người dùng hoạt động và hành vi học tập trên toàn hệ thống. Nguồn: nhật ký API Gateway."
+      <TPageHead
+        eyebrow="Toàn hệ thống · nguồn API Gateway"
+        title="Thống kê truy cập"
+        sub="Lưu lượng, người dùng hoạt động và hành vi học tập trên toàn hệ thống."
         actions={
-          <Segmented
-            value={range}
-            onChange={setRange}
-            options={[
-              { value: '7', label: '7 ngày' },
-              { value: '30', label: '30 ngày' },
-            ]}
-          />
+          <div role="tablist" className="inline-flex rounded-xl border border-slate-200 bg-white p-1 shadow-sm">
+            {(['7', '30'] as const).map((r) => (
+              <button
+                key={r}
+                type="button"
+                role="tab"
+                aria-selected={range === r}
+                onClick={() => setRange(r)}
+                className={cn('h-8 rounded-lg px-3.5 text-[13px] font-semibold transition-colors', range === r ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-600 hover:text-slate-900')}
+              >
+                {r} ngày
+              </button>
+            ))}
+          </div>
         }
       />
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-        <StatCard label="Lượt truy cập" value={traffic} icon={<Activity />} tone="sky" delta={8} deltaLabel="so với kỳ trước" format={formatNumber} />
-        <StatCard label="Người dùng hoạt động" value={Math.round(1240 * mult)} icon={<Users />} tone="indigo" delta={5} deltaLabel="so với kỳ trước" format={formatNumber} />
-        <StatCard label="Đề thi đã làm" value={Math.round(3860 * mult)} icon={<FileText />} tone="violet" delta={11} deltaLabel="so với kỳ trước" format={formatNumber} />
-        <StatCard label="Thời gian TB / phiên" value="24m" icon={<Clock />} tone="emerald" delta={3} deltaLabel="so với kỳ trước" />
-      </div>
+      <Figures
+        items={[
+          { label: 'Lượt truy cập', value: formatNumber(traffic), icon: Activity, tone: 'sky', note: <Delta v={8} /> },
+          { label: 'Người dùng hoạt động', value: formatNumber(Math.round(1240 * mult)), icon: Users, tone: 'indigo', note: <Delta v={5} /> },
+          { label: 'Đề thi đã làm', value: formatNumber(Math.round(3860 * mult)), icon: FileText, tone: 'violet', note: <Delta v={11} /> },
+          { label: 'Thời gian TB / phiên', value: '24m', icon: Clock, tone: 'emerald', note: <Delta v={3} /> },
+        ]}
+      />
 
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
-        <Card hard className="xl:col-span-2 animate-fade-up">
-          <CardHeader title="Lượt truy cập theo ngày" subtitle={range === '7' ? 'Tuần hiện tại, so với tuần trước' : '30 ngày gần nhất (theo tuần), so với kỳ trước'} />
+      <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
+        <Panel className="xl:col-span-2" title="Lượt truy cập theo ngày" sub={range === '7' ? 'Tuần hiện tại, so với tuần trước' : '30 ngày gần nhất (theo tuần), so với kỳ trước'} icon={Activity} tone="sky">
           <LineChart
             ariaLabel="Lượt truy cập theo ngày"
             labels={ADMIN_TRAFFIC.map((d) => d.label)}
@@ -79,30 +79,50 @@ export const AdminAnalyticsPage: React.FC = () => {
               { name: range === '7' ? 'Tuần này' : 'Kỳ này', values: ADMIN_TRAFFIC.map((d) => Math.round(d.value * mult)) },
               { name: range === '7' ? 'Tuần trước' : 'Kỳ trước', values: ADMIN_TRAFFIC.map((d, i) => Math.round(d.value * mult * (0.86 + (i % 3) * 0.04))) },
             ]}
-            height={250}
+            height={260}
             format={(v) => formatNumber(v)}
           />
-        </Card>
-        <Card hard className="animate-fade-up" style={{ animationDelay: '80ms' }}>
-          <CardHeader title="Thiết bị truy cập" subtitle="% phiên theo loại thiết bị" />
-          <HBarChart ariaLabel="Tỷ lệ thiết bị truy cập" data={devices.map((d) => ({ label: d.label, value: d.value }))} max={100} unit="%" labelWidth={80} />
-          <div className="mt-6 border-t border-slate-200 pt-4">
-            <CardHeader title="Lượt làm đề theo kỳ thi" subtitle="% số lượt làm đề" />
-            <HBarChart ariaLabel="Tỷ lệ lượt làm đề theo kỳ thi" data={[{ label: 'TOEIC', value: 68 }, { label: 'VSTEP', value: 32 }]} max={100} unit="%" labelWidth={80} />
-          </div>
-        </Card>
+        </Panel>
+        <div className="grid gap-6">
+          <Panel title="Thiết bị truy cập" sub="% phiên theo loại thiết bị" icon={Monitor} tone="indigo">
+            <HBarChart ariaLabel="Tỷ lệ thiết bị truy cập" data={[{ label: 'Máy tính', value: 54 }, { label: 'Điện thoại', value: 38 }, { label: 'Máy tính bảng', value: 8 }]} max={100} unit="%" labelWidth={100} />
+          </Panel>
+          <Panel title="Lượt làm đề theo kỳ thi" sub="% số lượt làm đề" icon={PieChart} tone="violet">
+            <HBarChart ariaLabel="Tỷ lệ lượt làm đề theo kỳ thi" data={[{ label: 'TOEIC', value: 68 }, { label: 'VSTEP', value: 32 }]} max={100} unit="%" labelWidth={100} />
+          </Panel>
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
-        <Card hard className="animate-fade-up" style={{ animationDelay: '120ms' }}>
-          <CardHeader title="Đăng ký mới theo tháng" subtitle="12 tháng gần nhất" />
-          <BarChart ariaLabel="Số tài khoản đăng ký mới theo tháng" data={ADMIN_SIGNUPS.map((v, i) => ({ label: `T${((i + 11) % 12) + 1}`, value: v }))} height={240} unit=" tài khoản" />
-        </Card>
-        <Card hard className="animate-fade-up" style={{ animationDelay: '160ms' }}>
-          <CardHeader title="Trang được xem nhiều nhất" subtitle="Lượt xem trong kỳ" />
-          <HBarChart ariaLabel="Trang được xem nhiều nhất" data={TOP_PAGES.map((p) => ({ label: p.path, value: Math.round(p.views * mult) }))} format={(v) => formatNumber(v)} labelWidth={130} />
-          <DataTable<PageRow> columns={columns} rows={TOP_PAGES} dense className="mt-5" />
-        </Card>
+      <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
+        <Panel title="Đăng ký mới theo tháng" sub="12 tháng gần nhất" icon={UserPlus} tone="emerald">
+          <BarChart ariaLabel="Số tài khoản đăng ký mới theo tháng" data={ADMIN_SIGNUPS.map((v, i) => ({ label: `T${((i + 11) % 12) + 1}`, value: v }))} height={260} unit=" tài khoản" />
+        </Panel>
+        <Panel flush title="Trang được xem nhiều nhất" sub="Lượt xem trong kỳ" icon={Eye} tone="amber">
+          <div className="p-5 pb-3">
+            <HBarChart ariaLabel="Trang được xem nhiều nhất" data={TOP_PAGES.map((p) => ({ label: p.path, value: Math.round(p.views * mult) }))} format={(v) => formatNumber(v)} labelWidth={130} />
+          </div>
+          <table className={cn(tbl.table, 'border-t border-slate-100')}>
+            <thead className={tbl.thead}>
+              <tr>
+                <th className={tbl.th}>Trang</th>
+                <th className={cn(tbl.th, 'text-right')}>Lượt xem</th>
+                <th className={cn(tbl.th, 'text-right')}>TG trung bình</th>
+              </tr>
+            </thead>
+            <tbody>
+              {TOP_PAGES.map((r, i) => (
+                <tr key={r.id} className={tbl.tr}>
+                  <td className={tbl.td}>
+                    <span className="mr-2 inline-block w-4 text-[12px] tabular-nums text-slate-400">{i + 1}</span>
+                    <code className="rounded-md bg-indigo-500/[0.07] px-1.5 py-0.5 font-mono text-[12px] text-indigo-700">{r.path}</code>
+                  </td>
+                  <td className={cn(tbl.td, 'text-right font-semibold tabular-nums text-slate-900')}>{formatNumber(Math.round(r.views * mult))}</td>
+                  <td className={cn(tbl.td, 'text-right tabular-nums text-slate-500')}>{r.avgTime}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </Panel>
       </div>
     </div>
   );

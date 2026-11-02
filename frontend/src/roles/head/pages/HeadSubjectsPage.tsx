@@ -1,47 +1,71 @@
 import React from 'react';
-import { Library } from 'lucide-react';
+import { BookMarked, Database, Headphones, PenLine, School, Users } from 'lucide-react';
 import { useDocumentTitle } from '@/shared/hooks';
-import { MOCK_SUBJECTS } from '@/shared/mocks';
+import { MOCK_SUBJECTS, teacherByName } from '@/shared/mocks';
 import type { Subject } from '@/shared/types';
-import { Badge, Column, PageHeader, StatCard } from '@/shared/components/ui';
+import { Avatar, Column } from '@/shared/components/ui';
+import { cn, formatNumber } from '@/shared/utils';
 import { CrudEditor } from '@/engines';
+import { Figures, IconTile, Meter, TPageHead } from '@/roles/teacher/components/TeacherKit';
+
+const maxQ = Math.max(...MOCK_SUBJECTS.map((s) => s.questionsCount));
 
 const columns: Column<Subject>[] = [
   {
     key: 'name',
     header: 'Môn học',
     render: (r) => (
-      <div>
-        <p className="font-bold text-slate-900">{r.name}</p>
-        <p className="text-[11px] text-slate-500">Phụ trách: {r.lead}</p>
+      <div className="flex items-center gap-3">
+        <IconTile icon={r.examType === 'TOEIC' ? Headphones : PenLine} tone={r.examType === 'TOEIC' ? 'indigo' : 'emerald'} />
+        <div className="min-w-0">
+          <p className="truncate font-semibold text-slate-900">{r.name}</p>
+          <p className="font-mono text-xs text-slate-500">{r.code}</p>
+        </div>
       </div>
     ),
   },
-  { key: 'code', header: 'Mã', render: (r) => <span className="font-mono text-xs font-bold px-2 py-0.5 rounded-md bg-slate-100 border border-slate-300">{r.code}</span> },
-  { key: 'examType', header: 'Kỳ thi', render: (r) => <Badge tone={r.examType === 'TOEIC' ? 'indigo' : 'emerald'}>{r.examType}</Badge> },
+  {
+    key: 'examType',
+    header: 'Kỳ thi',
+    render: (r) => <span className={cn('rounded-md px-2 py-0.5 text-[11px] font-semibold', r.examType === 'TOEIC' ? 'bg-indigo-500/10 text-indigo-700' : 'bg-emerald-500/10 text-emerald-700')}>{r.examType}</span>,
+  },
+  {
+    key: 'lead',
+    header: 'Phụ trách',
+    render: (r) => (
+      <div className="flex items-center gap-2">
+        <Avatar name={r.lead} src={teacherByName(r.lead)?.avatarUrl} size="xs" />
+        <span className="whitespace-nowrap text-slate-700">{r.lead}</span>
+      </div>
+    ),
+  },
   { key: 'teachersCount', header: 'Giáo viên', align: 'center' },
   { key: 'classesCount', header: 'Lớp', align: 'center' },
-  { key: 'questionsCount', header: 'Câu hỏi', align: 'right', render: (r) => <span className="font-display font-extrabold">{r.questionsCount.toLocaleString('vi-VN')}</span> },
+  {
+    key: 'questionsCount',
+    header: 'Câu hỏi',
+    render: (r) => (
+      <div className="flex min-w-[140px] items-center gap-2">
+        <Meter value={(r.questionsCount / maxQ) * 100} tone={r.examType === 'TOEIC' ? 'indigo' : 'green'} className="flex-1" />
+        <span className="w-12 text-right font-semibold tabular-nums text-slate-900">{formatNumber(r.questionsCount)}</span>
+      </div>
+    ),
+  },
 ];
 
 export const HeadSubjectsPage: React.FC = () => {
   useDocumentTitle('Danh mục môn học');
   return (
     <div className="space-y-6">
-      <PageHeader
-        title={
-          <>
-            Danh mục <span className="mark">môn học</span>
-          </>
-        }
-        description="Quản lý các môn học thuộc bộ môn, mã môn và giáo viên phụ trách."
-        icon={<Library />}
+      <TPageHead eyebrow="Bộ môn" title="Danh mục môn học" sub="Môn học thuộc bộ môn, mã môn, giáo viên phụ trách và quy mô lớp, ngân hàng câu hỏi của từng môn." />
+      <Figures
+        items={[
+          { label: 'Môn học', value: MOCK_SUBJECTS.length, note: `${MOCK_SUBJECTS.filter((s) => s.examType === 'TOEIC').length} TOEIC · ${MOCK_SUBJECTS.filter((s) => s.examType === 'VSTEP').length} VSTEP`, icon: BookMarked, tone: 'amber' },
+          { label: 'Lớp đang mở', value: MOCK_SUBJECTS.reduce((a, s) => a + s.classesCount, 0), note: 'tất cả môn', icon: School, tone: 'indigo' },
+          { label: 'Lượt phân công GV', value: MOCK_SUBJECTS.reduce((a, s) => a + s.teachersCount, 0), note: 'giáo viên × môn', icon: Users, tone: 'emerald' },
+          { label: 'Câu hỏi', value: formatNumber(MOCK_SUBJECTS.reduce((a, s) => a + s.questionsCount, 0)), note: 'đã thẩm định', icon: Database, tone: 'violet' },
+        ]}
       />
-      <div className="grid grid-cols-3 gap-4">
-        <StatCard label="Môn học" value={MOCK_SUBJECTS.length} tone="amber" />
-        <StatCard label="Lớp đang mở" value={MOCK_SUBJECTS.reduce((a, s) => a + s.classesCount, 0)} tone="indigo" />
-        <StatCard label="Câu hỏi" value={MOCK_SUBJECTS.reduce((a, s) => a + s.questionsCount, 0)} tone="emerald" />
-      </div>
       <CrudEditor<Subject>
         rows={MOCK_SUBJECTS}
         columns={columns}
