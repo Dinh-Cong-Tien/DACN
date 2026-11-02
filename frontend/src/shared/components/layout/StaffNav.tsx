@@ -38,12 +38,21 @@ const topCls = (active: boolean) => cn('inline-flex shrink-0 items-center gap-1 
 
 const Count: React.FC<{ n: string }> = ({ n }) => <span className="flex h-[18px] min-w-[18px] items-center justify-center rounded px-1 text-[10px] font-semibold text-white bg-rose-500">{n}</span>;
 
+const DROPDOWN_W = 320;
+
 /** Menu header khu vực quản lý: mục đơn hoặc dropdown có mô tả, nhóm, đếm số */
 export const StaffNav: React.FC<{ menus: StaffMenu[]; label: string }> = ({ menus, label }) => {
   const { pathname, search } = useLocation();
+  /** Menu xổ ra từ mép trái nút của nó (không đè lên mục bên cạnh); nếu sẽ tràn mép phải màn hình thì chỉ lùi sang trái đúng phần tràn */
+  const [shift, setShift] = React.useState<Record<string, number>>({});
+  const measure = (key: string) => (e: React.SyntheticEvent<HTMLDivElement>) => {
+    const left = e.currentTarget.getBoundingClientRect().left;
+    const over = Math.max(0, Math.ceil(left + DROPDOWN_W + 16 - window.innerWidth));
+    setShift((s) => (s[key] === over ? s : { ...s, [key]: over }));
+  };
   return (
     <nav className="hidden items-center gap-0.5 md:flex" aria-label={label}>
-      {menus.map((m, mi) => {
+      {menus.map((m) => {
         if (!m.children)
           return (
             <NavLink key={m.label} to={m.to!} className={({ isActive }) => topCls(isActive)}>
@@ -53,13 +62,13 @@ export const StaffNav: React.FC<{ menus: StaffMenu[]; label: string }> = ({ menu
           );
         const active = (m.to && pathname.startsWith(m.to.split('?')[0])) || m.children.some((c) => isHere(c, pathname, search));
         return (
-          <div key={m.label} className="group/menu relative">
+          <div key={m.label} className="group/menu relative" onMouseEnter={measure(m.label)} onFocus={measure(m.label)}>
             <button type="button" className={topCls(Boolean(active))} aria-haspopup="true">
               {m.label}
               <ChevronDown className="h-3.5 w-3.5 text-slate-400 transition-transform group-hover/menu:rotate-180" />
             </button>
-            <div className={cn('pointer-events-none absolute top-full z-50 pt-2 opacity-0 transition-opacity duration-150 group-focus-within/menu:pointer-events-auto group-focus-within/menu:opacity-100 group-hover/menu:pointer-events-auto group-hover/menu:opacity-100', mi === menus.length - 1 ? 'right-0' : 'left-0')}>
-              <div className={cn('rounded-lg border border-slate-200 bg-white p-1.5 shadow-[0_12px_32px_-12px_rgba(16,24,40,0.25)]', 'w-[320px]')}>
+            <div className={cn('pointer-events-none absolute top-full z-50 pt-2 opacity-0 transition-opacity duration-150 group-focus-within/menu:pointer-events-auto group-focus-within/menu:opacity-100 group-hover/menu:pointer-events-auto group-hover/menu:opacity-100')} style={{ left: -(shift[m.label] ?? 0) }}>
+              <div className={cn('rounded-lg border border-slate-200 bg-white p-1.5 shadow-[0_12px_32px_-12px_rgba(16,24,40,0.25)]', 'w-[320px]')} style={{ width: DROPDOWN_W }}>
                 {m.children.map((c, i) => {
                   const here = isHere(c, pathname, search);
                   const Icon = c.icon;
