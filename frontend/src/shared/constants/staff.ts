@@ -84,3 +84,13 @@ export function academicTerm(d = new Date()) {
   const term = m >= 9 || m === 1 ? 'Học kỳ I' : m <= 6 ? 'Học kỳ II' : 'Học kỳ hè';
   return { term, year, label: `${term}, năm học ${year}`, short: `${term} · ${year}` };
 }
+
+/** Chuyên cần gộp nhiều lớp = tổng lượt có mặt / tổng lượt điểm danh (không lấy TB các %) */
+export const pooledAttendance = (classes: { attendanceRate: number; attendanceMarks?: number }[]) => {
+  const marks = classes.reduce((a, c) => a + (c.attendanceMarks ?? 0), 0);
+  return marks ? Math.round(classes.reduce((a, c) => a + (c.attendanceRate / 100) * (c.attendanceMarks ?? 0), 0) / marks * 100) : 0;
+};
+
+/** Số học viên KHÁC NHAU trong nhiều lớp (học viên học 2 lớp chỉ tính 1); thiếu studentIds thì cộng sĩ số */
+export const distinctStudents = (classes: { studentsCount: number; studentIds?: string[] }[]) =>
+  classes.every((c) => c.studentIds) ? new Set(classes.flatMap((c) => c.studentIds!)).size : classes.reduce((a, c) => a + c.studentsCount, 0);

@@ -2,7 +2,8 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { ArrowDown, ArrowUp, Plus, Search, X } from 'lucide-react';
 import type { ExamType } from '@/shared/types';
 import { adminApi, useAdminInvalidate, useAdminQuestions } from '@/shared/api/admin';
-import type { QuestionRow } from '@/shared/api/head';
+import type { QuestionPage, QuestionQuery, QuestionRow } from '@/shared/api/head';
+import type { UseQueryResult } from '@tanstack/react-query';
 import { errorMessage } from '@/shared/api/client';
 import { EXAM_PARTS, partLabel } from '@/shared/constants/staff';
 import { Modal } from '@/shared/components/ui';
@@ -12,9 +13,27 @@ import { cn } from '@/shared/utils';
 
 type Picked = Pick<QuestionRow, 'id' | 'part' | 'stem' | 'passageTitle'>;
 
+/** Nguồn dữ liệu của hộp thoại: mặc định là API admin; giáo viên truyền API soạn học liệu của mình */
+export interface TestQuestionsSource {
+  load: (id: string) => Promise<{ questions: Picked[] }>;
+  save: (id: string, questionIds: string[]) => Promise<{ count: number }>;
+  useBank: (q: QuestionQuery) => UseQueryResult<QuestionPage>;
+  /** Trạng thái lọc ngân hàng; undefined = theo API (giáo viên: đã duyệt + câu của mình) */
+  bankStatus?: string;
+  onSaved?: () => void;
+  bankTitle?: string;
+}
+const ADMIN_SOURCE: TestQuestionsSource = {
+  load: (id) => adminApi.test(id),
+  save: (id, ids) => adminApi.setTestQuestions(id, ids),
+  useBank: useAdminQuestions,
+  bankStatus: 'PUBLISHED',
+};
+
 /** Gán câu hỏi từ ngân hàng vào đề: xem danh sách hiện tại, thêm theo Part/từ khoá, bỏ, đổi thứ tự, lưu (PUT /admin/tests/:id/questions). */
-export const TestQuestionsDialog: React.FC<{ test: { id: string; title: string; examType: ExamType } | null; onClose: () => void }> = ({ test, onClose }) => {
-  const refresh = useAdminInvalidate();
+export const TestQuestionsDialog: React.FC<{ test: { id: string; title: string; examType: ExamType } | null; onClose: () => void; source?: TestQuestionsSource }> = ({ test, onClose, source = ADMIN_SOURCE }) => {
+  const adminRefresh = useAdminInvalidate();
+  const refresh = source.onSaved ?? adminRefresh;
   const [list, setList] = useState<Picked[] | null>(null);
   const [part, setPart] = useState('');
   const [q, setQ] = useState('');
@@ -27,16 +46,17 @@ export const TestQuestionsDialog: React.FC<{ test: { id: string; title: string; 
     setQ('');
     setPage(1);
     if (!test) return;
-    adminApi
-      .test(test.id)
+    source
+      .load(test.id)
       .then((t) => setList(t.questions.map((x) => ({ id: x.id, part: x.part, stem: x.stem, passageTitle: x.passageTitle }))))
       .catch((e) => {
         toast.error('Không tải được đề', errorMessage(e));
         onClose();
       });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [test, onClose]);
 
-  const bank = useAdminQuestions({ examType: test?.examType, part: part || undefined, q: q.trim() || undefined, page, pageSize: 10, status: 'PUBLISHED' });
+  const bank = source.useBank({ examType: test?.examType, part: part || undefined, q: q.trim() || undefined, page, pageSize: 10, status: source.bankStatus });
   const inTest = useMemo(() => new Set((list ?? []).map((x) => x.id)), [list]);
   const byPart = useMemo(() => {
     const m = new Map<string, number>();
@@ -58,7 +78,7 @@ export const TestQuestionsDialog: React.FC<{ test: { id: string; title: string; 
     if (!test || !list) return;
     setSaving(true);
     try {
-      const r = await adminApi.setTestQuestions(test.id, list.map((x) => x.id));
+      const r = await source.save(test.id, list.map((x) => x.id));
       toast.success('Đã lưu câu hỏi của đề', `${test.title}: ${r.count} câu`);
       void refresh();
       onClose();
@@ -120,7 +140,7 @@ export const TestQuestionsDialog: React.FC<{ test: { id: string; title: string; 
         </section>
 
         <section className="min-w-0">
-          <h3 className="mb-2 text-sm font-semibold text-slate-900">Ngân hàng câu hỏi {test?.examType}</h3>
+          <h3 className="mb-2 text-sm font-semibold text-slate-900">{source.bankTitle ?? 'Ngân hàng câu hỏi'} {test?.examType}</h3>
           <div className="mb-2 flex flex-col gap-2 sm:flex-row">
             <select aria-label="Lọc theo Part" value={part} onChange={(e) => { setPart(e.target.value); setPage(1); }} className={cn(inputCls, 'sm:w-40')}>
               <option value="">Mọi Part</option>

@@ -6,9 +6,12 @@ import { prisma } from '../../lib/prisma';
 import { hashPassword } from '../../lib/password';
 import { badRequest, conflict, handler, me, notFound, pageQuery, paged, parse } from '../../core/http';
 import { toAppUser } from '../../core/dto';
+import { refreshLiveAfterWrite } from '../../core/auth';
 import { audit, notify } from './audit';
 
 export const usersRouter = Router();
+// Khoá / đổi vai trò / xoá có hiệu lực ngay với phiên đang đăng nhập của người đó
+usersRouter.use(refreshLiveAfterWrite);
 
 const ROLES = ['STUDENT', 'TEACHER', 'HEAD_TEACHER', 'ADMIN'] as const;
 const STATUSES = ['PENDING', 'ACTIVE', 'LOCKED'] as const;
@@ -76,7 +79,7 @@ const userBody = z.object({
   email: z.string().trim().toLowerCase().email(),
   role: z.enum(ROLES).default('STUDENT'),
   status: z.enum(STATUSES).default('ACTIVE'),
-  password: z.string().min(6).max(100).optional(),
+  password: z.string().min(8, 'Mật khẩu cần ít nhất 8 ký tự').max(100).optional(),
   phone: z.string().max(20).nullish(),
   departmentId: uuid.nullish(),
   avatarUrl: z.string().url().nullish(),

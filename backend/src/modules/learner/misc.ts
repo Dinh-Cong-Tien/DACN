@@ -3,6 +3,7 @@ import crypto from 'node:crypto';
 import { Router } from 'express';
 import { correctKeyOf, partToFe, pid } from './learner.shared';
 import { z } from 'zod';
+import { onlyStudent } from '../../core/auth';
 import type { Notification } from '@prisma/client';
 import { prisma } from '../../lib/prisma';
 import { badRequest, handler, me, notFound, pageQuery, paged, parse } from '../../core/http';
@@ -182,6 +183,7 @@ miscRouter.get(
 /** Tạo đơn mua gói: PENDING, admin xác nhận chuyển khoản → kích hoạt gói (thanh toán qua cổng là chức năng nâng cao). */
 miscRouter.post(
   '/billing/orders',
+  onlyStudent,
   handler(async (req) => {
     const userId = me(req).id;
     const body = parse(z.object({ planCode: z.string().min(2).max(30), method: z.enum(['BANK', 'MOMO', 'VNPAY', 'CARD']).default('BANK'), couponCode: z.string().trim().max(30).optional() }), req.body);

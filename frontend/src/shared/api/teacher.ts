@@ -5,6 +5,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { Assignment, AssignmentTarget, AssignmentType, AttendanceMark, ClassAnnouncement, ClassRoom, ClassSession, ClassStudent, CourseCategory, ExamType, StudentNote, Submission } from '@/shared/types';
 import { api, http, tokenStore } from './client';
+import type { QuestionPage, QuestionQuery, QuestionRow } from './head';
 
 // ======================= Types =======================
 
@@ -76,7 +77,9 @@ export interface GradingItem extends TSubmission {
 }
 
 export interface TeacherDashboard {
-  stats: { classes: number; students: number; pendingGrading: number; lateSubmissions: number; attendanceRate: number; atRiskCount: number; sessionsThisWeek: number };
+  stats: { classes: number; students: number; pendingGrading: number; lateSubmissions: number; attendanceRate: number; attendanceMarks: number; atRiskCount: number; sessionsThisWeek: number; unmarkedPastSessions: number };
+  /** Buổi gần nhất đã qua mà chưa điểm danh (để mở thẳng trang điểm danh) */
+  latestUnmarkedSessionId: string | null;
   classes: TClassRoom[];
   atRisk: TClassStudent[];
   sessions: TSession[];
@@ -378,3 +381,62 @@ export function fileHref(url?: string | null) {
   const t = tokenStore.get()?.accessToken;
   return t ? `${url}${url.includes('?') ? '&' : '?'}token=${encodeURIComponent(t)}` : url;
 }
+
+// ======================= Học liệu giáo viên soạn (gửi trưởng bộ môn duyệt) =======================
+
+export type ContentStatus = 'DRAFT' | 'PENDING_REVIEW' | 'PUBLISHED' | 'REJECTED' | 'ARCHIVED';
+export interface AuthorQuestionInput {
+  examType: ExamType;
+  part: string;
+  skill: string;
+  type?: 'SINGLE_CHOICE' | 'ESSAY' | 'SPEAKING_RESPONSE';
+  stem: string;
+  options?: { key: string; text: string }[] | null;
+  correctAnswer?: string | null;
+  explanation?: string | null;
+  translationVi?: string | null;
+  audioUrl?: string | null;
+  imageUrl?: string | null;
+}
+export interface AuthorTest {
+  id: string;
+  slug: string;
+  title: string;
+  examType: ExamType;
+  kind: 'MINI' | 'QUIZ' | string;
+  level: string;
+  durationMinutes: number;
+  totalQuestions: number;
+  parts: string[];
+  status: ContentStatus;
+  reviewNote?: string;
+  updatedAt: string;
+}
+export interface AuthorTestInput {
+  title: string;
+  examType: ExamType;
+  kind: 'MINI' | 'QUIZ';
+  level?: string | null;
+  durationMin: number;
+  isFree?: boolean;
+}
+
+const C = '/teacher/content';
+export const authoringApi = {
+  questions: (q: QuestionQuery) => api.get<QuestionPage>(`${C}/questions`, q),
+  bank: (q: QuestionQuery) => api.get<QuestionPage>(`${C}/bank`, q),
+  createQuestion: (b: AuthorQuestionInput) => api.post<QuestionRow>(`${C}/questions`, b),
+  updateQuestion: (id: string, b: Partial<AuthorQuestionInput>) => api.patch<QuestionRow>(`${C}/questions/${id}`, b),
+  deleteQuestion: (id: string) => api.delete<{ ok: true }>(`${C}/questions/${id}`),
+  tests: () => api.get<AuthorTest[]>(`${C}/tests`),
+  test: (id: string) => api.get<AuthorTest & { questions: (QuestionRow & { questionNo: number })[] }>(`${C}/tests/${id}`),
+  createTest: (b: AuthorTestInput) => api.post<AuthorTest>(`${C}/tests`, b),
+  updateTest: (id: string, b: Partial<AuthorTestInput>) => api.patch<AuthorTest>(`${C}/tests/${id}`, b),
+  deleteTest: (id: string) => api.delete<{ ok: true }>(`${C}/tests/${id}`),
+  setTestQuestions: (id: string, questionIds: string[]) => api.put<{ count: number }>(`${C}/tests/${id}/questions`, { questionIds }),
+  submit: (kind: 'questions' | 'tests', id: string) => api.post<{ id: string; status: ContentStatus }>(`${C}/${kind}/${id}/submit`),
+  withdraw: (kind: 'questions' | 'tests', id: string) => api.post<{ id: string; status: ContentStatus }>(`${C}/${kind}/${id}/withdraw`),
+};
+export const useAuthorQuestions = (q: QuestionQuery) => useQuery({ queryKey: [...tKeys.all, 'content', 'questions', q], queryFn: () => authoringApi.questions(q), placeholderData: (p) => p });
+export const useAuthorBank = (q: QuestionQuery) => useQuery({ queryKey: [...tKeys.all, 'content', 'bank', q], queryFn: () => authoringApi.bank(q), placeholderData: (p) => p });
+export const useAuthorTests = () => useQuery({ queryKey: [...tKeys.all, 'content', 'tests'], queryFn: authoringApi.tests });

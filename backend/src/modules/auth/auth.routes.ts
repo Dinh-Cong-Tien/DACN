@@ -6,6 +6,7 @@ import { hashPassword, comparePassword } from '../../lib/password';
 import { auth, issueRefreshToken, revokeRefreshToken, rotateRefreshToken, signAccessToken } from '../../core/auth';
 import { badRequest, conflict, forbidden, handler, me, parse, unauthorized } from '../../core/http';
 import { toAppUser } from '../../core/dto';
+import { limits, loginGuard, rateLimit, recordLoginFailure, resetLoginFailures } from '../../middleware/rate-limit';
 
 export const authRouter = Router();
 
@@ -14,7 +15,7 @@ const meta = (req: { headers: Record<string, unknown>; ip?: string }) => ({ user
 const registerBody = z.object({
   fullName: z.string().trim().min(2).max(120),
   email: z.string().trim().toLowerCase().email(),
-  password: z.string().min(6).max(100),
+  password: z.string().min(8, 'Mật khẩu cần ít nhất 8 ký tự').max(100),
 });
 const loginBody = z.object({ email: z.string().trim().toLowerCase().email(), password: z.string().min(1) });
 
@@ -30,6 +31,7 @@ async function session(userId: string, req: Parameters<typeof meta>[0]) {
 /** Đăng ký học viên (luồng #1). Chưa có dịch vụ email nên kích hoạt ngay. */
 authRouter.post(
   '/register',
+  rateLimit('register', limits.register, { message: 'Bạn đã tạo quá nhiều tài khoản từ thiết bị này. Vui lòng thử lại sau.' }),
   handler(async (req) => {
     const body = parse(registerBody, req.body);
     const exists = await prisma.user.findFirst({ where: { email: body.email, deletedAt: null }, select: { id: true } });
@@ -43,10 +45,15 @@ authRouter.post(
 
 authRouter.post(
   '/login',
+  loginGuard,
   handler(async (req) => {
     const body = parse(loginBody, req.body);
     const user = await prisma.user.findFirst({ where: { email: body.email, deletedAt: null } });
-    if (!user?.passwordHash || !(await comparePassword(body.password, user.passwordHash))) throw unauthorized('Email hoặc mật khẩu không đúng');
+    if (!user?.passwordHash || !(await comparePassword(body.password, user.passwordHash))) {
+      recordLoginFailure(req);
+      throw unauthorized('Email hoặc mật khẩu không đúng');
+    }
+    resetLoginFailures(req);
     if (user.status === 'LOCKED') throw forbidden(user.lockedReason ? `Tài khoản đã bị khoá: ${user.lockedReason}` : 'Tài khoản đã bị khoá');
     return session(user.id, req);
   })
@@ -54,6 +61,7 @@ authRouter.post(
 
 authRouter.post(
   '/refresh',
+  rateLimit('refresh', limits.refresh),
   handler(async (req) => {
     const { refreshToken } = parse(z.object({ refreshToken: z.string().min(10) }), req.body);
     const r = await rotateRefreshToken(refreshToken, meta(req));
@@ -107,7 +115,7 @@ authRouter.post(
   '/change-password',
   auth,
   handler(async (req) => {
-    const body = parse(z.object({ currentPassword: z.string(), newPassword: z.string().min(6).max(100) }), req.body);
+    const body = parse(z.object({ currentPassword: z.string(), newPassword: z.string().min(8, 'Mật khẩu mới cần ít nhất 8 ký tự').max(100) }), req.body);
     const user = await prisma.user.findUniqueOrThrow({ where: { id: me(req).id } });
     if (!user.passwordHash || !(await comparePassword(body.currentPassword, user.passwordHash))) throw badRequest('Mật khẩu hiện tại không đúng', 'WRONG_PASSWORD');
     await prisma.$transaction([

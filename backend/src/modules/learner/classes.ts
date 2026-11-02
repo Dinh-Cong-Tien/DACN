@@ -2,15 +2,15 @@
 import { Router } from 'express';
 import { pid } from './learner.shared';
 import { z } from 'zod';
+import { onlyStudent } from '../../core/auth';
 import type { Assignment, AssignmentSubmission, Class, Prisma } from '@prisma/client';
 import { prisma } from '../../lib/prisma';
 import { badRequest, conflict, forbidden, handler, me, notFound, parse } from '../../core/http';
 import { iso } from '../../core/dto';
+import { classGradient, classMetrics } from '../../core/metrics';
 
 export const classesRouter = Router();
 
-const GRADIENTS = ['from-indigo-500 to-violet-500', 'from-emerald-500 to-teal-500', 'from-amber-400 to-orange-500', 'from-rose-500 to-pink-500', 'from-sky-500 to-cyan-500', 'from-fuchsia-500 to-purple-500'];
-const gradientOf = (id: string) => GRADIENTS[parseInt(id.replace(/-/g, '').slice(0, 6), 16) % GRADIENTS.length];
 
 async function myMembership(classId: string, userId: string) {
   const m = await prisma.classMember.findUnique({ where: { classId_studentId: { classId, studentId: userId } } });
@@ -18,37 +18,24 @@ async function myMembership(classId: string, userId: string) {
   return m;
 }
 
-/** ClassRoom (số liệu tính từ dữ liệu thật của lớp) */
+/** ClassRoom — số liệu theo định nghĩa chung core/metrics.ts (khớp với giáo viên, trưởng bộ môn, admin) */
 async function toClassRoom(c: Class & { teacher: { fullName: string } }) {
-  const [students, assignments, graded, sessions] = await Promise.all([
-    prisma.classMember.count({ where: { classId: c.id, status: 'ACTIVE' } }),
-    prisma.assignment.count({ where: { classId: c.id, deletedAt: null, status: { not: 'DRAFT' } } }),
-    prisma.assignmentSubmission.aggregate({ where: { assignment: { classId: c.id, deletedAt: null } }, _count: { _all: true }, _avg: { score: true } }),
-    prisma.classSession.findMany({ where: { classId: c.id, status: 'DONE', attendance: { not: undefined } }, select: { attendance: true } }),
-  ]);
-  const done = await prisma.assignmentSubmission.count({ where: { assignment: { classId: c.id, deletedAt: null }, status: { in: ['SUBMITTED', 'LATE', 'GRADED'] } } });
-  let present = 0, marks = 0;
-  for (const s of sessions) for (const v of Object.values((s.attendance ?? {}) as Record<string, { mark?: string } | string>)) {
-    const mark = typeof v === 'string' ? v : v?.mark;
-    if (!mark) continue;
-    marks += 1;
-    if (mark === 'PRESENT' || mark === 'LATE') present += 1;
-  }
+  const m = (await classMetrics([c])).get(c.id)!;
   return {
     id: c.id,
     name: c.name,
     code: c.code,
     examType: c.examType,
     teacherName: c.teacher.fullName,
-    studentsCount: students,
-    assignmentsCount: assignments,
-    avgScore: graded._avg.score ? Math.round(Number(graded._avg.score) * 10) / 10 : 0,
-    completionRate: graded._count._all ? Math.round((done / graded._count._all) * 100) : 0,
-    attendanceRate: marks ? Math.round((present / marks) * 100) : 0,
+    studentsCount: m.studentsCount,
+    assignmentsCount: m.assignmentsCount,
+    avgScore: m.avgScore,
+    completionRate: m.completionRate,
+    attendanceRate: m.attendanceRate,
     createdAt: c.createdAt.toISOString().slice(0, 10),
     schedule: c.scheduleText ?? '',
     room: c.room ?? undefined,
-    gradient: gradientOf(c.id),
+    gradient: classGradient(c.id),
     coverUrl: c.coverUrl ?? undefined,
     level: c.level ?? undefined,
     description: c.description ?? undefined,
@@ -123,6 +110,7 @@ classesRouter.get(
 
 classesRouter.post(
   '/classes/join',
+  onlyStudent,
   handler(async (req) => {
     const userId = me(req).id;
     const { code } = parse(z.object({ code: z.string().trim().min(3).max(16) }), req.body);

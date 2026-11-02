@@ -3,6 +3,7 @@ import { z } from 'zod';
 import type { SrsCard } from '@prisma/client';
 import { prisma } from '../../lib/prisma';
 import { optionalAuth } from '../../core/auth';
+import { limits, rateLimit } from '../../middleware/rate-limit';
 import { handler, notFound, parse } from '../../core/http';
 import { isUuid } from './courses';
 import { gradientAt, toDictionaryEntry, toQuestion, toRules, toVocabWord } from './mappers';
@@ -66,6 +67,8 @@ lexiconRouter.get(
 /** GET /catalog/dictionary?q=accomplish&limit=10 → DictionaryEntry[] (khớp đầu từ trước, rồi gần đúng pg_trgm) */
 lexiconRouter.get(
   '/dictionary',
+  optionalAuth,
+  rateLimit('dict', limits.guestDictionary, { onlyGuest: true, message: 'Bạn tra từ quá nhiều. Đăng nhập để tra không giới hạn, hoặc thử lại sau ít phút.' }),
   handler(async (req) => {
     const q = parse(z.object({ q: z.string().trim().min(1).max(80), limit: z.coerce.number().int().min(1).max(30).default(10) }), req.query);
     const term = q.q.toLowerCase();

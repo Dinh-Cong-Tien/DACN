@@ -285,6 +285,10 @@ export interface DailyActivity {
 
 // ---------- TEACHER ----------
 export interface ClassRoom {
+  /** Học viên đang trong lớp (chỉ trả cho giáo viên/trưởng bộ môn/admin) — đếm học viên khác nhau khi gộp lớp */
+  studentIds?: string[];
+  /** Số lượt đã điểm danh (để tính chuyên cần gộp theo trọng số) */
+  attendanceMarks?: number;
   id: string;
   name: string;
   code: string;

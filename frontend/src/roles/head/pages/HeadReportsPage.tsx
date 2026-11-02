@@ -34,8 +34,9 @@ export const HeadReportsPage: React.FC = () => {
     toast.success('Đã xuất báo cáo', `${rows.length} lớp · tệp CSV mở được bằng Excel.`);
   };
   const grades = (['A', 'B', 'C', 'D'] as const).map((g) => ({ g, n: rows.filter((r) => r.grade === g).length }));
-  const totalStudents = rows.reduce((a, r) => a + r.students, 0);
-  const avgAttendance = rows.length ? Math.round(rows.reduce((a, r) => a + r.attendance, 0) / rows.length) : 0;
+  // Tổng hợp tính ở backend (cùng bộ lọc môn): học viên khác nhau, chuyên cần theo tổng lượt điểm danh
+  const totalStudents = data?.summary?.students ?? 0;
+  const avgAttendance = data?.summary?.attendanceRate ?? 0;
 
   return (
     <div className="space-y-6">
@@ -96,9 +97,9 @@ export const HeadReportsPage: React.FC = () => {
       </div>
 
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
-        <Panel title="Chuyên cần theo lớp" sub="% có mặt trên các buổi đã điểm danh" icon={CalendarCheck} tone="emerald">
-          {rows.some((r) => r.attendance) ? (
-            <HBarChart ariaLabel="Chuyên cần theo lớp" data={[...rows].sort((a, b) => b.attendance - a.attendance).map((r) => ({ label: r.className, value: r.attendance }))} max={100} unit="%" labelWidth={150} />
+        <Panel title="Chuyên cần theo lớp" sub={`% có mặt trên các buổi đã điểm danh${rows.some((r) => !r.hasAttendance) ? ` · ${rows.filter((r) => !r.hasAttendance).length} lớp chưa điểm danh` : ''}`} icon={CalendarCheck} tone="emerald">
+          {rows.some((r) => r.hasAttendance) ? (
+            <HBarChart ariaLabel="Chuyên cần theo lớp" data={rows.filter((r) => r.hasAttendance).sort((a, b) => b.attendance - a.attendance).map((r) => ({ label: r.className, value: r.attendance }))} max={100} unit="%" labelWidth={150} />
           ) : (
             <p className="py-12 text-center text-sm text-slate-500">Chưa có buổi học nào được điểm danh.</p>
           )}

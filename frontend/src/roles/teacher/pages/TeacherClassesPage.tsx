@@ -12,6 +12,7 @@ import { cn } from '@/shared/utils';
 import { Meter, Panel, TBtn, TPageHead, TTabs, inputCls } from '../components/TeacherKit';
 import { Img, PHOTOS } from '@/shared/components/media/Img';
 import { TError, TLoading } from '../components/TeacherState';
+import { distinctStudents } from '@/shared/constants/staff';
 
 export const TeacherClassesPage: React.FC = () => {
   useDocumentTitle('Lớp học của tôi');
@@ -82,7 +83,7 @@ export const TeacherClassesPage: React.FC = () => {
           <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Tìm theo tên hoặc mã lớp" className={cn(inputCls, 'w-full pl-9')} />
         </div>
         <p className="text-[13px] text-slate-500">
-          {list.length} lớp · {list.reduce((a, c) => a + c.studentsCount, 0)} học viên
+          {list.length} lớp · {distinctStudents(list)} học viên
         </p>
       </div>
 
@@ -115,7 +116,7 @@ export const TeacherClassesPage: React.FC = () => {
                     {[
                       [c.studentsCount, 'Học viên'],
                       [c.avgScore || '—', 'Điểm TB'],
-                      [c.attendanceRate ? `${c.attendanceRate}%` : '—', 'Chuyên cần'],
+                      [c.attendanceMarks ? `${c.attendanceRate}%` : '—', 'Chuyên cần'],
                     ].map(([v, l]) => (
                       <div key={l as string} className="rounded-xl bg-slate-50 py-2">
                         <p className="font-display text-lg font-bold tabular-nums text-slate-900">{v}</p>

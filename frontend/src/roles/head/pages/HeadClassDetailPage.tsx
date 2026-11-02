@@ -302,7 +302,7 @@ export const HeadClassDetailPage: React.FC = () => {
           { label: 'Sĩ số', value: cls.studentsCount, note: `${students.filter((x) => x.status !== 'GOOD').length} học viên cần theo dõi`, icon: Users, tone: 'indigo' },
           { label: 'Điểm trung bình', value: cls.avgScore || '—', note: 'bài thi thử & bài được chấm', icon: TrendingUp, tone: 'violet' },
           { label: 'Hoàn thành bài tập', value: cls.assignmentsCount ? `${cls.completionRate}%` : '—', note: `${cls.assignmentsCount} bài đã giao`, icon: ClipboardList, tone: 'amber' },
-          { label: 'Chuyên cần', value: cls.attendanceRate ? `${cls.attendanceRate}%` : '—', note: `${done.length} buổi đã dạy`, icon: ClipboardCheck, tone: 'emerald' },
+          { label: 'Chuyên cần', value: cls.attendanceMarks ? `${cls.attendanceRate}%` : '—', note: `${done.length} buổi đã dạy`, icon: ClipboardCheck, tone: 'emerald' },
         ]}
       />
 

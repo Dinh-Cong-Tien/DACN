@@ -6,6 +6,7 @@ import { Prisma, type Class, type ExamType, type User, type UserRole } from '@pr
 import { prisma } from '../../lib/prisma';
 import { forbidden } from '../../core/http';
 import { iso, num, planOf, ymd } from '../../core/dto';
+import { classGradient, classMetrics, rateOf, round1, type ClassMetrics } from '../../core/metrics';
 
 const GRADIENTS = [
   'from-indigo-500 via-violet-500 to-fuchsia-500',
@@ -27,11 +28,7 @@ export const initials = (name: string) =>
     .slice(-2)
     .map((w) => w[0]?.toUpperCase() ?? '')
     .join('');
-const round1 = (n: number) => Math.round(n * 10) / 10;
-const pct = (a: number, b: number) => (b ? Math.round((a / b) * 100) : 0);
-
-type AttendanceJson = Record<string, { mark?: string } | undefined>;
-const DONE_STATUSES = new Set(['SUBMITTED', 'LATE', 'GRADED']);
+export { round1, pct } from '../../core/metrics';
 
 /** Phạm vi bộ môn của trưởng bộ môn: departments.head_id = mình, hoặc users.department_id. ADMIN = mọi bộ môn. */
 export async function deptScope(user: { id: string; role: UserRole }): Promise<string[] | null> {
@@ -48,91 +45,9 @@ export async function deptScope(user: { id: string; role: UserRole }): Promise<s
 /** where cho Class trong phạm vi */
 export const classWhere = (scope: string[] | null): Prisma.ClassWhereInput => ({ deletedAt: null, ...(scope ? { departmentId: { in: scope } } : {}) });
 
-export interface ClassStats {
-  studentsCount: number;
-  assignmentsCount: number;
-  avgScore: number;
-  completionRate: number;
-  attendanceRate: number;
-  /** Số lượt điểm danh đã ghi (0 = chưa điểm danh buổi nào) */
-  attendanceMarks: number;
-  studentIds: string[];
-  perStudent: Map<string, { done: number; total: number; present: number; marks: number; scores: number[] }>;
-}
-
-/** Thống kê thật cho nhiều lớp: sĩ số, bài giao, điểm TB (lượt thi đã chấm cùng kỳ thi, dự phòng điểm bài giao), hoàn thành, chuyên cần. */
-export async function classStats(classes: Pick<Class, 'id' | 'examType'>[]): Promise<Map<string, ClassStats>> {
-  const ids = classes.map((c) => c.id);
-  const out = new Map<string, ClassStats>();
-  if (!ids.length) return out;
-  const [members, assignments, sessions] = await Promise.all([
-    prisma.classMember.findMany({ where: { classId: { in: ids }, status: 'ACTIVE' }, select: { classId: true, studentId: true } }),
-    prisma.assignment.findMany({
-      where: { classId: { in: ids }, deletedAt: null },
-      select: { id: true, classId: true, maxScore: true, assignmentSubmissionAssignments: { select: { studentId: true, status: true, score: true } } },
-    }),
-    prisma.classSession.findMany({ where: { classId: { in: ids }, status: 'DONE', attendance: { not: Prisma.DbNull } }, select: { classId: true, attendance: true } }),
-  ]);
-  const allStudents = [...new Set(members.map((m) => m.studentId))];
-  const attempts = allStudents.length
-    ? await prisma.examAttempt.findMany({
-        where: { userId: { in: allStudents }, status: 'COMPLETED', scoreTotal: { not: null }, mode: 'FULL', test: { isNot: null } },
-        // Chỉ đề full mới có điểm quy đổi đúng thang (TOEIC 990 / VSTEP 10); lượt luyện vài Part bị loại
-        select: { userId: true, scoreTotal: true, test: { select: { examType: true } } },
-      })
-    : [];
-  for (const c of classes) {
-    const sids = members.filter((m) => m.classId === c.id).map((m) => m.studentId);
-    const per = new Map(sids.map((s) => [s, { done: 0, total: 0, present: 0, marks: 0, scores: [] as number[] }]));
-    const asg = assignments.filter((a) => a.classId === c.id);
-    const fallbackScores: number[] = [];
-    for (const a of asg)
-      for (const s of a.assignmentSubmissionAssignments) {
-        const p = per.get(s.studentId);
-        if (!p) continue;
-        p.total++;
-        if (DONE_STATUSES.has(s.status)) p.done++;
-        // Điểm bài giao chỉ bù cho lớp VSTEP (cùng thang 10, quy đổi theo điểm tối đa); lớp TOEIC thang 990 không trộn
-        if (c.examType === 'VSTEP' && s.status === 'GRADED' && s.score !== null && Number(a.maxScore) > 0) fallbackScores.push(round1((Number(s.score) / Number(a.maxScore)) * 10));
-      }
-    let present = 0;
-    let marks = 0;
-    for (const s of sessions.filter((x) => x.classId === c.id)) {
-      const att = (s.attendance ?? {}) as AttendanceJson;
-      for (const [sid, v] of Object.entries(att)) {
-        if (!v?.mark) continue;
-        marks++;
-        const ok = v.mark === 'PRESENT' || v.mark === 'LATE';
-        if (ok) present++;
-        const p = per.get(sid);
-        if (p) {
-          p.marks++;
-          if (ok) p.present++;
-        }
-      }
-    }
-    const examScores: number[] = [];
-    for (const a of attempts)
-      if (a.test?.examType === c.examType && per.has(a.userId)) {
-        examScores.push(Number(a.scoreTotal));
-        per.get(a.userId)!.scores.push(Number(a.scoreTotal));
-      }
-    const scores = examScores.length ? examScores : fallbackScores;
-    const done = [...per.values()].reduce((x, p) => x + p.done, 0);
-    const total = [...per.values()].reduce((x, p) => x + p.total, 0);
-    out.set(c.id, {
-      studentsCount: sids.length,
-      assignmentsCount: asg.length,
-      avgScore: scores.length ? round1(scores.reduce((a, b) => a + b, 0) / scores.length) : 0,
-      completionRate: pct(done, total),
-      attendanceRate: pct(present, marks),
-      attendanceMarks: marks,
-      studentIds: sids,
-      perStudent: per,
-    });
-  }
-  return out;
-}
+/** Số liệu lớp — định nghĩa thống nhất ở core/metrics.ts (dùng chung với giáo viên, học viên, admin) */
+export type ClassStats = ClassMetrics;
+export const classStats = (classes: Pick<Class, 'id' | 'examType'>[]) => classMetrics(classes);
 
 type ClassWithTeacher = Class & { teacher: Pick<User, 'fullName'> };
 export const classInclude = { teacher: { select: { fullName: true } } } as const;
@@ -148,14 +63,17 @@ export function toClassRoom(c: ClassWithTeacher, s?: ClassStats) {
     teacherId: c.teacherId,
     departmentId: c.departmentId,
     studentsCount: s?.studentsCount ?? 0,
+    /** Để đếm học viên KHÁC NHAU khi gộp nhiều lớp (không cộng sĩ số) */
+    studentIds: s?.studentIds ?? [],
     assignmentsCount: s?.assignmentsCount ?? 0,
     avgScore: s?.avgScore ?? 0,
     completionRate: s?.completionRate ?? 0,
     attendanceRate: s?.attendanceRate ?? 0,
+    attendanceMarks: s?.attendanceMarks ?? 0,
     createdAt: c.createdAt.toISOString(),
     schedule: c.scheduleText ?? '',
     room: c.room ?? undefined,
-    gradient: gradientOf(c.code),
+    gradient: classGradient(c.id),
     coverUrl: c.coverUrl ?? undefined,
     level: c.level ?? undefined,
     description: c.description ?? undefined,
@@ -164,14 +82,6 @@ export function toClassRoom(c: ClassWithTeacher, s?: ClassStats) {
     maxStudents: c.maxStudents ?? undefined,
     isArchived: c.isArchived,
   };
-}
-
-/** Mức nguy cơ: tính từ hoàn thành/chuyên cần khi có dữ liệu, ngược lại dùng cache class_members.risk_level */
-export function riskOf(completion: number | null, attendance: number | null, cached: string): 'GOOD' | 'WARNING' | 'RISK' {
-  const vals = [completion, attendance].filter((v): v is number => v !== null);
-  if (!vals.length) return (['GOOD', 'WARNING', 'RISK'].includes(cached) ? cached : 'GOOD') as 'GOOD' | 'WARNING' | 'RISK';
-  const worst = Math.min(...vals);
-  return worst < 60 ? 'RISK' : worst < 80 ? 'WARNING' : 'GOOD';
 }
 
 /** DeptStudent cho danh sách học viên của các lớp */
@@ -184,21 +94,19 @@ export async function deptStudents(classes: Pick<Class, 'id' | 'examType'>[]) {
   });
   return members.map((m) => {
     const p = stats.get(m.classId)?.perStudent.get(m.studentId);
-    const completion = p && p.total ? pct(p.done, p.total) : null;
-    const attendance = p && p.marks ? pct(p.present, p.marks) : null;
     return {
       id: m.student.id,
       name: m.student.fullName,
       initials: initials(m.student.fullName),
       avatarUrl: m.student.avatarUrl ?? undefined,
       email: m.student.email,
-      avgScore: p?.scores.length ? round1(p.scores.reduce((a, b) => a + b, 0) / p.scores.length) : 0,
-      completion: completion ?? 0,
+      avgScore: p?.avgScore ?? 0,
+      completion: rateOf(p?.completion) ?? 0,
       streak: m.student.streakCurrent,
-      lastActive: (m.student.lastActiveAt ?? m.student.updatedAt).toISOString(),
-      status: riskOf(completion, attendance, m.riskLevel),
+      lastActive: (m.student.lastActiveAt ?? m.student.createdAt).toISOString(),
+      status: p?.risk ?? 'GOOD',
       classId: m.classId,
-      attendance: attendance ?? 0,
+      attendance: rateOf(p?.attendance) ?? 0,
     };
   });
 }
@@ -213,7 +121,7 @@ export async function teacherSummaries(where: Prisma.UserWhereInput) {
   const stats = await classStats(teachers.flatMap((t) => t.classTeachers));
   return teachers.map((t) => {
     const ss = t.classTeachers.map((c) => stats.get(c.id)!).filter(Boolean);
-    const scored = ss.filter((s) => s.avgScore > 0);
+    const scored = ss.filter((s) => s.hasScore);
     return {
       id: t.id,
       name: t.fullName,
@@ -222,7 +130,8 @@ export async function teacherSummaries(where: Prisma.UserWhereInput) {
       email: t.email,
       subject: t.department?.name ?? '',
       classesCount: ss.length,
-      studentsCount: ss.reduce((a, s) => a + s.studentsCount, 0),
+      // Số học viên KHÁC NHAU qua các lớp (khớp tổng quan của giáo viên và trang đội ngũ)
+      studentsCount: new Set(ss.flatMap((s) => s.studentIds)).size,
       avgClassScore: scored.length ? round1(scored.reduce((a, s) => a + s.avgScore, 0) / scored.length) : 0,
       status: t.status,
       role: t.role,

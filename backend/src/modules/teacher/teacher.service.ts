@@ -6,6 +6,7 @@ import { Prisma, type Assignment, type AssignmentSubmission, type Class, type Cl
 import { prisma } from '../../lib/prisma';
 import { forbidden, notFound, type AuthUser } from '../../core/http';
 import { iso, num, ymd } from '../../core/dto';
+import { aggregateStudents, classGradient, classMetrics, marksOf, rateOf, riskLevel, round1, syncRiskCache } from '../../core/metrics';
 
 // ---------------- Quyền sở hữu ----------------
 
@@ -26,6 +27,8 @@ export async function assertClass(u: AuthUser, classId: string): Promise<Class> 
 
 /** Học viên phải đang thuộc ít nhất một lớp của giáo viên. */
 export async function assertStudent(u: AuthUser, studentId: string) {
+  const exists = await prisma.user.findFirst({ where: { id: studentId, role: 'STUDENT', deletedAt: null }, select: { id: true } });
+  if (!exists) throw notFound('Học viên');
   const ids = await myClassIds(u);
   const m = await prisma.classMember.findFirst({ where: { studentId, classId: { in: ids } } });
   if (!m) throw forbidden('Học viên không thuộc lớp nào của bạn');
@@ -41,8 +44,7 @@ export async function assertAssignment(u: AuthUser, id: string) {
 
 // ---------------- Tiện ích ----------------
 
-const GRADIENTS = ['from-indigo-500 to-violet-600', 'from-emerald-500 to-teal-600', 'from-amber-400 to-orange-500', 'from-rose-500 to-pink-600', 'from-sky-500 to-cyan-600', 'from-violet-500 to-fuchsia-600'];
-export const gradientOf = (id: string) => GRADIENTS[[...id].reduce((a, ch) => a + ch.charCodeAt(0), 0) % GRADIENTS.length];
+export const gradientOf = classGradient;
 
 export const initialsOf = (name: string) =>
   name
@@ -52,8 +54,7 @@ export const initialsOf = (name: string) =>
     .map((w) => w[0]!.toUpperCase())
     .join('');
 
-export const round1 = (n: number) => Math.round(n * 10) / 10;
-export const pct = (a: number, b: number) => (b > 0 ? Math.round((a / b) * 100) : 0);
+export { round1, pct } from '../../core/metrics';
 export const hhmm = (d: Date) => d.toISOString().slice(11, 16);
 export const timeOf = (s: string) => new Date(`1970-01-01T${s.length === 5 ? `${s}:00` : s}Z`);
 export const dateOf = (s: string) => new Date(`${s}T00:00:00Z`);
@@ -72,10 +73,7 @@ export const DONE_STATUSES = ['SUBMITTED', 'LATE', 'GRADED'] as const;
 
 type AttendanceJson = Record<string, { mark: string; note?: string } | string>;
 /** Chuẩn hoá attendance JSONB → { studentId: mark } */
-export function marksOf(att: Prisma.JsonValue | null): Record<string, string> {
-  if (!att || typeof att !== 'object' || Array.isArray(att)) return {};
-  return Object.fromEntries(Object.entries(att as AttendanceJson).map(([k, v]) => [k, typeof v === 'string' ? v : v.mark]));
-}
+export { marksOf };
 export function notesOf(att: Prisma.JsonValue | null): Record<string, string> {
   if (!att || typeof att !== 'object' || Array.isArray(att)) return {};
   return Object.fromEntries(
@@ -85,115 +83,32 @@ export function notesOf(att: Prisma.JsonValue | null): Record<string, string> {
   );
 }
 
-// ---------------- Số liệu ----------------
+// ---------------- Số liệu (định nghĩa chung ở core/metrics.ts) ----------------
 
-/** Điểm thi thử TB (lượt COMPLETED có điểm) theo học viên. */
-async function avgScoreByStudent(studentIds: string[], examType?: 'TOEIC' | 'VSTEP') {
-  if (!studentIds.length) return new Map<string, number>();
-  const rows = await prisma.examAttempt.groupBy({
-    by: ['userId'],
-    where: { userId: { in: studentIds }, status: 'COMPLETED', scoreTotal: { not: null }, mode: 'FULL', test: examType ? { examType } : { isNot: null } },
-    _avg: { scoreTotal: true },
-  });
-  return new Map(rows.map((r) => [r.userId, round1(Number(r._avg.scoreTotal ?? 0))]));
-}
-
-/** Tỷ lệ hoàn thành bài giao (đã nộp / được giao, bỏ bài nháp) theo học viên, trong tập lớp. */
-async function completionByStudent(studentIds: string[], classIds: string[]) {
-  if (!studentIds.length) return new Map<string, number>();
-  const rows = await prisma.assignmentSubmission.groupBy({
-    by: ['studentId', 'status'],
-    where: { studentId: { in: studentIds }, assignment: { classId: { in: classIds }, deletedAt: null, status: { not: 'DRAFT' } } },
-    _count: { _all: true },
-  });
-  const acc = new Map<string, { done: number; total: number }>();
-  for (const r of rows) {
-    const cur = acc.get(r.studentId) ?? { done: 0, total: 0 };
-    cur.total += r._count._all;
-    if ((DONE_STATUSES as readonly string[]).includes(r.status)) cur.done += r._count._all;
-    acc.set(r.studentId, cur);
-  }
-  return new Map([...acc].map(([k, v]) => [k, pct(v.done, v.total)]));
-}
-
-/** Chuyên cần theo học viên: (có mặt + đi muộn) / số buổi đã điểm danh. */
+/** Chuyên cần theo học viên trong các lớp: (có mặt + đi muộn) / lượt đã điểm danh. */
 export async function attendanceByStudent(classIds: string[]) {
-  const sessions = await prisma.classSession.findMany({ where: { classId: { in: classIds }, status: 'DONE', NOT: { attendance: { equals: Prisma.DbNull } } }, select: { attendance: true } });
-  const acc = new Map<string, { ok: number; total: number }>();
-  for (const s of sessions) {
-    for (const [sid, mark] of Object.entries(marksOf(s.attendance))) {
-      const cur = acc.get(sid) ?? { ok: 0, total: 0 };
-      cur.total += 1;
-      if (mark === 'PRESENT' || mark === 'LATE') cur.ok += 1;
-      acc.set(sid, cur);
-    }
-  }
-  return acc;
+  const classes = await prisma.class.findMany({ where: { id: { in: classIds } }, select: { id: true, examType: true } });
+  const agg = aggregateStudents(await classMetrics(classes));
+  return new Map([...agg].map(([k, v]) => [k, { ok: v.attendance.ok, total: v.attendance.total }]));
 }
 
-/** Mức rủi ro: chuyên cần < 60% hoặc hoàn thành < 50% → RISK; < 80% / < 70% → WARNING. */
+/** Mức nguy cơ — xem core/metrics.riskLevel */
 export function riskOf(attendance?: { ok: number; total: number }, completion?: { done: number; total: number }) {
-  const a = attendance && attendance.total > 0 ? attendance.ok / attendance.total : 1;
-  const c = completion && completion.total > 0 ? completion.done / completion.total : 1;
-  // Ít hơn 3 buổi đã điểm danh / 2 bài đến hạn: chưa đủ dữ liệu để kết luận "nguy cơ", tối đa "cần chú ý"
-  const enoughA = (attendance?.total ?? 0) >= 3;
-  const enoughC = (completion?.total ?? 0) >= 2;
-  if ((enoughA && a < 0.6) || (enoughC && c < 0.5)) return 'RISK';
-  if (a < 0.8 || c < 0.7) return 'WARNING';
-  return 'GOOD';
+  return riskLevel(attendance, completion ? { ok: completion.done, total: completion.total } : undefined);
 }
 
-/** Tính lại class_members.risk_level cho cả lớp (sau điểm danh / nộp bài). */
-export async function recomputeRisk(classId: string) {
-  const members = await prisma.classMember.findMany({ where: { classId, status: 'ACTIVE' }, select: { id: true, studentId: true, riskLevel: true } });
-  if (!members.length) return;
-  const att = await attendanceByStudent([classId]);
-  const subs = await prisma.assignmentSubmission.groupBy({
-    by: ['studentId', 'status'],
-    where: { studentId: { in: members.map((m) => m.studentId) }, assignment: { classId, deletedAt: null, status: { not: 'DRAFT' }, dueAt: { lt: new Date() } } },
-    _count: { _all: true },
-  });
-  const comp = new Map<string, { done: number; total: number }>();
-  for (const r of subs) {
-    const cur = comp.get(r.studentId) ?? { done: 0, total: 0 };
-    cur.total += r._count._all;
-    if ((DONE_STATUSES as readonly string[]).includes(r.status)) cur.done += r._count._all;
-    comp.set(r.studentId, cur);
-  }
-  await prisma.$transaction(
-    members
-      .map((m) => ({ m, level: riskOf(att.get(m.studentId), comp.get(m.studentId)) }))
-      .filter(({ m, level }) => m.riskLevel !== level)
-      .map(({ m, level }) => prisma.classMember.update({ where: { id: m.id }, data: { riskLevel: level } }))
-  );
-}
+/** Tính lại class_members.risk_level cho cả lớp (sau điểm danh / nộp bài / chấm / đóng bài). */
+export const recomputeRisk = (classId: string) => syncRiskCache([classId]);
 
 // ---------------- DTO ----------------
 
 /** ClassRoom (kèm số liệu thật) cho danh sách lớp. */
 export async function toClassRooms(classes: (Class & { teacher: Pick<User, 'fullName'> })[]) {
-  const ids = classes.map((c) => c.id);
-  if (!ids.length) return [];
-  const [members, assignments, subs, att] = await Promise.all([
-    prisma.classMember.findMany({ where: { classId: { in: ids }, status: 'ACTIVE' }, select: { classId: true, studentId: true } }),
-    prisma.assignment.groupBy({ by: ['classId'], where: { classId: { in: ids }, deletedAt: null }, _count: { _all: true } }),
-    prisma.assignmentSubmission.findMany({ where: { assignment: { classId: { in: ids }, deletedAt: null, status: { not: 'DRAFT' } } }, select: { status: true, assignment: { select: { classId: true } } } }),
-    prisma.classSession.findMany({ where: { classId: { in: ids }, status: 'DONE' }, select: { classId: true, attendance: true } }),
-  ]);
-  const byClass = <T,>(rows: T[], key: (r: T) => string) => rows.reduce((m, r) => m.set(key(r), [...(m.get(key(r)) ?? []), r]), new Map<string, T[]>());
-  const memberMap = byClass(members, (m) => m.classId);
-  const subMap = byClass(subs, (s) => s.assignment.classId);
-  const attMap = byClass(att, (s) => s.classId);
-  const out = [];
-  for (const c of classes) {
-    const studentIds = (memberMap.get(c.id) ?? []).map((m) => m.studentId);
-    const scores = await avgScoreByStudent(studentIds, c.examType);
-    const vals = [...scores.values()];
-    const cs = subMap.get(c.id) ?? [];
-    let ok = 0;
-    let total = 0;
-    for (const s of attMap.get(c.id) ?? []) for (const mark of Object.values(marksOf(s.attendance))) (total++, (mark === 'PRESENT' || mark === 'LATE') && ok++);
-    out.push({
+  if (!classes.length) return [];
+  const metrics = await classMetrics(classes);
+  return classes.map((c) => {
+    const m = metrics.get(c.id)!;
+    return {
       id: c.id,
       name: c.name,
       code: c.code,
@@ -202,60 +117,51 @@ export async function toClassRooms(classes: (Class & { teacher: Pick<User, 'full
       description: c.description ?? undefined,
       teacherId: c.teacherId,
       teacherName: c.teacher.fullName,
-      studentsCount: studentIds.length,
+      studentsCount: m.studentsCount,
+      studentIds: m.studentIds,
       maxStudents: c.maxStudents ?? undefined,
-      assignmentsCount: assignments.find((a) => a.classId === c.id)?._count._all ?? 0,
-      avgScore: vals.length ? round1(vals.reduce((a, b) => a + b, 0) / vals.length) : 0,
-      completionRate: pct(cs.filter((s) => (DONE_STATUSES as readonly string[]).includes(s.status)).length, cs.length),
-      attendanceRate: pct(ok, total),
+      assignmentsCount: m.assignmentsCount,
+      avgScore: m.avgScore,
+      completionRate: m.completionRate,
+      attendanceRate: m.attendanceRate,
+      attendanceMarks: m.attendanceMarks,
       createdAt: ymd(c.createdAt)!,
       startDate: ymd(c.startDate),
       endDate: ymd(c.endDate),
       schedule: c.scheduleText ?? '',
       room: c.room ?? undefined,
-      gradient: gradientOf(c.id),
+      gradient: classGradient(c.id),
       coverUrl: c.coverUrl ?? undefined,
       isArchived: c.isArchived,
-    });
-  }
-  return out;
-}
-
-/** ClassStudent cho tập học viên thuộc các lớp `classIds`. */
-export async function toClassStudents(classIds: string[], examType?: 'TOEIC' | 'VSTEP') {
-  const members = await prisma.classMember.findMany({
-    where: { classId: { in: classIds }, status: 'ACTIVE' },
-    include: { student: true },
-    orderBy: { joinedAt: 'asc' },
-  });
-  const byStudent = new Map<string, { user: User; classIds: string[]; risk: string[] }>();
-  for (const m of members) {
-    const cur = byStudent.get(m.studentId) ?? { user: m.student, classIds: [], risk: [] };
-    cur.classIds.push(m.classId);
-    cur.risk.push(m.riskLevel);
-    byStudent.set(m.studentId, cur);
-  }
-  const ids = [...byStudent.keys()];
-  const [scores, completion, att] = await Promise.all([avgScoreByStudent(ids, examType), completionByStudent(ids, classIds), attendanceByStudent(classIds)]);
-  const rank = { GOOD: 0, WARNING: 1, RISK: 2 } as Record<string, number>;
-  return ids.map((id) => {
-    const { user, classIds: cids, risk } = byStudent.get(id)!;
-    const a = att.get(id);
-    return {
-      id,
-      name: user.fullName,
-      initials: initialsOf(user.fullName),
-      avatarUrl: user.avatarUrl ?? undefined,
-      email: user.email,
-      avgScore: scores.get(id) ?? 0,
-      completion: completion.get(id) ?? 0,
-      attendanceRate: a ? pct(a.ok, a.total) : null,
-      streak: user.streakCurrent,
-      lastActive: (user.lastActiveAt ?? user.createdAt).toISOString(),
-      status: risk.reduce((w, r) => (rank[r]! > rank[w]! ? r : w), 'GOOD') as 'GOOD' | 'WARNING' | 'RISK',
-      classIds: cids,
     };
   });
+}
+
+/** ClassStudent cho tập học viên thuộc các lớp `classIds` (gộp số liệu nếu học viên ở nhiều lớp). */
+export async function toClassStudents(classIds: string[], _examType?: 'TOEIC' | 'VSTEP') {
+  const classes = await prisma.class.findMany({ where: { id: { in: classIds } }, select: { id: true, examType: true } });
+  const agg = aggregateStudents(await classMetrics(classes));
+  const users = await prisma.user.findMany({ where: { id: { in: [...agg.keys()] } } });
+  const byId = new Map(users.map((u) => [u.id, u]));
+  return [...agg.entries()]
+    .filter(([id]) => byId.has(id))
+    .map(([id, v]) => {
+      const user = byId.get(id)!;
+      return {
+        id,
+        name: user.fullName,
+        initials: initialsOf(user.fullName),
+        avatarUrl: user.avatarUrl ?? undefined,
+        email: user.email,
+        avgScore: v.avgScore ?? 0,
+        completion: rateOf(v.completion) ?? 0,
+        attendanceRate: rateOf(v.attendance),
+        streak: user.streakCurrent,
+        lastActive: (user.lastActiveAt ?? user.createdAt).toISOString(),
+        status: v.risk,
+        classIds: v.classIds,
+      };
+    });
 }
 
 export function toSession(s: ClassSession & { class?: Pick<Class, 'name'> | null }) {

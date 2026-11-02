@@ -19,7 +19,7 @@ export const HeadComplaintsPage: React.FC = () => {
   const items = data ?? EMPTY;
   const studentAvatar = (id: string) => items.find((c) => c.id === id)?.avatarUrl;
   const setStatus = useHeadMutation((a: { id: string; status: 'NEW' | 'IN_REVIEW' | 'RESOLVED' }) => headApi.setComplaintStatus(a.id, a.status));
-  const replyM = useHeadMutation((a: { id: string; text: string }) => headApi.replyComplaint(a.id, { text: a.text, resolve: true }));
+  const replyM = useHeadMutation((a: { id: string; text: string; accepted: boolean }) => headApi.replyComplaint(a.id, { text: a.text, resolve: true, accepted: a.accepted }));
   const [tab, setTab] = useState<Complaint['status']>('NEW');
   const [replying, setReplying] = useState<Complaint | null>(null);
   const [reply, setReply] = useState('');
@@ -29,15 +29,16 @@ export const HeadComplaintsPage: React.FC = () => {
 
   const accept = (c: Complaint) =>
     setStatus.mutate({ id: c.id, status: 'IN_REVIEW' }, { onSuccess: () => toast.info('Đã tiếp nhận', `Khiếu nại của ${c.student} đang được xử lý.`), onError: (e) => toast.error('Không thực hiện được', errorMessage(e)) });
-  const resolve = () => {
+  /** accepted = khiếu nại đúng (đã sửa câu hỏi / điều chỉnh) → học viên báo lỗi câu hỏi được cộng điểm ghi nhận đóng góp */
+  const resolve = (accepted: boolean) => {
     if (!replying) return;
     if (!reply.trim()) return toast.error('Vui lòng nhập nội dung phản hồi');
     const who = replying.student;
     replyM.mutate(
-      { id: replying.id, text: reply.trim() },
+      { id: replying.id, text: reply.trim(), accepted },
       {
         onSuccess: () => {
-          toast.success('Đã phản hồi & đóng', `${who} sẽ nhận được thông báo.`);
+          toast.success(accepted ? 'Đã chấp nhận & đóng khiếu nại' : 'Đã từ chối & đóng khiếu nại', accepted && replying?.questionRef ? `${who} được cộng điểm ghi nhận đóng góp và nhận thông báo.` : `${who} sẽ nhận được thông báo.`);
           setReplying(null);
           setReply('');
         },
@@ -116,13 +117,17 @@ export const HeadComplaintsPage: React.FC = () => {
             <Button variant="ghost" onClick={() => setReplying(null)}>
               Huỷ
             </Button>
-            <Button variant="success" onClick={resolve}>
-              Gửi & đóng khiếu nại
+            <Button variant="outline" onClick={() => resolve(false)} disabled={replyM.isPending}>
+              Không chấp nhận
+            </Button>
+            <Button variant="success" onClick={() => resolve(true)} disabled={replyM.isPending}>
+              Chấp nhận & đóng
             </Button>
           </>
         }
       >
         {replying && <p className="mb-4 rounded-xl border-l-4 border-violet-400 bg-violet-500/[0.05] p-3 text-xs text-slate-600">"{replying.content}"</p>}
+        <p className="mb-3 text-xs text-slate-500">Chấp nhận khi khiếu nại đúng (đã hiệu đính câu hỏi trong Ngân hàng câu hỏi hoặc đã điều chỉnh điểm). Học viên báo lỗi câu hỏi được chấp nhận sẽ được cộng 20 điểm ghi nhận đóng góp.</p>
         <Textarea label="Nội dung phản hồi" required value={reply} onChange={(e) => setReply(e.target.value)} placeholder="Giải thích kết luận chuyên môn, kết quả phúc khảo hoặc hướng xử lý..." />
       </Modal>
     </div>

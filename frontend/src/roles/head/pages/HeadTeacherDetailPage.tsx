@@ -6,7 +6,7 @@ import { toast } from '@/shared/stores/uiStore';
 import type { GradingReview } from '@/shared/types';
 import { headApi, useHeadReviews, useHeadTeacher } from '@/shared/api/head';
 import { errorMessage } from '@/shared/api/client';
-import { addDaysLocal, mondayOf, weekdayCode, ymdLocal } from '@/shared/constants/staff';
+import { addDaysLocal, distinctStudents, mondayOf, pooledAttendance, weekdayCode, ymdLocal } from '@/shared/constants/staff';
 import { Avatar, Modal, Textarea } from '@/shared/components/ui';
 import { cn, formatDate } from '@/shared/utils';
 import { CLASS_BAR, DAY_NAME, Figures, Meter, Panel, PanelLink, Status, TBtn, classTone, tbl } from '@/roles/teacher/components/TeacherKit';
@@ -48,9 +48,8 @@ export const HeadTeacherDetailPage: React.FC = () => {
   const reviews = allReviews.filter((r) => r.teacher === t.name);
   const rated = obs.filter((o) => o.rating);
   const avgRating = rated.length ? Math.round((rated.reduce((a, o) => a + (o.rating ?? 0), 0) / rated.length) * 10) / 10 : null;
-  const withAtt = classes.filter((c) => c.attendanceRate);
-  const attendance = withAtt.length ? Math.round(withAtt.reduce((a, c) => a + c.attendanceRate, 0) / withAtt.length) : 0;
-  const students = classes.reduce((a, c) => a + c.studentsCount, 0);
+  const attendance = pooledAttendance(classes);
+  const students = distinctStudents(classes);
   const mon = mondayOf();
   const weekEnd = ymdLocal(addDaysLocal(mon, 7));
   const week = sessions.filter((s) => s.date >= ymdLocal(mon) && s.date < weekEnd && s.status !== 'CANCELLED').map((s) => ({ day: weekdayCode(s.date), time: `${s.start}–${s.end}`, cls: { id: s.classId, name: s.className, room: s.room } }));
@@ -153,7 +152,7 @@ export const HeadTeacherDetailPage: React.FC = () => {
                         <td className={tbl.td}>
                           <span className="flex items-center gap-2">
                             <Meter value={c.attendanceRate} tone={c.attendanceRate < 75 ? 'red' : c.attendanceRate < 85 ? 'amber' : 'green'} className="flex-1" />
-                            <span className="w-9 text-right text-[13px] tabular-nums">{c.attendanceRate ? `${c.attendanceRate}%` : '—'}</span>
+                            <span className="w-9 text-right text-[13px] tabular-nums">{c.attendanceMarks ? `${c.attendanceRate}%` : '—'}</span>
                           </span>
                         </td>
                         <td className={tbl.td}>

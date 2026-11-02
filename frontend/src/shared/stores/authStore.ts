@@ -2,7 +2,8 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { AppUser } from '@/shared/types';
 import { authApi } from '@/shared/api/auth';
-import { setSessionExpiredHandler, tokenStore } from '@/shared/api/client';
+import { setSessionExpiredHandler, setUserRefreshedHandler, tokenStore } from '@/shared/api/client';
+import { toast } from '@/shared/stores/uiStore';
 
 interface AuthState {
   user: AppUser | null;
@@ -35,8 +36,14 @@ export const useAuthStore = create<AuthState>()(
   )
 );
 
-// Refresh token hết hạn / bị thu hồi → xoá phiên trên giao diện
-setSessionExpiredHandler(() => useAuthStore.setState({ user: null, token: null }));
+// Refresh token hết hạn / bị thu hồi / tài khoản bị khoá → xoá phiên trên giao diện và báo lý do
+setSessionExpiredHandler((reason) => {
+  const had = Boolean(useAuthStore.getState().user);
+  useAuthStore.setState({ user: null, token: null });
+  if (had) toast.info('Phiên đăng nhập đã kết thúc', reason ?? 'Vui lòng đăng nhập lại.');
+});
+// Làm mới phiên thành công → cập nhật hồ sơ/vai trò mới nhất (RoleGuard tự chuyển trang nếu vai trò đổi)
+setUserRefreshedHandler((user) => useAuthStore.setState({ user }));
 
 // Khởi động: phiên cũ không có token thật (bản demo trước) → xoá; có token → đồng bộ hồ sơ từ /auth/me
 if (typeof window !== 'undefined') {

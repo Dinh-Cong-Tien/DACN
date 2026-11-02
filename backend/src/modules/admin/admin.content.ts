@@ -12,7 +12,7 @@ export const contentRouter = Router();
 
 const uuid = z.string().uuid();
 const idOf = (req: Request) => parse(uuid, req.params.id);
-const slugify = (s: string) =>
+export const slugify = (s: string) =>
   s
     .normalize('NFD')
     .replace(/[̀-ͯ]/g, '')
@@ -21,7 +21,7 @@ const slugify = (s: string) =>
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-|-$/g, '')
     .slice(0, 100) || 'muc';
-const uniqueSlug = (base: string) => `${slugify(base)}-${Date.now().toString(36).slice(-4)}`;
+export const uniqueSlug = (base: string) => `${slugify(base)}-${Date.now().toString(36).slice(-4)}`;
 const CONTENT_STATUS = z.enum(['DRAFT', 'PENDING_REVIEW', 'PUBLISHED', 'REJECTED', 'ARCHIVED']);
 const EXAM = z.enum(['TOEIC', 'VSTEP']);
 const CEFR = z.enum(['A1', 'A2', 'B1', 'B2', 'C1', 'C2']);
@@ -232,7 +232,7 @@ contentRouter.delete(
 // ============================ CÂU HỎI (gồm đề Viết / Nói) ============================
 contentRouter.get('/questions', handler((req) => listQuestions(req.query)));
 
-const questionBody = z.object({
+export const questionBody = z.object({
   examType: EXAM,
   part: PART,
   skill: SKILL,
@@ -252,7 +252,7 @@ const questionBody = z.object({
   rubricId: uuid.nullish(),
   status: CONTENT_STATUS.optional(),
 });
-const toQuestionData = (b: Partial<z.infer<typeof questionBody>>) => {
+export const toQuestionData = (b: Partial<z.infer<typeof questionBody>>) => {
   const { correctAnswer, explanation, options, taskConfig, ...rest } = b;
   return {
     ...rest,
@@ -312,7 +312,7 @@ async function bumpTagCounts(tagIds: string[]) {
 // ============================ ĐỀ THI ============================
 const PART_LABEL: Record<string, string> = { TOEIC_P1: 'Part 1', TOEIC_P2: 'Part 2', TOEIC_P3: 'Part 3', TOEIC_P4: 'Part 4', TOEIC_P5: 'Part 5', TOEIC_P6: 'Part 6', TOEIC_P7: 'Part 7' };
 type Section = { part: string; title?: string };
-const testRow = (t: Prisma.MockTestGetPayload<object>) => {
+export const testRow = (t: Prisma.MockTestGetPayload<object>) => {
   const sections = (t.sections ?? []) as Section[];
   return {
     id: t.id,
@@ -338,7 +338,7 @@ contentRouter.get(
   '/tests',
   handler(async () => (await prisma.mockTest.findMany({ where: { deletedAt: null }, orderBy: [{ examType: 'asc' }, { createdAt: 'desc' }] })).map(testRow))
 );
-const testBody = z.object({
+export const testBody = z.object({
   title: z.string().trim().min(2).max(200),
   slug: z.string().max(140).optional(),
   examType: EXAM,
@@ -395,11 +395,19 @@ contentRouter.put(
   handler(async (req) => {
     const id = idOf(req);
     const { questionIds, points } = parse(z.object({ questionIds: z.array(uuid).max(300), points: z.number().min(0).max(10).default(1) }), req.body);
+    const count = await setTestQuestions(id, questionIds, points);
+    await audit(req, 'TEST_QUESTIONS_SET', 'mock_test', id, { after: { count } });
+    return { count };
+  })
+);
+
+/** Gán danh sách câu cho đề (thay toàn bộ). `allow` lọc thêm câu được phép (vd giáo viên: câu đã xuất bản hoặc của chính mình). */
+export async function setTestQuestions(id: string, questionIds: string[], points = 1, allow?: Prisma.QuestionWhereInput) {
     const test = await prisma.mockTest.findFirst({ where: { id, deletedAt: null } });
     if (!test) throw notFound('Đề thi');
     if (new Set(questionIds).size !== questionIds.length) throw badRequest('Danh sách có câu hỏi bị trùng');
-    const qs = await prisma.question.findMany({ where: { id: { in: questionIds }, deletedAt: null }, select: { id: true, part: true, examType: true } });
-    if (qs.length !== questionIds.length) throw badRequest('Có câu hỏi không tồn tại hoặc đã bị xoá');
+    const qs = await prisma.question.findMany({ where: { id: { in: questionIds }, deletedAt: null, ...(allow ?? {}) }, select: { id: true, part: true, examType: true } });
+    if (qs.length !== questionIds.length) throw badRequest(allow ? 'Có câu hỏi không tồn tại, đã bị xoá hoặc chưa được duyệt' : 'Có câu hỏi không tồn tại hoặc đã bị xoá');
     if (qs.some((q) => q.examType !== test.examType)) throw badRequest(`Chỉ gán được câu hỏi ${test.examType} vào đề ${test.examType}`);
     const partOf = new Map(qs.map((q) => [q.id, q.part]));
     // Cấu trúc phần thi = các Part xuất hiện theo thứ tự câu, giữ tiêu đề/hướng dẫn cũ nếu đã có
@@ -411,10 +419,8 @@ contentRouter.put(
       prisma.mockTestQuestion.createMany({ data: questionIds.map((qid, i) => ({ testId: id, questionId: qid, part: partOf.get(qid)!, questionNo: i + 1, points })) }),
       prisma.mockTest.update({ where: { id }, data: { totalQuestions: questionIds.length, sections, version: { increment: 1 } } }),
     ]);
-    await audit(req, 'TEST_QUESTIONS_SET', 'mock_test', id, { after: { count: questionIds.length } });
-    return { count: questionIds.length };
-  })
-);
+    return questionIds.length;
+}
 
 /** Nhân bản đề (kèm danh sách câu hỏi), bản sao ở trạng thái nháp */
 contentRouter.post(

@@ -1,5 +1,5 @@
 import React from 'react';
-import { LayoutDashboard, Users, ClipboardList, ClipboardCheck, CalendarDays, PenTool, FolderOpen, BarChart3, Video, FileText, BookOpen, Sheet, UserRound } from 'lucide-react';
+import { LayoutDashboard, Users, ClipboardList, ClipboardCheck, CalendarDays, PenTool, FolderOpen, BarChart3, Video, FileText, BookOpen, Sheet, UserRound, FilePen } from 'lucide-react';
 import { AppShell, NavGroup } from '@/shared/components/layout/AppShell';
 import { TeacherNav, usePendingGradingCount } from './TeacherNav';
 
@@ -30,6 +30,7 @@ const groupsOf = (toGrade: number): NavGroup[] => [
       { to: '/teacher/library/courses', label: 'Khoá học & bài giảng', icon: Video },
       { to: '/teacher/library/tests', label: 'Ngân hàng đề', icon: FileText },
       { to: '/teacher/library/practice', label: 'Ngữ pháp & Từ vựng', icon: BookOpen },
+      { to: '/teacher/authoring', label: 'Học liệu của tôi', icon: FilePen },
       { to: '/teacher/materials', label: 'Tài liệu lớp', icon: FolderOpen },
     ],
   },

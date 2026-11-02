@@ -69,7 +69,9 @@ export const TeacherClassDetailPage: React.FC = () => {
   if (error || !cls) return <TError error={error} onRetry={() => refetch()} />;
 
   const sessions = cls.sessions;
-  const nextSession = sessions.filter((s) => s.status === 'UPCOMING').sort((a, b) => `${a.date}${a.start}`.localeCompare(`${b.date}${b.start}`))[0];
+  // Buổi kế tiếp: chưa diễn ra (buổi đã qua mà vẫn UPCOMING là "chưa điểm danh", không phải buổi kế tiếp)
+  const nowKey = (() => { const d = new Date(); const p = (n: number) => String(n).padStart(2, '0'); return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}${p(d.getHours())}:${p(d.getMinutes())}`; })();
+  const nextSession = sessions.filter((s) => s.status === 'UPCOMING' && `${s.date}${s.end}` > nowKey).sort((a, b) => `${a.date}${a.start}`.localeCompare(`${b.date}${b.start}`))[0];
   const news = cls.announcements;
   const materials = cls.materials;
   const assignments = cls.assignments;
@@ -283,7 +285,7 @@ export const TeacherClassDetailPage: React.FC = () => {
           { label: 'Sĩ số', value: cls.studentsCount, note: `${students.filter((x) => x.status !== 'GOOD').length} học viên cần theo dõi`, icon: Users, tone: 'indigo' },
           { label: 'Điểm trung bình', value: cls.avgScore || '—', note: cls.avgScore ? 'các bài thi thử của học viên' : 'chưa có bài thi thử', icon: TrendingUp, tone: 'violet' },
           { label: 'Hoàn thành bài tập', value: cls.assignmentsCount ? `${cls.completionRate}%` : '—', note: `${cls.assignmentsCount} bài đã giao`, icon: ClipboardList, tone: 'amber' },
-          { label: 'Chuyên cần', value: cls.attendanceRate ? `${cls.attendanceRate}%` : '—', note: `${sessionsDone} buổi đã dạy`, icon: ClipboardCheck, tone: 'emerald' },
+          { label: 'Chuyên cần', value: cls.attendanceMarks ? `${cls.attendanceRate}%` : '—', note: `${sessionsDone} buổi đã dạy`, icon: ClipboardCheck, tone: 'emerald' },
         ]}
       />
 

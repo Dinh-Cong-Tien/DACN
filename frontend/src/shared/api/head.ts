@@ -97,6 +97,8 @@ export interface HeadReports {
   classes: ReportRow[];
   monthly: { labels: string[]; attendance: number[]; completion: number[] };
   gradeDist: { grade: 'A' | 'B' | 'C' | 'D'; count: number }[];
+  /** Tổng hợp: học viên khác nhau, chuyên cần gộp theo lượt điểm danh (null = chưa điểm danh) */
+  summary?: { students: number; attendanceRate: number | null };
 }
 export interface QuestionRow {
   id: string;
@@ -156,6 +158,8 @@ export const headApi = {
   approve: (type: string, id: string, note?: string) => api.post(`/head/approvals/${type}/${id}/approve`, { note }),
   reject: (type: string, id: string, note: string) => api.post(`/head/approvals/${type}/${id}/reject`, { note }),
   questionBank: (q: QuestionQuery) => api.get<QuestionPage>('/head/question-bank', q),
+  updateQuestion: (id: string, b: { stem?: string; options?: { key: string; text: string }[] | null; correctAnswer?: string | null; explanation?: string | null; translationVi?: string | null }) => api.patch<QuestionRow>(`/head/question-bank/${id}`, b),
+  archiveQuestion: (id: string, archived: boolean) => api.post<QuestionRow>(`/head/question-bank/${id}/archive`, { archived }),
   question: (id: string) => api.get<QuestionRow & { passage: { id: string; title?: string; contentMd?: string; transcript?: string; audioUrl?: string; imageUrl?: string } | null }>(`/head/question-bank/${id}`),
   gradingReviews: () => api.get<HeadGradingReview[]>('/head/grading-reviews'),
   gradingReview: (id: string) => api.get<HeadGradingReview>(`/head/grading-reviews/${id}`),

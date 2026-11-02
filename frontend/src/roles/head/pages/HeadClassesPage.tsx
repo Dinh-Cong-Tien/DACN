@@ -6,7 +6,7 @@ import { toast } from '@/shared/stores/uiStore';
 import type { ClassRoom, ExamType } from '@/shared/types';
 import { headApi, useHeadClasses, useHeadInvalidate, useHeadSchedule, useHeadTeachers, type HeadClass } from '@/shared/api/head';
 import { errorMessage } from '@/shared/api/client';
-import { addDaysLocal, ymdLocal } from '@/shared/constants/staff';
+import { addDaysLocal, distinctStudents, pooledAttendance, ymdLocal } from '@/shared/constants/staff';
 import { Avatar, Input, Modal, Select } from '@/shared/components/ui';
 import { Img, PHOTOS } from '@/shared/components/media/Img';
 import { cn } from '@/shared/utils';
@@ -100,8 +100,8 @@ export const HeadClassesPage: React.FC = () => {
       <Figures
         items={[
           { label: 'Lớp đang mở', value: classes.length, note: `${new Set(classes.map((c) => c.teacherName)).size} giáo viên phụ trách`, icon: School, tone: 'indigo' },
-          { label: 'Tổng học viên', value: classes.reduce((a, c) => a + c.studentsCount, 0), icon: Users, tone: 'violet' },
-          { label: 'Chuyên cần TB', value: classes.some((c) => c.attendanceRate) ? `${Math.round(classes.reduce((a, c) => a + c.attendanceRate, 0) / Math.max(1, classes.filter((c) => c.attendanceRate).length))}%` : '—', icon: ClipboardCheck, tone: 'emerald' },
+          { label: 'Tổng học viên', value: distinctStudents(classes), icon: Users, tone: 'violet' },
+          { label: 'Chuyên cần TB', value: classes.some((c) => c.attendanceMarks) ? `${pooledAttendance(classes)}%` : '—', icon: ClipboardCheck, tone: 'emerald' },
           { label: 'Lớp cần xử lý', value: issues, note: 'chuyên cần thấp, GV bị khoá…', icon: AlertTriangle, tone: 'rose' },
         ]}
       />
@@ -130,7 +130,7 @@ export const HeadClassesPage: React.FC = () => {
           </label>
         </div>
         <p className="text-[13px] text-slate-500 lg:ml-auto">
-          {list.length} lớp · {list.reduce((a, c) => a + c.studentsCount, 0)} học viên
+          {list.length} lớp · {distinctStudents(list)} học viên
         </p>
       </div>
 
@@ -175,7 +175,7 @@ export const HeadClassesPage: React.FC = () => {
                     {[
                       [c.studentsCount, 'Học viên'],
                       [c.avgScore || '—', 'Điểm TB'],
-                      [c.attendanceRate ? `${c.attendanceRate}%` : '—', 'Chuyên cần'],
+                      [c.attendanceMarks ? `${c.attendanceRate}%` : '—', 'Chuyên cần'],
                     ].map(([v, l]) => (
                       <div key={l as string} className="rounded-xl bg-slate-50 py-2">
                         <p className={cn('font-display text-lg font-bold tabular-nums', l === 'Chuyên cần' && c.attendanceRate > 0 && c.attendanceRate < 75 ? 'text-rose-600' : 'text-slate-900')}>{v}</p>

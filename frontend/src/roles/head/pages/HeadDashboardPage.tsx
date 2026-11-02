@@ -1,4 +1,4 @@
-import { academicTerm } from '@/shared/constants/staff';
+import { academicTerm, distinctStudents } from '@/shared/constants/staff';
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { AlertTriangle, BarChart3, CalendarCheck, CheckSquare, ClipboardList, Database, Eye, FileCheck2, MessageSquareWarning, PenTool, School, TrendingDown, TrendingUp, UserRoundX, Users } from 'lucide-react';
@@ -39,7 +39,7 @@ export const HeadDashboardPage: React.FC = () => {
   const conflictCount = dash?.roomConflicts ?? 0;
   const orphan = dash?.classesNeedTeacher ?? [];
   const activeTeachers = teacherList.filter((t) => t.status === 'ACTIVE');
-  const totalStudents = DEPT_CLASSES.reduce((a, c) => a + c.studentsCount, 0);
+  const totalStudents = dash?.studentsCount ?? distinctStudents(DEPT_CLASSES);
   const totalQuestions = subjectList.reduce((a, s) => a + s.questionsCount, 0);
   const toeicReports = classReports.filter((r) => r.examType === 'TOEIC' && r.avgScore > 0);
   const lowAttendance = classReports.filter((r) => r.attendance > 0 && r.attendance < 80);

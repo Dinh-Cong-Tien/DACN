@@ -9,6 +9,7 @@ import { Column, Modal, Select, Button } from '@/shared/components/ui';
 import { Img, PHOTOS } from '@/shared/components/media/Img';
 import { CrudEditor } from '@/engines';
 import { Figures, Status, TPageHead } from '@/roles/teacher/components/TeacherKit';
+import { distinctStudents } from '@/shared/constants/staff';
 
 type Row = HeadClass & { locked?: boolean; teacherId: string };
 const EMPTY: Row[] = [];
@@ -78,7 +79,7 @@ export const AdminClassesPage: React.FC = () => {
       <Figures
         items={[
           { label: 'Lớp đang mở', value: rows.filter((r) => !r.locked).length, icon: School, tone: 'indigo' },
-          { label: 'Học viên trong lớp', value: rows.reduce((a, r) => a + r.studentsCount, 0), icon: Users, tone: 'emerald' },
+          { label: 'Học viên trong lớp', value: distinctStudents(rows), icon: Users, tone: 'emerald' },
           { label: 'Giáo viên phụ trách', value: new Set(rows.map((r) => r.teacherName)).size, icon: GraduationCap, tone: 'violet' },
           { label: 'Lớp cần đổi giáo viên', value: orphan, icon: AlertTriangle, tone: 'rose', note: 'Giáo viên bị khoá hoặc chờ duyệt' },
         ]}

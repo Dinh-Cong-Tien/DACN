@@ -8,6 +8,7 @@ import { headApi, useHeadClasses, useHeadStudents, type HeadClass } from '@/shar
 import { errorMessage } from '@/shared/api/client';
 import { Avatar } from '@/shared/components/ui';
 import { cn, timeAgo } from '@/shared/utils';
+import { pooledAttendance } from '@/shared/constants/staff';
 import { Figures, Meter, Panel, Status, TBtn, TPageHead, TTabs, inputCls, tbl } from '@/roles/teacher/components/TeacherKit';
 import { STUDENT_STATUS } from './HeadClassDetailPage';
 
@@ -59,10 +60,10 @@ export const HeadStudentsPage: React.FC = () => {
 
       <Figures
         items={[
-          { label: 'Học viên theo dõi', value: DEPT_STUDENTS.length, note: `trong ${DEPT_CLASSES.length} lớp của bộ môn`, icon: Users, tone: 'indigo' },
-          { label: 'Nguy cơ bỏ học', value: risk.length, note: 'chuyên cần thấp, lâu không học', icon: AlertTriangle, tone: 'rose' },
-          { label: 'Cần nhắc', value: DEPT_STUDENTS.filter((s) => s.status === 'WARNING').length, icon: TrendingDown, tone: 'amber' },
-          { label: 'Chuyên cần TB', value: DEPT_STUDENTS.some((s) => s.attendance) ? `${Math.round(DEPT_STUDENTS.reduce((a, s) => a + s.attendance, 0) / DEPT_STUDENTS.length)}%` : '—', icon: GraduationCap, tone: 'emerald' },
+          { label: 'Học viên theo dõi', value: new Set(DEPT_STUDENTS.map((s) => s.id)).size, note: `trong ${DEPT_CLASSES.length} lớp của bộ môn`, icon: Users, tone: 'indigo' },
+          { label: 'Nguy cơ bỏ học', value: new Set(risk.map((s) => s.id)).size, note: 'chuyên cần thấp, lâu không học', icon: AlertTriangle, tone: 'rose' },
+          { label: 'Cần nhắc', value: new Set(DEPT_STUDENTS.filter((s) => s.status === 'WARNING').map((s) => s.id)).size, icon: TrendingDown, tone: 'amber' },
+          { label: 'Chuyên cần TB', value: DEPT_CLASSES.some((c) => c.attendanceMarks) ? `${pooledAttendance(DEPT_CLASSES)}%` : '—', icon: GraduationCap, tone: 'emerald' },
         ]}
       />
 

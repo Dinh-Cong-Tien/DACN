@@ -6,6 +6,7 @@ import { toast } from '@/shared/stores/uiStore';
 import { useQueries } from '@tanstack/react-query';
 import { ASSIGNMENT_TYPE_LABEL, describeTarget } from '@/shared/constants/student';
 import { api, errorMessage } from '@/shared/api/client';
+import { useAuthStore } from '@/shared/stores/authStore';
 import { useJoinClass, useMyAssignments, useMyClasses, type ClassDetailDto } from '@/shared/api/learner';
 import type { Assignment, Material, MyAssignmentState } from '@/shared/types';
 import { assignmentHref, cn, formatDate, formatDateTime } from '@/shared/utils';
@@ -41,6 +42,8 @@ export const StudentClassesPage: React.FC = () => {
   const { data: classes = [], isLoading } = useMyClasses();
   const { data: mine } = useMyAssignments();
   const joinClass = useJoinClass();
+  // Tham gia lớp bằng mã chỉ dành cho học viên (nhân sự quản lý lớp ở khu vực của mình)
+  const isStudent = useAuthStore((s) => s.user?.role) === 'STUDENT';
   const rows: Row[] = (mine?.assignments ?? []).filter((a) => a.status !== 'DRAFT' && mine?.states[a.id]).map((a) => ({ ...a, me: mine!.states[a.id] }));
   // Tài liệu nằm trong chi tiết từng lớp
   const details = useQueries({ queries: classes.map((c) => ({ queryKey: ['learner', 'classes', c.id], queryFn: () => api.get<ClassDetailDto>(`/learner/classes/${c.id}`) })) });
@@ -100,7 +103,7 @@ export const StudentClassesPage: React.FC = () => {
             </dl>
           </article>
         ))}
-        <div className="rounded-xl border border-dashed border-slate-300 p-4">
+        {isStudent && <div className="rounded-xl border border-dashed border-slate-300 p-4">
           <h2 className="text-[15px] font-semibold text-slate-900">Vào lớp mới</h2>
           <p className="mt-1 text-[13px] text-slate-500">Nhập mã mời giáo viên gửi cho bạn.</p>
           <div className="mt-3 flex gap-2">
@@ -109,7 +112,7 @@ export const StudentClassesPage: React.FC = () => {
               Vào lớp
             </button>
           </div>
-        </div>
+        </div>}
       </section>
 
       <section>

@@ -4,7 +4,7 @@ import type { NextFunction, Request, Response } from 'express';
 import type { UserRole } from '@prisma/client';
 import { env } from '../config/env';
 import { prisma } from '../lib/prisma';
-import { forbidden, unauthorized, type AuthUser } from './http';
+import { HttpError, forbidden, unauthorized, type AuthUser } from './http';
 
 type AccessPayload = { sub: string; role: UserRole; email: string };
 
@@ -60,28 +60,71 @@ const decode = (token: string): AuthUser => {
   return { id: p.sub, role: p.role, email: p.email };
 };
 
+/**
+ * Trạng thái tài khoản đọc từ DB (cache 5 giây/tài khoản) thay vì tin hoàn toàn vào JWT:
+ * khoá / xoá / đổi vai trò có hiệu lực ngay ở request kế tiếp, không phải đợi access token 15 phút hết hạn.
+ */
+type Live = { role: UserRole; status: string; deleted: boolean; at: number };
+const liveCache = new Map<string, Live>();
+const LIVE_TTL = 5_000;
+
+export async function liveUser(id: string): Promise<Live | null> {
+  const c = liveCache.get(id);
+  if (c && Date.now() - c.at < LIVE_TTL) return c;
+  const u = await prisma.user.findUnique({ where: { id }, select: { role: true, status: true, deletedAt: true } });
+  if (!u) {
+    liveCache.delete(id);
+    return null;
+  }
+  const v = { role: u.role, status: u.status, deleted: !!u.deletedAt, at: Date.now() };
+  liveCache.set(id, v);
+  return v;
+}
+/** Gọi sau khi khoá / đổi vai trò / xoá để áp dụng ngay, không chờ hết cache */
+export const forgetLiveUser = (id: string) => liveCache.delete(id);
+export const clearLiveCache = () => liveCache.clear();
+/** Middleware: sau mọi thao tác ghi thành công (khoá, đổi vai trò, xoá tài khoản…) thì xoá cache trạng thái tài khoản */
+export const refreshLiveAfterWrite = (req: Request, res: Response, next: NextFunction) => {
+  if (req.method !== 'GET') res.on('finish', () => res.statusCode < 400 && liveCache.clear());
+  next();
+};
+
+async function resolveUser(token: string): Promise<AuthUser> {
+  const u = decode(token);
+  const live = await liveUser(u.id);
+  if (!live || live.deleted) throw new HttpError(401, 'ACCOUNT_GONE', 'Tài khoản không còn tồn tại');
+  if (live.status === 'LOCKED') throw new HttpError(401, 'ACCOUNT_LOCKED', 'Tài khoản đã bị khoá. Vui lòng liên hệ quản trị viên.');
+  return { ...u, role: live.role };
+}
+
 /** Bắt buộc đăng nhập. */
 export function auth(req: Request, _res: Response, next: NextFunction) {
   const token = readBearer(req);
   if (!token) return next(unauthorized());
-  try {
-    req.user = decode(token);
-    next();
-  } catch {
-    next(unauthorized('Phiên đăng nhập hết hạn'));
-  }
+  resolveUser(token)
+    .then((u) => {
+      req.user = u;
+      next();
+    })
+    .catch((e) => next(e instanceof HttpError ? e : unauthorized('Phiên đăng nhập hết hạn')));
 }
 
-/** Không bắt buộc đăng nhập: có token hợp lệ thì gắn req.user (trang công khai hiển thị thêm dữ liệu cá nhân). */
+/** Không bắt buộc đăng nhập: có token hợp lệ thì gắn req.user (trang công khai hiển thị thêm dữ liệu cá nhân). Token hỏng / tài khoản bị khoá → coi như khách. */
 export function optionalAuth(req: Request, _res: Response, next: NextFunction) {
   const token = readBearer(req);
-  if (token) {
-    try {
-      req.user = decode(token);
-    } catch {
-      /* bỏ qua token hỏng ở route công khai */
-    }
-  }
+  if (!token) return next();
+  resolveUser(token)
+    .then((u) => {
+      req.user = u;
+    })
+    .catch(() => undefined)
+    .finally(() => next());
+}
+
+/** Chỉ tài khoản học viên (không áp phân cấp, kể cả ADMIN): tham gia lớp bằng mã, đặt mua gói… */
+export function onlyStudent(req: Request, _res: Response, next: NextFunction) {
+  if (!req.user) return next(unauthorized());
+  if (req.user.role !== 'STUDENT') return next(forbidden('Chức năng này chỉ dành cho tài khoản học viên'));
   next();
 }
 

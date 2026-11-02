@@ -51,6 +51,11 @@ export interface CrudEditorProps<T extends { id: string }> {
   onDelete?: (row: T) => Promise<unknown>;
   /** Đang tải dữ liệu lần đầu */
   loading?: boolean;
+  /** Ẩn nút tạo mới (mặc định theo readOnly) */
+  canCreate?: boolean;
+  /** Dòng nào được sửa / xoá (vd chỉ nội dung nháp của tác giả). Mặc định theo readOnly */
+  canEditRow?: (row: T) => boolean;
+  canDeleteRow?: (row: T) => boolean;
 }
 
 /**
@@ -74,6 +79,9 @@ export function CrudEditor<T extends { id: string }>({
   idPrefix = 'new',
   defaultValues,
   readOnly,
+  canCreate = !readOnly,
+  canEditRow,
+  canDeleteRow,
   dense,
   selectable,
   bulkActions,
@@ -193,6 +201,9 @@ export function CrudEditor<T extends { id: string }>({
     toast.info('Đang tải xuống', `Xuất ${filtered.length} dòng ra CSV.`);
   };
 
+  const editable = (row: T) => (canEditRow ? canEditRow(row) : !readOnly);
+  const deletable = (row: T) => (canDeleteRow ? canDeleteRow(row) : !readOnly);
+
   const actionCol: Column<T> = {
     key: '__actions',
     header: '',
@@ -207,9 +218,9 @@ export function CrudEditor<T extends { id: string }>({
             </button>
           }
           items={[
-            ...(readOnly ? [] : [{ label: 'Chỉnh sửa', icon: <Pencil />, onClick: () => openEdit(row) }]),
+            ...(editable(row) ? [{ label: 'Chỉnh sửa', icon: <Pencil />, onClick: () => openEdit(row) }] : []),
             ...(rowActions ? rowActions(row) : []),
-            ...(readOnly ? [] : [{ divider: true, label: '' }, { label: 'Xoá', icon: <Trash2 />, danger: true, onClick: () => setDeleting(row) }]),
+            ...(deletable(row) ? [{ divider: true, label: '' }, { label: 'Xoá', icon: <Trash2 />, danger: true, onClick: () => setDeleting(row) }] : []),
           ]}
         />
       </div>
@@ -275,7 +286,7 @@ export function CrudEditor<T extends { id: string }>({
             <Button size="sm" variant="outline" leftIcon={<Download className="w-4 h-4" />} onClick={exportCsv}>
               CSV
             </Button>
-            {!readOnly && (
+            {canCreate && (
               <Button size="sm" leftIcon={<Plus className="w-4 h-4" />} onClick={openCreate}>
                 {createLabel}
               </Button>
@@ -297,7 +308,7 @@ export function CrudEditor<T extends { id: string }>({
         selectable={selectable}
         selected={selected}
         onToggle={toggleSel}
-        onRowClick={readOnly ? undefined : openEdit}
+        onRowClick={readOnly && !canEditRow ? undefined : (row) => (editable(row) ? openEdit(row) : undefined)}
         emptyTitle={loading ? 'Đang tải dữ liệu…' : `Chưa có ${entityName}`}
         emptyDescription={search ? 'Thử từ khoá khác hoặc xoá bộ lọc.' : `Nhấn "${createLabel}" để tạo ${entityName} đầu tiên.`}
         className="animate-fade-up"

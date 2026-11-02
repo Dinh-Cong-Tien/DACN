@@ -40,10 +40,15 @@ export const tokenStore = {
   },
 };
 
-/** Gọi khi refresh thất bại (phiên hết hạn) — authStore đăng ký để tự đăng xuất. */
-let onSessionExpired: (() => void) | null = null;
-export const setSessionExpiredHandler = (fn: () => void) => {
+/** Gọi khi refresh thất bại (phiên hết hạn, tài khoản bị khoá/xoá) — authStore đăng ký để tự đăng xuất, kèm lý do. */
+let onSessionExpired: ((reason?: string) => void) | null = null;
+export const setSessionExpiredHandler = (fn: (reason?: string) => void) => {
   onSessionExpired = fn;
+};
+/** Gọi khi refresh thành công — đồng bộ hồ sơ/vai trò mới nhất (vd admin vừa đổi vai trò) */
+let onUserRefreshed: ((user: AppUser) => void) | null = null;
+export const setUserRefreshedHandler = (fn: (user: AppUser) => void) => {
+  onUserRefreshed = fn;
 };
 
 export const http = axios.create({ baseURL: '/api/v1', timeout: 30_000 });
@@ -55,6 +60,8 @@ http.interceptors.request.use((cfg) => {
 });
 
 let refreshing: Promise<string | null> | null = null;
+/** Các route xác thực không tự làm mới phiên khi gặp 401 (sai mật khẩu, refresh hỏng…) */
+const NO_REFRESH = /^\/auth\/(login|register|refresh|logout)/;
 
 async function refreshAccessToken(): Promise<string | null> {
   const t = tokenStore.get();
@@ -62,10 +69,12 @@ async function refreshAccessToken(): Promise<string | null> {
   try {
     const res = await axios.post<{ data: Tokens & { user: AppUser } }>('/api/v1/auth/refresh', { refreshToken: t.refreshToken });
     tokenStore.set({ accessToken: res.data.data.accessToken, refreshToken: res.data.data.refreshToken });
+    onUserRefreshed?.(res.data.data.user);
     return res.data.data.accessToken;
-  } catch {
+  } catch (e) {
     tokenStore.set(null);
-    onSessionExpired?.();
+    const msg = axios.isAxiosError<ApiErrorBody>(e) ? e.response?.data?.error?.message : undefined;
+    onSessionExpired?.(msg);
     return null;
   }
 }
@@ -74,7 +83,7 @@ http.interceptors.response.use(
   (res) => res,
   async (err: AxiosError<ApiErrorBody>) => {
     const cfg = err.config as (AxiosRequestConfig & { _retry?: boolean }) | undefined;
-    if (err.response?.status === 401 && cfg && !cfg._retry && !cfg.url?.startsWith('/auth/')) {
+    if (err.response?.status === 401 && cfg && !cfg._retry && !NO_REFRESH.test(cfg.url ?? '')) {
       cfg._retry = true;
       refreshing ??= refreshAccessToken().finally(() => (refreshing = null));
       const token = await refreshing;

@@ -12,7 +12,7 @@ import { env } from '../../config/env';
 import { z } from 'zod';
 import { Prisma, type ExamPart } from '@prisma/client';
 import { prisma } from '../../lib/prisma';
-import { allow, auth } from '../../core/auth';
+import { allow, auth, liveUser } from '../../core/auth';
 import { badRequest, forbidden, handler, me, notFound, parse, unauthorized } from '../../core/http';
 import { iso, num, ymd } from '../../core/dto';
 import {
@@ -37,6 +37,8 @@ import {
   toSession,
   toSubmission,
 } from './teacher.service';
+
+import { contentRouter } from './teacher.content';
 
 export const teacherRouter = Router();
 
@@ -69,7 +71,6 @@ teacherRouter.get(
   '/files/:key',
   handler(async (req, res) => {
     const key = String(req.params.key);
-    if (!FILE_NAME.test(key)) throw notFound('Tài liệu');
     const bearer = req.headers.authorization?.startsWith('Bearer ') ? req.headers.authorization.slice(7) : undefined;
     const raw = typeof req.query.token === 'string' ? req.query.token : bearer;
     if (!raw) throw unauthorized('Bạn cần đăng nhập để mở tài liệu');
@@ -80,6 +81,11 @@ teacherRouter.get(
     } catch {
       throw unauthorized('Phiên đăng nhập hết hạn, tải lại trang rồi mở lại tài liệu');
     }
+    // Trạng thái/vai trò thật trong DB (tài khoản bị khoá/xoá không mở được tài liệu dù token còn hạn)
+    const live = await liveUser(viewer.id);
+    if (!live || live.deleted || live.status === 'LOCKED') throw unauthorized('Tài khoản không còn hiệu lực');
+    viewer.role = live.role;
+    if (!FILE_NAME.test(key)) throw notFound('Tài liệu');
     const url = `/api/v1/teacher/files/${key}`;
     const m = await prisma.material.findFirst({ where: { fileUrl: url, deletedAt: null }, include: { class: { select: { teacherId: true } } } });
     if (!m || !m.classId) throw notFound('Tài liệu');
@@ -100,6 +106,8 @@ teacherRouter.get(
 );
 
 teacherRouter.use(auth, allow('TEACHER', 'HEAD_TEACHER'));
+/** Học liệu giáo viên tự soạn, gửi trưởng bộ môn duyệt */
+teacherRouter.use('/content', contentRouter);
 
 // Id trên URL phải là UUID (bài tự luyện dùng dạng `ans:<uuid>`), sai định dạng → 404 thay vì lỗi Prisma
 for (const name of ['id', 'studentId']) {
@@ -155,7 +163,7 @@ teacherRouter.get(
     const ids = classes.map((c) => c.id);
     const { from, to } = weekRange();
     const todayVn = new Date(Date.now() + 7 * 3600_000).toISOString().slice(0, 10);
-    const [rooms, students, sessions, deadlines, pending, nextRows] = await Promise.all([
+    const [rooms, students, sessions, deadlines, pending, nextRows, unmarkedPast, oldestUnmarked] = await Promise.all([
       toClassRooms(classes),
       toClassStudents(ids),
       prisma.classSession.findMany({ where: { classId: { in: ids }, sessionDate: { gte: from, lte: to } }, include: { class: { select: { name: true } } }, orderBy: [{ sessionDate: 'asc' }, { startTime: 'asc' }] }),
@@ -171,21 +179,29 @@ teacherRouter.get(
         orderBy: [{ sessionDate: 'asc' }, { startTime: 'asc' }],
         take: 8,
       }),
+      // Buổi đã qua (trước hôm nay) mà vẫn UPCOMING = chưa điểm danh
+      prisma.classSession.count({ where: { classId: { in: ids }, status: 'UPCOMING', sessionDate: { lt: dateOf(todayVn) } } }),
+      prisma.classSession.findFirst({ where: { classId: { in: ids }, status: 'UPCOMING', sessionDate: { lt: dateOf(todayVn) } }, orderBy: [{ sessionDate: 'desc' }, { startTime: 'desc' }], select: { id: true } }),
     ]);
     // Buổi kế tiếp: chưa kết thúc (so theo giờ VN)
     const nowHm = new Date(Date.now() + 7 * 3600_000).toISOString().slice(11, 16);
     const next = nextRows.map(toSession).find((x) => x.date > todayVn || x.end > nowHm);
-    const att = rooms.filter((r) => r.attendanceRate > 0);
+    // Chuyên cần chung = tổng lượt có mặt / tổng lượt đã điểm danh của mọi lớp (không lấy TB các %)
+    const attMarks = rooms.reduce((a, r) => a + r.attendanceMarks, 0);
+    const attOk = rooms.reduce((a, r) => a + Math.round((r.attendanceRate / 100) * r.attendanceMarks), 0);
     return {
       stats: {
         classes: rooms.length,
         students: students.length,
         pendingGrading: pending.length,
         lateSubmissions: pending.filter((p) => p.status === 'LATE').length,
-        attendanceRate: att.length ? Math.round(att.reduce((a, r) => a + r.attendanceRate, 0) / att.length) : 0,
+        attendanceRate: attMarks ? Math.round((attOk / attMarks) * 100) : 0,
+        attendanceMarks: attMarks,
         atRiskCount: students.filter((s) => s.status !== 'GOOD').length,
         sessionsThisWeek: sessions.filter((s) => s.status !== 'CANCELLED').length,
+        unmarkedPastSessions: unmarkedPast,
       },
+      latestUnmarkedSessionId: oldestUnmarked?.id ?? null,
       classes: rooms,
       atRisk: students.filter((s) => s.status !== 'GOOD').sort((a, b) => (a.status === 'RISK' ? -1 : 1) - (b.status === 'RISK' ? -1 : 1)).slice(0, 6),
       sessions: sessions.map(toSession),
@@ -712,18 +728,18 @@ async function resolveTarget(type: string, t: Target, examType: 'TOEIC' | 'VSTEP
       return { targetId: test.id, maxScore: n, target: t };
     }
     case 'LESSON': {
-      const course = await prisma.course.findFirst({ where: { ...byIdOrSlug(t.courseId), deletedAt: null } });
-      if (!course) throw badRequest('Khoá học không tồn tại');
+      const course = await prisma.course.findFirst({ where: { ...byIdOrSlug(t.courseId), deletedAt: null, status: 'PUBLISHED' } });
+      if (!course) throw badRequest('Khoá học không tồn tại hoặc chưa xuất bản');
       const ids = t.lessonIds.filter(isUuid);
       if (ids.length) {
-        const n = await prisma.lesson.count({ where: { id: { in: ids }, deletedAt: null, section: { courseId: course.id } } });
+        const n = await prisma.lesson.count({ where: { id: { in: ids }, deletedAt: null, status: 'PUBLISHED', section: { courseId: course.id } } });
         if (n !== ids.length) throw badRequest('Có bài giảng không thuộc khoá học');
       }
       return { targetId: course.id, maxScore: 10, target: t };
     }
     case 'GRAMMAR': {
-      const g = await prisma.grammarTopic.findFirst({ where: { ...byIdOrSlug(t.slug), deletedAt: null } });
-      if (!g) throw badRequest('Chủ điểm ngữ pháp không tồn tại');
+      const g = await prisma.grammarTopic.findFirst({ where: { ...byIdOrSlug(t.slug), deletedAt: null, status: 'PUBLISHED' } });
+      if (!g) throw badRequest('Chủ điểm ngữ pháp không tồn tại hoặc chưa xuất bản');
       return { targetId: g.id, maxScore: 10, target: { kind: 'GRAMMAR', slug: g.slug } };
     }
     case 'VOCAB': {
@@ -734,7 +750,7 @@ async function resolveTarget(type: string, t: Target, examType: 'TOEIC' | 'VSTEP
     case 'WRITING':
     case 'SPEAKING': {
       const qid = t.kind === 'WRITING' ? t.taskId : t.partId;
-      const q = isUuid(qid) ? await prisma.question.findFirst({ where: { id: qid, deletedAt: null, type: t.kind === 'WRITING' ? 'ESSAY' : 'SPEAKING_RESPONSE' } }) : null;
+      const q = isUuid(qid) ? await prisma.question.findFirst({ where: { id: qid, deletedAt: null, status: 'PUBLISHED', type: t.kind === 'WRITING' ? 'ESSAY' : 'SPEAKING_RESPONSE' } }) : null;
       if (!q) throw badRequest(t.kind === 'WRITING' ? 'Đề Viết không tồn tại' : 'Đề Nói không tồn tại');
       void examType;
       return { targetId: q.id, maxScore: 10, target: t };
@@ -1399,7 +1415,7 @@ teacherRouter.get(
   handler(async (req) => {
     const q = parse(z.object({ examType: z.enum(['TOEIC', 'VSTEP']).optional(), q: z.string().trim().optional() }), req.query);
     const tests = await prisma.mockTest.findMany({
-      where: { deletedAt: null, status: 'PUBLISHED', examType: q.examType, kind: { in: ['FULL', 'MINI'] }, ...(q.q ? { title: { contains: q.q, mode: 'insensitive' } } : {}) },
+      where: { deletedAt: null, status: 'PUBLISHED', examType: q.examType, kind: { in: ['FULL', 'MINI', 'QUIZ'] }, ...(q.q ? { title: { contains: q.q, mode: 'insensitive' } } : {}) },
       orderBy: [{ examType: 'asc' }, { year: 'desc' }, { title: 'asc' }],
     });
     const counts = tests.length ? await prisma.mockTestQuestion.groupBy({ by: ['testId', 'part'], where: { testId: { in: tests.map((t) => t.id) } }, _count: { _all: true } }) : [];

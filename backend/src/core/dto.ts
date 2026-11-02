@@ -9,8 +9,13 @@ export const iso = (d: Date | null | undefined) => (d ? d.toISOString() : undefi
 export const ymd = (d: Date | null | undefined) => (d ? d.toISOString().slice(0, 10) : undefined);
 export const num = (d: Prisma.Decimal | number | null | undefined) => (d === null || d === undefined ? undefined : Number(d));
 
-/** Gói hiện tại: VIP nếu có user_subscriptions ACTIVE còn hạn với gói giá > 0. */
+/**
+ * Gói hiện tại: VIP nếu có user_subscriptions ACTIVE còn hạn với gói giá > 0.
+ * Nhân sự (giáo viên trở lên) luôn có quyền như VIP để xem trước / giao đề VIP cho lớp.
+ */
 export async function planOf(userId: string): Promise<'FREE' | 'VIP'> {
+  const u = await prisma.user.findUnique({ where: { id: userId }, select: { role: true } });
+  if (u && u.role !== 'STUDENT') return 'VIP';
   const sub = await prisma.userSubscription.findFirst({
     where: { userId, status: 'ACTIVE', OR: [{ endsAt: null }, { endsAt: { gt: new Date() } }], plan: { price: { gt: 0 } } },
     select: { id: true },

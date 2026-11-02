@@ -103,6 +103,31 @@ export async function seedBase(): Promise<SeedCtx> {
   }
 
   const now = new Date();
+  const today = dateOnly(now);
+  const today0 = () => today;
+  // Ngày tham gia hợp lý cho tài khoản khởi tạo (không để mọi tài khoản = lúc chạy seed):
+  //  - có ngày trong dữ liệu cũ (MOCK_USERS.joinedAt) → dùng đúng ngày đó
+  //  - học viên khác → 3 ngày trước khi lớp đầu tiên khai giảng; giáo viên khác → 30 ngày trước lớp đầu tiên họ dạy
+  const classStart = new Map<string, Date>((MOCKS.DEPT_CLASSES as any[]).map((c) => [c.id, dateOnly(new Date(c.createdAt))]));
+  const knownJoin = new Map<string, Date>((MOCKS.MOCK_USERS as any[]).map((u) => [u.email, dateOnly(new Date(u.joinedAt))]));
+  const firstClassOfStudent = new Map<string, Date>();
+  for (const s of MOCKS.DEPT_STUDENTS as any[]) {
+    const email = studentEmail.get(s.id);
+    const d = classStart.get(s.classId);
+    if (email && d && (!firstClassOfStudent.has(email) || d < firstClassOfStudent.get(email)!)) firstClassOfStudent.set(email, d);
+  }
+  const firstClassOfTeacher = new Map<string, Date>();
+  for (const c of MOCKS.DEPT_CLASSES as any[]) {
+    const t = list.find((u) => u.fullName === c.teacherName);
+    const d = classStart.get(c.id)!;
+    if (t && (!firstClassOfTeacher.has(t.email) || d < firstClassOfTeacher.get(t.email)!)) firstClassOfTeacher.set(t.email, d);
+  }
+  const joinedAt = (u: U): Date =>
+    knownJoin.get(u.email) ??
+    (u.role === 'STUDENT'
+      ? new Date((firstClassOfStudent.get(u.email) ?? today0()).getTime() - 3 * DAY_MS)
+      : new Date((firstClassOfTeacher.get(u.email) ?? new Date('2026-03-01T00:00:00Z')).getTime() - 30 * DAY_MS));
+  const joinedOf = new Map(list.map((u) => [u.email, joinedAt(u)]));
   // Bộ môn trước (head_id gán sau khi có user), rồi tới user (department_id)
   await insertMany(prisma.department, deptRows);
   await insertMany(
@@ -121,7 +146,8 @@ export async function seedBase(): Promise<SeedCtx> {
         avatarUrl: u.avatarUrl,
         bio: u.bio,
         departmentId: u.departmentId,
-        emailVerifiedAt: u.status === 'PENDING' ? null : now,
+        createdAt: joinedOf.get(u.email),
+        emailVerifiedAt: u.status === 'PENDING' ? null : joinedOf.get(u.email),
         lockedReason: u.status === 'LOCKED' ? 'Tạm khoá theo yêu cầu quản trị' : null,
         settings: { theme: 'system', locale: 'vi', timezone: 'Asia/Ho_Chi_Minh', dailyGoalMinutes: 30, notifyEmail: true, notifyInApp: true, showOnLeaderboard: true },
       };
@@ -137,7 +163,6 @@ export async function seedBase(): Promise<SeedCtx> {
   const classRows: any[] = [];
   const memberRows: any[] = [];
   const sessionRows: any[] = [];
-  const today = dateOnly(now);
   const DOW: Record<string, number> = { CN: 0, T2: 1, T3: 2, T4: 3, T5: 4, T6: 5, T7: 6 };
   for (const c of MOCKS.DEPT_CLASSES as any[]) {
     const teacherId = userByName.get(c.teacherName);
@@ -146,6 +171,9 @@ export async function seedBase(): Promise<SeedCtx> {
     const id = uuid();
     const start = dateOnly(new Date(c.createdAt));
     const end = new Date(start.getTime() + 16 * 7 * DAY_MS);
+    // Lớp được tạo 7 ngày trước khai giảng nhưng không sớm hơn ngày giáo viên tham gia
+    const teacherJoined = joinedOf.get(teacher.email)!;
+    const createdAt = new Date(Math.max(start.getTime() - 7 * DAY_MS, teacherJoined.getTime()));
     classRows.push({
       id,
       departmentId: teacher.departmentId,
@@ -160,10 +188,13 @@ export async function seedBase(): Promise<SeedCtx> {
       endDate: end,
       maxStudents: c.studentsCount,
       description: `Lớp ${c.name} — ${c.schedule}`,
+      createdAt,
     });
     for (const s of (MOCKS.DEPT_STUDENTS as any[]).filter((x) => x.classId === c.id)) {
       const sid = users.get(studentEmail.get(s.id) ?? '');
-      if (sid) memberRows.push({ classId: id, studentId: sid, joinedAt: start });
+      // Vào lớp khi lớp khai giảng, nhưng không trước ngày tạo tài khoản
+      const joined = joinedOf.get(studentEmail.get(s.id) ?? '');
+      if (sid) memberRows.push({ classId: id, studentId: sid, joinedAt: joined && joined > start ? joined : start });
     }
     // "T2 – T4 – T6 · 19:00" → các thứ + giờ bắt đầu, buổi 90 phút
     const [daysPart, timePart] = String(c.schedule).split('·').map((x: string) => x.trim());
@@ -171,7 +202,9 @@ export async function seedBase(): Promise<SeedCtx> {
     const [hh, mm] = (timePart ?? '19:00').split(':').map(Number);
     const endMin = hh * 60 + mm + 90;
     const endStr = `${String(Math.floor(endMin / 60)).padStart(2, '0')}:${String(endMin % 60).padStart(2, '0')}`;
-    for (let t = start.getTime(); t <= end.getTime(); t += DAY_MS) {
+    // Không có dữ liệu điểm danh lịch sử thật → chỉ sinh buổi từ hôm nay trở đi (giáo viên điểm danh dần khi dạy)
+    const todayUtc = Date.UTC(new Date().getUTCFullYear(), new Date().getUTCMonth(), new Date().getUTCDate());
+    for (let t = Math.max(start.getTime(), todayUtc); t <= end.getTime(); t += DAY_MS) {
       const d = new Date(t);
       if (!days.includes(d.getUTCDay())) continue;
       sessionRows.push({
@@ -181,7 +214,9 @@ export async function seedBase(): Promise<SeedCtx> {
         startTime: timeOf(timePart ?? '19:00'),
         endTime: timeOf(endStr),
         room: c.room,
-        status: d < today ? 'DONE' : 'UPCOMING',
+        // DONE chỉ khi giáo viên đã điểm danh (cùng quy tắc với nghiệp vụ điểm danh) — seed không có điểm danh nên mọi buổi là UPCOMING;
+        // buổi đã qua mà UPCOMING = "chưa điểm danh"
+        status: 'UPCOMING',
       });
     }
   }

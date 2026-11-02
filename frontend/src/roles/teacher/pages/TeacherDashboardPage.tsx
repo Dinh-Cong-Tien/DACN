@@ -61,6 +61,9 @@ export const TeacherDashboardPage: React.FC = () => {
 
   const todos: { icon: React.ElementType; tone: Tone; text: string; to: string; cta: string }[] = [
     ...todaySessions.map((s) => ({ icon: ClipboardCheck, tone: 'emerald' as Tone, text: `Điểm danh ${className(s.classId, s.className)} lúc ${s.start}`, to: `/teacher/attendance/${s.id}`, cta: 'Điểm danh' })),
+    ...(data.stats.unmarkedPastSessions && data.latestUnmarkedSessionId
+      ? [{ icon: ClipboardCheck, tone: 'rose' as Tone, text: `${data.stats.unmarkedPastSessions} buổi đã dạy chưa điểm danh`, to: `/teacher/attendance/${data.latestUnmarkedSessionId}`, cta: 'Điểm danh bù' }]
+      : []),
     ...(pendingCount ? [{ icon: PenTool, tone: 'violet' as Tone, text: `Chấm ${pendingCount} bài Viết / Nói (${lateCount} bài nộp muộn)`, to: '/teacher/grading', cta: 'Chấm bài' }] : []),
     ...(overdueOpen.length ? [{ icon: FileWarning, tone: 'rose' as Tone, text: `${overdueOpen.length} bài tập đã quá hạn nhưng chưa đóng`, to: '/teacher/assignments?status=OPEN', cta: 'Xem' }] : []),
     ...(watch.length ? [{ icon: UserRoundX, tone: 'amber' as Tone, text: watch.some((s) => s.status === 'RISK') ? `Liên hệ ${watch.filter((s) => s.status === 'RISK').length} học viên có nguy cơ bỏ học` : `Nhắc ${watch.length} học viên cần theo dõi`, to: '/teacher/students?filter=watch', cta: 'Hồ sơ' }] : []),
@@ -151,7 +154,7 @@ export const TeacherDashboardPage: React.FC = () => {
         items={[
           { label: 'Lớp phụ trách', value: classes.length, note: `${totalStudents} học viên`, icon: School, tone: 'indigo' },
           { label: 'Bài chờ chấm', value: pendingCount, note: `${lateCount} bài nộp muộn`, icon: PenTool, tone: 'violet' },
-          { label: 'Chuyên cần trung bình', value: data.stats.attendanceRate ? `${data.stats.attendanceRate}%` : '—', note: data.stats.attendanceRate ? 'các buổi đã dạy' : 'chưa có buổi nào được điểm danh', icon: ClipboardCheck, tone: 'emerald' },
+          { label: 'Chuyên cần trung bình', value: data.stats.attendanceMarks ? `${data.stats.attendanceRate}%` : '—', note: data.stats.attendanceMarks ? 'các buổi đã dạy' : 'chưa có buổi nào được điểm danh', icon: ClipboardCheck, tone: 'emerald' },
           { label: 'Học viên cần theo dõi', value: watch.length, note: `${watch.filter((s) => s.status === 'RISK').length} có nguy cơ bỏ học`, icon: UserRoundX, tone: 'rose' },
         ]}
       />
@@ -267,7 +270,7 @@ export const TeacherDashboardPage: React.FC = () => {
                   {[
                     [c.studentsCount, 'Học viên'],
                     [c.avgScore || '—', 'Điểm TB'],
-                    [c.attendanceRate ? `${c.attendanceRate}%` : '—', 'Chuyên cần'],
+                    [c.attendanceMarks ? `${c.attendanceRate}%` : '—', 'Chuyên cần'],
                   ].map(([v, l]) => (
                     <div key={l as string} className="rounded-lg bg-slate-50 py-1.5">
                       <p className="font-display text-[15px] font-bold tabular-nums text-slate-900">{v}</p>

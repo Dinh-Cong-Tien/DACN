@@ -3,6 +3,7 @@ import { z } from 'zod';
 import type { Faq, Prisma } from '@prisma/client';
 import { prisma } from '../../lib/prisma';
 import { optionalAuth } from '../../core/auth';
+import { limits, rateLimit } from '../../middleware/rate-limit';
 import { badRequest, handler, notFound, pageQuery, paged, parse } from '../../core/http';
 import { ymd } from '../../core/dto';
 import { gradientAt } from '../catalog/mappers';
@@ -291,6 +292,7 @@ const FALLBACK = ['Trợ lý tự động chưa có câu trả lời sẵn cho c
 cmsRouter.post(
   '/support/messages',
   optionalAuth,
+  rateLimit('guest-forms', limits.guestForms, { onlyGuest: true }),
   handler(async (req) => {
     const body = parse(
       z.object({ ticketId: z.string().uuid().optional(), text: z.string().trim().min(1).max(2000), name: z.string().trim().max(120).optional(), email: z.string().trim().email().optional() }),
@@ -477,7 +479,7 @@ cmsRouter.get(
         bio: true,
         role: true,
         department: { select: { name: true } },
-        classTeachers: { where: { deletedAt: null, isArchived: false }, select: { _count: { select: { classMemberClasss: { where: { status: 'ACTIVE' } } } } } },
+        classTeachers: { where: { deletedAt: null, isArchived: false }, select: { classMemberClasss: { where: { status: 'ACTIVE' }, select: { studentId: true } } } },
       },
       orderBy: [{ role: 'desc' }, { createdAt: 'asc' }],
     });
@@ -489,7 +491,8 @@ cmsRouter.get(
       department: u.department?.name ?? undefined,
       bio: u.bio ?? undefined,
       classes: u.classTeachers.length,
-      students: u.classTeachers.reduce((a, c) => a + c._count.classMemberClasss, 0),
+      // Số học viên KHÁC NHAU (một học viên học 2 lớp của cùng giáo viên chỉ tính 1) — khớp trang giáo viên/trưởng bộ môn
+      students: new Set(u.classTeachers.flatMap((c) => c.classMemberClasss.map((m) => m.studentId))).size,
     }));
   })
 );
@@ -516,6 +519,7 @@ const CONTACT_CATEGORY = { support: 'ACCOUNT', billing: 'PAYMENT', teacher: 'OTH
 cmsRouter.post(
   '/contact',
   optionalAuth,
+  rateLimit('guest-forms', limits.guestForms, { onlyGuest: true }),
   handler(async (req) => {
     const body = parse(
       z.object({
@@ -549,6 +553,7 @@ const NEWSLETTER_SUBJECT = 'Đăng ký nhận bài viết mới';
 cmsRouter.post(
   '/newsletter',
   optionalAuth,
+  rateLimit('guest-forms', limits.guestForms, { onlyGuest: true }),
   handler(async (req) => {
     const { email } = parse(z.object({ email: z.string().trim().toLowerCase().email() }), req.body);
     if (req.user) {

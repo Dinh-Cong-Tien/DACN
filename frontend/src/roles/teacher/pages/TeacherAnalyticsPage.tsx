@@ -80,7 +80,7 @@ export const TeacherAnalyticsPage: React.FC = () => {
         items={[
           { label: 'Điểm thi thử trung bình', value: cls.avgScore || '—', note: cls.examType === 'TOEIC' ? 'thang 990' : 'thang 10' },
           { label: 'Hoàn thành bài tập', value: assignments.length ? `${cls.completionRate}%` : '—', note: `${assignments.length} bài đã giao` },
-          { label: 'Chuyên cần', value: cls.attendanceRate ? `${cls.attendanceRate}%` : '—', note: 'tỷ lệ có mặt các buổi học' },
+          { label: 'Chuyên cần', value: cls.attendanceMarks ? `${cls.attendanceRate}%` : '—', note: 'tỷ lệ có mặt các buổi học' },
           { label: 'Phần yếu nhất', value: weakest ? partName(weakest.partId) : '—', note: weakest ? `đúng ${weakest.value}%` : 'chưa có bài làm' },
         ]}
       />

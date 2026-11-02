@@ -6,7 +6,7 @@ import { errorMessage } from '@/shared/api/client';
 import { useAuthStore } from '@/shared/stores/authStore';
 import { toast } from '@/shared/stores/uiStore';
 import { useDocumentTitle } from '@/shared/hooks';
-import { cn, formatNumber } from '@/shared/utils';
+import { cn, formatNumber, ROLE_HOME } from '@/shared/utils';
 import { Accent, PageHeader, Section, SectionHead, ActionLink, ActionButton } from './shared/PageKit';
 
 const vnd = (n: number) => `${formatNumber(n)}đ`;
@@ -77,7 +77,7 @@ export const PricingPage: React.FC = () => {
                     {ordering === p.id ? 'Đang tạo đơn…' : `Chọn ${p.name}`}
                   </ActionButton>
                 ) : (
-                  <ActionLink to={user ? '/app/settings' : '/auth/register'} variant={p.highlight ? 'primary' : 'secondary'} className="mt-5 w-full">
+                  <ActionLink to={!user ? '/auth/register' : user.role === 'STUDENT' ? '/app/settings' : ROLE_HOME[user.role]} variant={p.highlight ? 'primary' : 'secondary'} className="mt-5 w-full">
                     {p.price === 0 ? (user ? 'Đang dùng gói miễn phí' : 'Tạo tài khoản miễn phí') : user ? 'Dành cho tài khoản học viên' : `Đăng ký để chọn ${p.name}`}
                   </ActionLink>
                 )}

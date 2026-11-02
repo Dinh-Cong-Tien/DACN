@@ -6,7 +6,7 @@ import { Router, type Request } from 'express';
 import { z } from 'zod';
 import { Prisma, type ContentStatus, type ExamPart, type SkillType } from '@prisma/client';
 import { prisma } from '../../lib/prisma';
-import { allow, auth } from '../../core/auth';
+import { allow, auth, refreshLiveAfterWrite } from '../../core/auth';
 import { badRequest, conflict, forbidden, handler, me, notFound, pageQuery, paged, parse } from '../../core/http';
 import { audit, notify } from '../admin/audit';
 import {
@@ -25,7 +25,7 @@ import {
 } from './shared';
 
 export const headRouter = Router();
-headRouter.use(auth, allow('HEAD_TEACHER'));
+headRouter.use(auth, allow('HEAD_TEACHER'), refreshLiveAfterWrite);
 
 const scopeOf = (req: Request) => deptScope(me(req));
 const uuid = z.string().uuid();
@@ -46,7 +46,7 @@ headRouter.get(
     const classes = await prisma.class.findMany({ where: { ...classWhere(scope), isArchived: false }, include: { teacher: { select: { fullName: true, status: true, deletedAt: true } } } });
     const stats = await classStats(classes);
     const [pendingApprovals, pendingReviews, newComplaints, upcomingObs, teachers] = await Promise.all([
-      prisma.$queryRaw<{ n: bigint }[]>`SELECT count(*)::bigint AS n FROM v_review_queue`.then((r) => Number(r[0]?.n ?? 0)),
+      scopedQueue(req).then((r) => r.length),
       prisma.grading.count({ where: { reviewStatus: 'PENDING', ...gradingScope(scope) } }),
       prisma.ticket.count({ where: { category: 'ACADEMIC', status: 'OPEN' } }),
       prisma.classSession.count({ where: { observerId: me(req).id, sessionDate: { gte: startOfToday() }, class: classWhere(scope) } }),
@@ -56,7 +56,8 @@ headRouter.get(
     const ss = [...stats.values()];
     return {
       classesCount: classes.length,
-      studentsCount: ss.reduce((a, s) => a + s.studentsCount, 0),
+      // Học viên KHÁC NHAU trong bộ môn (học viên học 2 lớp chỉ tính 1)
+      studentsCount: new Set(ss.flatMap((s) => s.studentIds)).size,
       teachersCount: teachers.length,
       activeTeachers: teachers.filter((t) => t.status === 'ACTIVE').length,
       pendingApprovals,
@@ -64,7 +65,7 @@ headRouter.get(
       newComplaints,
       upcomingObservations: upcomingObs,
       roomConflicts: conflicts.length,
-      lowAttendanceClasses: classes.filter((c) => (stats.get(c.id)?.attendanceRate ?? 100) < 80 && (stats.get(c.id)?.attendanceRate ?? 0) > 0).length,
+      lowAttendanceClasses: classes.filter((c) => { const s = stats.get(c.id); return !!s && s.attendanceMarks > 0 && s.attendanceRate < 80; }).length,
       classesNeedTeacher: classes.filter((c) => c.teacher.status !== 'ACTIVE' || c.teacher.deletedAt).map((c) => ({ id: c.id, name: c.name, teacherName: c.teacher.fullName })),
     };
   })
@@ -122,8 +123,9 @@ headRouter.patch(
   '/subjects/:id',
   handler(async (req) => {
     const id = idParam(req);
+    if (!(await prisma.department.findFirst({ where: { id, deletedAt: null }, select: { id: true } }))) throw notFound('Bộ môn');
     const scope = await scopeOf(req);
-    if (scope && !scope.includes(id)) throw forbidden();
+    if (scope && !scope.includes(id)) throw forbidden('Bộ môn này không thuộc phạm vi bạn phụ trách');
     const body = parse(subjectBody.partial(), req.body);
     await prisma.department.update({ where: { id }, data: body });
     return (await toSubjects({ id }))[0];
@@ -133,8 +135,9 @@ headRouter.delete(
   '/subjects/:id',
   handler(async (req) => {
     const id = idParam(req);
+    if (!(await prisma.department.findFirst({ where: { id, deletedAt: null }, select: { id: true } }))) throw notFound('Bộ môn');
     const scope = await scopeOf(req);
-    if (scope && !scope.includes(id)) throw forbidden();
+    if (scope && !scope.includes(id)) throw forbidden('Bộ môn này không thuộc phạm vi bạn phụ trách');
     const inUse = await prisma.class.count({ where: { departmentId: id, deletedAt: null } });
     if (inUse) throw badRequest('Bộ môn còn lớp học, không thể xoá', 'IN_USE');
     await prisma.department.update({ where: { id }, data: { deletedAt: new Date() } });
@@ -432,6 +435,25 @@ async function roomConflicts(scope: string[] | null, from: Date, to: Date) {
 
 // ======================= Phê duyệt học liệu =======================
 type QueueRow = { resource_type: string; id: string; title: string | null; author_id: string | null; updated_at: Date };
+
+/**
+ * Hàng chờ phê duyệt trong phạm vi bộ môn: nội dung do giáo viên thuộc bộ môn mình gửi lên.
+ * Nội dung của admin/hệ thống (tác giả không thuộc bộ môn nào) hiện cho mọi trưởng bộ môn.
+ */
+async function scopedQueue(req: Request, id?: string): Promise<QueueRow[]> {
+  const scope = await scopeOf(req);
+  const rows = id
+    ? await prisma.$queryRaw<QueueRow[]>`SELECT resource_type, id::text AS id, title, author_id::text AS author_id, updated_at FROM v_review_queue WHERE id = ${id}::uuid`
+    : await prisma.$queryRaw<QueueRow[]>`SELECT resource_type, id::text AS id, title, author_id::text AS author_id, updated_at FROM v_review_queue ORDER BY updated_at ASC`;
+  if (!scope) return rows;
+  const authorIds = [...new Set(rows.map((r) => r.author_id).filter((x): x is string => !!x))];
+  const authors = await prisma.user.findMany({ where: { id: { in: authorIds } }, select: { id: true, departmentId: true } });
+  const deptOf = new Map(authors.map((a) => [a.id, a.departmentId]));
+  return rows.filter((r) => {
+    const d = r.author_id ? deptOf.get(r.author_id) : null;
+    return !d || scope.includes(d);
+  });
+}
 const APPROVAL_TYPE: Record<string, 'QUESTION' | 'TEST' | 'LESSON' | 'POST'> = {
   COURSE: 'LESSON',
   LESSON: 'LESSON',
@@ -469,7 +491,7 @@ async function summaryOf(type: string, id: string): Promise<string> {
 headRouter.get(
   '/approvals',
   handler(async (req) => {
-    const rows = await prisma.$queryRaw<QueueRow[]>`SELECT resource_type, id::text AS id, title, author_id::text AS author_id, updated_at FROM v_review_queue ORDER BY updated_at ASC`;
+    const rows = await scopedQueue(req);
     const authors = await prisma.user.findMany({ where: { id: { in: rows.map((r) => r.author_id).filter((x): x is string => !!x) } }, select: { id: true, fullName: true, avatarUrl: true } });
     const pending = await Promise.all(
       rows.map(async (r) => {
@@ -489,7 +511,7 @@ headRouter.get(
     );
     // Lịch sử duyệt lấy từ audit_logs (mọi thao tác duyệt đều được ghi)
     const logs = await prisma.auditLog.findMany({
-      where: { action: { in: ['CONTENT_APPROVE', 'CONTENT_REJECT'] } },
+      where: { action: { in: ['CONTENT_APPROVE', 'CONTENT_REJECT'] }, ...(me(req).role === 'ADMIN' ? {} : { actorId: me(req).id }) },
       include: { actor: { select: { fullName: true } } },
       orderBy: { createdAt: 'desc' },
       take: 100,
@@ -521,7 +543,7 @@ async function review(req: Request, decision: 'APPROVE' | 'REJECT') {
   if (decision === 'REJECT' && !note) throw badRequest('Cần ghi lý do từ chối', 'NOTE_REQUIRED');
   const status: ContentStatus = decision === 'APPROVE' ? 'PUBLISHED' : 'REJECTED';
   const reviewer = me(req).id;
-  const row = (await prisma.$queryRaw<QueueRow[]>`SELECT resource_type, id::text AS id, title, author_id::text AS author_id, updated_at FROM v_review_queue WHERE id = ${id}::uuid`)[0];
+  const row = (await scopedQueue(req, id))[0];
   if (!row || row.resource_type !== type) throw notFound('Nội dung chờ duyệt');
   const summary = await summaryOf(type, id);
   const data = { status, reviewNote: note ?? null };
@@ -539,9 +561,13 @@ async function review(req: Request, decision: 'APPROVE' | 'REJECT') {
       case 'QUESTION':
         await tx.question.update({ where: { id }, data: { ...data, reviewedById: reviewer } });
         break;
-      case 'TEST':
+      case 'TEST': {
         await tx.mockTest.update({ where: { id }, data: { ...data, reviewedById: reviewer } });
+        // Câu hỏi mới của chính tác giả nằm trong đề được duyệt/từ chối cùng đề
+        const own = await tx.mockTestQuestion.findMany({ where: { testId: id, question: { status: 'PENDING_REVIEW', authorId: row.author_id ?? undefined, deletedAt: null } }, select: { questionId: true } });
+        if (own.length) await tx.question.updateMany({ where: { id: { in: own.map((o) => o.questionId) } }, data: { ...data, reviewedById: reviewer } });
         break;
+      }
       case 'POST':
         await tx.post.update({ where: { id }, data: { status, publishedAt: status === 'PUBLISHED' ? new Date() : undefined } });
         break;
@@ -601,6 +627,8 @@ export const toQuestionRow = (q: Prisma.QuestionGetPayload<{ include: { passage:
   passageTitle: q.passage?.title ?? undefined,
   tagIds: q.tagIds,
   status: q.status,
+  reviewNote: q.reviewNote ?? undefined,
+  authorId: q.authorId ?? undefined,
   source: q.source,
   version: q.version,
   difficulty: Number(q.irtB),
@@ -629,13 +657,65 @@ export async function listQuestions(raw: unknown, extra: Prisma.QuestionWhereInp
   return { ...paged(items.map(toQuestionRow), total, f), byPart: byPart.map((b) => ({ part: b.part, count: b._count })) };
 }
 
+async function scopedQuestion(req: Request) {
+  const scope = await scopeOf(req);
+  const examTypes = scope ? [...new Set((await prisma.department.findMany({ where: { id: { in: scope } }, select: { examType: true } })).map((d) => d.examType))] : null;
+  const q = await prisma.question.findFirst({ where: { id: idParam(req), deletedAt: null, ...(examTypes ? { examType: { in: examTypes } } : {}) } });
+  if (!q) throw notFound('Câu hỏi');
+  return q;
+}
+const qEditBody = z.object({
+  stem: z.string().trim().min(1).optional(),
+  options: z.array(z.object({ key: z.string().max(4), text: z.string() })).nullish(),
+  correctAnswer: z.string().max(4).nullish(),
+  explanation: z.string().max(20000).nullish(),
+  translationVi: z.string().max(20000).nullish(),
+});
+/** Hiệu đính câu hỏi (vd sau khiếu nại). Câu nằm trong đề đã xuất bản: trigger CSDL lưu phiên bản cũ; trưởng bộ môn tự sửa nên xuất bản lại ngay. */
+headRouter.patch(
+  '/question-bank/:id',
+  handler(async (req) => {
+    const q = await scopedQuestion(req);
+    const b = parse(qEditBody, req.body);
+    const data: Prisma.QuestionUpdateInput = {
+      ...(b.stem !== undefined ? { stem: b.stem } : {}),
+      ...(b.options !== undefined ? { options: b.options ?? Prisma.JsonNull } : {}),
+      ...(b.correctAnswer !== undefined ? { correctAnswer: b.correctAnswer ? { keys: [b.correctAnswer] } : Prisma.JsonNull } : {}),
+      ...(b.explanation !== undefined ? { explanationMd: b.explanation } : {}),
+      ...(b.translationVi !== undefined ? { translationVi: b.translationVi } : {}),
+    };
+    const inc = { passage: { select: { id: true, title: true } } } as const;
+    const updated = await prisma.$transaction(async (tx) => {
+      const u = await tx.question.update({ where: { id: q.id }, data, include: inc });
+      const fixed = q.status === 'PUBLISHED' && u.status === 'PENDING_REVIEW' ? await tx.question.update({ where: { id: q.id }, data: { status: 'PUBLISHED', reviewedById: me(req).id }, include: inc }) : u;
+      await audit(req, 'QUESTION_EDIT', 'question', q.id, { tx, before: { stem: q.stem, correctAnswer: q.correctAnswer, version: q.version }, after: { stem: fixed.stem, correctAnswer: fixed.correctAnswer, version: fixed.version } });
+      return fixed;
+    });
+    return toQuestionRow(updated);
+  })
+);
+/** Lưu trữ (ẩn khỏi học viên, bài làm cũ vẫn xem được) hoặc khôi phục câu hỏi */
+headRouter.post(
+  '/question-bank/:id/archive',
+  handler(async (req) => {
+    const q = await scopedQuestion(req);
+    const { archived } = parse(z.object({ archived: z.boolean().default(true) }), req.body ?? {});
+    if (archived && q.status === 'ARCHIVED') throw conflict('Câu hỏi đã được lưu trữ');
+    if (!archived && q.status !== 'ARCHIVED') throw conflict('Câu hỏi không ở trạng thái lưu trữ');
+    const u = await prisma.question.update({ where: { id: q.id }, data: { status: archived ? 'ARCHIVED' : 'PUBLISHED', reviewedById: me(req).id }, include: { passage: { select: { id: true, title: true } } } });
+    await audit(req, archived ? 'QUESTION_ARCHIVE' : 'QUESTION_RESTORE', 'question', q.id, { after: { title: q.stem.slice(0, 80) } });
+    return toQuestionRow(u);
+  })
+);
+
 headRouter.get(
   '/question-bank',
   handler(async (req) => {
     const scope = await scopeOf(req);
     const deps = scope ? await prisma.department.findMany({ where: { id: { in: scope } }, select: { examType: true } }) : [];
     const examTypes = [...new Set(deps.map((d) => d.examType))];
-    return listQuestions(req.query, scope ? { examType: { in: examTypes } } : {});
+    // Bản nháp là riêng của tác giả cho tới khi gửi duyệt
+    return listQuestions(req.query, { NOT: { status: 'DRAFT' }, ...(scope ? { examType: { in: examTypes } } : {}) });
   })
 );
 headRouter.get(
@@ -923,13 +1003,37 @@ headRouter.post(
         },
         include: ticketInclude,
       });
-      await notify([t.userId], { type: 'SYSTEM', title: body.resolve ? 'Khiếu nại đã được giải quyết' : 'Phản hồi khiếu nại', message: body.text.slice(0, 300), refType: 'TICKET', refId: t.id }, tx);
+      const accepted = body.resolve && body.accepted !== false;
+      await notify(
+        [t.userId],
+        {
+          type: 'SYSTEM',
+          title: body.resolve ? (accepted ? 'Khiếu nại được chấp nhận' : 'Khiếu nại không được chấp nhận') : 'Phản hồi khiếu nại',
+          message: (accepted && t.questionId ? `Cảm ơn bạn đã báo lỗi, bạn được cộng ${CONTRIBUTION_XP} điểm ghi nhận đóng góp. ` : '') + body.text.slice(0, 300),
+          refType: 'TICKET',
+          refId: t.id,
+        },
+        tx
+      );
+      // Báo lỗi câu hỏi được chấp nhận → cộng điểm ghi nhận đóng góp (không tính là ngày học, không đổi streak)
+      if (accepted && t.questionId && t.userId) {
+        const today = new Date(new Date(Date.now() + 7 * 3600_000).toISOString().slice(0, 10));
+        await tx.dailyActivity.upsert({
+          where: { userId_activityDate: { userId: t.userId, activityDate: today } },
+          create: { userId: t.userId, activityDate: today, xp: CONTRIBUTION_XP },
+          update: { xp: { increment: CONTRIBUTION_XP } },
+        });
+        await tx.user.update({ where: { id: t.userId }, data: { xpTotal: { increment: CONTRIBUTION_XP } } });
+      }
       if (body.resolve) await audit(req, 'COMPLAINT_RESOLVE', 'ticket', t.id, { tx, after: { accepted: body.accepted !== false } });
       return u;
     });
     return toComplaint(updated);
   })
 );
+
+/** Điểm ghi nhận khi báo lỗi câu hỏi được chấp nhận */
+const CONTRIBUTION_XP = 20;
 
 // ======================= Báo cáo =======================
 headRouter.get(
@@ -971,7 +1075,8 @@ headRouter.get(
         completion: s.completionRate,
         // Chưa có điểm thi lẫn điểm danh thì chưa xếp loại
         hasAttendance: s.attendanceMarks > 0,
-        grade: s.avgScore > 0 || s.attendanceMarks > 0 ? gradeOf(c.examType, s.avgScore, s.attendanceRate) : null,
+        hasScore: s.hasScore,
+        grade: s.hasScore || s.attendanceMarks > 0 ? gradeOf(c.examType, s.hasScore ? s.avgScore : 0, s.attendanceRate) : null,
         trend,
       };
     });
@@ -1002,7 +1107,14 @@ headRouter.get(
       }),
     };
     const gradeDist = (['A', 'B', 'C', 'D'] as const).map((g) => ({ grade: g, count: reports.filter((r) => r.grade === g).length }));
-    return { classes: reports, monthly, gradeDist };
+    // Tổng hợp: học viên KHÁC NHAU, chuyên cần gộp theo lượt điểm danh (không lấy TB các %)
+    const all = [...stats.values()];
+    const marks = all.reduce((a, s) => a + s.attendanceMarks, 0);
+    const summary = {
+      students: new Set(all.flatMap((s) => s.studentIds)).size,
+      attendanceRate: marks ? Math.round(all.reduce((a, s) => a + (s.attendanceRate / 100) * s.attendanceMarks, 0) / marks * 100) : null,
+    };
+    return { classes: reports, monthly, gradeDist, summary };
   })
 );
 
