@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { Award, BarChart3, CalendarCheck, CheckCircle2, Download, LineChart as LineIcon, School, Table2, TrendingDown, TrendingUp, Users } from 'lucide-react';
 import { useDocumentTitle } from '@/shared/hooks';
 import { toast } from '@/shared/stores/uiStore';
-import { HEAD_MONTHLY, MOCK_CLASS_REPORTS, MOCK_SUBJECTS, teacherByName } from '@/shared/mocks';
+import { useHeadReports, useHeadSubjects, useHeadTeachers } from '@/shared/api/head';
 import { BarChart, HBarChart, LineChart } from '@/shared/components/charts/Charts';
 import type { ClassReport } from '@/shared/types';
 import { cn } from '@/shared/utils';
@@ -16,7 +16,22 @@ const GRADE_LABEL: Record<ClassReport['grade'], string> = { A: 'Xuất sắc', B
 export const HeadReportsPage: React.FC = () => {
   useDocumentTitle('Báo cáo tổng kết');
   const [subject, setSubject] = useState('');
-  const rows = MOCK_CLASS_REPORTS.filter((r) => !subject || (subject.includes('VSTEP') ? r.avgScore <= 10 : r.avgScore > 10));
+  const MOCK_SUBJECTS = useHeadSubjects().data ?? [];
+  const teachers = useHeadTeachers().data ?? [];
+  const teacherByName = (name: string) => teachers.find((t) => t.name === name);
+  const { data, isLoading } = useHeadReports(6, subject || undefined);
+  const rows = data?.classes ?? [];
+  const HEAD_MONTHLY = data?.monthly ?? { labels: [], attendance: [], completion: [] };
+  const toeicRows = rows.filter((r) => r.examType === 'TOEIC' && r.avgScore > 0);
+  const exportCsv = () => {
+    const esc = (v: unknown) => `"${String(v ?? '').replace(/"/g, '""')}"`;
+    const lines = [['Lớp', 'Giáo viên', 'Kỳ thi', 'Học viên', 'Điểm TB', 'Chuyên cần %', 'Hoàn thành bài %', 'Xếp loại', 'Xu hướng %'], ...rows.map((r) => [r.className, r.teacher, r.examType, r.students, r.avgScore, r.attendance, r.completion, r.grade, r.trend])];
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([String.fromCharCode(0xfeff) + lines.map((l) => l.map(esc).join(',')).join(String.fromCharCode(10))], { type: 'text/csv;charset=utf-8' }));
+    a.download = `bao-cao-bo-mon-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    toast.success('Đã xuất báo cáo', `${rows.length} lớp · tệp CSV mở được bằng Excel.`);
+  };
   const grades = (['A', 'B', 'C', 'D'] as const).map((g) => ({ g, n: rows.filter((r) => r.grade === g).length }));
   const totalStudents = rows.reduce((a, r) => a + r.students, 0);
   const avgAttendance = rows.length ? Math.round(rows.reduce((a, r) => a + r.attendance, 0) / rows.length) : 0;
@@ -32,12 +47,12 @@ export const HeadReportsPage: React.FC = () => {
             <select aria-label="Môn học" className={cn(inputCls, 'w-56')} value={subject} onChange={(e) => setSubject(e.target.value)}>
               <option value="">Tất cả môn học</option>
               {MOCK_SUBJECTS.map((s) => (
-                <option key={s.id} value={s.name}>
+                <option key={s.id} value={s.id}>
                   {s.name}
                 </option>
               ))}
             </select>
-            <TBtn variant="primary" icon={<Download />} onClick={() => toast.info('Đang xuất báo cáo', 'File PDF sẽ được tải xuống trong giây lát.')}>
+            <TBtn variant="primary" icon={<Download />} disabled={!rows.length} onClick={exportCsv}>
               Xuất báo cáo
             </TBtn>
           </>
@@ -48,14 +63,18 @@ export const HeadReportsPage: React.FC = () => {
         items={[
           { label: 'Lớp', value: rows.length, note: `${grades[0].n} lớp xếp loại A`, icon: School, tone: 'amber' },
           { label: 'Học viên', value: totalStudents, note: 'đang theo học', icon: Users, tone: 'indigo' },
-          { label: 'Chuyên cần TB', value: `${avgAttendance}%`, note: 'từ đầu học kỳ', icon: CheckCircle2, tone: 'emerald' },
+          { label: 'Chuyên cần TB', value: avgAttendance ? `${avgAttendance}%` : '—', note: 'từ các buổi đã điểm danh', icon: CheckCircle2, tone: 'emerald' },
           { label: 'Lớp tiến bộ', value: rows.filter((r) => r.trend > 0).length, note: 'xu hướng điểm tăng', icon: TrendingUp, tone: 'sky' },
         ]}
       />
 
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
         <Panel className="xl:col-span-2" title="Điểm TOEIC trung bình theo lớp" sub="Bài thi thử gần nhất · thang 990" icon={BarChart3} tone="indigo">
-          <BarChart ariaLabel="Điểm TOEIC trung bình theo lớp" data={rows.filter((r) => r.avgScore > 10).map((r) => ({ label: r.className.replace('TOEIC ', '').replace('Ngữ pháp nền tảng ', 'NP ').replace(' Intensive', '').replace('Foundation Sáng', 'Found.'), value: r.avgScore }))} height={240} unit=" điểm" />
+          {toeicRows.length ? (
+            <BarChart ariaLabel="Điểm TOEIC trung bình theo lớp" data={toeicRows.map((r) => ({ label: r.className.replace('TOEIC ', '').replace('Ngữ pháp nền tảng ', 'NP ').replace(' Intensive', '').replace('Foundation Sáng', 'Found.'), value: r.avgScore }))} height={240} unit=" điểm" />
+          ) : (
+            <p className="py-16 text-center text-sm text-slate-500">{isLoading ? 'Đang tải…' : 'Chưa có điểm thi thử của học viên các lớp TOEIC.'}</p>
+          )}
         </Panel>
         <Panel title="Phân bố xếp loại" sub={`Số lớp theo xếp loại · ${rows.length} lớp`} icon={Award} tone="amber">
           <ul className="space-y-4">
@@ -77,9 +96,14 @@ export const HeadReportsPage: React.FC = () => {
 
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
         <Panel title="Chuyên cần theo lớp" sub="% buổi có mặt từ đầu học kỳ" icon={CalendarCheck} tone="emerald">
-          <HBarChart ariaLabel="Chuyên cần theo lớp" data={[...rows].sort((a, b) => b.attendance - a.attendance).map((r) => ({ label: r.className, value: r.attendance }))} max={100} unit="%" labelWidth={150} />
+          {rows.some((r) => r.attendance) ? (
+            <HBarChart ariaLabel="Chuyên cần theo lớp" data={[...rows].sort((a, b) => b.attendance - a.attendance).map((r) => ({ label: r.className, value: r.attendance }))} max={100} unit="%" labelWidth={150} />
+          ) : (
+            <p className="py-12 text-center text-sm text-slate-500">Chưa có buổi học nào được điểm danh.</p>
+          )}
         </Panel>
         <Panel title="Chuyên cần và hoàn thành bài tập" sub="Trung bình toàn bộ môn theo tháng" icon={LineIcon} tone="violet">
+          {HEAD_MONTHLY.attendance.some(Boolean) || HEAD_MONTHLY.completion.some(Boolean) ? (
           <LineChart
             ariaLabel="Chuyên cần và hoàn thành bài tập theo tháng"
             labels={HEAD_MONTHLY.labels}
@@ -87,10 +111,13 @@ export const HeadReportsPage: React.FC = () => {
               { name: 'Chuyên cần', values: HEAD_MONTHLY.attendance },
               { name: 'Hoàn thành bài tập', values: HEAD_MONTHLY.completion },
             ]}
-            min={50}
+            min={0}
             max={100}
             unit="%"
           />
+          ) : (
+            <p className="py-12 text-center text-sm text-slate-500">Chưa có dữ liệu chuyên cần và bài tập.</p>
+          )}
         </Panel>
       </div>
 

@@ -2,22 +2,20 @@ import React from 'react';
 import { LayoutDashboard, Library, Database, Users, School, CheckSquare, BarChart3, MessageSquareWarning, GraduationCap, CalendarDays, Scale, Video, FileText, BookOpen } from 'lucide-react';
 import { AppShell, NavGroup } from '@/shared/components/layout/AppShell';
 import { StaffNav, type StaffMenu } from '@/shared/components/layout/StaffNav';
-import { DEPT_CLASSES, DEPT_STUDENTS, MOCK_APPROVALS, MOCK_COMPLAINTS, MOCK_GRADING_REVIEWS, MOCK_SUBJECTS, MOCK_TEACHERS } from '@/shared/mocks';
+import { useHeadDashboard, useHeadStudents, useHeadSubjects } from '@/shared/api/head';
 
-const pending = String(MOCK_APPROVALS.filter((a) => a.status === 'PENDING').length);
-const openComplaints = String(MOCK_COMPLAINTS.filter((c) => c.status !== 'RESOLVED').length);
-const toReview = String(MOCK_GRADING_REVIEWS.filter((r) => r.status === 'PENDING').length);
-const riskStudents = DEPT_STUDENTS.filter((s) => s.status === 'RISK').length;
+const badge = (n?: number) => (n ? String(n) : undefined);
+type Counts = { pending?: string; openComplaints?: string; toReview?: string; riskStudents: number; subjects: number; teachers: number; classes: number };
 
 /** Menu header trưởng bộ môn: quản lý bộ môn → giám sát giảng dạy → thẩm định học liệu → báo cáo */
-const MENUS: StaffMenu[] = [
+const buildMenus = ({ pending, openComplaints, toReview, riskStudents, subjects, teachers, classes }: Counts): StaffMenu[] => [
   { to: '/head/dashboard', label: 'Tổng quan' },
   {
     label: 'Bộ môn',
     children: [
-      { to: '/head/subjects', label: 'Môn học', icon: Library, desc: `${MOCK_SUBJECTS.length} môn, giáo viên và lớp của từng môn` },
-      { to: '/head/teachers', label: 'Giáo viên', icon: Users, desc: `${MOCK_TEACHERS.length} giáo viên, hồ sơ chuyên môn, dự giờ` },
-      { to: '/head/classes', label: 'Lớp học', icon: School, desc: `${DEPT_CLASSES.length} lớp, phân công giáo viên, chuyên cần` },
+      { to: '/head/subjects', label: 'Môn học', icon: Library, desc: `${subjects} môn, giáo viên và lớp của từng môn` },
+      { to: '/head/teachers', label: 'Giáo viên', icon: Users, desc: `${teachers} giáo viên, hồ sơ chuyên môn, dự giờ` },
+      { to: '/head/classes', label: 'Lớp học', icon: School, desc: `${classes} lớp, phân công giáo viên, chuyên cần` },
       { to: '/head/students', label: 'Học viên', icon: GraduationCap, desc: `${riskStudents} học viên nguy cơ bỏ học cần nhắc` },
     ],
   },
@@ -43,7 +41,7 @@ const MENUS: StaffMenu[] = [
 ];
 
 /** Ngăn kéo (điện thoại), thanh đáy và footer */
-const GROUPS: NavGroup[] = [
+const buildGroups = ({ pending, openComplaints, toReview }: Counts): NavGroup[] => [
   {
     title: 'Bộ môn',
     items: [
@@ -75,6 +73,22 @@ const GROUPS: NavGroup[] = [
   },
 ];
 
-export const HeadTeacherLayout: React.FC = () => (
+export const HeadTeacherLayout: React.FC = () => {
+  const dash = useHeadDashboard().data;
+  const students = useHeadStudents().data;
+  const subjects = useHeadSubjects().data;
+  const c: Counts = {
+    pending: badge(dash?.pendingApprovals),
+    openComplaints: badge(dash?.newComplaints),
+    toReview: badge(dash?.pendingReviews),
+    riskStudents: students?.filter((s) => s.status === 'RISK').length ?? 0,
+    subjects: subjects?.length ?? 0,
+    teachers: dash?.teachersCount ?? 0,
+    classes: dash?.classesCount ?? 0,
+  };
+  const MENUS = buildMenus(c);
+  const GROUPS = buildGroups(c);
+  return (
   <AppShell groups={GROUPS} brandTagline="Trưởng bộ môn" headerLabel="Khu vực Trưởng bộ môn" accent="amber" settingsTo="/head/settings" profileTo="/head/settings" notificationsTo="/head/notifications" workspace headerNav={<StaffNav menus={MENUS} label="Menu trưởng bộ môn" />} />
-);
+  );
+};

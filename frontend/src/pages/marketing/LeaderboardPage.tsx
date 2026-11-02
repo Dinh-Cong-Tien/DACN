@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
-import { MOCK_LEADERBOARD } from '@/shared/mocks';
+import { usePublicLeaderboard } from '@/shared/api/cms';
 import { useDocumentTitle, useGate } from '@/shared/hooks';
 import { cn, formatNumber } from '@/shared/utils';
 import { Accent, PageHeader, Section, UnderlineTabs, ActionLink } from './shared/PageKit';
@@ -24,13 +24,17 @@ export const LeaderboardPage: React.FC = () => {
   const [period, setPeriod] = useState<Period>('week');
   const [exam, setExam] = useState<Exam>('ALL');
 
-  const rows = useMemo(() => {
-    const base = MOCK_LEADERBOARD.map((u) => ({ ...u, score: period === 'week' ? u.points : Math.round(u.points * 4.3 + u.streak * 7) }));
-    return base
-      .filter((u) => exam === 'ALL' || u.target.startsWith(exam))
-      .sort((a, b) => b.score - a.score)
-      .map((u, i) => ({ ...u, place: i + 1 }));
-  }, [period, exam]);
+  const { data, isLoading } = usePublicLeaderboard({ period, exam, limit: 10 });
+  const rows = useMemo(() => (data?.entries ?? []).map((u) => ({ ...u, score: u.points, place: u.rank })), [data]);
+  const fmt = (d?: string) => (d ? `${d.slice(8, 10)}/${d.slice(5, 7)}` : '');
+  const week = useMemo(() => {
+    // Nhãn tuần/tháng hiện tại theo giờ Việt Nam
+    const now = new Date(Date.now() + 7 * 3600_000);
+    const dow = (now.getUTCDay() + 6) % 7;
+    const mon = new Date(now.getTime() - dow * 86400_000).toISOString().slice(0, 10);
+    const sun = new Date(now.getTime() + (6 - dow) * 86400_000).toISOString().slice(0, 10);
+    return { label: `Tuần ${fmt(mon)} – ${fmt(sun)}`, month: `Tháng ${now.getUTCMonth() + 1}/${now.getUTCFullYear()}` };
+  }, []);
 
   return (
     <div className="bg-page">
@@ -56,8 +60,8 @@ export const LeaderboardPage: React.FC = () => {
                 ]}
               />
               <select value={period} onChange={(e) => setPeriod(e.target.value as Period)} aria-label="Khoảng thời gian" className="mb-1 h-9 self-start rounded-lg border border-slate-300 bg-white px-2.5 text-sm text-slate-700 focus:border-indigo-600 focus:outline-none">
-                <option value="week">Tuần 27/10 – 02/11</option>
-                <option value="month">Tháng 10/2026</option>
+                <option value="week">{week.label}</option>
+                <option value="month">{week.month}</option>
               </select>
             </div>
 
@@ -73,6 +77,13 @@ export const LeaderboardPage: React.FC = () => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-200">
+                  {rows.length === 0 && (
+                    <tr>
+                      <td colSpan={5} className="px-4 py-12 text-center text-sm text-slate-500">
+                        {isLoading ? 'Đang tải bảng xếp hạng…' : 'Chưa có học viên nào ghi điểm trong kỳ này. Học ngay để có tên đầu tiên trên bảng!'}
+                      </td>
+                    </tr>
+                  )}
                   {rows.map((u) => (
                     <tr key={u.name}>
                       <td className="px-4 py-3">
@@ -84,7 +95,7 @@ export const LeaderboardPage: React.FC = () => {
                       </td>
                       <td className="px-4 py-3">
                         <p className="font-medium text-slate-900">{u.name}</p>
-                        <p className="text-[12px] text-slate-500">Mục tiêu {u.target}</p>
+                        {u.target && <p className="text-[12px] text-slate-500">Mục tiêu {u.target}</p>}
                       </td>
                       <td className="hidden px-4 py-3 text-right tabular-nums text-slate-600 sm:table-cell">{u.streak} ngày</td>
                       <td className="px-4 py-3 text-right font-semibold tabular-nums text-slate-900">{formatNumber(u.score)}</td>

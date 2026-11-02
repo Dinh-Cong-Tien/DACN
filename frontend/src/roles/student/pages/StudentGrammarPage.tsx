@@ -1,17 +1,16 @@
 import React, { useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { GraduationCap, ChevronLeft, ChevronRight, Lightbulb, Target, CheckCircle2, BookOpen } from 'lucide-react';
-import { GRAMMAR_TOPICS } from '@/shared/mocks';
+import { useGrammarTopics } from '@/shared/api/learner';
 import type { GrammarTopic } from '@/shared/types';
 import { cn } from '@/shared/utils';
 import { useDocumentTitle } from '@/shared/hooks';
 import { Badge, Button, Card, Chip, PageHeader, ProgressBar, SearchInput, EmptyState, Breadcrumb, RingProgress } from '@/shared/components/ui';
 import { Img, PHOTOS } from '@/shared/components/media/Img';
 
-const LEVELS = ['Tất cả', 'A2–B1', 'B1', 'A2–B2', 'B1–B2'];
 const CAT_PHOTO: Record<string, string> = { 'Thì động từ': PHOTOS.notes, 'Từ loại': PHOTOS.books, 'Giới từ': PHOTOS.writing, 'Mệnh đề': PHOTOS.library, 'Liên từ': PHOTOS.desk, 'Cấu trúc câu': PHOTOS.flatlay };
 
-const TopicDetail: React.FC<{ topic: GrammarTopic }> = ({ topic }) => {
+const TopicDetail: React.FC<{ topic: GrammarTopic; GRAMMAR_TOPICS: GrammarTopic[] }> = ({ topic, GRAMMAR_TOPICS }) => {
   const idx = GRAMMAR_TOPICS.findIndex((t) => t.id === topic.id);
   const prev = GRAMMAR_TOPICS[idx - 1];
   const next = GRAMMAR_TOPICS[idx + 1];
@@ -97,7 +96,10 @@ const TopicDetail: React.FC<{ topic: GrammarTopic }> = ({ topic }) => {
 
 export const StudentGrammarPage: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
+  const { data: GRAMMAR_TOPICS = [], isLoading } = useGrammarTopics();
   const topic = slug ? GRAMMAR_TOPICS.find((t) => t.slug === slug) : undefined;
+  // Bộ lọc trình độ lấy từ dữ liệu thật
+  const LEVELS = useMemo(() => ['Tất cả', ...[...new Set(GRAMMAR_TOPICS.map((t) => t.level).filter(Boolean))].sort()], [GRAMMAR_TOPICS]);
   useDocumentTitle(topic ? topic.title : 'Chủ điểm ngữ pháp');
   const [search, setSearch] = useState('');
   const [level, setLevel] = useState('Tất cả');
@@ -109,9 +111,10 @@ export const StudentGrammarPage: React.FC = () => {
       (acc[t.category] ??= []).push(t);
       return acc;
     }, {});
-  }, [search, level]);
+  }, [search, level, GRAMMAR_TOPICS]);
 
-  if (topic) return <TopicDetail topic={topic} />;
+  if (topic) return <TopicDetail topic={topic} GRAMMAR_TOPICS={GRAMMAR_TOPICS} />;
+  if (slug && isLoading) return <p className="text-sm text-slate-500">Đang tải chủ điểm…</p>;
 
   const done = GRAMMAR_TOPICS.filter((t) => t.progress === 100).length;
   const cats = Object.keys(grouped);
@@ -125,7 +128,7 @@ export const StudentGrammarPage: React.FC = () => {
           </>
         }
         icon={<GraduationCap />}
-        description={`Đã hoàn thành ${done}/${GRAMMAR_TOPICS.length} chủ điểm cốt lõi cho TOEIC & VSTEP.`}
+        description={isLoading ? 'Đang tải chủ điểm…' : `Đã hoàn thành ${done}/${GRAMMAR_TOPICS.length} chủ điểm cốt lõi cho TOEIC & VSTEP.`}
       />
       <Card hard padding="sm" tone="cream" className="animate-fade-down">
         <div className="flex flex-col md:flex-row md:items-center gap-3">

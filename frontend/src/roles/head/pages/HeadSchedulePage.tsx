@@ -2,8 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { AlertTriangle, ChevronLeft, ChevronRight, Eye } from 'lucide-react';
 import { useDocumentTitle } from '@/shared/hooks';
-import { DEPT_CLASSES, DEPT_SESSIONS, MOCK_OBSERVATIONS, MOCK_TEACHERS, teacherByName } from '@/shared/mocks';
-import type { ClassObservation, ClassSession } from '@/shared/types';
+import { useHeadClasses, useHeadObservations, useHeadSchedule, useHeadTeachers, type HeadClass, type SessionRow } from '@/shared/api/head';
 import { Avatar } from '@/shared/components/ui';
 import { cn, formatDate } from '@/shared/utils';
 import { CLASS_BAR, Panel, Status, TBtn, TPageHead, classTone, inputCls } from '@/roles/teacher/components/TeacherKit';
@@ -20,10 +19,11 @@ const mondayOf = (d: Date) => {
 };
 const toMin = (t: string) => Number(t.slice(0, 2)) * 60 + Number(t.slice(3, 5));
 
+type Slot = Pick<SessionRow, 'id' | 'classId' | 'date' | 'start' | 'end' | 'room' | 'status'>;
 /** Các cặp buổi trùng phòng: cùng ngày, cùng phòng (không tính học online), thời gian giao nhau */
-export function roomConflicts(sessions: ClassSession[]): [ClassSession, ClassSession][] {
+export function roomConflicts<T extends Slot>(sessions: T[]): [T, T][] {
   const live = sessions.filter((s) => s.status !== 'CANCELLED' && s.room && !s.room.startsWith('Online'));
-  const out: [ClassSession, ClassSession][] = [];
+  const out: [T, T][] = [];
   live.forEach((a, i) =>
     live.slice(i + 1).forEach((b) => {
       if (a.classId !== b.classId && a.date === b.date && a.room === b.room && toMin(a.start) < toMin(b.end) && toMin(b.start) < toMin(a.end)) out.push([a, b]);
@@ -32,7 +32,8 @@ export function roomConflicts(sessions: ClassSession[]): [ClassSession, ClassSes
   return out;
 }
 
-const clsOf = (id: string) => DEPT_CLASSES.find((c) => c.id === id)!;
+const EMPTY_C: HeadClass[] = [];
+const EMPTY_S: SessionRow[] = [];
 
 /** Lịch dạy toàn bộ môn theo tuần: phát hiện trùng phòng, theo dõi buổi dự giờ */
 export const HeadSchedulePage: React.FC = () => {
@@ -40,16 +41,24 @@ export const HeadSchedulePage: React.FC = () => {
   const today = iso(new Date());
   const [monday, setMonday] = useState(() => mondayOf(new Date()));
   const [teacher, setTeacher] = useState('ALL');
-  const [obs, setObs] = useState<ClassObservation[]>(MOCK_OBSERVATIONS);
   const [observeOpen, setObserveOpen] = useState(false);
   const days = Array.from({ length: 7 }, (_, i) => {
     const d = new Date(monday);
     d.setDate(monday.getDate() + i);
     return iso(d);
   });
-  const weekAll = DEPT_SESSIONS.filter((s) => s.date >= days[0] && s.date <= days[6]);
+  const nextMonday = new Date(monday);
+  nextMonday.setDate(monday.getDate() + 7);
+  const scheduleQ = useHeadSchedule(days[0], iso(nextMonday));
+  const DEPT_CLASSES = useHeadClasses().data ?? EMPTY_C;
+  const MOCK_TEACHERS = useHeadTeachers().data ?? [];
+  const obs = useHeadObservations().data ?? [];
+  const teacherByName = (name: string) => MOCK_TEACHERS.find((t) => t.name === name);
+  const clsOf = (id: string) => DEPT_CLASSES.find((c) => c.id === id) ?? ({ id, name: '—', teacherName: '—' } as HeadClass);
+  const toneOf = (id: string) => classTone(`cl-${DEPT_CLASSES.findIndex((c) => c.id === id) + 1}`);
+  const weekAll = scheduleQ.data?.sessions ?? EMPTY_S;
   const week = weekAll.filter((s) => teacher === 'ALL' || clsOf(s.classId).teacherName === teacher);
-  const conflicts = useMemo(() => roomConflicts(weekAll), [days[0]]); // eslint-disable-line react-hooks/exhaustive-deps
+  const conflicts = useMemo(() => roomConflicts(weekAll), [weekAll]);
   const conflictIds = new Set(conflicts.flat().map((s) => s.id));
   const obsKey = new Set(obs.map((o) => `${o.classId}|${o.date}`));
   const upcomingObs = obs.filter((o) => o.status === 'PLANNED').sort((a, b) => a.date.localeCompare(b.date));
@@ -98,7 +107,7 @@ export const HeadSchedulePage: React.FC = () => {
         <div className="flex flex-wrap gap-x-4 gap-y-2">
           {shownClasses.map((c) => (
             <span key={c.id} className="inline-flex items-center gap-2 text-[13px] text-slate-600">
-              <span className={cn('h-3 w-3 rounded border-l-4', CLASS_BAR[classTone(c.id)])} />
+              <span className={cn('h-3 w-3 rounded border-l-4', CLASS_BAR[toneOf(c.id)])} />
               {c.name}
             </span>
           ))}
@@ -141,14 +150,14 @@ export const HeadSchedulePage: React.FC = () => {
                         <Link
                           key={s.id}
                           to={`/head/classes/${c.id}`}
-                          className={cn('block rounded-lg border-l-4 px-2.5 py-2 transition-shadow hover:shadow-md', CLASS_BAR[classTone(c.id)], clash && 'ring-2 ring-rose-400', s.status === 'CANCELLED' && 'opacity-50')}
+                          className={cn('block rounded-lg border-l-4 px-2.5 py-2 transition-shadow hover:shadow-md', CLASS_BAR[toneOf(c.id)], clash && 'ring-2 ring-rose-400', s.status === 'CANCELLED' && 'opacity-50')}
                         >
                           <p className="flex items-center justify-between gap-1 text-[11px] font-semibold tabular-nums text-slate-600">
                             {s.start}–{s.end}
                             {obsKey.has(`${c.id}|${s.date}`) && <Eye className="h-3.5 w-3.5 text-violet-600" aria-label="Có dự giờ" />}
                           </p>
                           <p className={cn('mt-0.5 text-[13px] font-semibold leading-snug text-slate-900', s.status === 'CANCELLED' && 'line-through')}>{c.name}</p>
-                          <p className="text-[11px] text-slate-500">{c.teacherName}</p>
+                          <p className="text-[11px] text-slate-500">{s.teacher ?? c.teacherName}</p>
                           <p className={cn('text-[11px]', clash ? 'font-semibold text-rose-600' : 'text-slate-500')}>{clash ? `Trùng ${s.room}` : s.room}</p>
                         </Link>
                       );
@@ -206,7 +215,7 @@ export const HeadSchedulePage: React.FC = () => {
         </div>
       </div>
 
-      <ObserveDialog open={observeOpen} onClose={() => setObserveOpen(false)} onSave={(o) => setObs((all) => [...all, o])} />
+      <ObserveDialog open={observeOpen} onClose={() => setObserveOpen(false)} />
     </div>
   );
 };

@@ -1,22 +1,45 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Video, FileText, HelpCircle } from 'lucide-react';
-import { MOCK_COURSES, courseHref } from '@/shared/mocks';
+import { courseHref, useCourse, useLesson, useLessonProgress } from '@/shared/api/catalog';
+import { useQueryClient } from '@tanstack/react-query';
 import { useDocumentTitle } from '@/shared/hooks';
-import { Breadcrumb, Badge } from '@/shared/components/ui';
+import { Breadcrumb, Badge, EmptyState, Button } from '@/shared/components/ui';
 import { LessonEngine } from '@/engines';
+import { toast } from '@/shared/stores/uiStore';
+import { errorMessage } from '@/shared/api/client';
 
 const TYPE_LABEL = { VIDEO: { label: 'Video bài giảng', Icon: Video }, READING: { label: 'Bài đọc', Icon: FileText }, QUIZ: { label: 'Quiz củng cố', Icon: HelpCircle } } as const;
 
 export const StudentLessonPage: React.FC = () => {
-  const { id, lessonId } = useParams<{ id: string; lessonId: string }>();
+  const { id = '', lessonId } = useParams<{ id: string; lessonId: string }>();
   const navigate = useNavigate();
-  const course = MOCK_COURSES.find((c) => c.id === id) ?? MOCK_COURSES[0];
-  const all = course.sections.flatMap((s) => s.lessons);
-  const lesson = all.find((l) => l.id === lessonId) ?? all.find((l) => !l.isLocked && !l.isCompleted) ?? all[0];
-  useDocumentTitle(lesson.title);
+  const qc = useQueryClient();
+  const { data: course, isLoading, error } = useCourse(id);
+  const all = course?.sections.flatMap((s) => s.lessons) ?? [];
+  // Không chỉ định bài → bài đang học dở / bài đầu tiên chưa hoàn thành
+  const target = all.find((l) => l.id === lessonId) ?? all.find((l) => l.id === course?.currentLessonId) ?? all.find((l) => !l.isLocked && !l.isCompleted) ?? all[0];
+  const { data: detail } = useLesson(target?.id);
+  const progress = useLessonProgress();
+  const lesson = target ? { ...target, ...(detail ?? {}) } : undefined;
+  useDocumentTitle(lesson?.title ?? course?.title ?? 'Bài học');
+
+  // Ghi nhận bắt đầu học (tạo/ cập nhật lesson_progress) khi mở bài chưa khoá
+  useEffect(() => {
+    if (target && !target.isLocked && !target.isCompleted) progress.mutate({ lessonId: target.id, action: 'start' });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [target?.id]);
+
+  if (!course || !lesson)
+    return (
+      <div className="space-y-5">
+        <Breadcrumb items={[{ label: 'Khoá học', to: '/courses' }, { label: 'Bài học' }]} />
+        {isLoading ? <p className="text-sm text-slate-500">Đang tải bài học…</p> : <EmptyState title="Không tìm thấy bài học" description={error ? errorMessage(error) : 'Khoá học chưa có bài học.'} action={<Button to="/courses">Xem khoá học</Button>} />}
+      </div>
+    );
+
   const idx = all.findIndex((l) => l.id === lesson.id);
-  const t = TYPE_LABEL[lesson.type];
+  const t = TYPE_LABEL[lesson.type] ?? TYPE_LABEL.VIDEO;
 
   return (
     <div className="space-y-5">
@@ -30,13 +53,29 @@ export const StudentLessonPage: React.FC = () => {
             <Badge tone="slate" size="xs">
               Bài {idx + 1}/{all.length}
             </Badge>
-            <Badge tone="indigo" size="xs">
-              {course.level}
-            </Badge>
+            {course.level && (
+              <Badge tone="indigo" size="xs">
+                {course.level}
+              </Badge>
+            )}
           </div>
         </div>
       </div>
-      <LessonEngine key={lesson.id} course={course} lesson={lesson} onSelectLesson={(lid) => navigate(`/app/courses/${course.id}/lessons/${lid}`)} onComplete={() => undefined} />
+      <LessonEngine
+        key={lesson.id}
+        course={course}
+        lesson={lesson}
+        onSelectLesson={(lid) => navigate(`/app/courses/${course.slug ?? course.id}/lessons/${lid}`)}
+        onComplete={(lid) =>
+          progress.mutate(
+            { lessonId: lid, action: 'complete' },
+            {
+              onSuccess: () => ['progress', 'path'].forEach((k) => qc.invalidateQueries({ queryKey: ['learner', k] })),
+              onError: (e) => toast.error('Chưa lưu được tiến độ', errorMessage(e)),
+            }
+          )
+        }
+      />
     </div>
   );
 };

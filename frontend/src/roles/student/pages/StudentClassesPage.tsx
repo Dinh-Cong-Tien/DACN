@@ -3,7 +3,10 @@ import { Link } from 'react-router-dom';
 import { ArrowRight, Download, FileText, Music, Video, File } from 'lucide-react';
 import { useDocumentTitle } from '@/shared/hooks';
 import { toast } from '@/shared/stores/uiStore';
-import { ASSIGNMENT_TYPE_LABEL, MOCK_ASSIGNMENTS, MOCK_CLASSES, MOCK_MATERIALS, MY_ASSIGNMENTS, MY_CLASS_IDS, describeTarget } from '@/shared/mocks';
+import { useQueries } from '@tanstack/react-query';
+import { ASSIGNMENT_TYPE_LABEL, describeTarget } from '@/shared/constants/student';
+import { api, errorMessage } from '@/shared/api/client';
+import { useJoinClass, useMyAssignments, useMyClasses, type ClassDetailDto } from '@/shared/api/learner';
 import type { Assignment, Material, MyAssignmentState } from '@/shared/types';
 import { assignmentHref, cn, formatDate, formatDateTime } from '@/shared/utils';
 import { PageHeader } from '@/shared/components/ui';
@@ -34,19 +37,33 @@ export const StudentClassesPage: React.FC = () => {
   useDocumentTitle('Lớp của tôi');
   const [tab, setTab] = useState<TabKey>('TODO');
   const [code, setCode] = useState('');
-  const classes = MOCK_CLASSES.filter((c) => MY_CLASS_IDS.includes(c.id));
-  const rows: Row[] = MOCK_ASSIGNMENTS.filter((a) => MY_CLASS_IDS.includes(a.classId) && a.status !== 'DRAFT' && MY_ASSIGNMENTS[a.id]).map((a) => ({ ...a, me: MY_ASSIGNMENTS[a.id] }));
+  const { data: classes = [], isLoading } = useMyClasses();
+  const { data: mine } = useMyAssignments();
+  const joinClass = useJoinClass();
+  const rows: Row[] = (mine?.assignments ?? []).filter((a) => a.status !== 'DRAFT' && mine?.states[a.id]).map((a) => ({ ...a, me: mine!.states[a.id] }));
+  // Tài liệu nằm trong chi tiết từng lớp
+  const details = useQueries({ queries: classes.map((c) => ({ queryKey: ['learner', 'classes', c.id], queryFn: () => api.get<ClassDetailDto>(`/learner/classes/${c.id}`) })) });
   const groups: Record<TabKey, Row[]> = {
     TODO: rows.filter((r) => r.me.status === 'TODO').sort((a, b) => a.dueDate.localeCompare(b.dueDate)),
     SUBMITTED: rows.filter((r) => r.me.status === 'SUBMITTED'),
     GRADED: rows.filter((r) => r.me.status === 'GRADED'),
   };
-  const materials = MOCK_MATERIALS.filter((m) => MY_CLASS_IDS.includes(m.classId));
+  const materials = details.flatMap((d) => d.data?.materials ?? []);
+  // Bài trắc nghiệm được giao: gắn ?assignment= để lượt làm bài cập nhật bài nộp
+  const hrefOf = (r: Row) => {
+    const h = assignmentHref(r.target);
+    return r.target.kind === 'EXAM' ? `${h}${h.includes('?') ? '&' : '?'}assignment=${r.id}` : h;
+  };
 
   const join = () => {
     if (!/^ORB-[A-Z0-9]{4}$/.test(code)) return toast.error('Mã lớp chưa đúng', 'Mã có dạng ORB-XXXX, giáo viên gửi khi mở lớp.');
-    toast.success('Đã gửi yêu cầu vào lớp', `Giáo viên sẽ duyệt mã ${code}.`);
-    setCode('');
+    joinClass.mutate(code, {
+      onSuccess: (c) => {
+        toast.success('Đã vào lớp', c.name);
+        setCode('');
+      },
+      onError: (e) => toast.error('Chưa vào được lớp', errorMessage(e)),
+    });
   };
 
   return (
@@ -126,7 +143,7 @@ export const StudentClassesPage: React.FC = () => {
                     {r.note && tab === 'TODO' && <p className="mt-1.5 border-l-2 border-slate-200 pl-3 text-[13px] text-slate-600">Giáo viên dặn: {r.note}</p>}
                     {tab === 'GRADED' && r.me.feedback && (
                       <p className="mt-1.5 border-l-2 border-indigo-300 pl-3 text-[13px] text-slate-700">
-                        <span className="text-slate-500">Nhận xét của {MOCK_CLASSES.find((c) => c.id === r.classId)?.teacherName}:</span> {r.me.feedback}
+                        <span className="text-slate-500">Nhận xét của {classes.find((c) => c.id === r.classId)?.teacherName}:</span> {r.me.feedback}
                       </p>
                     )}
                   </div>
@@ -137,7 +154,7 @@ export const StudentClassesPage: React.FC = () => {
                           <span className="block tabular-nums text-slate-700">Hạn {formatDateTime(r.dueDate)}</span>
                           <span className={cn('block', due.late ? 'text-rose-600' : 'text-slate-500')}>{due.text}</span>
                         </span>
-                        <Link to={assignmentHref(r.target)} className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-md bg-indigo-600 px-3.5 text-sm font-medium text-white hover:bg-indigo-700">
+                        <Link to={hrefOf(r)} className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-md bg-indigo-600 px-3.5 text-sm font-medium text-white hover:bg-indigo-700">
                           Làm bài <ArrowRight className="h-4 w-4" />
                         </Link>
                       </>
@@ -163,6 +180,7 @@ export const StudentClassesPage: React.FC = () => {
       <section>
         <h2 className="text-[17px] font-semibold text-slate-900">Tài liệu lớp</h2>
         <ul className="mt-3 divide-y divide-slate-200 rounded-xl border border-slate-200 bg-white">
+          {materials.length === 0 && <li className="px-4 py-3 text-sm text-slate-500">{isLoading ? 'Đang tải…' : 'Lớp chưa có tài liệu nào.'}</li>}
           {materials.map((m) => {
             const Icon = MAT_ICON[m.type];
             return (
@@ -171,10 +189,10 @@ export const StudentClassesPage: React.FC = () => {
                 <span className="min-w-0 flex-1">
                   <span className="block truncate text-sm font-medium text-slate-900">{m.title}</span>
                   <span className="block text-[12px] text-slate-500">
-                    {MOCK_CLASSES.find((c) => c.id === m.classId)?.name} · {m.size} · {formatDate(m.uploadedAt)}
+                    {classes.find((c) => c.id === m.classId)?.name} · {m.size} · {formatDate(m.uploadedAt)}
                   </span>
                 </span>
-                <button type="button" onClick={() => toast.success('Đang tải xuống', m.title)} className="inline-flex h-8 items-center gap-1.5 rounded-md px-2.5 text-[13px] text-slate-600 hover:bg-slate-900/[0.05] hover:text-slate-900">
+                <button type="button" onClick={() => (m.fileUrl ? window.open(m.fileUrl, '_blank', 'noopener') : toast.info('Tài liệu chưa có tệp đính kèm', m.title))} className="inline-flex h-8 items-center gap-1.5 rounded-md px-2.5 text-[13px] text-slate-600 hover:bg-slate-900/[0.05] hover:text-slate-900">
                   <Download className="h-4 w-4" /> Tải
                 </button>
               </li>

@@ -59,7 +59,16 @@ testsRouter.get(
   '/tests/parts-info',
   handler(async (req) => {
     const { examType } = parse(z.object({ examType: examTypeQ }), req.query);
-    return examType === 'VSTEP' ? VSTEP_PARTS_INFO : examType === 'TOEIC' ? TOEIC_PARTS_INFO : [...TOEIC_PARTS_INFO, ...VSTEP_PARTS_INFO];
+    const info = examType === 'VSTEP' ? VSTEP_PARTS_INFO : examType === 'TOEIC' ? TOEIC_PARTS_INFO : [...TOEIC_PARTS_INFO, ...VSTEP_PARTS_INFO];
+    // Số câu trắc nghiệm đã xuất bản trong ngân hàng theo từng phần (để hiện "x câu luyện tập")
+    const counts = await prisma.question.groupBy({
+      by: ['part'],
+      where: { ...PUBLISHED, type: { notIn: ['ESSAY', 'SPEAKING_RESPONSE'] }, ...(examType ? { examType } : {}) },
+      _count: { _all: true },
+    });
+    const byId = new Map<string, number>();
+    for (const c of counts) byId.set(partId(c.part), (byId.get(partId(c.part)) ?? 0) + c._count._all);
+    return info.map((p) => ({ ...p, bankCount: byId.get(p.id) ?? 0 }));
   })
 );
 

@@ -6,7 +6,7 @@ import { useAuthStore } from '@/shared/stores/authStore';
 import { Badge, Button, Card, PageHeader, ProgressBar, StatCard } from '@/shared/components/ui';
 import { Stagger } from '@/shared/components/motion';
 import { Img, PHOTOS } from '@/shared/components/media/Img';
-import { LEARNING_PATH } from '@/shared/mocks';
+import { usePath } from '@/shared/api/learner';
 import type { PathItemType, PathStatus } from '@/shared/types';
 import { cn } from '@/shared/utils';
 
@@ -30,7 +30,9 @@ const PHASE_TONE = ['bg-emerald-400', 'bg-indigo-600', 'bg-violet-500'];
 export const StudentLearningPathPage: React.FC = () => {
   useDocumentTitle('Lộ trình của tôi');
   const user = useAuthStore((s) => s.user);
-  const daysLeft = user?.target?.examDate ? Math.max(0, Math.ceil((new Date(user.target.examDate).getTime() - Date.now()) / 86400000)) : 52;
+  const daysLeft = user?.target?.examDate ? Math.max(0, Math.ceil((new Date(user.target.examDate).getTime() - Date.now()) / 86400000)) : null;
+  const { data: path, isLoading } = usePath();
+  const LEARNING_PATH = path?.milestones ?? [];
   const allItems = LEARNING_PATH.flatMap((m) => m.items);
   const done = allItems.filter((i) => i.status === 'DONE').length;
   const totalMin = allItems.reduce((a, i) => a + i.durationMin, 0);
@@ -45,16 +47,34 @@ export const StudentLearningPathPage: React.FC = () => {
             Lộ trình <span className="mark">cá nhân hoá</span>
           </>
         }
-        description={`Sinh tự động từ bài thi xếp lớp và cập nhật theo từng bài làm của bạn. Mục tiêu: ${user?.target ? `${user.target.examType} ${user.target.score}` : 'TOEIC 750'}.`}
+        description={`Sinh tự động từ mục tiêu của bạn và cập nhật theo từng bài làm.${user?.target ? ` Mục tiêu: ${user.target.examType} ${user.target.score}.` : ''}`}
         actions={
-          <span className="sticker tilt-2 !bg-amber-300">
-            <CalendarDays className="w-3.5 h-3.5" /> Còn {daysLeft} ngày tới kỳ thi
-          </span>
+          daysLeft !== null ? (
+            <span className="sticker tilt-2 !bg-amber-300">
+              <CalendarDays className="w-3.5 h-3.5" /> Còn {daysLeft} ngày tới kỳ thi
+            </span>
+          ) : undefined
         }
       />
 
+      {!path && (
+        <Card hard className="mb-8">
+          <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="font-display font-extrabold text-slate-900">{isLoading ? 'Đang tải lộ trình…' : 'Bạn chưa có lộ trình'}</p>
+              {!isLoading && <p className="text-sm text-slate-500 mt-1">Đặt mục tiêu điểm và ngày thi, hệ thống sẽ lập lộ trình 3 chặng cho bạn.</p>}
+            </div>
+            {!isLoading && (
+              <Button to="/onboarding/goal" leftIcon={<Play className="w-4 h-4" />}>
+                Đặt mục tiêu
+              </Button>
+            )}
+          </div>
+        </Card>
+      )}
+
       <Stagger className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8" step={70}>
-        <StatCard label="Tiến độ tổng" value={Math.round((done / allItems.length) * 100)} suffix="%" icon={<Target />} tone="indigo" />
+        <StatCard label="Tiến độ tổng" value={Math.round((done / Math.max(1, allItems.length)) * 100)} suffix="%" icon={<Target />} tone="indigo" />
         <StatCard label="Mục đã hoàn thành" value={done} suffix={`/${allItems.length}`} icon={<CheckCircle2 />} tone="emerald" />
         <StatCard label="Thời lượng còn lại" value={Math.round((totalMin - allItems.filter((i) => i.status === 'DONE').reduce((a, i) => a + i.durationMin, 0)) / 60)} suffix="giờ" icon={<Clock />} tone="amber" />
         <StatCard label="Chặng hiện tại" value={`${LEARNING_PATH.find((m) => m.status === 'CURRENT')?.phase ?? 1}/3`} icon={<Compass />} tone="violet" />

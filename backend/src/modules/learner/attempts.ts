@@ -46,6 +46,8 @@ const startBody = z.object({
   lessonId: z.string().uuid().optional(),
   /** true = bỏ lượt đang dở (ABANDONED) và tạo lượt mới */
   restart: z.boolean().optional(),
+  /** Làm trên các câu chỉ định (vd. một đề Viết/Nói tự luyện để nộp giáo viên chấm) */
+  questionIds: z.array(z.string().uuid()).min(1).max(50).optional(),
 });
 
 const answerItem = z.object({
@@ -109,7 +111,8 @@ async function attemptPayload(attemptId: string, userId: string) {
     { id: at.test?.id ?? at.id, slug: at.test?.slug ?? at.id, title, examType, durationMinutes: at.timeLimitSec ? Math.round(at.timeLimitSec / 60) : 0, targetLevel: at.test?.level },
     ids,
     qs,
-    done
+    // Phiên luyện Part (PracticeEngine) chấm ngay từng câu nên trả kèm đáp án; thi thử chỉ lộ đáp án sau khi nộp
+    done || at.mode === 'PART_SESSION'
   );
   return {
     attempt: {
@@ -169,6 +172,11 @@ attemptsRouter.post(
       if (!chosen.length) throw badRequest('Đề không có phần đã chọn');
       questionIds = chosen.map((r) => r.questionId);
       parts = [...new Set(chosen.map((r) => r.part))];
+    } else if (body.questionIds?.length) {
+      const qs = await prisma.question.findMany({ where: { id: { in: body.questionIds }, status: 'PUBLISHED', deletedAt: null }, select: { id: true, part: true } });
+      if (qs.length !== new Set(body.questionIds).size) throw badRequest('Có câu hỏi không tồn tại hoặc chưa xuất bản');
+      questionIds = body.questionIds.filter((id, i, a) => a.indexOf(id) === i);
+      parts = [...new Set(qs.map((q) => q.part))];
     } else {
       if (!body.parts?.length) throw badRequest('Chọn ít nhất một phần để luyện');
       parts = body.parts.flatMap(feToParts);

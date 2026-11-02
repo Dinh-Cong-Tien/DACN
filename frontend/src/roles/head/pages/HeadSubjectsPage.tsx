@@ -1,16 +1,14 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { BookMarked, Database, Headphones, PenLine, School, Users } from 'lucide-react';
 import { useDocumentTitle } from '@/shared/hooks';
-import { MOCK_SUBJECTS, teacherByName } from '@/shared/mocks';
+import { headApi, useHeadInvalidate, useHeadSubjects, useHeadTeachers } from '@/shared/api/head';
 import type { Subject } from '@/shared/types';
 import { Avatar, Column } from '@/shared/components/ui';
 import { cn, formatNumber } from '@/shared/utils';
 import { CrudEditor } from '@/engines';
 import { Figures, IconTile, Meter, TPageHead } from '@/roles/teacher/components/TeacherKit';
 
-const maxQ = Math.max(...MOCK_SUBJECTS.map((s) => s.questionsCount));
-
-const columns: Column<Subject>[] = [
+const makeColumns = (maxQ: number, avatarOf: (name: string) => string | undefined): Column<Subject>[] => [
   {
     key: 'name',
     header: 'Môn học',
@@ -34,8 +32,8 @@ const columns: Column<Subject>[] = [
     header: 'Phụ trách',
     render: (r) => (
       <div className="flex items-center gap-2">
-        <Avatar name={r.lead} src={teacherByName(r.lead)?.avatarUrl} size="xs" />
-        <span className="whitespace-nowrap text-slate-700">{r.lead}</span>
+        <Avatar name={r.lead} src={avatarOf(r.lead)} size="xs" />
+        <span className="whitespace-nowrap text-slate-700">{r.lead || '—'}</span>
       </div>
     ),
   },
@@ -46,7 +44,7 @@ const columns: Column<Subject>[] = [
     header: 'Câu hỏi',
     render: (r) => (
       <div className="flex min-w-[140px] items-center gap-2">
-        <Meter value={(r.questionsCount / maxQ) * 100} tone={r.examType === 'TOEIC' ? 'indigo' : 'green'} className="flex-1" />
+        <Meter value={maxQ ? (r.questionsCount / maxQ) * 100 : 0} tone={r.examType === 'TOEIC' ? 'indigo' : 'green'} className="flex-1" />
         <span className="w-12 text-right font-semibold tabular-nums text-slate-900">{formatNumber(r.questionsCount)}</span>
       </div>
     ),
@@ -55,6 +53,11 @@ const columns: Column<Subject>[] = [
 
 export const HeadSubjectsPage: React.FC = () => {
   useDocumentTitle('Danh mục môn học');
+  const { data, isLoading } = useHeadSubjects();
+  const teachers = useHeadTeachers().data ?? [];
+  const refresh = useHeadInvalidate();
+  const MOCK_SUBJECTS = useMemo<Subject[]>(() => data ?? [], [data]);
+  const columns = makeColumns(Math.max(0, ...MOCK_SUBJECTS.map((s) => s.questionsCount)), (n) => teachers.find((t) => t.name === n)?.avatarUrl);
   return (
     <div className="space-y-6">
       <TPageHead eyebrow="Bộ môn" title="Danh mục môn học" sub="Môn học thuộc bộ môn, mã môn, giáo viên phụ trách và quy mô lớp, ngân hàng câu hỏi của từng môn." />
@@ -63,11 +66,26 @@ export const HeadSubjectsPage: React.FC = () => {
           { label: 'Môn học', value: MOCK_SUBJECTS.length, note: `${MOCK_SUBJECTS.filter((s) => s.examType === 'TOEIC').length} TOEIC · ${MOCK_SUBJECTS.filter((s) => s.examType === 'VSTEP').length} VSTEP`, icon: BookMarked, tone: 'amber' },
           { label: 'Lớp đang mở', value: MOCK_SUBJECTS.reduce((a, s) => a + s.classesCount, 0), note: 'tất cả môn', icon: School, tone: 'indigo' },
           { label: 'Lượt phân công GV', value: MOCK_SUBJECTS.reduce((a, s) => a + s.teachersCount, 0), note: 'giáo viên × môn', icon: Users, tone: 'emerald' },
-          { label: 'Câu hỏi', value: formatNumber(MOCK_SUBJECTS.reduce((a, s) => a + s.questionsCount, 0)), note: 'đã thẩm định', icon: Database, tone: 'violet' },
+          { label: 'Câu hỏi', value: formatNumber(MOCK_SUBJECTS.reduce((a, s) => a + s.questionsCount, 0)), note: 'đã xuất bản theo kỳ thi', icon: Database, tone: 'violet' },
         ]}
       />
       <CrudEditor<Subject>
         rows={MOCK_SUBJECTS}
+        loading={isLoading}
+        onCreate={async (v) => {
+          const r = await headApi.createSubject({ name: String(v.name), code: String(v.code), examType: v.examType ?? 'TOEIC' });
+          void refresh();
+          return r;
+        }}
+        onUpdate={async (row, v) => {
+          const r = await headApi.updateSubject(row.id, { name: v.name, code: v.code, examType: v.examType });
+          void refresh();
+          return r;
+        }}
+        onDelete={async (row) => {
+          await headApi.deleteSubject(row.id);
+          void refresh();
+        }}
         columns={columns}
         entityName="môn học"
         createLabel="Thêm môn học"
@@ -79,7 +97,6 @@ export const HeadSubjectsPage: React.FC = () => {
           { key: 'name', label: 'Tên môn học', type: 'text', required: true, placeholder: 'VD: TOEIC Speaking & Writing' },
           { key: 'code', label: 'Mã môn', type: 'text', required: true, placeholder: 'VD: TOEIC-SW' },
           { key: 'examType', label: 'Kỳ thi', type: 'select', options: [{ value: 'TOEIC', label: 'TOEIC' }, { value: 'VSTEP', label: 'VSTEP' }] },
-          { key: 'lead', label: 'Giáo viên phụ trách', type: 'text', placeholder: 'Họ tên' },
         ]}
       />
     </div>

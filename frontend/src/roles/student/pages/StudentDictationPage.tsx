@@ -1,27 +1,23 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Headphones, Play, Check, ArrowRight, RotateCcw, Trophy, Eye, EyeOff, Volume2 } from 'lucide-react';
 import { useDocumentTitle } from '@/shared/hooks';
 import { Badge, Button, Card, CardHeader, PageHeader, ProgressBar, RingProgress, StatCard, Textarea } from '@/shared/components/ui';
 import { Stagger } from '@/shared/components/motion';
 import { cn } from '@/shared/utils';
 import { toast } from '@/shared/stores/uiStore';
+import { submitDictation, useDictationList, useDictationPassage } from '@/shared/api/learner';
+import { useQueryClient } from '@tanstack/react-query';
 
 interface DictationItem {
   id: string;
   text: string;
-  textVi: string;
+  textVi?: string;
   level: 'Dễ' | 'Vừa' | 'Khó';
   topic: string;
 }
 
-const ITEMS: DictationItem[] = [
-  { id: 'd1', text: 'The meeting has been moved to Thursday afternoon.', textVi: 'Cuộc họp đã được dời sang chiều thứ Năm.', level: 'Dễ', topic: 'Office' },
-  { id: 'd2', text: 'Please submit your quarterly budget by the end of this week.', textVi: 'Vui lòng nộp ngân sách quý trước cuối tuần này.', level: 'Dễ', topic: 'Finance' },
-  { id: 'd3', text: 'Members of our loyalty program receive an additional five percent discount.', textVi: 'Thành viên chương trình khách hàng thân thiết được giảm thêm 5%.', level: 'Vừa', topic: 'Retail' },
-  { id: 'd4', text: 'The newly appointed director implemented a series of cost-cutting measures.', textVi: 'Giám đốc mới được bổ nhiệm đã triển khai một loạt biện pháp cắt giảm chi phí.', level: 'Vừa', topic: 'Management' },
-  { id: 'd5', text: 'Despite the heavy rain, the outdoor product launch proceeded as scheduled.', textVi: 'Dù mưa lớn, buổi ra mắt sản phẩm ngoài trời vẫn diễn ra đúng kế hoạch.', level: 'Khó', topic: 'Marketing' },
-  { id: 'd6', text: 'Sign up before June thirtieth and receive your first month at twenty percent off.', textVi: 'Đăng ký trước ngày 30/6 để được giảm 20% tháng đầu tiên.', level: 'Khó', topic: 'Advertising' },
-];
+/** Bậc CEFR của bài nghe → độ khó hiển thị */
+const LEVEL_OF = (cefr?: string | null): DictationItem['level'] => (!cefr || cefr === 'A1' || cefr === 'A2' ? 'Dễ' : cefr === 'B1' ? 'Vừa' : 'Khó');
 
 const normalize = (s: string) => s.toLowerCase().replace(/[^a-z0-9\s']/g, '').split(/\s+/).filter(Boolean);
 
@@ -35,8 +31,32 @@ export const StudentDictationPage: React.FC = () => {
   const [plays, setPlays] = useState(0);
   const [rate, setRate] = useState(0.9);
   const [finished, setFinished] = useState(false);
+  const qc = useQueryClient();
+  const typedAll = useRef<string[]>([]);
+  const started = useRef(Date.now());
+  // Bài nghe thật trong ngân hàng (passages DICTATION); mỗi câu của bài là một lượt chép
+  const { data: list = [] } = useDictationList();
+  const [passageIdx, setPassageIdx] = useState(0);
+  const passageId = list[passageIdx]?.id;
+  const { data: passage, isLoading } = useDictationPassage(passageId);
+  const ITEMS: DictationItem[] = useMemo(
+    () =>
+      (passage?.segments ?? [])
+        .filter((s) => s.text.trim())
+        .map((s, i) => ({ id: `${passage!.id}-${i}`, text: s.text.trim(), level: LEVEL_OF(passage!.level as string | undefined), topic: String(passage!.title ?? '').split(' — ')[0] || 'Nghe hiểu' })),
+    [passage]
+  );
+  useEffect(() => {
+    setIndex(0);
+    setResults([]);
+    setFinished(false);
+    setInput('');
+    setChecked(false);
+    typedAll.current = [];
+    started.current = Date.now();
+  }, [passageId]);
 
-  const item = ITEMS[index];
+  const item = ITEMS[index] ?? { id: 'empty', text: '', level: 'Dễ' as const, topic: '' };
   const target = useMemo(() => normalize(item.text), [item]);
   const typed = useMemo(() => normalize(input), [input]);
 
@@ -65,13 +85,23 @@ export const StudentDictationPage: React.FC = () => {
   const next = () => {
     const r = [...results, accuracy];
     setResults(r);
+    typedAll.current.push(input.trim());
     setInput('');
     setChecked(false);
     setShowVi(false);
     setPlays(0);
     if (index + 1 < ITEMS.length) setIndex((i) => i + 1);
-    else setFinished(true);
+    else {
+      setFinished(true);
+      // Lưu kết quả cả bài (exam_attempts DICTATION) để tính thời gian học, streak, lịch sử
+      if (passageId)
+        submitDictation({ passageId, typedText: typedAll.current.join(' '), timeSpentSec: Math.round((Date.now() - started.current) / 1000) })
+          .then(() => ['progress', 'attempts'].forEach((k) => qc.invalidateQueries({ queryKey: ['learner', k] })))
+          .catch(() => undefined);
+    }
   };
+
+  const nextPassage = () => list.length && setPassageIdx((i) => (i + 1) % list.length);
 
   const restart = () => {
     setIndex(0);
@@ -131,7 +161,15 @@ export const StudentDictationPage: React.FC = () => {
           </>
         }
         description="Nghe câu tiếng Anh và gõ lại chính xác từng từ. Hệ thống so khớp từng từ và chỉ ra chỗ bạn nghe sót."
+        actions={
+          list.length > 1 ? (
+            <Button variant="outline" size="sm" leftIcon={<ArrowRight className="w-4 h-4" />} onClick={nextPassage}>
+              Đổi bài nghe
+            </Button>
+          ) : undefined
+        }
       />
+      {!ITEMS.length && <p className="text-sm text-slate-500 mb-4">{isLoading || !list.length ? 'Đang tải bài nghe…' : 'Bài nghe chưa có câu nào.'}</p>}
 
       <Stagger className="grid grid-cols-3 gap-4 mb-6" step={70}>
         <StatCard label="Tiến độ" value={`${index + 1}/${ITEMS.length}`} icon={<Headphones />} tone="indigo" />
@@ -140,7 +178,7 @@ export const StudentDictationPage: React.FC = () => {
       </Stagger>
 
       <div className="max-w-3xl mx-auto space-y-4">
-        <ProgressBar value={(index / ITEMS.length) * 100} size="sm" />
+        <ProgressBar value={(index / Math.max(1, ITEMS.length)) * 100} size="sm" />
         <Card key={item.id} hard className="animate-slide-in-right">
           <CardHeader
             title={`Câu ${index + 1}`}
@@ -188,10 +226,14 @@ export const StudentDictationPage: React.FC = () => {
                   </span>
                 ))}
               </div>
-              <button onClick={() => setShowVi((v) => !v)} className="inline-flex items-center gap-1.5 text-xs font-extrabold text-indigo-700 hover:underline">
-                {showVi ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />} {showVi ? 'Ẩn nghĩa' : 'Xem nghĩa tiếng Việt'}
-              </button>
-              {showVi && <p className="text-sm text-slate-600 italic animate-fade-in">"{item.textVi}"</p>}
+              {item.textVi && (
+                <>
+                  <button onClick={() => setShowVi((v) => !v)} className="inline-flex items-center gap-1.5 text-xs font-extrabold text-indigo-700 hover:underline">
+                    {showVi ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />} {showVi ? 'Ẩn nghĩa' : 'Xem nghĩa tiếng Việt'}
+                  </button>
+                  {showVi && <p className="text-sm text-slate-600 italic animate-fade-in">"{item.textVi}"</p>}
+                </>
+              )}
             </div>
           )}
 

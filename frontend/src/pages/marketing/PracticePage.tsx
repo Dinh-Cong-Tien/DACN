@@ -4,7 +4,7 @@ import { ArrowRight, Headphones, BookOpen, PenTool, Mic, Zap, Lock } from 'lucid
 import { Badge, Button, SectionTitle, Card } from '@/shared/components/ui';
 import { Reveal, Stagger } from '@/shared/components/motion';
 import { Img, PHOTOS } from '@/shared/components/media/Img';
-import { TOEIC_PARTS_INFO, VSTEP_PARTS_INFO, QUESTIONS_BY_PART } from '@/shared/mocks';
+import { usePartsInfo } from '@/shared/api/catalog';
 import { useDocumentTitle, useGate } from '@/shared/hooks';
 import { cn } from '@/shared/utils';
 
@@ -14,6 +14,8 @@ const TILES = ['bg-white', 'bg-indigo-100', 'bg-amber-200', 'bg-white', 'bg-viol
 export const PracticePage: React.FC = () => {
   useDocumentTitle('Luyện tập kỹ năng');
   const gate = useGate();
+  const { data: TOEIC_PARTS_INFO = [] } = usePartsInfo('TOEIC');
+  const { data: VSTEP_PARTS_INFO = [] } = usePartsInfo('VSTEP');
   return (
     <div>
       <section className="bg-paper border-b-2 border-slate-900">
@@ -37,7 +39,7 @@ export const PracticePage: React.FC = () => {
         <Stagger className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {TOEIC_PARTS_INFO.map((p, i) => {
             const Icon = SKILL_ICON[p.skill];
-            const count = QUESTIONS_BY_PART[p.id]?.length ?? 0;
+            const count = p.bankCount ?? 0;
             return (
               <Link key={p.id} to={gate(`/app/practice/session/${p.id}`, '/auth/register')} className={cn('group rounded-3xl border-2 border-slate-900 shadow-hard p-5 card-hard-hover block', TILES[i], i === 6 && 'lg:col-span-2')}>
                 <div className="flex items-start justify-between">
@@ -52,7 +54,7 @@ export const PracticePage: React.FC = () => {
                 <p className="text-sm font-bold text-slate-700">{p.nameVi}</p>
                 <p className="text-xs text-slate-600 mt-2 line-clamp-2">{p.description}</p>
                 <div className="flex items-center justify-between mt-4 text-xs font-bold">
-                  <span className="text-slate-500">{count > 0 ? `${count} câu mẫu` : 'Sắp có'}</span>
+                  <span className="text-slate-500">{count > 0 ? `${count.toLocaleString('vi-VN')} câu luyện tập` : 'Sắp có'}</span>
                   <span className="flex items-center gap-1 text-violet-600 group-hover:gap-2 transition-all">
                     Luyện <ArrowRight className="w-3.5 h-3.5" />
                   </span>

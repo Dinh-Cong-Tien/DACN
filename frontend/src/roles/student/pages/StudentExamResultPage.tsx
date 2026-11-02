@@ -1,69 +1,82 @@
 import React, { useMemo, useState } from 'react';
 import { fireConfetti } from '@/shared/components/motion/confetti';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { Trophy, Clock, Target, AlertTriangle, RotateCcw, BookmarkPlus, Share2, Flag, CheckCircle2 } from 'lucide-react';
 import { useDocumentTitle } from '@/shared/hooks';
 import { Badge, Button, Card, CardHeader, PageHeader, ProgressBar, RingProgress, StatCard, Tabs, EmptyState } from '@/shared/components/ui';
 import { Stagger } from '@/shared/components/motion';
 import { QuestionRenderer } from '@/engines';
-import { MOCK_TESTS, buildMockTest } from '@/shared/mocks';
+import { useAttempt, useAttempts } from '@/shared/api/learner';
+import { errorMessage } from '@/shared/api/client';
 import { toast } from '@/shared/stores/uiStore';
 import { cn, examSetupQuery, formatDuration, getCorrectKey } from '@/shared/utils';
-import type { ExamSetup } from '@/shared/types';
 
-interface StoredResult {
+interface ViewResult {
   answers: Record<string, string>;
   flagged: string[];
   timeSpentSec: number;
   correctCount: number;
   total: number;
   bySection: { name: string; correct: number; total: number }[];
-  testId?: string;
-  title?: string;
-  examType?: 'TOEIC' | 'VSTEP';
-  setup?: ExamSetup;
-}
-
-function readStored(id: string): StoredResult | null {
-  try {
-    const raw = localStorage.getItem('orbi-last-result');
-    const r = raw ? (JSON.parse(raw) as StoredResult) : null;
-    return r?.testId === id ? r : null;
-  } catch {
-    return null;
-  }
 }
 
 export const StudentExamResultPage: React.FC = () => {
-  const { id = 'ets-2024-01' } = useParams<{ id: string }>();
+  const { id = '' } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const summary = MOCK_TESTS.find((t) => t.id === id);
-  const stored = useMemo(() => readStored(id), [id]);
-  const setup = stored?.setup;
-  const practice = setup?.mode === 'PRACTICE';
-  const test = useMemo(() => buildMockTest(id, summary?.examType ?? 'TOEIC', summary?.title, setup), [id, summary, setup]);
-  const questions = useMemo(() => test.sections.flatMap((s) => s.questions), [test]);
-  useDocumentTitle(`Kết quả · ${test.title}`);
+  const { search } = useLocation();
+  const attemptParam = new URLSearchParams(search).get('attempt') ?? undefined;
+  // Không có ?attempt → lấy lượt nộp gần nhất của đề này
+  const latest = useAttempts({ testId: id, pageSize: 1 }, !attemptParam);
+  const attemptId = attemptParam ?? latest.data?.items[0]?.id;
+  const { data: payload, isLoading, error } = useAttempt(attemptId);
   const [tab, setTab] = useState('wrong');
+  const test = payload?.test;
+  const setup = payload?.attempt.setup;
+  const practice = setup?.mode === 'PRACTICE' || (!!payload && payload.attempt.mode !== 'FULL');
+  const questions = useMemo(() => (test ? test.sections.flatMap((s) => s.questions) : []), [test]);
+  useDocumentTitle(`Kết quả · ${test?.title ?? ''}`);
 
-  const result = useMemo<StoredResult>(() => {
-    if (stored) return stored;
-    // Demo fallback: giả lập đúng 11/19, sai các câu còn lại
+  const result = useMemo<ViewResult | null>(() => {
+    if (!payload?.result || !test) return null;
+    const ans = payload.result.answers;
     const answers: Record<string, string> = {};
-    questions.forEach((q, i) => {
-      const correct = getCorrectKey(q);
-      answers[q.id] = i % 5 === 2 || i % 7 === 4 ? (q.options.find((o) => o.key !== correct)?.key ?? correct) : correct;
-    });
-    const bySection = test.sections.map((s) => ({ name: s.name, total: s.questions.length, correct: s.questions.filter((q) => answers[q.id] === getCorrectKey(q)).length }));
-    return { answers, flagged: [questions[1]?.id, questions[5]?.id].filter(Boolean) as string[], timeSpentSec: 1140, correctCount: bySection.reduce((a, s) => a + s.correct, 0), total: questions.length, bySection };
-  }, [stored, questions, test]);
+    ans.forEach((a) => a.selectedKey && (answers[a.questionId] = a.selectedKey));
+    const correctSet = new Set(ans.filter((a) => a.isCorrect).map((a) => a.questionId));
+    return {
+      answers,
+      flagged: ans.filter((a) => a.isFlagged).map((a) => a.questionId),
+      timeSpentSec: payload.result.summary.durationSec,
+      correctCount: payload.result.summary.correct,
+      total: payload.result.summary.total,
+      bySection: test.sections.map((s) => ({ name: s.name, total: s.questions.length, correct: s.questions.filter((q) => correctSet.has(q.id)).length })),
+    };
+  }, [payload, test]);
+
+  const pct = result ? Math.round((result.correctCount / Math.max(1, result.total)) * 100) : 0;
+  React.useEffect(() => { if (result && pct >= 60) fireConfetti(); }, [pct, result]);
+
+  if (!result || !test || !payload) {
+    const loading = isLoading || latest.isLoading;
+    return (
+      <div>
+        <PageHeader crumbs={[{ label: 'Thi thử', to: '/app/mock-tests' }, { label: 'Kết quả' }]} title={<>Kết quả <span className="mark">bài thi</span></>} />
+        {loading ? (
+          <p className="text-sm text-slate-500">Đang tải kết quả…</p>
+        ) : (
+          <EmptyState
+            title={error ? 'Không tải được kết quả' : 'Chưa có kết quả'}
+            description={error ? errorMessage(error) : 'Bạn chưa nộp bài nào cho đề này.'}
+            action={<Button onClick={() => navigate(`/app/mock-tests/${id}`)}>Xem đề thi</Button>}
+          />
+        )}
+      </div>
+    );
+  }
 
   const isVstep = test.examType === 'VSTEP';
-  const pct = Math.round((result.correctCount / Math.max(1, result.total)) * 100);
-  React.useEffect(() => { if (pct >= 60) fireConfetti(); }, [pct]);
-  // Luyện tập theo Part: không quy đổi thang điểm, chỉ tính số câu đúng
-  const score = practice ? result.correctCount : isVstep ? Math.round((result.correctCount / result.total) * 10 * 2) / 2 : Math.round(((result.correctCount / result.total) * 990) / 5) * 5;
-  const maxScore = practice ? result.total : isVstep ? 10 : 990;
+  // Điểm do server quy đổi (TOEIC theo bảng quy đổi, VSTEP thang 10); luyện tập = số câu đúng
+  const score = payload.result!.summary.score;
+  const maxScore = practice ? result.total : payload.result!.summary.maxScore || (isVstep ? 10 : 990);
   const wrong = questions.filter((q) => result.answers[q.id] !== getCorrectKey(q));
   const flaggedQ = questions.filter((q) => result.flagged.includes(q.id));
   const list = tab === 'all' ? questions : tab === 'wrong' ? wrong : flaggedQ;
@@ -82,7 +95,7 @@ export const StudentExamResultPage: React.FC = () => {
         description={test.title}
         actions={
           <>
-            <Button variant="outline" size="sm" leftIcon={<Share2 className="w-4 h-4" />} onClick={() => toast.info('Đã sao chép liên kết kết quả')}>
+            <Button variant="outline" size="sm" leftIcon={<Share2 className="w-4 h-4" />} onClick={() => { void navigator.clipboard?.writeText(window.location.href); toast.info('Đã sao chép liên kết kết quả'); }}>
               Chia sẻ
             </Button>
             <Button size="sm" leftIcon={<RotateCcw className="w-4 h-4" />} onClick={() => navigate(`/app/exam/${id}${setup ? examSetupQuery(setup) : ''}`)}>
@@ -131,7 +144,7 @@ export const StudentExamResultPage: React.FC = () => {
       <Stagger className="grid grid-cols-3 gap-4 mb-6" step={70}>
         <StatCard label="Độ chính xác" value={pct} suffix="%" icon={<Target />} tone={tone} />
         <StatCard label="Thời gian làm" value={formatDuration(result.timeSpentSec)} icon={<Clock />} tone="sky" hint={`Trung bình ${Math.round(result.timeSpentSec / Math.max(1, result.total))}s / câu`} />
-        <StatCard label="Lỗi sai đã lưu" value={wrong.length} suffix="câu" icon={<AlertTriangle />} tone="violet" hint="Sổ tay lỗi sai" />
+        <StatCard label="Lỗi sai đã lưu" value={wrong.filter((q) => result.answers[q.id]).length} suffix="câu" icon={<AlertTriangle />} tone="violet" hint="Sổ tay lỗi sai" />
       </Stagger>
 
       <Card hard className="animate-fade-up" padding="none">
@@ -148,7 +161,7 @@ export const StudentExamResultPage: React.FC = () => {
                 { key: 'flag', label: 'Đánh dấu', icon: <Flag />, count: flaggedQ.length },
               ]}
             />
-            <Button size="sm" variant="soft" leftIcon={<BookmarkPlus className="w-4 h-4" />} onClick={() => toast.success('Đã lưu vào Sổ tay lỗi sai', `${wrong.length} câu được thêm vào lịch ôn SM-2.`)}>
+            <Button size="sm" variant="soft" leftIcon={<BookmarkPlus className="w-4 h-4" />} onClick={() => navigate('/app/mistakes')}>
               Lưu lỗi sai
             </Button>
           </div>

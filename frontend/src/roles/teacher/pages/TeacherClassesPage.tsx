@@ -2,31 +2,27 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Plus, Copy, Search, Users } from 'lucide-react';
 import { useDocumentTitle } from '@/shared/hooks';
-import { useAuthStore } from '@/shared/stores/authStore';
 import { toast } from '@/shared/stores/uiStore';
-import { MOCK_CLASSES, MOCK_SESSIONS } from '@/shared/mocks';
-import type { ClassRoom, ExamType } from '@/shared/types';
+import { errorMessage } from '@/shared/api/client';
+import { teacherApi, useSessions, useTeacherClasses, useTeacherMutation } from '@/shared/api/teacher';
+import { addDays, isoDate } from '@/shared/constants/teacher';
+import type { ExamType } from '@/shared/types';
 import { Input, Modal, Select } from '@/shared/components/ui';
 import { cn } from '@/shared/utils';
 import { Meter, Panel, TBtn, TPageHead, inputCls } from '../components/TeacherKit';
 import { Img, PHOTOS } from '@/shared/components/media/Img';
-
-const COVERS = [PHOTOS.classroom, PHOTOS.discussion, PHOTOS.lecture, PHOTOS.team, PHOTOS.students2];
-
-const randomCode = () => {
-  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-  const s = Array.from({ length: 4 }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
-  return `ORB-${s}`;
-};
+import { TError, TLoading } from '../components/TeacherState';
 
 export const TeacherClassesPage: React.FC = () => {
   useDocumentTitle('Lớp học của tôi');
-  const user = useAuthStore((s) => s.user);
-  const [classes, setClasses] = useState<ClassRoom[]>(MOCK_CLASSES);
+  const { data: classes = [], isLoading, error: loadError, refetch } = useTeacherClasses();
+  const today = isoDate(new Date());
+  const upcoming = useSessions({ from: today, to: isoDate(addDays(new Date(), 28)) }).data ?? [];
   const [search, setSearch] = useState('');
   const [open, setOpen] = useState(false);
-  const [form, setForm] = useState({ name: '', examType: 'TOEIC' as ExamType, schedule: '' });
+  const [form, setForm] = useState({ name: '', examType: 'TOEIC' as ExamType, schedule: '', room: '' });
   const [error, setError] = useState('');
+  const createClass = useTeacherMutation(teacherApi.createClass);
 
   const list = classes.filter((c) => c.name.toLowerCase().includes(search.toLowerCase()) || c.code.toLowerCase().includes(search.toLowerCase()));
 
@@ -36,29 +32,23 @@ export const TeacherClassesPage: React.FC = () => {
   };
 
   const create = () => {
-    if (!form.name.trim()) return setError('Vui lòng nhập tên lớp');
-    const c: ClassRoom = {
-      id: `cl-${Date.now().toString(36)}`,
-      name: form.name.trim(),
-      code: randomCode(),
-      examType: form.examType,
-      teacherName: user?.fullName ?? 'Giáo viên',
-      studentsCount: 0,
-      assignmentsCount: 0,
-      avgScore: 0,
-      completionRate: 0,
-      attendanceRate: 0,
-      createdAt: new Date().toISOString().slice(0, 10),
-      schedule: form.schedule || 'Chưa thiết lập',
-      gradient: '',
-      coverUrl: COVERS[classes.length % COVERS.length],
-    };
-    setClasses((s) => [c, ...s]);
-    setOpen(false);
-    setForm({ name: '', examType: 'TOEIC', schedule: '' });
-    setError('');
-    toast.success('Đã tạo lớp mới', `Mã mời: ${c.code}`);
+    if (form.name.trim().length < 2) return setError('Vui lòng nhập tên lớp');
+    createClass.mutate(
+      { name: form.name.trim(), examType: form.examType, schedule: form.schedule.trim() || null, room: form.room.trim() || null },
+      {
+        onSuccess: (c) => {
+          setOpen(false);
+          setForm({ name: '', examType: 'TOEIC', schedule: '', room: '' });
+          setError('');
+          toast.success('Đã tạo lớp mới', `Mã mời: ${c.code}`);
+        },
+        onError: (e) => setError(errorMessage(e)),
+      }
+    );
   };
+
+  if (isLoading) return <TLoading />;
+  if (loadError) return <TError error={loadError} onRetry={() => refetch()} />;
 
   return (
     <div className="space-y-6">
@@ -86,14 +76,14 @@ export const TeacherClassesPage: React.FC = () => {
       {list.length === 0 ? (
         <Panel>
           <div className="py-10 text-center">
-            <p className="font-semibold text-slate-900">Không tìm thấy lớp nào</p>
-            <p className="mt-1 text-sm text-slate-500">Thử tìm bằng mã lớp, hoặc tạo lớp mới.</p>
+            <p className="font-semibold text-slate-900">{classes.length ? 'Không tìm thấy lớp nào' : 'Bạn chưa có lớp nào'}</p>
+            <p className="mt-1 text-sm text-slate-500">{classes.length ? 'Thử tìm bằng mã lớp, hoặc tạo lớp mới.' : 'Bấm “Tạo lớp” để mở lớp đầu tiên và gửi mã mời cho học viên.'}</p>
           </div>
         </Panel>
       ) : (
         <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
           {list.map((c) => {
-            const next = MOCK_SESSIONS.filter((s) => s.classId === c.id && s.status === 'UPCOMING').sort((a, b) => `${a.date}${a.start}`.localeCompare(`${b.date}${b.start}`))[0];
+            const next = upcoming.filter((s) => s.classId === c.id && s.status === 'UPCOMING').sort((a, b) => `${a.date}${a.start}`.localeCompare(`${b.date}${b.start}`))[0];
             return (
               <article key={c.id} className="group flex flex-col overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-[0_1px_2px_rgba(16,24,40,0.04),0_8px_24px_-16px_rgba(16,24,40,0.15)] transition-shadow hover:shadow-[0_20px_40px_-24px_rgba(16,24,40,0.4)]">
                 <Link to={`/teacher/classes/${c.id}`} className="relative block">
@@ -103,7 +93,7 @@ export const TeacherClassesPage: React.FC = () => {
                   <div className="absolute inset-x-4 bottom-3 text-white">
                     <h3 className="font-display text-xl font-extrabold leading-tight">{c.name}</h3>
                     <p className="mt-0.5 text-[13px] text-slate-200">
-                      {c.schedule} · {c.room}
+                      {c.schedule || 'Chưa có lịch'}{c.room ? ` · ${c.room}` : ''}
                     </p>
                   </div>
                 </Link>
@@ -112,7 +102,7 @@ export const TeacherClassesPage: React.FC = () => {
                     {[
                       [c.studentsCount, 'Học viên'],
                       [c.avgScore || '—', 'Điểm TB'],
-                      [`${c.attendanceRate}%`, 'Chuyên cần'],
+                      [c.attendanceRate ? `${c.attendanceRate}%` : '—', 'Chuyên cần'],
                     ].map(([v, l]) => (
                       <div key={l as string} className="rounded-xl bg-slate-50 py-2">
                         <p className="font-display text-lg font-bold tabular-nums text-slate-900">{v}</p>
@@ -125,7 +115,7 @@ export const TeacherClassesPage: React.FC = () => {
                     <Meter value={c.completionRate} className="flex-1" />
                     <span className="w-10 text-right tabular-nums text-slate-700">{c.completionRate}%</span>
                   </div>
-                  <p className="mt-3 text-[13px] text-slate-600">{next ? `Buổi tới: ${next.date.slice(8, 10)}/${next.date.slice(5, 7)} lúc ${next.start} · ${next.topic}` : 'Chưa có buổi sắp tới'}</p>
+                  <p className="mt-3 text-[13px] text-slate-600">{next ? `Buổi tới: ${next.date.slice(8, 10)}/${next.date.slice(5, 7)} lúc ${next.start}${next.topic ? ` · ${next.topic}` : ''}` : 'Chưa có buổi sắp tới'}</p>
                   <div className="mt-auto flex items-center justify-between gap-2 border-t border-slate-100 pt-3">
                     <button type="button" onClick={() => copy(c.code)} title="Sao chép mã mời" className="group/code inline-flex items-center gap-1.5 font-mono text-[13px] text-slate-600 hover:text-indigo-700">
                       {c.code}
@@ -146,15 +136,15 @@ export const TeacherClassesPage: React.FC = () => {
         open={open}
         onClose={() => setOpen(false)}
         title="Tạo lớp học mới"
-        description="Mã mời 8 ký tự được tạo tự động sau khi lưu."
+        description="Mã mời được tạo tự động sau khi lưu."
         icon={<Users />}
         footer={
           <>
             <TBtn variant="ghost" onClick={() => setOpen(false)}>
               Huỷ
             </TBtn>
-            <TBtn variant="primary" onClick={create}>
-              Tạo lớp
+            <TBtn variant="primary" onClick={create} disabled={createClass.isPending}>
+              {createClass.isPending ? 'Đang tạo…' : 'Tạo lớp'}
             </TBtn>
           </>
         }
@@ -163,6 +153,7 @@ export const TeacherClassesPage: React.FC = () => {
           <Input label="Tên lớp" required placeholder="VD: TOEIC 650+ K13" value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} error={error} />
           <Select label="Kỳ thi" options={[{ value: 'TOEIC', label: 'TOEIC' }, { value: 'VSTEP', label: 'VSTEP' }]} value={form.examType} onChange={(e) => setForm((f) => ({ ...f, examType: e.target.value as ExamType }))} />
           <Input label="Lịch học" placeholder="VD: T2 – T4 – T6 · 19:00" value={form.schedule} onChange={(e) => setForm((f) => ({ ...f, schedule: e.target.value }))} />
+          <Input label="Phòng học" placeholder="VD: Phòng 302 hoặc Online" value={form.room} onChange={(e) => setForm((f) => ({ ...f, room: e.target.value }))} />
         </div>
       </Modal>
     </div>

@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { Download, Search } from 'lucide-react';
-import { RESOURCES } from '@/shared/mocks';
+import { cmsApi, useResources } from '@/shared/api/cms';
+import { errorMessage } from '@/shared/api/client';
 import { useDocumentTitle, useGate } from '@/shared/hooks';
 import { toast } from '@/shared/stores/uiStore';
 import { cn, formatNumber } from '@/shared/utils';
@@ -19,11 +20,12 @@ export const ResourcesPage: React.FC = () => {
   const gate = useGate();
   const [cat, setCat] = useState('Tất cả');
   const [q, setQ] = useState('');
+  const { data: RESOURCES = [], isLoading, refetch } = useResources();
   const cats = ['Tất cả', ...Array.from(new Set(RESOURCES.map((r) => r.category)))];
   const list = useMemo(() => {
     const key = q.trim().toLowerCase();
     return RESOURCES.filter((r) => (cat === 'Tất cả' || r.category === cat) && (!key || r.title.toLowerCase().includes(key))).sort((a, b) => b.downloads - a.downloads);
-  }, [cat, q]);
+  }, [cat, q, RESOURCES]);
   const total = RESOURCES.reduce((a, r) => a + r.downloads, 0);
 
   return (
@@ -73,12 +75,14 @@ export const ResourcesPage: React.FC = () => {
               </label>
             </div>
 
-            {list.length === 0 ? (
+            {isLoading ? (
+              <div className="rounded-xl border border-slate-200 px-6 py-14 text-center text-sm text-slate-500">Đang tải tài liệu…</div>
+            ) : list.length === 0 ? (
               <div className="rounded-xl border border-dashed border-slate-300 px-6 py-14 text-center text-sm text-slate-500">Không tìm thấy tài liệu phù hợp.</div>
             ) : (
               <ul className="divide-y divide-slate-200 rounded-xl border border-slate-200">
                 {list.map((r) => {
-                  const t = TYPE_TAG[r.type];
+                  const t = TYPE_TAG[r.type] ?? TYPE_TAG.PDF;
                   return (
                     <li key={r.id} className="flex items-start gap-4 px-4 py-4 hover:bg-slate-50 sm:px-5">
                       <span className={cn('mt-0.5 flex h-11 w-9 shrink-0 items-end justify-center rounded-md border pb-1 text-[10px] font-semibold', t.cls)}>{t.label}</span>
@@ -91,7 +95,16 @@ export const ResourcesPage: React.FC = () => {
                         </p>
                       </div>
                       <button
-                        onClick={() => toast.info('Đang tải xuống', `${r.title} (${r.size})`)}
+                        onClick={() =>
+                          cmsApi
+                            .download(r.id)
+                            .then(({ fileUrl }) => {
+                              if (!fileUrl) return toast.info('Tài liệu VIP', 'Đăng nhập tài khoản VIP để tải tài liệu này.');
+                              window.open(fileUrl, '_blank', 'noopener');
+                              void refetch();
+                            })
+                            .catch((e) => toast.error('Chưa tải được tài liệu', errorMessage(e)))
+                        }
                         className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-lg border border-slate-300 px-3 text-[13px] font-semibold text-slate-800 hover:border-indigo-600 hover:text-indigo-700"
                       >
                         <Download className="h-4 w-4" />

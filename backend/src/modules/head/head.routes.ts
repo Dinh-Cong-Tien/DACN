@@ -189,6 +189,21 @@ headRouter.get(
   })
 );
 
+/** Gửi nhận xét chuyên môn cho giáo viên (thông báo) */
+headRouter.post(
+  '/teachers/:id/note',
+  handler(async (req) => {
+    const id = idParam(req);
+    const scope = await scopeOf(req);
+    const { text } = parse(z.object({ text: z.string().trim().min(2).max(2000) }), req.body);
+    const t = await prisma.user.findFirst({ where: { id, deletedAt: null, role: { in: ['TEACHER', 'HEAD_TEACHER'] }, ...(scope ? { departmentId: { in: scope } } : {}) }, select: { id: true, fullName: true } });
+    if (!t) throw notFound('Giáo viên');
+    await notify([t.id], { type: 'REVIEW', title: 'Nhận xét từ trưởng bộ môn', message: text, link: '/teacher/dashboard', refType: 'USER', refId: t.id });
+    await audit(req, 'TEACHER_NOTE', 'user', t.id, { after: { target: t.fullName, text: text.slice(0, 200) } });
+    return { ok: true };
+  })
+);
+
 /** Duyệt hồ sơ giáo viên (PENDING → ACTIVE) hoặc tạm khoá trong bộ môn */
 headRouter.patch(
   '/teachers/:id',
@@ -231,6 +246,7 @@ headRouter.get(
     ]);
     return {
       class: toClassRoom(c, stats),
+      analytics: await classAnalytics(c.id, c.examType),
       students,
       sessions: sessions.map(toSessionRow),
       observations: sessions.filter((s) => s.observation).map((s) => toObservation({ ...s, class: { id: c.id, teacher: { fullName: c.teacher.fullName } } })),
@@ -250,6 +266,39 @@ headRouter.get(
         };
       }),
     };
+  })
+);
+
+/** Xu hướng điểm thi thử theo tháng + tỷ lệ đúng theo Part của học viên trong lớp (dữ liệu thật) */
+async function classAnalytics(classId: string, examType: 'TOEIC' | 'VSTEP') {
+  const ids = (await prisma.classMember.findMany({ where: { classId, status: 'ACTIVE' }, select: { studentId: true } })).map((m) => m.studentId);
+  if (!ids.length) return { trend: { labels: [] as string[], values: [] as number[] }, accuracy: [] as { part: string; rate: number; total: number }[] };
+  const ms = lastMonths(6);
+  const attempts = await prisma.examAttempt.findMany({
+    where: { userId: { in: ids }, status: 'COMPLETED', scoreTotal: { not: null }, submittedAt: { gte: ms[0].start }, test: { examType } },
+    select: { scoreTotal: true, submittedAt: true },
+  });
+  const trend = {
+    labels: ms.map((m) => m.label),
+    values: ms.map((m) => avg(attempts.filter((a) => a.submittedAt! >= m.start && a.submittedAt! < m.end).map((a) => Number(a.scoreTotal)))),
+  };
+  const rows = await prisma.$queryRaw<{ part: string; total: bigint; correct: bigint }[]>`
+    SELECT q.part::text AS part, count(*)::bigint AS total, count(*) FILTER (WHERE a.is_correct)::bigint AS correct
+    FROM attempt_answers a JOIN questions q ON q.id = a.question_id JOIN exam_attempts e ON e.id = a.attempt_id
+    WHERE e.user_id = ANY(${ids}::uuid[]) AND a.is_correct IS NOT NULL AND q.exam_type = ${examType}::exam_type
+    GROUP BY q.part ORDER BY q.part`;
+  return { trend, accuracy: rows.map((r) => ({ part: r.part, total: Number(r.total), rate: Math.round((Number(r.correct) / Number(r.total)) * 100) })) };
+}
+
+/** Gửi nhận xét của trưởng bộ môn cho giáo viên phụ trách lớp */
+headRouter.post(
+  '/classes/:id/note',
+  handler(async (req) => {
+    const c = await scopedClass(req, idParam(req));
+    const { text } = parse(z.object({ text: z.string().trim().min(2).max(2000) }), req.body);
+    await notify([c.teacherId], { type: 'REVIEW', title: `Nhận xét về lớp ${c.name}`, message: text, link: `/teacher/classes/${c.id}`, refType: 'CLASS', refId: c.id });
+    await audit(req, 'CLASS_NOTE', 'class', c.id, { after: { target: c.name, text: text.slice(0, 200) } });
+    return { ok: true };
   })
 );
 
@@ -719,8 +768,14 @@ headRouter.post(
 // ======================= Dự giờ =======================
 type ObsJson = { status?: 'PLANNED' | 'DONE'; rating?: number; strengths?: string; improvements?: string };
 type SessionWithClass = Prisma.ClassSessionGetPayload<{ include: { class: { select: { id: true; name: true } } } }>;
+function presentRate(attendance: Prisma.JsonValue | null | undefined): number | null {
+  const marks = Object.values((attendance ?? {}) as Record<string, { mark?: string } | string>).map((v) => (typeof v === 'string' ? v : v?.mark)).filter(Boolean);
+  return marks.length ? Math.round((marks.filter((m) => m === 'PRESENT' || m === 'LATE').length / marks.length) * 100) : null;
+}
 function toSessionRow(s: SessionWithClass) {
   return {
+    attendanceRate: presentRate(s.attendance),
+    note: s.note ?? undefined,
     id: s.id,
     classId: s.class.id,
     className: s.class.name,

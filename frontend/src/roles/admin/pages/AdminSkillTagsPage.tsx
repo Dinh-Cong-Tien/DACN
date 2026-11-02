@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { BookOpen, BookA, Hash, Headphones, Mic, PenLine, Puzzle, Tags, BarChart3 } from 'lucide-react';
-import { MOCK_SKILL_TAGS } from '@/shared/mocks';
+import { adminApi, useAdminInvalidate, useAdminSkillTags } from '@/shared/api/admin';
 import type { SkillTag, SkillType } from '@/shared/types';
 import { useDocumentTitle } from '@/shared/hooks';
 import { Column } from '@/shared/components/ui';
@@ -63,7 +63,10 @@ const fields: CrudField<SkillTag>[] = [
 
 export const AdminSkillTagsPage: React.FC = () => {
   useDocumentTitle('Danh mục kỹ năng');
-  const bySkill = SKILLS.map((s) => ({ label: SKILL_META[s].vi, value: MOCK_SKILL_TAGS.filter((t) => t.skill === s).reduce((a, t) => a + t.questionsCount, 0), tone: SKILL_META[s].tone }));
+  const { data, isLoading } = useAdminSkillTags();
+  const refresh = useAdminInvalidate();
+  const tags = useMemo<SkillTag[]>(() => data ?? [], [data]);
+  const bySkill = SKILLS.map((s) => ({ label: SKILL_META[s].vi, value: tags.filter((t) => t.skill === s).reduce((a, t) => a + t.questionsCount, 0), tone: SKILL_META[s].tone }));
   const total = bySkill.reduce((a, b) => a + b.value, 0);
 
   return (
@@ -77,13 +80,13 @@ export const AdminSkillTagsPage: React.FC = () => {
       <div className="grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-4 xl:grid-cols-6">
         {SKILLS.map((sk) => {
           const m = SKILL_META[sk];
-          const tags = MOCK_SKILL_TAGS.filter((t) => t.skill === sk).length;
+          const tagCount = tags.filter((t) => t.skill === sk).length;
           const q = bySkill.find((b) => b.label === m.vi)?.value ?? 0;
           return (
             <div key={sk} className="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-[0_1px_2px_rgba(16,24,40,0.04)]">
               <div className="flex items-center justify-between">
                 <IconTile icon={m.icon} tone={m.tone} size="sm" />
-                <span className="text-xs font-medium text-slate-500">{tags} thẻ</span>
+                <span className="text-xs font-medium text-slate-500">{tagCount} thẻ</span>
               </div>
               <p className="mt-3 text-[13px] text-slate-500">{m.vi}</p>
               <p className="font-display text-[1.45rem] font-extrabold leading-tight tabular-nums text-slate-900">{q.toLocaleString('vi-VN')}</p>
@@ -93,12 +96,27 @@ export const AdminSkillTagsPage: React.FC = () => {
         })}
       </div>
 
-      <Panel title="Số câu hỏi theo kỹ năng" sub={`${MOCK_SKILL_TAGS.length} thẻ · ${total.toLocaleString('vi-VN')} câu được gắn thẻ`} icon={BarChart3} tone="indigo" action={<Tags className="h-4 w-4 text-slate-400" />}>
+      <Panel title="Số câu hỏi theo kỹ năng" sub={`${tags.length} thẻ · ${total.toLocaleString('vi-VN')} câu được gắn thẻ`} icon={BarChart3} tone="indigo" action={<Tags className="h-4 w-4 text-slate-400" />}>
         <BarChart ariaLabel="Số câu hỏi theo kỹ năng" data={bySkill.map(({ label, value }) => ({ label, value }))} height={210} unit=" câu" />
       </Panel>
 
       <CrudEditor<SkillTag>
-        rows={MOCK_SKILL_TAGS}
+        rows={tags}
+        loading={isLoading}
+        onCreate={async (v) => {
+          const t = await adminApi.createSkillTag({ name: v.name, slug: v.slug || undefined, skill: v.skill });
+          void refresh();
+          return t;
+        }}
+        onUpdate={async (row, v) => {
+          const t = await adminApi.updateSkillTag(row.id, { name: v.name, slug: v.slug || undefined, skill: v.skill });
+          void refresh();
+          return t;
+        }}
+        onDelete={async (row) => {
+          await adminApi.deleteSkillTag(row.id);
+          void refresh();
+        }}
         columns={columns}
         fields={fields}
         entityName="thẻ kỹ năng"

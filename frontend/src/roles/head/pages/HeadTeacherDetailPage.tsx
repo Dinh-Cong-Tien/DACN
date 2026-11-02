@@ -3,11 +3,13 @@ import { Link, useParams } from 'react-router-dom';
 import { ChevronRight, ClipboardCheck, Eye, Mail, MessageSquare, PenTool, School, Star, TrendingUp, Users } from 'lucide-react';
 import { useDocumentTitle } from '@/shared/hooks';
 import { toast } from '@/shared/stores/uiStore';
-import { DEPT_CLASSES, MOCK_GRADING_REVIEWS, MOCK_OBSERVATIONS, MOCK_TEACHERS } from '@/shared/mocks';
-import type { ClassObservation, GradingReview } from '@/shared/types';
+import type { GradingReview } from '@/shared/types';
+import { headApi, useHeadReviews, useHeadTeacher } from '@/shared/api/head';
+import { errorMessage } from '@/shared/api/client';
+import { addDaysLocal, mondayOf, weekdayCode, ymdLocal } from '@/shared/constants/staff';
 import { Avatar, Modal, Textarea } from '@/shared/components/ui';
 import { cn, formatDate } from '@/shared/utils';
-import { CLASS_BAR, DAY_NAME, Figures, Meter, Panel, PanelLink, Status, TBtn, classTone, tbl, weekSessions } from '@/roles/teacher/components/TeacherKit';
+import { CLASS_BAR, DAY_NAME, Figures, Meter, Panel, PanelLink, Status, TBtn, classTone, tbl } from '@/roles/teacher/components/TeacherKit';
 import { ObserveDialog, Stars } from './HeadClassDetailPage';
 
 const STATUS_LABEL = { ACTIVE: ['green', 'Đang giảng dạy'], LOCKED: ['red', 'Đã khoá tài khoản'], PENDING: ['amber', 'Chờ duyệt hồ sơ'] } as const;
@@ -23,20 +25,51 @@ export const reviewGap = (r: GradingReview) => (r.headCriteria ? Math.round((cri
 /** Hồ sơ chuyên môn của giáo viên: lớp phụ trách, lịch dạy, dự giờ, kết quả kiểm định chấm bài */
 export const HeadTeacherDetailPage: React.FC = () => {
   const { id } = useParams();
-  const t = MOCK_TEACHERS.find((x) => x.id === id) ?? MOCK_TEACHERS[0];
-  useDocumentTitle(t.name);
-  const classes = DEPT_CLASSES.filter((c) => c.teacherName === t.name);
-  const [obs, setObs] = useState<ClassObservation[]>(MOCK_OBSERVATIONS.filter((o) => o.teacher === t.name));
-  const reviews = MOCK_GRADING_REVIEWS.filter((r) => r.teacher === t.name);
-  const rated = obs.filter((o) => o.rating);
-  const avgRating = rated.length ? Math.round((rated.reduce((a, o) => a + (o.rating ?? 0), 0) / rated.length) * 10) / 10 : null;
-  const attendance = classes.length ? Math.round(classes.reduce((a, c) => a + c.attendanceRate, 0) / classes.length) : 0;
-  const students = classes.reduce((a, c) => a + c.studentsCount, 0);
-  const week = weekSessions(classes);
+  const q = useHeadTeacher(id);
+  const allReviews = useHeadReviews().data ?? [];
   const [observeOpen, setObserveOpen] = useState(false);
   const [msgOpen, setMsgOpen] = useState(false);
   const [msg, setMsg] = useState('');
+  const [sending, setSending] = useState(false);
+  useDocumentTitle(q.data?.teacher.name ?? 'Hồ sơ giáo viên');
+  if (!q.data) {
+    return (
+      <div className="space-y-6">
+        <Link to="/head/teachers" className="text-[13px] text-slate-500 hover:text-slate-900">
+          ← Giáo viên bộ môn
+        </Link>
+        <Panel>
+          <p className="py-12 text-center text-sm text-slate-500">{q.isError ? 'Không tìm thấy giáo viên trong bộ môn của bạn.' : 'Đang tải…'}</p>
+        </Panel>
+      </div>
+    );
+  }
+  const { teacher: t, classes, observations: obs, sessions } = q.data;
+  const reviews = allReviews.filter((r) => r.teacher === t.name);
+  const rated = obs.filter((o) => o.rating);
+  const avgRating = rated.length ? Math.round((rated.reduce((a, o) => a + (o.rating ?? 0), 0) / rated.length) * 10) / 10 : null;
+  const withAtt = classes.filter((c) => c.attendanceRate);
+  const attendance = withAtt.length ? Math.round(withAtt.reduce((a, c) => a + c.attendanceRate, 0) / withAtt.length) : 0;
+  const students = classes.reduce((a, c) => a + c.studentsCount, 0);
+  const mon = mondayOf();
+  const weekEnd = ymdLocal(addDaysLocal(mon, 7));
+  const week = sessions.filter((s) => s.date >= ymdLocal(mon) && s.date < weekEnd && s.status !== 'CANCELLED').map((s) => ({ day: weekdayCode(s.date), time: `${s.start}–${s.end}`, cls: { id: s.classId, name: s.className, room: s.room } }));
+  const toneOf = (cid: string) => classTone(`cl-${Math.max(0, classes.findIndex((c) => c.id === cid)) + 1}`);
   const st = STATUS_LABEL[t.status];
+  const sendMsg = async () => {
+    if (!msg.trim()) return toast.error('Chưa nhập nội dung');
+    setSending(true);
+    try {
+      await headApi.teacherNote(t.id, msg.trim());
+      setMsgOpen(false);
+      setMsg('');
+      toast.success('Đã gửi nhận xét', t.name);
+    } catch (e) {
+      toast.error('Không gửi được', errorMessage(e));
+    } finally {
+      setSending(false);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -81,7 +114,7 @@ export const HeadTeacherDetailPage: React.FC = () => {
           { label: 'Lớp phụ trách', value: classes.length, icon: School, tone: 'indigo' },
           { label: 'Học viên', value: students, icon: Users, tone: 'violet' },
           { label: 'Điểm TB lớp', value: t.avgClassScore || '—', icon: TrendingUp, tone: 'sky' },
-          { label: 'Chuyên cần TB', value: classes.length ? `${attendance}%` : '—', icon: ClipboardCheck, tone: 'emerald' },
+          { label: 'Chuyên cần TB', value: attendance ? `${attendance}%` : '—', icon: ClipboardCheck, tone: 'emerald' },
           { label: 'Chờ kiểm định', value: reviews.filter((r) => r.status === 'PENDING').length, note: `${reviews.length} bài đã chọn kiểm tra`, icon: PenTool, tone: 'amber' },
           { label: 'Điểm dự giờ TB', value: avgRating ? `${avgRating}/5` : '—', note: `${rated.length} buổi đã dự`, icon: Star, tone: 'rose' },
         ]}
@@ -112,15 +145,15 @@ export const HeadTeacherDetailPage: React.FC = () => {
                             {c.name}
                           </Link>
                           <p className="text-[12px] text-slate-500">
-                            {c.schedule} · {c.room}
+                            {c.schedule || 'Chưa xếp lịch'} · {c.room || 'Chưa xếp phòng'}
                           </p>
                         </td>
                         <td className={cn(tbl.td, 'text-right tabular-nums')}>{c.studentsCount}</td>
-                        <td className={cn(tbl.td, 'text-right tabular-nums')}>{c.avgScore}</td>
+                        <td className={cn(tbl.td, 'text-right tabular-nums')}>{c.avgScore || '—'}</td>
                         <td className={tbl.td}>
                           <span className="flex items-center gap-2">
                             <Meter value={c.attendanceRate} tone={c.attendanceRate < 75 ? 'red' : c.attendanceRate < 85 ? 'amber' : 'green'} className="flex-1" />
-                            <span className="w-9 text-right text-[13px] tabular-nums">{c.attendanceRate}%</span>
+                            <span className="w-9 text-right text-[13px] tabular-nums">{c.attendanceRate ? `${c.attendanceRate}%` : '—'}</span>
                           </span>
                         </td>
                         <td className={tbl.td}>
@@ -173,16 +206,16 @@ export const HeadTeacherDetailPage: React.FC = () => {
         <div className="min-w-0 space-y-6">
           <Panel title="Lịch dạy trong tuần" icon={Users} tone="emerald">
             {week.length === 0 ? (
-              <p className="text-sm text-slate-500">Chưa có lịch dạy.</p>
+              <p className="text-sm text-slate-500">Không có buổi dạy nào trong tuần này.</p>
             ) : (
               <ul className="space-y-2">
                 {week.map((w, i) => (
-                  <li key={i} className={cn('rounded-lg border-l-4 px-3 py-2', CLASS_BAR[classTone(w.cls.id)])}>
+                  <li key={i} className={cn('rounded-lg border-l-4 px-3 py-2', CLASS_BAR[toneOf(w.cls.id)])}>
                     <p className="text-[12px] text-slate-500">
                       {DAY_NAME[w.day]} · {w.time}
                     </p>
                     <p className="text-sm font-medium text-slate-900">{w.cls.name}</p>
-                    <p className="text-[12px] text-slate-500">{w.cls.room}</p>
+                    <p className="text-[12px] text-slate-500">{w.cls.room ?? ''}</p>
                   </li>
                 ))}
               </ul>
@@ -212,7 +245,7 @@ export const HeadTeacherDetailPage: React.FC = () => {
         </div>
       </div>
 
-      {classes.length > 0 && <ObserveDialog key={classes[0].id} open={observeOpen} onClose={() => setObserveOpen(false)} classId={classes.length === 1 ? classes[0].id : undefined} onSave={(o) => setObs((all) => [...all, o])} />}
+      {classes.length > 0 && <ObserveDialog key={classes[0].id} open={observeOpen} onClose={() => setObserveOpen(false)} classId={classes.length === 1 ? classes[0].id : undefined} classIds={classes.map((c) => c.id)} />}
       <Modal
         open={msgOpen}
         onClose={() => setMsgOpen(false)}
@@ -224,15 +257,7 @@ export const HeadTeacherDetailPage: React.FC = () => {
             <TBtn variant="ghost" onClick={() => setMsgOpen(false)}>
               Huỷ
             </TBtn>
-            <TBtn
-              variant="primary"
-              onClick={() => {
-                if (!msg.trim()) return toast.error('Chưa nhập nội dung');
-                setMsgOpen(false);
-                setMsg('');
-                toast.success('Đã gửi nhận xét', t.name);
-              }}
-            >
+            <TBtn variant="primary" disabled={sending} onClick={() => void sendMsg()}>
               Gửi
             </TBtn>
           </>

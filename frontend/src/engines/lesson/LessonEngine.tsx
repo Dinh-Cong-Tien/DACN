@@ -1,7 +1,8 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { BookOpen, CheckCircle2, ChevronRight, Languages, Lock, Play, Volume2, X, BookmarkPlus, FileText, HelpCircle, Video } from 'lucide-react';
 import type { Course, DictionaryEntry, Lesson, TranscriptLine } from '@/shared/types';
-import { lookupWord } from '@/shared/mocks/courses';
+import { catalogApi } from '@/shared/api/catalog';
+import { api, errorMessage, tokenStore } from '@/shared/api/client';
 import { cn, formatClock } from '@/shared/utils';
 import { Badge, Button, Card, ProgressBar } from '@/shared/components/ui';
 import { toast } from '@/shared/stores/uiStore';
@@ -15,8 +16,26 @@ interface LessonEngineProps {
 
 const LESSON_ICON = { VIDEO: Video, READING: FileText, QUIZ: HelpCircle } as const;
 
+/** Link Vimeo / YouTube → link nhúng iframe; file video trực tiếp → null (dùng thẻ <video>) */
+const embedUrl = (url: string): string | null => {
+  const vimeo = url.match(/vimeo\.com\/(?:video\/)?(\d+)/);
+  if (vimeo) return `https://player.vimeo.com/video/${vimeo[1]}`;
+  const yt = url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([\w-]{11})/);
+  if (yt) return `https://www.youtube.com/embed/${yt[1]}`;
+  return null;
+};
+
+type WordEntry = DictionaryEntry & { id?: string };
+
+/** Tra từ trong kho words; không có thì trả mục rỗng để popover báo chưa có nghĩa */
+const lookupWord = async (word: string): Promise<WordEntry> => {
+  const key = word.toLowerCase();
+  const hits = (await catalogApi.dictionary(key, 5).catch(() => [])) as WordEntry[];
+  return hits.find((h) => h.word.toLowerCase() === key) ?? hits[0] ?? { word: key, ipa: '', pos: '', meaningVi: 'Chưa có trong từ điển của OrbiLingo.', meaningEn: '', example: '' };
+};
+
 /** Popover từ điển 1 chạm */
-const DictionaryPopover: React.FC<{ entry: DictionaryEntry; x: number; y: number; onClose: () => void }> = ({ entry, x, y, onClose }) => {
+const DictionaryPopover: React.FC<{ entry: WordEntry; x: number; y: number; onClose: () => void }> = ({ entry, x, y, onClose }) => {
   const speak = () => {
     try {
       const u = new SpeechSynthesisUtterance(entry.word);
@@ -31,9 +50,13 @@ const DictionaryPopover: React.FC<{ entry: DictionaryEntry; x: number; y: number
       <div className="flex items-start justify-between gap-2">
         <div>
           <p className="font-black text-slate-900 text-lg leading-tight">{entry.word}</p>
-          <p className="text-xs text-indigo-600 font-mono mt-0.5">
-            {entry.ipa} · <span className="italic text-slate-500">{entry.pos}</span>
-          </p>
+          {(entry.ipa || entry.pos) && (
+            <p className="text-xs text-indigo-600 font-mono mt-0.5">
+              {entry.ipa}
+              {entry.ipa && entry.pos ? ' · ' : ''}
+              <span className="italic text-slate-500">{entry.pos}</span>
+            </p>
+          )}
         </div>
         <div className="flex items-center gap-1">
           <button onClick={speak} className="p-1.5 rounded-lg text-indigo-600 hover:bg-indigo-50" title="Phát âm">
@@ -53,9 +76,17 @@ const DictionaryPopover: React.FC<{ entry: DictionaryEntry; x: number; y: number
         fullWidth
         className="mt-3"
         leftIcon={<BookmarkPlus className="w-3.5 h-3.5" />}
+        disabled={!entry.id}
         onClick={() => {
-          toast.success('Đã thêm vào sổ từ', `"${entry.word}" sẽ xuất hiện trong lịch ôn SRS.`);
-          onClose();
+          if (!tokenStore.get()) {
+            toast.info('Đăng nhập để lưu từ', 'Từ đã lưu sẽ xuất hiện trong lịch ôn tập của bạn.');
+            return;
+          }
+          api
+            .post('/learner/vocab/learn', { wordIds: [entry.id] })
+            .then(() => toast.success('Đã thêm vào sổ từ', `"${entry.word}" sẽ xuất hiện trong lịch ôn SRS.`))
+            .catch((e) => toast.error('Chưa lưu được từ', errorMessage(e)))
+            .finally(onClose);
         }}
       >
         Lưu vào sổ từ vựng
@@ -69,7 +100,7 @@ export const LessonEngine: React.FC<LessonEngineProps> = ({ course, lesson, onSe
   const videoRef = useRef<HTMLVideoElement>(null);
   const [time, setTime] = useState(0);
   const [showVi, setShowVi] = useState(true);
-  const [popover, setPopover] = useState<{ entry: DictionaryEntry; x: number; y: number } | null>(null);
+  const [popover, setPopover] = useState<{ entry: WordEntry; x: number; y: number } | null>(null);
   const [done, setDone] = useState(lesson.isCompleted);
   const activeRef = useRef<HTMLButtonElement>(null);
 
@@ -97,14 +128,17 @@ export const LessonEngine: React.FC<LessonEngineProps> = ({ course, lesson, onSe
     e.stopPropagation();
     const clean = word.replace(/[^a-zA-Z'-]/g, '');
     if (!clean) return;
-    setPopover({ entry: lookupWord(clean), x: e.clientX, y: e.clientY });
+    const { clientX: x, clientY: y } = e;
+    void lookupWord(clean).then((entry) => setPopover({ entry, x, y }));
   };
 
   const markDone = () => {
+    if (done) return;
     setDone(true);
     onComplete?.(lesson.id);
-    toast.success('Hoàn thành bài học!', '+20 điểm nỗ lực. Bài tiếp theo đã được mở khoá.');
+    toast.success('Hoàn thành bài học!', 'Bài tiếp theo đã được mở khoá.');
   };
+  const embed = lesson.videoUrl ? embedUrl(lesson.videoUrl) : null;
 
   const allLessons = course.sections.flatMap((s) => s.lessons);
   const idx = allLessons.findIndex((l) => l.id === lesson.id);
@@ -116,7 +150,11 @@ export const LessonEngine: React.FC<LessonEngineProps> = ({ course, lesson, onSe
       <div className="space-y-5 min-w-0">
         {/* Player */}
         <Card padding="none" className="overflow-hidden animate-scale-in">
-          {lesson.type === 'VIDEO' && lesson.videoUrl ? (
+          {lesson.type === 'VIDEO' && embed ? (
+            <div className="relative bg-black aspect-video">
+              <iframe src={embed} title={lesson.title} className="w-full h-full" allow="autoplay; fullscreen; picture-in-picture" allowFullScreen />
+            </div>
+          ) : lesson.type === 'VIDEO' && lesson.videoUrl ? (
             <div className="relative bg-black aspect-video">
               <video ref={videoRef} src={lesson.videoUrl} controls className="w-full h-full" onTimeUpdate={(e) => setTime(e.currentTarget.currentTime)} onEnded={markDone} controlsList="nodownload" />
             </div>
@@ -125,10 +163,11 @@ export const LessonEngine: React.FC<LessonEngineProps> = ({ course, lesson, onSe
               <div className="flex items-center gap-2 text-indigo-600 font-bold text-sm">
                 <BookOpen className="w-4 h-4" /> Bài đọc lý thuyết
               </div>
-              <p className="text-slate-700 leading-relaxed">{lesson.content}</p>
-              <div className="rounded-2xl bg-indigo-50 border border-indigo-100 p-4 text-sm text-indigo-900">
-                <b>Ghi nhớ:</b> Tính từ bổ nghĩa danh từ · Trạng từ bổ nghĩa động từ, tính từ và trạng từ khác · Hậu tố <i>-ly</i> thường là trạng từ.
-              </div>
+              {(lesson.content ?? '').split(/\n{2,}/).map((para, k) => (
+                <p key={k} className="text-slate-700 leading-relaxed whitespace-pre-line">
+                  {para}
+                </p>
+              ))}
             </div>
           ) : (
             <div className="p-8 text-center space-y-3">

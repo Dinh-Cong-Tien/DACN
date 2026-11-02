@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { ArrowRightLeft } from 'lucide-react';
-import { SCORE_TABLE } from '@/shared/mocks';
+import { useScoreTable } from '@/shared/api/cms';
 import type { ScoreRow } from '@/shared/types';
 import { useDocumentTitle } from '@/shared/hooks';
 import { cn } from '@/shared/utils';
@@ -18,7 +18,7 @@ function parseRange(s: string): [number, number] | null {
   return [nums[0], nums[1]];
 }
 
-function findRow(source: Source, value: string): ScoreRow | null {
+function findRow(SCORE_TABLE: ScoreRow[], source: Source, value: string): ScoreRow | null {
   if (source === 'CEFR') return SCORE_TABLE.find((r) => r.cefr.toLowerCase() === value.trim().toLowerCase()) ?? null;
   const n = Number(value);
   if (Number.isNaN(n) || value === '') return null;
@@ -51,7 +51,8 @@ export const ScoreConverterPage: React.FC = () => {
   useDocumentTitle('Quy đổi điểm');
   const [source, setSource] = useState<Source>('TOEIC');
   const [value, setValue] = useState('650');
-  const row = useMemo(() => findRow(source, value), [source, value]);
+  const { data: SCORE_TABLE = [] } = useScoreTable();
+  const row = useMemo(() => findRow(SCORE_TABLE, source, value), [SCORE_TABLE, source, value]);
 
   return (
     <div className="bg-page">

@@ -1,17 +1,17 @@
 import React from 'react';
 import { LayoutDashboard, Users, ClipboardList, ClipboardCheck, CalendarDays, PenTool, FolderOpen, BarChart3, Video, FileText, BookOpen, Sheet, UserRound } from 'lucide-react';
 import { AppShell, NavGroup } from '@/shared/components/layout/AppShell';
-import { TeacherNav } from './TeacherNav';
+import { TeacherNav, usePendingGradingCount } from './TeacherNav';
 
 /** Menu ngăn kéo (điện thoại) và thanh đáy; header máy tính dùng TeacherNav */
-const GROUPS: NavGroup[] = [
+const groupsOf = (toGrade: number): NavGroup[] => [
   {
     title: 'Giảng dạy',
     items: [
       { to: '/teacher/dashboard', label: 'Tổng quan', icon: LayoutDashboard },
       { to: '/teacher/classes', label: 'Lớp học', icon: Users },
       { to: '/teacher/schedule', label: 'Lịch dạy', icon: CalendarDays },
-      { to: '/teacher/grading', label: 'Chấm bài', icon: PenTool, badge: '4' },
+      { to: '/teacher/grading', label: 'Chấm bài', icon: PenTool, badge: toGrade ? String(toGrade) : undefined },
       { to: '/teacher/assignments', label: 'Bài tập', icon: ClipboardList },
       { to: '/teacher/attendance', label: 'Điểm danh', icon: ClipboardCheck },
     ],
@@ -35,6 +35,10 @@ const GROUPS: NavGroup[] = [
   },
 ];
 
-export const TeacherLayout: React.FC = () => (
-  <AppShell groups={GROUPS} brandTagline="Khu vực giáo viên" headerLabel="Khu vực giáo viên" accent="emerald" settingsTo="/teacher/settings" profileTo="/teacher/settings" notificationsTo="/teacher/notifications" workspace headerNav={<TeacherNav />} />
-);
+export const TeacherLayout: React.FC = () => {
+  const toGrade = usePendingGradingCount();
+  const groups = React.useMemo(() => groupsOf(toGrade), [toGrade]);
+  return (
+  <AppShell groups={groups} brandTagline="Khu vực giáo viên" headerLabel="Khu vực giáo viên" accent="emerald" settingsTo="/teacher/settings" profileTo="/teacher/settings" notificationsTo="/teacher/notifications" workspace headerNav={<TeacherNav />} />
+  );
+};

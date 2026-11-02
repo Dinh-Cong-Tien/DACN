@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ChevronDown, Phone, SendHorizontal, X } from 'lucide-react';
 import { cn } from '@/shared/utils';
-import { SUPPORT_INFO } from '@/shared/mocks';
+import { SUPPORT_INFO } from '@/shared/constants/public';
 import type { ChatMessage } from '@/shared/types';
 import { agentOf, isOnline, useSupportChat } from './useSupportChat';
 import './ChatWidget.css';

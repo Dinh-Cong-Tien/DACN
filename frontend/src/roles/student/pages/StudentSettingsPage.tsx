@@ -4,6 +4,9 @@ import type { ExamType } from '@/shared/types';
 import { useDocumentTitle } from '@/shared/hooks';
 import { useAuthStore } from '@/shared/stores/authStore';
 import { toast } from '@/shared/stores/uiStore';
+import { authApi } from '@/shared/api/auth';
+import { api, errorMessage } from '@/shared/api/client';
+import { useGoal, useJoinClass, useSaveGoal } from '@/shared/api/learner';
 import { ROLE_LABEL, formatDate } from '@/shared/utils';
 import { Avatar, Badge, Button, Card, CardHeader, ConfirmDialog, Input, PageHeader, PasswordInput, Select, Switch, Tabs } from '@/shared/components/ui';
 
@@ -19,12 +22,24 @@ export const StudentSettingsPage: React.FC = () => {
   const logout = useAuthStore((s) => s.logout);
   const [tab, setTab] = useState('profile');
   const [fullName, setFullName] = useState(user?.fullName ?? '');
-  const [phone, setPhone] = useState('');
+  const settings = ((user as (typeof user & { settings?: Record<string, unknown>; phone?: string }) | null)?.settings ?? {}) as { notifyTypes?: Record<string, boolean>; dailyGoalMinutes?: number };
+  const [phone, setPhone] = useState((user as (typeof user & { phone?: string }) | null)?.phone ?? '');
+  const { data: goal } = useGoal();
+  const saveGoal = useSaveGoal();
+  const join = useJoinClass();
   const [examType, setExamType] = useState<ExamType>(user?.target?.examType ?? 'TOEIC');
   const [score, setScore] = useState(user?.target?.score ?? '750');
   const [examDate, setExamDate] = useState(user?.target?.examDate?.slice(0, 10) ?? '');
-  const [minutes, setMinutes] = useState(45);
-  const [notif, setNotif] = useState({ review: true, assignment: true, streak: true, marketing: false });
+  const [minutes, setMinutes] = useState(settings.dailyGoalMinutes ?? 45);
+  const [notif, setNotif] = useState({ review: true, assignment: true, streak: true, marketing: false, ...(settings.notifyTypes ?? {}) });
+  // Đồng bộ form mục tiêu với mục tiêu đang hiệu lực trên máy chủ
+  React.useEffect(() => {
+    if (!goal) return;
+    setExamType(goal.examType);
+    setScore(goal.targetScore ? String(goal.targetScore) : (goal.targetLevel ?? ''));
+    if (goal.targetDate) setExamDate(goal.targetDate);
+    setMinutes(goal.minutesPerDay);
+  }, [goal]);
   const [pw, setPw] = useState({ current: '', next: '', confirm: '' });
   const [code, setCode] = useState('');
   const [deleteOpen, setDeleteOpen] = useState(false);
@@ -34,29 +49,58 @@ export const StudentSettingsPage: React.FC = () => {
 
   const saveProfile = () => {
     setSaving(true);
-    setTimeout(() => {
-      updateUser({ fullName });
-      setSaving(false);
-      toast.success('Đã lưu hồ sơ');
-    }, 500);
+    authApi
+      .updateMe({ fullName, phone: phone || null })
+      .then((u) => {
+        updateUser(u);
+        toast.success('Đã lưu hồ sơ');
+      })
+      .catch((e) => toast.error('Chưa lưu được hồ sơ', errorMessage(e)))
+      .finally(() => setSaving(false));
   };
 
   const saveTarget = () => {
-    updateUser({ target: { examType, score, examDate: examDate ? new Date(examDate).toISOString() : undefined } });
-    toast.success('Đã cập nhật mục tiêu', `Lộ trình sẽ được điều chỉnh theo ${examType} ${score}.`);
+    const isToeic = examType === 'TOEIC';
+    saveGoal.mutate(
+      {
+        examType,
+        targetScore: isToeic ? Math.min(990, parseInt(score, 10) || 750) : null,
+        targetLevel: isToeic ? null : score,
+        targetDate: examDate || null,
+        minutesPerDay: Math.min(480, Math.max(10, minutes)),
+        studyDays: goal?.studyDays ?? [1, 2, 3, 4, 5],
+      } as Parameters<typeof saveGoal.mutate>[0],
+      {
+        onSuccess: () => {
+          authApi.me().then(updateUser).catch(() => undefined);
+          toast.success('Đã cập nhật mục tiêu', `Lộ trình được lập lại theo ${examType} ${score}.`);
+        },
+        onError: (e) => toast.error('Chưa cập nhật được mục tiêu', errorMessage(e)),
+      }
+    );
   };
 
   const changePw = () => {
     if (!pw.current || pw.next.length < 8) return toast.error('Mật khẩu không hợp lệ', 'Mật khẩu mới cần tối thiểu 8 ký tự.');
     if (pw.next !== pw.confirm) return toast.error('Mật khẩu không khớp');
-    setPw({ current: '', next: '', confirm: '' });
-    toast.success('Đã đổi mật khẩu');
+    authApi
+      .changePassword(pw.current, pw.next)
+      .then(() => {
+        setPw({ current: '', next: '', confirm: '' });
+        toast.success('Đã đổi mật khẩu', 'Các thiết bị khác sẽ phải đăng nhập lại.');
+      })
+      .catch((e) => toast.error('Chưa đổi được mật khẩu', errorMessage(e)));
   };
 
   const joinClass = () => {
     if (code.trim().length < 6) return toast.error('Mã mời không hợp lệ', 'Mã lớp gồm 8 ký tự, ví dụ ORB-7K2P.');
-    toast.success('Đã gửi yêu cầu tham gia', `Giáo viên lớp ${code.toUpperCase()} sẽ duyệt bạn sớm.`);
-    setCode('');
+    join.mutate(code.trim().toUpperCase(), {
+      onSuccess: (c) => {
+        toast.success('Đã vào lớp', c.name);
+        setCode('');
+      },
+      onError: (e) => toast.error('Chưa vào được lớp', errorMessage(e)),
+    });
   };
 
   return (
@@ -171,7 +215,15 @@ export const StudentSettingsPage: React.FC = () => {
             <Switch checked={notif.marketing} onChange={(v) => setNotif((s) => ({ ...s, marketing: v }))} label="Ưu đãi & tin tức" description="Email về khoá học mới và khuyến mãi." />
           </div>
           <div className="flex justify-end mt-6">
-            <Button leftIcon={<Save className="w-4 h-4" />} onClick={() => toast.success('Đã lưu tuỳ chọn thông báo')}>
+            <Button leftIcon={<Save className="w-4 h-4" />} onClick={() =>
+                authApi
+                  .updateMe({ settings: { notifyTypes: notif, dailyGoalMinutes: minutes } })
+                  .then((u) => {
+                    updateUser(u);
+                    toast.success('Đã lưu tuỳ chọn thông báo');
+                  })
+                  .catch((e) => toast.error('Chưa lưu được', errorMessage(e)))
+              }>
               Lưu
             </Button>
           </div>
@@ -208,8 +260,13 @@ export const StudentSettingsPage: React.FC = () => {
         confirmText="Xoá tài khoản"
         onConfirm={() => {
           setDeleteOpen(false);
-          toast.info('Đã gửi yêu cầu xoá tài khoản', 'Tài khoản sẽ bị xoá sau 7 ngày nếu bạn không đăng nhập lại.');
-          logout();
+          api
+            .post('/learner/account/delete')
+            .then(() => {
+              toast.info('Đã xoá tài khoản', 'Cảm ơn bạn đã học cùng OrbiLingo.');
+              logout();
+            })
+            .catch((e) => toast.error('Chưa xoá được tài khoản', errorMessage(e)));
         }}
       />
     </div>

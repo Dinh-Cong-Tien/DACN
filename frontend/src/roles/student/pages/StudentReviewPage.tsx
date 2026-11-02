@@ -1,11 +1,14 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useRef, useState } from 'react';
 import { RotateCcw, CalendarDays, BookOpen, AlertTriangle, Play, Brain, ArrowLeft } from 'lucide-react';
 import { useDocumentTitle } from '@/shared/hooks';
 import { Badge, Button, Card, CardHeader, PageHeader, StatCard, Timeline } from '@/shared/components/ui';
 import { Stagger } from '@/shared/components/motion';
 import { Img, PHOTOS } from '@/shared/components/media/Img';
 import { PracticeEngine } from '@/engines';
-import { MOCK_MISTAKES, MOCK_VOCAB, MISTAKE_CAUSE_LABEL } from '@/shared/mocks';
+import { MISTAKE_CAUSE_LABEL } from '@/shared/constants/student';
+import { api, errorMessage } from '@/shared/api/client';
+import { useMistakes, useMyWords, useReviewDue } from '@/shared/api/learner';
+import { useQueryClient } from '@tanstack/react-query';
 import { cn, formatDate } from '@/shared/utils';
 import { toast } from '@/shared/stores/uiStore';
 
@@ -20,9 +23,13 @@ const SM2_STEPS = [
 export const StudentReviewPage: React.FC = () => {
   useDocumentTitle('Lịch ôn ngắt quãng');
   const [reviewing, setReviewing] = useState(false);
-  const now = Date.now();
-  const dueMistakes = useMemo(() => MOCK_MISTAKES.filter((m) => !m.isResolved && new Date(m.nextReviewAt).getTime() <= now), [now]);
-  const dueVocab = useMemo(() => MOCK_VOCAB.filter((v) => new Date(v.nextReviewAt).getTime() <= now), [now]);
+  const qc = useQueryClient();
+  const { data: due } = useReviewDue();
+  const { data: openMistakes = [] } = useMistakes({ resolved: false });
+  const { data: myWords = [] } = useMyWords();
+  const dueMistakes = due?.mistakes ?? [];
+  const dueVocab = due?.words ?? [];
+  const wrongIds = useRef(new Set<string>());
 
   const upcoming = useMemo(() => {
     const days: { id: string; date: Date; mistakes: number; vocab: number }[] = [];
@@ -31,12 +38,24 @@ export const StudentReviewPage: React.FC = () => {
       d.setHours(0, 0, 0, 0);
       d.setDate(d.getDate() + i);
       const end = d.getTime() + 86400000;
-      const mk = MOCK_MISTAKES.filter((m) => !m.isResolved && new Date(m.nextReviewAt).getTime() >= d.getTime() && new Date(m.nextReviewAt).getTime() < end).length;
-      const vc = MOCK_VOCAB.filter((v) => new Date(v.nextReviewAt).getTime() >= d.getTime() && new Date(v.nextReviewAt).getTime() < end).length;
+      const mk = openMistakes.filter((m) => new Date(m.nextReviewAt).getTime() >= d.getTime() && new Date(m.nextReviewAt).getTime() < end).length;
+      const vc = myWords.filter((v) => new Date(v.nextReviewAt).getTime() >= d.getTime() && new Date(v.nextReviewAt).getTime() < end).length;
       days.push({ id: `d${i}`, date: d, mistakes: mk, vocab: vc });
     }
     return days;
-  }, []);
+  }, [openMistakes, myWords]);
+
+  // Kết thúc phiên ôn câu sai: nhớ đúng → chất lượng 4, sai → 1 (SM-2)
+  const finishReview = async (s: { correct: number; total: number }) => {
+    try {
+      for (const m of dueMistakes) await api.post('/learner/review', { mistakeId: m.id, quality: wrongIds.current.has(m.question.id) ? 1 : 4 });
+      wrongIds.current.clear();
+      ['review', 'mistakes', 'progress'].forEach((k) => qc.invalidateQueries({ queryKey: ['learner', k] }));
+      toast.success('Hoàn thành phiên ôn', `${s.total - (s.total - s.correct)}/${s.total} câu nhớ đúng. SM-2 đã cập nhật lịch.`);
+    } catch (e) {
+      toast.error('Chưa lưu được kết quả ôn', errorMessage(e));
+    }
+  };
 
   if (reviewing) {
     return (
@@ -48,7 +67,8 @@ export const StudentReviewPage: React.FC = () => {
           title="Ôn tập câu sai hôm nay"
           questions={dueMistakes.map((m) => m.question)}
           exitTo="/app/review"
-          onFinishPractice={(s) => toast.success('Hoàn thành phiên ôn', `${s.correct}/${s.total} câu nhớ đúng. SM-2 đã cập nhật lịch.`)}
+          onMistakeRecorded={(qid) => wrongIds.current.add(qid)}
+          onFinishPractice={(s) => void finishReview({ correct: s.total - wrongIds.current.size, total: s.total })}
         />
       </div>
     );
@@ -70,7 +90,7 @@ export const StudentReviewPage: React.FC = () => {
         <StatCard label="Cần ôn hôm nay" value={dueMistakes.length + dueVocab.length} icon={<RotateCcw />} tone="violet" />
         <StatCard label="Câu sai" value={dueMistakes.length} icon={<AlertTriangle />} tone="amber" />
         <StatCard label="Từ vựng" value={dueVocab.length} icon={<BookOpen />} tone="indigo" />
-        <StatCard label="7 ngày tới" value={upcoming.reduce((a, d) => a + d.mistakes + d.vocab, 0)} icon={<CalendarDays />} tone="sky" />
+        <StatCard label="7 ngày tới" value={due?.upcoming7d ?? upcoming.reduce((a, d) => a + d.mistakes + d.vocab, 0)} icon={<CalendarDays />} tone="sky" />
       </Stagger>
 
       <div className="grid grid-cols-1 xl:grid-cols-[1fr_340px] gap-5">
@@ -80,7 +100,7 @@ export const StudentReviewPage: React.FC = () => {
               <div className="p-6 space-y-3">
                 <span className="sticker tilt-1 !bg-amber-300">Hôm nay · {formatDate(new Date().toISOString())}</span>
                 <h2 className="font-display text-2xl md:text-3xl font-extrabold leading-tight">{dueMistakes.length + dueVocab.length} mục đang chờ bạn</h2>
-                <p className="text-sm text-indigo-100">Ước tính {Math.max(5, (dueMistakes.length + dueVocab.length) * 1.5)} phút. Hoàn thành để giữ chuỗi chuyên cần.</p>
+                <p className="text-sm text-indigo-100">Ước tính {Math.max(5, Math.round((dueMistakes.length + dueVocab.length) * 1.5))} phút. Hoàn thành để giữ chuỗi chuyên cần.</p>
                 <div className="flex gap-2 flex-wrap pt-1">
                   <Button variant="white" leftIcon={<Play className="w-4 h-4" />} disabled={dueMistakes.length === 0} onClick={() => setReviewing(true)}>
                     Ôn câu sai
@@ -99,6 +119,7 @@ export const StudentReviewPage: React.FC = () => {
           <Card hard className="animate-fade-up" style={{ animationDelay: '100ms' }}>
             <CardHeader title="Danh sách ôn hôm nay" icon={<AlertTriangle />} />
             <div className="space-y-2">
+              {dueMistakes.length + dueVocab.length === 0 && <p className="text-sm text-slate-500">Hôm nay không có mục nào cần ôn. Câu sai và từ đang học sẽ xuất hiện ở đây đúng ngày đến hạn.</p>}
               {dueMistakes.map((m, i) => (
                 <div key={m.id} className="flex items-center gap-3 p-3 rounded-xl border-2 border-slate-200 hover:border-slate-900 hover:bg-amber-50 transition animate-fade-in" style={{ animationDelay: `${i * 40}ms` }}>
                   <span className="w-8 h-8 rounded-lg bg-violet-500 border-2 border-slate-900 text-white flex items-center justify-center shrink-0 text-xs font-display font-extrabold">{i + 1}</span>

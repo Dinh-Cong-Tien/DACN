@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Plus, Pencil, Trash2, Download, Filter, MoreHorizontal } from 'lucide-react';
 import { Button, Card, Column, ConfirmDialog, DataTable, Dropdown, Field, Input, Modal, Pagination, SearchInput, Select, Textarea, Switch, MenuItem } from '@/shared/components/ui';
 import { toast } from '@/shared/stores/uiStore';
@@ -45,6 +45,12 @@ export interface CrudEditorProps<T extends { id: string }> {
   bulkActions?: (ids: string[], clear: () => void) => React.ReactNode;
   /** Từ khoá tìm kiếm ban đầu (vd. từ ?q= trên URL) */
   initialSearch?: string;
+  /** Lưu qua API: trả về bản ghi đã lưu (có id thật). Lỗi ném ra → giữ form + báo lỗi. */
+  onCreate?: (values: Partial<T>) => Promise<T>;
+  onUpdate?: (row: T, values: Partial<T>) => Promise<T>;
+  onDelete?: (row: T) => Promise<unknown>;
+  /** Đang tải dữ liệu lần đầu */
+  loading?: boolean;
 }
 
 /**
@@ -72,6 +78,10 @@ export function CrudEditor<T extends { id: string }>({
   selectable,
   bulkActions,
   initialSearch = '',
+  onCreate,
+  onUpdate,
+  onDelete,
+  loading,
 }: CrudEditorProps<T>) {
   const [rows, setRows] = useState<T[]>(initialRows);
   const [search, setSearch] = useState(initialSearch);
@@ -83,6 +93,10 @@ export function CrudEditor<T extends { id: string }>({
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [deleting, setDeleting] = useState<T | null>(null);
   const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [saving, setSaving] = useState(false);
+
+  // Dữ liệu từ API đến sau lần render đầu → đồng bộ lại
+  useEffect(() => setRows(initialRows), [initialRows]);
 
   const commit = (next: T[]) => {
     setRows(next);
@@ -130,25 +144,42 @@ export function CrudEditor<T extends { id: string }>({
     return Object.keys(e).length === 0;
   };
 
-  const save = () => {
+  const errMsg = (e: unknown) => (e instanceof Error ? e.message : 'Đã có lỗi xảy ra');
+
+  const save = async () => {
     if (!validate()) return;
-    if (editing) {
-      commit(rows.map((r) => (r.id === editing.id ? ({ ...r, ...form } as T) : r)));
-      toast.success('Đã cập nhật', `${entityName} đã được lưu.`);
-    } else {
-      const id = `${idPrefix}-${Date.now().toString(36)}`;
-      commit([{ ...(defaultValues ?? {}), ...form, id } as T, ...rows]);
-      toast.success('Đã tạo mới', `${entityName} mới đã được thêm.`);
-      setPage(1);
+    setSaving(true);
+    try {
+      if (editing) {
+        const saved = onUpdate ? await onUpdate(editing, form as Partial<T>) : ({ ...editing, ...form } as T);
+        commit(rows.map((r) => (r.id === editing.id ? saved : r)));
+        toast.success('Đã cập nhật', `${entityName} đã được lưu.`);
+      } else {
+        const values = { ...(defaultValues ?? {}), ...form } as Partial<T>;
+        const saved = onCreate ? await onCreate(values) : ({ ...values, id: `${idPrefix}-${Date.now().toString(36)}` } as T);
+        commit([saved, ...rows]);
+        toast.success('Đã tạo mới', `${entityName} mới đã được thêm.`);
+        setPage(1);
+      }
+      setFormOpen(false);
+    } catch (e) {
+      toast.error('Không lưu được', errMsg(e));
+    } finally {
+      setSaving(false);
     }
-    setFormOpen(false);
   };
 
-  const confirmDelete = () => {
+  const confirmDelete = async () => {
     if (!deleting) return;
-    commit(rows.filter((r) => r.id !== deleting.id));
-    toast.success('Đã xoá', `${entityName} đã bị xoá khỏi hệ thống.`);
-    setDeleting(null);
+    try {
+      if (onDelete) await onDelete(deleting);
+      commit(rows.filter((r) => r.id !== deleting.id));
+      toast.success('Đã xoá', `${entityName} đã bị xoá khỏi hệ thống.`);
+    } catch (e) {
+      toast.error('Không xoá được', errMsg(e));
+    } finally {
+      setDeleting(null);
+    }
   };
 
   const exportCsv = () => {
@@ -267,7 +298,7 @@ export function CrudEditor<T extends { id: string }>({
         selected={selected}
         onToggle={toggleSel}
         onRowClick={readOnly ? undefined : openEdit}
-        emptyTitle={`Chưa có ${entityName}`}
+        emptyTitle={loading ? 'Đang tải dữ liệu…' : `Chưa có ${entityName}`}
         emptyDescription={search ? 'Thử từ khoá khác hoặc xoá bộ lọc.' : `Nhấn "${createLabel}" để tạo ${entityName} đầu tiên.`}
         className="animate-fade-up"
       />
@@ -284,7 +315,7 @@ export function CrudEditor<T extends { id: string }>({
             <Button variant="ghost" onClick={() => setFormOpen(false)}>
               Huỷ
             </Button>
-            <Button onClick={save}>{editing ? 'Lưu thay đổi' : 'Tạo mới'}</Button>
+            <Button onClick={save} loading={saving}>{editing ? 'Lưu thay đổi' : 'Tạo mới'}</Button>
           </>
         }
       >

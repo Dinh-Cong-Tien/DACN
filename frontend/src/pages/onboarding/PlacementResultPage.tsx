@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo, useRef } from 'react';
 import { fireConfetti } from '@/shared/components/motion/confetti';
 import { useNavigate } from 'react-router-dom';
 import { ArrowRight, Compass, CheckCircle2, Lock, Play, PartyPopper } from 'lucide-react';
@@ -6,7 +6,9 @@ import { useDocumentTitle, useLocalStorage } from '@/shared/hooks';
 import { Badge, Button, Card, RingProgress, RadarChart, ProgressBar } from '@/shared/components/ui';
 import { CountUp } from '@/shared/components/motion';
 import { Img, PHOTOS } from '@/shared/components/media/Img';
-import { LEARNING_PATH, RADAR_SKILLS } from '@/shared/mocks';
+import { useSaveGoal, type PartResult } from '@/shared/api/learner';
+import { authApi } from '@/shared/api/auth';
+import { errorMessage } from '@/shared/api/client';
 import { useAuthStore } from '@/shared/stores/authStore';
 import { toast } from '@/shared/stores/uiStore';
 import { cn } from '@/shared/utils';
@@ -24,23 +26,59 @@ export const PlacementResultPage: React.FC = () => {
   const result = useMemo(() => {
     try {
       const raw = localStorage.getItem('orbi-placement');
-      if (raw) return JSON.parse(raw) as { correct: number; total: number };
+      if (raw) return JSON.parse(raw) as { correct: number; total: number; partResults?: PartResult[] };
     } catch {
       /* ignore */
     }
-    return { correct: 6, total: 10 };
+    return { correct: 0, total: 0, partResults: [] as PartResult[] };
   }, []);
+  // Bản đồ năng lực từ kết quả từng phần của bài xếp lớp
+  const RADAR_SKILLS = useMemo(() => {
+    const acc = (ids: string[]) => {
+      const rs = (result.partResults ?? []).filter((r) => ids.includes(r.part));
+      const t = rs.reduce((a, r) => a + r.total, 0);
+      return t ? Math.round((rs.reduce((a, r) => a + r.correct, 0) / t) * 100) : 0;
+    };
+    return [
+      { label: 'Listening', value: acc(['PART_1', 'PART_2', 'PART_3', 'PART_4', 'VSTEP_LISTENING']) },
+      { label: 'Reading', value: acc(['PART_6', 'PART_7', 'VSTEP_READING']) },
+      { label: 'Grammar', value: acc(['PART_5']) },
+    ];
+  }, [result]);
 
-  const pct = Math.round((result.correct / result.total) * 100);
+  const pct = result.total ? Math.round((result.correct / result.total) * 100) : 0;
   React.useEffect(() => { fireConfetti({ count: 90 }); }, []);
   const isVstep = state.examType === 'VSTEP';
   const estimated = isVstep ? Math.round((3 + pct * 0.06) * 2) / 2 : Math.round((300 + pct * 6) / 5) * 5;
   const level = isVstep ? (estimated >= 8.5 ? 'C1' : estimated >= 6 ? 'B2' : estimated >= 4 ? 'B1' : 'A2') : estimated >= 785 ? 'B2' : estimated >= 550 ? 'B1' : 'A2';
   const target = state.targetScore || (isVstep ? 'B2' : '750');
 
+  // Lưu mục tiêu + lịch học lên máy chủ → hệ thống sinh lộ trình 3 chặng (luồng #2)
+  const saveGoal = useSaveGoal();
+  const saved = useRef(false);
+  useEffect(() => {
+    if (saved.current) return;
+    saved.current = true;
+    const DAY_NO: Record<string, number> = { T2: 1, T3: 2, T4: 3, T5: 4, T6: 5, T7: 6, CN: 7 };
+    saveGoal.mutate(
+      {
+        examType: state.examType,
+        currentLevel: isVstep ? level : String(estimated),
+        targetScore: isVstep ? null : Math.min(990, parseInt(String(target), 10) || 750),
+        targetLevel: isVstep ? String(target) : null,
+        targetDate: state.examDate || null,
+        studyDays: state.days.map((d) => DAY_NO[d]).filter(Boolean),
+        minutesPerDay: Math.min(480, Math.max(10, state.minutesPerDay)),
+      } as Parameters<typeof saveGoal.mutate>[0],
+      { onError: (e) => toast.error('Chưa lưu được mục tiêu', errorMessage(e)) }
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  const LEARNING_PATH = saveGoal.data?.path?.milestones ?? [];
+
   const start = () => {
     completeOnboarding();
-    updateUser({ target: { examType: state.examType, score: target, examDate: state.examDate || undefined } });
+    authApi.me().then(updateUser).catch(() => updateUser({ target: { examType: state.examType, score: String(target), examDate: state.examDate || undefined } }));
     toast.success('Lộ trình đã sẵn sàng!', 'Chúc bạn học tập hiệu quả cùng OrbiLingo.');
     navigate('/');
   };

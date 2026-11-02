@@ -1,7 +1,9 @@
 import React from 'react';
 import { Link, Navigate, useParams } from 'react-router-dom';
 import { ArrowRight, Check, ChevronRight, Lock } from 'lucide-react';
-import { COURSE_PART_NOTE, MOCK_COURSES, courseHref } from '@/shared/mocks';
+import { courseHref, useCourse, useCourses } from '@/shared/api/catalog';
+import { COURSE_PART_NOTE } from '@/shared/constants/public';
+import { SkeletonCard } from '@/shared/components/ui';
 import { useDocumentTitle, useGate } from '@/shared/hooks';
 import { useAuthStore } from '@/shared/stores/authStore';
 import { cn } from '@/shared/utils';
@@ -28,14 +30,22 @@ const STEPS = ['Xem video bài giảng, có bản ghi chữ song ngữ và tra t
  */
 export const LessonPathPage: React.FC = () => {
   const { slug } = useParams();
-  const course = MOCK_COURSES.find((c) => c.slug === slug);
-  return course ? <PathView key={course.id} course={course} /> : <Navigate to="/courses" replace />;
+  const { data: course, isLoading, isError } = useCourse(slug);
+  if (isLoading)
+    return (
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14 space-y-6">
+        <SkeletonCard lines={4} />
+        <SkeletonCard lines={8} />
+      </div>
+    );
+  return course && !isError ? <PathView key={course.id} course={course} /> : <Navigate to="/courses" replace />;
 };
 
 const PathView: React.FC<{ course: Course }> = ({ course }) => {
   const copy = copyOf(course);
   // Học song song: luôn gợi ý 2 khoá kiến thức chung; khoá kỹ năng gợi ý thêm các khoá kỹ năng khác, không gợi ý khoá nền tảng kỳ thi
   const general = (c: Course) => c.category === 'GRAMMAR' || c.category === 'VOCABULARY';
+  const { data: MOCK_COURSES = [] } = useCourses();
   const others = MOCK_COURSES.filter((c) => c.id !== course.id && (general(c) || (course.category === 'SKILL' ? c.category === 'SKILL' : general(course) && c.category === 'FOUNDATION')));
   useDocumentTitle(course.title);
   const gate = useGate();

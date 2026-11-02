@@ -2,7 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { HelpCircle, LifeBuoy, Mail, Phone, Settings, Bell } from 'lucide-react';
 import { Logo } from '@/shared/components/ui';
-import { MOCK_SERVICES } from '@/shared/mocks';
+import { useAdminSystem } from '@/shared/api/admin';
 import type { NavGroup } from './AppShell';
 
 export interface StaffFooterProps {
@@ -15,10 +15,11 @@ export interface StaffFooterProps {
   showSystemStatus?: boolean;
 }
 
-const degraded = MOCK_SERVICES.filter((s) => s.status !== 'UP').length;
-
 /** Footer khu vực quản lý (giáo viên, trưởng bộ môn, quản trị): cùng nền tối với footer website học viên */
 export const StaffFooter: React.FC<StaffFooterProps> = ({ groups, brandTagline, settingsTo, notificationsTo, showSystemStatus }) => {
+  // Trạng thái dịch vụ đo thật (chỉ admin gọi API hệ thống)
+  const sys = useAdminSystem(!!showSystemStatus);
+  const degraded = sys.data?.services.filter((s) => s.status !== 'UP').length ?? 0;
   const support = [
     settingsTo && { to: settingsTo, label: 'Cài đặt tài khoản', icon: Settings },
     notificationsTo && { to: notificationsTo, label: 'Thông báo', icon: Bell },

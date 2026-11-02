@@ -90,7 +90,8 @@ teacherRouter.get(
     const classes = await prisma.class.findMany({ where: { ...ownClassWhere(u), isArchived: false }, include: classInclude, orderBy: [{ createdAt: 'asc' }, { name: 'asc' }] });
     const ids = classes.map((c) => c.id);
     const { from, to } = weekRange();
-    const [rooms, students, sessions, deadlines, pending] = await Promise.all([
+    const todayVn = new Date(Date.now() + 7 * 3600_000).toISOString().slice(0, 10);
+    const [rooms, students, sessions, deadlines, pending, nextRows] = await Promise.all([
       toClassRooms(classes),
       toClassStudents(ids),
       prisma.classSession.findMany({ where: { classId: { in: ids }, sessionDate: { gte: from, lte: to } }, include: { class: { select: { name: true } } }, orderBy: [{ sessionDate: 'asc' }, { startTime: 'asc' }] }),
@@ -100,7 +101,16 @@ teacherRouter.get(
         include: submissionInclude,
         orderBy: { submittedAt: 'asc' },
       }),
+      prisma.classSession.findMany({
+        where: { classId: { in: ids }, status: 'UPCOMING', sessionDate: { gte: dateOf(todayVn) } },
+        include: { class: { select: { name: true } } },
+        orderBy: [{ sessionDate: 'asc' }, { startTime: 'asc' }],
+        take: 8,
+      }),
     ]);
+    // Buổi kế tiếp: chưa kết thúc (so theo giờ VN)
+    const nowHm = new Date(Date.now() + 7 * 3600_000).toISOString().slice(11, 16);
+    const next = nextRows.map(toSession).find((x) => x.date > todayVn || x.end > nowHm);
     const att = rooms.filter((r) => r.attendanceRate > 0);
     return {
       stats: {
@@ -118,6 +128,7 @@ teacherRouter.get(
       upcomingDeadlines: await toAssignments(deadlines),
       pendingSubmissions: pending.slice(0, 8).map(toSubmission),
       week: { from: ymd(from), to: ymd(to) },
+      nextSession: next ?? null,
     };
   })
 );
@@ -810,9 +821,48 @@ teacherRouter.get(
       orderBy: { submittedAt: 'asc' },
     });
     const practice = q.assignmentId ? [] : await practiceAnswers(ids, q.status);
-    return [...subs.map(toSubmission), ...practice].sort((a, b) => a.submittedAt.localeCompare(b.submittedAt));
+    const items = [...subs.map(toSubmission), ...practice].sort((a, b) => a.submittedAt.localeCompare(b.submittedAt));
+    return enrichGrading(items);
   })
 );
+
+type GradingItem = { id: string; assignmentId: string; classId: string; type: string };
+
+/** Thêm đề bài (stem), số từ tối thiểu, tên lớp, tiêu chí chấm cho từng bài trong hàng chấm. */
+async function enrichGrading<T extends GradingItem>(items: T[]) {
+  if (!items.length) return [];
+  const classes = await prisma.class.findMany({ where: { id: { in: [...new Set(items.map((i) => i.classId))] } }, select: { id: true, name: true, examType: true } });
+  const asgIds = [...new Set(items.map((i) => i.assignmentId).filter(Boolean))];
+  const asgs = asgIds.length ? await prisma.assignment.findMany({ where: { id: { in: asgIds } }, select: { id: true, targetId: true } }) : [];
+  const answerIds = items.filter((i) => i.id.startsWith('ans:')).map((i) => i.id.slice(4));
+  const answers = answerIds.length ? await prisma.attemptAnswer.findMany({ where: { id: { in: answerIds } }, select: { id: true, questionId: true } }) : [];
+  const qIds = [...new Set([...asgs.map((a) => a.targetId), ...answers.map((a) => a.questionId)].filter((x): x is string => !!x))];
+  const questions = qIds.length ? await prisma.question.findMany({ where: { id: { in: qIds } }, select: { id: true, stem: true, taskConfig: true, rubricId: true, examType: true, imageUrl: true } }) : [];
+  const rubricCache = new Map<string, Awaited<ReturnType<typeof rubricFor>>>();
+  const out = [];
+  for (const it of items) {
+    const cls = classes.find((c) => c.id === it.classId);
+    const qid = it.id.startsWith('ans:') ? answers.find((a) => a.id === it.id.slice(4))?.questionId : asgs.find((a) => a.id === it.assignmentId)?.targetId;
+    const qn = questions.find((x) => x.id === qid);
+    const kind = it.type === 'SPEAKING' ? 'SPEAKING' : 'ESSAY';
+    const examType = qn?.examType ?? cls?.examType ?? 'TOEIC';
+    const key = `${kind}|${examType}|${qn?.rubricId ?? ''}`;
+    if (!rubricCache.has(key)) rubricCache.set(key, await rubricFor(kind, examType, qn?.rubricId));
+    const rubric = rubricCache.get(key);
+    const cfg = (qn?.taskConfig ?? {}) as { minWords?: number };
+    out.push({
+      ...it,
+      className: cls?.name,
+      prompt: qn ? qn.stem.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim() : undefined,
+      promptImageUrl: qn?.imageUrl ?? undefined,
+      minWords: cfg.minWords,
+      rubric: rubric
+        ? { id: rubric.id, name: rubric.name, criteria: ((rubric.criteria as { key: string; label: string; description?: string; desc?: string; weight?: number }[]) ?? []).map((c) => ({ key: c.key, label: c.label, desc: c.description ?? c.desc ?? '', weight: c.weight })) }
+        : undefined,
+    });
+  }
+  return out;
+}
 
 /** Rubric theo loại bài + kỳ thi của lớp. */
 async function rubricFor(kind: 'ESSAY' | 'SPEAKING', examType: 'TOEIC' | 'VSTEP', questionRubricId?: string | null) {
@@ -1210,6 +1260,14 @@ teacherRouter.get(
 // THƯ VIỆN (nội dung đã xuất bản để giao bài)
 // =====================================================================
 
+/** Số lần mỗi nội dung đã được giao (mọi lớp), theo target_id. */
+async function usedCounts() {
+  const rows = await prisma.assignment.groupBy({ by: ['targetId'], where: { deletedAt: null, targetId: { not: null } }, _count: { _all: true } });
+  return new Map(rows.map((r) => [r.targetId!, r._count._all]));
+}
+
+const VSTEP_GROUP_TITLE: Record<string, string> = { VSTEP_LISTENING: 'Listening · Nghe', VSTEP_READING: 'Reading · Đọc', VSTEP_WRITING: 'Writing · Viết', VSTEP_SPEAKING: 'Speaking · Nói' };
+
 const PART_TITLE: Record<string, string> = {
   TOEIC_P1: 'Part 1 · Mô tả tranh',
   TOEIC_P2: 'Part 2 · Hỏi – đáp',
@@ -1229,6 +1287,13 @@ teacherRouter.get(
       orderBy: [{ examType: 'asc' }, { year: 'desc' }, { title: 'asc' }],
     });
     const counts = tests.length ? await prisma.mockTestQuestion.groupBy({ by: ['testId', 'part'], where: { testId: { in: tests.map((t) => t.id) } }, _count: { _all: true } }) : [];
+    const used = await usedCounts();
+    /** Gộp Part theo nhóm frontend (TOEIC: PART_n; VSTEP: theo kỹ năng) */
+    const partsOf = (testId: string) => {
+      const acc = new Map<string, number>();
+      for (const c of counts.filter((x) => x.testId === testId).sort((a, b) => a.part.localeCompare(b.part))) acc.set(feGroupOfPart(c.part), (acc.get(feGroupOfPart(c.part)) ?? 0) + c._count._all);
+      return [...acc].map(([id, questions]) => ({ id, title: PART_TITLE[Object.keys(FE_PART).find((k) => FE_PART[k] === id) ?? ''] ?? VSTEP_GROUP_TITLE[id] ?? id, questions }));
+    };
     return tests.map((t) => ({
       id: t.id,
       slug: t.slug,
@@ -1241,10 +1306,10 @@ teacherRouter.get(
       isFree: t.isFree,
       coverUrl: t.coverUrl ?? undefined,
       tags: t.tags,
-      parts: counts
-        .filter((c) => c.testId === t.id)
-        .sort((a, b) => a.part.localeCompare(b.part))
-        .map((c) => ({ id: feGroupOfPart(c.part) === c.part ? c.part : FE_PART[c.part] ?? c.part, dbPart: c.part, title: PART_TITLE[c.part] ?? c.part, questions: c._count._all })),
+      level: t.level ?? undefined,
+      attemptsCount: t.attemptsCount,
+      usedCount: used.get(t.id) ?? 0,
+      parts: partsOf(t.id),
     }));
   })
 );
@@ -1254,9 +1319,14 @@ teacherRouter.get(
   handler(async () => {
     const courses = await prisma.course.findMany({
       where: { deletedAt: null, status: 'PUBLISHED' },
-      include: { courseSectionCourses: { orderBy: { orderIndex: 'asc' }, include: { lessonSections: { where: { deletedAt: null }, orderBy: { orderIndex: 'asc' }, select: { id: true, title: true, type: true, durationMin: true, orderIndex: true } } } } },
+      include: {
+        author: { select: { fullName: true } },
+        courseSectionCourses: { orderBy: { orderIndex: 'asc' }, include: { lessonSections: { where: { deletedAt: null }, orderBy: { orderIndex: 'asc' }, select: { id: true, title: true, type: true, durationMin: true, orderIndex: true } } } },
+      },
       orderBy: [{ category: 'asc' }, { title: 'asc' }],
     });
+    const used = await usedCounts();
+    const enrolled = courses.length ? await prisma.courseEnrollment.groupBy({ by: ['courseId'], where: { courseId: { in: courses.map((c) => c.id) } }, _count: { _all: true } }) : [];
     return courses.map((c) => ({
       id: c.id,
       slug: c.slug,
@@ -1267,7 +1337,10 @@ teacherRouter.get(
       coverUrl: c.coverUrl ?? undefined,
       lessonsCount: c.lessonsCount,
       durationMin: c.durationMin,
-      sections: c.courseSectionCourses.map((s) => ({ id: s.id, title: s.title, partNo: s.partNo, lessons: s.lessonSections })),
+      teacherName: c.author?.fullName,
+      studentsCount: enrolled.find((e) => e.courseId === c.id)?._count._all ?? 0,
+      usedCount: used.get(c.id) ?? 0,
+      sections: c.courseSectionCourses.map((s) => ({ id: s.id, title: s.title, partNo: s.partNo, partTitle: s.partTitle ?? undefined, lessons: s.lessonSections })),
     }));
   })
 );
@@ -1275,8 +1348,13 @@ teacherRouter.get(
 teacherRouter.get(
   '/library/grammar',
   handler(async () => {
-    const rows = await prisma.grammarTopic.findMany({ where: { deletedAt: null, status: 'PUBLISHED' }, orderBy: [{ orderIndex: 'asc' }, { title: 'asc' }], select: { id: true, slug: true, title: true, category: true, level: true, summary: true } });
-    return rows.map((r) => ({ ...r, level: r.level ?? undefined }));
+    const rows = await prisma.grammarTopic.findMany({ where: { deletedAt: null, status: 'PUBLISHED' }, orderBy: [{ orderIndex: 'asc' }, { title: 'asc' }], select: { id: true, slug: true, title: true, category: true, level: true, summary: true, tagId: true } });
+    const used = await usedCounts();
+    const tagIds = rows.map((r) => r.tagId).filter((x): x is string => !!x);
+    const qCounts = tagIds.length
+      ? await prisma.$queryRaw<{ tag: string; n: bigint }[]>`SELECT t AS tag, count(*)::bigint AS n FROM questions q, unnest(q.tag_ids) t WHERE q.deleted_at IS NULL AND q.status = 'PUBLISHED' AND t = ANY(${tagIds}::uuid[]) GROUP BY t`
+      : [];
+    return rows.map(({ tagId, ...r }) => ({ ...r, level: r.level ?? undefined, questionsCount: Number(qCounts.find((x) => x.tag === tagId)?.n ?? 0), usedCount: used.get(r.id) ?? 0 }));
   })
 );
 
@@ -1284,7 +1362,8 @@ teacherRouter.get(
   '/library/vocab',
   handler(async () => {
     const rows = await prisma.vocabTopic.findMany({ where: { deletedAt: null }, orderBy: [{ orderIndex: 'asc' }, { name: 'asc' }] });
-    return rows.map((r) => ({ id: r.id, slug: r.slug, name: r.name, icon: r.icon ?? undefined, examType: r.examType ?? undefined, level: r.level ?? undefined, wordsCount: r.wordsCount, isFree: r.isFree }));
+    const used = await usedCounts();
+    return rows.map((r) => ({ id: r.id, slug: r.slug, name: r.name, icon: r.icon ?? undefined, examType: r.examType ?? undefined, level: r.level ?? undefined, wordsCount: r.wordsCount, isFree: r.isFree, usedCount: used.get(r.id) ?? 0 }));
   })
 );
 
@@ -1295,9 +1374,10 @@ async function promptList(type: 'ESSAY' | 'SPEAKING_RESPONSE', examType?: 'TOEIC
     select: { id: true, examType: true, part: true, stem: true, imageUrl: true, audioUrl: true, taskConfig: true, level: true },
     take: 500,
   });
+  const used = await usedCounts();
   return rows.map((r) => {
     const text = r.stem.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
-    return { id: r.id, examType: r.examType, part: r.part, title: text.slice(0, 120), prompt: text, imageUrl: r.imageUrl ?? undefined, audioUrl: r.audioUrl ?? undefined, level: r.level ?? undefined, taskConfig: r.taskConfig ?? undefined };
+    return { id: r.id, examType: r.examType, part: r.part, title: text.slice(0, 120), prompt: text, imageUrl: r.imageUrl ?? undefined, audioUrl: r.audioUrl ?? undefined, level: r.level ?? undefined, taskConfig: r.taskConfig ?? undefined, usedCount: used.get(r.id) ?? 0 };
   });
 }
 

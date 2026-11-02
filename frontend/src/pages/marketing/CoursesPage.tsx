@@ -3,7 +3,8 @@ import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
 import { RevealPhoto } from '@/shared/components/motion';
 import { Img } from '@/shared/components/media/Img';
-import { MOCK_COURSES, courseHref } from '@/shared/mocks';
+import { courseHref, useCourses } from '@/shared/api/catalog';
+import { SkeletonGrid } from '@/shared/components/ui';
 import { useDocumentTitle, useGate } from '@/shared/hooks';
 import { useAuthStore } from '@/shared/stores/authStore';
 import type { Course, CourseSection } from '@/shared/types';
@@ -106,8 +107,9 @@ const GROUPS = [
 export const CoursesPage: React.FC = () => {
   useDocumentTitle('Khoá học');
   const isStudent = useAuthStore((s) => s.user?.role === 'STUDENT');
+  const { data: MOCK_COURSES = [], isLoading } = useCourses();
   const lessons = MOCK_COURSES.reduce((a, c) => a + c.lessonsCount, 0);
-  const hours = MOCK_COURSES.reduce((a, c) => a + c.durationHours, 0);
+  const hours = Math.round(MOCK_COURSES.reduce((a, c) => a + c.durationHours, 0));
 
   return (
     <div className="bg-page">
@@ -128,7 +130,8 @@ export const CoursesPage: React.FC = () => {
       />
       <Section innerClassName="py-12 md:py-16">
         <div className="space-y-14">
-          {GROUPS.map((g) => (
+          {isLoading && <SkeletonGrid count={3} cols="grid-cols-1" />}
+          {GROUPS.filter((g) => isLoading || MOCK_COURSES.some(g.match)).map((g) => (
             <section key={g.key} aria-labelledby={`g-${g.key}`}>
               <h2 id={`g-${g.key}`} className="font-display text-2xl font-extrabold tracking-tight text-slate-900 md:text-[1.9rem]">
                 {g.title}

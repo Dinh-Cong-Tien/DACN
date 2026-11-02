@@ -3,14 +3,17 @@ import { AlertTriangle, CheckCircle2, ChevronDown, Target, RotateCcw, XCircle, L
 import { useDocumentTitle } from '@/shared/hooks';
 import { Badge, Button, Card, Chip, EmptyState, PageHeader, StatCard, Tabs, MiniBars } from '@/shared/components/ui';
 import { Stagger } from '@/shared/components/motion';
-import { MOCK_MISTAKES, MISTAKE_CAUSE_LABEL } from '@/shared/mocks';
-import type { Mistake, MistakeCause } from '@/shared/types';
+import { MISTAKE_CAUSE_LABEL } from '@/shared/constants/student';
+import { useMistakes, useUpdateMistake } from '@/shared/api/learner';
+import { errorMessage } from '@/shared/api/client';
+import type { MistakeCause } from '@/shared/types';
 import { cn, formatDate, timeAgo } from '@/shared/utils';
 import { toast } from '@/shared/stores/uiStore';
 
 export const StudentMistakesPage: React.FC = () => {
   useDocumentTitle('Sổ tay lỗi sai');
-  const [items, setItems] = useState<Mistake[]>(MOCK_MISTAKES);
+  const { data: items = [], isLoading } = useMistakes();
+  const update = useUpdateMistake();
   const [tab, setTab] = useState('open');
   const [cause, setCause] = useState<MistakeCause | 'ALL'>('ALL');
   const [expanded, setExpanded] = useState<string | null>(null);
@@ -20,9 +23,16 @@ export const StudentMistakesPage: React.FC = () => {
   const dueToday = items.filter((m) => !m.isResolved && new Date(m.nextReviewAt).getTime() <= now).length;
   const causeStats = (Object.keys(MISTAKE_CAUSE_LABEL) as MistakeCause[]).map((c) => ({ label: MISTAKE_CAUSE_LABEL[c].label, value: items.filter((m) => m.cause === c).length, tone: MISTAKE_CAUSE_LABEL[c].tone })).filter((s) => s.value > 0);
 
+  const topCauses = [...causeStats].sort((a, b) => b.value - a.value).slice(0, 2).map((c) => c.label);
+
   const resolve = (id: string) => {
-    setItems((s) => s.map((m) => (m.id === id ? { ...m, isResolved: true } : m)));
-    toast.success('Đã đánh dấu đã hiểu', 'Câu này sẽ được ôn lại sau 14 ngày để kiểm tra.');
+    update.mutate(
+      { id, isResolved: true },
+      {
+        onSuccess: () => toast.success('Đã đánh dấu đã hiểu', 'Câu này được chuyển sang mục Đã giải quyết.'),
+        onError: (e) => toast.error('Chưa cập nhật được', errorMessage(e)),
+      }
+    );
   };
 
   return (
@@ -78,7 +88,11 @@ export const StudentMistakesPage: React.FC = () => {
 
           {list.length === 0 ? (
             <Card hard>
-              <EmptyState icon={<CheckCircle2 />} title="Không có lỗi sai nào" description="Tuyệt vời! Hãy tiếp tục luyện tập để giữ phong độ." />
+              <EmptyState
+                icon={<CheckCircle2 />}
+                title={isLoading ? 'Đang tải…' : 'Không có lỗi sai nào'}
+                description={isLoading ? undefined : items.length ? 'Không có câu nào trong mục này.' : 'Câu sai khi luyện tập và thi thử sẽ tự động được lưu ở đây.'}
+              />
             </Card>
           ) : (
             list.map((m, i) => {
@@ -137,7 +151,7 @@ export const StudentMistakesPage: React.FC = () => {
                           {m.question.explanation}
                         </div>
                         <div className="flex flex-wrap gap-2">
-                          {m.question.tags.map((t) => (
+                          {m.question.tags.filter((t) => !/^[0-9a-f]{8}-[0-9a-f]{4}-/i.test(t)).map((t) => (
                             <Badge key={t} tone="slate" size="xs">
                               #{t}
                             </Badge>
@@ -171,7 +185,19 @@ export const StudentMistakesPage: React.FC = () => {
           <Card hard tone="yellow" className="animate-slide-in-right" style={{ animationDelay: '100ms' }}>
             <p className="font-display font-extrabold text-slate-900 text-sm">Gợi ý từ hệ thống</p>
             <p className="text-xs text-slate-800 mt-1 leading-relaxed">
-              Bạn sai nhiều nhất ở nhóm <b>Nghe nhầm</b> và <b>Từ vựng</b>. Hãy luyện Part 2 mỗi ngày 10 câu và ôn flashcard chủ đề Business.
+              {topCauses.length ? (
+                <>
+                  Bạn sai nhiều nhất ở nhóm {topCauses.map((c, i) => (
+                    <React.Fragment key={c}>
+                      {i > 0 && ' và '}
+                      <b>{c}</b>
+                    </React.Fragment>
+                  ))}
+                  . Ôn lại các câu này theo lịch SM-2 và luyện thêm câu tương tự.
+                </>
+              ) : (
+                'Chưa đủ dữ liệu để gợi ý. Hãy luyện tập hoặc làm một đề thi thử.'
+              )}
             </p>
             <Button size="sm" variant="secondary" fullWidth className="mt-3" to="/app/review">
               Ôn theo lịch SM-2

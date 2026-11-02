@@ -3,10 +3,12 @@ import { Navigate, useNavigate, useParams, useSearchParams } from 'react-router-
 import { ChevronDown, ChevronRight, ExternalLink } from 'lucide-react';
 import { useDocumentTitle } from '@/shared/hooks';
 import { useAuthStore } from '@/shared/stores/authStore';
-import { GRAMMAR_TOPICS, MOCK_ASSIGNMENTS, MOCK_COURSES, MOCK_TESTS, VOCAB_TOPICS, VSTEP_SPEAKING_PARTS, VSTEP_WRITING_TASKS, courseHref } from '@/shared/mocks';
-import type { AssignmentTarget, Course, ExamType } from '@/shared/types';
+import { useLibCourses, useLibGrammar, useLibSpeaking, useLibTests, useLibVocab, useLibWriting } from '@/shared/api/teacher';
+import { partName, promptName } from '@/shared/constants/teacher';
+import type { AssignmentTarget, ExamType } from '@/shared/types';
 import { cn } from '@/shared/utils';
 import { Panel, TBtn, TPageHead, tbl } from '../components/TeacherKit';
+import { TEmpty, TError, TLoading } from '../components/TeacherState';
 
 type Kind = 'courses' | 'tests' | 'practice';
 
@@ -42,11 +44,12 @@ const GroupTabs: React.FC<{ groups: { label: string; tabs: { key: string; label:
   </div>
 );
 
-const GROUP_LABEL: Record<Course['category'], string> = { GRAMMAR: 'Kiến thức chung', VOCABULARY: 'Kiến thức chung', SKILL: 'Kỹ năng tiếng Anh', FOUNDATION: 'Nền tảng theo kỳ thi' };
-const LESSON_TYPE: Record<string, string> = { VIDEO: 'Video', READING: 'Bài đọc', QUIZ: 'Kiểm tra' };
+const GROUP_LABEL: Record<string, string> = { GRAMMAR: 'Kiến thức chung', VOCABULARY: 'Kiến thức chung', SKILL: 'Kỹ năng tiếng Anh', FOUNDATION: 'Nền tảng theo kỳ thi', EXAM_PREP: 'Luyện thi' };
+const LESSON_TYPE: Record<string, string> = { VIDEO: 'Video', READING: 'Bài đọc', QUIZ: 'Kiểm tra', CHECKPOINT: 'Kiểm tra giữa khoá' };
 
-/** Số lần nội dung đã được giao cho các lớp (theo loại và id) */
-const usedCount = (match: (t: AssignmentTarget) => boolean) => MOCK_ASSIGNMENTS.filter((a) => match(a.target)).length;
+/** Trạng thái tải chung cho từng khối dữ liệu thư viện */
+const QueryGate: React.FC<{ q: { isLoading: boolean; error: unknown; refetch: () => unknown }; children: React.ReactNode }> = ({ q, children }) =>
+  q.isLoading ? <TLoading /> : q.error ? <TError error={q.error} onRetry={() => q.refetch()} /> : <>{children}</>;
 
 const PreviewLink: React.FC<{ href: string }> = ({ href }) => (
   <a href={href} target="_blank" rel="noreferrer" title="Xem như học viên" className="inline-flex h-8 w-8 items-center justify-center rounded-md text-slate-500 hover:bg-slate-900/[0.05] hover:text-slate-900">
@@ -93,18 +96,22 @@ const PracticeView: React.FC<{ assign: Assign }> = ({ assign }) => {
   const [params, setParams] = useSearchParams();
   const tab = params.get('tab') === 'vocab' ? 'vocab' : 'grammar';
   const vocabExam = params.get('exam');
-  const vocab = VOCAB_TOPICS.filter((v) => !vocabExam || (v.name.startsWith('VSTEP') ? 'VSTEP' : 'TOEIC') === vocabExam);
+  const grammarQ = useLibGrammar();
+  const vocabQ = useLibVocab();
+  const grammarList = grammarQ.data ?? [];
+  const allVocab = vocabQ.data ?? [];
+  const vocab = allVocab.filter((v) => !vocabExam || (v.examType ?? 'TOEIC') === vocabExam);
   return (
     <div className="space-y-5">
       <GroupTabs
         value={tab === 'vocab' ? `vocab-${vocabExam ?? 'all'}` : 'grammar'}
         onChange={(k) => setParams(k === 'grammar' ? { tab: 'grammar' } : k === 'vocab-all' ? { tab: 'vocab' } : { tab: 'vocab', exam: k.slice(6) }, { replace: true })}
         groups={[
-          { label: 'Ngữ pháp', tabs: [{ key: 'grammar', label: 'Chủ điểm ngữ pháp', count: GRAMMAR_TOPICS.length }] },
+          { label: 'Ngữ pháp', tabs: [{ key: 'grammar', label: 'Chủ điểm ngữ pháp', count: grammarList.length }] },
           {
             label: 'Từ vựng',
             tabs: [
-              { key: 'vocab-all', label: 'Tất cả bộ từ', count: VOCAB_TOPICS.length },
+              { key: 'vocab-all', label: 'Tất cả bộ từ', count: allVocab.length },
               { key: 'vocab-TOEIC', label: 'TOEIC' },
               { key: 'vocab-VSTEP', label: 'VSTEP' },
             ],
@@ -112,6 +119,7 @@ const PracticeView: React.FC<{ assign: Assign }> = ({ assign }) => {
         ]}
       />
       {tab === 'grammar' ? (
+        <QueryGate q={grammarQ}>
         <Panel title="Chủ điểm ngữ pháp" sub="Học viên làm bài tập sau mỗi chủ điểm, chấm tự động" flush>
           <div className="overflow-x-auto">
             <table className={tbl.table}>
@@ -126,16 +134,16 @@ const PracticeView: React.FC<{ assign: Assign }> = ({ assign }) => {
                 </tr>
               </thead>
               <tbody>
-                {GRAMMAR_TOPICS.map((g) => (
+                {grammarList.map((g) => (
                   <tr key={g.id} className={tbl.tr}>
                     <td className={cn(tbl.td, 'min-w-[280px]')}>
                       <p className="font-medium text-slate-900">{g.title}</p>
                       <p className="line-clamp-1 text-[12px] text-slate-500">{g.summary}</p>
                     </td>
                     <td className={cn(tbl.td, 'whitespace-nowrap text-slate-600')}>{g.category}</td>
-                    <td className={cn(tbl.td, 'whitespace-nowrap text-slate-600')}>{g.level}</td>
-                    <td className={cn(tbl.td, 'text-right tabular-nums')}>{g.questionsCount}</td>
-                    <td className={cn(tbl.td, 'text-right tabular-nums text-slate-600')}>{usedCount((t) => t.kind === 'GRAMMAR' && t.slug === g.slug)} lần</td>
+                    <td className={cn(tbl.td, 'whitespace-nowrap text-slate-600')}>{g.level ?? '—'}</td>
+                    <td className={cn(tbl.td, 'text-right tabular-nums')}>{g.questionsCount || '—'}</td>
+                    <td className={cn(tbl.td, 'text-right tabular-nums text-slate-600')}>{g.usedCount} lần</td>
                     <td className={cn(tbl.td, 'whitespace-nowrap text-right')}>
                       <PreviewLink href={`/app/grammar/${g.slug}`} />
                       {assign && (
@@ -150,7 +158,9 @@ const PracticeView: React.FC<{ assign: Assign }> = ({ assign }) => {
             </table>
           </div>
         </Panel>
+        </QueryGate>
       ) : (
+        <QueryGate q={vocabQ}>
         <Panel title="Bộ flashcard từ vựng" sub="Học viên ôn theo lịch ngắt quãng, giáo viên theo dõi số từ đã thuộc" flush>
           <div className="overflow-x-auto">
             <table className={tbl.table}>
@@ -167,13 +177,13 @@ const PracticeView: React.FC<{ assign: Assign }> = ({ assign }) => {
                 {vocab.map((v) => (
                   <tr key={v.id} className={tbl.tr}>
                     <td className={cn(tbl.td, 'font-medium text-slate-900')}>{v.name}</td>
-                    <td className={cn(tbl.td, 'text-slate-600')}>{v.name.startsWith('VSTEP') ? 'VSTEP' : 'TOEIC'}</td>
-                    <td className={cn(tbl.td, 'text-right tabular-nums')}>{v.total}</td>
-                    <td className={cn(tbl.td, 'text-right tabular-nums text-slate-600')}>{usedCount((t) => t.kind === 'VOCAB' && t.topicId === v.id)} lần</td>
+                    <td className={cn(tbl.td, 'text-slate-600')}>{v.examType ?? 'Chung'}</td>
+                    <td className={cn(tbl.td, 'text-right tabular-nums')}>{v.wordsCount}</td>
+                    <td className={cn(tbl.td, 'text-right tabular-nums text-slate-600')}>{v.usedCount} lần</td>
                     <td className={cn(tbl.td, 'whitespace-nowrap text-right')}>
-                      <PreviewLink href={`/app/vocabulary/flashcards/${v.id}`} />
+                      <PreviewLink href={`/app/vocabulary/flashcards/${v.slug}`} />
                       {assign && (
-                        <TBtn size="sm" onClick={() => assign({ kind: 'VOCAB', topicId: v.id })}>
+                        <TBtn size="sm" onClick={() => assign({ kind: 'VOCAB', topicId: v.slug })}>
                           Giao bài
                         </TBtn>
                       )}
@@ -184,6 +194,7 @@ const PracticeView: React.FC<{ assign: Assign }> = ({ assign }) => {
             </table>
           </div>
         </Panel>
+        </QueryGate>
       )}
     </div>
   );
@@ -191,12 +202,35 @@ const PracticeView: React.FC<{ assign: Assign }> = ({ assign }) => {
 
 /** Đề tự luận Viết / Nói */
 const EssayList: React.FC<{ kind: 'writing' | 'speaking'; assign: Assign }> = ({ kind, assign }) => {
-  const rows =
-    kind === 'writing'
-      ? VSTEP_WRITING_TASKS.map((w) => ({ id: w.id, name: w.task, meta: `${w.minutes} phút · tối thiểu ${w.minWords} từ`, prompt: w.prompt, href: `/app/writing?task=${w.id}`, target: { kind: 'WRITING', taskId: w.id } as AssignmentTarget }))
-      : VSTEP_SPEAKING_PARTS.map((p) => ({ id: p.id, name: p.part, meta: `${p.minutes} phút`, prompt: p.prompt, href: `/app/speaking?part=${p.id}`, target: { kind: 'SPEAKING', partId: p.id } as AssignmentTarget }));
+  const writingQ = useLibWriting();
+  const speakingQ = useLibSpeaking();
+  const q = kind === 'writing' ? writingQ : speakingQ;
+  const [exam, setExam] = useState<ExamType | 'ALL'>('ALL');
+  const [limit, setLimit] = useState(30);
+  const source = (q.data ?? []).filter((p) => exam === 'ALL' || p.examType === exam);
+  const rows = source.slice(0, limit).map((p) => {
+    const cfg = p.taskConfig ?? {};
+    const minutes = cfg.minutes ?? (cfg.responseSec ? Math.max(1, Math.round(cfg.responseSec / 60)) : undefined);
+    const meta = [p.examType, minutes ? `${minutes} phút` : '', cfg.minWords ? `tối thiểu ${cfg.minWords} từ` : '', p.usedCount ? `đã giao ${p.usedCount} lần` : ''].filter(Boolean).join(' · ');
+    return kind === 'writing'
+      ? { id: p.id, name: promptName(p, 'WRITING'), meta, prompt: p.prompt, href: `/app/writing?task=${p.id}`, target: { kind: 'WRITING', taskId: p.id } as AssignmentTarget }
+      : { id: p.id, name: promptName(p, 'SPEAKING'), meta, prompt: p.prompt, href: `/app/speaking?part=${p.id}`, target: { kind: 'SPEAKING', partId: p.id } as AssignmentTarget };
+  });
   return (
-    <Panel title={kind === 'writing' ? 'Đề Viết' : 'Đề Nói'} sub="Bài nộp về Bàn chấm bài · chấm theo 4 tiêu chí, thang 10" flush>
+    <QueryGate q={q}>
+    <Panel
+      title={kind === 'writing' ? 'Đề Viết' : 'Đề Nói'}
+      sub={`${source.length} đề · bài nộp về Bàn chấm bài, chấm theo tiêu chí, thang 10`}
+      action={
+        <select value={exam} onChange={(e) => (setExam(e.target.value as ExamType | 'ALL'), setLimit(30))} className="h-8 rounded-lg border border-slate-200 bg-white px-2 text-[13px] text-slate-700" aria-label="Lọc theo kỳ thi">
+          <option value="ALL">Tất cả</option>
+          <option value="TOEIC">TOEIC</option>
+          <option value="VSTEP">VSTEP</option>
+        </select>
+      }
+      flush
+    >
+      {rows.length === 0 && <TEmpty title="Chưa có đề nào" />}
       <ul className="divide-y divide-slate-100">
         {rows.map((r) => (
           <li key={r.id} className="flex flex-col gap-3 px-5 py-4 sm:flex-row sm:items-start">
@@ -204,7 +238,7 @@ const EssayList: React.FC<{ kind: 'writing' | 'speaking'; assign: Assign }> = ({
               <p className="font-semibold text-slate-900">
                 {r.name} <span className="font-normal text-slate-500">· {r.meta}</span>
               </p>
-              <p className="mt-1 text-sm leading-relaxed text-slate-600">{r.prompt}</p>
+              <p className="mt-1 line-clamp-3 text-sm leading-relaxed text-slate-600">{r.prompt}</p>
             </div>
             <div className="flex shrink-0 items-center gap-1">
               <PreviewLink href={r.href} />
@@ -217,7 +251,15 @@ const EssayList: React.FC<{ kind: 'writing' | 'speaking'; assign: Assign }> = ({
           </li>
         ))}
       </ul>
+      {source.length > limit && (
+        <div className="border-t border-slate-100 px-5 py-3 text-center">
+          <TBtn size="sm" variant="ghost" onClick={() => setLimit((n) => n + 30)}>
+            Xem thêm {Math.min(30, source.length - limit)} đề
+          </TBtn>
+        </div>
+      )}
     </Panel>
+    </QueryGate>
   );
 };
 
@@ -231,9 +273,13 @@ const CoursesView: React.FC<{ assign: Assign }> = ({ assign }) => {
     if (id) requestAnimationFrame(() => document.getElementById(`course-${id}`)?.scrollIntoView({ block: 'start', behavior: 'smooth' }));
   }, [params]);
   const [picked, setPicked] = useState<string[]>([]);
+  const coursesQ = useLibCourses();
+  const courses = coursesQ.data ?? [];
 
   return (
+    <QueryGate q={coursesQ}>
     <Panel flush>
+      {courses.length === 0 && <TEmpty title="Chưa có khoá học nào được xuất bản" />}
       <div className="overflow-x-auto">
         <table className={tbl.table}>
           <thead className={tbl.thead}>
@@ -248,7 +294,7 @@ const CoursesView: React.FC<{ assign: Assign }> = ({ assign }) => {
             </tr>
           </thead>
           <tbody>
-            {MOCK_COURSES.map((c) => {
+            {courses.map((c) => {
               const open = openId === c.id;
               const lessons = c.sections.flatMap((s) => s.lessons);
               return (
@@ -260,16 +306,16 @@ const CoursesView: React.FC<{ assign: Assign }> = ({ assign }) => {
                         <span className="font-medium text-slate-900">{c.title}</span>
                       </span>
                     </td>
-                    <td className={cn(tbl.td, 'whitespace-nowrap text-slate-600')}>{c.examType ? `${GROUP_LABEL[c.category]} · ${c.examType}` : GROUP_LABEL[c.category]}</td>
-                    <td className={cn(tbl.td, 'whitespace-nowrap text-slate-600')}>{c.level}</td>
+                    <td className={cn(tbl.td, 'whitespace-nowrap text-slate-600')}>{c.examType ? `${GROUP_LABEL[c.category] ?? c.category} · ${c.examType}` : GROUP_LABEL[c.category] ?? c.category}</td>
+                    <td className={cn(tbl.td, 'whitespace-nowrap text-slate-600')}>{c.level ?? '—'}</td>
                     <td className={cn(tbl.td, 'text-right tabular-nums')}>{c.lessonsCount}</td>
                     <td className={cn(tbl.td, 'text-right tabular-nums')}>{c.studentsCount.toLocaleString('vi-VN')}</td>
                     <td className={cn(tbl.td, 'whitespace-nowrap text-slate-600')}>
-                      {c.teacherName}
-                      {c.teacherName === me && <span className="ml-1.5 text-[12px] text-indigo-700">(bạn)</span>}
+                      {c.teacherName ?? '—'}
+                      {c.teacherName && c.teacherName === me && <span className="ml-1.5 text-[12px] text-indigo-700">(bạn)</span>}
                     </td>
                     <td className={cn(tbl.td, 'text-right')} onClick={(e) => e.stopPropagation()}>
-                      <PreviewLink href={courseHref(c)} />
+                      <PreviewLink href={`/courses/${c.slug}`} />
                     </td>
                   </tr>
                   {open && (
@@ -278,7 +324,7 @@ const CoursesView: React.FC<{ assign: Assign }> = ({ assign }) => {
                         <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
                           <p className="text-[13px] text-slate-500">{assign ? 'Tích chọn bài rồi giao cho lớp. Học viên thấy bài trong mục Lớp của tôi.' : `${lessons.length} bài giảng theo đúng thứ tự học viên học.`}</p>
                           {assign && (
-                            <TBtn size="sm" variant="primary" disabled={!picked.length} onClick={() => assign({ kind: 'LESSON', courseId: c.id, lessonIds: lessons.filter((l) => picked.includes(l.id)).map((l) => l.id) })}>
+                            <TBtn size="sm" variant="primary" disabled={!picked.length} onClick={() => assign({ kind: 'LESSON', courseId: c.slug, lessonIds: lessons.filter((l) => picked.includes(l.id)).map((l) => l.id) })}>
                               Giao {picked.length || ''} bài đã chọn
                             </TBtn>
                           )}
@@ -287,7 +333,7 @@ const CoursesView: React.FC<{ assign: Assign }> = ({ assign }) => {
                           {c.sections.map((sec) => (
                             <div key={sec.id}>
                               <p className="border-b border-slate-100 bg-slate-50 px-3 py-1.5 text-[12px] font-medium text-slate-500">
-                                {sec.part ? `${sec.part} · ` : ''}
+                                {sec.partTitle ? `${sec.partTitle} · ` : ''}
                                 {sec.title}
                               </p>
                               {sec.lessons.map((l) => {
@@ -298,7 +344,7 @@ const CoursesView: React.FC<{ assign: Assign }> = ({ assign }) => {
                                     {assign && <input type="checkbox" checked={on} onChange={() => setPicked((p) => (on ? p.filter((x) => x !== l.id) : [...p, l.id]))} className="h-4 w-4 rounded border-slate-300 accent-indigo-600" />}
                                     <span className="w-12 shrink-0 tabular-nums text-[12px] text-slate-400">Bài {n}</span>
                                     <span className="min-w-0 flex-1 truncate text-slate-800">{l.title}</span>
-                                    <span className="hidden w-20 text-[12px] text-slate-500 sm:block">{LESSON_TYPE[l.type]}</span>
+                                    <span className="hidden w-20 text-[12px] text-slate-500 sm:block">{LESSON_TYPE[l.type] ?? l.type}</span>
                                     <span className="w-14 text-right text-[12px] tabular-nums text-slate-500">{l.durationMin} phút</span>
                                   </label>
                                 );
@@ -316,6 +362,7 @@ const CoursesView: React.FC<{ assign: Assign }> = ({ assign }) => {
         </table>
       </div>
     </Panel>
+    </QueryGate>
   );
 };
 
@@ -324,7 +371,11 @@ const TestsView: React.FC<{ assign: Assign }> = ({ assign }) => {
   const raw = params.get('tab') ?? params.get('exam');
   const tab = raw === 'VSTEP' || raw === 'writing' || raw === 'speaking' ? raw : 'TOEIC';
   const exam: ExamType = tab === 'VSTEP' ? 'VSTEP' : 'TOEIC';
-  const tests = MOCK_TESTS.filter((t) => t.examType === exam);
+  const testsQ = useLibTests();
+  const writingQ = useLibWriting();
+  const speakingQ = useLibSpeaking();
+  const all = testsQ.data ?? [];
+  const tests = all.filter((t) => t.examType === exam);
   return (
     <div className="space-y-5">
       <GroupTabs
@@ -334,15 +385,15 @@ const TestsView: React.FC<{ assign: Assign }> = ({ assign }) => {
           {
             label: 'Đề trắc nghiệm · chấm tự động',
             tabs: [
-              { key: 'TOEIC', label: 'Thi thử TOEIC', count: MOCK_TESTS.filter((t) => t.examType === 'TOEIC').length },
-              { key: 'VSTEP', label: 'Thi thử VSTEP', count: MOCK_TESTS.filter((t) => t.examType === 'VSTEP').length },
+              { key: 'TOEIC', label: 'Thi thử TOEIC', count: all.filter((t) => t.examType === 'TOEIC').length },
+              { key: 'VSTEP', label: 'Thi thử VSTEP', count: all.filter((t) => t.examType === 'VSTEP').length },
             ],
           },
           {
             label: 'Đề tự luận · giáo viên chấm',
             tabs: [
-              { key: 'writing', label: 'Đề Viết', count: VSTEP_WRITING_TASKS.length },
-              { key: 'speaking', label: 'Đề Nói', count: VSTEP_SPEAKING_PARTS.length },
+              { key: 'writing', label: 'Đề Viết', count: writingQ.data?.length },
+              { key: 'speaking', label: 'Đề Nói', count: speakingQ.data?.length },
             ],
           },
         ]}
@@ -350,7 +401,9 @@ const TestsView: React.FC<{ assign: Assign }> = ({ assign }) => {
       {tab === 'writing' || tab === 'speaking' ? (
         <EssayList kind={tab} assign={assign} />
       ) : (
+      <QueryGate q={testsQ}>
       <Panel title={`Đề thi thử ${exam}`} sub="Giao full đề hoặc chọn Part và đặt thời gian khi giao" flush>
+        {tests.length === 0 && <TEmpty title={`Chưa có đề ${exam} nào được xuất bản`} />}
         <div className="overflow-x-auto">
           <table className={tbl.table}>
             <thead className={tbl.thead}>
@@ -370,18 +423,19 @@ const TestsView: React.FC<{ assign: Assign }> = ({ assign }) => {
                   <td className={cn(tbl.td, 'min-w-[240px]')}>
                     <p className="font-medium text-slate-900">{t.title}</p>
                     <p className="text-[12px] text-slate-500">
-                      {t.year} · {t.isFree ? 'Miễn phí cho học viên' : 'Gói VIP'} · đã giao {usedCount((x) => x.kind === 'EXAM' && x.testId === t.id)} lần
+                      {t.year ? `${t.year} · ` : ''}
+                      {t.isFree ? 'Miễn phí cho học viên' : 'Gói VIP'} · đã giao {t.usedCount} lần
                     </p>
                   </td>
-                  <td className={cn(tbl.td, 'whitespace-nowrap text-slate-600')}>{t.parts.join(', ')}</td>
-                  <td className={cn(tbl.td, 'whitespace-nowrap text-slate-600')}>{t.level}</td>
+                  <td className={cn(tbl.td, 'max-w-[240px] text-slate-600')}>{t.parts.map((p) => partName(p.id)).join(', ')}</td>
+                  <td className={cn(tbl.td, 'whitespace-nowrap text-slate-600')}>{t.level ?? '—'}</td>
                   <td className={cn(tbl.td, 'text-right tabular-nums')}>{t.totalQuestions}</td>
-                  <td className={cn(tbl.td, 'text-right tabular-nums')}>{t.durationMinutes}</td>
-                  <td className={cn(tbl.td, 'text-right tabular-nums text-slate-600')}>{t.attempts.toLocaleString('vi-VN')}</td>
+                  <td className={cn(tbl.td, 'text-right tabular-nums')}>{t.durationMin}</td>
+                  <td className={cn(tbl.td, 'text-right tabular-nums text-slate-600')}>{t.attemptsCount.toLocaleString('vi-VN')}</td>
                   <td className={cn(tbl.td, 'whitespace-nowrap text-right')}>
-                    <PreviewLink href={`/app/mock-tests/${t.id}`} />
+                    <PreviewLink href={`/app/mock-tests/${t.slug}`} />
                     {assign && (
-                      <TBtn size="sm" onClick={() => assign({ kind: 'EXAM', testId: t.id, setup: { mode: 'FULL', parts: t.partIds, minutes: t.durationMinutes } })}>
+                      <TBtn size="sm" onClick={() => assign({ kind: 'EXAM', testId: t.slug, setup: { mode: 'FULL', parts: t.parts.map((p) => p.id), minutes: t.durationMin } })}>
                         Giao bài
                       </TBtn>
                     )}
@@ -392,6 +446,7 @@ const TestsView: React.FC<{ assign: Assign }> = ({ assign }) => {
           </table>
         </div>
       </Panel>
+      </QueryGate>
       )}
     </div>
   );

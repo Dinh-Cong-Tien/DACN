@@ -342,9 +342,11 @@ export async function seedBase(): Promise<SeedCtx> {
       publishedAt: new Date(p.date),
     });
   };
-  for (const p of MOCKS.BLOG_POSTS as any[]) pushPost(p, 'BLOG');
+  // Series giới thiệu kỳ thi nạp trước để giữ slug gốc; bài blog trùng tiêu đề với series thì bỏ (tránh 2 bản)
   (MOCKS.TOEIC_GUIDES as any[]).forEach((p, i) => pushPost(p, 'EXAM_GUIDE', 'TOEIC', i + 1));
   (MOCKS.VSTEP_GUIDES as any[]).forEach((p, i) => pushPost(p, 'EXAM_GUIDE', 'VSTEP', i + 1));
+  const guideTitles = new Set(posts.map((p) => p.title));
+  for (const p of MOCKS.BLOG_POSTS as any[]) if (!guideTitles.has(p.title)) pushPost(p, 'BLOG');
   await insertMany(prisma.post, posts);
 
   await insertMany(

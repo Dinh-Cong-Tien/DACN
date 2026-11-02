@@ -1,17 +1,19 @@
 import React from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { Chip, SectionTitle, Breadcrumb, EmptyState, Avatar, Badge } from '@/shared/components/ui';
+import { Chip, SectionTitle, Breadcrumb, EmptyState, Avatar, Badge, SkeletonGrid } from '@/shared/components/ui';
 import { Reveal, Stagger } from '@/shared/components/motion';
 import { Img } from '@/shared/components/media/Img';
-import { BLOG_POSTS, BLOG_CATEGORIES } from '@/shared/mocks';
+import { usePostCategories, usePosts } from '@/shared/api/cms';
 import { useDocumentTitle } from '@/shared/hooks';
 import { formatDate } from '@/shared/utils';
 
 export const BlogCategoryPage: React.FC = () => {
   const { slug } = useParams();
   const navigate = useNavigate();
+  const { data: BLOG_CATEGORIES = [] } = usePostCategories();
+  const { data, isLoading } = usePosts({ category: slug, pageSize: 200 });
   const cat = BLOG_CATEGORIES.find((c) => c.slug === slug);
-  const posts = BLOG_POSTS.filter((p) => p.categorySlug === slug);
+  const posts = data?.items ?? [];
   useDocumentTitle(cat?.name ?? 'Chủ đề');
 
   return (
@@ -27,7 +29,9 @@ export const BlogCategoryPage: React.FC = () => {
           ))}
         </div>
       </Reveal>
-      {posts.length === 0 ? (
+      {isLoading ? (
+        <SkeletonGrid count={6} cols="grid-cols-1 sm:grid-cols-2 lg:grid-cols-3" />
+      ) : posts.length === 0 ? (
         <EmptyState title="Chưa có bài viết" description="Chủ đề này sẽ sớm có nội dung." />
       ) : (
         <Stagger key={slug} className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">

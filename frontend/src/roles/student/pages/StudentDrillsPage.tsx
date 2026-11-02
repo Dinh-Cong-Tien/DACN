@@ -1,9 +1,13 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useRef, useState } from 'react';
 import { Target, Play, ArrowLeft, Zap, TrendingDown } from 'lucide-react';
 import { useDocumentTitle } from '@/shared/hooks';
 import { Badge, Button, Card, CardHeader, Chip, PageHeader, ProgressBar, RadarChart } from '@/shared/components/ui';
 import { PracticeEngine } from '@/engines';
-import { MOCK_MISTAKES, MISTAKE_CAUSE_LABEL, QUESTIONS_BY_PART, RADAR_SKILLS, SKILL_SCORES } from '@/shared/mocks';
+import { MISTAKE_CAUSE_LABEL } from '@/shared/constants/student';
+import { api, errorMessage } from '@/shared/api/client';
+import { startAttempt, submitAttempt, useMistakes, useProgress } from '@/shared/api/learner';
+import { getCorrectKey } from '@/shared/utils';
+import { useQueryClient } from '@tanstack/react-query';
 import type { IQuestion, MistakeCause } from '@/shared/types';
 import { cn } from '@/shared/utils';
 import { toast } from '@/shared/stores/uiStore';
@@ -24,17 +28,64 @@ export const StudentDrillsPage: React.FC = () => {
   const [size, setSize] = useState(10);
   const [cause, setCause] = useState<MistakeCause | 'ALL'>('ALL');
   const [questions, setQuestions] = useState<IQuestion[] | null>(null);
+  const [busy, setBusy] = useState(false);
+  const qc = useQueryClient();
+  const { data: allMistakes = [] } = useMistakes({ resolved: false });
+  const { data: progress } = useProgress();
+  const MOCK_MISTAKES = allMistakes;
+  const RADAR_SKILLS = progress?.radar ?? [];
+  const SKILL_SCORES = progress?.skillScores ?? [];
 
-  const openMistakes = useMemo(() => MOCK_MISTAKES.filter((m) => !m.isResolved).filter((m) => cause === 'ALL' || m.cause === cause), [cause]);
+  const openMistakes = useMemo(() => allMistakes.filter((m) => cause === 'ALL' || m.cause === cause), [cause, allMistakes]);
   const weakest = [...SKILL_SCORES].sort((a, b) => a.score - b.score).slice(0, 3);
+  // Phiên bổ sung câu cùng dạng (exam_attempts PART_SESSION) + map câu sai → mistakeId để cập nhật SM-2
+  const extra = useRef<{ attemptId: string; ids: Set<string> } | null>(null);
+  const mistakeOf = useRef(new Map<string, string>());
+  const wrong = useRef(new Map<string, string>());
 
-  const start = () => {
-    const base = openMistakes.map((m) => m.question);
-    const ids = new Set(base.map((q) => q.id));
-    const pool = shuffle(Object.values(QUESTIONS_BY_PART).flat().filter((q) => !ids.has(q.id)));
-    const set = [...shuffle(base), ...pool].slice(0, size);
+  const start = async () => {
+    const chosen = shuffle(openMistakes).slice(0, size);
+    const base = chosen.map((m) => m.question);
+    mistakeOf.current = new Map(chosen.map((m) => [m.question.id, m.id]));
+    wrong.current.clear();
+    extra.current = null;
+    let pool: IQuestion[] = [];
+    const need = size - base.length;
+    if (need > 0) {
+      // Part yếu nhất (theo dữ liệu thật), mặc định Part 5
+      const weakPart = weakest[0]?.skill.startsWith('Part ') ? `PART_${weakest[0].skill.slice(5)}` : 'PART_5';
+      setBusy(true);
+      try {
+        const r = await startAttempt({ parts: [weakPart], questionCount: need });
+        pool = r.test.sections.flatMap((s) => s.questions).filter((q) => !mistakeOf.current.has(q.id));
+        extra.current = { attemptId: r.attempt.id, ids: new Set(pool.map((q) => q.id)) };
+      } catch (e) {
+        toast.error('Chưa lấy được câu bổ sung', errorMessage(e));
+      } finally {
+        setBusy(false);
+      }
+    }
+    const set = [...shuffle(base), ...pool];
+    if (!set.length) return toast.info('Chưa có câu để luyện', 'Hãy làm bài luyện tập hoặc thi thử trước.');
     setQuestions(set);
-    toast.info('Đã tạo bộ luyện', `${Math.min(base.length, size)} câu từ Sổ tay lỗi sai + ${Math.max(0, size - base.length)} câu cùng dạng.`);
+    toast.info('Đã tạo bộ luyện', `${base.length} câu từ Sổ tay lỗi sai + ${pool.length} câu cùng dạng.`);
+  };
+
+  const finish = async () => {
+    try {
+      // Câu từ sổ lỗi sai: ôn SM-2 (đúng 4, sai 1)
+      for (const [qid, mid] of mistakeOf.current) await api.post('/learner/review', { mistakeId: mid, quality: wrong.current.has(qid) ? 1 : 4 });
+      // Câu bổ sung: nộp lượt luyện để chấm và lưu câu sai mới
+      if (extra.current && questions) {
+        const ex = extra.current;
+        const answers = questions.filter((q) => ex.ids.has(q.id)).map((q) => ({ questionId: q.id, selectedKey: wrong.current.get(q.id) ?? getCorrectKey(q) }));
+        await submitAttempt(ex.attemptId, answers);
+        extra.current = null;
+      }
+      ['review', 'mistakes', 'progress', 'attempts'].forEach((k) => qc.invalidateQueries({ queryKey: ['learner', k] }));
+    } catch (e) {
+      toast.error('Chưa lưu được kết quả luyện', errorMessage(e));
+    }
   };
 
   if (questions) {
@@ -43,7 +94,13 @@ export const StudentDrillsPage: React.FC = () => {
         <Button variant="ghost" size="sm" leftIcon={<ArrowLeft className="w-4 h-4" />} onClick={() => setQuestions(null)}>
           Tạo bộ khác
         </Button>
-        <PracticeEngine title="Luyện điểm yếu" questions={questions} exitTo="/app/drills" />
+        <PracticeEngine
+          title="Luyện điểm yếu"
+          questions={questions}
+          exitTo="/app/drills"
+          onMistakeRecorded={(qid, key) => wrong.current.set(qid, key)}
+          onFinishPractice={() => void finish()}
+        />
       </div>
     );
   }
@@ -101,7 +158,7 @@ export const StudentDrillsPage: React.FC = () => {
                   )}
                   .
                 </div>
-                <Button variant="gradient" size="lg" leftIcon={<Play className="w-4 h-4" />} onClick={start}>
+                <Button variant="gradient" size="lg" leftIcon={<Play className="w-4 h-4" />} onClick={() => void start()} loading={busy}>
                   Bắt đầu luyện
                 </Button>
               </div>
@@ -134,6 +191,7 @@ export const StudentDrillsPage: React.FC = () => {
           <Card hard className="animate-slide-in-right" style={{ animationDelay: '100ms' }}>
             <CardHeader title="3 Part yếu nhất" icon={<TrendingDown />} />
             <div className="space-y-3">
+              {weakest.length === 0 && <p className="text-xs text-slate-500">Chưa có dữ liệu luyện tập.</p>}
               {weakest.map((s) => (
                 <ProgressBar key={s.skill} value={s.score} label={s.skill} showValue size="sm" tone="violet" />
               ))}

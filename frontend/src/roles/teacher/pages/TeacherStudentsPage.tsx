@@ -3,11 +3,14 @@ import { useSearchParams } from 'react-router-dom';
 import { Mail, MessageSquarePlus, Phone, Search } from 'lucide-react';
 import { useDocumentTitle } from '@/shared/hooks';
 import { toast } from '@/shared/stores/uiStore';
-import { MOCK_CLASSES, MOCK_CLASS_STUDENTS, MOCK_SESSIONS, MOCK_STUDENT_NOTES, MOCK_SUBMISSIONS } from '@/shared/mocks';
+import { errorMessage } from '@/shared/api/client';
+import { teacherApi, useStudentProfile, useTeacherClasses, useTeacherMutation, useTeacherStudents } from '@/shared/api/teacher';
+import { MISTAKE_CAUSE_TEXT } from '@/shared/constants/teacher';
 import type { StudentNote } from '@/shared/types';
 import { cn, formatDate, formatDateTime, timeAgo } from '@/shared/utils';
 import { Avatar } from '@/shared/components/ui';
 import { Meter, Panel, Status, TBtn, TPageHead, TTabs, inputCls } from '../components/TeacherKit';
+import { TEmpty, TError, TLoading } from '../components/TeacherState';
 
 const STATUS = { GOOD: ['green', 'Ổn định'], WARNING: ['amber', 'Cần nhắc'], RISK: ['red', 'Nguy cơ bỏ học'] } as const;
 const NOTE_KIND: Record<StudentNote['kind'], [string, string]> = { NOTE: ['Ghi chú', 'bg-slate-100 text-slate-600'], REMINDER: ['Nhắc nhở', 'bg-amber-500/15 text-amber-700'], CONTACT: ['Đã liên hệ', 'bg-sky-500/10 text-sky-700'] };
@@ -18,27 +21,50 @@ export const TeacherStudentsPage: React.FC = () => {
   const [params, setParams] = useSearchParams();
   const filter = params.get('filter') === 'watch' ? 'watch' : 'all';
   const [q, setQ] = useState('');
-  const [notes, setNotes] = useState<StudentNote[]>(MOCK_STUDENT_NOTES);
   const [draft, setDraft] = useState('');
   const [kind, setKind] = useState<StudentNote['kind']>('NOTE');
-  const cls = MOCK_CLASSES[0];
-  const done = MOCK_SESSIONS.filter((s) => s.classId === cls.id && s.status === 'DONE');
-  const attendance = (id: string) => {
-    const v = done.map((s) => s.attendance?.[id]).filter(Boolean);
-    return v.length ? Math.round((v.filter((x) => x === 'PRESENT' || x === 'LATE').length / v.length) * 100) : 100;
-  };
+  const noteInput = React.useRef<HTMLInputElement>(null);
+  const studentsQ = useTeacherStudents();
+  const all = studentsQ.data ?? [];
+  const classes = useTeacherClasses().data ?? [];
 
-  const list = MOCK_CLASS_STUDENTS.filter((s) => (filter === 'all' || s.status !== 'GOOD') && s.name.toLowerCase().includes(q.toLowerCase()));
-  const selected = MOCK_CLASS_STUDENTS.find((s) => s.id === params.get('id')) ?? list[0] ?? MOCK_CLASS_STUDENTS[0];
+  const list = all.filter((s) => (filter === 'all' || s.status !== 'GOOD') && s.name.toLowerCase().includes(q.toLowerCase()));
+  const selected = all.find((s) => s.id === params.get('id')) ?? list[0] ?? all[0];
+  const profile = useStudentProfile(selected?.id);
+  const createNote = useTeacherMutation((v: { studentId: string; kind: StudentNote['kind']; text: string }) => teacherApi.addNote(v.studentId, { kind: v.kind, text: v.text }));
   const select = (id: string) => setParams({ ...(filter === 'watch' ? { filter } : {}), id }, { replace: true });
-  const subs = MOCK_SUBMISSIONS.filter((s) => s.studentName === selected.name);
-  const myNotes = notes.filter((n) => n.studentId === selected.id).sort((a, b) => b.date.localeCompare(a.date));
+
+  if (studentsQ.isLoading) return <TLoading />;
+  if (studentsQ.error) return <TError error={studentsQ.error} onRetry={() => studentsQ.refetch()} />;
+  if (!selected) {
+    return (
+      <div className="space-y-6">
+        <TPageHead eyebrow="Học viên" title="Hồ sơ học viên" />
+        <Panel>
+          <TEmpty title="Chưa có học viên nào" sub="Học viên tham gia lớp của bạn bằng mã mời sẽ hiện ở đây." action={<TBtn to="/teacher/classes">Mở lớp học</TBtn>} />
+        </Panel>
+      </div>
+    );
+  }
+
+  const classNames = selected.classIds.map((id) => classes.find((c) => c.id === id)?.name).filter(Boolean).join(', ');
+  const subs = (profile.data?.submissions ?? []).filter((x) => x.submittedAt);
+  const myNotes = [...(profile.data?.notes ?? [])].sort((a, b) => b.date.localeCompare(a.date));
+  const att = selected.attendanceRate;
 
   const addNote = () => {
     if (!draft.trim()) return;
-    setNotes((n) => [{ id: `nt-${Date.now()}`, studentId: selected.id, date: new Date().toISOString().slice(0, 10), kind, text: draft.trim() }, ...n]);
-    setDraft('');
-    toast.success('Đã lưu ghi chú', selected.name);
+    const who = selected;
+    createNote.mutate(
+      { studentId: who.id, kind, text: draft.trim() },
+      {
+        onSuccess: () => {
+          setDraft('');
+          toast.success('Đã lưu ghi chú', who.name);
+        },
+        onError: (e) => toast.error('Không lưu được ghi chú', errorMessage(e)),
+      }
+    );
   };
 
   return (
@@ -56,11 +82,12 @@ export const TeacherStudentsPage: React.FC = () => {
               value={filter}
               onChange={(k) => setParams(k === 'watch' ? { filter: k } : {}, { replace: true })}
               items={[
-                { key: 'all', label: 'Tất cả', count: MOCK_CLASS_STUDENTS.length },
-                { key: 'watch', label: 'Cần theo dõi', count: MOCK_CLASS_STUDENTS.filter((s) => s.status !== 'GOOD').length },
+                { key: 'all', label: 'Tất cả', count: all.length },
+                { key: 'watch', label: 'Cần theo dõi', count: all.filter((s) => s.status !== 'GOOD').length },
               ]}
             />
           </div>
+          {list.length === 0 && <p className="px-5 py-8 text-center text-sm text-slate-500">Không có học viên phù hợp.</p>}
           <ul className="max-h-[62vh] divide-y divide-slate-100 overflow-y-auto">
             {list.map((s) => (
               <li key={s.id}>
@@ -69,7 +96,7 @@ export const TeacherStudentsPage: React.FC = () => {
                   <span className="min-w-0 flex-1">
                     <span className="block truncate text-sm font-semibold text-slate-900">{s.name}</span>
                     <span className="block text-[12px] text-slate-500">
-                      Điểm {s.avgScore} · chuyên cần {attendance(s.id)}%
+                      Điểm {s.avgScore || '—'} · chuyên cần {s.attendanceRate === null ? '—' : `${s.attendanceRate}%`}
                     </span>
                   </span>
                   <Status tone={STATUS[s.status][0]}>{''}</Status>
@@ -86,26 +113,32 @@ export const TeacherStudentsPage: React.FC = () => {
               <div className="min-w-0 flex-1">
                 <h2 className="font-display text-2xl font-extrabold text-slate-900">{selected.name}</h2>
                 <p className="mt-0.5 text-sm text-slate-600">
-                  {cls.name} · hoạt động {timeAgo(selected.lastActive).toLowerCase()}
+                  {classNames || 'Lớp của bạn'} · hoạt động {timeAgo(selected.lastActive).toLowerCase()}
                 </p>
                 <div className="mt-2">
                   <Status tone={STATUS[selected.status][0]}>{STATUS[selected.status][1]}</Status>
                 </div>
               </div>
               <div className="flex gap-2">
-                <TBtn icon={<Mail />} onClick={() => toast.info('Mở email', selected.email)}>
-                  Email
-                </TBtn>
-                <TBtn icon={<Phone />} onClick={() => setKind('CONTACT')}>
+                <a href={`mailto:${selected.email}`} className="inline-flex h-10 items-center justify-center gap-1.5 whitespace-nowrap rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-800 shadow-sm hover:border-slate-300 hover:bg-slate-50 [&_svg]:h-4 [&_svg]:w-4">
+                  <Mail /> Email
+                </a>
+                <TBtn
+                  icon={<Phone />}
+                  onClick={() => {
+                    setKind('CONTACT');
+                    noteInput.current?.focus();
+                  }}
+                >
                   Ghi cuộc gọi
                 </TBtn>
               </div>
             </div>
             <dl className="grid grid-cols-2 divide-x divide-y divide-slate-100 border-t border-slate-100 sm:grid-cols-4 sm:divide-y-0">
               {[
-                ['Điểm trung bình', String(selected.avgScore), null],
+                ['Điểm trung bình', selected.avgScore ? String(selected.avgScore) : '—', null],
                 ['Hoàn thành bài tập', `${selected.completion}%`, selected.completion],
-                ['Chuyên cần', `${attendance(selected.id)}%`, attendance(selected.id)],
+                ['Chuyên cần', att === null ? '—' : `${att}%`, att],
                 ['Ngày học liên tục', String(selected.streak), null],
               ].map(([l, v, m]) => (
                 <div key={l as string} className="px-5 py-4">
@@ -125,12 +158,14 @@ export const TeacherStudentsPage: React.FC = () => {
                   <option value="REMINDER">Nhắc nhở</option>
                   <option value="CONTACT">Đã liên hệ</option>
                 </select>
-                <input value={draft} onChange={(e) => setDraft(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && addNote()} placeholder="Nội dung trao đổi" className={cn(inputCls, 'min-w-0 flex-1')} />
-                <TBtn variant="primary" onClick={addNote} disabled={!draft.trim()}>
+                <input ref={noteInput} value={draft} onChange={(e) => setDraft(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && addNote()} placeholder="Nội dung trao đổi" className={cn(inputCls, 'min-w-0 flex-1')} />
+                <TBtn variant="primary" onClick={addNote} disabled={!draft.trim() || createNote.isPending}>
                   Lưu
                 </TBtn>
               </div>
-              {myNotes.length === 0 ? (
+              {profile.isLoading ? (
+                <p className="mt-5 text-sm text-slate-500">Đang tải…</p>
+              ) : myNotes.length === 0 ? (
                 <p className="mt-5 text-sm text-slate-500">Chưa có ghi chú nào về học viên này.</p>
               ) : (
                 <ol className="mt-5 space-y-4 border-l border-slate-200 pl-4">
@@ -147,29 +182,72 @@ export const TeacherStudentsPage: React.FC = () => {
               )}
             </Panel>
 
-            <Panel title="Bài đã nộp" sub="Bài tự luận gần đây">
+            <Panel title="Bài đã nộp" sub="Bài tập được giao trong lớp của bạn">
               {subs.length === 0 ? (
-                <p className="text-sm text-slate-500">Chưa có bài tự luận nào.</p>
+                <p className="text-sm text-slate-500">{profile.isLoading ? 'Đang tải…' : 'Chưa nộp bài nào.'}</p>
               ) : (
                 <ul className="divide-y divide-slate-100">
                   {subs.map((s) => (
                     <li key={s.id} className="flex items-center justify-between gap-3 py-3 first:pt-0 last:pb-0">
                       <span className="min-w-0">
                         <span className="block truncate text-sm font-semibold text-slate-900">{s.assignmentTitle}</span>
-                        <span className="block text-[12px] text-slate-500">{formatDateTime(s.submittedAt)}</span>
+                        <span className="block text-[12px] text-slate-500">{formatDateTime(s.submittedAt)}{s.status === 'LATE' ? ' · nộp muộn' : ''}</span>
                       </span>
                       {s.score !== undefined ? (
                         <span className="font-display text-lg font-extrabold tabular-nums text-slate-900">
                           {s.score}
                           <span className="text-[12px] font-normal text-slate-400">/{s.maxScore}</span>
                         </span>
-                      ) : (
+                      ) : s.type === 'ESSAY' || s.type === 'SPEAKING' ? (
                         <TBtn size="sm" to={`/teacher/grading/${s.id}`}>
                           Chấm
                         </TBtn>
+                      ) : (
+                        <span className="text-[12px] text-slate-500">Chờ điểm</span>
                       )}
                     </li>
                   ))}
+                </ul>
+              )}
+            </Panel>
+          </div>
+
+          <div className="grid items-start gap-6 xl:grid-cols-2">
+            <Panel title="Lịch sử làm bài" sub="Thi thử, luyện Part, chép chính tả gần đây">
+              {(profile.data?.attempts.length ?? 0) === 0 ? (
+                <p className="text-sm text-slate-500">{profile.isLoading ? 'Đang tải…' : 'Học viên chưa làm bài nào.'}</p>
+              ) : (
+                <ul className="divide-y divide-slate-100">
+                  {profile.data!.attempts.slice(0, 8).map((a) => (
+                    <li key={a.id} className="flex items-center justify-between gap-3 py-2.5 first:pt-0 last:pb-0">
+                      <span className="min-w-0">
+                        <span className="block truncate text-sm font-semibold text-slate-900">{a.testTitle}</span>
+                        <span className="block text-[12px] text-slate-500">
+                          {a.submittedAt ? formatDateTime(a.submittedAt) : ''}
+                          {a.correct !== undefined ? ` · đúng ${a.correct}/${a.total}` : ''}
+                        </span>
+                      </span>
+                      <span className="font-display text-lg font-extrabold tabular-nums text-slate-900">{a.score ?? '—'}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </Panel>
+            <Panel title="Lỗi sai thường gặp" sub="Từ Sổ tay lỗi sai của học viên">
+              {(profile.data?.mistakeCauses.length ?? 0) === 0 ? (
+                <p className="text-sm text-slate-500">{profile.isLoading ? 'Đang tải…' : 'Chưa có lỗi sai nào được ghi nhận.'}</p>
+              ) : (
+                <ul className="space-y-2.5">
+                  {profile.data!.mistakeCauses.map((c) => {
+                    const total = profile.data!.mistakeCauses.reduce((x, y) => x + y.count, 0);
+                    return (
+                      <li key={c.cause} className="flex items-center gap-3 text-sm">
+                        <span className="w-36 shrink-0 text-slate-700">{MISTAKE_CAUSE_TEXT[c.cause] ?? c.cause}</span>
+                        <Meter value={(c.count / total) * 100} className="flex-1" />
+                        <span className="w-14 text-right tabular-nums text-slate-600">{c.count} câu</span>
+                      </li>
+                    );
+                  })}
                 </ul>
               )}
             </Panel>

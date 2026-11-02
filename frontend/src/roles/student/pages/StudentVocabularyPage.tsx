@@ -1,6 +1,8 @@
 import React, { useMemo, useState } from 'react';
 import { BookOpen, CheckCircle2, RotateCcw, Flame, Volume2, Plus, Layers, ArrowRight } from 'lucide-react';
-import { MOCK_VOCAB, VOCAB_TOPICS } from '@/shared/mocks';
+import { api, errorMessage } from '@/shared/api/client';
+import { useMyWords, useReviewDue, useVocabTopics } from '@/shared/api/learner';
+import { useQueryClient } from '@tanstack/react-query';
 import type { VocabWord } from '@/shared/types';
 import { cn, formatDate } from '@/shared/utils';
 import { useDocumentTitle } from '@/shared/hooks';
@@ -24,6 +26,9 @@ const TOPIC_PHOTO: Record<string, string> = {
   'vt-academic': PHOTOS.library,
 };
 
+/** Ảnh minh hoạ xoay vòng cho bộ từ (dữ liệu bộ từ không có ảnh bìa) */
+const TOPIC_PHOTOS = [PHOTOS.office, PHOTOS.team, PHOTOS.laptop, PHOTOS.desk, PHOTOS.campus, PHOTOS.library, PHOTOS.books];
+
 const speak = (word: string) => {
   try {
     const u = new SpeechSynthesisUtterance(word);
@@ -38,14 +43,18 @@ const speak = (word: string) => {
 export const StudentVocabularyPage: React.FC = () => {
   useDocumentTitle('Từ vựng & Flashcard');
   const user = useAuthStore((s) => s.user);
-  const [words, setWords] = useState<VocabWord[]>(MOCK_VOCAB);
+  const qc = useQueryClient();
+  const { data: words = [] } = useMyWords();
+  const { data: VOCAB_TOPICS = [] } = useVocabTopics();
+  const { data: dueData } = useReviewDue();
+  const [saving, setSaving] = useState(false);
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState<string>('ALL');
   const [addOpen, setAddOpen] = useState(false);
   const [form, setForm] = useState({ word: '', meaning: '', example: '' });
 
   const now = Date.now();
-  const due = words.filter((w) => new Date(w.nextReviewAt).getTime() <= now);
+  const due = dueData?.words ?? words.filter((w) => new Date(w.nextReviewAt).getTime() <= now);
   const mastered = words.filter((w) => w.status === 'MASTERED');
 
   const list = useMemo(
@@ -63,24 +72,18 @@ export const StudentVocabularyPage: React.FC = () => {
       toast.error('Thiếu thông tin', 'Nhập từ và nghĩa tiếng Việt.');
       return;
     }
-    const w: VocabWord = {
-      id: `w-${Date.now()}`,
-      word: form.word.trim(),
-      ipa: '',
-      pos: 'word',
-      meaningVi: form.meaning.trim(),
-      example: form.example.trim(),
-      topic: 'Sổ từ cá nhân',
-      status: 'LEARNING',
-      nextReviewAt: new Date().toISOString(),
-      easeFactor: 2.5,
-      intervalDays: 1,
-      repetitions: 0,
-    };
-    setWords((s) => [w, ...s]);
-    setForm({ word: '', meaning: '', example: '' });
-    setAddOpen(false);
-    toast.success('Đã thêm từ mới', `"${w.word}" sẽ xuất hiện trong lịch ôn hôm nay.`);
+    setSaving(true);
+    api
+      .post<VocabWord>('/learner/vocab/custom', { word: form.word.trim(), meaning: form.meaning.trim(), example: form.example.trim() || undefined })
+      .then((w) => {
+        qc.invalidateQueries({ queryKey: ['learner', 'vocab'] });
+        qc.invalidateQueries({ queryKey: ['learner', 'review'] });
+        setForm({ word: '', meaning: '', example: '' });
+        setAddOpen(false);
+        toast.success('Đã thêm từ mới', `"${w.word}" sẽ xuất hiện trong lịch ôn hôm nay.`);
+      })
+      .catch((e) => toast.error('Chưa thêm được từ', errorMessage(e)))
+      .finally(() => setSaving(false));
   };
 
   return (
@@ -107,7 +110,7 @@ export const StudentVocabularyPage: React.FC = () => {
 
       <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
         <StatCard label="Tổng số từ" value={words.length} icon={<BookOpen />} tone="indigo" />
-        <StatCard label="Đã thuộc" value={mastered.length} icon={<CheckCircle2 />} tone="emerald" hint={`${Math.round((mastered.length / words.length) * 100)}% kho từ`} />
+        <StatCard label="Đã thuộc" value={mastered.length} icon={<CheckCircle2 />} tone="emerald" hint={`${Math.round((mastered.length / Math.max(1, words.length)) * 100)}% sổ từ`} />
         <StatCard label="Cần ôn hôm nay" value={due.length} icon={<RotateCcw />} tone="amber" hint="Theo lịch SM-2" />
         <StatCard label="Chuỗi ngày" value={user?.streak ?? 0} suffix="ngày" icon={<Flame />} tone="violet" />
       </div>
@@ -117,15 +120,15 @@ export const StudentVocabularyPage: React.FC = () => {
           <h2 className="font-display font-bold text-slate-900 text-lg flex items-center gap-2">
             <Layers className="w-5 h-5 text-indigo-600" /> Chủ đề từ vựng
           </h2>
-          <span className="text-xs font-bold text-slate-500">{VOCAB_TOPICS.reduce((a, t) => a + t.total, 0)} từ · 6 chủ đề</span>
+          <span className="text-xs font-bold text-slate-500">{VOCAB_TOPICS.reduce((a, t) => a + t.total, 0).toLocaleString('vi-VN')} từ · {VOCAB_TOPICS.length} chủ đề</span>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
           {VOCAB_TOPICS.map((t, i) => {
-            const pct = Math.round((t.learned / t.total) * 100);
+            const pct = Math.round((t.learned / Math.max(1, t.total)) * 100);
             return (
               <Card key={t.id} hard hover padding="none" className="overflow-hidden animate-fade-up flex flex-col" style={{ animationDelay: `${i * 60}ms` }}>
                 <div className="relative h-32">
-                  <Img src={TOPIC_PHOTO[t.id] ?? PHOTOS.books} alt={t.name} wrapperClass="absolute inset-0" fallbackClass="bg-indigo-200" />
+                  <Img src={TOPIC_PHOTO[t.id] ?? TOPIC_PHOTOS[i % TOPIC_PHOTOS.length]} alt={t.name} wrapperClass="absolute inset-0" fallbackClass="bg-indigo-200" />
                   <div className="absolute inset-0 bg-slate-900/25" />
                   <span className="absolute top-3 left-3 sticker tilt-1 !py-1 !text-[10px]">
                     {t.icon} {t.total} từ
@@ -143,7 +146,7 @@ export const StudentVocabularyPage: React.FC = () => {
                     </p>
                   </div>
                   <ProgressBar value={pct} size="sm" tone={t.learned === 0 ? 'slate' : 'indigo'} />
-                  <Button to={`/app/vocabulary/flashcards/${t.id}`} size="sm" variant={t.learned === 0 ? 'outline' : 'primary'} fullWidth rightIcon={<ArrowRight className="w-4 h-4" />} className="mt-auto">
+                  <Button to={`/app/vocabulary/flashcards/${(t as typeof t & { slug?: string }).slug ?? t.id}`} size="sm" variant={t.learned === 0 ? 'outline' : 'primary'} fullWidth rightIcon={<ArrowRight className="w-4 h-4" />} className="mt-auto">
                     {t.learned === 0 ? 'Bắt đầu học' : 'Ôn flashcard'}
                   </Button>
                 </div>
@@ -221,7 +224,9 @@ export const StudentVocabularyPage: React.FC = () => {
             <Button variant="ghost" onClick={() => setAddOpen(false)}>
               Huỷ
             </Button>
-            <Button onClick={addWord}>Lưu từ</Button>
+            <Button onClick={addWord} loading={saving}>
+              Lưu từ
+            </Button>
           </>
         }
       >

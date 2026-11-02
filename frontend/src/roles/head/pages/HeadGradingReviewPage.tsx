@@ -1,9 +1,10 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { CheckCircle2, Pause, Play, Scale, TriangleAlert } from 'lucide-react';
+import { CheckCircle2, Scale, TriangleAlert } from 'lucide-react';
 import { useDocumentTitle } from '@/shared/hooks';
 import { toast } from '@/shared/stores/uiStore';
-import { MOCK_GRADING_REVIEWS, SPEAKING_CRITERIA, VSTEP_SPEAKING_PARTS, VSTEP_WRITING_TASKS, WRITING_CRITERIA, teacherByName } from '@/shared/mocks';
+import { headApi, useHeadInvalidate, useHeadReviews, useHeadTeachers, type HeadGradingReview } from '@/shared/api/head';
+import { errorMessage } from '@/shared/api/client';
 import type { GradingReview } from '@/shared/types';
 import { cn, formatDateTime } from '@/shared/utils';
 import { Avatar } from '@/shared/components/ui';
@@ -14,42 +15,53 @@ const SCORE_STEPS = Array.from({ length: 21 }, (_, i) => i / 2);
 const STATUS: Record<GradingReview['status'], [StatusTone, string]> = { PENDING: ['amber', 'Chờ kiểm định'], AGREED: ['green', 'Đồng ý điểm GV'], ADJUSTED: ['red', 'Đã điều chỉnh'] };
 const round = (v: number) => Math.round(v * 2) / 2;
 const fmt = (v: number) => v.toLocaleString('vi-VN', { minimumFractionDigits: 1, maximumFractionDigits: 2 });
+const EMPTY: HeadGradingReview[] = [];
 
 /** Kiểm định chấm bài: trưởng bộ môn chấm lại bài Viết/Nói giáo viên đã chấm, cùng đề và bộ tiêu chí học viên thấy, để đảm bảo chấm thống nhất giữa các lớp */
 export const HeadGradingReviewPage: React.FC = () => {
   useDocumentTitle('Kiểm định chấm bài');
   const { reviewId } = useParams();
   const navigate = useNavigate();
-  const [reviews, setReviews] = useState<GradingReview[]>(MOCK_GRADING_REVIEWS);
-  const [tab, setTab] = useState<GradingReview['status']>(() => MOCK_GRADING_REVIEWS.find((r) => r.id === reviewId)?.status ?? 'PENDING');
+  const reviewsQ = useHeadReviews();
+  const refresh = useHeadInvalidate();
+  const teachers = useHeadTeachers().data ?? [];
+  const teacherByName = (name: string) => teachers.find((t) => t.name === name);
+  const reviews = reviewsQ.data ?? EMPTY;
+  const [tabState, setTab] = useState<GradingReview['status']>();
+  const tab = tabState ?? reviews.find((r) => r.id === reviewId)?.status ?? 'PENDING';
   const [scores, setScores] = useState<Record<string, number>>({});
   const [note, setNote] = useState('');
-  const [playing, setPlaying] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   const list = reviews.filter((r) => r.status === tab);
   const selected = useMemo(() => reviews.find((r) => r.id === reviewId && r.status === tab) ?? list[0], [reviews, reviewId, list, tab]);
-  const criteria = selected?.type === 'SPEAKING' ? SPEAKING_CRITERIA : WRITING_CRITERIA;
-  const task = selected?.type === 'ESSAY' ? VSTEP_WRITING_TASKS.find((t) => t.id === selected.taskId) : undefined;
-  const part = selected?.type === 'SPEAKING' ? VSTEP_SPEAKING_PARTS.find((p) => p.id === selected.taskId) : undefined;
-  const wordCount = selected?.type === 'ESSAY' ? selected.content.trim().split(/\s+/).length : 0;
+  const criteria = (selected?.rubric.criteria ?? []).map((c) => ({ key: c.key, label: c.label, desc: c.description ?? '' }));
+  const wordCount = selected?.type === 'ESSAY' && selected.content.trim() ? selected.content.trim().split(/\s+/).length : 0;
   const teacherAvg = criteriaAvg(selected?.teacherCriteria);
-  const headAvg = criteria.every((c) => scores[c.key] !== undefined) ? criteriaAvg(scores) : null;
+  const headAvg = criteria.length && criteria.every((c) => scores[c.key] !== undefined) ? criteriaAvg(scores) : null;
   const gap = headAvg === null ? null : Math.round((teacherAvg - headAvg) * 100) / 100;
 
   useEffect(() => {
     setScores(selected?.headCriteria ?? selected?.teacherCriteria ?? {});
     setNote(selected?.headNote ?? '');
-    setPlaying(false);
   }, [selected?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const decide = (agree: boolean) => {
+  const decide = async (agree: boolean) => {
     if (!selected) return;
     if (!agree && gap === 0) return toast.error('Điểm kiểm định đang trùng điểm giáo viên', 'Chỉnh điểm ở ít nhất một tiêu chí, hoặc chọn Đồng ý điểm GV.');
     if (!agree && !note.trim()) return toast.error('Cần ghi chú lý do điều chỉnh', 'Giáo viên sẽ nhận ghi chú này cùng điểm mới.');
     const next = list.find((r) => r.id !== selected.id);
-    setReviews((all) => all.map((r) => (r.id === selected.id ? { ...r, status: agree ? 'AGREED' : 'ADJUSTED', headCriteria: agree ? r.teacherCriteria : scores, headNote: agree ? undefined : note } : r)));
-    toast.success(agree ? 'Đã xác nhận điểm' : 'Đã điều chỉnh điểm', agree ? `${selected.studentName} · ${fmt(round(teacherAvg))}/10` : `${selected.studentName} · ${fmt(round(teacherAvg))} → ${fmt(round(headAvg ?? 0))} · ${selected.teacher} nhận được thông báo`);
-    navigate(next ? `/head/grading-review/${next.id}` : '/head/grading-review');
+    setSaving(true);
+    try {
+      const r = await headApi.decideReview(selected.id, agree ? { decision: 'AGREED', note: note.trim() || undefined } : { decision: 'ADJUSTED', scores, note: note.trim() });
+      toast.success(agree ? 'Đã xác nhận điểm' : 'Đã điều chỉnh điểm', agree ? `${selected.studentName} · ${fmt(round(teacherAvg))}/10` : `${selected.studentName} · ${fmt(round(teacherAvg))} → ${fmt(r.headTotal ?? round(headAvg ?? 0))} · ${selected.teacher} nhận được thông báo`);
+      await refresh();
+      navigate(next ? `/head/grading-review/${next.id}` : '/head/grading-review');
+    } catch (e) {
+      toast.error('Không lưu được kết quả kiểm định', errorMessage(e));
+    } finally {
+      setSaving(false);
+    }
   };
 
   const done = reviews.filter((r) => r.status !== 'PENDING');
@@ -81,7 +93,7 @@ export const HeadGradingReviewPage: React.FC = () => {
             />
           </div>
           {list.length === 0 ? (
-            <p className="px-4 py-10 text-center text-sm text-slate-500">Không có bài nào.</p>
+            <p className="px-4 py-10 text-center text-sm text-slate-500">{reviewsQ.isLoading ? 'Đang tải…' : 'Không có bài nào.'}</p>
           ) : (
             <ul className="max-h-[65vh] divide-y divide-slate-100 overflow-y-auto">
               {list.map((r) => (
@@ -108,7 +120,7 @@ export const HeadGradingReviewPage: React.FC = () => {
         {selected ? (
           <div className="min-w-0 space-y-6" key={selected.id}>
             <Panel
-              title={task ? `Writing ${task.task}` : `Speaking ${part?.part ?? ''}`}
+              title={selected.type === 'ESSAY' ? `Bài Viết · ${selected.rubric.name}` : `Bài Nói · ${selected.rubric.name}`}
               sub={
                 <>
                   {selected.studentName} · {selected.className} · giáo viên{' '}
@@ -124,43 +136,32 @@ export const HeadGradingReviewPage: React.FC = () => {
               }
               action={<Status tone={STATUS[selected.status][0]}>{STATUS[selected.status][1]}</Status>}
             >
-              {(task || part) && (
+              {selected.taskTitle && (
                 <div className="mb-4 rounded-md bg-slate-50 px-4 py-3">
-                  <p className="text-[12px] font-medium text-slate-500">Đề bài · {task ? `${task.task} · ${task.minutes} phút · tối thiểu ${task.minWords} từ` : `${part!.part} · ${part!.minutes} phút`}</p>
-                  <p className="mt-1 text-sm leading-relaxed text-slate-800">{task?.prompt ?? part?.prompt}</p>
+                  <p className="text-[12px] font-medium text-slate-500">Đề bài</p>
+                  <p className="mt-1 text-sm leading-relaxed text-slate-800">{selected.taskTitle}</p>
                 </div>
               )}
               {selected.type === 'ESSAY' ? (
                 <div>
                   <div className="mb-2 flex items-center justify-between text-[13px] text-slate-500">
                     <span>Bài làm</span>
-                    <span className={cn('tabular-nums', task && wordCount < task.minWords && 'text-rose-600')}>
-                      {wordCount} từ{task && wordCount < task.minWords ? ` · thiếu ${task.minWords - wordCount} từ` : ''}
-                    </span>
+                    <span className="tabular-nums">{wordCount} từ</span>
                   </div>
                   <div className="max-h-96 overflow-y-auto whitespace-pre-line rounded-md border border-slate-200 px-5 py-4 font-serif text-[15px] leading-[1.85] text-slate-800">{selected.content}</div>
                 </div>
               ) : (
-                <div className="flex items-center gap-4 rounded-md border border-slate-200 px-4 py-3">
-                  <button type="button" onClick={() => setPlaying((p) => !p)} aria-label={playing ? 'Tạm dừng' : 'Phát'} className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-indigo-600 text-white hover:bg-indigo-700">
-                    {playing ? <Pause className="h-4 w-4" /> : <Play className="ml-0.5 h-4 w-4" />}
-                  </button>
-                  <div className="min-w-0 flex-1">
-                    <div className="flex h-8 items-center gap-[2px]">
-                      {Array.from({ length: 64 }).map((_, i) => (
-                        <span key={i} className="flex-1 rounded-sm bg-slate-300" style={{ height: `${25 + ((i * 37) % 75)}%` }} />
-                      ))}
-                    </div>
-                    <p className="mt-1 text-[12px] text-slate-500">{selected.content}</p>
-                  </div>
+                <div className="space-y-2 rounded-md border border-slate-200 px-4 py-3">
+                  {selected.audioUrl ? <audio controls src={selected.audioUrl} className="w-full" /> : <p className="text-sm text-slate-500">Bài nói không có tệp ghi âm.</p>}
+                  {selected.content && <p className="text-[12px] text-slate-500">{selected.content}</p>}
                 </div>
               )}
               <div className="mt-4 rounded-md border-l-4 border-l-indigo-400 bg-indigo-500/[0.05] px-4 py-2.5 text-sm text-slate-700">
-                <span className="font-medium text-slate-900">Nhận xét của giáo viên:</span> {selected.teacherFeedback}
+                <span className="font-medium text-slate-900">Nhận xét của giáo viên:</span> {selected.teacherFeedback || '—'}
               </div>
             </Panel>
 
-            <Panel title="So sánh điểm theo tiêu chí" sub="Thang 0–10 mỗi tiêu chí, điểm bài là trung bình 4 tiêu chí. Cột kiểm định mặc định lấy điểm giáo viên, chỉnh ở tiêu chí chưa hợp lý.">
+            <Panel title="So sánh điểm theo tiêu chí" sub={`Thang 0–${selected.rubric.scaleMax} mỗi tiêu chí, điểm bài là trung bình các tiêu chí. Cột kiểm định mặc định lấy điểm giáo viên, chỉnh ở tiêu chí chưa hợp lý.`}>
               <div className="overflow-x-auto rounded-md border border-slate-200">
                 <table className="w-full min-w-[480px] text-sm">
                   <thead className="bg-slate-50 text-[12px] font-semibold text-slate-500">
@@ -214,8 +215,8 @@ export const HeadGradingReviewPage: React.FC = () => {
 
               {selected.status === 'PENDING' && (
                 <div className="mt-5 flex flex-wrap justify-end gap-2 border-t border-slate-200 pt-4">
-                  <TBtn onClick={() => decide(true)}>Đồng ý điểm GV</TBtn>
-                  <TBtn variant="primary" onClick={() => decide(false)}>
+                  <TBtn disabled={saving} onClick={() => void decide(true)}>Đồng ý điểm GV</TBtn>
+                  <TBtn variant="primary" disabled={saving} onClick={() => void decide(false)}>
                     Điều chỉnh điểm
                   </TBtn>
                 </div>

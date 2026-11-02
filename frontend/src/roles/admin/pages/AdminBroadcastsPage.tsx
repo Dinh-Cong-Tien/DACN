@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { Bell, Mail, Send, CalendarClock, Megaphone } from 'lucide-react';
 import { useDocumentTitle } from '@/shared/hooks';
 import { toast } from '@/shared/stores/uiStore';
-import { MOCK_BROADCASTS, MOCK_USERS } from '@/shared/mocks';
+import { adminApi, useAdminBroadcasts, useAdminInvalidate } from '@/shared/api/admin';
+import { errorMessage } from '@/shared/api/client';
 import type { Broadcast } from '@/shared/types';
 import { cn, formatDateTime } from '@/shared/utils';
 import { Panel, Status, TBtn, TPageHead, inputCls, tbl, type StatusTone } from '@/roles/teacher/components/TeacherKit';
@@ -10,34 +11,52 @@ import { Panel, Status, TBtn, TPageHead, inputCls, tbl, type StatusTone } from '
 const AUDIENCE: Record<Broadcast['audience'], string> = { ALL: 'Tất cả người dùng', STUDENT: 'Học viên', VIP: 'Học viên VIP', TEACHER: 'Giáo viên', HEAD_TEACHER: 'Trưởng bộ môn' };
 const STATUS: Record<Broadcast['status'], { label: string; tone: StatusTone }> = { SENT: { label: 'Đã gửi', tone: 'green' }, SCHEDULED: { label: 'Hẹn giờ', tone: 'blue' }, DRAFT: { label: 'Nháp', tone: 'gray' } };
 
-/** Số người nhận ước tính: tỷ lệ theo dữ liệu mẫu nhân lên quy mô hệ thống */
-const SCALE = 86;
-const reachOf = (a: Broadcast['audience']) => {
-  const active = MOCK_USERS.filter((u) => u.status === 'ACTIVE');
-  const n = a === 'ALL' ? active.length : a === 'VIP' ? active.filter((u) => u.role === 'STUDENT' && u.plan === 'VIP').length : active.filter((u) => u.role === a).length;
-  return a === 'TEACHER' || a === 'HEAD_TEACHER' ? n : n * SCALE;
+const EMPTY: Broadcast[] = [];
+/** Thời điểm mặc định khi hẹn giờ: 8:00 sáng mai (giờ địa phương) */
+const tomorrow8 = () => {
+  const d = new Date();
+  d.setDate(d.getDate() + 1);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}T08:00`;
 };
 
 /** Gửi thông báo hệ thống: hiện trong chuông thông báo của người nhận và/hoặc gửi email */
 export const AdminBroadcastsPage: React.FC = () => {
   useDocumentTitle('Gửi thông báo');
-  const [items, setItems] = useState<Broadcast[]>(MOCK_BROADCASTS);
+  const { data, isLoading } = useAdminBroadcasts();
+  const refresh = useAdminInvalidate();
+  const items = data?.items ?? EMPTY;
+  const reachOf = (a: Broadcast['audience']) => data?.audienceCounts[a] ?? 0;
+  const [sending, setSending] = useState(false);
   const [title, setTitle] = useState('');
   const [body, setBody] = useState('');
   const [audience, setAudience] = useState<Broadcast['audience']>('STUDENT');
   const [channels, setChannels] = useState<Broadcast['channels']>(['IN_APP']);
   const [when, setWhen] = useState<'now' | 'later'>('now');
-  const [at, setAt] = useState('2026-11-03T08:00');
+  const [at, setAt] = useState(tomorrow8);
 
   const toggle = (c: 'IN_APP' | 'EMAIL') => setChannels((cs) => (cs.includes(c) ? cs.filter((x) => x !== c) : [...cs, c]));
   const valid = title.trim() && body.trim() && channels.length && (when === 'now' || at);
 
-  const submit = (status: Broadcast['status']) => {
-    const b: Broadcast = { id: `bc-${Date.now()}`, title: title.trim() || 'Chưa có tiêu đề', body: body.trim(), audience, channels, status, at: status === 'SCHEDULED' ? new Date(at).toISOString() : new Date().toISOString(), reach: status === 'DRAFT' ? 0 : reachOf(audience) };
-    setItems((xs) => [b, ...xs]);
-    setTitle('');
-    setBody('');
-    toast.success(status === 'SENT' ? 'Đã gửi thông báo' : status === 'SCHEDULED' ? 'Đã hẹn giờ gửi' : 'Đã lưu nháp', status === 'DRAFT' ? b.title : `${AUDIENCE[audience]} · ${reachOf(audience).toLocaleString('vi-VN')} người nhận`);
+  const submit = async (status: Broadcast['status']) => {
+    setSending(true);
+    try {
+      const b = await adminApi.createBroadcast({
+        title: title.trim() || 'Chưa có tiêu đề',
+        body: body.trim() || title.trim(),
+        audience,
+        channels: channels.length ? channels : ['IN_APP'],
+        mode: status === 'SENT' ? 'NOW' : status === 'SCHEDULED' ? 'SCHEDULE' : 'DRAFT',
+        scheduledAt: status === 'SCHEDULED' ? new Date(at).toISOString() : undefined,
+      });
+      setTitle('');
+      setBody('');
+      toast.success(status === 'SENT' ? 'Đã gửi thông báo' : status === 'SCHEDULED' ? 'Đã hẹn giờ gửi' : 'Đã lưu nháp', status === 'DRAFT' ? b.title : `${AUDIENCE[audience]} · ${(status === 'SENT' ? b.reach : reachOf(audience)).toLocaleString('vi-VN')} người nhận${channels.includes('EMAIL') ? ' (email chưa có dịch vụ gửi, chỉ ghi nhận)' : ''}`);
+      await refresh();
+    } catch (e) {
+      toast.error('Không gửi được', errorMessage(e));
+    } finally {
+      setSending(false);
+    }
   };
 
   return (
@@ -63,7 +82,7 @@ export const AdminBroadcastsPage: React.FC = () => {
                 {(Object.keys(AUDIENCE) as Broadcast['audience'][]).map((a) => (
                   <button key={a} type="button" onClick={() => setAudience(a)} className={cn('rounded-xl border px-3 py-2 text-left text-[13px] transition-colors', audience === a ? 'border-indigo-500 bg-indigo-500/[0.06] text-indigo-800' : 'border-slate-200 text-slate-700 hover:border-slate-300')}>
                     <span className="block font-semibold">{AUDIENCE[a]}</span>
-                    <span className="text-[11px] text-slate-500">~{reachOf(a).toLocaleString('vi-VN')} người</span>
+                    <span className="text-[11px] text-slate-500">{reachOf(a).toLocaleString('vi-VN')} người</span>
                   </button>
                 ))}
               </div>
@@ -94,10 +113,10 @@ export const AdminBroadcastsPage: React.FC = () => {
             </div>
 
             <div className="flex flex-wrap justify-end gap-2 border-t border-slate-100 pt-4">
-              <TBtn variant="ghost" disabled={!title.trim()} onClick={() => submit('DRAFT')}>
+              <TBtn variant="ghost" disabled={!title.trim() || title.trim().length < 2 || body.trim().length < 2 || sending} onClick={() => void submit('DRAFT')}>
                 Lưu nháp
               </TBtn>
-              <TBtn variant="primary" icon={when === 'now' ? <Send /> : <CalendarClock />} disabled={!valid} onClick={() => submit(when === 'now' ? 'SENT' : 'SCHEDULED')}>
+              <TBtn variant="primary" icon={when === 'now' ? <Send /> : <CalendarClock />} disabled={!valid || sending || body.trim().length < 2} onClick={() => void submit(when === 'now' ? 'SENT' : 'SCHEDULED')}>
                 {when === 'now' ? 'Gửi thông báo' : 'Hẹn giờ gửi'}
               </TBtn>
             </div>
@@ -152,10 +171,24 @@ export const AdminBroadcastsPage: React.FC = () => {
                   <td className={cn(tbl.td, 'text-right tabular-nums')}>{b.reach ? b.reach.toLocaleString('vi-VN') : '—'}</td>
                   <td className={cn(tbl.td, 'text-right tabular-nums')}>{b.openRate !== undefined ? `${b.openRate}%` : '—'}</td>
                   <td className={tbl.td}>
-                    <Status tone={STATUS[b.status].tone}>{STATUS[b.status].label}</Status>
+                    <div className="flex items-center gap-2">
+                      <Status tone={STATUS[b.status].tone}>{STATUS[b.status].label}</Status>
+                      {b.status !== 'SENT' && (
+                        <TBtn size="sm" variant="ghost" onClick={() => adminApi.sendBroadcast(b.id).then(() => { toast.success('Đã gửi thông báo', b.title); void refresh(); }).catch((e) => toast.error('Không gửi được', errorMessage(e)))}>
+                          Gửi ngay
+                        </TBtn>
+                      )}
+                    </div>
                   </td>
                 </tr>
               ))}
+              {!items.length && (
+                <tr>
+                  <td colSpan={7} className="px-5 py-10 text-center text-sm text-slate-500">
+                    {isLoading ? 'Đang tải…' : 'Chưa có thông báo nào.'}
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>

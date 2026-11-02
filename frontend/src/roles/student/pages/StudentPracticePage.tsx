@@ -5,7 +5,7 @@ import { useDocumentTitle, useParamState } from '@/shared/hooks';
 import { Badge, Card, CardHeader, PageHeader, ProgressBar, Tabs, StatCard } from '@/shared/components/ui';
 import { Stagger } from '@/shared/components/motion';
 import { Img, PHOTOS } from '@/shared/components/media/Img';
-import { TOEIC_PARTS_INFO, QUESTIONS_BY_PART, SKILL_SCORES } from '@/shared/mocks';
+import { usePartsInfo, usePracticeOverview, useProgress } from '@/shared/api/learner';
 import { cn } from '@/shared/utils';
 
 const VSTEP_CARDS = [
@@ -18,8 +18,15 @@ const PART_TONE = ['bg-sky-500 text-white', 'bg-indigo-600 text-white', 'bg-viol
 export const StudentPracticePage: React.FC = () => {
   useDocumentTitle('Luyện tập kỹ năng');
   const [tab, setTab] = useParamState('exam', ['TOEIC', 'VSTEP'], 'TOEIC');
-  const totalQ = Object.values(QUESTIONS_BY_PART).reduce((a, q) => a + q.length, 0);
-  const avg = Math.round(SKILL_SCORES.reduce((a, s) => a + s.score, 0) / SKILL_SCORES.length);
+  const { data: TOEIC_PARTS_INFO = [] } = usePartsInfo('TOEIC');
+  const { data: overview } = usePracticeOverview();
+  const { data: progress } = useProgress();
+  const SKILL_SCORES = progress?.skillScores ?? [];
+  const totalQ = overview?.total ?? 0;
+  const avg = SKILL_SCORES.length ? Math.round(SKILL_SCORES.reduce((a, s) => a + s.score, 0) / SKILL_SCORES.length) : 0;
+  const accOf = (label: string) => SKILL_SCORES.find((s) => s.skill === label)?.score ?? 0;
+  // Gợi ý: 2 Part có độ chính xác thấp nhất (khi đã có dữ liệu)
+  const weakest = [...SKILL_SCORES].sort((a, b) => a.score - b.score).slice(0, 2).map((s) => s.skill);
 
   return (
     <div>
@@ -36,9 +43,9 @@ export const StudentPracticePage: React.FC = () => {
 
       <Stagger className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8" step={70}>
         <StatCard label="Câu hỏi có sẵn" value={totalQ} icon={<Layers />} tone="indigo" />
-        <StatCard label="Độ chính xác TB" value={avg} suffix="%" icon={<Target />} tone="emerald" delta={4} deltaLabel="tuần này" />
-        <StatCard label="Câu đã luyện" value={1284} icon={<CheckCircle2 />} tone="violet" />
-        <StatCard label="Combo tốt nhất" value={9} icon={<Zap />} tone="amber" />
+        <StatCard label="Độ chính xác TB" value={avg} suffix="%" icon={<Target />} tone="emerald" />
+        <StatCard label="Câu đã luyện" value={progress?.totals.questions ?? 0} icon={<CheckCircle2 />} tone="violet" />
+        <StatCard label="Lỗi sai cần ôn" value={progress?.totals.mistakesOpen ?? 0} icon={<Zap />} tone="amber" />
       </Stagger>
 
       <div className="grid grid-cols-1 xl:grid-cols-[1fr_320px] gap-6">
@@ -46,8 +53,8 @@ export const StudentPracticePage: React.FC = () => {
           {tab === 'TOEIC' ? (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {TOEIC_PARTS_INFO.map((p, i) => {
-                const count = QUESTIONS_BY_PART[p.id]?.length ?? 0;
-                const acc = SKILL_SCORES[i]?.score ?? 0;
+                const count = overview?.byPart[p.id] ?? 0;
+                const acc = accOf(`Part ${p.id.slice(5)}`);
                 return (
                   <Link key={p.id} to={`/app/practice/session/${p.id}`} className="group block animate-fade-up" style={{ animationDelay: `${i * 60}ms` }}>
                     <Card hard hover className="h-full" padding="sm">
@@ -70,7 +77,7 @@ export const StudentPracticePage: React.FC = () => {
                         <span className="text-xs font-extrabold text-slate-700 shrink-0">{acc}% đúng</span>
                       </div>
                       <p className="text-[11px] text-slate-500 font-semibold mt-2">
-                        {count} câu mẫu · {p.questions} câu trong đề thật{p.minutes ? ` · ~${p.minutes} phút` : ''}
+                        {count.toLocaleString('vi-VN')} câu trong ngân hàng · {p.questions} câu trong đề thật{p.minutes ? ` · ~${p.minutes} phút` : ''}
                       </p>
                     </Card>
                   </Link>
@@ -80,7 +87,7 @@ export const StudentPracticePage: React.FC = () => {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {VSTEP_CARDS.map((p, i) => {
-                const count = QUESTIONS_BY_PART[p.id]?.length ?? 0;
+                const count = overview?.byPart[p.id] ?? 0;
                 const Icon = p.skill === 'Listening' ? Headphones : BookOpen;
                 return (
                   <Link key={p.id} to={`/app/practice/session/${p.id}`} className="group block animate-fade-up" style={{ animationDelay: `${i * 80}ms` }}>
@@ -122,8 +129,9 @@ export const StudentPracticePage: React.FC = () => {
         </div>
 
         <Card hard className="h-fit animate-slide-in-right">
-          <CardHeader title="Độ chính xác theo Part" subtitle="30 ngày gần nhất" icon={<Target />} />
+          <CardHeader title="Độ chính xác theo Part" subtitle="Tính trên các câu bạn đã làm" icon={<Target />} />
           <div className="space-y-3">
+            {SKILL_SCORES.length === 0 && <p className="text-xs text-slate-500">Chưa có dữ liệu. Luyện vài câu để xem độ chính xác từng Part.</p>}
             {SKILL_SCORES.map((s, i) => (
               <div key={s.skill} className="animate-fade-in" style={{ animationDelay: `${i * 60}ms` }}>
                 <ProgressBar value={s.score} label={s.skill} showValue size="sm" tone={s.score >= 75 ? 'emerald' : s.score >= 60 ? 'amber' : 'violet'} />
@@ -131,7 +139,7 @@ export const StudentPracticePage: React.FC = () => {
             ))}
           </div>
           <div className="mt-5 p-3 rounded-xl bg-amber-100 border-2 border-slate-900 text-xs text-slate-800">
-            <b>Gợi ý:</b> Part 7 và Part 4 đang thấp nhất. Luyện 10 câu mỗi ngày hoặc dùng{' '}
+            <b>Gợi ý:</b> {weakest.length ? `${weakest.join(' và ')} đang thấp nhất.` : 'Bắt đầu từ Part bạn thấy khó nhất.'} Luyện 10 câu mỗi ngày hoặc dùng{' '}
             <Link to="/app/drills" className="font-extrabold underline">
               Luyện điểm yếu
             </Link>

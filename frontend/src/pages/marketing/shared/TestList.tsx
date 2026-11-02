@@ -28,7 +28,7 @@ export const TestList: React.FC<{ tests: MockTestSummary[] }> = ({ tests }) => {
           {tests.map((t) => (
             <tr key={t.id} className="group hover:bg-slate-50">
               <td className="px-5 py-4">
-                <Link to={gate(`/app/mock-tests/${t.id}`)} className="font-medium text-slate-900 group-hover:text-indigo-700">
+                <Link to={gate(`/app/mock-tests/${t.slug}`)} className="font-medium text-slate-900 group-hover:text-indigo-700">
                   {t.title}
                 </Link>
                 <p className="mt-0.5 text-[13px] text-slate-500">
@@ -45,7 +45,7 @@ export const TestList: React.FC<{ tests: MockTestSummary[] }> = ({ tests }) => {
               <td className="hidden md:table-cell px-4 py-4 text-right tabular-nums text-slate-500">{formatNumber(t.attempts)}</td>
               <td className="px-5 py-4 text-right">
                 {t.isFree ? (
-                  <Link to={gate(`/app/mock-tests/${t.id}`)} className="inline-flex h-9 items-center rounded-lg border border-slate-300 px-3.5 text-[13px] font-semibold text-slate-900 hover:border-indigo-600 hover:text-indigo-700">
+                  <Link to={gate(`/app/mock-tests/${t.slug}`)} className="inline-flex h-9 items-center rounded-lg border border-slate-300 px-3.5 text-[13px] font-semibold text-slate-900 hover:border-indigo-600 hover:text-indigo-700">
                     Làm bài
                   </Link>
                 ) : (

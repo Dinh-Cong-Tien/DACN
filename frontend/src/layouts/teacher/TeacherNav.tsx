@@ -1,22 +1,20 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { BarChart3, Briefcase, Calculator, CalendarDays, ClipboardCheck, ClipboardList, Database, FileEdit, FileText, FolderOpen, GraduationCap, Languages, Plus, Presentation, Sheet, UserRoundX, Users } from 'lucide-react';
-import { MOCK_ASSIGNMENTS, MOCK_CLASSES, MOCK_SUBMISSIONS } from '@/shared/mocks';
+import { useGradingQueue, useTeacherAssignments, useTeacherClasses, type TClassRoom } from '@/shared/api/teacher';
 import { StaffNav, type StaffMenu } from '@/shared/components/layout/StaffNav';
 
-const toGrade = String(MOCK_SUBMISSIONS.filter((s) => s.status !== 'GRADED').length);
-const drafts = MOCK_ASSIGNMENTS.filter((a) => a.status === 'DRAFT').length;
 
 /**
  * Menu header giáo viên theo quy trình dạy học: lớp → lịch dạy, điểm danh → giao bài → chấm bài → theo dõi học viên, bảng điểm → học liệu.
  */
-export const TEACHER_MENUS: StaffMenu[] = [
+export const buildTeacherMenus = (classes: TClassRoom[], toGrade: number, drafts: number): StaffMenu[] => [
   { to: '/teacher/dashboard', label: 'Tổng quan' },
   {
     label: 'Lớp học',
     to: '/teacher/classes',
     children: [
       { to: '/teacher/classes', label: 'Tất cả lớp', icon: Users, desc: 'Mã mời, lịch học, sĩ số, tạo lớp mới', exact: true },
-      ...MOCK_CLASSES.map((c) => ({ to: `/teacher/classes/${c.id}`, label: c.name, icon: c.examType === 'TOEIC' ? Briefcase : GraduationCap, desc: `${c.schedule} · ${c.studentsCount} học viên`, group: 'Lớp đang dạy' })),
+      ...classes.map((c) => ({ to: `/teacher/classes/${c.id}`, label: c.name, icon: c.examType === 'TOEIC' ? Briefcase : GraduationCap, desc: `${c.schedule || 'Chưa có lịch'} · ${c.studentsCount} học viên`, group: 'Lớp đang dạy' })),
     ],
   },
   {
@@ -36,7 +34,7 @@ export const TEACHER_MENUS: StaffMenu[] = [
       { to: '/teacher/assignments?status=DRAFT', label: 'Bản nháp', icon: FileEdit, desc: 'Bài đã soạn, chưa gửi học viên', badge: drafts ? String(drafts) : undefined },
     ],
   },
-  { to: '/teacher/grading', label: 'Chấm bài', badge: toGrade },
+  { to: '/teacher/grading', label: 'Chấm bài', badge: toGrade ? String(toGrade) : undefined },
   {
     label: 'Học viên',
     to: '/teacher/students',
@@ -51,7 +49,7 @@ export const TEACHER_MENUS: StaffMenu[] = [
     label: 'Học liệu',
     to: '/teacher/library',
     children: [
-      { to: '/teacher/library/courses', label: 'Khoá học & bài giảng', icon: Presentation, desc: '8 khoá, giao từng bài giảng theo lộ trình' },
+      { to: '/teacher/library/courses', label: 'Khoá học & bài giảng', icon: Presentation, desc: 'Giao từng bài giảng theo lộ trình' },
       { to: '/teacher/library/tests', label: 'Ngân hàng đề', icon: FileText, desc: 'Thi thử TOEIC, VSTEP · đề Viết, đề Nói' },
       { to: '/teacher/library/practice', label: 'Ngữ pháp & Từ vựng', icon: Languages, desc: 'Chủ điểm ngữ pháp, bộ flashcard' },
       { to: '/teacher/materials', label: 'Tài liệu lớp', icon: FolderOpen, desc: 'Slide, audio, bài mẫu của riêng lớp' },
@@ -61,4 +59,13 @@ export const TEACHER_MENUS: StaffMenu[] = [
   },
 ];
 
-export const TeacherNav: React.FC = () => <StaffNav menus={TEACHER_MENUS} label="Menu giáo viên" />;
+/** Số bài chờ chấm (badge menu Chấm bài, thanh đáy) */
+export const usePendingGradingCount = () => useGradingQueue('pending').data?.length ?? 0;
+
+export const TeacherNav: React.FC = () => {
+  const classes = useTeacherClasses().data;
+  const toGrade = usePendingGradingCount();
+  const drafts = useTeacherAssignments({ status: 'DRAFT' }).data?.length ?? 0;
+  const menus = useMemo(() => buildTeacherMenus(classes ?? [], toGrade, drafts), [classes, toGrade, drafts]);
+  return <StaffNav menus={menus} label="Menu giáo viên" />;
+};

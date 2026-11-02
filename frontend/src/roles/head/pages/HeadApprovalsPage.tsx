@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { CheckSquare, Check, Clock, X, Eye, FileText, Database, Video, Newspaper } from 'lucide-react';
 import { useDocumentTitle } from '@/shared/hooks';
 import { toast } from '@/shared/stores/uiStore';
-import { MOCK_APPROVALS, MOCK_TEACHERS } from '@/shared/mocks';
+import { headApi, useHeadApprovals, useHeadInvalidate, type HeadApproval } from '@/shared/api/head';
+import { errorMessage } from '@/shared/api/client';
 import type { ApprovalRequest } from '@/shared/types';
 import { cn, timeAgo, formatDateTime } from '@/shared/utils';
 import { Avatar, Button, EmptyState, Modal, Textarea } from '@/shared/components/ui';
@@ -15,11 +16,16 @@ const TYPE: Record<ApprovalRequest['type'], { label: string; tone: Tone; icon: R
   POST: { label: 'Bài viết', tone: 'amber', icon: Newspaper, cls: 'bg-amber-500/15 text-amber-800' },
 };
 
-const authorAvatar = (name: string) => MOCK_TEACHERS.find((t) => t.name === name)?.avatarUrl;
+const EMPTY: HeadApproval[] = [];
 
 export const HeadApprovalsPage: React.FC = () => {
   useDocumentTitle('Phê duyệt học liệu');
-  const [items, setItems] = useState<ApprovalRequest[]>(MOCK_APPROVALS);
+  const { data, isLoading } = useHeadApprovals();
+  const refresh = useHeadInvalidate();
+  const items = data ?? EMPTY;
+  const authorAvatar = (name: string) => items.find((a) => a.author === name)?.authorAvatar;
+  const typeOf = (a: ApprovalRequest) => (a as HeadApproval).resourceType ?? a.type;
+  const [busy, setBusy] = useState(false);
   const [tab, setTab] = useState<ApprovalRequest['status']>('PENDING');
   const [detail, setDetail] = useState<ApprovalRequest | null>(null);
   const [rejecting, setRejecting] = useState<ApprovalRequest | null>(null);
@@ -28,19 +34,35 @@ export const HeadApprovalsPage: React.FC = () => {
   const list = items.filter((a) => a.status === tab);
   const count = (s: ApprovalRequest['status']) => items.filter((a) => a.status === s).length;
 
-  const approve = (a: ApprovalRequest) => {
-    setItems((s) => s.map((x) => (x.id === a.id ? { ...x, status: 'APPROVED' } : x)));
-    setDetail(null);
-    toast.success('Đã phê duyệt', `${a.title} sẽ được xuất bản cho học viên.`);
+  const approve = async (a: ApprovalRequest) => {
+    setBusy(true);
+    try {
+      await headApi.approve(typeOf(a), a.id);
+      setDetail(null);
+      toast.success('Đã phê duyệt', `${a.title} đã được xuất bản cho học viên.`);
+      await refresh();
+    } catch (e) {
+      toast.error('Không phê duyệt được', errorMessage(e));
+    } finally {
+      setBusy(false);
+    }
   };
-  const reject = () => {
+  const reject = async () => {
     if (!rejecting) return;
     if (!reason.trim()) return toast.error('Vui lòng nhập lý do từ chối');
-    setItems((s) => s.map((x) => (x.id === rejecting.id ? { ...x, status: 'REJECTED', summary: `Từ chối: ${reason}` } : x)));
-    toast.info('Đã từ chối', `Giáo viên ${rejecting.author} sẽ nhận được phản hồi.`);
-    setRejecting(null);
-    setDetail(null);
-    setReason('');
+    setBusy(true);
+    try {
+      await headApi.reject(typeOf(rejecting), rejecting.id, reason.trim());
+      toast.info('Đã từ chối', `${rejecting.author} sẽ nhận được phản hồi.`);
+      setRejecting(null);
+      setDetail(null);
+      setReason('');
+      await refresh();
+    } catch (e) {
+      toast.error('Không từ chối được', errorMessage(e));
+    } finally {
+      setBusy(false);
+    }
   };
 
   return (
@@ -65,14 +87,14 @@ export const HeadApprovalsPage: React.FC = () => {
 
       {list.length === 0 ? (
         <Panel>
-          <EmptyState icon={<CheckSquare />} title="Không có yêu cầu" description="Chưa có học liệu nào ở trạng thái này." />
+          <EmptyState icon={<CheckSquare />} title={isLoading ? "Đang tải…" : "Không có yêu cầu"} description={isLoading ? "" : "Chưa có học liệu nào ở trạng thái này."} />
         </Panel>
       ) : (
         <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
           {list.map((a) => {
             const t = TYPE[a.type];
             return (
-              <section key={a.id} className="flex flex-col overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-[0_1px_2px_rgba(16,24,40,0.04),0_8px_24px_-16px_rgba(16,24,40,0.12)] transition-shadow hover:shadow-[0_1px_2px_rgba(16,24,40,0.04),0_16px_32px_-16px_rgba(16,24,40,0.2)]">
+              <section key={`${a.id}-${a.status}-${a.submittedAt}`} className="flex flex-col overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-[0_1px_2px_rgba(16,24,40,0.04),0_8px_24px_-16px_rgba(16,24,40,0.12)] transition-shadow hover:shadow-[0_1px_2px_rgba(16,24,40,0.04),0_16px_32px_-16px_rgba(16,24,40,0.2)]">
                 <div className="flex flex-1 items-start gap-4 p-5">
                   <IconTile icon={t.icon} tone={t.tone} size="lg" />
                   <div className="min-w-0 flex-1">
@@ -103,7 +125,7 @@ export const HeadApprovalsPage: React.FC = () => {
                         <TBtn size="sm" icon={<X />} onClick={() => setRejecting(a)}>
                           Từ chối
                         </TBtn>
-                        <TBtn size="sm" variant="primary" icon={<Check />} onClick={() => approve(a)}>
+                        <TBtn size="sm" variant="primary" icon={<Check />} disabled={busy} onClick={() => void approve(a)}>
                           Phê duyệt
                         </TBtn>
                       </>
@@ -130,7 +152,7 @@ export const HeadApprovalsPage: React.FC = () => {
               <Button variant="outline" onClick={() => setRejecting(detail)}>
                 Từ chối
               </Button>
-              <Button variant="success" onClick={() => detail && approve(detail)}>
+              <Button variant="success" loading={busy} onClick={() => detail && void approve(detail)}>
                 Phê duyệt
               </Button>
             </>
@@ -169,7 +191,7 @@ export const HeadApprovalsPage: React.FC = () => {
             <Button variant="ghost" onClick={() => setRejecting(null)}>
               Huỷ
             </Button>
-            <Button variant="danger" onClick={reject}>
+            <Button variant="danger" loading={busy} onClick={() => void reject()}>
               Xác nhận từ chối
             </Button>
           </>

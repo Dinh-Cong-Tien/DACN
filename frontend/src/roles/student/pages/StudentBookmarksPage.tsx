@@ -1,30 +1,32 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Bookmark, BookmarkX, FileQuestion, BookOpen, PlayCircle, Volume2, Play } from 'lucide-react';
-import { ALL_QUESTIONS, MOCK_COURSES, MOCK_VOCAB } from '@/shared/mocks';
-import type { Course, Lesson } from '@/shared/types';
-import { cn, getCorrectKey } from '@/shared/utils';
+import { useBookmarks, useRemoveBookmark, type BookmarkDto } from '@/shared/api/learner';
+import { errorMessage } from '@/shared/api/client';
+import { cn } from '@/shared/utils';
 import { useDocumentTitle } from '@/shared/hooks';
 import { toast } from '@/shared/stores/uiStore';
 import { Badge, Button, Card, EmptyState, PageHeader, Tabs } from '@/shared/components/ui';
 import { Img, PHOTOS } from '@/shared/components/media/Img';
 
-interface LessonBookmark {
-  course: Course;
-  lesson: Lesson;
-}
+type QDetail = { stem: string; part: string; examType: string; options: { key: string; text: string }[]; correctKey: string };
+type LDetail = { courseTitle: string; coverUrl?: string | null; type: string; durationMin: number };
+const detailOf = <T,>(b: BookmarkDto) => (b as BookmarkDto & { detail?: T }).detail;
 
 export const StudentBookmarksPage: React.FC = () => {
   useDocumentTitle('Nội dung đã lưu');
   const [tab, setTab] = useState('questions');
-  const [questions, setQuestions] = useState(ALL_QUESTIONS.slice(0, 4));
-  const [words, setWords] = useState(MOCK_VOCAB.slice(0, 5));
-  const [lessons, setLessons] = useState<LessonBookmark[]>(MOCK_COURSES.slice(0, 3).map((course) => ({ course, lesson: course.sections[0].lessons[0] })));
+  const { data: all = [] } = useBookmarks();
+  const remove = useRemoveBookmark();
+  const questions = all.filter((b) => b.targetType === 'QUESTION').map((b) => ({ id: b.targetId, ...(detailOf<QDetail>(b) ?? { stem: b.title, part: b.subtitle ?? '', examType: '', options: [], correctKey: '' }) }));
+  const words = all.filter((b) => b.targetType === 'WORD').map((b) => ({ id: b.targetId, word: b.title, meaningVi: b.subtitle ?? '', ipa: detailOf<{ ipa: string }>(b)?.ipa ?? '' }));
+  const lessons = all.filter((b) => b.targetType === 'LESSON').map((b) => ({ id: b.targetId, title: b.title, link: b.link ?? '#', ...(detailOf<LDetail>(b) ?? { courseTitle: b.subtitle ?? '', type: '', durationMin: 0 }) }));
 
-  const unsave = (label: string, fn: () => void) => {
-    fn();
-    toast.info('Đã bỏ lưu', label);
-  };
+  const unsave = (label: string, targetId: string) =>
+    remove.mutate(targetId, {
+      onSuccess: () => toast.info('Đã bỏ lưu', label),
+      onError: (e) => toast.error('Chưa bỏ lưu được', errorMessage(e)),
+    });
 
   const speak = (w: string) => {
     try {
@@ -72,22 +74,24 @@ export const StudentBookmarksPage: React.FC = () => {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1.5">
                       <Badge tone="indigo" size="xs">
-                        {q.partOrSkill.replace('_', ' ')}
+                        {q.part.replace('_', ' ')}
                       </Badge>
-                      <Badge tone="slate" size="xs">
-                        {q.examType}
-                      </Badge>
+                      {q.examType && (
+                        <Badge tone="slate" size="xs">
+                          {q.examType}
+                        </Badge>
+                      )}
                     </div>
                     <p className="text-sm font-bold text-slate-900 leading-snug">{q.stem}</p>
                     <div className="flex flex-wrap gap-1.5 mt-2">
                       {q.options.map((o) => (
-                        <span key={o.key} className={cn('text-[11px] px-2 py-0.5 rounded-md border-2', o.key === getCorrectKey(q) ? 'bg-emerald-200 border-slate-900 text-slate-900 font-bold' : 'bg-white border-slate-200 text-slate-600')}>
+                        <span key={o.key} className={cn('text-[11px] px-2 py-0.5 rounded-md border-2', o.key === q.correctKey ? 'bg-emerald-200 border-slate-900 text-slate-900 font-bold' : 'bg-white border-slate-200 text-slate-600')}>
                           {o.key}. {o.text}
                         </span>
                       ))}
                     </div>
                   </div>
-                  <button onClick={() => unsave('Câu hỏi đã được gỡ khỏi danh sách.', () => setQuestions((s) => s.filter((x) => x.id !== q.id)))} className="p-2 rounded-lg text-slate-400 hover:text-violet-600 hover:bg-violet-50 transition" title="Bỏ lưu">
+                  <button onClick={() => unsave('Câu hỏi đã được gỡ khỏi danh sách.', q.id)} className="p-2 rounded-lg text-slate-400 hover:text-violet-600 hover:bg-violet-50 transition" title="Bỏ lưu">
                     <BookmarkX className="w-4 h-4" />
                   </button>
                 </div>
@@ -114,7 +118,7 @@ export const StudentBookmarksPage: React.FC = () => {
                   </p>
                   <p className="text-sm text-slate-700 font-semibold truncate mt-1">{w.meaningVi}</p>
                 </div>
-                <button onClick={() => unsave(`"${w.word}" đã được gỡ.`, () => setWords((s) => s.filter((x) => x.id !== w.id)))} className="p-2 rounded-lg text-slate-400 hover:text-violet-600 hover:bg-violet-50 transition">
+                <button onClick={() => unsave(`"${w.word}" đã được gỡ.`, w.id)} className="p-2 rounded-lg text-slate-400 hover:text-violet-600 hover:bg-violet-50 transition">
                   <BookmarkX className="w-4 h-4" />
                 </button>
               </Card>
@@ -129,10 +133,10 @@ export const StudentBookmarksPage: React.FC = () => {
           </Card>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {lessons.map(({ course, lesson }, i) => (
-              <Card key={lesson.id + course.id} hard hover padding="none" className="overflow-hidden animate-fade-up" style={{ animationDelay: `${i * 60}ms` }}>
-                <Link to={`/app/courses/${course.id}/lessons/${lesson.id}`} className="block relative h-32">
-                  <Img src={course.coverUrl ?? PHOTOS.books} alt={course.title} wrapperClass="absolute inset-0" fallbackClass="bg-indigo-200" />
+            {lessons.map((lesson, i) => (
+              <Card key={lesson.id} hard hover padding="none" className="overflow-hidden animate-fade-up" style={{ animationDelay: `${i * 60}ms` }}>
+                <Link to={lesson.link} className="block relative h-32">
+                  <Img src={lesson.coverUrl ?? PHOTOS.books} alt={lesson.courseTitle} wrapperClass="absolute inset-0" fallbackClass="bg-indigo-200" />
                   <div className="absolute inset-0 bg-slate-900/20" />
                   <span className="absolute top-3 left-3 sticker tilt-1 !py-1 !text-[10px]">{lesson.type}</span>
                   <span className="absolute bottom-3 right-3 w-10 h-10 rounded-full bg-violet-500 border-2 border-slate-900 text-white flex items-center justify-center shadow-hard-sm">
@@ -140,11 +144,11 @@ export const StudentBookmarksPage: React.FC = () => {
                   </span>
                 </Link>
                 <div className="p-4 border-t-2 border-slate-900">
-                  <p className="text-[11px] text-slate-500 truncate font-semibold">{course.title}</p>
+                  <p className="text-[11px] text-slate-500 truncate font-semibold">{lesson.courseTitle}</p>
                   <p className="font-display font-bold text-slate-900 text-sm truncate">{lesson.title}</p>
                   <div className="flex items-center justify-between mt-3">
                     <span className="text-[11px] text-slate-600 font-bold">{lesson.durationMin} phút</span>
-                    <Button size="xs" variant="ghost" leftIcon={<BookmarkX className="w-3.5 h-3.5" />} onClick={() => unsave('Bài học đã được gỡ.', () => setLessons((s) => s.filter((x) => x.lesson.id !== lesson.id || x.course.id !== course.id)))}>
+                    <Button size="xs" variant="ghost" leftIcon={<BookmarkX className="w-3.5 h-3.5" />} onClick={() => unsave('Bài học đã được gỡ.', lesson.id)}>
                       Bỏ lưu
                     </Button>
                   </div>

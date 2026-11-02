@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Newspaper, ExternalLink, FolderTree, PenLine, Eye } from 'lucide-react';
-import { BLOG_POSTS, BLOG_CATEGORIES } from '@/shared/mocks';
+import { adminApi, useAdminInvalidate, useAdminPosts } from '@/shared/api/admin';
 import type { BlogPost } from '@/shared/types';
 import { formatDate } from '@/shared/utils';
 import { useDocumentTitle } from '@/shared/hooks';
@@ -51,17 +51,28 @@ const columns: Column<BlogPost>[] = [
   },
 ];
 
-const fields: CrudField<BlogPost>[] = [
-  { key: 'title', label: 'Tiêu đề', type: 'text', required: true, colSpan: 2 },
-  { key: 'excerpt', label: 'Tóm tắt', type: 'textarea' },
-  { key: 'category', label: 'Chuyên mục', type: 'select', required: true, options: BLOG_CATEGORIES.map((c) => ({ value: c.name, label: c.name })) },
-  { key: 'author', label: 'Tác giả', type: 'text', required: true },
-  { key: 'date', label: 'Ngày đăng', type: 'date' },
-  { key: 'readMin', label: 'Thời gian đọc (phút)', type: 'number' },
-];
-
 export const AdminBlogPage: React.FC = () => {
   useDocumentTitle('Quản lý tin tức');
+  const { data, isLoading } = useAdminPosts();
+  const refresh = useAdminInvalidate();
+  const posts = useMemo<BlogPost[]>(() => (data ?? []).filter((p) => p.kind !== 'EXAM_GUIDE'), [data]);
+  const categories = useMemo(() => [...new Map(posts.filter((p) => p.category).map((p) => [p.category, { name: p.category, slug: p.categorySlug }])).values()], [posts]);
+  const catOptions = categories.map((c) => ({ value: c.name, label: c.name }));
+  const fields: CrudField<BlogPost>[] = [
+    { key: 'title', label: 'Tiêu đề', type: 'text', required: true, colSpan: 2 },
+    { key: 'excerpt', label: 'Tóm tắt', type: 'textarea' },
+    { key: 'category', label: 'Chuyên mục', type: 'select', required: true, options: catOptions },
+    { key: 'readMin', label: 'Thời gian đọc (phút)', type: 'number' },
+  ];
+  const views = posts.reduce((a, p) => a + (p.views ?? 0), 0);
+  const payload = (v: Partial<BlogPost>) => ({
+    title: v.title,
+    excerpt: v.excerpt ?? '',
+    category: v.category,
+    categorySlug: categories.find((c) => c.name === v.category)?.slug,
+    readMin: v.readMin ? Number(v.readMin) : undefined,
+  });
+
   return (
     <div className="space-y-6">
       <TPageHead
@@ -76,22 +87,37 @@ export const AdminBlogPage: React.FC = () => {
       />
       <Figures
         items={[
-          { label: 'Bài viết', value: BLOG_POSTS.length, icon: Newspaper, tone: 'indigo', note: 'đã xuất bản' },
-          { label: 'Chuyên mục', value: BLOG_CATEGORIES.length, icon: FolderTree, tone: 'violet' },
-          { label: 'Tác giả', value: new Set(BLOG_POSTS.map((p) => p.author)).size, icon: PenLine, tone: 'emerald', note: 'giáo viên đóng góp' },
-          { label: 'Lượt đọc tháng', value: '18.420', icon: Eye, tone: 'amber', note: '+14% so với tháng trước' },
+          { label: 'Bài viết', value: posts.length, icon: Newspaper, tone: 'indigo', note: `${posts.filter((p) => !('status' in p) || (p as { status?: string }).status === 'PUBLISHED').length} đã xuất bản` },
+          { label: 'Chuyên mục', value: categories.length, icon: FolderTree, tone: 'violet' },
+          { label: 'Tác giả', value: new Set(posts.map((p) => p.author)).size, icon: PenLine, tone: 'emerald', note: 'người đóng góp' },
+          { label: 'Lượt đọc', value: views.toLocaleString('vi-VN'), icon: Eye, tone: 'amber', note: 'tổng từ khi đăng' },
         ]}
       />
       <CrudEditor<BlogPost>
-        rows={BLOG_POSTS}
+        rows={posts}
+        loading={isLoading}
         columns={columns}
         fields={fields}
         entityName="bài viết"
         createLabel="Viết bài mới"
         idPrefix="b"
         searchKeys={['title', 'author']}
-        filters={[{ key: 'category', label: 'Chuyên mục', options: BLOG_CATEGORIES.map((c) => ({ value: c.name, label: c.name })) }]}
-        defaultValues={{ category: BLOG_CATEGORIES[0].name, categorySlug: BLOG_CATEGORIES[0].slug, author: 'Admin', date: new Date().toISOString().slice(0, 10), readMin: 5, gradient: '', content: [], tags: [], slug: '', excerpt: '' }}
+        filters={[{ key: 'category', label: 'Chuyên mục', options: catOptions }]}
+        defaultValues={{ category: categories[0]?.name, readMin: 5, excerpt: '' }}
+        onCreate={async (v) => {
+          const p = await adminApi.createPost({ ...payload(v), status: 'PUBLISHED' });
+          void refresh();
+          return p;
+        }}
+        onUpdate={async (row, v) => {
+          const p = await adminApi.updatePost(row.id, payload(v));
+          void refresh();
+          return p;
+        }}
+        onDelete={async (row) => {
+          await adminApi.deletePost(row.id);
+          void refresh();
+        }}
         rowActions={(p) => [{ label: 'Xem bài', icon: <ExternalLink />, onClick: () => window.open(`/blog/${p.slug}`, '_blank') }]}
       />
     </div>

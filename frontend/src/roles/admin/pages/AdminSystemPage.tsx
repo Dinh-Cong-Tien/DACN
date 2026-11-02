@@ -1,10 +1,10 @@
-import React, { useState } from 'react';
-import { RefreshCw, Cpu, MemoryStick, HardDrive, Database, AlertTriangle, CheckCircle2, Info, Server, Gauge, Activity, Rocket, Mail } from 'lucide-react';
-import { MOCK_SERVICES } from '@/shared/mocks';
+import React from 'react';
+import { RefreshCw, Cpu, MemoryStick, Database, AlertTriangle, ShieldAlert, Server, Activity, HardDrive } from 'lucide-react';
 import type { ServiceStatus } from '@/shared/types';
-import { cn } from '@/shared/utils';
+import { cn, timeAgo } from '@/shared/utils';
 import { useDocumentTitle } from '@/shared/hooks';
 import { toast } from '@/shared/stores/uiStore';
+import { useAdminAuditLogs, useAdminSystem } from '@/shared/api/admin';
 import { IconTile, Meter, Panel, Status, TBtn, TPageHead, type StatusTone, type Tone } from '@/roles/teacher/components/TeacherKit';
 
 const STATUS_META: Record<ServiceStatus['status'], { tone: StatusTone; label: string; meter: 'green' | 'amber' | 'red' }> = {
@@ -14,56 +14,47 @@ const STATUS_META: Record<ServiceStatus['status'], { tone: StatusTone; label: st
 };
 
 const SERVICE_ICON: Record<string, { icon: React.ElementType; tone: Tone }> = {
-  'API Gateway': { icon: Server, tone: 'indigo' },
+  'API Server': { icon: Server, tone: 'indigo' },
   PostgreSQL: { icon: Database, tone: 'sky' },
-  'Redis Cache': { icon: Gauge, tone: 'rose' },
-  'Media Storage (S3)': { icon: HardDrive, tone: 'amber' },
-  'Email Service': { icon: Mail, tone: 'violet' },
-  'Background Jobs': { icon: Activity, tone: 'emerald' },
 };
 
-const RESOURCES: { label: string; value: number; icon: React.ElementType; tone: Tone; detail: string }[] = [
-  { label: 'CPU', value: 42, icon: Cpu, tone: 'indigo', detail: '4 vCPU · load 1.7' },
-  { label: 'RAM', value: 63, icon: MemoryStick, tone: 'violet', detail: '5.1 / 8 GB' },
-  { label: 'Ổ đĩa', value: 71, icon: HardDrive, tone: 'amber', detail: '142 / 200 GB' },
-  { label: 'Kết nối CSDL', value: 28, icon: Database, tone: 'sky', detail: '28 / 100 pool' },
-];
-
-const INCIDENTS: { id: string; title: string; description: string; time: string; tone: Tone; icon: React.ElementType }[] = [
-  { id: 'i1', title: 'Media Storage phản hồi chậm', description: 'Độ trễ CDN tăng lên 310 ms, đang theo dõi.', time: '09:12 hôm nay', tone: 'amber', icon: AlertTriangle },
-  { id: 'i2', title: 'Sao lưu CSDL hoàn tất', description: 'orbilingo_prod · 1.8 GB · 02:00', time: 'Hôm nay', tone: 'emerald', icon: CheckCircle2 },
-  { id: 'i3', title: 'Triển khai API v1.4.2', description: 'Không downtime, 14 endpoint cập nhật.', time: '2 ngày trước', tone: 'indigo', icon: Rocket },
-  { id: 'i4', title: 'Email Service gián đoạn 6 phút', description: 'SMTP relay timeout, đã tự phục hồi.', time: '5 ngày trước', tone: 'rose', icon: AlertTriangle },
-];
-
-const uptimeNum = (s: string) => Number.parseFloat(s) || 0;
-
+/** Trạng thái dịch vụ đo thật từ backend: ping CSDL, thông số tiến trình Node và máy chủ */
 export const AdminSystemPage: React.FC = () => {
   useDocumentTitle('Trạng thái dịch vụ');
-  const [checking, setChecking] = useState(false);
-  const [checkedAt, setCheckedAt] = useState(new Date());
-  const up = MOCK_SERVICES.filter((s) => s.status === 'UP').length;
-  const allUp = up === MOCK_SERVICES.length;
-  const avgLatency = Math.round(MOCK_SERVICES.reduce((a, s) => a + s.latencyMs, 0) / MOCK_SERVICES.length);
+  const { data, isFetching, refetch, isError } = useAdminSystem();
+  const incidents = useAdminAuditLogs({ severity: 'CRITICAL', pageSize: 6 });
+  const services = data?.services ?? [];
+  const up = services.filter((s) => s.status === 'UP').length;
+  const allUp = !isError && services.length > 0 && up === services.length;
+  const avgLatency = services.length ? Math.round(services.reduce((a, s) => a + s.latencyMs, 0) / services.length) : 0;
+  const host = data?.host;
+  const proc = data?.process;
+  const db = data?.database;
 
-  const recheck = () => {
-    setChecking(true);
-    setTimeout(() => {
-      setChecking(false);
-      setCheckedAt(new Date());
-      toast.success('Đã kiểm tra lại', `${up}/${MOCK_SERVICES.length} dịch vụ hoạt động bình thường.`);
-    }, 800);
+  const recheck = async () => {
+    const r = await refetch();
+    const ss = r.data?.services ?? [];
+    if (r.isError) toast.error('Không kết nối được máy chủ API');
+    else toast.success('Đã kiểm tra lại', `${ss.filter((s) => s.status === 'UP').length}/${ss.length} dịch vụ hoạt động bình thường.`);
   };
+
+  const ramUsed = host ? host.totalMemMb - host.freeMemMb : 0;
+  const resources: { label: string; value: number; icon: React.ElementType; tone: Tone; detail: string }[] = [
+    { label: 'CPU (tải 1 phút)', value: host && host.load[0] ? Math.min(100, Math.round((host.load[0] / host.cpus) * 100)) : 0, icon: Cpu, tone: 'indigo', detail: host ? `${host.cpus} nhân · ${host.platform}${host.load[0] ? '' : ' · hệ điều hành không báo tải'}` : '—' },
+    { label: 'RAM máy chủ', value: host ? Math.round((ramUsed / host.totalMemMb) * 100) : 0, icon: MemoryStick, tone: 'violet', detail: host ? `${(ramUsed / 1024).toFixed(1)} / ${(host.totalMemMb / 1024).toFixed(1)} GB` : '—' },
+    { label: 'Bộ nhớ tiến trình API', value: proc ? Math.round((proc.heapUsedMb / proc.heapTotalMb) * 100) : 0, icon: HardDrive, tone: 'amber', detail: proc ? `Heap ${proc.heapUsedMb} / ${proc.heapTotalMb} MB · RSS ${proc.rssMb} MB` : '—' },
+    { label: 'Kết nối CSDL', value: db ? Math.min(100, db.connections) : 0, icon: Database, tone: 'sky', detail: db ? `${db.connections} kết nối · ${db.tables} bảng · ${db.size}` : '—' },
+  ];
 
   return (
     <div className="space-y-6">
       <TPageHead
         crumbs={[{ label: 'Hệ thống' }, { label: 'Trạng thái dịch vụ' }]}
         title="Trạng thái dịch vụ"
-        sub="Giám sát API, cơ sở dữ liệu, cache, lưu trữ media và các job nền theo thời gian thực."
+        sub="Giám sát máy chủ API và cơ sở dữ liệu PostgreSQL theo thời gian thực (tự làm mới mỗi phút)."
         actions={
-          <TBtn variant="primary" icon={<RefreshCw className={cn(checking && 'animate-spin')} />} onClick={recheck} disabled={checking}>
-            {checking ? 'Đang kiểm tra…' : 'Kiểm tra lại'}
+          <TBtn variant="primary" icon={<RefreshCw className={cn(isFetching && 'animate-spin')} />} onClick={recheck} disabled={isFetching}>
+            {isFetching ? 'Đang kiểm tra…' : 'Kiểm tra lại'}
           </TBtn>
         }
       />
@@ -79,14 +70,17 @@ export const AdminSystemPage: React.FC = () => {
               {allUp ? 'Mọi dịch vụ ổn định' : 'Có dịch vụ cần chú ý'}
             </span>
             <h2 className="mt-4 font-display text-2xl font-extrabold leading-tight md:text-3xl">
-              {allUp ? 'Tất cả hệ thống hoạt động bình thường' : `${MOCK_SERVICES.length - up} dịch vụ đang suy giảm hiệu năng`}
+              {isError ? 'Không kết nối được máy chủ API' : !data ? 'Đang kiểm tra…' : allUp ? 'Tất cả hệ thống hoạt động bình thường' : `${services.length - up} dịch vụ đang suy giảm hiệu năng`}
             </h2>
-            <p className="mt-2 text-sm text-white/60">Kiểm tra lần cuối lúc {checkedAt.toLocaleTimeString('vi-VN')} · region ap-southeast-1 · build 1.4.2</p>
+            <p className="mt-2 text-sm text-white/60">
+              Kiểm tra lần cuối lúc {data ? new Date(data.checkedAt).toLocaleTimeString('vi-VN') : '—'}
+              {proc ? ` · Node ${proc.node} · PID ${proc.pid}` : ''}
+            </p>
             <dl className="mt-6 grid grid-cols-3 gap-3">
               {[
-                { k: 'Đang chạy', v: `${up}/${MOCK_SERVICES.length}` },
-                { k: 'Uptime 30 ngày', v: '99,94%' },
-                { k: 'Độ trễ TB', v: `${avgLatency} ms` },
+                { k: 'Đang chạy', v: `${up}/${services.length}` },
+                { k: 'API chạy liên tục', v: services[0]?.uptime ?? '—' },
+                { k: 'Độ trễ CSDL', v: `${avgLatency} ms` },
               ].map((x) => (
                 <div key={x.k} className="rounded-2xl bg-white/[0.06] p-3 ring-1 ring-white/10">
                   <dt className="text-[11px] text-white/50">{x.k}</dt>
@@ -95,28 +89,28 @@ export const AdminSystemPage: React.FC = () => {
               ))}
             </dl>
           </div>
-          <div>
-            <p className="mb-2 text-[12px] font-semibold text-white/60">Lịch sử 30 ngày</p>
-            <div className="flex h-14 items-end gap-[3px]">
-              {Array.from({ length: 30 }).map((_, i) => (
-                <span
-                  key={i}
-                  title={`Ngày -${29 - i}`}
-                  className={cn('flex-1 rounded-sm', i === 25 ? 'h-3/5 bg-amber-400' : i === 12 ? 'h-2/5 bg-rose-500' : 'h-full bg-emerald-400/80')}
-                />
+          <div className="rounded-2xl bg-white/[0.04] p-4 ring-1 ring-white/10">
+            <p className="mb-3 text-[12px] font-semibold text-white/60">Cơ sở dữ liệu</p>
+            <dl className="space-y-2 text-[13px]">
+              {[
+                ['Phiên bản', db?.version.split(',')[0] ?? '—'],
+                ['Dung lượng', db?.size ?? '—'],
+                ['Số bảng', db ? String(db.tables) : '—'],
+                ['Hoạt động gần nhất', data?.lastActivityAt ? timeAgo(data.lastActivityAt) : '—'],
+              ].map(([k, v]) => (
+                <div key={k} className="flex justify-between gap-3">
+                  <dt className="text-white/50">{k}</dt>
+                  <dd className="truncate text-right font-semibold text-white/90">{v}</dd>
+                </div>
               ))}
-            </div>
-            <div className="mt-2 flex justify-between text-[11px] text-white/40">
-              <span>30 ngày trước</span>
-              <span>Hôm nay</span>
-            </div>
+            </dl>
           </div>
         </div>
       </section>
 
       {/* Dịch vụ */}
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-        {MOCK_SERVICES.map((s) => {
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+        {services.map((s) => {
           const m = STATUS_META[s.status];
           const ic = SERVICE_ICON[s.name] ?? { icon: Server, tone: 'indigo' as Tone };
           return (
@@ -139,20 +133,21 @@ export const AdminSystemPage: React.FC = () => {
                   </p>
                 </div>
                 <div>
-                  <p className="text-[12px] text-slate-500">Uptime</p>
-                  <p className="font-display text-xl font-extrabold tabular-nums text-slate-900">{s.uptime}</p>
+                  <p className="text-[12px] text-slate-500">Tình trạng</p>
+                  <p className="truncate font-display text-xl font-extrabold text-slate-900">{s.uptime}</p>
                 </div>
               </div>
-              <Meter value={uptimeNum(s.uptime)} tone={m.meter} className="mt-3" />
+              <Meter value={s.status === 'UP' ? 100 : s.status === 'DEGRADED' ? 60 : 10} tone={m.meter} className="mt-3" />
             </article>
           );
         })}
+        {!services.length && <p className="col-span-full py-6 text-center text-sm text-slate-500">{isError ? 'Không lấy được trạng thái dịch vụ.' : 'Đang kiểm tra…'}</p>}
       </div>
 
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
-        <Panel className="xl:col-span-2" title="Tài nguyên máy chủ" sub="orbi-prod-01 · Ubuntu 22.04 · ap-southeast-1" icon={Cpu} tone="indigo">
+        <Panel className="xl:col-span-2" title="Tài nguyên máy chủ" sub={host ? `${host.platform} · ${host.cpus} nhân` : 'Đang tải…'} icon={Cpu} tone="indigo">
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            {RESOURCES.map((r) => (
+            {resources.map((r) => (
               <div key={r.label} className="rounded-2xl border border-slate-100 bg-slate-50/70 p-4">
                 <div className="flex items-center justify-between">
                   <span className="flex items-center gap-2.5 text-sm font-semibold text-slate-800">
@@ -167,19 +162,28 @@ export const AdminSystemPage: React.FC = () => {
             ))}
           </div>
         </Panel>
-        <Panel title="Nhật ký sự cố" sub="7 ngày gần nhất" icon={AlertTriangle} tone="amber">
-          <ol className="relative space-y-5 before:absolute before:bottom-2 before:left-4 before:top-2 before:w-px before:bg-slate-200">
-            {INCIDENTS.map((it) => (
-              <li key={it.id} className="relative flex gap-3">
-                <IconTile icon={it.icon} tone={it.tone} size="sm" className="relative ring-4 ring-white" />
-                <div className="min-w-0">
-                  <p className="text-sm font-semibold text-slate-900">{it.title}</p>
-                  <p className="text-[13px] text-slate-500">{it.description}</p>
-                  <p className="mt-0.5 text-[12px] text-slate-400">{it.time}</p>
-                </div>
-              </li>
-            ))}
-          </ol>
+        <Panel title="Sự kiện nghiêm trọng" sub="Thao tác mức CRITICAL gần nhất" icon={AlertTriangle} tone="amber">
+          {incidents.data?.items.length ? (
+            <ol className="relative space-y-5 before:absolute before:bottom-2 before:left-4 before:top-2 before:w-px before:bg-slate-200">
+              {incidents.data.items.map((it) => (
+                <li key={it.id} className="relative flex gap-3">
+                  <IconTile icon={ShieldAlert} tone="rose" size="sm" className="relative ring-4 ring-white" />
+                  <div className="min-w-0">
+                    <p className="text-sm font-semibold text-slate-900">{it.action}</p>
+                    <p className="truncate text-[13px] text-slate-500">
+                      {it.actor} · {it.target}
+                    </p>
+                    <p className="mt-0.5 text-[12px] text-slate-400">{timeAgo(it.createdAt)}</p>
+                  </div>
+                </li>
+              ))}
+            </ol>
+          ) : (
+            <div className="flex flex-col items-center gap-2 py-8 text-center">
+              <IconTile icon={Activity} tone="emerald" />
+              <p className="text-sm text-slate-500">Chưa có sự kiện nghiêm trọng nào.</p>
+            </div>
+          )}
         </Panel>
       </div>
     </div>

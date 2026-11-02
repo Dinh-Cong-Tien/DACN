@@ -1,7 +1,9 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Mic, Square, Play, Send, Clock, CheckCircle2, RotateCcw, MessageSquare } from 'lucide-react';
 import { useSearchParams } from 'react-router-dom';
-import { VSTEP_SPEAKING_PARTS } from '@/shared/mocks';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { api, errorMessage, http } from '@/shared/api/client';
+import { startAttempt, submitAttempt, usePracticeTasks, useSubmitAssignment } from '@/shared/api/learner';
 import { cn, formatClock } from '@/shared/utils';
 import { useDocumentTitle } from '@/shared/hooks';
 import { toast } from '@/shared/stores/uiStore';
@@ -14,16 +16,11 @@ interface HistoryRow {
   id: string;
   part: string;
   date: string;
-  duration: string;
+  durationSec: number;
   score?: number;
   status: 'GRADED' | 'PENDING';
+  audioUrl?: string;
 }
-
-const HISTORY: HistoryRow[] = [
-  { id: 'h-1', part: 'Part 2 — Solution Discussion', date: '28/10/2026', duration: '03:42', status: 'PENDING' },
-  { id: 'h-2', part: 'Part 1 — Social Interaction', date: '21/10/2026', duration: '02:15', score: 7.0, status: 'GRADED' },
-  { id: 'h-3', part: 'Part 3 — Topic Development', date: '14/10/2026', duration: '04:50', score: 6.5, status: 'GRADED' },
-];
 
 const PART_PHOTO = [PHOTOS.discussion, PHOTOS.meeting, PHOTOS.lecture];
 const PART_TONE: Array<'teal' | 'coral' | 'yellow'> = ['teal', 'coral', 'yellow'];
@@ -33,7 +30,24 @@ export const StudentSpeakingPage: React.FC = () => {
   useDocumentTitle('Luyện Nói VSTEP');
   // Mở từ bài được giao: ?part=<id> vào thẳng phần giáo viên giao
   const [params] = useSearchParams();
-  const [partId, setPartId] = useState<string | null>(VSTEP_SPEAKING_PARTS.find((p) => p.id === params.get('part'))?.id ?? null);
+  const assignmentId = params.get('assignment');
+  const qc = useQueryClient();
+  const { data: tasks = [] } = usePracticeTasks('speaking', { examType: 'VSTEP' });
+  const VSTEP_SPEAKING_PARTS = useMemo(
+    () =>
+      tasks
+        .map((q) => {
+          const c = (q.taskConfig ?? {}) as { title?: string; minutes?: number };
+          return { id: q.id, part: c.title ?? 'Phần thi Nói', minutes: c.minutes ?? 3, prompt: q.stem };
+        })
+        .sort((a, b) => a.part.localeCompare(b.part)),
+    [tasks]
+  );
+  const { data: HISTORY = [] } = useQuery({ queryKey: ['learner', 'speaking-history'], queryFn: () => api.get<HistoryRow[]>('/learner/speaking/history') });
+  const submitAssignment = useSubmitAssignment();
+  const [sending, setSending] = useState(false);
+  const blobRef = useRef<Blob | null>(null);
+  const [partId, setPartId] = useState<string | null>(params.get('part'));
   const part = VSTEP_SPEAKING_PARTS.find((p) => p.id === partId);
   const partIdx = VSTEP_SPEAKING_PARTS.findIndex((p) => p.id === partId);
   const [phase, setPhase] = useState<Phase>('IDLE');
@@ -85,6 +99,7 @@ export const StudentSpeakingPage: React.FC = () => {
       rec.ondataavailable = (e) => chunksRef.current.push(e.data);
       rec.onstop = () => {
         const blob = new Blob(chunksRef.current, { type: 'audio/webm' });
+        blobRef.current = blob;
         setAudioUrl(URL.createObjectURL(blob));
         stream.getTracks().forEach((t) => t.stop());
       };
@@ -110,15 +125,32 @@ export const StudentSpeakingPage: React.FC = () => {
     setAudioUrl(null);
   };
 
-  const submit = () => {
-    toast.success('Đã nộp bài nói', 'Giáo viên sẽ nhận xét theo 4 tiêu chí: Pronunciation, Fluency, Vocabulary, Grammar.');
-    setPartId(null);
+  const submit = async () => {
+    if (!part || !blobRef.current) return;
+    setSending(true);
+    try {
+      // 1. Tải file ghi âm lên máy chủ  2. Nộp bài kèm đường dẫn file
+      const up = await http.post<{ data: { url: string } }>('/learner/uploads/recording', blobRef.current, { headers: { 'Content-Type': 'audio/webm' } });
+      const audio = up.data.data.url;
+      if (assignmentId) await submitAssignment.mutateAsync({ id: assignmentId, audioUrl: audio });
+      else {
+        const r = await startAttempt({ questionIds: [part.id] });
+        await submitAttempt(r.attempt.id, [{ questionId: part.id, audioUrl: audio, timeSpentMs: elapsed * 1000 }], elapsed);
+      }
+      qc.invalidateQueries({ queryKey: ['learner', 'speaking-history'] });
+      toast.success('Đã nộp bài nói', 'Giáo viên sẽ nhận xét theo 4 tiêu chí: Pronunciation, Fluency, Vocabulary, Grammar.');
+      setPartId(null);
+    } catch (e) {
+      toast.error('Chưa nộp được bài nói', errorMessage(e));
+    } finally {
+      setSending(false);
+    }
   };
 
   const cols: Column<HistoryRow>[] = [
     { key: 'part', header: 'Phần thi', render: (r) => <span className="font-bold text-slate-900">{r.part}</span> },
-    { key: 'date', header: 'Ngày' },
-    { key: 'duration', header: 'Thời lượng', align: 'center', render: (r) => <span className="font-mono">{r.duration}</span> },
+    { key: 'date', header: 'Ngày', render: (r) => new Date(r.date).toLocaleDateString('vi-VN') },
+    { key: 'durationSec', header: 'Thời lượng', align: 'center', render: (r) => <span className="font-mono">{formatClock(r.durationSec)}</span> },
     { key: 'score', header: 'Điểm', align: 'center', render: (r) => (r.score !== undefined ? <span className="font-display font-extrabold text-indigo-700 text-base">{r.score.toFixed(1)}</span> : <span className="text-slate-400">—</span>) },
     {
       key: 'status',
@@ -169,7 +201,7 @@ export const StudentSpeakingPage: React.FC = () => {
           </div>
           <Card hard className="animate-fade-up" style={{ animationDelay: '250ms' }}>
             <CardHeader title="Lịch sử bài nộp" subtitle="Các bản ghi âm gần đây" icon={<MessageSquare />} />
-            <DataTable columns={cols} rows={HISTORY} dense />
+            <DataTable columns={cols} rows={HISTORY} dense emptyTitle="Chưa nộp bài nói nào" emptyDescription="Chọn một phần thi ở trên để ghi âm và nộp bài." />
           </Card>
         </>
       ) : (
@@ -246,7 +278,7 @@ export const StudentSpeakingPage: React.FC = () => {
                     <Button variant="outline" leftIcon={<RotateCcw className="w-4 h-4" />} onClick={reset}>
                       Ghi lại
                     </Button>
-                    <Button variant="success" leftIcon={<Send className="w-4 h-4" />} onClick={submit}>
+                    <Button variant="success" leftIcon={<Send className="w-4 h-4" />} onClick={() => void submit()} loading={sending}>
                       Nộp bài nói
                     </Button>
                   </div>

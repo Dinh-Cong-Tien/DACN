@@ -1,7 +1,17 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { PenTool, Clock, Play, Send, Save, FileText, CheckCircle2, Pause } from 'lucide-react';
 import { useSearchParams } from 'react-router-dom';
-import { VSTEP_WRITING_TASKS, WRITING_CRITERIA } from '@/shared/mocks';
+import { WRITING_CRITERIA } from '@/shared/constants/student';
+import { errorMessage } from '@/shared/api/client';
+import { startAttempt, submitAttempt, usePracticeTasks, useSubmitAssignment, type ApiQuestion } from '@/shared/api/learner';
+
+type WritingTask = { id: string; task: string; minutes: number; minWords: number; prompt: string };
+const toTask = (q: ApiQuestion): WritingTask => {
+  const c = (q.taskConfig ?? {}) as { title?: string; minutes?: number; minWords?: number; keywords?: string[] };
+  const prompt = c.keywords?.length ? `${q.stem}\nTừ khoá bắt buộc: ${c.keywords.join(', ')}` : q.stem;
+  return { id: q.id, task: c.title ?? 'Đề Viết', minutes: c.minutes ?? 20, minWords: c.minWords ?? 120, prompt };
+};
+const EMPTY_TASK: WritingTask = { id: '', task: 'Đề Viết', minutes: 20, minWords: 120, prompt: '' };
 import { cn, formatClock } from '@/shared/utils';
 import { useDocumentTitle, useLocalStorage } from '@/shared/hooks';
 import { toast } from '@/shared/stores/uiStore';
@@ -14,8 +24,20 @@ export const StudentWritingPage: React.FC = () => {
   useDocumentTitle('Luyện Viết VSTEP');
   // Mở từ bài được giao: ?task=<id> chọn sẵn đề giáo viên giao
   const [params] = useSearchParams();
-  const [taskId, setTaskId] = useState(VSTEP_WRITING_TASKS.find((t) => t.id === params.get('task'))?.id ?? VSTEP_WRITING_TASKS[0].id);
-  const task = VSTEP_WRITING_TASKS.find((t) => t.id === taskId) ?? VSTEP_WRITING_TASKS[0];
+  const wanted = params.get('task');
+  const assignmentId = params.get('assignment');
+  const { data: vstep = [] } = usePracticeTasks('writing', { examType: 'VSTEP' });
+  // Đề được giao không thuộc 2 đề VSTEP mặc định (vd. đề TOEIC) → tải thêm để tìm
+  const { data: allWriting = [] } = usePracticeTasks('writing', { limit: 300 });
+  const VSTEP_WRITING_TASKS = useMemo(() => {
+    const list = vstep.map(toTask);
+    const extra = wanted && !list.some((t) => t.id === wanted) ? allWriting.find((q) => q.id === wanted) : undefined;
+    return extra ? [toTask(extra), ...list] : list;
+  }, [vstep, allWriting, wanted]);
+  const [taskId, setTaskId] = useState<string>(wanted ?? '');
+  const task = VSTEP_WRITING_TASKS.find((t) => t.id === taskId) ?? VSTEP_WRITING_TASKS[0] ?? EMPTY_TASK;
+  const submitAssignment = useSubmitAssignment();
+  const [sending, setSending] = useState(false);
   const [drafts, setDrafts] = useLocalStorage<Record<string, string>>('orbi-writing-draft', {});
   const text = drafts[task.id] ?? '';
   const [running, setRunning] = useState(false);
@@ -46,15 +68,30 @@ export const StudentWritingPage: React.FC = () => {
 
   const setText = (v: string) => setDrafts((d) => ({ ...d, [task.id]: v }));
 
-  const submit = () => {
-    setSummaryOpen(false);
-    setSubmitted((s) => [...s, task.id]);
-    setRunning(false);
-    toast.success('Đã nộp bài', 'Giáo viên sẽ chấm theo rubric 4 tiêu chí và phản hồi trong 48h.');
+  const submit = async () => {
+    setSending(true);
+    try {
+      if (assignmentId) {
+        // Bài được giao: nộp vào bài nộp của lớp
+        await submitAssignment.mutateAsync({ id: assignmentId, content: text });
+      } else {
+        // Tự luyện: lưu thành lượt làm bài, giáo viên lớp bạn sẽ thấy trong hàng chờ chấm
+        const r = await startAttempt({ questionIds: [task.id] });
+        await submitAttempt(r.attempt.id, [{ questionId: task.id, textAnswer: text }], task.minutes * 60 - remaining);
+      }
+      setSummaryOpen(false);
+      setSubmitted((s) => [...s, task.id]);
+      setRunning(false);
+      toast.success('Đã nộp bài', 'Giáo viên sẽ chấm theo rubric 4 tiêu chí.');
+    } catch (e) {
+      toast.error('Chưa nộp được bài', errorMessage(e));
+    } finally {
+      setSending(false);
+    }
   };
 
   const outline =
-    task.id === 'vs-w-1'
+    task.minWords < 200
       ? ['Dear + tên người nhận, nêu lý do viết', 'Đoạn 1: mô tả vấn đề đã gặp', 'Đoạn 2: ảnh hưởng tới chuyến đi', 'Đoạn 3: yêu cầu cụ thể', 'Kết thư lịch sự (Yours sincerely)']
       : ['Mở bài: paraphrase + nêu quan điểm', 'Thân 1: luận điểm + giải thích + ví dụ', 'Thân 2: quan điểm đối lập/bổ sung', 'Kết bài: khẳng định lại ý kiến', 'Dành 5 phút kiểm tra lỗi'];
 
@@ -88,7 +125,7 @@ export const StudentWritingPage: React.FC = () => {
                 ≥ {task.minWords} từ
               </Badge>
             </div>
-            <p className="font-display text-lg text-slate-900 leading-relaxed font-semibold">{task.prompt}</p>
+            <p className="font-display text-lg text-slate-900 leading-relaxed font-semibold whitespace-pre-line">{task.prompt}</p>
           </Card>
 
           <div className="rounded-2xl border-2 border-slate-900 shadow-hard bg-paper overflow-hidden animate-fade-up" style={{ animationDelay: '80ms' }}>
@@ -169,7 +206,7 @@ export const StudentWritingPage: React.FC = () => {
             <Button variant="ghost" onClick={() => setSummaryOpen(false)}>
               Viết tiếp
             </Button>
-            <Button variant="success" leftIcon={<Send className="w-4 h-4" />} onClick={submit}>
+            <Button variant="success" leftIcon={<Send className="w-4 h-4" />} onClick={() => void submit()} loading={sending}>
               Nộp cho giáo viên
             </Button>
           </>

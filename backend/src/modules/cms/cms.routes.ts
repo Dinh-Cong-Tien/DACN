@@ -343,3 +343,74 @@ cmsRouter.get(
     };
   })
 );
+
+// ---------------- Bảng vinh danh công khai ----------------
+
+/** Ngày hiện tại theo giờ Việt Nam (UTC+7), dạng YYYY-MM-DD */
+const vnToday = () => new Date(Date.now() + 7 * 3600_000).toISOString().slice(0, 10);
+const shiftDays = (ymdStr: string, n: number) => new Date(new Date(`${ymdStr}T00:00:00Z`).getTime() + n * 86400_000).toISOString().slice(0, 10);
+
+/** Khoảng [from, to) của tuần (bắt đầu thứ Hai) hoặc tháng hiện tại, lùi `back` kỳ */
+function leaderboardRange(period: 'week' | 'month', back = 0) {
+  const today = vnToday();
+  if (period === 'week') {
+    const dow = (new Date(`${today}T00:00:00Z`).getUTCDay() + 6) % 7; // 0 = thứ Hai
+    const from = shiftDays(today, -dow - 7 * back);
+    return { from, to: shiftDays(from, 7) };
+  }
+  const [y, m] = today.split('-').map(Number);
+  const d0 = new Date(Date.UTC(y, m - 1 - back, 1));
+  const d1 = new Date(Date.UTC(y, m - back, 1));
+  return { from: d0.toISOString().slice(0, 10), to: d1.toISOString().slice(0, 10) };
+}
+
+async function publicRanking(period: 'week' | 'month', exam: 'ALL' | 'TOEIC' | 'VSTEP', back = 0) {
+  const r = leaderboardRange(period, back);
+  const rows = await prisma.$queryRaw<{ user_id: string; points: bigint }[]>`
+    SELECT d.user_id, SUM(d.xp) AS points
+    FROM daily_activities d JOIN users u ON u.id = d.user_id
+    LEFT JOIN learning_goals g ON g.user_id = u.id AND g.is_active
+    WHERE d.activity_date >= ${r.from}::date AND d.activity_date < ${r.to}::date
+      AND u.role = 'STUDENT' AND u.deleted_at IS NULL AND u.status = 'ACTIVE'
+      AND coalesce((u.settings->>'showOnLeaderboard')::boolean, true)
+      AND (${exam} = 'ALL' OR g.exam_type::text = ${exam})
+    GROUP BY d.user_id HAVING SUM(d.xp) > 0 ORDER BY points DESC LIMIT 100`;
+  return { range: r, list: rows.map((x) => ({ userId: x.user_id, points: Number(x.points) })) };
+}
+
+// GET /cms/leaderboard?period=week|month&exam=ALL|TOEIC|VSTEP&limit=10 → { from, to, entries: LeaderboardEntry[] } (không cần đăng nhập)
+cmsRouter.get(
+  '/leaderboard',
+  handler(async (req) => {
+    const q = parse(
+      z.object({ period: z.enum(['week', 'month']).default('week'), exam: z.enum(['ALL', 'TOEIC', 'VSTEP']).default('ALL'), limit: z.coerce.number().int().min(3).max(50).default(10) }),
+      req.query
+    );
+    const [cur, prev] = await Promise.all([publicRanking(q.period, q.exam), publicRanking(q.period, q.exam, 1)]);
+    const prevRank = new Map(prev.list.map((x, i) => [x.userId, i + 1]));
+    const top = cur.list.slice(0, q.limit);
+    const ids = top.map((x) => x.userId);
+    const [users, goals] = await Promise.all([
+      prisma.user.findMany({ where: { id: { in: ids } }, select: { id: true, fullName: true, avatarUrl: true, streakCurrent: true } }),
+      prisma.learningGoal.findMany({ where: { userId: { in: ids }, isActive: true } }),
+    ]);
+    const umap = new Map(users.map((u) => [u.id, u]));
+    const gmap = new Map(goals.map((g) => [g.userId, g]));
+    const entries = top.map((x, i) => {
+      const u = umap.get(x.userId)!;
+      const g = gmap.get(x.userId);
+      const pr = prevRank.get(x.userId);
+      return {
+        rank: i + 1,
+        name: u.fullName,
+        initials: u.fullName.split(/\s+/).slice(-2).map((w) => w[0]).join('').toUpperCase(),
+        avatarUrl: u.avatarUrl ?? undefined,
+        points: x.points,
+        streak: u.streakCurrent,
+        delta: pr ? pr - (i + 1) : 0,
+        target: g ? `${g.examType} ${g.targetScore ?? g.targetLevel ?? ''}`.trim() : '',
+      };
+    });
+    return { period: q.period, from: cur.range.from, to: shiftDays(cur.range.to, -1), entries };
+  })
+);

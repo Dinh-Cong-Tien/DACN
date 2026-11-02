@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { RevealPhoto } from '@/shared/components/motion';
 import { Img } from '@/shared/components/media/Img';
-import { BLOG_POSTS, BLOG_CATEGORIES } from '@/shared/mocks';
+import { usePostCategories, usePosts } from '@/shared/api/cms';
+import { EmptyState, SkeletonGrid } from '@/shared/components/ui';
 import { useDocumentTitle } from '@/shared/hooks';
 import { toast } from '@/shared/stores/uiStore';
 import { formatDate, formatNumber } from '@/shared/utils';
@@ -17,9 +18,15 @@ const Meta: React.FC<{ p: BlogPost }> = ({ p }) => (
 
 export const BlogPage: React.FC = () => {
   useDocumentTitle('Kinh nghiệm thi');
+  const { data, isLoading } = usePosts({ pageSize: 200 });
+  const { data: BLOG_CATEGORIES = [] } = usePostCategories();
+  const BLOG_POSTS = data?.items ?? [];
   const [featured, ...rest] = BLOG_POSTS;
   const popular = [...BLOG_POSTS].sort((a, b) => (b.views ?? 0) - (a.views ?? 0)).slice(0, 5);
   const [email, setEmail] = useState('');
+
+  if (isLoading) return <div className="bg-page"><div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14"><SkeletonGrid count={6} /></div></div>;
+  if (!featured) return <div className="bg-page"><EmptyState title="Chưa có bài viết" description="Bài viết mới sẽ sớm được đăng." /></div>;
 
   return (
     <div className="bg-page">

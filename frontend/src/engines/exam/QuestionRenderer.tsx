@@ -6,6 +6,9 @@ import { AudioPlayer } from '@/shared/components/media/AudioPlayer';
 import { Badge } from '@/shared/components/ui';
 import { toast } from '@/shared/stores/uiStore';
 
+/** Nhãn chủ điểm dạng chữ; bỏ id kỹ thuật (UUID của skill_tags) trả về từ API */
+const readableTags = (tags?: string[]) => (tags ?? []).filter((t) => !/^[0-9a-f]{8}-[0-9a-f]{4}-/i.test(t));
+
 export interface QuestionRendererProps {
   question: IQuestion;
   index?: number;
@@ -157,9 +160,9 @@ export const QuestionRenderer: React.FC<QuestionRendererProps> = ({
             )}
           </div>
           <p className="leading-relaxed text-slate-700 whitespace-pre-line">{question.explanation ?? 'Chưa có lời giải cho câu hỏi này.'}</p>
-          {question.tags?.length > 0 && (
+          {readableTags(question.tags).length > 0 && (
             <div className="flex flex-wrap gap-1.5 mt-3 pt-3 border-t border-black/5">
-              {question.tags.map((t) => (
+              {readableTags(question.tags).map((t) => (
                 <Badge key={t} tone="slate" size="xs">
                   #{t}
                 </Badge>

@@ -3,7 +3,9 @@ import { Link, useParams } from 'react-router-dom';
 import { ArrowLeft, ArrowRight, Bookmark, ChevronRight, Share2 } from 'lucide-react';
 import { Avatar } from '@/shared/components/ui';
 import { Img } from '@/shared/components/media/Img';
-import { BLOG_POSTS, TOEIC_GUIDE_SLUG, VSTEP_GUIDE_SLUG } from '@/shared/mocks';
+import { usePost, usePosts } from '@/shared/api/cms';
+import { TOEIC_GUIDE_SLUG, VSTEP_GUIDE_SLUG } from '@/shared/constants/public';
+import { EmptyState, SkeletonCard } from '@/shared/components/ui';
 import { useDocumentTitle } from '@/shared/hooks';
 import { cn, formatDate } from '@/shared/utils';
 import { toast } from '@/shared/stores/uiStore';
@@ -33,14 +35,18 @@ function toBlocks(content: string[]): Block[] {
 
 export const BlogDetailPage: React.FC = () => {
   const { slug } = useParams();
-  const post = BLOG_POSTS.find((p) => p.slug === slug) ?? BLOG_POSTS[0];
-  useDocumentTitle(post.title);
+  const { data: post, isLoading, isError } = usePost(slug);
+  const { data: same } = usePosts(post ? { category: post.categorySlug, pageSize: 200 } : undefined);
+  useDocumentTitle(post?.title ?? 'Bài viết');
+  if (isLoading) return <div className="mx-auto max-w-3xl px-4 py-14"><SkeletonCard lines={8} /></div>;
+  if (isError || !post) return <EmptyState title="Không tìm thấy bài viết" description="Bài viết có thể đã bị gỡ hoặc đường dẫn chưa đúng." action={<Link to="/blog" className="font-semibold text-indigo-700">Về trang Kinh nghiệm</Link>} />;
   const series = SERIES[post.categorySlug];
-  const siblings = BLOG_POSTS.filter((p) => p.categorySlug === post.categorySlug);
+  // Bộ bài giới thiệu kỳ thi xếp theo thứ tự trong series
+  const siblings = [...(same?.items ?? [post])].sort((a, b) => ((a as { seriesOrder?: number }).seriesOrder ?? 0) - ((b as { seriesOrder?: number }).seriesOrder ?? 0));
   const idx = siblings.findIndex((p) => p.id === post.id);
   const prev = series ? siblings[idx - 1] : undefined;
   const next = series ? siblings[idx + 1] : undefined;
-  const related = siblings.filter((p) => p.id !== post.id).slice(0, 3);
+  const related = (post.related?.length ? post.related : siblings.filter((p) => p.id !== post.id)).slice(0, 3);
   const blocks = toBlocks(post.content);
   const headings = blocks.filter((b): b is Extract<Block, { kind: 'h2' }> => b.kind === 'h2');
 

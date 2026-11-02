@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { History, Download, Info, AlertTriangle, ShieldAlert, Search, Cog } from 'lucide-react';
-import { MOCK_AUDIT_LOGS, MOCK_USERS } from '@/shared/mocks';
+import { useAdminAuditLogs, type AdminAuditLog } from '@/shared/api/admin';
 import type { AppRole, AuditLog } from '@/shared/types';
 import { cn, formatDateTime, ROLE_LABEL } from '@/shared/utils';
 import { useDocumentTitle } from '@/shared/hooks';
@@ -21,7 +21,7 @@ const ROLE_CHIP: Record<AppRole, string> = {
   ADMIN: 'bg-violet-500/10 text-violet-700',
 };
 const PAGE_SIZE = 8;
-const avatarOf = (name: string) => MOCK_USERS.find((u) => u.fullName === name)?.avatarUrl;
+const EMPTY: AdminAuditLog[] = [];
 
 export const AdminAuditLogsPage: React.FC = () => {
   useDocumentTitle('Nhật ký hệ thống');
@@ -29,14 +29,17 @@ export const AdminAuditLogsPage: React.FC = () => {
   const [role, setRole] = useState<AppRole | ''>('');
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
+  const { data, isLoading } = useAdminAuditLogs({ pageSize: 500 });
+  const MOCK_AUDIT_LOGS = data?.items ?? EMPTY;
+  const avatarOf = (name: string) => MOCK_AUDIT_LOGS.find((l) => l.actor === name)?.actorAvatar;
 
   const filtered = useMemo(() => {
     const s = search.toLowerCase();
     return MOCK_AUDIT_LOGS.filter((l) => (!severity || l.severity === severity) && (!role || l.role === role) && (!s || [l.actor, l.target, l.action].some((v) => v.toLowerCase().includes(s))));
-  }, [severity, role, search]);
+  }, [severity, role, search, MOCK_AUDIT_LOGS]);
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const rows = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
-  const count = (s: AuditLog['severity']) => MOCK_AUDIT_LOGS.filter((l) => l.severity === s).length;
+  const count = (s: AuditLog['severity']) => data?.bySeverity[s] ?? 0;
 
   const sevTabs: { key: AuditLog['severity'] | ''; label: string; n: number }[] = [
     { key: '', label: 'Tất cả', n: MOCK_AUDIT_LOGS.length },
@@ -50,7 +53,15 @@ export const AdminAuditLogsPage: React.FC = () => {
         title="Nhật ký hệ thống"
         sub="Lưu vết mọi thao tác nhạy cảm: thay đổi phân quyền, khoá tài khoản, sửa cấu hình, xoá dữ liệu. Bản ghi không thể chỉnh sửa."
         actions={
-          <TBtn icon={<Download />} onClick={() => toast.info('Đang xuất CSV', `${filtered.length} bản ghi theo bộ lọc hiện tại.`)}>
+          <TBtn icon={<Download />} onClick={() => {
+              const esc = (v: unknown) => `"${String(v ?? '').replace(/"/g, '""')}"`;
+              const csv = ['Thời gian,Người thực hiện,Vai trò,Hành động,Đối tượng,Mức độ,IP', ...filtered.map((l) => [l.createdAt, l.actor, l.role, l.action, l.target, l.severity, l.ip].map(esc).join(','))].join(String.fromCharCode(10));
+              const a = document.createElement('a');
+              a.href = URL.createObjectURL(new Blob([String.fromCharCode(0xfeff) + csv], { type: 'text/csv;charset=utf-8' }));
+              a.download = `nhat-ky-he-thong-${new Date().toISOString().slice(0, 10)}.csv`;
+              a.click();
+              toast.info('Đã xuất CSV', `${filtered.length} bản ghi theo bộ lọc hiện tại.`);
+            }}>
             Xuất CSV
           </TBtn>
         }
@@ -58,7 +69,7 @@ export const AdminAuditLogsPage: React.FC = () => {
 
       <Figures
         items={[
-          { label: 'Tổng bản ghi', value: MOCK_AUDIT_LOGS.length, icon: History, tone: 'indigo', note: '30 ngày gần nhất' },
+          { label: 'Tổng bản ghi', value: data?.total ?? 0, icon: History, tone: 'indigo', note: isLoading ? 'đang tải…' : `hiển thị ${MOCK_AUDIT_LOGS.length} bản ghi mới nhất` },
           { label: 'Thông tin', value: count('INFO'), icon: Info, tone: 'sky' },
           { label: 'Cảnh báo', value: count('WARN'), icon: AlertTriangle, tone: 'amber' },
           { label: 'Nghiêm trọng', value: count('CRITICAL'), icon: ShieldAlert, tone: 'rose', note: 'cần xem xét' },

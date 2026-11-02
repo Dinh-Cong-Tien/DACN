@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { Timer, Volume2, Flag, ClipboardCheck } from 'lucide-react';
-import { MOCK_TESTS } from '@/shared/mocks';
+import { useTests } from '@/shared/api/catalog';
+import type { MockTestSummary } from '@/shared/types';
 import { useDocumentTitle, useGate, useParamState } from '@/shared/hooks';
 import { cn } from '@/shared/utils';
 import { Accent, PageHeader, Section, SectionHead, UnderlineTabs, CtaStrip } from './shared/PageKit';
@@ -9,7 +10,7 @@ import { TestList } from './shared/TestList';
 type Exam = 'TOEIC' | 'VSTEP';
 type Kind = 'ALL' | 'FULL' | 'MINI' | 'FREE';
 
-const isFull = (t: (typeof MOCK_TESTS)[number]) => t.totalQuestions >= 150 || t.parts.length >= 4;
+const isFull = (t: MockTestSummary) => t.totalQuestions >= 150 || t.parts.length >= 4;
 
 const ROOM = [
   { icon: Timer, title: 'Đồng hồ đếm ngược', text: 'TOEIC 120 phút, VSTEP theo từng kỹ năng. Hết giờ tự nộp bài.' },
@@ -23,9 +24,10 @@ export const MockTestsPage: React.FC = () => {
   const gate = useGate();
   const [exam, setExam] = useParamState<Exam>('exam', ['TOEIC', 'VSTEP'], 'TOEIC');
   const [kind, setKind] = useState<Kind>('ALL');
+  const { data: MOCK_TESTS = [], isLoading } = useTests();
   const list = useMemo(
     () => MOCK_TESTS.filter((t) => t.examType === exam).filter((t) => (kind === 'ALL' ? true : kind === 'FREE' ? t.isFree : kind === 'FULL' ? isFull(t) : !isFull(t))),
-    [exam, kind]
+    [exam, kind, MOCK_TESTS]
   );
 
   return (
@@ -36,8 +38,8 @@ export const MockTestsPage: React.FC = () => {
         title={<>Đề thi thử <Accent>TOEIC và VSTEP</Accent></>}
         lead="Đề TOEIC theo format ETS mới nhất và đề VSTEP theo định dạng của Bộ GD&ĐT. Làm trên máy như thi thật, nộp bài là có điểm và giải thích."
         facts={[
-          { value: '96', label: 'Đề TOEIC' },
-          { value: '87', label: 'Đề VSTEP' },
+          { value: isLoading ? '…' : String(MOCK_TESTS.filter((t) => t.examType === 'TOEIC').length), label: 'Đề TOEIC' },
+          { value: isLoading ? '…' : String(MOCK_TESTS.filter((t) => t.examType === 'VSTEP').length), label: 'Đề VSTEP' },
           { value: '3 đề / tuần', label: 'Miễn phí với tài khoản Free' },
         ]}
       />

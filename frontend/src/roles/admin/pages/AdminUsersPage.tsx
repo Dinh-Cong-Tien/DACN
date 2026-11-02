@@ -1,7 +1,8 @@
 import { useSearchParams } from 'react-router-dom';
-import React from 'react';
-import { Users, Lock, Unlock, KeyRound, UserCheck, Mail, UserPlus, Crown } from 'lucide-react';
-import { MOCK_USERS } from '@/shared/mocks';
+import React, { useMemo } from 'react';
+import { Users, Lock, Unlock, KeyRound, UserCheck, UserPlus, Crown } from 'lucide-react';
+import { adminApi, useAdminInvalidate, useAdminUsers } from '@/shared/api/admin';
+import { errorMessage } from '@/shared/api/client';
 import type { AppRole, AppUser } from '@/shared/types';
 import { formatDate, timeAgo, ROLE_LABEL } from '@/shared/utils';
 import { useDocumentTitle } from '@/shared/hooks';
@@ -84,21 +85,34 @@ const fields: CrudField<AppUser>[] = [
       { value: 'LOCKED', label: 'Đã khoá' },
     ],
   },
-  {
-    key: 'plan',
-    label: 'Gói thành viên',
-    type: 'select',
-    options: [
-      { value: 'FREE', label: 'Free' },
-      { value: 'VIP', label: 'VIP' },
-    ],
-  },
 ];
+
+/** Mật khẩu tạm khi admin đặt lại (chưa có dịch vụ email → hiện cho admin gửi người dùng) */
+const tempPassword = () => `Orbi${Math.random().toString(36).slice(2, 8)}!`;
 
 export const AdminUsersPage: React.FC = () => {
   const [params] = useSearchParams();
   useDocumentTitle('Quản lý người dùng');
-  const count = (s: AppUser['status']) => MOCK_USERS.filter((u) => u.status === s).length;
+  const { data, isLoading } = useAdminUsers();
+  const refresh = useAdminInvalidate();
+  const users = useMemo<AppUser[]>(() => data?.items ?? [], [data]);
+  const byStatus = data?.stats.byStatus ?? {};
+  const total = Object.values(data?.stats.byRole ?? {}).reduce<number>((a, b) => a + (b ?? 0), 0);
+
+  const run = async (fn: () => Promise<unknown>, ok: string, desc?: string) => {
+    try {
+      await fn();
+      toast.success(ok, desc);
+      await refresh();
+    } catch (e) {
+      toast.error('Không thực hiện được', errorMessage(e));
+    }
+  };
+  const bulk = (ids: string[], clear: () => void, action: 'LOCK' | 'UNLOCK') =>
+    run(
+      () => adminApi.bulkUsers({ ids, action }).then(clear),
+      action === 'LOCK' ? `Đã khoá ${ids.length} tài khoản` : `Đã mở khoá ${ids.length} tài khoản`
+    );
 
   return (
     <div className="space-y-6">
@@ -115,15 +129,16 @@ export const AdminUsersPage: React.FC = () => {
 
       <Figures
         items={[
-          { label: 'Tổng tài khoản', value: MOCK_USERS.length, note: `${MOCK_USERS.filter((u) => u.plan === 'VIP').length} tài khoản VIP`, icon: Users, tone: 'indigo' },
-          { label: 'Đang hoạt động', value: count('ACTIVE'), note: 'đăng nhập 7 ngày qua', icon: UserCheck, tone: 'emerald' },
-          { label: 'Chờ kích hoạt', value: count('PENDING'), note: 'chưa xác thực email', icon: UserPlus, tone: 'amber' },
-          { label: 'Đã khoá', value: count('LOCKED'), note: 'vi phạm hoặc theo yêu cầu', icon: Lock, tone: 'rose' },
+          { label: 'Tổng tài khoản', value: total, note: `${users.filter((u) => u.plan === 'VIP').length} tài khoản VIP`, icon: Users, tone: 'indigo' },
+          { label: 'Đang hoạt động', value: byStatus.ACTIVE ?? 0, note: `${data?.stats.activeLast7d ?? 0} đăng nhập 7 ngày qua`, icon: UserCheck, tone: 'emerald' },
+          { label: 'Chờ kích hoạt', value: byStatus.PENDING ?? 0, note: 'chưa xác thực email', icon: UserPlus, tone: 'amber' },
+          { label: 'Đã khoá', value: byStatus.LOCKED ?? 0, note: 'vi phạm hoặc theo yêu cầu', icon: Lock, tone: 'rose' },
         ]}
       />
 
       <CrudEditor<AppUser>
-        rows={MOCK_USERS}
+        rows={users}
+        loading={isLoading}
         columns={columns}
         fields={fields}
         entityName="tài khoản"
@@ -152,40 +167,48 @@ export const AdminUsersPage: React.FC = () => {
             ],
           },
         ]}
-        defaultValues={{ role: 'STUDENT', status: 'PENDING', plan: 'FREE', streak: 0, effortPoints: 0, joinedAt: new Date().toISOString(), lastActiveAt: new Date().toISOString() }}
+        defaultValues={{ role: 'STUDENT', status: 'ACTIVE' }}
+        onCreate={async (v) => {
+          const u = await adminApi.createUser({ fullName: v.fullName, email: v.email, role: v.role, status: v.status });
+          if (u.temporaryPassword) toast.info('Mật khẩu tạm thời', `${u.email}: ${u.temporaryPassword} — gửi cho người dùng và yêu cầu đổi sau khi đăng nhập.`);
+          void refresh();
+          return u;
+        }}
+        onUpdate={async (row, v) => {
+          const u = await adminApi.updateUser(row.id, { fullName: v.fullName, email: v.email, role: v.role, status: v.status });
+          void refresh();
+          return u;
+        }}
+        onDelete={async (row) => {
+          await adminApi.deleteUser(row.id);
+          void refresh();
+        }}
         selectable
         bulkActions={(ids, clear) => (
           <>
-            <Button
-              size="xs"
-              variant="danger"
-              leftIcon={<Lock className="w-3.5 h-3.5" />}
-              onClick={() => {
-                toast.success(`Đã khoá ${ids.length} tài khoản`);
-                clear();
-              }}
-            >
+            <Button size="xs" variant="danger" leftIcon={<Lock className="w-3.5 h-3.5" />} onClick={() => bulk(ids, clear, 'LOCK')}>
               Khoá tất cả
             </Button>
-            <Button
-              size="xs"
-              variant="outline"
-              leftIcon={<Mail className="w-3.5 h-3.5" />}
-              onClick={() => {
-                toast.info('Đang gửi email', `Gửi thông báo tới ${ids.length} người dùng.`);
-                clear();
-              }}
-            >
-              Gửi email
+            <Button size="xs" variant="outline" leftIcon={<Unlock className="w-3.5 h-3.5" />} onClick={() => bulk(ids, clear, 'UNLOCK')}>
+              Mở khoá tất cả
             </Button>
           </>
         )}
         rowActions={(u) => [
-          ...(u.status === 'PENDING' ? [{ label: 'Kích hoạt tài khoản', icon: <UserCheck />, onClick: () => toast.success('Đã kích hoạt', `${u.fullName} có thể đăng nhập ngay.`) }] : []),
+          ...(u.status === 'PENDING'
+            ? [{ label: 'Kích hoạt tài khoản', icon: <UserCheck />, onClick: () => run(() => adminApi.updateUser(u.id, { status: 'ACTIVE' }), 'Đã kích hoạt', `${u.fullName} có thể đăng nhập ngay.`) }]
+            : []),
           u.status === 'LOCKED'
-            ? { label: 'Mở khoá', icon: <Unlock />, onClick: () => toast.success('Đã mở khoá', `${u.fullName} đã được khôi phục quyền truy cập.`) }
-            : { label: 'Khoá tài khoản', icon: <Lock />, onClick: () => toast.warning('Đã khoá tài khoản', `${u.fullName} không thể đăng nhập cho tới khi mở khoá.`) },
-          { label: 'Đặt lại mật khẩu', icon: <KeyRound />, onClick: () => toast.info('Đã gửi email đặt lại mật khẩu', `Tới ${u.email}`) },
+            ? { label: 'Mở khoá', icon: <Unlock />, onClick: () => run(() => adminApi.lockUser(u.id, false), 'Đã mở khoá', `${u.fullName} đã được khôi phục quyền truy cập.`) }
+            : { label: 'Khoá tài khoản', icon: <Lock />, onClick: () => run(() => adminApi.lockUser(u.id, true, 'Khoá bởi quản trị viên'), 'Đã khoá tài khoản', `${u.fullName} không thể đăng nhập cho tới khi mở khoá.`) },
+          {
+            label: 'Đặt lại mật khẩu',
+            icon: <KeyRound />,
+            onClick: () => {
+              const pw = tempPassword();
+              void run(() => adminApi.updateUser(u.id, { password: pw }), 'Đã đặt lại mật khẩu', `Mật khẩu tạm của ${u.email}: ${pw}`);
+            },
+          },
         ]}
       />
     </div>

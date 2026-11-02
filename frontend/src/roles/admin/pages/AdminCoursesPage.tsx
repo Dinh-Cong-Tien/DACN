@@ -1,7 +1,8 @@
 import React, { useMemo, useState } from 'react';
 import { FolderTree, BookOpen, Layers, ChevronRight, Plus, Pencil, Trash2, Database, Users, Eye, ListTree } from 'lucide-react';
-import { MOCK_COURSE_TREE, MOCK_COURSES } from '@/shared/mocks';
 import type { CourseTreeNode } from '@/shared/types';
+import { adminApi, useAdminCourses, useAdminCourseTree, useAdminInvalidate, type AdminTreeNode } from '@/shared/api/admin';
+import { errorMessage } from '@/shared/api/client';
 import { cn } from '@/shared/utils';
 import { useDocumentTitle } from '@/shared/hooks';
 import { Button, ConfirmDialog, EmptyState, Input, Modal, Select } from '@/shared/components/ui';
@@ -15,17 +16,23 @@ const TYPE_META: Record<CourseTreeNode['type'], { icon: React.ElementType; tone:
   SECTION: { icon: Layers, tone: 'emerald', label: 'Chương', child: null },
 };
 
-type Mode = { kind: 'add' | 'edit'; node: CourseTreeNode } | null;
-
-function updateTree(nodes: CourseTreeNode[], id: string, fn: (n: CourseTreeNode) => CourseTreeNode | null): CourseTreeNode[] {
-  return nodes.flatMap((n) => {
-    if (n.id === id) {
-      const r = fn(n);
-      return r ? [r] : [];
-    }
-    return [{ ...n, children: n.children ? updateTree(n.children, id, fn) : n.children }];
-  });
-}
+type Mode = { kind: 'add' | 'edit'; node: AdminTreeNode } | null;
+/** Danh mục là nhóm cố định của hệ thống (enum course_category) */
+const CATEGORIES = [
+  { value: 'FOUNDATION', label: 'Kiến thức nền tảng' },
+  { value: 'GRAMMAR', label: 'Ngữ pháp' },
+  { value: 'VOCABULARY', label: 'Từ vựng' },
+  { value: 'SKILL', label: 'Kỹ năng' },
+  { value: 'EXAM_PREP', label: 'Luyện thi' },
+];
+const STATUS_VI: Record<string, { tone: 'green' | 'amber' | 'red' | 'gray'; label: string }> = {
+  PUBLISHED: { tone: 'green', label: 'Công khai' },
+  PENDING_REVIEW: { tone: 'amber', label: 'Chờ duyệt' },
+  DRAFT: { tone: 'gray', label: 'Nháp' },
+  REJECTED: { tone: 'red', label: 'Bị từ chối' },
+  ARCHIVED: { tone: 'gray', label: 'Lưu trữ' },
+};
+const EMPTY: AdminTreeNode[] = [];
 
 function countTree(nodes: CourseTreeNode[]): Record<CourseTreeNode['type'], number> {
   const out = { CATEGORY: 0, COURSE: 0, SECTION: 0 };
@@ -38,7 +45,7 @@ function countTree(nodes: CourseTreeNode[]): Record<CourseTreeNode['type'], numb
   return out;
 }
 
-function findNode(nodes: CourseTreeNode[], id: string): CourseTreeNode | null {
+function findNode(nodes: AdminTreeNode[], id: string): AdminTreeNode | null {
   for (const n of nodes) {
     if (n.id === id) return n;
     if (n.children) {
@@ -51,17 +58,22 @@ function findNode(nodes: CourseTreeNode[], id: string): CourseTreeNode | null {
 
 export const AdminCoursesPage: React.FC = () => {
   useDocumentTitle('Cây thư mục khoá học');
-  const [tree, setTree] = useState<CourseTreeNode[]>(MOCK_COURSE_TREE);
-  const [open, setOpen] = useState<Set<string>>(new Set(MOCK_COURSE_TREE.map((n) => n.id)));
-  const [selectedId, setSelectedId] = useState<string | null>(MOCK_COURSE_TREE[0]?.id ?? null);
+  const treeQ = useAdminCourseTree();
+  const coursesQ = useAdminCourses();
+  const refresh = useAdminInvalidate();
+  const tree = treeQ.data ?? EMPTY;
+  const [open, setOpen] = useState<Set<string>>(new Set(['cat-FOUNDATION']));
+  const [selectedId, setSelectedId] = useState<string | null>(null);
   const [mode, setMode] = useState<Mode>(null);
   const [title, setTitle] = useState('');
-  const [newType, setNewType] = useState<CourseTreeNode['type']>('CATEGORY');
-  const [deleting, setDeleting] = useState<CourseTreeNode | null>(null);
+  const [newType, setNewType] = useState<CourseTreeNode['type']>('COURSE');
+  const [category, setCategory] = useState('FOUNDATION');
+  const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState<AdminTreeNode | null>(null);
 
   const counts = useMemo(() => countTree(tree), [tree]);
-  const selected = selectedId ? findNode(tree, selectedId) : null;
-  const selectedCourse = selected ? MOCK_COURSES.find((c) => c.id === selected.id) : undefined;
+  const selected = (selectedId ? findNode(tree, selectedId) : null) ?? tree[0] ?? null;
+  const selectedCourse = selected ? coursesQ.data?.find((c) => c.id === selected.id) : undefined;
 
   const toggle = (id: string) =>
     setOpen((prev) => {
@@ -71,48 +83,66 @@ export const AdminCoursesPage: React.FC = () => {
       return n;
     });
 
-  const openAdd = (node: CourseTreeNode | null) => {
+  const openAdd = (node: AdminTreeNode | null) => {
     setTitle('');
     if (node) {
       setNewType(TYPE_META[node.type].child ?? 'SECTION');
+      if (node.type === 'CATEGORY') setCategory(node.category ?? 'FOUNDATION');
       setMode({ kind: 'add', node });
     } else {
-      setNewType('CATEGORY');
+      setNewType('COURSE');
       setMode({ kind: 'add', node: { id: '__root', title: 'root', type: 'CATEGORY' } });
     }
   };
-  const openEdit = (node: CourseTreeNode) => {
+  const openEdit = (node: AdminTreeNode) => {
     setTitle(node.title);
     setMode({ kind: 'edit', node });
   };
 
-  const save = () => {
+  const save = async () => {
     if (!mode || !title.trim()) return toast.error('Vui lòng nhập tên');
-    if (mode.kind === 'edit') {
-      setTree((t) => updateTree(t, mode.node.id, (n) => ({ ...n, title: title.trim() })));
-      toast.success('Đã cập nhật', `"${title}" đã được lưu.`);
-    } else {
-      const child: CourseTreeNode = { id: `n-${Date.now().toString(36)}`, title: title.trim(), type: newType, meta: 'Mới tạo', children: newType === 'SECTION' ? undefined : [] };
-      if (mode.node.id === '__root') setTree((t) => [...t, child]);
-      else {
-        setTree((t) => updateTree(t, mode.node.id, (n) => ({ ...n, children: [...(n.children ?? []), child] })));
+    const name = title.trim();
+    setSaving(true);
+    try {
+      if (mode.kind === 'edit') {
+        if (mode.node.type === 'COURSE') await adminApi.updateCourse(mode.node.id, { title: name });
+        else if (mode.node.type === 'SECTION') await adminApi.updateSection(mode.node.id, { title: name });
+        toast.success('Đã cập nhật', `"${name}" đã được lưu.`);
+      } else if (newType === 'COURSE') {
+        const c = await adminApi.createCourse({ title: name, category: mode.node.type === 'CATEGORY' && mode.node.id !== '__root' ? mode.node.category : category, status: 'DRAFT' });
+        setOpen((o) => new Set(o).add(`cat-${c.category}`));
+        setSelectedId(c.id);
+        toast.success('Đã thêm khoá học', `"${name}" được tạo ở trạng thái nháp.`);
+      } else {
+        await adminApi.createSection({ courseId: mode.node.id, title: name });
         setOpen((o) => new Set(o).add(mode.node.id));
+        toast.success('Đã thêm chương', `"${name}" đã được tạo.`);
       }
-      setSelectedId(child.id);
-      toast.success('Đã thêm', `${TYPE_META[newType].label} "${title}" đã được tạo.`);
+      await refresh();
+      setMode(null);
+    } catch (e) {
+      toast.error('Không lưu được', errorMessage(e));
+    } finally {
+      setSaving(false);
     }
-    setMode(null);
   };
 
-  const confirmDelete = () => {
+  const confirmDelete = async () => {
     if (!deleting) return;
-    setTree((t) => updateTree(t, deleting.id, () => null));
-    if (selectedId === deleting.id) setSelectedId(null);
-    toast.success('Đã xoá', `"${deleting.title}" và các mục con đã bị xoá.`);
-    setDeleting(null);
+    try {
+      if (deleting.type === 'COURSE') await adminApi.deleteCourse(deleting.id);
+      else if (deleting.type === 'SECTION') await adminApi.deleteSection(deleting.id);
+      if (selectedId === deleting.id) setSelectedId(null);
+      toast.success('Đã xoá', `"${deleting.title}" đã bị xoá.`);
+      await refresh();
+    } catch (e) {
+      toast.error('Không xoá được', errorMessage(e));
+    } finally {
+      setDeleting(null);
+    }
   };
 
-  const renderNode = (node: CourseTreeNode, depth: number) => {
+  const renderNode = (node: AdminTreeNode, depth: number) => {
     const meta = TYPE_META[node.type];
     const hasChildren = !!node.children?.length;
     const isOpen = open.has(node.id);
@@ -150,12 +180,16 @@ export const AdminCoursesPage: React.FC = () => {
                 <Plus className="h-4 w-4" />
               </button>
             )}
-            <button type="button" onClick={() => openEdit(node)} className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-500 hover:bg-indigo-50 hover:text-indigo-700" title="Đổi tên">
-              <Pencil className="h-4 w-4" />
-            </button>
-            <button type="button" onClick={() => setDeleting(node)} className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-500 hover:bg-rose-50 hover:text-rose-600" title="Xoá">
-              <Trash2 className="h-4 w-4" />
-            </button>
+            {node.type !== 'CATEGORY' && (
+              <>
+                <button type="button" onClick={() => openEdit(node)} className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-500 hover:bg-indigo-50 hover:text-indigo-700" title="Đổi tên">
+                  <Pencil className="h-4 w-4" />
+                </button>
+                <button type="button" onClick={() => setDeleting(node)} className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-500 hover:bg-rose-50 hover:text-rose-600" title="Xoá">
+                  <Trash2 className="h-4 w-4" />
+                </button>
+              </>
+            )}
           </div>
         </div>
         {hasChildren && isOpen && <ul className="mt-0.5 space-y-0.5">{node.children!.map((c) => renderNode(c, depth + 1))}</ul>}
@@ -177,7 +211,7 @@ export const AdminCoursesPage: React.FC = () => {
               Xem như học viên
             </TBtn>
             <TBtn variant="primary" icon={<Plus />} onClick={() => openAdd(null)}>
-              Thêm danh mục
+              Thêm khoá học
             </TBtn>
           </>
         }
@@ -186,14 +220,14 @@ export const AdminCoursesPage: React.FC = () => {
       <Figures
         items={[
           { label: 'Danh mục', value: counts.CATEGORY, note: 'nhóm khoá học', icon: FolderTree, tone: 'amber' },
-          { label: 'Khoá học', value: counts.COURSE, note: `${MOCK_COURSES.length} khoá đang phát hành`, icon: BookOpen, tone: 'indigo' },
+          { label: 'Khoá học', value: counts.COURSE, note: `${coursesQ.data?.filter((c) => c.status === 'PUBLISHED').length ?? 0} khoá đang phát hành`, icon: BookOpen, tone: 'indigo' },
           { label: 'Chương', value: counts.SECTION, note: 'đã chia trong khoá', icon: Layers, tone: 'emerald' },
         ]}
       />
 
       <div className="grid grid-cols-1 items-start gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
         <Panel title="Cấu trúc nội dung" sub={`${counts.CATEGORY + counts.COURSE + counts.SECTION} mục · nhấn để xem chi tiết`} icon={ListTree} tone="indigo" className="min-w-0">
-          {tree.length ? <ul className="space-y-0.5">{tree.map((n) => renderNode(n, 0))}</ul> : <EmptyState icon={<Database />} title="Chưa có danh mục" description="Tạo danh mục đầu tiên để bắt đầu." compact />}
+          {treeQ.isLoading ? <p className="py-8 text-center text-sm text-slate-500">Đang tải…</p> : tree.length ? <ul className="space-y-0.5">{tree.map((n) => renderNode(n, 0))}</ul> : <EmptyState icon={<Database />} title="Chưa có khoá học" description="Tạo khoá học đầu tiên để bắt đầu." compact />}
         </Panel>
 
         <section className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-[0_1px_2px_rgba(16,24,40,0.04),0_8px_24px_-16px_rgba(16,24,40,0.12)] xl:sticky xl:top-24">
@@ -231,12 +265,12 @@ export const AdminCoursesPage: React.FC = () => {
                   <div className="flex justify-between gap-4 py-2.5">
                     <dt className="text-slate-500">Hiển thị</dt>
                     <dd>
-                      <Status tone="green">Công khai</Status>
+                      {selected.type === 'CATEGORY' ? <Status tone="blue">Nhóm hệ thống</Status> : <Status tone={STATUS_VI[selected.status ?? selectedCourse?.status ?? 'PUBLISHED']?.tone ?? 'gray'}>{STATUS_VI[selected.status ?? selectedCourse?.status ?? 'PUBLISHED']?.label ?? selected.status}</Status>}
                     </dd>
                   </div>
                   <div className="flex justify-between gap-4 py-2.5">
-                    <dt className="text-slate-500">Mã</dt>
-                    <dd className="font-mono text-xs text-slate-500">{selected.id}</dd>
+                    <dt className="text-slate-500">{selected.slug ? 'Đường dẫn' : 'Mã'}</dt>
+                    <dd className="truncate font-mono text-xs text-slate-500">{selected.slug ? `/courses/${selected.slug}` : selected.id.slice(0, 8)}</dd>
                   </div>
                 </dl>
                 <div className="mt-4 grid gap-2">
@@ -245,14 +279,14 @@ export const AdminCoursesPage: React.FC = () => {
                       Thêm {TYPE_META[childType].label.toLowerCase()}
                     </TBtn>
                   )}
-                  <div className="grid grid-cols-2 gap-2">
+                  {selected.type !== 'CATEGORY' && <div className="grid grid-cols-2 gap-2">
                     <TBtn icon={<Pencil />} onClick={() => openEdit(selected)}>
                       Đổi tên
                     </TBtn>
                     <TBtn variant="ghost" className="text-rose-600 hover:bg-rose-50 hover:text-rose-700" icon={<Trash2 />} onClick={() => setDeleting(selected)}>
                       Xoá
                     </TBtn>
-                  </div>
+                  </div>}
                 </div>
               </div>
             </>
@@ -267,21 +301,21 @@ export const AdminCoursesPage: React.FC = () => {
       <Modal
         open={!!mode}
         onClose={() => setMode(null)}
-        title={mode?.kind === 'edit' ? 'Đổi tên' : mode?.node.id === '__root' ? 'Thêm danh mục' : `Thêm vào "${mode?.node.title}"`}
+        title={mode?.kind === 'edit' ? 'Đổi tên' : mode?.node.id === '__root' ? 'Thêm khoá học' : `Thêm vào "${mode?.node.title}"`}
         size="sm"
         footer={
           <>
             <Button variant="ghost" onClick={() => setMode(null)}>
               Huỷ
             </Button>
-            <Button onClick={save}>{mode?.kind === 'edit' ? 'Lưu' : 'Tạo'}</Button>
+            <Button onClick={save} loading={saving}>{mode?.kind === 'edit' ? 'Lưu' : 'Tạo'}</Button>
           </>
         }
       >
         <div className="space-y-4">
           <Input label="Tên" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Nhập tên..." autoFocus required />
           {mode?.kind === 'add' && mode.node.id === '__root' && (
-            <Select label="Loại" value={newType} onChange={(e) => setNewType(e.target.value as CourseTreeNode['type'])} options={[{ value: 'CATEGORY', label: 'Danh mục' }]} />
+            <Select label="Danh mục" value={category} onChange={(e) => setCategory(e.target.value)} options={CATEGORIES} />
           )}
           {mode?.kind === 'add' && mode.node.id !== '__root' && (
             <p className="text-xs text-slate-500">

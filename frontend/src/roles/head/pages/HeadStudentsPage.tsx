@@ -3,14 +3,16 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { AlertTriangle, BellRing, GraduationCap, Search, TrendingDown, Users } from 'lucide-react';
 import { useDocumentTitle } from '@/shared/hooks';
 import { toast } from '@/shared/stores/uiStore';
-import { DEPT_CLASSES, DEPT_STUDENTS } from '@/shared/mocks';
-import type { ClassStudent } from '@/shared/types';
+import type { ClassStudent, DeptStudent } from '@/shared/types';
+import { headApi, useHeadClasses, useHeadStudents, type HeadClass } from '@/shared/api/head';
+import { errorMessage } from '@/shared/api/client';
 import { Avatar } from '@/shared/components/ui';
 import { cn, timeAgo } from '@/shared/utils';
 import { Figures, Meter, Panel, Status, TBtn, TPageHead, TTabs, inputCls, tbl } from '@/roles/teacher/components/TeacherKit';
 import { STUDENT_STATUS } from './HeadClassDetailPage';
 
-const clsOf = (id: string) => DEPT_CLASSES.find((c) => c.id === id)!;
+const EMPTY_S: DeptStudent[] = [];
+const EMPTY_C: HeadClass[] = [];
 
 /** Học viên toàn bộ môn: phát hiện sớm học viên nguy cơ để nhắc giáo viên chủ nhiệm */
 export const HeadStudentsPage: React.FC = () => {
@@ -20,16 +22,26 @@ export const HeadStudentsPage: React.FC = () => {
   const [params] = useSearchParams();
   const [q, setQ] = useState(params.get('q') ?? '');
   const [reminded, setReminded] = useState<string[]>([]);
+  const studentsQ = useHeadStudents();
+  const DEPT_STUDENTS = studentsQ.data ?? EMPTY_S;
+  const DEPT_CLASSES = useHeadClasses().data ?? EMPTY_C;
+  const clsOf = (id: string) => DEPT_CLASSES.find((c) => c.id === id) ?? ({ id, name: '—', teacherName: '—' } as HeadClass);
 
   const scope = DEPT_STUDENTS.filter((s) => classId === 'ALL' || s.classId === classId);
   const list = scope.filter((s) => (status === 'ALL' || s.status === status) && (s.name.toLowerCase().includes(q.toLowerCase()) || s.email.includes(q.toLowerCase())));
   const risk = DEPT_STUDENTS.filter((s) => s.status === 'RISK');
-  const remind = (ids: string[]) => {
-    const fresh = ids.filter((id) => !reminded.includes(id));
+  const key = (s: DeptStudent) => `${s.id}:${s.classId}`;
+  const remind = async (rows: DeptStudent[]) => {
+    const fresh = rows.filter((s) => !reminded.includes(key(s)));
     if (!fresh.length) return toast.info('Đã nhắc trước đó', 'Giáo viên đã nhận được nhắc nhở cho các học viên này.');
-    setReminded((r) => [...r, ...fresh]);
-    const teachers = new Set(fresh.map((id) => clsOf(DEPT_STUDENTS.find((s) => s.id === id)!.classId).teacherName));
-    toast.success('Đã nhắc giáo viên chủ nhiệm', `${fresh.length} học viên · gửi tới ${[...teachers].join(', ')}`);
+    try {
+      await Promise.all(fresh.map((s) => headApi.remindTeacher(s.id, s.classId)));
+      setReminded((r) => [...r, ...fresh.map(key)]);
+      const teachers = new Set(fresh.map((s) => clsOf(s.classId).teacherName));
+      toast.success('Đã nhắc giáo viên chủ nhiệm', `${fresh.length} học viên · gửi tới ${[...teachers].join(', ')}`);
+    } catch (e) {
+      toast.error('Không gửi được nhắc nhở', errorMessage(e));
+    }
   };
 
   return (
@@ -39,7 +51,7 @@ export const HeadStudentsPage: React.FC = () => {
         title="Học viên bộ môn"
         sub="Kết quả, chuyên cần và mức độ hoạt động của học viên trong mọi lớp. Học viên nguy cơ bỏ học được gửi nhắc cho giáo viên chủ nhiệm."
         actions={
-          <TBtn variant="primary" icon={<BellRing />} onClick={() => remind(risk.map((s) => s.id))}>
+          <TBtn variant="primary" icon={<BellRing />} disabled={!risk.length} onClick={() => void remind(risk)}>
             Nhắc GV về {risk.length} học viên nguy cơ
           </TBtn>
         }
@@ -47,10 +59,10 @@ export const HeadStudentsPage: React.FC = () => {
 
       <Figures
         items={[
-          { label: 'Học viên theo dõi', value: DEPT_STUDENTS.length, note: `${DEPT_CLASSES.reduce((a, c) => a + c.studentsCount, 0)} học viên toàn bộ môn`, icon: Users, tone: 'indigo' },
+          { label: 'Học viên theo dõi', value: DEPT_STUDENTS.length, note: `trong ${DEPT_CLASSES.length} lớp của bộ môn`, icon: Users, tone: 'indigo' },
           { label: 'Nguy cơ bỏ học', value: risk.length, note: 'chuyên cần thấp, lâu không học', icon: AlertTriangle, tone: 'rose' },
           { label: 'Cần nhắc', value: DEPT_STUDENTS.filter((s) => s.status === 'WARNING').length, icon: TrendingDown, tone: 'amber' },
-          { label: 'Chuyên cần TB', value: `${Math.round(DEPT_STUDENTS.reduce((a, s) => a + s.attendance, 0) / DEPT_STUDENTS.length)}%`, icon: GraduationCap, tone: 'emerald' },
+          { label: 'Chuyên cần TB', value: DEPT_STUDENTS.some((s) => s.attendance) ? `${Math.round(DEPT_STUDENTS.reduce((a, s) => a + s.attendance, 0) / DEPT_STUDENTS.length)}%` : '—', icon: GraduationCap, tone: 'emerald' },
         ]}
       />
 
@@ -100,7 +112,7 @@ export const HeadStudentsPage: React.FC = () => {
               {list.map((s) => {
                 const c = clsOf(s.classId);
                 return (
-                  <tr key={s.id} className={tbl.tr}>
+                  <tr key={key(s)} className={tbl.tr}>
                     <td className={tbl.td}>
                       <span className="flex items-center gap-2.5">
                         <Avatar name={s.name} src={s.avatarUrl} size="sm" />
@@ -130,10 +142,10 @@ export const HeadStudentsPage: React.FC = () => {
                     </td>
                     <td className={cn(tbl.td, 'text-right')}>
                       {s.status !== 'GOOD' &&
-                        (reminded.includes(s.id) ? (
+                        (reminded.includes(key(s)) ? (
                           <span className="whitespace-nowrap text-[12px] text-slate-400">Đã nhắc GV</span>
                         ) : (
-                          <TBtn size="sm" onClick={() => remind([s.id])}>
+                          <TBtn size="sm" onClick={() => void remind([s])}>
                             Nhắc GV
                           </TBtn>
                         ))}
@@ -144,7 +156,7 @@ export const HeadStudentsPage: React.FC = () => {
               {list.length === 0 && (
                 <tr>
                   <td colSpan={8} className="px-5 py-10 text-center text-sm text-slate-500">
-                    Không có học viên nào khớp bộ lọc.
+                    {studentsQ.isLoading ? "Đang tải…" : "Không có học viên nào khớp bộ lọc."}
                   </td>
                 </tr>
               )}

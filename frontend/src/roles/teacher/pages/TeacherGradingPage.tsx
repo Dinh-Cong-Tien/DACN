@@ -1,13 +1,15 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Pause, Play } from 'lucide-react';
+import { Mic } from 'lucide-react';
 import { useDocumentTitle } from '@/shared/hooks';
 import { toast } from '@/shared/stores/uiStore';
-import { MOCK_ASSIGNMENTS, MOCK_SUBMISSIONS, SPEAKING_CRITERIA, VSTEP_SPEAKING_PARTS, VSTEP_WRITING_TASKS, WRITING_CRITERIA } from '@/shared/mocks';
+import { errorMessage } from '@/shared/api/client';
+import { teacherApi, useGradingQueue, useTeacherMutation, type GradingCriterion } from '@/shared/api/teacher';
 import type { Submission } from '@/shared/types';
 import { cn, formatDateTime } from '@/shared/utils';
 import { Avatar } from '@/shared/components/ui';
 import { Panel, Status, TBtn, TPageHead, TTabs, inputCls } from '../components/TeacherKit';
+import { TError, TLoading } from '../components/TeacherState';
 
 const FEEDBACK_BANK = {
   ESSAY: ['Bố cục rõ, đủ mở bài – thân bài – kết bài.', 'Cần thêm ví dụ cụ thể cho mỗi luận điểm.', 'Chú ý chia động từ và mạo từ.', 'Dùng câu phức nhiều hơn để tăng điểm ngữ pháp.'],
@@ -17,44 +19,58 @@ const FEEDBACK_BANK = {
 const SCORE_STEPS = Array.from({ length: 21 }, (_, i) => i / 2);
 const STATUS_TEXT: Record<Submission['status'], [ 'amber' | 'red' | 'green', string]> = { PENDING: ['amber', 'Chờ chấm'], LATE: ['red', 'Nộp muộn'], GRADED: ['green', 'Đã chấm'] };
 
+/** Điểm bài = trung bình có trọng số các tiêu chí, làm tròn 0,5 (khớp cách backend tính) */
+const weightedAvg = (criteria: GradingCriterion[], scores: Record<string, number>) => {
+  const w = criteria.reduce((a, c) => a + (c.weight ?? 1), 0);
+  return w ? Math.round((criteria.reduce((a, c) => a + scores[c.key] * (c.weight ?? 1), 0) / w) * 2) / 2 : 0;
+};
+
 /** Bàn chấm bài tự luận: đề bài đúng như học viên đã làm (Luyện Viết / Luyện Nói), chấm theo cùng bộ tiêu chí học viên nhìn thấy */
 export const TeacherGradingPage: React.FC = () => {
   useDocumentTitle('Chấm bài');
   const { submissionId } = useParams();
   const navigate = useNavigate();
-  const [subs, setSubs] = useState<Submission[]>(MOCK_SUBMISSIONS.filter((s) => s.type === 'ESSAY' || s.type === 'SPEAKING'));
+  const { data: subs = [], isLoading, error, refetch } = useGradingQueue('all');
   const [tab, setTab] = useState<'TODO' | 'GRADED'>('TODO');
   const [scores, setScores] = useState<Record<string, number>>({});
   const [feedback, setFeedback] = useState('');
-  const [playing, setPlaying] = useState(false);
+  const grade = useTeacherMutation((v: { id: string; criteria: Record<string, number>; feedback: string; release: boolean }) => teacherApi.grade(v.id, { criteria: v.criteria, feedback: v.feedback || null, release: v.release }));
 
   const inTab = (s: Submission) => (tab === 'GRADED' ? s.status === 'GRADED' : s.status !== 'GRADED');
   const list = subs.filter(inTab).sort((a, b) => a.submittedAt.localeCompare(b.submittedAt));
   const selected = useMemo(() => subs.find((s) => s.id === submissionId) ?? list[0], [subs, submissionId, list]);
-  const assignment = MOCK_ASSIGNMENTS.find((a) => a.id === selected?.assignmentId);
-  const criteria = selected?.type === 'SPEAKING' ? SPEAKING_CRITERIA : WRITING_CRITERIA;
-  const task = assignment?.target.kind === 'WRITING' ? VSTEP_WRITING_TASKS.find((t) => t.id === (assignment.target as { taskId: string }).taskId) : undefined;
-  const part = assignment?.target.kind === 'SPEAKING' ? VSTEP_SPEAKING_PARTS.find((p) => p.id === (assignment.target as { partId: string }).partId) : undefined;
+  const criteria = selected?.rubric?.criteria ?? [];
   const wordCount = selected?.type === 'ESSAY' && selected.content ? selected.content.trim().split(/\s+/).length : 0;
-  const filled = criteria.every((c) => scores[c.key] !== undefined);
-  const avg = filled ? Math.round((criteria.reduce((a, c) => a + scores[c.key], 0) / criteria.length) * 2) / 2 : null;
+  const minWords = selected?.minWords;
+  const filled = criteria.length > 0 && criteria.every((c) => scores[c.key] !== undefined);
+  const avg = filled ? weightedAvg(criteria, scores) : null;
 
-  // Đổi bài: nạp lại điểm / nhận xét đã lưu
+  // Đổi bài: nạp lại điểm từng tiêu chí / nhận xét đã lưu
   useEffect(() => {
     setFeedback(selected?.feedback ?? '');
-    setScores(selected?.score !== undefined ? Object.fromEntries(criteria.map((c) => [c.key, selected.score as number])) : {});
-    setPlaying(false);
-  }, [selected?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+    setScores(selected?.criteriaScores ?? {});
+  }, [selected?.id, selected?.criteriaScores]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const go = (id: string) => navigate(`/teacher/grading/${encodeURIComponent(id)}`);
 
   const save = (release: boolean) => {
-    if (!selected || avg === null) return toast.error('Chưa chấm đủ tiêu chí', 'Chọn điểm cho cả 4 tiêu chí.');
-    if (release) setSubs((all) => all.map((s) => (s.id === selected.id ? { ...s, score: avg, feedback, status: 'GRADED' } : s)));
-    toast.success(release ? 'Đã trả bài' : 'Đã lưu nháp điểm', `${selected.studentName} · ${avg}/10${release ? ' · học viên nhận được thông báo' : ''}`);
-    if (release) {
-      const nextSub = list.find((s) => s.id !== selected.id);
-      if (nextSub) navigate(`/teacher/grading/${nextSub.id}`);
-    }
+    if (!selected || avg === null) return toast.error('Chưa chấm đủ tiêu chí', `Chọn điểm cho cả ${criteria.length} tiêu chí.`);
+    const cur = selected;
+    const nextSub = list.find((s) => s.id !== cur.id);
+    grade.mutate(
+      { id: cur.id, criteria: scores, feedback: feedback.trim(), release },
+      {
+        onSuccess: (r) => {
+          toast.success(release ? 'Đã trả bài' : 'Đã lưu nháp điểm', `${cur.studentName} · ${avg}/10${release ? ' · học viên nhận được thông báo' : ''}${r.reviewSampled ? ' · bài được chọn để trưởng bộ môn kiểm định' : ''}`);
+          if (release && nextSub && tab === 'TODO') go(nextSub.id);
+        },
+        onError: (e) => toast.error('Không lưu được điểm', errorMessage(e)),
+      }
+    );
   };
+
+  if (isLoading) return <TLoading />;
+  if (error) return <TError error={error} onRetry={() => refetch()} />;
 
   return (
     <div className="space-y-6">
@@ -73,12 +89,12 @@ export const TeacherGradingPage: React.FC = () => {
             />
           </div>
           {list.length === 0 ? (
-            <p className="px-4 py-10 text-center text-sm text-slate-500">Không còn bài nào.</p>
+            <p className="px-4 py-10 text-center text-sm text-slate-500">{tab === 'TODO' ? 'Không còn bài nào chờ chấm.' : 'Chưa có bài nào đã chấm.'}</p>
           ) : (
             <ul className="max-h-[65vh] divide-y divide-slate-100 overflow-y-auto">
               {list.map((s) => (
                 <li key={s.id}>
-                  <button type="button" onClick={() => navigate(`/teacher/grading/${s.id}`)} className={cn('flex w-full items-start gap-3 px-4 py-3 text-left transition-colors', selected?.id === s.id ? 'bg-indigo-500/[0.06]' : 'hover:bg-slate-50')}>
+                  <button type="button" onClick={() => go(s.id)} className={cn('flex w-full items-start gap-3 px-4 py-3 text-left transition-colors', selected?.id === s.id ? 'bg-indigo-500/[0.06]' : 'hover:bg-slate-50')}>
                     <Avatar name={s.studentName} src={s.avatarUrl} size="sm" />
                     <span className="min-w-0 flex-1">
                       <span className="flex items-baseline justify-between gap-2">
@@ -88,7 +104,7 @@ export const TeacherGradingPage: React.FC = () => {
                       <span className="block truncate text-[12px] text-slate-500">{s.assignmentTitle}</span>
                       <span className={cn('block text-[12px]', s.status === 'LATE' ? 'text-rose-600' : 'text-slate-400')}>
                         {s.status === 'LATE' ? 'Nộp muộn · ' : ''}
-                        {formatDateTime(s.submittedAt)}
+                        {s.submittedAt ? formatDateTime(s.submittedAt) : ''}
                       </span>
                     </span>
                   </button>
@@ -102,15 +118,17 @@ export const TeacherGradingPage: React.FC = () => {
           <div className="min-w-0 space-y-6" key={selected.id}>
             <Panel
               title={selected.assignmentTitle}
-              sub={`${selected.studentName} · ${assignment?.className ?? ''} · nộp lúc ${formatDateTime(selected.submittedAt)}`}
+              sub={`${selected.studentName}${selected.className ? ` · ${selected.className}` : ''}${selected.submittedAt ? ` · nộp lúc ${formatDateTime(selected.submittedAt)}` : ''}`}
               action={<Status tone={STATUS_TEXT[selected.status][0]}>{STATUS_TEXT[selected.status][1]}</Status>}
             >
-              {(task || part) && (
+              {selected.prompt && (
                 <div className="mb-4 rounded-md bg-slate-50 px-4 py-3">
                   <p className="text-[12px] font-medium text-slate-500">
-                    Đề bài · {task ? `${task.task} · ${task.minutes} phút · tối thiểu ${task.minWords} từ` : `${part!.part} · ${part!.minutes} phút`}
+                    Đề bài · {selected.type === 'ESSAY' ? 'Viết' : 'Nói'}
+                    {minWords ? ` · tối thiểu ${minWords} từ` : ''}
                   </p>
-                  <p className="mt-1 text-sm leading-relaxed text-slate-800">{task?.prompt ?? part?.prompt}</p>
+                  <p className="mt-1 text-sm leading-relaxed text-slate-800">{selected.prompt}</p>
+                  {selected.promptImageUrl && <img src={selected.promptImageUrl} alt="Hình của đề" className="mt-3 max-h-56 rounded-md border border-slate-200" />}
                 </div>
               )}
 
@@ -118,30 +136,27 @@ export const TeacherGradingPage: React.FC = () => {
                 <div>
                   <div className="mb-2 flex items-center justify-between text-[13px] text-slate-500">
                     <span>Bài làm</span>
-                    <span className={cn('tabular-nums', task && wordCount < task.minWords && 'text-rose-600')}>
-                      {wordCount} từ{task && wordCount < task.minWords ? ` · thiếu ${task.minWords - wordCount} từ` : ''}
+                    <span className={cn('tabular-nums', minWords && wordCount < minWords && 'text-rose-600')}>
+                      {wordCount} từ{minWords && wordCount < minWords ? ` · thiếu ${minWords - wordCount} từ` : ''}
                     </span>
                   </div>
-                  <div className="max-h-96 overflow-y-auto whitespace-pre-line rounded-md border border-slate-200 px-5 py-4 font-serif text-[15px] leading-[1.85] text-slate-800">{selected.content}</div>
+                  <div className="max-h-96 overflow-y-auto whitespace-pre-line rounded-md border border-slate-200 px-5 py-4 font-serif text-[15px] leading-[1.85] text-slate-800">{selected.content || <span className="font-sans text-sm text-slate-400">Học viên chưa nhập nội dung.</span>}</div>
                 </div>
               ) : (
                 <div className="flex items-center gap-4 rounded-md border border-slate-200 px-4 py-3">
-                  <button type="button" onClick={() => setPlaying((p) => !p)} aria-label={playing ? 'Tạm dừng' : 'Phát'} className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-indigo-600 text-white hover:bg-indigo-700">
-                    {playing ? <Pause className="h-4 w-4" /> : <Play className="ml-0.5 h-4 w-4" />}
-                  </button>
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-indigo-600 text-white">
+                    <Mic className="h-4 w-4" />
+                  </span>
                   <div className="min-w-0 flex-1">
-                    <div className="flex h-8 items-center gap-[2px]">
-                      {Array.from({ length: 64 }).map((_, i) => (
-                        <span key={i} className="flex-1 rounded-sm bg-slate-300" style={{ height: `${25 + ((i * 37) % 75)}%` }} />
-                      ))}
-                    </div>
-                    <p className="mt-1 font-mono text-[12px] text-slate-500">{selected.content}</p>
+                    {selected.audioUrl ? <audio controls src={selected.audioUrl} className="w-full" /> : <p className="text-sm text-slate-500">Không có file ghi âm.</p>}
+                    {selected.content && <p className="mt-1 text-[12px] text-slate-500">{selected.content}</p>}
                   </div>
                 </div>
               )}
             </Panel>
 
-            <Panel title="Chấm điểm" sub={`Thang 0–10 cho mỗi tiêu chí, điểm bài là trung bình 4 tiêu chí (làm tròn 0,5). Học viên thấy đúng các tiêu chí này ở trang Luyện ${selected.type === 'ESSAY' ? 'Viết' : 'Nói'}.`}>
+            <Panel title="Chấm điểm" sub={`${selected.rubric ? `${selected.rubric.name} · ` : ''}Thang 0–10 cho mỗi tiêu chí, điểm bài là trung bình ${criteria.length} tiêu chí (làm tròn 0,5).${selected.maxScore && selected.maxScore !== 10 ? ` Quy về thang ${selected.maxScore} của bài giao.` : ''}`}>
+              {criteria.length === 0 && <p className="mb-4 rounded-md bg-amber-500/10 px-3 py-2 text-[13px] text-amber-800">Chưa cấu hình bộ tiêu chí chấm cho loại bài này.</p>}
               <div className="overflow-hidden rounded-md border border-slate-200">
                 {criteria.map((c, i) => (
                   <div key={c.key} className={cn('flex items-center justify-between gap-4 px-4 py-2.5', i > 0 && 'border-t border-slate-100')}>
@@ -181,16 +196,18 @@ export const TeacherGradingPage: React.FC = () => {
               </div>
 
               <div className="mt-5 flex justify-end gap-2 border-t border-slate-200 pt-4">
-                <TBtn onClick={() => save(false)}>Lưu nháp</TBtn>
-                <TBtn variant="primary" onClick={() => save(true)}>
-                  {selected.status === 'GRADED' ? 'Cập nhật điểm' : 'Trả bài'}
+                <TBtn onClick={() => save(false)} disabled={grade.isPending}>
+                  Lưu nháp
+                </TBtn>
+                <TBtn variant="primary" onClick={() => save(true)} disabled={grade.isPending}>
+                  {grade.isPending ? 'Đang lưu…' : selected.status === 'GRADED' ? 'Cập nhật điểm' : 'Trả bài'}
                 </TBtn>
               </div>
             </Panel>
           </div>
         ) : (
           <Panel>
-            <p className="py-10 text-center text-sm text-slate-500">Chọn một bài ở danh sách bên trái để chấm.</p>
+            <p className="py-10 text-center text-sm text-slate-500">{subs.length ? 'Chọn một bài ở danh sách bên trái để chấm.' : 'Chưa có bài Viết / Nói nào học viên nộp. Bài nộp từ bài tập được giao và bài tự luyện của học viên trong lớp sẽ hiện ở đây.'}</p>
           </Panel>
         )}
       </div>

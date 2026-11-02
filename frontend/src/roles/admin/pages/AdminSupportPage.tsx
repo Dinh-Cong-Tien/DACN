@@ -4,7 +4,8 @@ import { ArrowLeft, Mail, MessageCircle, Phone, Search, Send, Crown, Inbox } fro
 import { useDocumentTitle } from '@/shared/hooks';
 import { useAuthStore } from '@/shared/stores/authStore';
 import { toast } from '@/shared/stores/uiStore';
-import { MOCK_TICKETS, MOCK_USERS } from '@/shared/mocks';
+import { adminApi, useAdminInvalidate, useAdminTickets, useAdminUsers } from '@/shared/api/admin';
+import { errorMessage } from '@/shared/api/client';
 import type { SupportTicket, TicketStatus } from '@/shared/types';
 import { Avatar } from '@/shared/components/ui';
 import { cn, formatDateTime, timeAgo } from '@/shared/utils';
@@ -31,8 +32,14 @@ const QUICK: { label: string; text: string; cat?: SupportTicket['category'] }[] 
 /** Hộp thư hỗ trợ: đầu kia của khung chat hỗ trợ học viên, cộng email và hotline */
 export const AdminSupportPage: React.FC = () => {
   useDocumentTitle('Hỗ trợ học viên');
-  const me = useAuthStore((s) => s.user)?.fullName ?? 'Quản trị viên';
-  const [tickets, setTickets] = useState<SupportTicket[]>(MOCK_TICKETS);
+  const meUser = useAuthStore((s) => s.user);
+  const me = meUser?.fullName ?? 'Quản trị viên';
+  const ticketsQ = useAdminTickets();
+  const admins = useAdminUsers({ role: 'ADMIN' }).data?.items ?? [];
+  const students = useAdminUsers({ role: 'STUDENT' }).data?.items ?? [];
+  const refresh = useAdminInvalidate();
+  const tickets = useMemo<(SupportTicket & { assigneeId?: string })[]>(() => ticketsQ.data ?? [], [ticketsQ.data]);
+  const [sending, setSending] = useState(false);
   const [params] = useSearchParams();
   const linked = params.get('id');
   const [tab, setTab] = useState<TicketStatus | 'ALL'>(linked ? 'ALL' : 'OPEN');
@@ -49,16 +56,34 @@ export const AdminSupportPage: React.FC = () => {
   const active = tickets.find((t) => t.id === activeId) ?? null;
   const shown = active ?? list[0] ?? null;
   const count = (s: TicketStatus) => tickets.filter((t) => t.status === s).length;
-  const patch = (id: string, p: Partial<SupportTicket>) => setTickets((ts) => ts.map((t) => (t.id === id ? { ...t, ...p } : t)));
-
-  const send = () => {
-    if (!shown || !draft.trim()) return;
-    patch(shown.id, { messages: [...shown.messages, { from: 'STAFF', text: draft.trim(), at: new Date().toISOString() }], status: shown.status === 'OPEN' ? 'PENDING' : shown.status, assignee: shown.assignee ?? me });
-    setDraft('');
-    toast.success('Đã gửi trả lời', shown.channel === 'CHAT' ? `${shown.userName} nhận được trong khung chat hỗ trợ` : `Đã gửi tới ${shown.email}`);
+  const patch = async (id: string, p: Record<string, unknown>, ok?: string) => {
+    try {
+      await adminApi.updateTicket(id, p);
+      if (ok) toast.success(ok);
+      await refresh();
+    } catch (e) {
+      toast.error('Không cập nhật được', errorMessage(e));
+    }
   };
 
-  const user = shown ? MOCK_USERS.find((u) => u.email === shown.email) : undefined;
+  const send = async () => {
+    if (!shown || !draft.trim()) return;
+    setSending(true);
+    try {
+      await adminApi.replyTicket(shown.id, draft.trim());
+      setDraft('');
+      toast.success('Đã gửi trả lời', shown.channel === 'CHAT' ? `${shown.userName} nhận được trong khung chat hỗ trợ và thông báo` : `Đã ghi nhận trả lời cho ${shown.email}`);
+      await refresh();
+    } catch (e) {
+      toast.error('Không gửi được', errorMessage(e));
+    } finally {
+      setSending(false);
+    }
+  };
+
+  const user = shown ? students.find((u) => u.email === shown.email) : undefined;
+  const lastAt = (t: SupportTicket) => t.messages[t.messages.length - 1]?.at ?? t.createdAt;
+  const resolvedWeek = tickets.filter((t) => t.status === 'RESOLVED' && Date.now() - new Date(lastAt(t)).getTime() < 7 * 86400_000).length;
 
   return (
     <div className="space-y-6">
@@ -67,8 +92,8 @@ export const AdminSupportPage: React.FC = () => {
         items={[
           { label: 'Yêu cầu mới', value: count('OPEN'), icon: Inbox, tone: 'rose', note: `${tickets.filter((t) => t.status === 'OPEN' && t.priority === 'HIGH').length} yêu cầu gấp` },
           { label: 'Đang xử lý', value: count('PENDING'), icon: MessageCircle, tone: 'amber' },
-          { label: 'Đã xong tuần này', value: count('RESOLVED'), icon: Send, tone: 'emerald' },
-          { label: 'Phản hồi đầu tiên TB', value: '38 phút', icon: Phone, tone: 'sky', note: 'Mục tiêu dưới 1 giờ' },
+          { label: 'Đã xong tuần này', value: resolvedWeek, icon: Send, tone: 'emerald', note: `${count('RESOLVED')} yêu cầu đã xong` },
+          { label: 'Tổng yêu cầu', value: tickets.length, icon: Phone, tone: 'sky', note: 'chat, email, hotline' },
         ]}
       />
 
@@ -111,7 +136,7 @@ export const AdminSupportPage: React.FC = () => {
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center justify-between gap-2">
                         <p className="truncate text-sm font-semibold text-slate-900">{t.userName}</p>
-                        <span className="shrink-0 text-[11px] text-slate-400">{timeAgo(t.messages[t.messages.length - 1].at)}</span>
+                        <span className="shrink-0 text-[11px] text-slate-400">{timeAgo(lastAt(t))}</span>
                       </div>
                       <p className="truncate text-[13px] text-slate-700">{t.subject}</p>
                       <div className="mt-1.5 flex flex-wrap items-center gap-2 text-[11px] text-slate-500">
@@ -126,7 +151,7 @@ export const AdminSupportPage: React.FC = () => {
                 </li>
               );
             })}
-            {!list.length && <li className="px-4 py-12 text-center text-sm text-slate-500">Không có yêu cầu nào.</li>}
+            {!list.length && <li className="px-4 py-12 text-center text-sm text-slate-500">{ticketsQ.isLoading ? 'Đang tải…' : 'Không có yêu cầu nào.'}</li>}
           </ul>
         </div>
 
@@ -139,23 +164,23 @@ export const AdminSupportPage: React.FC = () => {
                   <ArrowLeft className="h-4 w-4" /> Danh sách
                 </button>
                 <p className="text-[12px] text-slate-500">
-                  #{shown.id} · {CHANNEL[shown.channel].label} · {CATEGORY[shown.category]} · {formatDateTime(shown.createdAt)}
+                  #{shown.id.slice(0, 8)} · {CHANNEL[shown.channel].label} · {CATEGORY[shown.category]} · {formatDateTime(shown.createdAt)}
                 </p>
                 <h2 className="mt-0.5 font-display text-[17px] font-bold text-slate-900">{shown.subject}</h2>
               </div>
               <div className="flex flex-wrap items-center gap-2">
-                <select value={shown.status} onChange={(e) => { patch(shown.id, { status: e.target.value as TicketStatus }); toast.success('Đã cập nhật trạng thái', STATUS[e.target.value as TicketStatus].label); }} className={cn(inputCls, 'h-9 w-[132px]')} aria-label="Trạng thái">
+                <select value={shown.status} onChange={(e) => void patch(shown.id, { status: e.target.value }, `Trạng thái: ${STATUS[e.target.value as TicketStatus].label}`)} className={cn(inputCls, 'h-9 w-[132px]')} aria-label="Trạng thái">
                   {Object.entries(STATUS).map(([k, s]) => (
                     <option key={k} value={k}>
                       {s.label}
                     </option>
                   ))}
                 </select>
-                <select value={shown.assignee ?? ''} onChange={(e) => patch(shown.id, { assignee: e.target.value || undefined })} className={cn(inputCls, 'h-9 w-[160px]')} aria-label="Người phụ trách">
+                <select value={shown.assigneeId ?? ''} onChange={(e) => void patch(shown.id, { assigneeId: e.target.value || null }, 'Đã phân công')} className={cn(inputCls, 'h-9 w-[160px]')} aria-label="Người phụ trách">
                   <option value="">Chưa phân công</option>
-                  {[me, 'Tổ chuyên môn TOEIC', 'Tổ chuyên môn VSTEP', 'Kế toán'].map((n) => (
-                    <option key={n} value={n}>
-                      {n}
+                  {(admins.length ? admins : meUser ? [{ id: meUser.id, fullName: me }] : []).map((u) => (
+                    <option key={u.id} value={u.id}>
+                      {u.fullName}
                     </option>
                   ))}
                 </select>
@@ -184,16 +209,16 @@ export const AdminSupportPage: React.FC = () => {
                       </button>
                     ))}
                   </div>
-                  <textarea value={draft} onChange={(e) => setDraft(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) send(); }} rows={3} placeholder={shown.channel === 'CHAT' ? 'Trả lời trong khung chat của học viên…' : `Trả lời qua email ${shown.email}…`} className={cn(inputCls, 'h-auto w-full resize-none py-2.5')} />
+                  <textarea value={draft} onChange={(e) => setDraft(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) void send(); }} rows={3} placeholder={shown.channel === 'CHAT' ? 'Trả lời trong khung chat của học viên…' : `Trả lời qua email ${shown.email}…`} className={cn(inputCls, 'h-auto w-full resize-none py-2.5')} />
                   <div className="flex items-center justify-between gap-2">
                     <span className="text-[12px] text-slate-400 max-sm:hidden">Ctrl + Enter để gửi</span>
                     <div className="ml-auto flex gap-2">
                       {shown.status !== 'RESOLVED' && (
-                        <TBtn size="sm" onClick={() => { patch(shown.id, { status: 'RESOLVED' }); toast.success('Đã đóng yêu cầu', `#${shown.id}`); }}>
+                        <TBtn size="sm" onClick={() => void patch(shown.id, { status: 'RESOLVED' }, 'Đã đóng yêu cầu')}>
                           Đánh dấu đã xong
                         </TBtn>
                       )}
-                      <TBtn size="sm" variant="primary" icon={<Send />} disabled={!draft.trim()} onClick={send}>
+                      <TBtn size="sm" variant="primary" icon={<Send />} disabled={!draft.trim() || sending} onClick={() => void send()}>
                         Gửi
                       </TBtn>
                     </div>
@@ -237,7 +262,7 @@ export const AdminSupportPage: React.FC = () => {
                   </div>
                 </dl>
                 <div className="flex flex-col gap-2">
-                  <TBtn size="sm" to="/admin/users">Xem tài khoản</TBtn>
+                  <TBtn size="sm" to={`/admin/users?q=${encodeURIComponent(shown.email)}`}>Xem tài khoản</TBtn>
                   {shown.category === 'PAYMENT' && <TBtn size="sm" to="/admin/billing">Xem giao dịch</TBtn>}
                 </div>
               </aside>

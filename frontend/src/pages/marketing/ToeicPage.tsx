@@ -1,22 +1,34 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Headphones, BookOpen } from 'lucide-react';
-import { TOEIC_PARTS_INFO, MOCK_TESTS, SCORE_TABLE, SKILL_SCORES, MOCK_ATTEMPTS, TOEIC_GUIDES, TOEIC_GUIDE_SLUG } from '@/shared/mocks';
+import { usePartsInfo, useTests } from '@/shared/api/catalog';
+import { useExamGuides, useScoreTable } from '@/shared/api/cms';
+import { TOEIC_GUIDE_SLUG } from '@/shared/constants/public';
 import { useDocumentTitle, useGate } from '@/shared/hooks';
 import { cn } from '@/shared/utils';
 import { Accent, PageHeader, Section, SectionHead, ActionLink, CtaStrip } from './shared/PageKit';
 import { TestList } from './shared/TestList';
 import { ExamGuideList } from './shared/ExamGuideList';
 
-/** Bản xem trước phiếu kết quả thi thử (dữ liệu thật của lượt làm gần nhất trong mock) */
+/** Hình minh hoạ phiếu kết quả thi thử (số liệu minh hoạ, không phải bài làm của học viên) */
+const SAMPLE_REPORT = { testTitle: 'Phiếu kết quả minh hoạ · TOEIC full test', score: 715, listening: 380, reading: 335 };
+const SAMPLE_PARTS = [
+  { skill: 'Part 1', score: 83 },
+  { skill: 'Part 2', score: 72 },
+  { skill: 'Part 3', score: 68 },
+  { skill: 'Part 4', score: 61 },
+  { skill: 'Part 5', score: 80 },
+  { skill: 'Part 6', score: 70 },
+  { skill: 'Part 7', score: 55 },
+];
 const ScoreReportPreview: React.FC = () => {
-  const a = MOCK_ATTEMPTS[0];
+  const a = SAMPLE_REPORT;
   return (
     <figure className="rounded-xl border border-slate-200 bg-white shadow-[0_1px_2px_rgba(16,24,40,0.04),0_12px_32px_-12px_rgba(16,24,40,0.14)]">
       <div className="flex items-center justify-between border-b border-slate-200 px-5 py-3.5">
         <div>
           <p className="text-sm font-semibold text-slate-900">{a.testTitle}</p>
-          <p className="text-[12px] text-slate-500">Nộp bài 25/10/2026 · 1 giờ 54 phút</p>
+          <p className="text-[12px] text-slate-500">Ví dụ phiếu điểm sau khi nộp bài · 1 giờ 54 phút</p>
         </div>
         <span className="rounded-md bg-emerald-50 px-2 py-1 text-[12px] font-medium text-emerald-700">Đã chấm</span>
       </div>
@@ -37,7 +49,7 @@ const ScoreReportPreview: React.FC = () => {
       </div>
       <div className="space-y-2.5 px-5 py-4">
         <p className="text-[12px] text-slate-500">Tỉ lệ đúng theo Part</p>
-        {SKILL_SCORES.map((s) => (
+        {SAMPLE_PARTS.map((s) => (
           <div key={s.skill} className="grid grid-cols-[3.5rem_1fr_2.5rem] items-center gap-3 text-[13px]">
             <span className="text-slate-600">{s.skill}</span>
             <span className="h-1.5 rounded-full bg-slate-100">
@@ -55,9 +67,13 @@ const ScoreReportPreview: React.FC = () => {
 export const ToeicPage: React.FC = () => {
   useDocumentTitle('Luyện thi TOEIC');
   const gate = useGate();
-  const [active, setActive] = useState(TOEIC_PARTS_INFO[0].id);
-  const part = TOEIC_PARTS_INFO.find((p) => p.id === active)!;
-  const tests = MOCK_TESTS.filter((t) => t.examType === 'TOEIC').slice(0, 6);
+  const { data: TOEIC_PARTS_INFO = [] } = usePartsInfo('TOEIC');
+  const { data: allTests = [] } = useTests({ examType: 'TOEIC' });
+  const { data: TOEIC_GUIDES = [] } = useExamGuides('TOEIC');
+  const { data: SCORE_TABLE = [] } = useScoreTable();
+  const [active, setActive] = useState('PART_1');
+  const part = TOEIC_PARTS_INFO.find((p) => p.id === active) ?? TOEIC_PARTS_INFO[0];
+  const tests = allTests.slice(0, 6);
 
   return (
     <div className="bg-page">
@@ -80,7 +96,7 @@ export const ToeicPage: React.FC = () => {
           { value: '200 câu', label: 'Số câu' },
           { value: '120 phút', label: 'Thời gian' },
           { value: '10 – 990', label: 'Thang điểm' },
-          { value: '96 đề', label: 'Full test trên OrbiLingo' },
+          { value: `${allTests.length} đề`, label: 'Full test trên OrbiLingo' },
         ]}
         aside={<ScoreReportPreview />}
       />
@@ -125,6 +141,7 @@ export const ToeicPage: React.FC = () => {
             ))}
           </div>
 
+          {part && (
           <article key={part.id} className="rounded-xl border border-slate-200 p-6 md:p-8 animate-fade-in">
             <p className="text-[13px] text-slate-500">
               {part.skill} · {part.questions} câu{part.minutes ? ` · nên dành ~${part.minutes} phút` : ''}
@@ -149,6 +166,7 @@ export const ToeicPage: React.FC = () => {
               </Link>
             </div>
           </article>
+          )}
         </div>
       </Section>
 

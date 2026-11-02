@@ -321,6 +321,37 @@ export function parseEts(file: string): EtsItem[] {
 
 const etsDir = (...p: string[]) => dataPath('playwright_test', 'englishteststore', ...p);
 
+/** Tên file bài tập englishteststore → các chủ điểm ngữ pháp (slug) mà bài tập thuộc về. */
+const GRAMMAR_KEYMAP: [RegExp, string[]][] = [
+  [/^Present Simple$|Present Simple vs|Present Simple -|Am, is, are/i, ['thi-hien-tai-don', 'present-simple']],
+  [/^Present Continuous$|Present Continuous vs|Present Simple vs Present Continuous/i, ['thi-hien-tai-tiep-dien-present-continuous']],
+  [/Present Perfect Tense|Present Perfect vs Past Simple|Since and For|Present Simple - Present Continuous - Present Perfect/i, ['hien-tai-hoan-thanh', 'thi-hien-tai-hoan-thanh-present-perfect']],
+  [/Present Perfect Continuous|Present Perfect vs Present Perfect Continuous/i, ['thi-hien-tai-hoan-thanh-tiep-dien-present-perfect-continuous']],
+  [/^Past Simple$|Past Simple vs|Past Simple -|Used to/i, ['thi-qua-khu-don-past-simple']],
+  [/Past Continuous/i, ['thi-qua-khu-tiep-dien-past-continuous']],
+  [/^Past Perfect$|Past Simple vs Past Perfect|Past Perfect vs/i, ['thi-qua-khu-hoan-thanh-past-perfect']],
+  [/Past Perfect Continuous/i, ['thi-qua-khu-hoan-thanh-tiep-dien-past-perfect-continuous']],
+  [/^Future Simple|Will vs Be going to|^Be going to|Shall vs Will|Present Continuous vs Future Simple/i, ['thi-tuong-lai-don-future-simple']],
+  [/Future Continuous/i, ['thi-tuong-lai-tiep-dien-future-continuous']],
+  [/Future Perfect/i, ['thi-tuong-lai-hoan-thanh-future-perfect']],
+  [/Verb Tenses/i, ['su-phoi-hop-thi-trong-tieng-anh-sequence-of-tenses']],
+  [/Adjectives and Adverbs|Error Recognition TOEIC/i, ['tu-loai-word-form', 'tu-loai-trong-toeic-parts-of-speech']],
+  [/^Adjectives|Adjectives as Nouns/i, ['tinh-tu-adjectives']],
+  [/^Adverbs/i, ['trang-tu-adverbs']],
+  [/Nouns|Measures|Quantifier|Much vs Many/i, ['danh-tu-nouns']],
+  [/Pronouns/i, ['dai-tu-pronouns']],
+  [/Relative/i, ['menh-de-quan-he', 'menh-de-tinh-tu']],
+  [/Conjunctions|Either vs Neither|So and Neither/i, ['lien-tu', 'lien-tu-conjunctions']],
+  [/Preposition/i, ['gioi-tu', 'gioi-tu-prepositions']],
+  [/Comparison/i, ['cau-truc-cau-so-sanh-comparison']],
+  [/Subjunctive|^Mood$/i, ['cau-truc-cau-gia-dinh-subjunctive-mood']],
+  [/Narration|Tell vs Say/i, ['cau-truc-cau-gian-tiep-reported-speech']],
+  [/Question Tag|Interrogative/i, ['cau-truc-cau-hoi-questions']],
+  [/Imperative/i, ['cau-truc-menh-lenh-yeu-cau']],
+  [/So vs Such/i, ['cau-truc-cau-nguyen-nhan-ket-qua']],
+  [/Verbs|Modal|Must|Auxiliary|Gerund|Infinitive|Participle|Verbal|Have and Have got|Do vs Make/i, ['dong-tu-verbs']],
+];
+
 /** Bài tập ngữ pháp → questions TOEIC_P5 (GRAMMAR), gắn chủ điểm ngữ pháp qua nhãn kỹ năng. */
 export async function importGrammarExercises(ctx: SeedCtx, topicTagByKey: (fileTitle: string) => string | undefined) {
   const dir = etsDir('Grammar Tests');
@@ -332,6 +363,10 @@ export async function importGrammarExercises(ctx: SeedCtx, topicTagByKey: (fileT
     if (!items.length) continue;
     const name = f.replace(/\.txt$/, '').replace(/ Tests?$/, '');
     const tagId = topicTagByKey(name) ?? ctx.addTag(`grammar-${slugify(name)}`, name, 'GRAMMAR', null);
+    const extraTags = GRAMMAR_KEYMAP.filter(([re]) => re.test(name))
+      .flatMap(([, slugs]) => slugs)
+      .map((s) => ctx.tags.get(`grammar-${s}`))
+      .filter((t): t is string => !!t);
     const seen = new Set<string>();
     for (const it of items) {
       if (seen.size >= PER_FILE) break;
@@ -342,7 +377,7 @@ export async function importGrammarExercises(ctx: SeedCtx, topicTagByKey: (fileT
         part: 'TOEIC_P5',
         skill: 'GRAMMAR',
         type: 'SINGLE_CHOICE',
-        tagIds: [tagId, ctx.tags.get('toeic-p5')!],
+        tagIds: [...new Set([tagId, ...extraTags, ctx.tags.get('toeic-p5')!])],
         stem: it.context ? `${it.context}\n${it.stem}` : it.stem,
         options: it.options,
         correctAnswer: { keys: [it.answer] },

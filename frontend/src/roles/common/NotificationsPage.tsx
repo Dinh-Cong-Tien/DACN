@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { Bell, CheckCheck, RotateCcw, ClipboardList, Award, Settings2, Users, Trash2 } from 'lucide-react';
-import { useAuthStore } from '@/shared/stores/authStore';
-import { notificationsFor } from '@/shared/components/layout/NotificationBell';
+import { api, errorMessage } from '@/shared/api/client';
+import { useMarkAllNotificationsRead, useMarkNotificationRead, useNotifications } from '@/shared/api/learner';
 import type { AppNotification } from '@/shared/types';
 import { cn, timeAgo } from '@/shared/utils';
 import { Badge, Button, Card, EmptyState, PageHeader, Tabs } from '@/shared/components/ui';
@@ -19,17 +20,35 @@ const META: Record<AppNotification['type'], { icon: React.ElementType; cls: stri
 
 export const NotificationsPage: React.FC = () => {
   useDocumentTitle('Thông báo');
-  const role = useAuthStore((st) => st.user?.role);
-  const [items, setItems] = useState(() => notificationsFor(role));
+  // Thông báo của người đang đăng nhập (mọi vai trò) — bảng notifications
+  const qc = useQueryClient();
+  const { data, isLoading } = useNotifications();
+  const items: AppNotification[] = data?.items ?? [];
+  const markOne = useMarkNotificationRead();
+  const markAllRead = useMarkAllNotificationsRead();
   const [tab, setTab] = useState('all');
   const list = items.filter((n) => (tab === 'all' ? true : tab === 'unread' ? !n.isRead : n.type === tab));
   const unread = items.filter((n) => !n.isRead).length;
 
   const markAll = () => {
-    setItems((s) => s.map((n) => ({ ...n, isRead: true })));
-    toast.success('Đã đánh dấu tất cả là đã đọc');
+    markAllRead.mutate(undefined, {
+      onSuccess: () => toast.success('Đã đánh dấu tất cả là đã đọc'),
+      onError: (e) => toast.error('Chưa cập nhật được', errorMessage(e)),
+    });
   };
-  const markRead = (id: string) => setItems((s) => s.map((x) => (x.id === id ? { ...x, isRead: true } : x)));
+  const markRead = (id: string) => {
+    if (items.find((x) => x.id === id && !x.isRead)) markOne.mutate(id);
+  };
+  // Xoá toàn bộ thông báo đang hiển thị
+  const clearAll = async () => {
+    try {
+      await Promise.all(items.map((n) => api.delete(`/learner/notifications/${n.id}`)));
+      qc.invalidateQueries({ queryKey: ['learner', 'notifications'] });
+      toast.info('Đã xoá thông báo');
+    } catch (e) {
+      toast.error('Chưa xoá được', errorMessage(e));
+    }
+  };
 
   return (
     <div className="max-w-3xl mx-auto">
@@ -46,7 +65,7 @@ export const NotificationsPage: React.FC = () => {
             <Button variant="outline" size="sm" leftIcon={<CheckCheck className="w-4 h-4" />} onClick={markAll} disabled={!unread}>
               Đọc tất cả
             </Button>
-            <Button variant="ghost" size="sm" leftIcon={<Trash2 className="w-4 h-4" />} onClick={() => setItems([])}>
+            <Button variant="ghost" size="sm" leftIcon={<Trash2 className="w-4 h-4" />} onClick={() => void clearAll()}>
               Xoá hết
             </Button>
           </>
@@ -67,7 +86,7 @@ export const NotificationsPage: React.FC = () => {
       />
       {list.length === 0 ? (
         <Card hard>
-          <EmptyState icon={<Bell />} title="Không có thông báo" description="Khi có cập nhật mới, chúng sẽ xuất hiện tại đây." />
+          <EmptyState icon={<Bell />} title={isLoading ? "Đang tải…" : "Không có thông báo"} description={isLoading ? undefined : "Khi có cập nhật mới, chúng sẽ xuất hiện tại đây."} />
         </Card>
       ) : (
         <div className="space-y-3">

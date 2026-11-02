@@ -27,3 +27,6 @@ pnpm-debug.log*
 # OS
 .DS_Store
 Thumbs.db
+
+# File người dùng tải lên (ghi âm…)
+backend/uploads/

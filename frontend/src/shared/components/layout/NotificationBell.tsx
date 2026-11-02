@@ -1,13 +1,11 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Bell, BellOff, CheckCheck, ClipboardList, GraduationCap, Info, Trophy, Users, X } from 'lucide-react';
-import { ADMIN_NOTIFICATIONS, HEAD_NOTIFICATIONS, MOCK_NOTIFICATIONS, TEACHER_NOTIFICATIONS } from '@/shared/mocks';
 import { useAuthStore } from '@/shared/stores/authStore';
 import type { AppNotification, AppRole } from '@/shared/types';
+import { useMarkAllNotificationsRead, useMarkNotificationRead, useNotifications } from '@/shared/api/learner';
 import { cn, timeAgo } from '@/shared/utils';
 
-/** Danh sách thông báo theo vai trò */
-export const notificationsFor = (role?: AppRole): AppNotification[] => (role === 'TEACHER' ? TEACHER_NOTIFICATIONS : role === 'HEAD_TEACHER' ? HEAD_NOTIFICATIONS : role === 'ADMIN' ? ADMIN_NOTIFICATIONS : MOCK_NOTIFICATIONS);
 
 const TYPE_ICON: Record<AppNotification['type'], [React.ElementType, string]> = {
   ASSIGNMENT: [ClipboardList, 'bg-violet-500/10 text-violet-600'],
@@ -19,16 +17,18 @@ const TYPE_ICON: Record<AppNotification['type'], [React.ElementType, string]> = 
 
 /** Chuông thông báo dạng popup: bấm chuông mở khung thông báo ngay dưới header, không chuyển trang */
 export const NotificationBell: React.FC<{ allTo: string }> = ({ allTo }) => {
-  const role = useAuthStore((s) => s.user?.role);
+  const loggedIn = useAuthStore((s) => !!s.user);
   const navigate = useNavigate();
-  const [items, setItems] = useState<AppNotification[]>(() => notificationsFor(role));
+  const { data } = useNotifications();
+  const markRead = useMarkNotificationRead();
+  const markAll = useMarkAllNotificationsRead();
+  const items: AppNotification[] = loggedIn ? (data?.items ?? []) : [];
   const [open, setOpen] = useState(false);
   const [tab, setTab] = useState<'all' | 'unread'>('all');
   const ref = useRef<HTMLDivElement>(null);
-  const unread = items.filter((n) => !n.isRead).length;
+  const unread = loggedIn ? (data?.unread ?? items.filter((n) => !n.isRead).length) : 0;
   const list = tab === 'unread' ? items.filter((n) => !n.isRead) : items;
 
-  useEffect(() => setItems(notificationsFor(role)), [role]);
   useEffect(() => {
     if (!open) return;
     const onDown = (e: MouseEvent) => !ref.current?.contains(e.target as Node) && setOpen(false);
@@ -42,7 +42,7 @@ export const NotificationBell: React.FC<{ allTo: string }> = ({ allTo }) => {
   }, [open]);
 
   const openItem = (n: AppNotification) => {
-    setItems((all) => all.map((x) => (x.id === n.id ? { ...x, isRead: true } : x)));
+    if (!n.isRead) markRead.mutate(n.id);
     setOpen(false);
     if (n.link) navigate(n.link);
   };
@@ -63,7 +63,7 @@ export const NotificationBell: React.FC<{ allTo: string }> = ({ allTo }) => {
             </div>
             <div className="flex items-center gap-1">
               {unread > 0 && (
-                <button type="button" onClick={() => setItems((all) => all.map((x) => ({ ...x, isRead: true })))} className="inline-flex h-8 items-center gap-1 rounded-lg px-2 text-[12px] font-semibold text-indigo-600 hover:bg-indigo-500/10">
+                <button type="button" onClick={() => markAll.mutate()} className="inline-flex h-8 items-center gap-1 rounded-lg px-2 text-[12px] font-semibold text-indigo-600 hover:bg-indigo-500/10">
                   <CheckCheck className="h-4 w-4" /> Đọc hết
                 </button>
               )}
@@ -87,7 +87,7 @@ export const NotificationBell: React.FC<{ allTo: string }> = ({ allTo }) => {
           <ul className="max-h-[60vh] overflow-y-auto border-t border-slate-100 sm:max-h-[420px]">
             {list.length === 0 && (
               <li className="flex flex-col items-center gap-2 px-4 py-10 text-center text-sm text-slate-500">
-                <BellOff className="h-6 w-6 text-slate-300" /> Không có thông báo chưa đọc
+                <BellOff className="h-6 w-6 text-slate-300" /> {tab === 'unread' ? 'Không có thông báo chưa đọc' : 'Chưa có thông báo nào'}
               </li>
             )}
             {list.map((n) => {

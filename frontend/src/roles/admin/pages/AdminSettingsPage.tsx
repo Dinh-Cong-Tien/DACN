@@ -1,6 +1,7 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Save, RotateCcw, Settings2, GraduationCap, Flame, Shield, AlertTriangle, SlidersHorizontal } from 'lucide-react';
-import { MOCK_SETTINGS } from '@/shared/mocks';
+import { adminApi, useAdminInvalidate, useAdminSettings } from '@/shared/api/admin';
+import { errorMessage } from '@/shared/api/client';
 import type { SystemSetting } from '@/shared/types';
 import { cn } from '@/shared/utils';
 import { useDocumentTitle } from '@/shared/hooks';
@@ -18,35 +19,51 @@ const metaOf = (g: string) => GROUP_META[g] ?? { icon: SlidersHorizontal, tone: 
 const anchor = (g: string) => `grp-${g.normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/\s+/g, '-').toLowerCase()}`;
 
 type Values = Record<string, SystemSetting['value']>;
-const initialValues = (): Values => Object.fromEntries(MOCK_SETTINGS.map((s) => [s.key, s.value]));
+const EMPTY: SystemSetting[] = [];
+const toValues = (xs: SystemSetting[]): Values => Object.fromEntries(xs.map((s) => [s.key, s.value]));
 
 export const AdminSettingsPage: React.FC = () => {
   useDocumentTitle('Cấu hình tham số');
-  const groups = useMemo(() => Array.from(new Set(MOCK_SETTINGS.map((s) => s.group))), []);
-  const [active, setActive] = useState(groups[0]);
-  const [values, setValues] = useState<Values>(initialValues);
-  const [saved, setSaved] = useState<Values>(initialValues);
+  const { data } = useAdminSettings();
+  const refresh = useAdminInvalidate();
+  const MOCK_SETTINGS = data ?? EMPTY;
+  const groups = useMemo(() => Array.from(new Set(MOCK_SETTINGS.map((s) => s.group))), [MOCK_SETTINGS]);
+  const [activeState, setActive] = useState<string>();
+  const active = activeState ?? groups[0];
+  const [values, setValues] = useState<Values>({});
+  const [saved, setSaved] = useState<Values>({});
+  useEffect(() => {
+    const v = toValues(MOCK_SETTINGS);
+    setValues(v);
+    setSaved(v);
+  }, [MOCK_SETTINGS]);
   const [saving, setSaving] = useState(false);
   const [resetOpen, setResetOpen] = useState(false);
 
   const dirty = useMemo(() => MOCK_SETTINGS.filter((s) => values[s.key] !== saved[s.key]).length, [values, saved]);
   const dirtyIn = (g: string) => MOCK_SETTINGS.filter((s) => s.group === g && values[s.key] !== saved[s.key]).length;
   const set = (key: string, v: SystemSetting['value']) => setValues((s) => ({ ...s, [key]: v }));
-  const maintenance = Boolean(values.maintenance_mode);
+  const maintenance = Boolean(values[MOCK_SETTINGS.find((s) => /maintenance/i.test(s.key) && s.type === 'TOGGLE')?.key ?? 'maintenance_mode']);
 
-  const save = () => {
+  const save = async () => {
+    const changed = Object.fromEntries(MOCK_SETTINGS.filter((s) => values[s.key] !== saved[s.key]).map((s) => [s.key, values[s.key]]));
     setSaving(true);
-    setTimeout(() => {
+    try {
+      await adminApi.saveSettings(changed);
       setSaved(values);
+      toast.success('Đã lưu cấu hình', `${dirty} tham số đã được cập nhật và ghi vào nhật ký hệ thống.`);
+      void refresh();
+    } catch (e) {
+      toast.error('Không lưu được', errorMessage(e));
+    } finally {
       setSaving(false);
-      toast.success('Đã lưu cấu hình', `${dirty} tham số đã được cập nhật và ghi vào Audit Log.`);
-    }, 600);
+    }
   };
 
   const reset = () => {
-    setValues(initialValues());
+    setValues(saved);
     setResetOpen(false);
-    toast.info('Đã khôi phục mặc định', 'Nhấn "Lưu cấu hình" để áp dụng.');
+    toast.info('Đã huỷ thay đổi', 'Các tham số trở về giá trị đang áp dụng.');
   };
 
   const jump = (g: string) => {
@@ -60,7 +77,7 @@ export const AdminSettingsPage: React.FC = () => {
       case 'TOGGLE':
         return <Switch checked={Boolean(v)} onChange={(x) => set(s.key, x)} />;
       case 'NUMBER':
-        return <input type="number" className={cn(inputCls, 'w-32 text-right tabular-nums')} value={Number(v)} onChange={(e) => set(s.key, Number(e.target.value))} />;
+        return <input type="number" className={cn(inputCls, 'w-32 text-right tabular-nums')} value={v === undefined || v === '' ? '' : Number(v)} onChange={(e) => set(s.key, Number(e.target.value))} />;
       case 'SELECT':
         return (
           <select className={cn(inputCls, 'w-44')} value={String(v)} onChange={(e) => set(s.key, e.target.value)}>
@@ -84,7 +101,7 @@ export const AdminSettingsPage: React.FC = () => {
         sub="Thiết lập chung, hạn mức học tập, quy tắc động lực và bảo mật. Mọi thay đổi được ghi vào nhật ký kiểm toán kèm IP người thực hiện."
         actions={
           <TBtn icon={<RotateCcw />} onClick={() => setResetOpen(true)}>
-            Khôi phục mặc định
+            Huỷ thay đổi
           </TBtn>
         }
       />
@@ -180,7 +197,7 @@ export const AdminSettingsPage: React.FC = () => {
         </div>
       </div>
 
-      <ConfirmDialog open={resetOpen} onClose={() => setResetOpen(false)} onConfirm={reset} danger title="Khôi phục cấu hình mặc định?" message="Toàn bộ tham số sẽ trở về giá trị ban đầu của hệ thống. Thay đổi chưa lưu sẽ bị mất." confirmText="Khôi phục" />
+      <ConfirmDialog open={resetOpen} onClose={() => setResetOpen(false)} onConfirm={reset} danger title="Huỷ các thay đổi chưa lưu?" message="Các tham số sẽ trở về giá trị đang áp dụng." confirmText="Huỷ thay đổi" />
     </div>
   );
 };

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { TrendingUp, Target, FileText, Clock, CheckCircle2, Calendar } from 'lucide-react';
-import { DAILY_ACTIVITY, HEATMAP_DATA, MOCK_ATTEMPTS, RADAR_SKILLS, SCORE_HISTORY, SKILL_SCORES, WEEKDAY_LABELS } from '@/shared/mocks';
+import { useAttempts, useProgress } from '@/shared/api/learner';
 import type { AttemptSummary } from '@/shared/types';
 import { formatDate, formatDuration } from '@/shared/utils';
 import { useDocumentTitle } from '@/shared/hooks';
@@ -13,10 +13,21 @@ export const StudentProgressPage: React.FC = () => {
   useDocumentTitle('Tiến độ & Phân tích');
   const user = useAuthStore((s) => s.user);
   const [range, setRange] = useState('7');
-  const current = SCORE_HISTORY[SCORE_HISTORY.length - 1];
+  const { data: progress } = useProgress();
+  const { data: history } = useAttempts({ pageSize: 100 });
+  const SCORE_HISTORY = progress?.scoreHistory ?? [];
+  const DAILY_ACTIVITY = progress?.dailyActivity ?? [];
+  const HEATMAP_DATA = progress?.heatmap ?? {};
+  const RADAR_SKILLS = progress?.radar ?? [];
+  const SKILL_SCORES = progress?.skillScores ?? [];
+  // Lượt làm bài trong khoảng thời gian đang chọn
+  const since = Date.now() - Number(range) * 86400000;
+  const MOCK_ATTEMPTS = (history?.items ?? []).filter((a) => new Date(a.date).getTime() >= since);
+  const current = SCORE_HISTORY[SCORE_HISTORY.length - 1] ?? 0;
+  const prev = SCORE_HISTORY[SCORE_HISTORY.length - 2];
   const target = Number(user?.target?.score ?? 750) || 750;
   const totalMinutes = DAILY_ACTIVITY.reduce((a, d) => a + d.minutes, 0);
-  const accuracy = Math.round((MOCK_ATTEMPTS.reduce((a, x) => a + x.correct / x.total, 0) / MOCK_ATTEMPTS.length) * 100);
+  const accuracy = MOCK_ATTEMPTS.length ? Math.round((MOCK_ATTEMPTS.reduce((a, x) => a + x.correct / Math.max(1, x.total), 0) / MOCK_ATTEMPTS.length) * 100) : 0;
 
   const toneFor = (v: number) => (v >= 75 ? 'emerald' : v >= 60 ? 'amber' : 'violet');
 
@@ -25,7 +36,7 @@ export const StudentProgressPage: React.FC = () => {
       key: 'testTitle',
       header: 'Đề thi',
       render: (r) => (
-        <Link to={`/app/mock-tests/${r.testId}/result`} className="font-bold text-slate-900 hover:text-indigo-700 underline-offset-2 hover:underline">
+        <Link to={r.testId ? `/app/mock-tests/${r.testId}/result?attempt=${r.id}` : '/app/practice'} className="font-bold text-slate-900 hover:text-indigo-700 underline-offset-2 hover:underline">
           {r.testTitle}
         </Link>
       ),
@@ -51,17 +62,17 @@ export const StudentProgressPage: React.FC = () => {
       />
 
       <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
-        <StatCard label="Điểm hiện tại" value={current} suffix={`/ ${target}`} icon={<Target />} tone="indigo" delta={Math.round(((current - SCORE_HISTORY[SCORE_HISTORY.length - 2]) / SCORE_HISTORY[SCORE_HISTORY.length - 2]) * 100)} deltaLabel="so với lần trước" />
+        <StatCard label="Điểm hiện tại" value={current} suffix={`/ ${target}`} icon={<Target />} tone="indigo" delta={prev ? Math.round(((current - prev) / prev) * 100) : undefined} deltaLabel={prev ? 'so với lần trước' : undefined} hint={SCORE_HISTORY.length ? undefined : 'Chưa có đề TOEIC full'} />
         <StatCard label="Đề đã làm" value={MOCK_ATTEMPTS.length} icon={<FileText />} tone="violet" hint={`${range} ngày gần nhất`} />
-        <StatCard label="Giờ học tuần này" value={Math.round((totalMinutes / 60) * 10) / 10} suffix="h" icon={<Clock />} tone="emerald" delta={12} deltaLabel="so với tuần trước" />
+        <StatCard label="Giờ học tuần này" value={Math.round((totalMinutes / 60) * 10) / 10} suffix="h" icon={<Clock />} tone="emerald" hint={`${totalMinutes} phút trong 7 ngày`} />
         <StatCard label="Độ chính xác" value={accuracy} suffix="%" icon={<CheckCircle2 />} tone="amber" hint="trung bình các đề" />
       </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-5">
         <Card hard className="xl:col-span-2 animate-fade-up">
-          <CardHeader title="Xu hướng điểm thi thử" subtitle={`${SCORE_HISTORY.length} lần gần nhất · mục tiêu ${target}`} icon={<TrendingUp />} action={<span className="sticker tilt-2 !bg-emerald-200">+{current - SCORE_HISTORY[0]} điểm</span>} />
+          <CardHeader title="Xu hướng điểm thi thử" subtitle={`${SCORE_HISTORY.length} lần gần nhất · mục tiêu ${target}`} icon={<TrendingUp />} action={SCORE_HISTORY.length > 1 ? <span className="sticker tilt-2 !bg-emerald-200">{current - SCORE_HISTORY[0] >= 0 ? '+' : ''}{current - SCORE_HISTORY[0]} điểm</span> : undefined} />
           <div className="overflow-x-auto">
-            <Sparkline data={SCORE_HISTORY} width={640} height={160} className="w-full [&>svg]:w-full [&>svg]:h-auto" />
+            <Sparkline data={SCORE_HISTORY.length > 1 ? SCORE_HISTORY : [0, 0]} width={640} height={160} className="w-full [&>svg]:w-full [&>svg]:h-auto" />
           </div>
           <div className="flex justify-between mt-2 text-[11px] font-semibold text-slate-500">
             {SCORE_HISTORY.map((s, i) => (
@@ -94,7 +105,7 @@ export const StudentProgressPage: React.FC = () => {
         <Reveal delay={80}>
           <Card hard>
             <CardHeader title="Thời gian học 7 ngày" subtitle={`Tổng ${totalMinutes} phút · ${DAILY_ACTIVITY.reduce((a, d) => a + d.questions, 0)} câu`} />
-            <MiniBars data={DAILY_ACTIVITY.map((d, i) => ({ label: WEEKDAY_LABELS[i], value: d.minutes, tone: d.minutes === 0 ? 'slate' : i === 4 ? 'violet' : 'indigo' }))} height={140} />
+            <MiniBars data={DAILY_ACTIVITY.map((d) => ({ label: ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'][new Date(`${d.date}T00:00:00`).getDay()], value: d.minutes, tone: d.minutes === 0 ? 'slate' : 'indigo' }))} height={140} />
           </Card>
         </Reveal>
       </div>
@@ -118,7 +129,7 @@ export const StudentProgressPage: React.FC = () => {
           <div className="p-5 pb-0">
             <CardHeader title="Lịch sử thi thử" subtitle="Nhấn vào đề để xem phân tích chi tiết" />
           </div>
-          <DataTable columns={cols} rows={MOCK_ATTEMPTS} className="border-0 rounded-none rounded-b-2xl border-t-2 !border-t-slate-900" />
+          <DataTable columns={cols} rows={MOCK_ATTEMPTS} emptyTitle="Chưa có lượt làm bài" emptyDescription="Làm một bài luyện tập hoặc đề thi thử để xem lịch sử ở đây." className="border-0 rounded-none rounded-b-2xl border-t-2 !border-t-slate-900" />
         </Card>
       </Reveal>
     </div>

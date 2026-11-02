@@ -1,7 +1,7 @@
 /** Thông báo, mục đã lưu, gói dịch vụ & đơn mua (ghi nhận, chờ admin xác nhận). */
 import crypto from 'node:crypto';
 import { Router } from 'express';
-import { pid } from './learner.shared';
+import { correctKeyOf, partToFe, pid } from './learner.shared';
 import { z } from 'zod';
 import type { Notification } from '@prisma/client';
 import { prisma } from '../../lib/prisma';
@@ -74,17 +74,32 @@ type Target = (typeof TARGETS)[number];
 async function resolveTargets(items: { targetType: string; targetId: string }[]) {
   const ids = (t: Target) => items.filter((i) => i.targetType === t).map((i) => i.targetId);
   const [qs, ls, ws, gs, ps, ts] = await Promise.all([
-    prisma.question.findMany({ where: { id: { in: ids('QUESTION') } }, select: { id: true, stem: true, part: true } }),
-    prisma.lesson.findMany({ where: { id: { in: ids('LESSON') } }, select: { id: true, title: true, section: { select: { course: { select: { slug: true } } } } } }),
-    prisma.word.findMany({ where: { id: { in: ids('WORD') } }, select: { id: true, headword: true, meaningVi: true } }),
+    prisma.question.findMany({ where: { id: { in: ids('QUESTION') } }, select: { id: true, stem: true, part: true, examType: true, options: true, correctAnswer: true } }),
+    prisma.lesson.findMany({ where: { id: { in: ids('LESSON') } }, select: { id: true, title: true, type: true, durationMin: true, section: { select: { course: { select: { slug: true, title: true, coverUrl: true } } } } } }),
+    prisma.word.findMany({ where: { id: { in: ids('WORD') } }, select: { id: true, headword: true, meaningVi: true, ipaUs: true, ipaUk: true } }),
     prisma.grammarTopic.findMany({ where: { id: { in: ids('GRAMMAR_TOPIC') } }, select: { id: true, title: true, slug: true } }),
     prisma.post.findMany({ where: { id: { in: ids('POST') } }, select: { id: true, title: true, slug: true } }),
     prisma.mockTest.findMany({ where: { id: { in: ids('TEST') } }, select: { id: true, title: true, slug: true } }),
   ]);
-  const m = new Map<string, { title: string; subtitle?: string; link: string }>();
-  qs.forEach((q) => m.set(q.id, { title: q.stem.slice(0, 160), subtitle: q.part.replace('TOEIC_P', 'Part '), link: '/app/mistakes' }));
-  ls.forEach((l) => m.set(l.id, { title: l.title, link: `/app/courses/${l.section.course.slug}/lessons/${l.id}` }));
-  ws.forEach((w) => m.set(w.id, { title: w.headword, subtitle: w.meaningVi, link: '/app/vocabulary' }));
+  const m = new Map<string, { title: string; subtitle?: string; link: string; detail?: Record<string, unknown> }>();
+  // detail: dữ liệu để trang "Đã lưu" hiển thị đầy đủ (phương án + đáp án, IPA, khoá học của bài)
+  qs.forEach((q) =>
+    m.set(q.id, {
+      title: q.stem.slice(0, 160),
+      subtitle: q.part.replace('TOEIC_P', 'Part '),
+      link: '/app/mistakes',
+      detail: { stem: q.stem, part: partToFe(q.part), examType: q.examType, options: q.options ?? [], correctKey: correctKeyOf(q) },
+    })
+  );
+  ls.forEach((l) =>
+    m.set(l.id, {
+      title: l.title,
+      subtitle: l.section.course.title,
+      link: `/app/courses/${l.section.course.slug}/lessons/${l.id}`,
+      detail: { courseTitle: l.section.course.title, coverUrl: l.section.course.coverUrl, type: l.type, durationMin: l.durationMin },
+    })
+  );
+  ws.forEach((w) => m.set(w.id, { title: w.headword, subtitle: w.meaningVi, link: '/app/vocabulary', detail: { ipa: w.ipaUs ?? w.ipaUk ?? '' } }));
   gs.forEach((g) => m.set(g.id, { title: g.title, link: `/app/grammar/${g.slug}` }));
   ps.forEach((p) => m.set(p.id, { title: p.title, link: `/blog/${p.slug}` }));
   ts.forEach((t) => m.set(t.id, { title: t.title, link: `/app/mock-tests/${t.slug}` }));

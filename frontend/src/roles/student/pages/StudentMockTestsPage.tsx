@@ -4,7 +4,7 @@ import { FileText, Clock, Users, Lock, ArrowRight, History, Trophy } from 'lucid
 import { useDocumentTitle, useParamState } from '@/shared/hooks';
 import { Badge, Button, Card, CardHeader, Chip, Column, DataTable, PageHeader, Tabs } from '@/shared/components/ui';
 import { Img } from '@/shared/components/media/Img';
-import { MOCK_TESTS, MOCK_ATTEMPTS } from '@/shared/mocks';
+import { useAttempts, useTests } from '@/shared/api/learner';
 import type { AttemptSummary } from '@/shared/types';
 import { cn, formatDate, formatDuration, formatNumber } from '@/shared/utils';
 
@@ -15,6 +15,10 @@ export const StudentMockTestsPage: React.FC = () => {
   const navigate = useNavigate();
   const [tab, setTab] = useParamState('exam', ['TOEIC', 'VSTEP'], 'TOEIC');
   const [filter, setFilter] = useState<Filter>('ALL');
+  const { data: MOCK_TESTS = [], isLoading } = useTests();
+  const { data: history } = useAttempts();
+  const MOCK_ATTEMPTS = history?.items ?? [];
+  const best = MOCK_ATTEMPTS.filter((a) => a.examType === 'TOEIC' && a.maxScore >= 900).reduce((m, a) => Math.max(m, a.score), 0);
 
   const tests = useMemo(
     () =>
@@ -24,7 +28,7 @@ export const StudentMockTestsPage: React.FC = () => {
         if (filter === 'FREE') return t.isFree;
         return true;
       }),
-    [tab, filter]
+    [tab, filter, MOCK_TESTS]
   );
 
   const columns: Column<AttemptSummary>[] = [
@@ -44,7 +48,7 @@ export const StudentMockTestsPage: React.FC = () => {
     { key: 'correct', header: 'Đúng', align: 'center', render: (r) => `${r.correct}/${r.total}` },
     { key: 'durationSec', header: 'Thời gian', align: 'center', render: (r) => formatDuration(r.durationSec) },
     { key: 'date', header: 'Ngày', render: (r) => <span className="text-slate-500">{formatDate(r.date)}</span> },
-    { key: 'act', header: '', align: 'right', render: (r) => <Link to={`/app/mock-tests/${r.testId}/result`} className="text-xs font-extrabold text-indigo-700 hover:underline" onClick={(e) => e.stopPropagation()}>Xem kết quả</Link> },
+    { key: 'act', header: '', align: 'right', render: (r) => <Link to={`/app/mock-tests/${r.testId}/result?attempt=${r.id}`} className="text-xs font-extrabold text-indigo-700 hover:underline" onClick={(e) => e.stopPropagation()}>Xem kết quả</Link> },
   ];
 
   return (
@@ -75,6 +79,7 @@ export const StudentMockTestsPage: React.FC = () => {
         ))}
       </div>
 
+      {isLoading && <p className="text-sm text-slate-500 mb-6">Đang tải đề thi…</p>}
       <div key={`${tab}-${filter}`} className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5 mb-10">
         {tests.map((t, i) => (
           <Link key={t.id} to={`/app/mock-tests/${t.id}`} className="group block animate-fade-up" style={{ animationDelay: `${i * 50}ms` }}>
@@ -122,8 +127,8 @@ export const StudentMockTestsPage: React.FC = () => {
       </div>
 
       <Card hard className="animate-fade-up">
-        <CardHeader title="Lịch sử làm bài" subtitle={`${MOCK_ATTEMPTS.length} lượt thi gần nhất`} icon={<History />} action={<Badge tone="emerald" solid icon={<Trophy className="w-3 h-3" />}>Cao nhất: 715</Badge>} />
-        <DataTable columns={columns} rows={MOCK_ATTEMPTS} onRowClick={(r) => navigate(`/app/mock-tests/${r.testId}/result`)} dense />
+        <CardHeader title="Lịch sử làm bài" subtitle={`${MOCK_ATTEMPTS.length} lượt thi gần nhất`} icon={<History />} action={best > 0 ? <Badge tone="emerald" solid icon={<Trophy className="w-3 h-3" />}>Cao nhất: {best}</Badge> : undefined} />
+        <DataTable columns={columns} rows={MOCK_ATTEMPTS} emptyTitle="Chưa có lượt thi nào" emptyDescription="Chọn một đề ở trên để bắt đầu." onRowClick={(r) => navigate(`/app/mock-tests/${r.testId}/result?attempt=${r.id}`)} dense />
       </Card>
     </div>
   );

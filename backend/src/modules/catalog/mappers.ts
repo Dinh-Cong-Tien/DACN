@@ -164,6 +164,7 @@ export const toVocabWord = (w: Word, topicName: string, card?: SrsCard | null) =
 });
 
 export const toDictionaryEntry = (w: Word) => ({
+  id: w.id,
   word: w.headword,
   ipa: w.ipaUs ?? w.ipaUk ?? '',
   pos: w.pos,

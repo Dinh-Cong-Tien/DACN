@@ -3,15 +3,17 @@ import { Search, MessageCircle, ArrowRight } from 'lucide-react';
 import { Accordion, Input, SectionTitle, Chip, EmptyState, Button } from '@/shared/components/ui';
 import { Reveal } from '@/shared/components/motion';
 import { Img, PHOTOS, pravatar } from '@/shared/components/media/Img';
-import { FAQS } from '@/shared/mocks';
+import { useFaqs } from '@/shared/api/cms';
+import { SkeletonCard } from '@/shared/components/ui';
 import { useDocumentTitle } from '@/shared/hooks';
 
 export const FAQPage: React.FC = () => {
   useDocumentTitle('Câu hỏi thường gặp');
   const [q, setQ] = useState('');
   const [cat, setCat] = useState('Tất cả');
+  const { data: FAQS = [], isLoading } = useFaqs();
   const cats = ['Tất cả', ...Array.from(new Set(FAQS.map((f) => f.category)))];
-  const list = useMemo(() => FAQS.filter((f) => (cat === 'Tất cả' || f.category === cat) && (f.question + f.answer).toLowerCase().includes(q.toLowerCase())), [q, cat]);
+  const list = useMemo(() => FAQS.filter((f) => (cat === 'Tất cả' || f.category === cat) && (f.question + f.answer).toLowerCase().includes(q.toLowerCase())), [q, cat, FAQS]);
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14 md:py-20 grid lg:grid-cols-[1fr_340px] gap-12 items-start">
@@ -27,7 +29,7 @@ export const FAQPage: React.FC = () => {
             ))}
           </div>
         </Reveal>
-        {list.length === 0 ? <EmptyState title="Không tìm thấy câu hỏi" description="Thử từ khoá ngắn hơn hoặc gửi câu hỏi cho chúng tôi." /> : <Accordion key={cat + q} defaultOpen={list[0]?.id} items={list.map((f) => ({ id: f.id, title: f.question, content: f.answer }))} />}
+        {isLoading ? <SkeletonCard lines={5} /> : list.length === 0 ? <EmptyState title="Không tìm thấy câu hỏi" description="Thử từ khoá ngắn hơn hoặc gửi câu hỏi cho chúng tôi." /> : <Accordion key={cat + q} defaultOpen={list[0]?.id} items={list.map((f) => ({ id: f.id, title: f.question, content: f.answer }))} />}
       </div>
       <aside className="space-y-5 lg:sticky lg:top-24">
         <div className="photo-frame tilt-2">

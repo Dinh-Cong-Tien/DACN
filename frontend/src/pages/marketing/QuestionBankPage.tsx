@@ -1,43 +1,45 @@
-import React, { useState } from 'react';
-import { TOEIC_PART5, TOEIC_PART2, VSTEP_READING } from '@/shared/mocks';
+import React, { useMemo, useState } from 'react';
+import { usePartsInfo, usePracticeSet, useTests } from '@/shared/api/catalog';
 import { QuestionRenderer } from '@/engines';
 import { useDocumentTitle, useGate } from '@/shared/hooks';
 import { formatNumber } from '@/shared/utils';
 import { Accent, PageHeader, Section, ActionLink } from './shared/PageKit';
 
-const SAMPLES = [TOEIC_PART5[0], TOEIC_PART2[0], VSTEP_READING[1]];
-
-/** Số câu theo từng phần trong ngân hàng (tổng 12.614) */
-const DISTRIBUTION: [string, string, number][] = [
-  ['Part 1', 'Mô tả tranh', 612],
-  ['Part 2', 'Hỏi – đáp', 1487],
-  ['Part 3', 'Hội thoại ngắn', 2106],
-  ['Part 4', 'Bài nói ngắn', 1623],
-  ['Part 5', 'Hoàn thành câu', 2358],
-  ['Part 6', 'Hoàn thành đoạn văn', 914],
-  ['Part 7', 'Đọc hiểu', 2071],
-  ['VSTEP', 'Đọc', 847],
-  ['VSTEP', 'Nghe', 596],
+/** 3 câu mẫu lấy ngẫu nhiên từ ngân hàng: Part 5, Part 2 và VSTEP Đọc */
+const SAMPLE_SETS = [
+  { part: 'PART_5', limit: 1 },
+  { part: 'PART_2', limit: 1 },
+  { part: 'VSTEP_READING', limit: 1 },
 ];
-const TOTAL = DISTRIBUTION.reduce((a, [, , n]) => a + n, 0);
 
 export const QuestionBankPage: React.FC = () => {
   useDocumentTitle('Ngân hàng câu hỏi');
   const gate = useGate();
   const [showExp, setShowExp] = useState(false);
   const [answers, setAnswers] = useState<Record<string, string>>({});
+  const { data: toeic = [] } = usePartsInfo('TOEIC');
+  const { data: vstep = [] } = usePartsInfo('VSTEP');
+  const { data: tests = [] } = useTests();
+  const { data: sampleRaw = [], isLoading: samplesLoading } = usePracticeSet(SAMPLE_SETS);
+  // mỗi nhóm có thể trả cả bài đọc nhiều câu → lấy câu đầu của từng phần
+  const SAMPLES = useMemo(() => SAMPLE_SETS.map((s) => sampleRaw.find((q) => q.partOrSkill === s.part)).filter((q): q is NonNullable<typeof q> => !!q), [sampleRaw]);
+  const DISTRIBUTION: [string, string, number][] = [
+    ...toeic.map((p) => [p.name, p.nameVi, p.bankCount ?? 0] as [string, string, number]),
+    ...vstep.filter((p) => (p.bankCount ?? 0) > 0).map((p) => ['VSTEP', p.nameVi.replace('Kỹ năng ', ''), p.bankCount ?? 0] as [string, string, number]),
+  ];
+  const TOTAL = DISTRIBUTION.reduce((a, [, , n]) => a + n, 0);
 
   return (
     <div className="bg-page">
       <PageHeader
         crumbs={[{ label: 'Trang chủ', to: '/' }, { label: 'Công cụ' }, { label: 'Ngân hàng câu hỏi' }]}
         eyebrow="Ngân hàng câu hỏi"
-        title={<><Accent>12.614 câu hỏi</Accent> TOEIC và VSTEP</>}
+        title={<><Accent>{TOTAL ? `${formatNumber(TOTAL)} câu hỏi` : 'Câu hỏi'}</Accent> TOEIC và VSTEP</>}
         lead="Mỗi câu có lời giải, độ khó từ 1 đến 5 và thẻ kiến thức (thì, từ loại, paraphrase...). Câu mới chỉ được dùng trong đề sau khi trưởng bộ môn duyệt."
         facts={[
           { value: formatNumber(TOTAL), label: 'Câu hỏi đã duyệt' },
-          { value: '9', label: 'Phần thi' },
-          { value: '214', label: 'Câu thêm trong tháng 10' },
+          { value: String(DISTRIBUTION.length), label: 'Phần thi' },
+          { value: String(tests.length), label: 'Đề thi thử' },
         ]}
       />
 
@@ -56,6 +58,7 @@ export const QuestionBankPage: React.FC = () => {
               </label>
             </div>
             <div className="space-y-5">
+              {samplesLoading && <p className="text-sm text-slate-500">Đang tải câu mẫu…</p>}
               {SAMPLES.map((q, i) => (
                 <QuestionRenderer key={q.id} variant="plain" index={i} question={q} selectedAnswer={answers[q.id]} onSelectAnswer={(k) => setAnswers((a) => ({ ...a, [q.id]: k }))} showExplanation={showExp} isReadOnly={showExp} allowFlagReport={false} />
               ))}

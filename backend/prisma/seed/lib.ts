@@ -12,7 +12,7 @@ export const exists = (p: string) => fs.existsSync(p);
 export const readJson = <T = any>(p: string): T => JSON.parse(fs.readFileSync(p, 'utf8'));
 export const readText = (p: string) => fs.readFileSync(p, 'utf8').replace(/\r\n/g, '\n');
 
-/** Nội dung biên tập lấy từ frontend mocks (snapshot JSON, xem export-mocks.ts). */
+/** Nội dung biên tập ban đầu của web (snapshot JSON từ bản giao diện trước khi nối CSDL). */
 export const MOCKS: Record<string, any> = readJson(path.join(__dirname, 'data', 'mocks.json'));
 
 export const uuid = () => crypto.randomUUID();

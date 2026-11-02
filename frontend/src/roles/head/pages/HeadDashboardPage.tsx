@@ -3,14 +3,13 @@ import { Link } from 'react-router-dom';
 import { AlertTriangle, BarChart3, CalendarCheck, CheckSquare, ClipboardList, Database, Eye, FileCheck2, MessageSquareWarning, PenTool, School, TrendingDown, TrendingUp, UserRoundX, Users } from 'lucide-react';
 import { useDocumentTitle } from '@/shared/hooks';
 import { useAuthStore } from '@/shared/stores/authStore';
-import { DEPT_CLASSES, DEPT_SESSIONS, MOCK_APPROVALS, MOCK_CLASS_REPORTS, MOCK_COMPLAINTS, MOCK_GRADING_REVIEWS, MOCK_OBSERVATIONS, MOCK_SUBJECTS, MOCK_TEACHERS, teacherByName } from '@/shared/mocks';
+import { useHeadApprovals, useHeadClasses, useHeadComplaints, useHeadDashboard, useHeadObservations, useHeadReports, useHeadReviews, useHeadSubjects, useHeadTeachers } from '@/shared/api/head';
 import type { ApprovalRequest, ClassReport } from '@/shared/types';
 import { cn, formatNumber, timeAgo } from '@/shared/utils';
 import { Avatar } from '@/shared/components/ui';
 import { BarChart } from '@/shared/components/charts/Charts';
 import { Img, PHOTOS } from '@/shared/components/media/Img';
 import { Figures, GradientTail, IconTile, Meter, Panel, PanelLink, Status, TBtn, tbl, type Tone } from '@/roles/teacher/components/TeacherKit';
-import { roomConflicts } from './HeadSchedulePage';
 
 const WEEKDAY = ['Chủ nhật', 'Thứ Hai', 'Thứ Ba', 'Thứ Tư', 'Thứ Năm', 'Thứ Sáu', 'Thứ Bảy'];
 const iso = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
@@ -25,28 +24,30 @@ export const HeadDashboardPage: React.FC = () => {
   const user = useAuthStore((s) => s.user);
   const now = new Date();
   const today = iso(now);
-  const monday = new Date(now);
-  monday.setDate(now.getDate() - ((now.getDay() + 6) % 7));
-  const sunday = new Date(monday);
-  sunday.setDate(monday.getDate() + 6);
-
-  const pending = MOCK_APPROVALS.filter((a) => a.status === 'PENDING');
+  const dash = useHeadDashboard().data;
+  const MOCK_SUBJECTS = useHeadSubjects().data ?? [];
+  const MOCK_TEACHERS = useHeadTeachers().data ?? [];
+  const DEPT_CLASSES = useHeadClasses().data ?? [];
+  const MOCK_COMPLAINTS = useHeadComplaints().data ?? [];
+  const MOCK_CLASS_REPORTS = useHeadReports(6).data?.classes ?? [];
+  const pending = (useHeadApprovals().data ?? []).filter((a) => a.status === 'PENDING');
+  const reviews = (useHeadReviews().data ?? []).filter((r) => r.status === 'PENDING');
+  const teacherByName = (name: string) => MOCK_TEACHERS.find((t) => t.name === name);
   const newComplaints = MOCK_COMPLAINTS.filter((c) => c.status === 'NEW');
-  const reviews = MOCK_GRADING_REVIEWS.filter((r) => r.status === 'PENDING');
-  const planned = MOCK_OBSERVATIONS.filter((o) => o.status === 'PLANNED').sort((a, b) => `${a.date}${a.start}`.localeCompare(`${b.date}${b.start}`));
-  const conflicts = roomConflicts(DEPT_SESSIONS.filter((s) => s.date >= iso(monday) && s.date <= iso(sunday)));
-  const orphan = DEPT_CLASSES.filter((c) => teacherByName(c.teacherName)?.status !== 'ACTIVE');
+  const planned = (useHeadObservations().data ?? []).filter((o) => o.status === 'PLANNED' && o.date >= today).sort((a, b) => `${a.date}${a.start}`.localeCompare(`${b.date}${b.start}`));
+  const conflictCount = dash?.roomConflicts ?? 0;
+  const orphan = dash?.classesNeedTeacher ?? [];
   const activeTeachers = MOCK_TEACHERS.filter((t) => t.status === 'ACTIVE');
   const totalStudents = DEPT_CLASSES.reduce((a, c) => a + c.studentsCount, 0);
   const totalQuestions = MOCK_SUBJECTS.reduce((a, s) => a + s.questionsCount, 0);
-  const toeicReports = MOCK_CLASS_REPORTS.filter((r) => r.avgScore > 10);
-  const lowAttendance = MOCK_CLASS_REPORTS.filter((r) => r.attendance < 80);
+  const toeicReports = MOCK_CLASS_REPORTS.filter((r) => r.examType === 'TOEIC' && r.avgScore > 0);
+  const lowAttendance = MOCK_CLASS_REPORTS.filter((r) => r.attendance > 0 && r.attendance < 80);
 
   const todos: { icon: React.ElementType; tone: Tone; text: string; to: string; cta: string }[] = [
     ...(pending.length ? [{ icon: CheckSquare, tone: 'indigo' as Tone, text: `Duyệt ${pending.length} học liệu giáo viên gửi lên`, to: '/head/approvals', cta: 'Duyệt' }] : []),
     ...(reviews.length ? [{ icon: PenTool, tone: 'violet' as Tone, text: `Kiểm định ${reviews.length} bài Viết / Nói giáo viên đã chấm`, to: '/head/grading-review', cta: 'Chấm lại' }] : []),
     ...(newComplaints.length ? [{ icon: MessageSquareWarning, tone: 'rose' as Tone, text: `Tiếp nhận ${newComplaints.length} khiếu nại mới từ học viên`, to: '/head/complaints', cta: 'Xử lý' }] : []),
-    ...(conflicts.length ? [{ icon: AlertTriangle, tone: 'amber' as Tone, text: `${conflicts.length} buổi trùng phòng trong tuần này`, to: '/head/schedule', cta: 'Lịch dạy' }] : []),
+    ...(conflictCount ? [{ icon: AlertTriangle, tone: 'amber' as Tone, text: `${conflictCount} buổi trùng phòng trong tuần này`, to: '/head/schedule', cta: 'Lịch dạy' }] : []),
     ...(planned.length ? [{ icon: Eye, tone: 'sky' as Tone, text: `Dự giờ ${planned[0].teacher} · ${WEEKDAY[new Date(planned[0].date).getDay()]} ${dm(planned[0].date)} lúc ${planned[0].start}`, to: '/head/schedule', cta: 'Xem' }] : []),
     ...orphan.map((c) => ({ icon: UserRoundX, tone: 'emerald' as Tone, text: `Phân công lại giáo viên cho lớp ${c.name}`, to: `/head/classes/${c.id}`, cta: 'Phân công' })),
   ];
@@ -90,7 +91,8 @@ export const HeadDashboardPage: React.FC = () => {
               <h2 className="mt-3 font-display text-[1.75rem] font-extrabold leading-tight md:text-[2rem]">Học liệu giáo viên gửi lên</h2>
               <p className="mt-2 max-w-lg text-[15px] leading-relaxed text-slate-200">Thẩm định đề thi, câu hỏi và bài giảng trước khi xuất bản tới học viên toàn bộ môn.</p>
               <ul className="mt-5 divide-y divide-white/10 rounded-xl bg-white/[0.06] ring-1 ring-white/10 backdrop-blur-sm">
-                {pending.map((a) => (
+                {!pending.length && <li className="px-4 py-3 text-sm text-slate-300">Chưa có học liệu nào chờ duyệt.</li>}
+                {pending.slice(0, 4).map((a) => (
                   <li key={a.id} className="flex items-center gap-3 px-4 py-3">
                     <Avatar name={a.author} src={teacherByName(a.author)?.avatarUrl} size="sm" />
                     <div className="min-w-0 flex-1">
@@ -118,6 +120,7 @@ export const HeadDashboardPage: React.FC = () => {
         {/* Việc cần xử lý */}
         <Panel title="Việc cần xử lý hôm nay" sub={`${todos.length} việc`} icon={ClipboardList} tone="indigo" flush>
           <ul className="divide-y divide-slate-100">
+            {!todos.length && <li className="px-5 py-10 text-center text-sm text-slate-500">Không có việc nào cần xử lý.</li>}
             {todos.map((t) => (
               <li key={t.text} className="flex items-center gap-3 px-5 py-3">
                 <IconTile icon={t.icon} tone={t.tone} size="sm" />
@@ -142,15 +145,19 @@ export const HeadDashboardPage: React.FC = () => {
 
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)]">
         <Panel title="Điểm trung bình các lớp TOEIC" sub="Kỳ thi thử gần nhất · ETS 2024 Test 2" icon={BarChart3} tone="sky" action={<PanelLink to="/head/reports">Báo cáo</PanelLink>}>
-          <BarChart ariaLabel="Điểm trung bình các lớp TOEIC" data={toeicReports.map((r) => ({ label: r.className.replace('TOEIC ', '').replace('Ngữ pháp nền tảng ', 'NP ').replace(' Intensive', '').replace('Foundation Sáng', 'Found.'), value: r.avgScore }))} height={220} unit=" điểm" />
+          {toeicReports.length ? (
+            <BarChart ariaLabel="Điểm trung bình các lớp TOEIC" data={toeicReports.map((r) => ({ label: r.className.replace('TOEIC ', '').replace('Ngữ pháp nền tảng ', 'NP ').replace(' Intensive', '').replace('Foundation Sáng', 'Found.'), value: r.avgScore }))} height={220} unit=" điểm" />
+          ) : (
+            <p className="py-16 text-center text-sm text-slate-500">Chưa có điểm thi thử của học viên các lớp TOEIC.</p>
+          )}
           <div className="mt-4 grid grid-cols-3 gap-3 border-t border-slate-100 pt-4 text-center">
             <div>
               <p className="text-xs text-slate-500">Cao nhất</p>
-              <p className="font-display text-lg font-extrabold text-slate-900">{Math.max(...toeicReports.map((r) => r.avgScore))}</p>
+              <p className="font-display text-lg font-extrabold text-slate-900">{toeicReports.length ? Math.max(...toeicReports.map((r) => r.avgScore)) : '—'}</p>
             </div>
             <div>
               <p className="text-xs text-slate-500">Thấp nhất</p>
-              <p className="font-display text-lg font-extrabold text-slate-900">{Math.min(...toeicReports.map((r) => r.avgScore))}</p>
+              <p className="font-display text-lg font-extrabold text-slate-900">{toeicReports.length ? Math.min(...toeicReports.map((r) => r.avgScore)) : '—'}</p>
             </div>
             <div>
               <p className="text-xs text-slate-500">Lớp chuyên cần &lt; 80%</p>
@@ -159,7 +166,7 @@ export const HeadDashboardPage: React.FC = () => {
           </div>
         </Panel>
 
-        <Panel title="Ngân hàng câu hỏi" sub={`${formatNumber(totalQuestions)} câu đã thẩm định`} icon={Database} tone="amber" action={<PanelLink to="/head/question-bank">Mở</PanelLink>}>
+        <Panel title="Ngân hàng câu hỏi" sub={`${formatNumber(totalQuestions)} câu đã xuất bản`} icon={Database} tone="amber" action={<PanelLink to="/head/question-bank">Mở</PanelLink>}>
           <ul className="space-y-4">
             {MOCK_SUBJECTS.map((s) => (
               <li key={s.id}>
@@ -167,7 +174,7 @@ export const HeadDashboardPage: React.FC = () => {
                   <span className="truncate font-medium text-slate-800">{s.name}</span>
                   <span className="shrink-0 font-semibold tabular-nums text-slate-900">{formatNumber(s.questionsCount)}</span>
                 </div>
-                <Meter value={(s.questionsCount / Math.max(...MOCK_SUBJECTS.map((x) => x.questionsCount))) * 100} tone={s.examType === 'TOEIC' ? 'indigo' : 'green'} />
+                <Meter value={(s.questionsCount / Math.max(1, ...MOCK_SUBJECTS.map((x) => x.questionsCount))) * 100} tone={s.examType === 'TOEIC' ? 'indigo' : 'green'} />
                 <p className="mt-1 text-xs text-slate-500">
                   {s.code} · {s.classesCount} lớp · {s.teachersCount} giáo viên
                 </p>

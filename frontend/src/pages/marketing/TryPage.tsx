@@ -1,5 +1,5 @@
 import { ThreeBackground } from '@/shared/components/three/ThreeBackground';
-import React, { useMemo, useState } from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, CheckCircle2, Clock, Headphones, PenLine, Sparkles, ShieldCheck } from 'lucide-react';
 import { useDocumentTitle } from '@/shared/hooks';
@@ -8,7 +8,7 @@ import { PracticeEngine } from '@/engines';
 import { Button, Card, Badge, Avatar } from '@/shared/components/ui';
 import { Reveal, Doodles } from '@/shared/components/motion';
 import { Img, PHOTOS, pravatar } from '@/shared/components/media/Img';
-import { TOEIC_PART2, TOEIC_PART5, VSTEP_READING } from '@/shared/mocks';
+import { usePracticeSet } from '@/shared/api/catalog';
 
 type Pack = 'TOEIC' | 'VSTEP';
 
@@ -22,7 +22,8 @@ export const TryPage: React.FC = () => {
   const [pack, setPack] = useState<Pack | null>(null);
   const [done, setDone] = useState<{ correct: number; total: number } | null>(null);
 
-  const questions = useMemo(() => (pack === 'VSTEP' ? [...VSTEP_READING] : [...TOEIC_PART2.slice(0, 2), ...TOEIC_PART5.slice(0, 5)]), [pack]);
+  // Bộ mẫu lấy ngẫu nhiên từ ngân hàng câu hỏi (kèm đáp án để giải thích ngay sau mỗi câu)
+  const { data: questions = [], isLoading: loadingQs } = usePracticeSet(pack === 'VSTEP' ? [{ part: 'VSTEP_READING', limit: 5 }] : [{ part: 'PART_2', limit: 2 }, { part: 'PART_5', limit: 5 }], !!pack);
 
   // ===== Bước 3: kết quả + mời đăng ký =====
   if (done) {
@@ -96,7 +97,11 @@ export const TryPage: React.FC = () => {
             Chọn bộ khác
           </Button>
         </div>
+        {loadingQs || !questions.length ? (
+          <Card className="py-16 text-center text-sm text-slate-500">{loadingQs ? 'Đang chuẩn bị câu hỏi…' : 'Chưa có câu hỏi cho bộ này.'}</Card>
+        ) : (
         <PracticeEngine title={pack === 'VSTEP' ? 'VSTEP mẫu' : 'TOEIC mẫu'} questions={questions} exitTo="/try" onFinishPractice={(s) => setDone({ correct: s.correct, total: s.total })} />
+        )}
       </div>
     );
   }

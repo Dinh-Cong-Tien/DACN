@@ -1,41 +1,57 @@
-import React, { useRef, useState } from 'react';
-import { Upload, FileText, Video, Music, File, Trash2, Download } from 'lucide-react';
+import React, { useState } from 'react';
+import { Upload, FileText, Video, Music, File, Trash2, ExternalLink, Link2 } from 'lucide-react';
 import { useDocumentTitle } from '@/shared/hooks';
 import { toast } from '@/shared/stores/uiStore';
-import { MOCK_MATERIALS, MOCK_CLASSES } from '@/shared/mocks';
-import type { Material } from '@/shared/types';
+import { errorMessage } from '@/shared/api/client';
+import { teacherApi, useMaterials, useTeacherClasses, useTeacherMutation, type MaterialType, type TMaterial } from '@/shared/api/teacher';
 import { cn, formatDate } from '@/shared/utils';
-import { ConfirmDialog } from '@/shared/components/ui';
+import { ConfirmDialog, Input, Modal, Select } from '@/shared/components/ui';
 import { Figures, TBtn, TPageHead, inputCls, tbl } from '../components/TeacherKit';
+import { TEmpty, TError, TLoading } from '../components/TeacherState';
 
-const ICON: Record<Material['type'], React.ElementType> = { VIDEO: Video, PDF: FileText, DOC: File, AUDIO: Music };
-const LABEL: Record<Material['type'], string> = { VIDEO: 'Video', PDF: 'PDF', DOC: 'Word', AUDIO: 'Audio' };
+const ICON: Record<MaterialType, React.ElementType> = { VIDEO: Video, PDF: FileText, DOC: File, AUDIO: Music, LINK: Link2 };
+const LABEL: Record<MaterialType, string> = { VIDEO: 'Video', PDF: 'PDF', DOC: 'Word', AUDIO: 'Audio', LINK: 'Liên kết' };
 
-const fmtSize = (b: number) => (b > 1024 * 1024 ? `${(b / 1024 / 1024).toFixed(1)} MB` : `${Math.max(1, Math.round(b / 1024))} KB`);
-const typeOf = (name: string): Material['type'] => {
-  const ext = name.split('.').pop()?.toLowerCase() ?? '';
-  if (['mp4', 'webm', 'mov'].includes(ext)) return 'VIDEO';
-  if (['mp3', 'wav', 'm4a'].includes(ext)) return 'AUDIO';
-  if (ext === 'pdf') return 'PDF';
-  return 'DOC';
+/** Đoán loại tài liệu theo đường dẫn */
+const typeOf = (url: string): MaterialType => {
+  const u = url.toLowerCase();
+  if (/youtu\.?be|vimeo|\.mp4|\.webm|\.mov/.test(u)) return 'VIDEO';
+  if (/\.mp3|\.wav|\.m4a/.test(u)) return 'AUDIO';
+  if (/\.pdf/.test(u)) return 'PDF';
+  if (/\.docx?|docs\.google\.com\/document/.test(u)) return 'DOC';
+  return 'LINK';
 };
 
 export const TeacherMaterialsPage: React.FC = () => {
   useDocumentTitle('Tài liệu lớp');
-  const [rows, setRows] = useState<Material[]>(MOCK_MATERIALS);
+  const classes = useTeacherClasses().data ?? [];
   const [classId, setClassId] = useState('');
-  const [drag, setDrag] = useState(false);
-  const [deleting, setDeleting] = useState<Material | null>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const { data: list = [], isLoading, error, refetch } = useMaterials(classId || undefined);
+  const [deleting, setDeleting] = useState<TMaterial | null>(null);
+  const [open, setOpen] = useState(false);
+  const [form, setForm] = useState({ classId: '', title: '', url: '', type: 'LINK' as MaterialType });
+  const add = useTeacherMutation(teacherApi.addMaterial);
+  const remove = useTeacherMutation(teacherApi.deleteMaterial);
+  const className = (id: string) => classes.find((c) => c.id === id)?.name ?? '—';
 
-  const list = rows.filter((m) => !classId || m.classId === classId);
-
-  const addFiles = (files: FileList | null) => {
-    if (!files?.length) return;
-    const target = classId || MOCK_CLASSES[0].id;
-    const added: Material[] = Array.from(files).map((f) => ({ id: `mt-${Date.now().toString(36)}-${f.name.length}`, classId: target, title: f.name, type: typeOf(f.name), size: fmtSize(f.size), uploadedAt: new Date().toISOString().slice(0, 10), downloads: 0 }));
-    setRows((r) => [...added, ...r]);
-    toast.success(`Đã tải lên ${added.length} tài liệu`, `Lớp ${MOCK_CLASSES.find((c) => c.id === target)?.name}`);
+  const openAdd = () => {
+    setForm({ classId: classId || classes[0]?.id || '', title: '', url: '', type: 'LINK' });
+    setOpen(true);
+  };
+  const save = () => {
+    if (!form.classId) return toast.error('Chọn lớp nhận tài liệu');
+    if (!form.title.trim()) return toast.error('Vui lòng nhập tên tài liệu');
+    if (!/^https?:\/\/\S+$/.test(form.url.trim())) return toast.error('Đường dẫn chưa hợp lệ', 'Nhập link bắt đầu bằng http:// hoặc https://');
+    add.mutate(
+      { classId: form.classId, title: form.title.trim(), type: form.type, fileUrl: form.url.trim() },
+      {
+        onSuccess: () => {
+          setOpen(false);
+          toast.success('Đã thêm tài liệu', `Lớp ${className(form.classId)} nhận được thông báo.`);
+        },
+        onError: (e) => toast.error('Không thêm được tài liệu', errorMessage(e)),
+      }
+    );
   };
 
   return (
@@ -43,27 +59,17 @@ export const TeacherMaterialsPage: React.FC = () => {
       <TPageHead
         crumbs={[{ label: 'Học liệu' }, { label: 'Tài liệu lớp' }]}
         title="Tài liệu lớp"
-        sub="File riêng của từng lớp: slide, bài mẫu, audio, video quay buổi học. Học viên tải ở mục Lớp của tôi."
+        sub="Tài liệu riêng của từng lớp: slide, bài mẫu, audio, video quay buổi học. Học viên mở ở mục Lớp của tôi."
         actions={
-          <TBtn variant="primary" icon={<Upload />} onClick={() => inputRef.current?.click()}>
-            Tải lên
+          <TBtn variant="primary" icon={<Upload />} onClick={openAdd} disabled={!classes.length}>
+            Thêm tài liệu
           </TBtn>
         }
-      />
-      <input
-        ref={inputRef}
-        type="file"
-        multiple
-        className="hidden"
-        onChange={(e) => {
-          addFiles(e.target.files);
-          e.target.value = '';
-        }}
       />
 
       <Figures
         items={[
-          { label: 'Tài liệu', value: list.length, note: classId ? MOCK_CLASSES.find((c) => c.id === classId)?.name : 'tất cả các lớp' },
+          { label: 'Tài liệu', value: list.length, note: classId ? className(classId) : 'tất cả các lớp' },
           { label: 'Video / audio', value: list.filter((m) => m.type === 'VIDEO' || m.type === 'AUDIO').length, note: 'bài giảng, file nghe' },
           { label: 'Lượt học viên tải', value: list.reduce((a, m) => a + m.downloads, 0), note: 'tính từ đầu khoá' },
         ]}
@@ -72,84 +78,105 @@ export const TeacherMaterialsPage: React.FC = () => {
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <select value={classId} onChange={(e) => setClassId(e.target.value)} className={cn(inputCls, 'sm:w-64')} aria-label="Lọc theo lớp">
           <option value="">Tất cả lớp</option>
-          {MOCK_CLASSES.map((c) => (
+          {classes.map((c) => (
             <option key={c.id} value={c.id}>
               {c.name}
             </option>
           ))}
         </select>
-        <p className="text-[13px] text-slate-500">File tải lên khi đang lọc sẽ vào đúng lớp đó · MP4, PDF, DOCX, MP3 · tối đa 500 MB</p>
+        <p className="text-[13px] text-slate-500">Thêm bằng đường dẫn Google Drive, OneDrive, YouTube… đã chia sẻ quyền xem</p>
       </div>
 
-      <div
-        onDragOver={(e) => {
-          e.preventDefault();
-          setDrag(true);
-        }}
-        onDragLeave={() => setDrag(false)}
-        onDrop={(e) => {
-          e.preventDefault();
-          setDrag(false);
-          addFiles(e.dataTransfer.files);
-        }}
-        className={cn('rounded-lg border bg-white transition-colors', drag ? 'border-dashed border-indigo-500 bg-indigo-500/[0.03]' : 'border-slate-200')}
+      {isLoading ? (
+        <TLoading />
+      ) : error ? (
+        <TError error={error} onRetry={() => refetch()} />
+      ) : (
+        <div className="rounded-lg border border-slate-200 bg-white">
+          {list.length === 0 ? (
+            <TEmpty title="Chưa có tài liệu" sub="Bấm “Thêm tài liệu” để chia sẻ slide, bài mẫu hoặc video cho lớp." />
+          ) : (
+            <div className="overflow-x-auto">
+              <table className={tbl.table}>
+                <thead className={tbl.thead}>
+                  <tr>
+                    <th className={tbl.th}>Tên tài liệu</th>
+                    <th className={tbl.th}>Lớp</th>
+                    <th className={tbl.th}>Loại</th>
+                    <th className={cn(tbl.th, 'text-right')}>Dung lượng</th>
+                    <th className={tbl.th}>Ngày thêm</th>
+                    <th className={cn(tbl.th, 'text-right')}>Lượt tải</th>
+                    <th className={tbl.th} />
+                  </tr>
+                </thead>
+                <tbody>
+                  {list.map((m) => {
+                    const Icon = ICON[m.type] ?? File;
+                    return (
+                      <tr key={m.id} className={tbl.tr}>
+                        <td className={tbl.td}>
+                          <span className="flex items-center gap-2.5">
+                            <Icon className="h-4 w-4 shrink-0 text-slate-400" />
+                            <span className="font-medium text-slate-900">{m.title}</span>
+                          </span>
+                        </td>
+                        <td className={cn(tbl.td, 'whitespace-nowrap text-slate-600')}>{className(m.classId)}</td>
+                        <td className={cn(tbl.td, 'text-slate-600')}>{LABEL[m.type] ?? m.type}</td>
+                        <td className={cn(tbl.td, 'text-right tabular-nums text-slate-600')}>{m.size}</td>
+                        <td className={cn(tbl.td, 'tabular-nums text-slate-600')}>{formatDate(m.uploadedAt)}</td>
+                        <td className={cn(tbl.td, 'text-right tabular-nums')}>{m.downloads}</td>
+                        <td className={cn(tbl.td, 'whitespace-nowrap text-right')}>
+                          {m.fileUrl && (
+                            <a href={m.fileUrl} target="_blank" rel="noreferrer" title="Mở tài liệu" className="inline-flex h-8 w-8 items-center justify-center rounded-md text-slate-500 hover:bg-slate-900/[0.05] hover:text-slate-900">
+                              <ExternalLink className="h-4 w-4" />
+                            </a>
+                          )}
+                          <button type="button" title="Xoá" onClick={() => setDeleting(m)} className="inline-flex h-8 w-8 items-center justify-center rounded-md text-slate-500 hover:bg-rose-500/10 hover:text-rose-600">
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      )}
+
+      <Modal
+        open={open}
+        onClose={() => setOpen(false)}
+        title="Thêm tài liệu"
+        description="Học viên trong lớp nhận thông báo và mở được tài liệu ngay."
+        icon={<Upload />}
+        footer={
+          <>
+            <TBtn variant="ghost" onClick={() => setOpen(false)}>
+              Huỷ
+            </TBtn>
+            <TBtn variant="primary" onClick={save} disabled={add.isPending}>
+              {add.isPending ? 'Đang lưu…' : 'Thêm tài liệu'}
+            </TBtn>
+          </>
+        }
       >
-        {list.length === 0 ? (
-          <p className="px-4 py-12 text-center text-sm text-slate-500">Chưa có tài liệu. Kéo thả file vào đây để tải lên.</p>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className={tbl.table}>
-              <thead className={tbl.thead}>
-                <tr>
-                  <th className={tbl.th}>Tên tài liệu</th>
-                  <th className={tbl.th}>Lớp</th>
-                  <th className={tbl.th}>Loại</th>
-                  <th className={cn(tbl.th, 'text-right')}>Dung lượng</th>
-                  <th className={tbl.th}>Ngày tải lên</th>
-                  <th className={cn(tbl.th, 'text-right')}>Lượt tải</th>
-                  <th className={tbl.th} />
-                </tr>
-              </thead>
-              <tbody>
-                {list.map((m) => {
-                  const Icon = ICON[m.type];
-                  return (
-                    <tr key={m.id} className={tbl.tr}>
-                      <td className={tbl.td}>
-                        <span className="flex items-center gap-2.5">
-                          <Icon className="h-4 w-4 shrink-0 text-slate-400" />
-                          <span className="font-medium text-slate-900">{m.title}</span>
-                        </span>
-                      </td>
-                      <td className={cn(tbl.td, 'whitespace-nowrap text-slate-600')}>{MOCK_CLASSES.find((c) => c.id === m.classId)?.name ?? '—'}</td>
-                      <td className={cn(tbl.td, 'text-slate-600')}>{LABEL[m.type]}</td>
-                      <td className={cn(tbl.td, 'text-right tabular-nums text-slate-600')}>{m.size}</td>
-                      <td className={cn(tbl.td, 'tabular-nums text-slate-600')}>{formatDate(m.uploadedAt)}</td>
-                      <td className={cn(tbl.td, 'text-right tabular-nums')}>{m.downloads}</td>
-                      <td className={cn(tbl.td, 'whitespace-nowrap text-right')}>
-                        <button type="button" title="Tải xuống" onClick={() => toast.info('Đang tải xuống', m.title)} className="inline-flex h-8 w-8 items-center justify-center rounded-md text-slate-500 hover:bg-slate-900/[0.05] hover:text-slate-900">
-                          <Download className="h-4 w-4" />
-                        </button>
-                        <button type="button" title="Xoá" onClick={() => setDeleting(m)} className="inline-flex h-8 w-8 items-center justify-center rounded-md text-slate-500 hover:bg-rose-500/10 hover:text-rose-600">
-                          <Trash2 className="h-4 w-4" />
-                        </button>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
+        <div className="space-y-4">
+          <Select label="Lớp" options={classes.map((c) => ({ value: c.id, label: c.name }))} value={form.classId} onChange={(e) => setForm((f) => ({ ...f, classId: e.target.value }))} />
+          <Input label="Tên tài liệu" required placeholder="VD: Slide buổi 5 — Part 3" value={form.title} onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))} />
+          <Input label="Đường dẫn" required placeholder="https://drive.google.com/…" value={form.url} onChange={(e) => setForm((f) => ({ ...f, url: e.target.value, type: typeOf(e.target.value) }))} />
+          <Select label="Loại" options={[{ value: 'PDF', label: 'PDF' }, { value: 'VIDEO', label: 'Video' }, { value: 'DOC', label: 'Tài liệu Word' }, { value: 'AUDIO', label: 'Audio' }, { value: 'LINK', label: 'Liên kết khác' }]} value={form.type} onChange={(e) => setForm((f) => ({ ...f, type: e.target.value as MaterialType }))} />
+        </div>
+      </Modal>
 
       <ConfirmDialog
         open={!!deleting}
         onClose={() => setDeleting(null)}
         onConfirm={() => {
           if (deleting) {
-            setRows((r) => r.filter((x) => x.id !== deleting.id));
-            toast.success('Đã xoá tài liệu');
+            const d = deleting;
+            remove.mutate(d.id, { onSuccess: () => toast.success('Đã xoá tài liệu', d.title), onError: (e) => toast.error('Không xoá được tài liệu', errorMessage(e)) });
           }
           setDeleting(null);
         }}

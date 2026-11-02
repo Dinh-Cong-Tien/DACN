@@ -194,6 +194,32 @@ studyRouter.post(
   })
 );
 
+/**
+ * Thêm từ vào sổ từ cá nhân: từ đã có trong kho (khớp headword) thì dùng lại, chưa có thì thêm vào kho tra cứu (topic NULL).
+ * Sau đó tạo thẻ SRS để từ xuất hiện trong lịch ôn.
+ */
+studyRouter.post(
+  '/vocab/custom',
+  handler(async (req) => {
+    const userId = me(req).id;
+    const body = parse(
+      z.object({ word: z.string().trim().min(1).max(80), meaning: z.string().trim().min(1).max(500), example: z.string().trim().max(500).optional(), pos: z.string().trim().max(12).optional() }),
+      req.body
+    );
+    const existing = await prisma.word.findFirst({ where: { headword: { equals: body.word, mode: 'insensitive' } }, orderBy: { topicId: 'asc' } });
+    const word =
+      existing ??
+      (await prisma.word.create({ data: { headword: body.word, pos: body.pos || 'word', meaningVi: body.meaning, exampleEn: body.example || null, topicId: null } }));
+    const card = await prisma.srsCard.upsert({
+      where: { userId_wordId: { userId, wordId: word.id } },
+      create: { userId, wordId: word.id },
+      update: {},
+      include: { word: { include: { topic: { select: { name: true } } } } },
+    });
+    return toVocabWord(card.word!, card);
+  })
+);
+
 // ---------------- Ôn tập SM-2 ----------------
 studyRouter.get(
   '/review/due',

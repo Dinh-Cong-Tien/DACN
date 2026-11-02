@@ -1,9 +1,10 @@
-import { Router } from 'express';
+import express, { Router } from 'express';
 import { auth } from '../../core/auth';
 import { attemptsRouter } from './attempts';
 import { classesRouter } from './classes';
 import { miscRouter } from './misc';
 import { pathRouter } from './path';
+import { practiceRouter, UPLOAD_DIR } from './practice';
 import { progressRouter } from './progress';
 import { studyRouter } from './study';
 
@@ -13,6 +14,8 @@ import { studyRouter } from './study';
  */
 export const learnerRouter = Router();
 
+// File ghi âm phát trong thẻ <audio> (không gửi được header Authorization) → phục vụ công khai theo tên ngẫu nhiên UUID
+learnerRouter.use('/media', express.static(UPLOAD_DIR, { fallthrough: false, maxAge: '7d' }));
 learnerRouter.use(auth);
 learnerRouter.use(pathRouter);
 learnerRouter.use(attemptsRouter);
@@ -20,3 +23,4 @@ learnerRouter.use(studyRouter);
 learnerRouter.use(progressRouter);
 learnerRouter.use(classesRouter);
 learnerRouter.use(miscRouter);
+learnerRouter.use(practiceRouter);

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Check, Minus, ChevronDown } from 'lucide-react';
-import { PRICING_PLANS, FAQS } from '@/shared/mocks';
+import { useFaqs, usePlans } from '@/shared/api/cms';
 import { useDocumentTitle } from '@/shared/hooks';
 import { cn, formatNumber } from '@/shared/utils';
 import { Accent, PageHeader, Section, SectionHead, ActionLink } from './shared/PageKit';
@@ -34,7 +34,9 @@ const Cell: React.FC<{ v: boolean | string }> = ({ v }) =>
 export const PricingPage: React.FC = () => {
   useDocumentTitle('Bảng giá');
   const [cycle, setCycle] = useState<Cycle>('term');
-  const faqs = FAQS.filter((f) => f.category === 'Thanh toán' || f.id === 'f-2');
+  const { data: PRICING_PLANS = [] } = usePlans();
+  const { data: FAQS = [] } = useFaqs();
+  const faqs = FAQS.filter((f) => f.category === 'Thanh toán');
 
   return (
     <div className="bg-page">

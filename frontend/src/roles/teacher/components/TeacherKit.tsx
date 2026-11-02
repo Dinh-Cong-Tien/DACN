@@ -195,5 +195,10 @@ export const todayCode = () => DAYS[new Date().getDay()];
 
 /** Màu riêng mỗi lớp (lịch dạy, nhãn lớp) */
 const CLASS_COLORS = ['indigo', 'emerald', 'amber', 'violet', 'sky', 'rose'] as const;
-export const classTone = (classId: string): Tone => CLASS_COLORS[(Number(classId.split('-')[1]) - 1) % CLASS_COLORS.length] ?? 'indigo';
+export const classTone = (classId: string): Tone => {
+  const n = /^cl-(\d+)$/.exec(classId);
+  // id UUID: băm chuỗi để mỗi lớp giữ một màu ổn định
+  const idx = n ? Number(n[1]) - 1 : [...classId].reduce((a, ch) => (a * 31 + ch.charCodeAt(0)) >>> 0, 7);
+  return CLASS_COLORS[idx % CLASS_COLORS.length] ?? 'indigo';
+};
 export const CLASS_BAR: Record<Tone, string> = { indigo: 'border-l-indigo-500 bg-indigo-500/[0.07]', emerald: 'border-l-emerald-500 bg-emerald-500/[0.07]', amber: 'border-l-amber-500 bg-amber-500/[0.09]', violet: 'border-l-violet-500 bg-violet-500/[0.07]', sky: 'border-l-sky-500 bg-sky-500/[0.07]', rose: 'border-l-rose-500 bg-rose-500/[0.07]' };

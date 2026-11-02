@@ -5,7 +5,9 @@ import { ArrowRight, Star, CheckCircle2, Play, Flame, Target, BookOpen, Users, F
 import { Button, Card, SectionTitle } from '@/shared/components/ui';
 import { Reveal, Stagger, CountUp, Doodles, TypeLoop, RevealPhoto } from '@/shared/components/motion';
 import { Img, PHOTOS, pravatar } from '@/shared/components/media/Img';
-import { HOME_STATS, HOME_EXAM_TRACKS, TESTIMONIALS, PRICING_PLANS, MOCK_COURSES } from '@/shared/mocks';
+import { useCourses, useTests } from '@/shared/api/catalog';
+import { useHomeStats, usePlans, useTestimonials } from '@/shared/api/cms';
+import { examTracks } from '@/shared/constants/public';
 import { useDocumentTitle, useGate, useInView } from '@/shared/hooks';
 import { formatCurrency, cn } from '@/shared/utils';
 import { useResolvedTheme } from '@/shared/stores/themeStore';
@@ -134,6 +136,15 @@ export const HomePage: React.FC = () => {
   const gate = useGate();
   const isDark = useResolvedTheme() === 'dark';
   const isStudent = useAuthStore((s) => s.isAuthenticated() && s.user?.role === 'STUDENT');
+  const { data: stats = [] } = useHomeStats();
+  const { data: MOCK_COURSES = [] } = useCourses();
+  const { data: TESTIMONIALS = [] } = useTestimonials();
+  const { data: PRICING_PLANS = [] } = usePlans();
+  const { data: tests = [] } = useTests();
+  // 4 số liệu thật: học viên, câu hỏi, đề thi, bài học
+  const HOME_STATS = stats.filter((s) => s.key !== 'courses').slice(0, 4);
+  const HOME_EXAM_TRACKS = examTracks({ toeic: tests.filter((t) => t.examType === 'TOEIC').length, vstep: tests.filter((t) => t.examType === 'VSTEP').length });
+  const statsMonth = `${new Date().getMonth() + 1}/${new Date().getFullYear()}`;
   const { hash } = useLocation();
   // Link "Vào học" (/#goc-hoc-tap): cuộn tới khối Góc học tập
   useEffect(() => {
@@ -207,7 +218,7 @@ export const HomePage: React.FC = () => {
                   <span className="text-xs font-bold text-white light:text-slate-900 ml-1">4.9/5</span>
                 </div>
                 <p className="text-xs text-slate-400 light:text-slate-500 font-semibold">
-                  <b className="text-white light:text-slate-900">24.837</b> học viên đang học mỗi ngày
+                  <b className="text-white light:text-slate-900">{(stats.find((x) => x.key === 'students')?.value ?? 0).toLocaleString('vi-VN')}</b> học viên đang học
                 </p>
               </div>
             </div>
@@ -300,8 +311,9 @@ export const HomePage: React.FC = () => {
       {/* ================= STATS ================= */}
       {/* Hàng số liệu kiểu báo cáo: chữ trắng, đường kẻ mảnh, không thẻ kính / không gradient */}
       <section className="relative isolate max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14 md:py-16">
-        <p className="text-xs font-medium text-slate-500 mb-4">Số liệu OrbiLingo tính đến tháng 10/2026</p>
-        <Stagger className="grid grid-cols-2 lg:grid-cols-4 border-y border-white/10 light:border-slate-900/10">
+        <p className="text-xs font-medium text-slate-500 mb-4">Số liệu OrbiLingo tính đến tháng {statsMonth}</p>
+        {/* key: dựng lại khi số liệu từ API về để hiệu ứng xuất hiện chạy cho các ô mới */}
+        <Stagger key={HOME_STATS.length} className="grid grid-cols-2 lg:grid-cols-4 min-h-[9rem] border-y border-white/10 light:border-slate-900/10">
           {HOME_STATS.map((s, i) => {
             const plus = s.suffix.trim() === '+';
             return (

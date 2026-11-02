@@ -3,75 +3,85 @@ import { Link } from 'react-router-dom';
 import { AlertTriangle, Plus, School, Search, Users, TrendingUp, ClipboardCheck } from 'lucide-react';
 import { useDocumentTitle } from '@/shared/hooks';
 import { toast } from '@/shared/stores/uiStore';
-import { DEPT_CLASSES, DEPT_SESSIONS, MOCK_TEACHERS, teacherByName } from '@/shared/mocks';
 import type { ClassRoom, ExamType } from '@/shared/types';
+import { headApi, useHeadClasses, useHeadInvalidate, useHeadSchedule, useHeadTeachers, type HeadClass } from '@/shared/api/head';
+import { errorMessage } from '@/shared/api/client';
+import { addDaysLocal, ymdLocal } from '@/shared/constants/staff';
 import { Avatar, Input, Modal, Select } from '@/shared/components/ui';
 import { Img, PHOTOS } from '@/shared/components/media/Img';
 import { cn } from '@/shared/utils';
 import { Figures, Meter, Panel, TBtn, TPageHead, inputCls } from '@/roles/teacher/components/TeacherKit';
 
 const COVERS = [PHOTOS.classroom, PHOTOS.discussion, PHOTOS.lecture, PHOTOS.team, PHOTOS.students2];
+const EMPTY: HeadClass[] = [];
 
-/** Vấn đề của lớp cần trưởng bộ môn xử lý */
-export const classIssue = (c: ClassRoom): string | null => {
-  const t = teacherByName(c.teacherName);
-  if (!t || t.status === 'LOCKED') return 'Giáo viên đã bị khoá tài khoản, cần phân công lại';
-  if (c.attendanceRate < 75) return `Chuyên cần ${c.attendanceRate}%, dưới ngưỡng 75%`;
-  if (c.completionRate < 65) return `Hoàn thành bài tập ${c.completionRate}%, dưới ngưỡng 65%`;
+/** Vấn đề của lớp cần trưởng bộ môn xử lý. `teacherStatus` = trạng thái tài khoản GV (undefined khi chưa tải). Chỉ số = 0 nghĩa là chưa có dữ liệu. */
+export const classIssue = (c: ClassRoom, teacherStatus?: string | null): string | null => {
+  if (teacherStatus === null || teacherStatus === 'LOCKED') return 'Giáo viên đã bị khoá tài khoản, cần phân công lại';
+  if (c.attendanceRate > 0 && c.attendanceRate < 75) return `Chuyên cần ${c.attendanceRate}%, dưới ngưỡng 75%`;
+  if (c.completionRate > 0 && c.completionRate < 65) return `Hoàn thành bài tập ${c.completionRate}%, dưới ngưỡng 65%`;
   return null;
 };
 
 /** Lớp học thuộc bộ môn: theo dõi mọi lớp, giáo viên phụ trách, phân công lại khi cần */
 export const HeadClassesPage: React.FC = () => {
   useDocumentTitle('Lớp học bộ môn');
-  const [classes, setClasses] = useState<ClassRoom[]>(DEPT_CLASSES);
+  const classesQ = useHeadClasses();
+  const classes = classesQ.data ?? EMPTY;
+  const MOCK_TEACHERS = useHeadTeachers().data ?? [];
+  const refresh = useHeadInvalidate();
+  const today = new Date();
+  const upcoming = useHeadSchedule(ymdLocal(today), ymdLocal(addDaysLocal(today, 14))).data?.sessions ?? [];
+  const teacherByName = (name: string) => MOCK_TEACHERS.find((t) => t.name === name);
+  /** null = GV không còn trong bộ môn / bị xoá; undefined = đang tải */
+  const statusOf = (c: HeadClass) => (MOCK_TEACHERS.length ? (MOCK_TEACHERS.find((t) => t.id === c.teacherId)?.status ?? null) : undefined);
+  const [saving, setSaving] = useState(false);
   const [exam, setExam] = useState<'ALL' | ExamType>('ALL');
   const [teacher, setTeacher] = useState('ALL');
   const [onlyIssue, setOnlyIssue] = useState(false);
   const [q, setQ] = useState('');
   const [open, setOpen] = useState(false);
-  const [form, setForm] = useState({ name: '', examType: 'TOEIC' as ExamType, teacherName: MOCK_TEACHERS[0].name, schedule: '', room: '' });
+  const [form, setForm] = useState({ name: '', examType: 'TOEIC' as ExamType, teacherId: '', schedule: '', room: '' });
   const [error, setError] = useState('');
 
   const list = classes.filter(
     (c) =>
       (exam === 'ALL' || c.examType === exam) &&
       (teacher === 'ALL' || c.teacherName === teacher) &&
-      (!onlyIssue || classIssue(c)) &&
+      (!onlyIssue || classIssue(c, statusOf(c))) &&
       (c.name.toLowerCase().includes(q.toLowerCase()) || c.code.toLowerCase().includes(q.toLowerCase()))
   );
-  const issues = classes.filter((c) => classIssue(c)).length;
+  const issues = classes.filter((c) => classIssue(c, statusOf(c))).length;
   const activeTeachers = MOCK_TEACHERS.filter((t) => t.status === 'ACTIVE');
 
-  const create = () => {
+  const create = async () => {
     if (!form.name.trim()) return setError('Vui lòng nhập tên lớp');
-    const c: ClassRoom = {
-      id: `cl-${Date.now().toString(36)}`,
-      name: form.name.trim(),
-      code: `ORB-${Math.random().toString(36).slice(2, 6).toUpperCase()}`,
-      examType: form.examType,
-      teacherName: form.teacherName,
-      studentsCount: 0,
-      assignmentsCount: 0,
-      avgScore: 0,
-      completionRate: 0,
-      attendanceRate: 100,
-      createdAt: new Date().toISOString().slice(0, 10),
-      schedule: form.schedule || 'Chưa xếp lịch',
-      room: form.room || 'Chưa xếp phòng',
-      gradient: '',
-      coverUrl: COVERS[classes.length % COVERS.length],
-    };
-    setClasses((s) => [c, ...s]);
-    setOpen(false);
-    setForm({ name: '', examType: 'TOEIC', teacherName: MOCK_TEACHERS[0].name, schedule: '', room: '' });
-    setError('');
-    toast.success('Đã mở lớp mới', `${c.name} · giáo viên ${c.teacherName} nhận được thông báo phân công.`);
+    const teacherId = form.teacherId || activeTeachers[0]?.id;
+    if (!teacherId) return setError('Bộ môn chưa có giáo viên đang hoạt động');
+    setSaving(true);
+    try {
+      const c = await headApi.createClass({ name: form.name.trim(), examType: form.examType, teacherId, scheduleText: form.schedule || undefined, room: form.room || undefined, coverUrl: COVERS[classes.length % COVERS.length] });
+      setOpen(false);
+      setForm({ name: '', examType: 'TOEIC', teacherId: '', schedule: '', room: '' });
+      setError('');
+      toast.success('Đã mở lớp mới', `${c.name} · mã ${c.code} · giáo viên ${c.teacherName} nhận được thông báo phân công.`);
+      await refresh();
+    } catch (e) {
+      setError(errorMessage(e));
+    } finally {
+      setSaving(false);
+    }
   };
 
-  const reassign = (c: ClassRoom, name: string) => {
-    setClasses((all) => all.map((x) => (x.id === c.id ? { ...x, teacherName: name } : x)));
-    toast.success('Đã phân công lại', `${c.name} → ${name}`);
+  const reassign = async (c: HeadClass, teacherId: string) => {
+    const name = MOCK_TEACHERS.find((t) => t.id === teacherId)?.name ?? '';
+    try {
+      await headApi.updateClass(c.id, { teacherId });
+      toast.success('Đã phân công lại', `${c.name} → ${name}`);
+      await refresh();
+    } catch (e) {
+      toast.error('Không phân công được', errorMessage(e));
+    }
   };
 
   return (
@@ -91,7 +101,7 @@ export const HeadClassesPage: React.FC = () => {
         items={[
           { label: 'Lớp đang mở', value: classes.length, note: `${new Set(classes.map((c) => c.teacherName)).size} giáo viên phụ trách`, icon: School, tone: 'indigo' },
           { label: 'Tổng học viên', value: classes.reduce((a, c) => a + c.studentsCount, 0), icon: Users, tone: 'violet' },
-          { label: 'Chuyên cần TB', value: `${Math.round(classes.reduce((a, c) => a + c.attendanceRate, 0) / classes.length)}%`, icon: ClipboardCheck, tone: 'emerald' },
+          { label: 'Chuyên cần TB', value: classes.some((c) => c.attendanceRate) ? `${Math.round(classes.reduce((a, c) => a + c.attendanceRate, 0) / Math.max(1, classes.filter((c) => c.attendanceRate).length))}%` : '—', icon: ClipboardCheck, tone: 'emerald' },
           { label: 'Lớp cần xử lý', value: issues, note: 'chuyên cần thấp, GV bị khoá…', icon: AlertTriangle, tone: 'rose' },
         ]}
       />
@@ -126,14 +136,14 @@ export const HeadClassesPage: React.FC = () => {
 
       {list.length === 0 ? (
         <Panel>
-          <p className="py-10 text-center text-sm text-slate-500">Không có lớp nào khớp bộ lọc.</p>
+          <p className="py-10 text-center text-sm text-slate-500">{classesQ.isLoading ? 'Đang tải…' : 'Không có lớp nào khớp bộ lọc.'}</p>
         </Panel>
       ) : (
         <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
           {list.map((c) => {
             const t = teacherByName(c.teacherName);
-            const issue = classIssue(c);
-            const next = DEPT_SESSIONS.filter((s) => s.classId === c.id && s.status === 'UPCOMING')[0];
+            const issue = classIssue(c, statusOf(c));
+            const next = upcoming.find((s) => s.classId === c.id && s.status === 'UPCOMING');
             return (
               <article key={c.id} className="group flex flex-col overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-[0_1px_2px_rgba(16,24,40,0.04),0_8px_24px_-16px_rgba(16,24,40,0.15)] transition-shadow hover:shadow-[0_20px_40px_-24px_rgba(16,24,40,0.4)]">
                 <Link to={`/head/classes/${c.id}`} className="relative block">
@@ -165,10 +175,10 @@ export const HeadClassesPage: React.FC = () => {
                     {[
                       [c.studentsCount, 'Học viên'],
                       [c.avgScore || '—', 'Điểm TB'],
-                      [`${c.attendanceRate}%`, 'Chuyên cần'],
+                      [c.attendanceRate ? `${c.attendanceRate}%` : '—', 'Chuyên cần'],
                     ].map(([v, l]) => (
                       <div key={l as string} className="rounded-xl bg-slate-50 py-2">
-                        <p className={cn('font-display text-lg font-bold tabular-nums', l === 'Chuyên cần' && c.attendanceRate < 75 ? 'text-rose-600' : 'text-slate-900')}>{v}</p>
+                        <p className={cn('font-display text-lg font-bold tabular-nums', l === 'Chuyên cần' && c.attendanceRate > 0 && c.attendanceRate < 75 ? 'text-rose-600' : 'text-slate-900')}>{v}</p>
                         <p className="text-[11px] text-slate-500">{l}</p>
                       </div>
                     ))}
@@ -187,14 +197,14 @@ export const HeadClassesPage: React.FC = () => {
                   )}
                   <div className="mt-auto flex items-center justify-between gap-2 border-t border-slate-100 pt-3">
                     <select
-                      value={c.teacherName}
-                      onChange={(e) => reassign(c, e.target.value)}
+                      value={c.teacherId}
+                      onChange={(e) => void reassign(c, e.target.value)}
                       aria-label={`Phân công giáo viên cho lớp ${c.name}`}
                       className="h-8 min-w-0 max-w-[60%] rounded-lg border border-slate-200 bg-white px-2 text-[13px] text-slate-700"
                     >
-                      {!activeTeachers.some((x) => x.name === c.teacherName) && <option value={c.teacherName}>{c.teacherName} (cần thay)</option>}
+                      {!activeTeachers.some((x) => x.id === c.teacherId) && <option value={c.teacherId}>{c.teacherName} (cần thay)</option>}
                       {activeTeachers.map((x) => (
-                        <option key={x.id} value={x.name}>
+                        <option key={x.id} value={x.id}>
                           {x.name}
                         </option>
                       ))}
@@ -221,7 +231,7 @@ export const HeadClassesPage: React.FC = () => {
             <TBtn variant="ghost" onClick={() => setOpen(false)}>
               Huỷ
             </TBtn>
-            <TBtn variant="primary" onClick={create}>
+            <TBtn variant="primary" disabled={saving} onClick={() => void create()}>
               Mở lớp
             </TBtn>
           </>
@@ -231,7 +241,7 @@ export const HeadClassesPage: React.FC = () => {
           <Input label="Tên lớp" required placeholder="VD: TOEIC 650+ K13" value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} error={error} />
           <div className="grid gap-4 sm:grid-cols-2">
             <Select label="Kỳ thi" options={[{ value: 'TOEIC', label: 'TOEIC' }, { value: 'VSTEP', label: 'VSTEP' }]} value={form.examType} onChange={(e) => setForm((f) => ({ ...f, examType: e.target.value as ExamType }))} />
-            <Select label="Giáo viên phụ trách" options={activeTeachers.map((t) => ({ value: t.name, label: `${t.name} · ${t.classesCount} lớp` }))} value={form.teacherName} onChange={(e) => setForm((f) => ({ ...f, teacherName: e.target.value }))} />
+            <Select label="Giáo viên phụ trách" options={activeTeachers.map((t) => ({ value: t.id, label: `${t.name} · ${t.classesCount} lớp` }))} value={form.teacherId || activeTeachers[0]?.id || ''} onChange={(e) => setForm((f) => ({ ...f, teacherId: e.target.value }))} />
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
             <Input label="Lịch học" placeholder="VD: T2 – T4 – T6 · 19:00" value={form.schedule} onChange={(e) => setForm((f) => ({ ...f, schedule: e.target.value }))} />

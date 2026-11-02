@@ -2,25 +2,48 @@ import React, { useMemo, useState } from 'react';
 import { BadgeCheck, Clock, Pencil, RotateCcw, Wallet, CreditCard, Check } from 'lucide-react';
 import { useDocumentTitle } from '@/shared/hooks';
 import { toast } from '@/shared/stores/uiStore';
-import { MOCK_PAYMENTS, PRICING_PLANS, REVENUE_MONTHLY } from '@/shared/mocks';
-import type { PaymentTxn, PricingPlan } from '@/shared/types';
-import { Button, ConfirmDialog, Input, Modal, Switch } from '@/shared/components/ui';
+import type { PaymentTxn } from '@/shared/types';
+import { adminApi, useAdminBilling, useAdminInvalidate, type AdminPlan, type AdminTxn } from '@/shared/api/admin';
+import { errorMessage } from '@/shared/api/client';
+import { Button, Input, Modal, Switch } from '@/shared/components/ui';
 import { LineChart } from '@/shared/components/charts/Charts';
 import { cn, formatCurrency, formatDateTime } from '@/shared/utils';
 import { Figures, Panel, Status, TBtn, TPageHead, inputCls, tbl, type StatusTone } from '@/roles/teacher/components/TeacherKit';
 
 const TXN_STATUS: Record<PaymentTxn['status'], { label: string; tone: StatusTone }> = { PAID: { label: 'Thành công', tone: 'green' }, PENDING: { label: 'Chờ xác nhận', tone: 'amber' }, REFUNDED: { label: 'Đã hoàn tiền', tone: 'gray' }, FAILED: { label: 'Thất bại', tone: 'red' } };
 const METHOD: Record<PaymentTxn['method'], string> = { MOMO: 'MoMo', VNPAY: 'VNPay', CARD: 'Thẻ quốc tế', BANK: 'Chuyển khoản' };
-const planName = (id: string) => PRICING_PLANS.find((p) => p.id === id)?.name ?? id;
 const vnd = (n: number) => `${n.toLocaleString('vi-VN')}đ`;
 
-type Plan = PricingPlan & { active: boolean };
+type Plan = AdminPlan & { active: boolean };
+const EMPTY_T: AdminTxn[] = [];
 
 /** Gói VIP học viên mua ở trang Bảng giá: doanh thu, giao dịch, chỉnh giá gói */
 export const AdminBillingPage: React.FC = () => {
   useDocumentTitle('Gói VIP & thanh toán');
-  const [txns, setTxns] = useState<PaymentTxn[]>(MOCK_PAYMENTS);
-  const [plans, setPlans] = useState<Plan[]>(PRICING_PLANS.map((p) => ({ ...p, active: true })));
+  const { data, isLoading } = useAdminBilling();
+  const refresh = useAdminInvalidate();
+  const txns = data?.items ?? EMPTY_T;
+  const plans = useMemo<Plan[]>(() => (data?.plans ?? []).map((p) => ({ ...p, active: p.isActive })), [data]);
+  const planName = (id: string) => txns.find((t) => t.planId === id)?.planName ?? plans.find((p) => p.id === id)?.name ?? id;
+  const R = data?.revenue ?? { labels: [], revenue: [], byPlan: [] };
+  const cur = R.revenue[R.revenue.length - 1] ?? 0;
+  const prev = R.revenue[R.revenue.length - 2] ?? 0;
+  const [busy, setBusy] = useState(false);
+  const [reason, setReason] = useState('');
+  const run = async (fn: () => Promise<unknown>, ok: string, desc?: string) => {
+    setBusy(true);
+    try {
+      await fn();
+      toast.success(ok, desc);
+      await refresh();
+      return true;
+    } catch (e) {
+      toast.error('Không thực hiện được', errorMessage(e));
+      return false;
+    } finally {
+      setBusy(false);
+    }
+  };
   const [status, setStatus] = useState('');
   const [method, setMethod] = useState('');
   const [editing, setEditing] = useState<Plan | null>(null);
@@ -28,36 +51,33 @@ export const AdminBillingPage: React.FC = () => {
   const [refund, setRefund] = useState<PaymentTxn | null>(null);
 
   const rows = useMemo(() => txns.filter((t) => (!status || t.status === status) && (!method || t.method === method)), [txns, status, method]);
-  const thisMonth = txns.filter((t) => t.createdAt.startsWith('2026-11') && t.status === 'PAID').reduce((a, t) => a + t.amount, 0);
-  const setTxn = (id: string, s: PaymentTxn['status']) => setTxns((ts) => ts.map((t) => (t.id === id ? { ...t, status: s } : t)));
+  const monthKey = new Date().toISOString().slice(0, 7);
+  const paidThisMonth = txns.filter((t) => t.status === 'PAID' && (t.paidAt ?? t.createdAt).startsWith(monthKey));
+  const thisMonth = paidThisMonth.reduce((a, t) => a + t.amount, 0);
+  const recentRefunds = txns.filter((t) => t.status === 'REFUNDED' && Date.now() - new Date(t.refundedAt ?? t.createdAt).getTime() < 30 * 86400_000).length;
 
   return (
     <div className="space-y-6">
       <TPageHead crumbs={[{ label: 'Vận hành' }, { label: 'Gói VIP & thanh toán' }]} title="Gói VIP & thanh toán" sub="Các gói học viên mua ở trang Bảng giá. Thanh toán chuyển khoản cần xác nhận thủ công trước khi kích hoạt VIP." />
       <Figures
         items={[
-          { label: 'Doanh thu tháng 10', value: `${REVENUE_MONTHLY.revenue[5].toLocaleString('vi-VN')} tr`, icon: Wallet, tone: 'emerald', note: `+${Math.round((REVENUE_MONTHLY.revenue[5] / REVENUE_MONTHLY.revenue[4] - 1) * 100)}% so với tháng 9` },
-          { label: 'Đầu tháng 11', value: vnd(thisMonth), icon: CreditCard, tone: 'indigo', note: `${txns.filter((t) => t.createdAt.startsWith('2026-11') && t.status === 'PAID').length} giao dịch thành công` },
-          { label: 'Chờ xác nhận', value: txns.filter((t) => t.status === 'PENDING').length, icon: Clock, tone: 'amber', note: 'Chuyển khoản ngân hàng' },
-          { label: 'Hoàn tiền', value: txns.filter((t) => t.status === 'REFUNDED').length, icon: RotateCcw, tone: 'rose', note: 'Trong 30 ngày' },
+          { label: 'Doanh thu tháng này', value: `${cur.toLocaleString('vi-VN')} tr`, icon: Wallet, tone: 'emerald', note: prev ? `${cur >= prev ? '+' : ''}${Math.round((cur / prev - 1) * 100)}% so với tháng trước` : 'triệu đồng' },
+          { label: 'Đã thu tháng này', value: vnd(thisMonth), icon: CreditCard, tone: 'indigo', note: `${paidThisMonth.length} giao dịch thành công` },
+          { label: 'Chờ xác nhận', value: data?.summary.pending ?? 0, icon: Clock, tone: 'amber', note: 'Chuyển khoản ngân hàng' },
+          { label: 'Hoàn tiền', value: recentRefunds, icon: RotateCcw, tone: 'rose', note: `Trong 30 ngày · ${data?.summary.activeVip ?? 0} gói VIP đang hiệu lực` },
         ]}
       />
 
       <div className="grid gap-4 xl:grid-cols-2 [&>*]:min-w-0">
         <Panel title="Doanh thu theo tháng" sub="Triệu đồng, 6 tháng gần nhất">
-          <LineChart ariaLabel="Doanh thu theo tháng" labels={REVENUE_MONTHLY.labels} series={[{ name: 'Doanh thu', values: REVENUE_MONTHLY.revenue }]} unit=" tr" format={(v) => v.toLocaleString('vi-VN')} height={240} />
+          {R.revenue.some(Boolean) ? <LineChart ariaLabel="Doanh thu theo tháng" labels={R.labels} series={[{ name: 'Doanh thu', values: R.revenue }]} unit=" tr" format={(v) => v.toLocaleString('vi-VN')} height={240} /> : <p className="py-16 text-center text-sm text-slate-500">Chưa có giao dịch thành công trong 6 tháng gần nhất.</p>}
         </Panel>
         <Panel title="Số gói bán ra" sub="Theo tháng, từng gói">
-          <LineChart
-            ariaLabel="Số gói bán ra theo tháng"
-            labels={REVENUE_MONTHLY.labels}
-            series={[
-              { name: 'VIP TOEIC', values: REVENUE_MONTHLY.vipToeic },
-              { name: 'VSTEP Master', values: REVENUE_MONTHLY.vstepMaster },
-            ]}
-            unit=" gói"
-            height={240}
-          />
+          {R.byPlan.some((p) => p.counts.some(Boolean)) ? (
+            <LineChart ariaLabel="Số gói bán ra theo tháng" labels={R.labels} series={R.byPlan.map((p) => ({ name: p.name, values: p.counts }))} unit=" gói" height={240} />
+          ) : (
+            <p className="py-16 text-center text-sm text-slate-500">Chưa có gói nào được bán.</p>
+          )}
         </Panel>
       </div>
 
@@ -84,7 +104,7 @@ export const AdminBillingPage: React.FC = () => {
                 ))}
               </ul>
               <div className="mt-4 flex items-center justify-between gap-2 border-t border-slate-100 pt-4">
-                <Switch checked={p.active} onChange={(v) => { setPlans((ps) => ps.map((x) => (x.id === p.id ? { ...x, active: v } : x))); toast.success(v ? 'Đã mở bán gói' : 'Đã ngừng bán gói', p.name); }} label="Đang bán" />
+                <Switch checked={p.active} onChange={(v) => void run(() => adminApi.updatePlan(p.code, { isActive: v }), v ? 'Đã mở bán gói' : 'Đã ngừng bán gói', p.name)} label="Đang bán" />
                 {p.price > 0 && (
                   <TBtn size="sm" icon={<Pencil />} onClick={() => { setEditing(p); setPrice(String(p.price)); }}>
                     Sửa giá
@@ -138,7 +158,7 @@ export const AdminBillingPage: React.FC = () => {
             <tbody>
               {rows.map((t) => (
                 <tr key={t.id} className={tbl.tr}>
-                  <td className={cn(tbl.td, 'whitespace-nowrap font-mono text-[12px] text-slate-600')}>{t.id}</td>
+                  <td className={cn(tbl.td, 'whitespace-nowrap font-mono text-[12px] text-slate-600')}>{t.orderCode}</td>
                   <td className={cn(tbl.td, 'min-w-[180px]')}>
                     <p className="font-medium text-slate-900">{t.userName}</p>
                     <p className="text-[12px] text-slate-500">{t.email}</p>
@@ -152,12 +172,12 @@ export const AdminBillingPage: React.FC = () => {
                   </td>
                   <td className={cn(tbl.td, 'whitespace-nowrap text-right')}>
                     {t.status === 'PENDING' && (
-                      <TBtn size="sm" variant="primary" icon={<BadgeCheck />} onClick={() => { setTxn(t.id, 'PAID'); toast.success('Đã xác nhận thanh toán', `${t.userName} được kích hoạt ${planName(t.planId)}`); }}>
+                      <TBtn size="sm" variant="primary" icon={<BadgeCheck />} disabled={busy} onClick={() => void run(() => adminApi.confirmPayment(t.id), 'Đã xác nhận thanh toán', `${t.userName} được kích hoạt ${planName(t.planId)}`)}>
                         Xác nhận
                       </TBtn>
                     )}
                     {t.status === 'PAID' && (
-                      <TBtn size="sm" variant="ghost" onClick={() => setRefund(t)}>
+                      <TBtn size="sm" variant="ghost" onClick={() => { setRefund(t); setReason(''); }}>
                         Hoàn tiền
                       </TBtn>
                     )}
@@ -167,7 +187,7 @@ export const AdminBillingPage: React.FC = () => {
               {!rows.length && (
                 <tr>
                   <td colSpan={8} className="px-5 py-10 text-center text-sm text-slate-500">
-                    Không có giao dịch phù hợp.
+                    {isLoading ? 'Đang tải…' : 'Không có giao dịch phù hợp.'}
                   </td>
                 </tr>
               )}
@@ -186,11 +206,10 @@ export const AdminBillingPage: React.FC = () => {
             <Button variant="ghost" onClick={() => setEditing(null)}>Huỷ</Button>
             <Button
               disabled={!Number(price)}
-              onClick={() => {
+              loading={busy}
+              onClick={async () => {
                 if (!editing) return;
-                setPlans((ps) => ps.map((x) => (x.id === editing.id ? { ...x, price: Number(price) } : x)));
-                toast.success('Đã cập nhật giá', `${editing.name}: ${vnd(Number(price))}`);
-                setEditing(null);
+                if (await run(() => adminApi.updatePlan(editing.code, { price: Math.round(Number(price)) }), 'Đã cập nhật giá', `${editing.name}: ${vnd(Number(price))}`)) setEditing(null);
               }}
             >
               Lưu
@@ -201,20 +220,30 @@ export const AdminBillingPage: React.FC = () => {
         <Input label={`Giá (VNĐ) ${editing?.period ?? ''}`} type="number" min={0} step={1000} value={price} onChange={(e) => setPrice(e.target.value)} />
       </Modal>
 
-      <ConfirmDialog
+      <Modal
         open={!!refund}
         onClose={() => setRefund(null)}
-        danger
         title="Hoàn tiền giao dịch?"
-        message={refund ? `Hoàn ${vnd(refund.amount)} cho ${refund.userName} qua ${METHOD[refund.method]}. Tài khoản sẽ trở về gói Free.` : undefined}
-        confirmText="Hoàn tiền"
-        onConfirm={() => {
-          if (!refund) return;
-          setTxn(refund.id, 'REFUNDED');
-          toast.warning('Đã hoàn tiền', `${refund.id} · ${refund.userName}`);
-          setRefund(null);
-        }}
-      />
+        description={refund ? `Hoàn ${vnd(refund.amount)} cho ${refund.userName} qua ${METHOD[refund.method]}. Gói kích hoạt từ giao dịch này sẽ bị huỷ.` : undefined}
+        footer={
+          <>
+            <Button variant="ghost" onClick={() => setRefund(null)}>Huỷ</Button>
+            <Button
+              variant="danger"
+              loading={busy}
+              disabled={reason.trim().length < 3}
+              onClick={async () => {
+                if (!refund) return;
+                if (await run(() => adminApi.refundPayment(refund.id, reason.trim()), 'Đã hoàn tiền', `${(refund as AdminTxn).orderCode} · ${refund.userName}`)) setRefund(null);
+              }}
+            >
+              Hoàn tiền
+            </Button>
+          </>
+        }
+      >
+        <Input label="Lý do hoàn tiền" value={reason} onChange={(e) => setReason(e.target.value)} placeholder="VD: Học viên mua nhầm gói" required />
+      </Modal>
     </div>
   );
 };

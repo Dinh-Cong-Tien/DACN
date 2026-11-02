@@ -14,7 +14,7 @@ import { ThemeToggle } from '@/shared/components/layout/ThemeToggle';
 import { UserMenu } from '@/shared/components/layout/UserMenu';
 import { PageBackdrop } from '@/shared/components/layout/PageBackdrop';
 import { useResolvedTheme } from '@/shared/stores/themeStore';
-import { MOCK_NOTIFICATIONS } from '@/shared/mocks';
+import { useNotifications } from '@/shared/api/learner';
 
 interface GuestLayoutProps {
   /** Bọc nội dung trong container (dùng cho các trang học viên /app/*) */
@@ -39,7 +39,9 @@ export const GuestLayout: React.FC<GuestLayoutProps> = ({ contained }) => {
   const logout = useAuthStore((s) => s.logout);
   const setPalette = useUiStore((s) => s.setPalette);
   const isStudent = isAuth && user?.role === 'STUDENT';
-  const unread = MOCK_NOTIFICATIONS.filter((n) => !n.isRead).length;
+  // Số thông báo chưa đọc (tự làm mới mỗi phút; khách chưa đăng nhập không gọi API)
+  const { data: notifs } = useNotifications();
+  const unread = notifs?.unread ?? 0;
 
   useEffect(() => {
     setOpen(false);

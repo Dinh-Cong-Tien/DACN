@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Trophy, Flame, ArrowUp, ArrowDown, Minus, Crown } from 'lucide-react';
-import { MOCK_LEADERBOARD } from '@/shared/mocks';
+import { useLeaderboard } from '@/shared/api/learner';
 import type { LeaderboardEntry } from '@/shared/types';
 import { cn, formatNumber } from '@/shared/utils';
 import { useDocumentTitle } from '@/shared/hooks';
@@ -30,10 +30,12 @@ const PODIUM: { rank: number; h: string; color: string; label: string }[] = [
 
 export const StudentLeaderboardPage: React.FC = () => {
   useDocumentTitle('Bảng vinh danh');
-  const [scope, setScope] = useState('week');
+  const [scope, setScope] = useState<'week' | 'month' | 'all'>('week');
+  const { data, isLoading } = useLeaderboard(scope);
+  const MOCK_LEADERBOARD = data?.entries ?? [];
   const me = MOCK_LEADERBOARD.find((e) => e.isMe);
   const rest = MOCK_LEADERBOARD.filter((e) => e.rank > 3);
-  const byRank = (r: number) => MOCK_LEADERBOARD.find((e) => e.rank === r) as LeaderboardEntry;
+  const byRank = (r: number) => MOCK_LEADERBOARD.find((e) => e.rank === r) as LeaderboardEntry | undefined;
 
   return (
     <div className="space-y-6">
@@ -45,7 +47,7 @@ export const StudentLeaderboardPage: React.FC = () => {
         }
         icon={<Trophy />}
         description="Xếp hạng theo điểm nỗ lực tự học. Làm mới mỗi thứ Hai hằng tuần."
-        actions={<Segmented options={[{ value: 'week', label: 'Tuần' }, { value: 'month', label: 'Tháng' }, { value: 'class', label: 'Lớp' }]} value={scope} onChange={setScope} />}
+        actions={<Segmented options={[{ value: 'week', label: 'Tuần' }, { value: 'month', label: 'Tháng' }, { value: 'all', label: 'Tất cả' }]} value={scope} onChange={(v) => setScope(v as 'week' | 'month' | 'all')} />}
       />
 
       <div className="grid grid-cols-1 xl:grid-cols-[1fr_300px] gap-6">
@@ -53,8 +55,10 @@ export const StudentLeaderboardPage: React.FC = () => {
           <Card hard tone="cream" className="relative overflow-hidden" padding="lg">
             <Doodles className="opacity-40" />
             <div className="relative flex items-end justify-center gap-3 sm:gap-6">
+              {MOCK_LEADERBOARD.length === 0 && <p className="py-10 text-sm text-slate-600">{isLoading ? 'Đang tải…' : 'Chưa có ai ghi điểm trong khoảng thời gian này. Học và làm bài để lên bảng!'}</p>}
               {PODIUM.map((p, i) => {
                 const e = byRank(p.rank);
+                if (!e) return null;
                 return (
                   <div key={p.rank} className="flex flex-col items-center animate-fade-up w-28 sm:w-36" style={{ animationDelay: `${i * 150 + 100}ms` }}>
                     <div className="relative mb-2">
@@ -75,7 +79,7 @@ export const StudentLeaderboardPage: React.FC = () => {
             </div>
           </Card>
 
-          <Card hard padding="none" className="overflow-hidden">
+          {rest.length > 0 && <Card hard padding="none" className="overflow-hidden">
             <ul className="divide-y-2 divide-slate-900/10">
               {rest.map((e, i) => (
                 <li key={e.rank} className={cn('flex items-center gap-3 sm:gap-4 px-4 sm:px-5 py-3.5 animate-fade-up transition-colors', e.isMe ? 'bg-amber-100' : 'hover:bg-slate-50')} style={{ animationDelay: `${i * 50 + 400}ms` }}>
@@ -102,7 +106,7 @@ export const StudentLeaderboardPage: React.FC = () => {
                 </li>
               ))}
             </ul>
-          </Card>
+          </Card>}
         </div>
 
         <aside>
@@ -125,7 +129,8 @@ export const StudentLeaderboardPage: React.FC = () => {
                 </div>
               </div>
               <p className="text-xs opacity-90">
-                Tăng <b>{me.delta}</b> bậc tuần này. Còn {formatNumber(byRank(me.rank - 1).points - me.points)} điểm để vượt #{me.rank - 1}.
+                {me.delta > 0 ? <>Tăng <b>{me.delta}</b> bậc so với kỳ trước. </> : null}
+                {me.rank > 1 && byRank(me.rank - 1) ? `Còn ${formatNumber(byRank(me.rank - 1)!.points - me.points)} điểm để vượt #${me.rank - 1}.` : 'Bạn đang dẫn đầu!'}
               </p>
             </Card>
           )}

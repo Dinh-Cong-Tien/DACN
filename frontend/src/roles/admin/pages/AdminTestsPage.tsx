@@ -1,7 +1,7 @@
-import React from 'react';
+import React, { useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Eye, Copy, Clock, FileText, Flame, Layers, PlayCircle, Crown } from 'lucide-react';
-import { MOCK_TESTS } from '@/shared/mocks';
-import type { MockTestSummary } from '@/shared/types';
+import { adminApi, useAdminInvalidate, useAdminTests, type AdminTestRow } from '@/shared/api/admin';
 import { formatNumber } from '@/shared/utils';
 import { useDocumentTitle } from '@/shared/hooks';
 import { Column } from '@/shared/components/ui';
@@ -10,6 +10,9 @@ import { Figures, Panel, TBtn, TPageHead } from '@/roles/teacher/components/Teac
 import { Img } from '@/shared/components/media/Img';
 import { CrudEditor, CrudField } from '@/engines';
 import { toast } from '@/shared/stores/uiStore';
+import { errorMessage } from '@/shared/api/client';
+
+type MockTestSummary = AdminTestRow;
 
 const columns: Column<MockTestSummary>[] = [
   {
@@ -68,13 +71,18 @@ const fields: CrudField<MockTestSummary>[] = [
   },
   { key: 'level', label: 'Cấp độ', type: 'text', placeholder: '550–750' },
   { key: 'durationMinutes', label: 'Thời gian (phút)', type: 'number', required: true },
-  { key: 'totalQuestions', label: 'Tổng số câu', type: 'number', required: true },
   { key: 'year', label: 'Năm', type: 'number' },
   { key: 'isFree', label: 'Miễn phí', type: 'toggle', hint: 'Tắt để chỉ tài khoản VIP được làm' },
 ];
 
 export const AdminTestsPage: React.FC = () => {
   useDocumentTitle('Cấu hình đề thi');
+  const navigate = useNavigate();
+  const { data, isLoading } = useAdminTests();
+  const refresh = useAdminInvalidate();
+  const MOCK_TESTS = useMemo<MockTestSummary[]>(() => data ?? [], [data]);
+  const years = MOCK_TESTS.map((t) => t.year).filter(Boolean);
+  const payload = (v: Partial<MockTestSummary>) => ({ title: v.title, examType: v.examType, level: v.level || undefined, durationMin: Number(v.durationMinutes) || 120, year: v.year ? Number(v.year) : undefined, isFree: !!v.isFree });
   const totalAttempts = MOCK_TESTS.reduce((a, t) => a + t.attempts, 0);
   return (
     <div className="space-y-6">
@@ -91,21 +99,40 @@ export const AdminTestsPage: React.FC = () => {
       <Figures
         items={[
           { label: 'Tổng đề thi', value: MOCK_TESTS.length, note: 'đang phát hành', icon: FileText, tone: 'indigo' },
-          { label: 'Đề TOEIC', value: MOCK_TESTS.filter((t) => t.examType === 'TOEIC').length, note: 'ETS 2023–2025', icon: Layers, tone: 'violet' },
+          { label: 'Đề TOEIC', value: MOCK_TESTS.filter((t) => t.examType === 'TOEIC').length, note: years.length ? `${Math.min(...years)}–${Math.max(...years)}` : '—', icon: Layers, tone: 'violet' },
           { label: 'Đề VSTEP', value: MOCK_TESTS.filter((t) => t.examType === 'VSTEP').length, note: 'B1 · B2 · C1', icon: Layers, tone: 'emerald' },
-          { label: 'Tổng lượt làm', value: formatNumber(totalAttempts), note: '+11% tháng này', icon: PlayCircle, tone: 'amber' },
+          { label: 'Tổng lượt làm', value: formatNumber(totalAttempts), note: 'từ khi phát hành', icon: PlayCircle, tone: 'amber' },
         ]}
       />
       <Panel title="Đề được làm nhiều nhất" sub="Lượt làm bài từ khi phát hành" icon={Flame} tone="rose">
+        {totalAttempts === 0 ? (
+          <p className="py-10 text-center text-sm text-slate-500">Chưa có lượt làm bài nào.</p>
+        ) : (
         <HBarChart
           ariaLabel="Lượt làm theo đề thi"
           labelWidth={150}
           format={(v) => formatNumber(v)}
           data={[...MOCK_TESTS].sort((x, y) => y.attempts - x.attempts).slice(0, 6).map((t) => ({ label: t.title, value: t.attempts }))}
         />
+        )}
       </Panel>
       <CrudEditor<MockTestSummary>
         rows={MOCK_TESTS}
+        loading={isLoading}
+        onCreate={async (v) => {
+          const t = await adminApi.createTest(payload(v));
+          void refresh();
+          return t;
+        }}
+        onUpdate={async (row, v) => {
+          const t = await adminApi.updateTest(row.id, payload(v));
+          void refresh();
+          return t;
+        }}
+        onDelete={async (row) => {
+          await adminApi.deleteTest(row.id);
+          void refresh();
+        }}
         columns={columns}
         fields={fields}
         entityName="đề thi"
@@ -122,10 +149,21 @@ export const AdminTestsPage: React.FC = () => {
             ],
           },
         ]}
-        defaultValues={{ examType: 'TOEIC', level: '550+', durationMinutes: 120, totalQuestions: 200, parts: ['Part 1–7'], attempts: 0, isFree: true, year: new Date().getFullYear(), slug: '', tags: [] }}
+        defaultValues={{ examType: 'TOEIC', level: '', durationMinutes: 120, isFree: true, year: new Date().getFullYear() }}
         rowActions={(t) => [
-          { label: 'Xem trước đề', icon: <Eye />, onClick: () => toast.info('Xem trước đề', `Mở "${t.title}" ở chế độ xem thử (demo).`) },
-          { label: 'Nhân bản', icon: <Copy />, onClick: () => toast.success('Đã nhân bản', `Bản sao của "${t.title}" đã được tạo ở trạng thái nháp.`) },
+          { label: 'Xem trước đề', icon: <Eye />, onClick: () => navigate(`/app/mock-tests/${t.slug}`) },
+          {
+            label: 'Nhân bản',
+            icon: <Copy />,
+            onClick: () =>
+              adminApi
+                .createTest({ ...payload(t), title: `${t.title} (bản sao)`, status: 'DRAFT' })
+                .then(() => {
+                  toast.success('Đã nhân bản', `Bản sao của "${t.title}" được tạo ở trạng thái nháp (chưa có câu hỏi).`);
+                  void refresh();
+                })
+                .catch((e) => toast.error('Không nhân bản được', errorMessage(e))),
+          },
         ]}
       />
     </div>

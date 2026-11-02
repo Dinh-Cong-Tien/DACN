@@ -1,13 +1,14 @@
-import React, { useState } from 'react';
-import { BarChart3, CheckCircle2, Database, Eye, Layers, Upload } from 'lucide-react';
-import { ALL_QUESTIONS, QUESTIONS_BY_PART } from '@/shared/mocks';
+import React, { useMemo, useState } from 'react';
+import { BarChart3, CheckCircle2, Database, Eye, Layers } from 'lucide-react';
 import type { IQuestion, SkillType } from '@/shared/types';
+import { adminApi, useAdminInvalidate, useAdminQuestions } from '@/shared/api/admin';
+import { headApi, type QuestionRow } from '@/shared/api/head';
+import { EXAM_PARTS, partLabel, partShort, stars, toIQuestion } from '@/shared/constants/staff';
 import { useDocumentTitle } from '@/shared/hooks';
 import { BarChart } from '@/shared/components/charts/Charts';
-import { Button, Column, Modal } from '@/shared/components/ui';
+import { Column, Modal, Select } from '@/shared/components/ui';
 import { Figures, Panel, TPageHead } from '@/roles/teacher/components/TeacherKit';
 import { CrudEditor, CrudField, QuestionRenderer } from '@/engines';
-import { toast } from '@/shared/stores/uiStore';
 
 const SKILL_TONE: Record<SkillType, string> = {
   LISTENING: 'bg-sky-50 text-sky-700 ring-sky-200/70',
@@ -21,47 +22,39 @@ const SKILL_VI: Record<SkillType, string> = { LISTENING: 'Nghe', READING: 'Đọ
 const chip = 'inline-flex items-center whitespace-nowrap rounded-lg px-2 py-0.5 text-xs font-semibold ring-1 ring-inset';
 const SKILL_OPTIONS = (Object.keys(SKILL_TONE) as SkillType[]).map((s) => ({ value: s, label: SKILL_VI[s] }));
 
-const columns: Column<IQuestion>[] = [
+const columns: Column<QuestionRow>[] = [
   {
     key: 'stem',
     header: 'Câu hỏi',
     render: (q) => (
       <div className="max-w-md">
         <p className="font-medium text-slate-900 truncate">{q.stem.length > 70 ? `${q.stem.slice(0, 70)}…` : q.stem}</p>
-        <p className="text-xs text-slate-400 font-mono">{q.id}</p>
+        <p className="text-xs text-slate-400">{q.passageTitle ?? (q.status === 'PUBLISHED' ? 'Đã xuất bản' : q.status)}</p>
       </div>
     ),
   },
   { key: 'examType', header: 'Kỳ thi', render: (q) => <span className={`${chip} ${q.examType === 'TOEIC' ? 'bg-indigo-600 text-white ring-indigo-600' : 'bg-emerald-600 text-white ring-emerald-600'}`}>{q.examType}</span> },
-  { key: 'partOrSkill', header: 'Part', render: (q) => <span className="whitespace-nowrap text-[13px] text-slate-700">{q.partOrSkill.replace('PART_', 'Part ').replace('VSTEP_', '').replace('_', ' ')}</span> },
-  { key: 'skillType', header: 'Kỹ năng', render: (q) => <span className={`${chip} ${SKILL_TONE[q.skillType]}`}>{SKILL_VI[q.skillType]}</span> },
+  { key: 'part', header: 'Part', render: (q) => <span className="whitespace-nowrap text-[13px] text-slate-700">{partLabel(q.part)}</span> },
+  { key: 'skill', header: 'Kỹ năng', render: (q) => <span className={`${chip} ${SKILL_TONE[q.skill as SkillType]}`}>{SKILL_VI[q.skill as SkillType]}</span> },
   {
     key: 'difficulty',
     header: 'Độ khó',
     render: (q) => (
       <span className="text-amber-500 text-xs tracking-wider">
-        {'★'.repeat(q.difficulty)}
-        <span className="text-slate-300">{'★'.repeat(Math.max(0, 5 - q.difficulty))}</span>
+        {'★'.repeat(stars(q.difficulty))}
+        <span className="text-slate-300">{'★'.repeat(Math.max(0, 5 - stars(q.difficulty)))}</span>
       </span>
     ),
   },
   {
-    key: 'tags',
-    header: 'Thẻ',
-    render: (q) => (
-      <div className="flex flex-wrap gap-1 max-w-[200px]">
-        {q.tags.slice(0, 2).map((t) => (
-          <span key={t} className="rounded-md bg-slate-100 px-1.5 py-0.5 text-[11px] text-slate-600">
-            #{t}
-          </span>
-        ))}
-        {q.tags.length > 2 && <span className="text-[10px] text-slate-500">+{q.tags.length - 2}</span>}
-      </div>
-    ),
+    key: 'correctAnswer',
+    header: 'Đáp án',
+    align: 'center',
+    render: (q) => (q.correctAnswer ? <span className="rounded-md bg-emerald-50 px-2 py-0.5 text-xs font-bold text-emerald-700">{q.correctAnswer}</span> : <span className="text-xs text-slate-400">—</span>),
   },
 ];
 
-const fields: CrudField<IQuestion>[] = [
+const fields: CrudField<QuestionRow>[] = [
   { key: 'stem', label: 'Nội dung câu hỏi', type: 'textarea', required: true, placeholder: 'Nhập đề bài...' },
   {
     key: 'examType',
@@ -73,66 +66,100 @@ const fields: CrudField<IQuestion>[] = [
       { value: 'VSTEP', label: 'VSTEP' },
     ],
   },
-  { key: 'partOrSkill', label: 'Part / Kỹ năng', type: 'text', required: true, placeholder: 'PART_5' },
-  { key: 'skillType', label: 'Loại kỹ năng', type: 'select', required: true, options: SKILL_OPTIONS },
-  { key: 'level', label: 'Cấp độ', type: 'text', placeholder: '550+' },
-  { key: 'difficulty', label: 'Độ khó (1–5)', type: 'number', required: true },
+  { key: 'part', label: 'Part', type: 'select', required: true, options: EXAM_PARTS.map((p) => ({ value: p.value, label: p.label })) },
+  { key: 'skill', label: 'Loại kỹ năng', type: 'select', required: true, options: SKILL_OPTIONS },
+  { key: 'correctAnswer', label: 'Đáp án đúng', type: 'select', options: ['A', 'B', 'C', 'D'].map((k) => ({ value: k, label: k })) },
   { key: 'explanation', label: 'Lời giải thích', type: 'textarea', placeholder: 'Giải thích vì sao chọn đáp án đúng...' },
 ];
+
+const EMPTY: QuestionRow[] = [];
 
 export const AdminQuestionsPage: React.FC = () => {
   useDocumentTitle('Ngân hàng câu hỏi');
   const [preview, setPreview] = useState<IQuestion | null>(null);
-  const toeic = ALL_QUESTIONS.filter((q) => q.examType === 'TOEIC').length;
-  const byPart = Object.entries(QUESTIONS_BY_PART).map(([k, v]) => ({ label: k.replace('PART_', 'P').replace('VSTEP_', 'V-'), value: v.length }));
+  const [exam, setExam] = useState<'' | 'TOEIC' | 'VSTEP'>('');
+  const [part, setPart] = useState('');
+  const query = useMemo(() => ({ pageSize: 200, examType: exam || undefined, part: part || undefined }), [exam, part]);
+  const { data, isLoading } = useAdminQuestions(query);
+  const all = useAdminQuestions({ pageSize: 1 });
+  const refresh = useAdminInvalidate();
+  const rows = data?.items ?? EMPTY;
+  const byPartAll = all.data?.byPart ?? [];
+  const total = all.data?.total ?? 0;
+  const toeic = byPartAll.filter((b) => b.part.startsWith('TOEIC')).reduce((a, b) => a + b.count, 0);
+  const byPart = byPartAll.map((b) => ({ label: partShort(b.part), value: b.count }));
+
+  const openPreview = async (q: QuestionRow) => {
+    const full = await headApi.question(q.id).catch(() => null);
+    setPreview(toIQuestion(q, full?.passage));
+  };
+  const payload = (v: Partial<QuestionRow>) => ({
+    examType: v.examType,
+    part: v.part,
+    skill: v.skill,
+    stem: v.stem,
+    correctAnswer: v.correctAnswer || undefined,
+    explanation: v.explanation ?? undefined,
+    options: v.options,
+  });
 
   return (
     <div className="space-y-6">
       <TPageHead
         eyebrow="Nội dung · Ngân hàng đề"
         title="Ngân hàng câu hỏi"
-        sub="Tạo, sửa, xoá và phân loại câu hỏi theo kỳ thi, Part và kỹ năng. Kho chính thức 12.614 câu; bảng dưới hiển thị bộ câu mẫu."
+        sub={`Tạo, sửa, xoá và phân loại câu hỏi theo kỳ thi, Part và kỹ năng. Kho hiện có ${total.toLocaleString('vi-VN')} câu; bảng hiển thị tối đa 200 câu theo bộ lọc Kỳ thi / Part.`}
       />
 
       <Figures
         items={[
-          { label: 'Câu mẫu', value: ALL_QUESTIONS.length, note: 'kho chính thức 12.614 câu', icon: Database, tone: 'indigo' },
-          { label: 'TOEIC', value: toeic, note: 'Part 1–7', icon: Layers, tone: 'violet' },
-          { label: 'VSTEP', value: ALL_QUESTIONS.length - toeic, note: 'Reading · Listening', icon: Layers, tone: 'emerald' },
-          { label: 'Có lời giải', value: ALL_QUESTIONS.filter((q) => q.explanation).length, note: 'đã biên soạn giải thích', icon: CheckCircle2, tone: 'amber' },
+          { label: 'Tổng câu hỏi', value: total.toLocaleString('vi-VN'), note: 'trong ngân hàng', icon: Database, tone: 'indigo' },
+          { label: 'TOEIC', value: toeic.toLocaleString('vi-VN'), note: 'Part 1–7', icon: Layers, tone: 'violet' },
+          { label: 'VSTEP', value: (total - toeic).toLocaleString('vi-VN'), note: 'Nghe · Đọc · Viết · Nói', icon: Layers, tone: 'emerald' },
+          { label: 'Có lời giải', value: rows.filter((q) => q.hasExplanation).length, note: `trong ${rows.length} câu đang xem`, icon: CheckCircle2, tone: 'amber' },
         ]}
       />
 
-      <Panel title="Phân bố theo Part" sub="Số câu mẫu trong từng phần thi" icon={BarChart3} tone="sky">
-        <BarChart ariaLabel="Số câu hỏi theo Part" data={byPart.map(({ label, value }) => ({ label, value }))} height={200} unit=" câu" />
+      <Panel title="Phân bố theo Part" sub="Số câu hỏi trong từng phần thi" icon={BarChart3} tone="sky">
+        {byPart.length ? <BarChart ariaLabel="Số câu hỏi theo Part" data={byPart} height={200} unit=" câu" /> : <p className="py-10 text-center text-sm text-slate-500">Chưa có câu hỏi.</p>}
       </Panel>
 
-      <CrudEditor<IQuestion>
-        rows={ALL_QUESTIONS}
+      <CrudEditor<QuestionRow>
+        rows={rows}
+        loading={isLoading}
         columns={columns}
         fields={fields}
         entityName="câu hỏi"
         createLabel="Thêm câu hỏi"
         idPrefix="q"
-        searchKeys={['stem', 'partOrSkill']}
-        filters={[
-          {
-            key: 'examType',
-            label: 'Kỳ thi',
-            options: [
-              { value: 'TOEIC', label: 'TOEIC' },
-              { value: 'VSTEP', label: 'VSTEP' },
-            ],
-          },
-          { key: 'skillType', label: 'Kỹ năng', options: SKILL_OPTIONS },
-        ]}
-        defaultValues={{ examType: 'TOEIC', type: 'SINGLE_CHOICE', skillType: 'READING', partOrSkill: 'PART_5', level: '550+', difficulty: 2, tags: [], options: [{ key: 'A', text: '' }, { key: 'B', text: '' }, { key: 'C', text: '' }, { key: 'D', text: '' }], correctAnswer: { key: 'A' } }}
+        searchKeys={['stem', 'part']}
+        filters={[{ key: 'skill', label: 'Kỹ năng', options: SKILL_OPTIONS }]}
+        defaultValues={{ examType: 'TOEIC', type: 'SINGLE_CHOICE', skill: 'READING', part: 'TOEIC_P5', options: [{ key: 'A', text: '' }, { key: 'B', text: '' }, { key: 'C', text: '' }, { key: 'D', text: '' }], correctAnswer: 'A' }}
         toolbarExtra={
-          <Button size="sm" variant="outline" leftIcon={<Upload className="w-4 h-4" />} onClick={() => toast.info('Import CSV', 'Chọn file .csv theo mẫu để nhập hàng loạt (demo).')}>
-            Import CSV
-          </Button>
+          <div className="flex gap-2">
+            <div className="w-32">
+              <Select inputSize="sm" placeholder="Kỳ thi" value={exam} onChange={(e) => { setExam(e.target.value as '' | 'TOEIC' | 'VSTEP'); setPart(''); }} options={[{ value: 'TOEIC', label: 'TOEIC' }, { value: 'VSTEP', label: 'VSTEP' }]} />
+            </div>
+            <div className="w-44">
+              <Select inputSize="sm" placeholder="Part" value={part} onChange={(e) => setPart(e.target.value)} options={EXAM_PARTS.filter((p) => !exam || p.exam === exam).map((p) => ({ value: p.value, label: p.label }))} />
+            </div>
+          </div>
         }
-        rowActions={(q) => [{ label: 'Xem trước', icon: <Eye />, onClick: () => setPreview(q) }]}
+        onCreate={async (v) => {
+          const q = await adminApi.createQuestion(payload(v));
+          void refresh();
+          return q;
+        }}
+        onUpdate={async (row, v) => {
+          const q = await adminApi.updateQuestion(row.id, payload(v));
+          void refresh();
+          return q;
+        }}
+        onDelete={async (row) => {
+          await adminApi.deleteQuestion(row.id);
+          void refresh();
+        }}
+        rowActions={(q) => [{ label: 'Xem trước', icon: <Eye />, onClick: () => void openPreview(q) }]}
       />
 
       <Modal open={!!preview} onClose={() => setPreview(null)} title="Xem trước câu hỏi" size="lg">

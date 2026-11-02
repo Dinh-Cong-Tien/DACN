@@ -1,10 +1,57 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import { Search, FileText, PlayCircle, BookOpen, Compass, AlertTriangle, Trophy, Settings, LayoutDashboard, CornerDownLeft, ArrowUp, ArrowDown, Users, ClipboardList, PenTool, Sparkles, CalendarDays, ClipboardCheck, Sheet, BarChart3, FolderOpen } from 'lucide-react';
 import { useUiStore } from '@/shared/stores/uiStore';
 import { useAuthStore } from '@/shared/stores/authStore';
-import { MOCK_ASSIGNMENTS, MOCK_CLASSES, MOCK_CLASS_STUDENTS, MOCK_COURSES, MOCK_TESTS, GRAMMAR_TOPICS, DEPT_CLASSES, DEPT_STUDENTS, MOCK_TEACHERS, MOCK_USERS, MOCK_TICKETS, courseHref } from '@/shared/mocks';
+import { api } from '@/shared/api/client';
+import { catalogApi, courseHref } from '@/shared/api/catalog';
+import { headApi } from '@/shared/api/head';
+import { adminApi } from '@/shared/api/admin';
+import type { AppRole, Assignment, ClassRoom, ClassStudent, Course, DeptStudent, GrammarTopic, MockTestSummary, SupportTicket, TeacherSummary } from '@/shared/types';
+
+/** Dữ liệu tìm kiếm theo vai trò, chỉ tải khi mở ô tìm kiếm */
+interface PaletteData {
+  classes: (ClassRoom & { teacherName: string })[];
+  students: (ClassStudent | DeptStudent)[];
+  assignments: Assignment[];
+  tests: MockTestSummary[];
+  courses: Course[];
+  grammar: GrammarTopic[];
+  teachers: TeacherSummary[];
+  users: { id: string; fullName: string; email: string }[];
+  tickets: SupportTicket[];
+}
+const EMPTY_DATA: PaletteData = { classes: [], students: [], assignments: [], tests: [], courses: [], grammar: [], teachers: [], users: [], tickets: [] };
+const settle = async <T,>(p: Promise<T>, fallback: T) => p.catch(() => fallback);
+async function loadPaletteData(role: AppRole): Promise<PaletteData> {
+  if (role === 'TEACHER') {
+    const [classes, students, assignments, tests, courses] = await Promise.all([
+      settle(api.get<PaletteData['classes']>('/teacher/classes'), []),
+      settle(api.get<ClassStudent[]>('/teacher/students'), []),
+      settle(api.get<Assignment[]>('/teacher/assignments'), []),
+      settle(catalogApi.tests(), []),
+      settle(catalogApi.courses(), []),
+    ]);
+    return { ...EMPTY_DATA, classes, students, assignments, tests, courses };
+  }
+  if (role === 'HEAD_TEACHER') {
+    const [classes, teachers, students] = await Promise.all([settle(headApi.classes(), []), settle(headApi.teachers(), []), settle(headApi.students(), [])]);
+    return { ...EMPTY_DATA, classes, teachers, students };
+  }
+  if (role === 'ADMIN') {
+    const [users, classes, tickets, courses] = await Promise.all([
+      settle(adminApi.users().then((r) => r.items), []),
+      settle(adminApi.classes(), []),
+      settle(adminApi.tickets(), []),
+      settle(catalogApi.courses(), []),
+    ]);
+    return { ...EMPTY_DATA, users, classes, tickets, courses };
+  }
+  const [tests, courses, grammar] = await Promise.all([settle(catalogApi.tests(), []), settle(catalogApi.courses(), []), role === 'STUDENT' ? settle(catalogApi.grammar(), []) : Promise.resolve([])]);
+  return { ...EMPTY_DATA, tests, courses, grammar };
+}
 import { cn } from '@/shared/utils';
 
 interface Cmd {
@@ -133,7 +180,20 @@ export const CommandPalette: React.FC = () => {
 
   const role = user?.role ?? 'GUEST';
   const staff = role === 'TEACHER' || role === 'HEAD_TEACHER' || role === 'ADMIN';
+  const dataQ = useQuery({ queryKey: ['palette', role, user?.id ?? 'guest'], queryFn: () => loadPaletteData(role), enabled: open, staleTime: 5 * 60_000 });
+  const pd = dataQ.data ?? EMPTY_DATA;
   const all = useMemo<Cmd[]>(() => {
+    const MOCK_CLASSES = pd.classes;
+    const DEPT_CLASSES = pd.classes;
+    const MOCK_CLASS_STUDENTS = pd.students as ClassStudent[];
+    const DEPT_STUDENTS = pd.students as DeptStudent[];
+    const MOCK_ASSIGNMENTS = pd.assignments;
+    const MOCK_TESTS = pd.tests;
+    const MOCK_COURSES = pd.courses;
+    const GRAMMAR_TOPICS = pd.grammar;
+    const MOCK_TEACHERS = pd.teachers;
+    const MOCK_USERS = pd.users;
+    const MOCK_TICKETS = pd.tickets;
     // Mỗi vai trò chỉ tìm trong phần việc của mình
     if (role === 'TEACHER') {
       const classes: Cmd[] = MOCK_CLASSES.map((c) => ({ id: `cl-${c.id}`, label: c.name, hint: `${c.examType} · ${c.schedule} · ${c.studentsCount} học viên`, group: 'Lớp học', to: `/teacher/classes/${c.id}`, icon: Users, keywords: c.code }));
@@ -152,17 +212,17 @@ export const CommandPalette: React.FC = () => {
     if (role === 'ADMIN') {
       const users: Cmd[] = MOCK_USERS.map((u) => ({ id: `u-${u.id}`, label: u.fullName, hint: u.email, group: 'Tài khoản', to: `/admin/users?q=${encodeURIComponent(u.email)}`, icon: Users }));
       const classes: Cmd[] = DEPT_CLASSES.map((c) => ({ id: `cl-${c.id}`, label: c.name, hint: `${c.teacherName} · mã ${c.code}`, group: 'Lớp học', to: '/admin/classes', icon: Users, keywords: c.code }));
-      const tickets: Cmd[] = MOCK_TICKETS.map((t) => ({ id: `tk-${t.id}`, label: t.subject, hint: `${t.userName} · #${t.id}`, group: 'Yêu cầu hỗ trợ', to: `/admin/support?id=${t.id}`, icon: AlertTriangle }));
+      const tickets: Cmd[] = MOCK_TICKETS.map((t) => ({ id: `tk-${t.id}`, label: t.subject, hint: `${t.userName} · #${t.id.slice(0, 8)}`, group: 'Yêu cầu hỗ trợ', to: `/admin/support?id=${t.id}`, icon: AlertTriangle }));
       const courses: Cmd[] = MOCK_COURSES.map((c) => ({ id: `c-${c.id}`, label: c.title, hint: `${c.lessonsCount} bài giảng`, group: 'Khoá học', to: '/admin/courses', icon: PlayCircle }));
       return [...ADMIN, ...users, ...classes, ...tickets, ...courses];
     }
     const nav = role === 'STUDENT' ? STUDENT : GUEST;
     const isAuth = role !== 'GUEST';
-    const tests: Cmd[] = MOCK_TESTS.map((t) => ({ id: `t-${t.id}`, label: t.title, hint: `${t.examType} · ${t.durationMinutes} phút · ${t.totalQuestions} câu`, group: 'Đề thi thử', to: isAuth ? `/app/mock-tests/${t.id}` : '/mock-tests', icon: FileText, keywords: t.tags?.join(' ') }));
+    const tests: Cmd[] = MOCK_TESTS.map((t) => ({ id: `t-${t.id}`, label: t.title, hint: `${t.examType} · ${t.durationMinutes} phút · ${t.totalQuestions} câu`, group: 'Đề thi thử', to: isAuth ? `/app/mock-tests/${t.slug ?? t.id}` : '/mock-tests', icon: FileText, keywords: t.tags?.join(' ') }));
     const courses: Cmd[] = MOCK_COURSES.map((c) => ({ id: `c-${c.id}`, label: c.title, hint: `${c.lessonsCount} bài · ${c.durationHours} giờ`, group: 'Khoá học', to: courseHref(c), icon: PlayCircle }));
     const grammar: Cmd[] = isAuth ? GRAMMAR_TOPICS.map((g) => ({ id: `g-${g.id}`, label: g.title, hint: `${g.category} · ${g.level}`, group: 'Ngữ pháp', to: `/app/grammar/${g.slug}`, icon: BookOpen })) : [];
     return [...nav, ...tests, ...courses, ...grammar];
-  }, [role]);
+  }, [role, pd]);
 
   const results = useMemo(() => {
     const n = normalize(q.trim());

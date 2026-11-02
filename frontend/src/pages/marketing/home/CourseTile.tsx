@@ -4,7 +4,7 @@ import { Star } from 'lucide-react';
 import { Img } from '@/shared/components/media/Img';
 import { RevealPhoto } from '@/shared/components/motion';
 import { cn } from '@/shared/utils';
-import { courseHref } from '@/shared/mocks';
+import { courseHref } from '@/shared/api/catalog';
 import type { Course } from '@/shared/types';
 
 /** Thẻ khoá học kiểu trang LMS: ảnh bìa + thời lượng, tên, giáo viên, đánh giá, số bài, giá */

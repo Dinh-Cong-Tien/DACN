@@ -3,10 +3,12 @@ import { Link } from 'react-router-dom';
 import { CalendarDays, ChevronLeft, ChevronRight, ClipboardCheck, Clock, MapPin, NotebookPen, Users } from 'lucide-react';
 import { useDocumentTitle } from '@/shared/hooks';
 import { toast } from '@/shared/stores/uiStore';
-import { MOCK_CLASSES, MOCK_SESSIONS } from '@/shared/mocks';
+import { errorMessage } from '@/shared/api/client';
+import { teacherApi, useSessions, useTeacherClasses, useTeacherMutation } from '@/shared/api/teacher';
 import type { ClassSession } from '@/shared/types';
 import { cn } from '@/shared/utils';
 import { CLASS_BAR, Panel, Status, TBtn, TPageHead, classTone, inputCls } from '../components/TeacherKit';
+import { TError } from '../components/TeacherState';
 
 const WEEKDAYS = ['Thứ Hai', 'Thứ Ba', 'Thứ Tư', 'Thứ Năm', 'Thứ Sáu', 'Thứ Bảy', 'Chủ nhật'];
 const iso = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
@@ -29,16 +31,22 @@ export const TeacherSchedulePage: React.FC = () => {
   useDocumentTitle('Lịch dạy');
   const today = iso(new Date());
   const [monday, setMonday] = useState(() => mondayOf(new Date()));
-  const [sessions, setSessions] = useState<ClassSession[]>(MOCK_SESSIONS);
   const days = Array.from({ length: 7 }, (_, i) => {
     const d = new Date(monday);
     d.setDate(monday.getDate() + i);
     return iso(d);
   });
-  const week = sessions.filter((s) => s.date >= days[0] && s.date <= days[6]);
-  const [selectedId, setSelectedId] = useState<string | null>(() => week.find((s) => s.date >= today && s.status === 'UPCOMING')?.id ?? week[0]?.id ?? null);
-  const selected = sessions.find((s) => s.id === selectedId) ?? null;
-  const cls = selected ? MOCK_CLASSES.find((c) => c.id === selected.classId) : undefined;
+  const classes = useTeacherClasses().data ?? [];
+  const { data: week = [], isLoading, error, refetch } = useSessions({ from: days[0], to: days[6] });
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  // Chọn sẵn buổi sắp tới gần nhất khi đổi tuần / tải xong
+  React.useEffect(() => {
+    if (!week.length) return setSelectedId(null);
+    setSelectedId((cur) => (cur && week.some((s) => s.id === cur) ? cur : week.find((s) => s.date >= today && s.status === 'UPCOMING')?.id ?? week[0].id));
+  }, [week, today]);
+  const selected = week.find((s) => s.id === selectedId) ?? null;
+  const cls = selected ? classes.find((c) => c.id === selected.classId) : undefined;
+  const updateSession = useTeacherMutation((v: { id: string; topic: string }) => teacherApi.updateSession(v.id, { topic: v.topic }));
   const [topic, setTopic] = useState('');
   React.useEffect(() => setTopic(selected?.topic ?? ''), [selected?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -48,12 +56,14 @@ export const TeacherSchedulePage: React.FC = () => {
     m.setDate(m.getDate() + n * 7);
     setMonday(m);
   };
-  const legend = useMemo(() => MOCK_CLASSES.map((c) => ({ c, tone: classTone(c.id) })), []);
+  const legend = useMemo(() => classes.map((c) => ({ c, tone: classTone(c.id) })), [classes]);
 
   const saveTopic = () => {
     if (!selected) return;
-    setSessions((all) => all.map((s) => (s.id === selected.id ? { ...s, topic } : s)));
-    toast.success('Đã lưu giáo án', `${cls?.name} · ${dm(selected.date)}`);
+    updateSession.mutate(
+      { id: selected.id, topic: topic.trim() },
+      { onSuccess: () => toast.success('Đã lưu giáo án', `${cls?.name ?? selected.className ?? ''} · ${dm(selected.date)}`), onError: (e) => toast.error('Không lưu được giáo án', errorMessage(e)) }
+    );
   };
 
   return (
@@ -61,7 +71,7 @@ export const TeacherSchedulePage: React.FC = () => {
       <TPageHead
         eyebrow="Giảng dạy"
         title="Lịch dạy"
-        sub={`Tuần ${dm(days[0])} – ${dm(days[6])} · ${week.filter((s) => s.status !== 'CANCELLED').length} buổi · ${hours.toLocaleString('vi-VN')} giờ đứng lớp`}
+        sub={`Tuần ${dm(days[0])} – ${dm(days[6])} · ${isLoading ? '…' : `${week.filter((s) => s.status !== 'CANCELLED').length} buổi · ${hours.toLocaleString('vi-VN')} giờ đứng lớp`}`}
         actions={
           <>
             <div className="flex items-center rounded-xl border border-slate-200 bg-white shadow-sm">
@@ -91,6 +101,8 @@ export const TeacherSchedulePage: React.FC = () => {
         ))}
       </div>
 
+      {error && <TError error={error} onRetry={() => refetch()} />}
+
       <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
         <div className="overflow-x-auto rounded-2xl border border-slate-200/80 bg-white shadow-[0_1px_2px_rgba(16,24,40,0.04),0_8px_24px_-16px_rgba(16,24,40,0.12)]">
           <div className="grid min-w-[840px] grid-cols-7 divide-x divide-slate-100">
@@ -105,7 +117,7 @@ export const TeacherSchedulePage: React.FC = () => {
                   </div>
                   <div className="space-y-2 p-2">
                     {list.map((s) => {
-                      const c = MOCK_CLASSES.find((x) => x.id === s.classId)!;
+                      const c = { id: s.classId, name: classes.find((x) => x.id === s.classId)?.name ?? s.className ?? '' };
                       const on = s.id === selectedId;
                       return (
                         <button
@@ -118,8 +130,8 @@ export const TeacherSchedulePage: React.FC = () => {
                             {s.start}–{s.end}
                           </p>
                           <p className={cn('mt-0.5 text-[13px] font-semibold leading-snug text-slate-900', s.status === 'CANCELLED' && 'line-through')}>{c.name}</p>
-                          <p className="mt-0.5 line-clamp-2 text-[11px] leading-snug text-slate-600">{s.topic}</p>
-                          <p className="mt-1 text-[11px] text-slate-500">{s.status === 'DONE' ? `Có mặt ${presentRate(s)}%` : s.status === 'CANCELLED' ? 'Nghỉ' : s.room}</p>
+                          {s.topic && <p className="mt-0.5 line-clamp-2 text-[11px] leading-snug text-slate-600">{s.topic}</p>}
+                          <p className="mt-1 text-[11px] text-slate-500">{s.status === 'DONE' ? (s.attendance ? `Có mặt ${presentRate(s)}%` : 'Đã dạy') : s.status === 'CANCELLED' ? 'Nghỉ' : s.room}</p>
                         </button>
                       );
                     })}
@@ -130,20 +142,22 @@ export const TeacherSchedulePage: React.FC = () => {
           </div>
         </div>
 
-        {selected && cls ? (
-          <Panel title={cls.name} sub={`${WEEKDAYS[(new Date(selected.date).getDay() + 6) % 7]}, ${dm(selected.date)}`} icon={CalendarDays} tone={classTone(cls.id)} className="xl:sticky xl:top-20">
+        {selected ? (
+          <Panel title={cls?.name ?? selected.className ?? 'Buổi học'} sub={`${WEEKDAYS[(new Date(selected.date).getDay() + 6) % 7]}, ${dm(selected.date)}`} icon={CalendarDays} tone={classTone(selected.classId)} className="xl:sticky xl:top-20">
             <dl className="space-y-2.5 text-sm">
               <div className="flex items-center gap-2.5 text-slate-700">
                 <Clock className="h-4 w-4 text-slate-400" /> {selected.start} – {selected.end}
               </div>
               <div className="flex items-center gap-2.5 text-slate-700">
-                <MapPin className="h-4 w-4 text-slate-400" /> {selected.room}
+                <MapPin className="h-4 w-4 text-slate-400" /> {selected.room || cls?.room || '—'}
               </div>
-              <div className="flex items-center gap-2.5 text-slate-700">
-                <Users className="h-4 w-4 text-slate-400" /> {cls.studentsCount} học viên · mã lớp {cls.code}
-              </div>
+              {cls && (
+                <div className="flex items-center gap-2.5 text-slate-700">
+                  <Users className="h-4 w-4 text-slate-400" /> {cls.studentsCount} học viên · mã lớp {cls.code}
+                </div>
+              )}
               <div className="pt-1">
-                <Status tone={selected.status === 'DONE' ? 'green' : selected.status === 'CANCELLED' ? 'gray' : 'blue'}>{selected.status === 'DONE' ? `Đã dạy · có mặt ${presentRate(selected)}%` : selected.status === 'CANCELLED' ? 'Buổi nghỉ' : 'Sắp dạy'}</Status>
+                <Status tone={selected.status === 'DONE' ? 'green' : selected.status === 'CANCELLED' ? 'gray' : 'blue'}>{selected.status === 'DONE' ? (selected.attendance ? `Đã dạy · có mặt ${presentRate(selected)}%` : 'Đã dạy · chưa điểm danh') : selected.status === 'CANCELLED' ? 'Buổi nghỉ' : 'Sắp dạy'}</Status>
               </div>
             </dl>
 
@@ -151,13 +165,13 @@ export const TeacherSchedulePage: React.FC = () => {
               <span className="mb-1.5 flex items-center gap-1.5 text-[13px] font-semibold text-slate-700">
                 <NotebookPen className="h-4 w-4 text-slate-400" /> Giáo án buổi học
               </span>
-              <textarea value={topic} onChange={(e) => setTopic(e.target.value)} rows={3} className={cn(inputCls, 'h-auto w-full py-2 leading-relaxed')} />
+              <textarea value={topic} onChange={(e) => setTopic(e.target.value)} rows={3} placeholder="Nội dung dự kiến của buổi học" className={cn(inputCls, 'h-auto w-full py-2 leading-relaxed')} />
             </label>
             {selected.note && <p className="mt-3 rounded-xl bg-amber-500/10 px-3 py-2 text-[13px] text-amber-800">Ghi chú: {selected.note}</p>}
 
             <div className="mt-5 flex flex-wrap gap-2">
-              <TBtn onClick={saveTopic} disabled={topic === selected.topic}>
-                Lưu giáo án
+              <TBtn onClick={saveTopic} disabled={topic === selected.topic || updateSession.isPending}>
+                {updateSession.isPending ? 'Đang lưu…' : 'Lưu giáo án'}
               </TBtn>
               {selected.status !== 'CANCELLED' && (
                 <TBtn variant="primary" icon={<ClipboardCheck />} to={`/teacher/attendance/${selected.id}`}>
@@ -165,13 +179,13 @@ export const TeacherSchedulePage: React.FC = () => {
                 </TBtn>
               )}
             </div>
-            <Link to={`/teacher/classes/${cls.id}`} className="mt-4 inline-flex items-center gap-0.5 text-[13px] font-semibold text-indigo-600 hover:text-indigo-700">
+            <Link to={`/teacher/classes/${selected.classId}`} className="mt-4 inline-flex items-center gap-0.5 text-[13px] font-semibold text-indigo-600 hover:text-indigo-700">
               Mở trang lớp <ChevronRight className="h-3.5 w-3.5" />
             </Link>
           </Panel>
         ) : (
           <Panel>
-            <p className="py-8 text-center text-sm text-slate-500">Tuần này không có buổi dạy.</p>
+            <p className="py-8 text-center text-sm text-slate-500">{isLoading ? 'Đang tải lịch dạy…' : 'Tuần này không có buổi dạy.'}</p>
           </Panel>
         )}
       </div>

@@ -2,7 +2,8 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Link, useLocation, useOutlet } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { Logo } from '@/shared/components/ui';
-import { TESTIMONIALS, SUPPORT_INFO } from '@/shared/mocks';
+import { SUPPORT_INFO } from '@/shared/constants/public';
+import { useTestimonials } from '@/shared/api/cms';
 import { cn } from '@/shared/utils';
 import './AuthLayout.css';
 
@@ -111,7 +112,9 @@ const MiniCard: React.FC<{ variant: AsideVariant }> = ({ variant }) =>
 
 /** Cảm nhận học viên gọn ở chân khối */
 const Quote: React.FC<{ variant: AsideVariant }> = ({ variant }) => {
-  const t = TESTIMONIALS[variant === 'register' ? 2 : 0];
+  const { data } = useTestimonials();
+  const t = data?.length ? data[(variant === 'register' ? 2 : 0) % data.length] : undefined;
+  if (!t) return null;
   return (
     <figure className="flex items-start gap-3.5">
       <img src={t.avatar} alt="" className="h-10 w-10 shrink-0 rounded-full bg-white/15 object-cover object-top ring-2 ring-white/20" />

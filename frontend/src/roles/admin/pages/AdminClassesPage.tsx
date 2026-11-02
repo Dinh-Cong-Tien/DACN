@@ -1,27 +1,44 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Copy, Lock, Unlock, UserCog, School, Users, GraduationCap, AlertTriangle } from 'lucide-react';
 import { useDocumentTitle } from '@/shared/hooks';
 import { toast } from '@/shared/stores/uiStore';
-import { DEPT_CLASSES, MOCK_TEACHERS } from '@/shared/mocks';
-import type { ClassRoom } from '@/shared/types';
+import { adminApi, useAdminClasses, useAdminInvalidate, useAdminUsers } from '@/shared/api/admin';
+import { headApi, type HeadClass } from '@/shared/api/head';
+import { errorMessage } from '@/shared/api/client';
 import { Column, Modal, Select, Button } from '@/shared/components/ui';
 import { Img, PHOTOS } from '@/shared/components/media/Img';
 import { CrudEditor } from '@/engines';
 import { Figures, Status, TPageHead } from '@/roles/teacher/components/TeacherKit';
 
-type Row = ClassRoom & { locked?: boolean };
-
-const teacherStatus = (name: string) => MOCK_TEACHERS.find((t) => t.name === name)?.status;
+type Row = HeadClass & { locked?: boolean; teacherId: string };
+const EMPTY: Row[] = [];
 
 /** Toàn bộ lớp trên hệ thống: mã mời học viên dùng để vào lớp, giáo viên phụ trách, trạng thái */
 export const AdminClassesPage: React.FC = () => {
   useDocumentTitle('Lớp học toàn hệ thống');
-  const [rows, setRows] = useState<Row[]>(DEPT_CLASSES);
+  const classesQ = useAdminClasses();
+  const usersQ = useAdminUsers();
+  const refresh = useAdminInvalidate();
+  const rows = useMemo<Row[]>(() => (classesQ.data ?? EMPTY).map((c) => ({ ...c, locked: !!c.isArchived })), [classesQ.data]);
+  const MOCK_TEACHERS = useMemo(
+    () => (usersQ.data?.items ?? []).filter((u) => u.role === 'TEACHER' || u.role === 'HEAD_TEACHER').map((u) => ({ id: u.id, name: u.fullName, status: u.status, subject: u.role === 'HEAD_TEACHER' ? 'Trưởng bộ môn' : 'Giáo viên' })),
+    [usersQ.data]
+  );
+  const teacherStatus = (id: string) => MOCK_TEACHERS.find((t) => t.id === id)?.status;
   const [reassign, setReassign] = useState<Row | null>(null);
   const [teacher, setTeacher] = useState('');
+  const [saving, setSaving] = useState(false);
 
-  const update = (id: string, patch: Partial<Row>) => setRows((rs) => rs.map((r) => (r.id === id ? { ...r, ...patch } : r)));
-  const orphan = rows.filter((r) => teacherStatus(r.teacherName) !== 'ACTIVE').length;
+  const run = async (fn: () => Promise<unknown>, ok: string, desc?: string, warn = false) => {
+    try {
+      await fn();
+      (warn ? toast.warning : toast.success)(ok, desc);
+      await refresh();
+    } catch (e) {
+      toast.error('Không thực hiện được', errorMessage(e));
+    }
+  };
+  const orphan = rows.filter((r) => MOCK_TEACHERS.length && teacherStatus(r.teacherId) !== 'ACTIVE').length;
 
   const columns: Column<Row>[] = [
     {
@@ -47,7 +64,7 @@ export const AdminClassesPage: React.FC = () => {
       render: (r) => (
         <div className="whitespace-nowrap text-[13px]">
           <p className="text-slate-800">{r.teacherName}</p>
-          {teacherStatus(r.teacherName) !== 'ACTIVE' && <p className="text-[11px] text-rose-600">Tài khoản giáo viên không hoạt động</p>}
+          {MOCK_TEACHERS.length > 0 && teacherStatus(r.teacherId) !== 'ACTIVE' && <p className="text-[11px] text-rose-600">Tài khoản giáo viên không hoạt động</p>}
         </div>
       ),
     },
@@ -67,9 +84,22 @@ export const AdminClassesPage: React.FC = () => {
         ]}
       />
       <CrudEditor<Row>
-        key={rows.map((r) => `${r.id}${r.teacherName}${r.locked ? 1 : 0}`).join()}
         rows={rows}
-        onChange={setRows}
+        loading={classesQ.isLoading}
+        onCreate={async (v) => {
+          const c = await headApi.createClass({ name: v.name, examType: v.examType, teacherId: v.teacherId, room: v.room || undefined, scheduleText: v.schedule || undefined });
+          void refresh();
+          return { ...c, locked: false } as Row;
+        }}
+        onUpdate={async (row, v) => {
+          const c = await adminApi.updateClass(row.id, { name: v.name, teacherId: v.teacherId !== row.teacherId ? v.teacherId : undefined, room: v.room ?? null, scheduleText: v.schedule ?? null });
+          void refresh();
+          return { ...c, locked: !!c.isArchived } as Row;
+        }}
+        onDelete={async (row) => {
+          await adminApi.deleteClass(row.id);
+          void refresh();
+        }}
         columns={columns}
         entityName="lớp học"
         createLabel="Tạo lớp"
@@ -77,22 +107,23 @@ export const AdminClassesPage: React.FC = () => {
         searchKeys={['name', 'code', 'teacherName']}
         filters={[
           { key: 'examType', label: 'Kỳ thi', options: [{ value: 'TOEIC', label: 'TOEIC' }, { value: 'VSTEP', label: 'VSTEP' }] },
-          { key: 'teacherName', label: 'Giáo viên', options: MOCK_TEACHERS.map((t) => ({ value: t.name, label: t.name })) },
+          { key: 'teacherName', label: 'Giáo viên', options: [...new Set(rows.map((r) => r.teacherName))].map((n) => ({ value: n, label: n })) },
         ]}
-        defaultValues={{ examType: 'TOEIC', code: `ORB-${Math.random().toString(36).slice(2, 6).toUpperCase()}`, studentsCount: 0, assignmentsCount: 0, avgScore: 0, completionRate: 0, attendanceRate: 0, createdAt: new Date().toISOString().slice(0, 10), gradient: '', coverUrl: PHOTOS.students2, teacherName: MOCK_TEACHERS[0].name, room: 'Phòng 301' }}
+        defaultValues={{ examType: 'TOEIC', teacherId: MOCK_TEACHERS.find((t) => t.status === 'ACTIVE')?.id, room: '' }}
         fields={[
           { key: 'name', label: 'Tên lớp', required: true, colSpan: 2 },
           { key: 'examType', label: 'Kỳ thi', type: 'select', options: [{ value: 'TOEIC', label: 'TOEIC' }, { value: 'VSTEP', label: 'VSTEP' }] },
-          { key: 'teacherName', label: 'Giáo viên phụ trách', type: 'select', options: MOCK_TEACHERS.filter((t) => t.status === 'ACTIVE').map((t) => ({ value: t.name, label: t.name })) },
+          { key: 'teacherId', label: 'Giáo viên phụ trách', type: 'select', required: true, options: MOCK_TEACHERS.filter((t) => t.status === 'ACTIVE').map((t) => ({ value: t.id, label: t.name })) },
           { key: 'schedule', label: 'Lịch học', placeholder: 'T2 – T4 · 19:00' },
           { key: 'room', label: 'Phòng / hình thức', placeholder: 'Phòng 302 hoặc Online · Google Meet' },
         ]}
         rowActions={(r) => [
           { label: 'Sao chép mã mời', icon: <Copy />, onClick: () => { void navigator.clipboard?.writeText(r.code).catch(() => undefined); toast.success('Đã sao chép mã mời', r.code); } },
           { label: 'Đổi giáo viên', icon: <UserCog />, onClick: () => { setReassign(r); setTeacher(''); } },
+          { label: 'Đổi mã mời', icon: <Copy />, onClick: () => void run(() => adminApi.regenerateCode(r.id), 'Đã tạo mã mời mới', r.name) },
           r.locked
-            ? { label: 'Mở khoá lớp', icon: <Unlock />, onClick: () => { update(r.id, { locked: false }); toast.success('Đã mở khoá lớp', r.name); } }
-            : { label: 'Khoá lớp', icon: <Lock />, onClick: () => { update(r.id, { locked: true }); toast.warning('Đã khoá lớp', `${r.name}: học viên không vào lớp bằng mã mời được nữa`); } },
+            ? { label: 'Mở khoá lớp', icon: <Unlock />, onClick: () => void run(() => adminApi.updateClass(r.id, { isArchived: false }), 'Đã mở khoá lớp', r.name) }
+            : { label: 'Khoá lớp', icon: <Lock />, onClick: () => void run(() => adminApi.updateClass(r.id, { isArchived: true }), 'Đã khoá lớp', `${r.name}: học viên không vào lớp bằng mã mời được nữa`, true) },
         ]}
       />
 
@@ -106,10 +137,12 @@ export const AdminClassesPage: React.FC = () => {
             <Button variant="ghost" onClick={() => setReassign(null)}>Huỷ</Button>
             <Button
               disabled={!teacher}
-              onClick={() => {
+              loading={saving}
+              onClick={async () => {
                 if (!reassign) return;
-                update(reassign.id, { teacherName: teacher });
-                toast.success('Đã đổi giáo viên', `${reassign.name} → ${teacher}`);
+                setSaving(true);
+                await run(() => adminApi.updateClass(reassign.id, { teacherId: teacher }), 'Đã đổi giáo viên', `${reassign.name} → ${MOCK_TEACHERS.find((t) => t.id === teacher)?.name ?? ''}`);
+                setSaving(false);
                 setReassign(null);
               }}
             >
@@ -123,7 +156,7 @@ export const AdminClassesPage: React.FC = () => {
           placeholder="Chọn giáo viên"
           value={teacher}
           onChange={(e) => setTeacher(e.target.value)}
-          options={MOCK_TEACHERS.filter((t) => t.status === 'ACTIVE' && t.name !== reassign?.teacherName).map((t) => ({ value: t.name, label: `${t.name} · ${t.subject}` }))}
+          options={MOCK_TEACHERS.filter((t) => t.status === 'ACTIVE' && t.id !== reassign?.teacherId).map((t) => ({ value: t.id, label: `${t.name} · ${t.subject}` }))}
         />
         <p className="mt-3 text-[13px] text-slate-500">Bài tập, bảng điểm và lịch sử điểm danh của lớp được giữ nguyên. Giáo viên mới nhận thông báo ngay.</p>
       </Modal>

@@ -3,11 +3,12 @@ import { Link, useParams } from 'react-router-dom';
 import { CalendarDays, ChevronRight, ClipboardCheck, ClipboardList, Eye, MapPin, MessageSquare, Star, TrendingUp, Users } from 'lucide-react';
 import { useDocumentTitle } from '@/shared/hooks';
 import { toast } from '@/shared/stores/uiStore';
-import { ASSIGNMENT_TYPE_LABEL, CLASS_PART_ACCURACY, CLASS_SCORE_TREND, DEPT_CLASSES, DEPT_SESSIONS, DEPT_STUDENTS, MOCK_ASSIGNMENTS, MOCK_OBSERVATIONS, TOEIC_PARTS_INFO, VSTEP_PARTS_INFO, describeTarget, teacherByName } from '@/shared/mocks';
-import type { ClassObservation, ClassStudent } from '@/shared/types';
+import type { ClassStudent } from '@/shared/types';
+import { headApi, useHeadClass, useHeadClasses, useHeadInvalidate, useHeadTeachers, type HeadClass } from '@/shared/api/head';
+import { errorMessage } from '@/shared/api/client';
+import { ASSIGNMENT_TYPE_LABEL, partLabel } from '@/shared/constants/staff';
 import { Img, PHOTOS } from '@/shared/components/media/Img';
 import { HBarChart, LineChart } from '@/shared/components/charts/Charts';
-import { presentRate } from '@/roles/teacher/pages/TeacherSchedulePage';
 import { cn, formatDate, timeAgo } from '@/shared/utils';
 import { Avatar, Input, Modal, Textarea } from '@/shared/components/ui';
 import { Figures, Meter, Panel, Status, TBtn, TTabs, tbl, type StatusTone } from '@/roles/teacher/components/TeacherKit';
@@ -18,7 +19,7 @@ export const STUDENT_STATUS: Record<ClassStudent['status'], { label: string; ton
   WARNING: { label: 'Cần nhắc', tone: 'amber' },
   RISK: { label: 'Nguy cơ bỏ học', tone: 'red' },
 };
-const PART_INFO = [...TOEIC_PARTS_INFO, ...VSTEP_PARTS_INFO];
+const EMPTY_C: HeadClass[] = [];
 const A_STATUS: Record<string, [StatusTone, string]> = { OPEN: ['green', 'Đang mở'], CLOSED: ['gray', 'Đã đóng'], DRAFT: ['amber', 'Bản nháp'] };
 
 export const Stars: React.FC<{ value: number }> = ({ value }) => (
@@ -29,17 +30,37 @@ export const Stars: React.FC<{ value: number }> = ({ value }) => (
   </span>
 );
 
-/** Modal lên lịch dự giờ, dùng chung cho chi tiết lớp, hồ sơ giáo viên, lịch bộ môn */
-export const ObserveDialog: React.FC<{ open: boolean; onClose: () => void; classId?: string; onSave: (o: ClassObservation) => void }> = ({ open, onClose, classId, onSave }) => {
-  const [cid, setCid] = useState(classId ?? DEPT_CLASSES[0].id);
-  const [date, setDate] = useState('2026-11-10');
-  const cls = DEPT_CLASSES.find((c) => c.id === (classId ?? cid))!;
-  const session = DEPT_SESSIONS.find((s) => s.classId === cls.id && s.date >= date && s.status === 'UPCOMING');
-  const save = () => {
-    if (!session) return toast.error('Không có buổi học phù hợp', 'Chọn ngày khác trong lịch của lớp.');
-    onSave({ id: `ob-${Date.now()}`, classId: cls.id, teacher: cls.teacherName, date: session.date, start: session.start, topic: session.topic, status: 'PLANNED' });
-    toast.success('Đã lên lịch dự giờ', `${cls.name} · ${formatDate(session.date)} ${session.start} · giáo viên ${cls.teacherName} nhận được thông báo.`);
-    onClose();
+const todayIso = () => {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+};
+
+/** Modal lên lịch dự giờ, dùng chung cho chi tiết lớp, hồ sơ giáo viên, lịch bộ môn. `classIds` giới hạn danh sách lớp được chọn. */
+export const ObserveDialog: React.FC<{ open: boolean; onClose: () => void; classId?: string; classIds?: string[]; onSaved?: () => void }> = ({ open, onClose, classId, classIds, onSaved }) => {
+  const all = useHeadClasses().data ?? EMPTY_C;
+  const options = classIds ? all.filter((c) => classIds.includes(c.id)) : all;
+  const [cidState, setCid] = useState<string>();
+  const cid = classId ?? cidState ?? options[0]?.id;
+  const [date, setDate] = useState(todayIso);
+  const [saving, setSaving] = useState(false);
+  const refresh = useHeadInvalidate();
+  const detail = useHeadClass(open ? cid : undefined).data;
+  const cls = detail?.class ?? all.find((c) => c.id === cid);
+  const session = detail?.sessions.find((s) => s.date >= date && s.date >= todayIso() && s.status === 'UPCOMING' && !s.observerId);
+  const save = async () => {
+    if (!cls || !session) return toast.error('Không có buổi học phù hợp', 'Chọn ngày khác trong lịch của lớp.');
+    setSaving(true);
+    try {
+      await headApi.planObservation(session.id);
+      toast.success('Đã lên lịch dự giờ', `${cls.name} · ${formatDate(session.date)} ${session.start} · giáo viên ${cls.teacherName} nhận được thông báo.`);
+      await refresh();
+      onSaved?.();
+      onClose();
+    } catch (e) {
+      toast.error('Không lên lịch được', errorMessage(e));
+    } finally {
+      setSaving(false);
+    }
   };
   return (
     <Modal
@@ -53,7 +74,7 @@ export const ObserveDialog: React.FC<{ open: boolean; onClose: () => void; class
           <TBtn variant="ghost" onClick={onClose}>
             Huỷ
           </TBtn>
-          <TBtn variant="primary" onClick={save}>
+          <TBtn variant="primary" disabled={saving || !session} onClick={() => void save()}>
             Lên lịch
           </TBtn>
         </>
@@ -63,8 +84,8 @@ export const ObserveDialog: React.FC<{ open: boolean; onClose: () => void; class
         {!classId && (
           <label className="block text-sm">
             <span className="mb-1.5 block font-semibold text-slate-700">Lớp</span>
-            <select value={cid} onChange={(e) => setCid(e.target.value)} className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm">
-              {DEPT_CLASSES.map((c) => (
+            <select value={cid ?? ''} onChange={(e) => setCid(e.target.value)} className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm">
+              {options.map((c) => (
                 <option key={c.id} value={c.id}>
                   {c.name} · {c.teacherName}
                 </option>
@@ -83,7 +104,7 @@ export const ObserveDialog: React.FC<{ open: boolean; onClose: () => void; class
               <p className="text-slate-600">{session.topic}</p>
             </>
           ) : (
-            <p className="text-slate-500">Không còn buổi học nào sau ngày này.</p>
+            <p className="text-slate-500">{detail ? 'Không còn buổi học nào (chưa có người dự giờ) sau ngày này.' : 'Đang tải lịch của lớp…'}</p>
           )}
         </div>
       </div>
@@ -94,31 +115,50 @@ export const ObserveDialog: React.FC<{ open: boolean; onClose: () => void; class
 /** Chi tiết lớp ở góc nhìn trưởng bộ môn: theo dõi kết quả, chuyên cần, bài tập, dự giờ; gửi nhận xét cho giáo viên */
 export const HeadClassDetailPage: React.FC = () => {
   const { id } = useParams();
-  const cls = DEPT_CLASSES.find((c) => c.id === id) ?? DEPT_CLASSES[0];
-  useDocumentTitle(cls.name);
-  const teacher = teacherByName(cls.teacherName);
-  const issue = classIssue(cls);
+  const q = useHeadClass(id);
+  const teachers = useHeadTeachers().data ?? [];
   const [tab, setTab] = useState('overview');
   const [observeOpen, setObserveOpen] = useState(false);
   const [noteOpen, setNoteOpen] = useState(false);
   const [note, setNote] = useState('');
-  const [obs, setObs] = useState<ClassObservation[]>(MOCK_OBSERVATIONS.filter((o) => o.classId === cls.id));
+  const [sending, setSending] = useState(false);
+  useDocumentTitle(q.data?.class.name ?? 'Chi tiết lớp');
 
-  const sessions = DEPT_SESSIONS.filter((s) => s.classId === cls.id);
+  if (!q.data) {
+    return (
+      <div className="space-y-6">
+        <Link to="/head/classes" className="text-[13px] text-slate-500 hover:text-slate-900">
+          ← Lớp học bộ môn
+        </Link>
+        <Panel>
+          <p className="py-12 text-center text-sm text-slate-500">{q.isError ? 'Không tìm thấy lớp học hoặc lớp không thuộc bộ môn của bạn.' : 'Đang tải…'}</p>
+        </Panel>
+      </div>
+    );
+  }
+
+  const { class: cls, students, sessions, assignments, observations: obs, analytics } = q.data;
+  const teacher = teachers.find((t) => t.id === cls.teacherId);
+  const issue = classIssue(cls, teachers.length ? (teacher?.status ?? null) : undefined);
   const done = sessions.filter((s) => s.status === 'DONE');
-  const students = DEPT_STUDENTS.filter((s) => s.classId === cls.id);
-  const assignments = MOCK_ASSIGNMENTS.filter((a) => a.classId === cls.id);
-  const trend = CLASS_SCORE_TREND[cls.examType];
-  const scale = cls.avgScore && trend.values.length ? cls.avgScore / trend.values[trend.values.length - 1] : 1;
-  const trendValues = trend.values.map((v) => (cls.examType === 'TOEIC' ? Math.round((v * scale) / 5) * 5 : Math.round(v * scale * 10) / 10));
-  const offset = (Number(cls.id.split('-')[1]) * 7) % 13;
-  const accuracy = CLASS_PART_ACCURACY[cls.examType].map((p, i) => ({ label: ((i) => (i ? `${i.name} · ${i.nameVi}` : p.partId))(PART_INFO.find((x) => x.id === p.partId)), value: Math.max(30, Math.min(95, p.value + ((offset + i * 5) % 11) - 5)) }));
+  const trend = analytics.trend;
+  const trendValues = trend.values;
+  const hasTrend = trendValues.some((v) => v > 0);
+  const accuracy = analytics.accuracy.map((a) => ({ label: partLabel(a.part), value: a.rate }));
 
-  const sendNote = () => {
+  const sendNote = async () => {
     if (!note.trim()) return toast.error('Chưa nhập nội dung nhận xét');
-    setNoteOpen(false);
-    setNote('');
-    toast.success('Đã gửi nhận xét', `${cls.teacherName} nhận được nhận xét về lớp ${cls.name}.`);
+    setSending(true);
+    try {
+      await headApi.classNote(cls.id, note.trim());
+      setNoteOpen(false);
+      setNote('');
+      toast.success('Đã gửi nhận xét', `${cls.teacherName} nhận được nhận xét về lớp ${cls.name}.`);
+    } catch (e) {
+      toast.error('Không gửi được', errorMessage(e));
+    } finally {
+      setSending(false);
+    }
   };
 
   return (
@@ -144,10 +184,10 @@ export const HeadClassDetailPage: React.FC = () => {
             <h1 className="mt-3 font-display text-[2rem] font-extrabold leading-tight md:text-[2.6rem]">{cls.name}</h1>
             <p className="mt-2 flex flex-wrap gap-x-5 gap-y-1 text-sm text-slate-200">
               <span className="inline-flex items-center gap-1.5">
-                <CalendarDays className="h-4 w-4" /> {cls.schedule}
+                <CalendarDays className="h-4 w-4" /> {cls.schedule || 'Chưa xếp lịch'}
               </span>
               <span className="inline-flex items-center gap-1.5">
-                <MapPin className="h-4 w-4" /> {cls.room}
+                <MapPin className="h-4 w-4" /> {cls.room || 'Chưa xếp phòng'}
               </span>
               <span className="inline-flex items-center gap-1.5">
                 <Users className="h-4 w-4" /> {cls.studentsCount} học viên · mở ngày {formatDate(cls.createdAt)}
@@ -178,9 +218,9 @@ export const HeadClassDetailPage: React.FC = () => {
       <Figures
         items={[
           { label: 'Sĩ số', value: cls.studentsCount, note: `${students.filter((x) => x.status !== 'GOOD').length} học viên cần theo dõi`, icon: Users, tone: 'indigo' },
-          { label: 'Điểm trung bình', value: cls.avgScore || '—', note: 'bài thi thử gần nhất', icon: TrendingUp, tone: 'violet' },
-          { label: 'Hoàn thành bài tập', value: `${cls.completionRate}%`, note: `${cls.assignmentsCount} bài đã giao`, icon: ClipboardList, tone: 'amber' },
-          { label: 'Chuyên cần', value: `${cls.attendanceRate}%`, note: `${done.length} buổi đã dạy`, icon: ClipboardCheck, tone: 'emerald' },
+          { label: 'Điểm trung bình', value: cls.avgScore || '—', note: 'bài thi thử & bài được chấm', icon: TrendingUp, tone: 'violet' },
+          { label: 'Hoàn thành bài tập', value: cls.assignmentsCount ? `${cls.completionRate}%` : '—', note: `${cls.assignmentsCount} bài đã giao`, icon: ClipboardList, tone: 'amber' },
+          { label: 'Chuyên cần', value: cls.attendanceRate ? `${cls.attendanceRate}%` : '—', note: `${done.length} buổi đã dạy`, icon: ClipboardCheck, tone: 'emerald' },
         ]}
       />
 
@@ -199,10 +239,14 @@ export const HeadClassDetailPage: React.FC = () => {
       {tab === 'overview' && (
         <div className="grid gap-6 lg:grid-cols-2 [&>*]:min-w-0">
           <Panel title="Điểm thi thử trung bình theo tháng" sub={cls.examType === 'TOEIC' ? 'Thang 990' : 'Thang 10'}>
-            <LineChart ariaLabel="Điểm thi thử trung bình theo tháng" labels={trend.labels} series={[{ name: 'Điểm TB', values: trendValues }]} min={cls.examType === 'TOEIC' ? Math.min(...trendValues) - 50 - ((Math.min(...trendValues) - 50) % 50) : Math.floor(Math.min(...trendValues) - 1)} format={(v) => v.toLocaleString('vi-VN')} />
+            {hasTrend ? (
+              <LineChart ariaLabel="Điểm thi thử trung bình theo tháng" labels={trend.labels} series={[{ name: 'Điểm TB', values: trendValues }]} min={0} format={(v) => v.toLocaleString('vi-VN')} />
+            ) : (
+              <p className="py-14 text-center text-sm text-slate-500">Học viên trong lớp chưa có bài thi thử nào được chấm.</p>
+            )}
           </Panel>
-          <Panel title="Tỷ lệ đúng theo phần thi" sub="Bài thi thử gần nhất của cả lớp">
-            <HBarChart ariaLabel="Tỷ lệ đúng theo phần thi" data={accuracy} max={100} unit="%" labelWidth={170} />
+          <Panel title="Tỷ lệ đúng theo phần thi" sub="Tất cả câu học viên trong lớp đã làm">
+            {accuracy.length ? <HBarChart ariaLabel="Tỷ lệ đúng theo phần thi" data={accuracy} max={100} unit="%" labelWidth={120} /> : <p className="py-14 text-center text-sm text-slate-500">Chưa có câu trả lời nào.</p>}
           </Panel>
         </div>
       )}
@@ -250,7 +294,7 @@ export const HeadClassDetailPage: React.FC = () => {
               </tbody>
             </table>
           </div>
-          <p className="border-t border-slate-100 px-5 py-3 text-[12px] text-slate-500">Hiển thị {students.length} học viên tiêu biểu trong {cls.studentsCount} học viên của lớp.</p>
+          {!students.length && <p className="px-5 py-8 text-center text-sm text-slate-500">Lớp chưa có học viên.</p>}
         </Panel>
       )}
 
@@ -269,7 +313,7 @@ export const HeadClassDetailPage: React.FC = () => {
               </thead>
               <tbody>
                 {sessions.map((s) => {
-                  const rate = presentRate(s);
+                  const rate = s.attendanceRate ?? 0;
                   return (
                     <tr key={s.id} className={tbl.tr}>
                       <td className={cn(tbl.td, 'whitespace-nowrap tabular-nums')}>{formatDate(s.date)}</td>
@@ -281,7 +325,7 @@ export const HeadClassDetailPage: React.FC = () => {
                         {s.note && <p className="text-[12px] text-slate-500">{s.note}</p>}
                       </td>
                       <td className={tbl.td}>
-                        {s.status === 'DONE' ? (
+                        {s.status === 'DONE' && s.attendanceRate != null ? (
                           <span className="flex items-center gap-2">
                             <Meter value={rate} tone={rate < 75 ? 'red' : rate < 85 ? 'amber' : 'green'} className="flex-1" />
                             <span className="w-10 text-right text-[13px] tabular-nums text-slate-600">{rate}%</span>
@@ -323,14 +367,12 @@ export const HeadClassDetailPage: React.FC = () => {
                     <tr key={a.id} className={tbl.tr}>
                       <td className={cn(tbl.td, 'min-w-[240px]')}>
                         <p className="font-medium text-slate-900">{a.title}</p>
-                        <p className="text-[12px] text-slate-500">
-                          {ASSIGNMENT_TYPE_LABEL[a.type]} · {describeTarget(a.target)}
-                        </p>
+                        <p className="text-[12px] text-slate-500">{ASSIGNMENT_TYPE_LABEL[a.type] ?? a.type}</p>
                       </td>
-                      <td className={cn(tbl.td, 'whitespace-nowrap tabular-nums text-slate-700')}>{formatDate(a.dueDate)}</td>
+                      <td className={cn(tbl.td, 'whitespace-nowrap tabular-nums text-slate-700')}>{a.dueAt ? formatDate(a.dueAt) : '—'}</td>
                       <td className={tbl.td}>
                         <span className="flex items-center gap-2">
-                          <Meter value={(a.submitted / a.total) * 100} className="flex-1" />
+                          <Meter value={a.total ? (a.submitted / a.total) * 100 : 0} className="flex-1" />
                           <span className="w-12 text-right text-[13px] tabular-nums text-slate-600">
                             {a.submitted}/{a.total}
                           </span>
@@ -338,7 +380,7 @@ export const HeadClassDetailPage: React.FC = () => {
                       </td>
                       <td className={cn(tbl.td, 'text-right tabular-nums')}>{a.avgScore ?? '—'}</td>
                       <td className={tbl.td}>
-                        <Status tone={A_STATUS[a.status][0]}>{A_STATUS[a.status][1]}</Status>
+                        <Status tone={(A_STATUS[a.status] ?? A_STATUS.DRAFT)[0]}>{(A_STATUS[a.status] ?? A_STATUS.DRAFT)[1]}</Status>
                       </td>
                     </tr>
                   ))}
@@ -390,7 +432,7 @@ export const HeadClassDetailPage: React.FC = () => {
         </Panel>
       )}
 
-      <ObserveDialog open={observeOpen} onClose={() => setObserveOpen(false)} classId={cls.id} onSave={(o) => (setObs((all) => [...all, o]), setTab('observe'))} />
+      <ObserveDialog open={observeOpen} onClose={() => setObserveOpen(false)} classId={cls.id} onSaved={() => setTab('observe')} />
       <Modal
         open={noteOpen}
         onClose={() => setNoteOpen(false)}
@@ -402,7 +444,7 @@ export const HeadClassDetailPage: React.FC = () => {
             <TBtn variant="ghost" onClick={() => setNoteOpen(false)}>
               Huỷ
             </TBtn>
-            <TBtn variant="primary" onClick={sendNote}>
+            <TBtn variant="primary" disabled={sending} onClick={() => void sendNote()}>
               Gửi nhận xét
             </TBtn>
           </>

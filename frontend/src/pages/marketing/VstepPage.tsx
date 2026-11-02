@@ -1,5 +1,7 @@
 import React from 'react';
-import { VSTEP_PARTS_INFO, MOCK_TESTS, VSTEP_GUIDES, VSTEP_GUIDE_SLUG } from '@/shared/mocks';
+import { usePartsInfo, useTests } from '@/shared/api/catalog';
+import { useExamGuides } from '@/shared/api/cms';
+import { VSTEP_GUIDE_SLUG } from '@/shared/constants/public';
 import { useDocumentTitle, useGate } from '@/shared/hooks';
 import { Accent, PageHeader, Section, SectionHead, ActionLink, CtaStrip } from './shared/PageKit';
 import { TestList } from './shared/TestList';
@@ -50,7 +52,9 @@ const WritingFeedbackPreview: React.FC = () => (
 export const VstepPage: React.FC = () => {
   useDocumentTitle('Luyện thi VSTEP');
   const gate = useGate();
-  const tests = MOCK_TESTS.filter((t) => t.examType === 'VSTEP');
+  const { data: tests = [] } = useTests({ examType: 'VSTEP' });
+  const { data: VSTEP_PARTS_INFO = [] } = usePartsInfo('VSTEP');
+  const { data: VSTEP_GUIDES = [] } = useExamGuides('VSTEP');
 
   return (
     <div className="bg-page">
@@ -73,7 +77,7 @@ export const VstepPage: React.FC = () => {
           { value: '4 kỹ năng', label: 'Nghe · Đọc · Viết · Nói' },
           { value: '172 phút', label: 'Thời gian' },
           { value: '0 – 10', label: 'Thang điểm' },
-          { value: '87 đề', label: 'Đề mẫu trên OrbiLingo' },
+          { value: `${tests.length} đề`, label: 'Đề mẫu trên OrbiLingo' },
         ]}
         aside={<WritingFeedbackPreview />}
       />

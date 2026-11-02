@@ -6,7 +6,8 @@ import { useAuthStore } from '@/shared/stores/authStore';
 import { Badge, Button, Card, ProgressBar, MiniBars, Sparkline, Heatmap, Avatar, AvatarGroup } from '@/shared/components/ui';
 import { Stagger, CountUp, Reveal } from '@/shared/components/motion';
 import { Img, PHOTOS } from '@/shared/components/media/Img';
-import { LEARNING_PATH, DAILY_ACTIVITY, WEEKDAY_LABELS, SCORE_HISTORY, MOCK_MISTAKES, MOCK_VOCAB, MOCK_TESTS, MOCK_ACHIEVEMENTS, HEATMAP_DATA, MISTAKE_CAUSE_LABEL, MOCK_LEADERBOARD } from '@/shared/mocks';
+import { MISTAKE_CAUSE_LABEL } from '@/shared/constants/student';
+import { useAchievements, useAttempts, useLeaderboard, usePath, useProgress, useReviewDue, useTests } from '@/shared/api/learner';
 import { cn, formatNumber } from '@/shared/utils';
 
 const greeting = () => {
@@ -21,17 +22,33 @@ export const StudentDashboardPage: React.FC = () => {
   useDocumentTitle('Tổng quan');
   const user = useAuthStore((s) => s.user);
   const now = Date.now();
-  const dueMistakes = MOCK_MISTAKES.filter((m) => !m.isResolved && new Date(m.nextReviewAt).getTime() <= now);
-  const dueVocab = MOCK_VOCAB.filter((v) => new Date(v.nextReviewAt).getTime() <= now);
-  const milestone = LEARNING_PATH.find((m) => m.status === 'CURRENT') ?? LEARNING_PATH[0];
-  const item = milestone.items.find((i) => i.status === 'CURRENT') ?? milestone.items[0];
-  const earned = MOCK_ACHIEVEMENTS.filter((a) => a.earned).slice(-4);
+  const { data: due } = useReviewDue();
+  const { data: path } = usePath();
+  const { data: progress } = useProgress();
+  const { data: achievements = [] } = useAchievements();
+  const { data: board } = useLeaderboard('week');
+  const { data: allTests = [] } = useTests();
+  const { data: fullHistory } = useAttempts({ mode: 'FULL', pageSize: 20 });
+  const dueMistakes = due?.mistakes ?? [];
+  const dueVocab = due?.words ?? [];
+  const LEARNING_PATH = path?.milestones ?? [];
+  // Chưa có lộ trình → gợi ý đặt mục tiêu
+  const milestone = LEARNING_PATH.find((m) => m.status === 'CURRENT') ?? LEARNING_PATH[0] ?? { title: 'Chặng khởi động', subtitle: 'Chưa có lộ trình', description: 'Đặt mục tiêu và làm bài xếp lớp để hệ thống lập lộ trình học riêng cho bạn.', progress: 0, items: [] };
+  const item = milestone.items.find((i) => i.status === 'CURRENT') ?? milestone.items[0] ?? { title: 'Đặt mục tiêu học', link: '/onboarding/goal', durationMin: 5, skill: 'Bắt đầu' };
+  const earned = achievements.filter((a) => a.earned).slice(-4);
+  const nextBadge = achievements.filter((a) => !a.earned && a.total).sort((a, b) => (b.progress ?? 0) / (b.total ?? 1) - (a.progress ?? 0) / (a.total ?? 1))[0];
+  const SCORE_HISTORY = progress?.scoreHistory ?? [];
+  const DAILY_ACTIVITY = progress?.dailyActivity ?? [];
+  const HEATMAP_DATA = progress?.heatmap ?? {};
+  const lastFull = fullHistory?.items.find((a) => a.examType === 'TOEIC');
+  const activeDays = Object.values(HEATMAP_DATA).filter((m) => m > 0).length;
+  const goalMinutes = progress?.totals.dailyGoalMinutes ?? 20;
   const daysLeft = user?.target?.examDate ? Math.max(0, Math.ceil((new Date(user.target.examDate).getTime() - now) / 86400000)) : null;
   const today = new Date().toLocaleDateString('vi-VN', { weekday: 'long', day: '2-digit', month: '2-digit' });
   const firstName = (user?.fullName ?? 'bạn').split(' ').slice(-1)[0];
-  const peers = MOCK_LEADERBOARD.filter((p) => !p.isMe).slice(0, 5);
+  const peers = (board?.entries ?? []).filter((p) => !p.isMe).slice(0, 5);
   const totalMin = DAILY_ACTIVITY.reduce((a, d) => a + d.minutes, 0);
-  const suggested = MOCK_TESTS.filter((t) => t.examType === (user?.target?.examType ?? 'TOEIC')).slice(0, 3);
+  const suggested = allTests.filter((t) => t.examType === (user?.target?.examType ?? 'TOEIC')).slice(0, 3);
 
   return (
     <div className="space-y-10">
@@ -42,16 +59,22 @@ export const StudentDashboardPage: React.FC = () => {
             {greeting()} · {today}
           </p>
           <h1 className="font-display text-4xl md:text-5xl font-extrabold text-slate-900 tracking-tight leading-[1.05]">
-            {firstName} ơi, hôm nay học <span className="mark">45 phút</span> nhé.
+            {firstName} ơi, hôm nay học <span className="mark">{goalMinutes} phút</span> nhé.
           </h1>
           <p className="text-base text-slate-500 max-w-xl">
-            Mục tiêu <b className="text-slate-900">{user?.target?.examType ?? 'TOEIC'} {user?.target?.score ?? '750'}</b>
-            {daysLeft !== null && (
+            {user?.target ? (
               <>
-                {' '}· còn <b className="text-slate-900">{daysLeft} ngày</b> tới kỳ thi
+                Mục tiêu <b className="text-slate-900">{user.target.examType} {user.target.score}</b>
+                {daysLeft !== null && (
+                  <>
+                    {' '}· còn <b className="text-slate-900">{daysLeft} ngày</b> tới kỳ thi
+                  </>
+                )}
+                {LEARNING_PATH.length ? `. Bạn đang ở ${milestone.title.toLowerCase()}.` : '.'}
               </>
+            ) : (
+              'Bạn chưa đặt mục tiêu. Đặt mục tiêu để nhận lộ trình học riêng.'
             )}
-            . Bạn đang ở {milestone.title.toLowerCase()}, đúng nhịp so với lộ trình.
           </p>
           <div className="flex flex-wrap gap-3 pt-1">
             <Button variant="gradient" size="lg" to={item.link} leftIcon={<Play className="w-4 h-4" />}>
@@ -65,8 +88,8 @@ export const StudentDashboardPage: React.FC = () => {
 
         <div className="rounded-3xl bg-white border border-slate-900/10 p-2 grid grid-cols-3 divide-x divide-slate-900/10">
           {[
-            { label: 'Chuỗi ngày học', value: user?.streak ?? 0, suffix: 'ngày', icon: <Flame className="w-4 h-4 text-violet-500 fill-violet-500" />, sub: '+2 so với tuần trước' },
-            { label: 'Điểm gần nhất', value: 715, suffix: '/990', icon: <Trophy className="w-4 h-4 text-amber-500" />, sub: 'ETS 2024 Test 1' },
+            { label: 'Chuỗi ngày học', value: user?.streak ?? 0, suffix: 'ngày', icon: <Flame className="w-4 h-4 text-violet-500 fill-violet-500" />, sub: `Dài nhất ${progress?.totals.longestStreak ?? 0} ngày` },
+            { label: 'Điểm gần nhất', value: lastFull?.score ?? 0, suffix: '/990', icon: <Trophy className="w-4 h-4 text-amber-500" />, sub: lastFull?.testTitle ?? 'Chưa làm đề full' },
             { label: 'Cần ôn hôm nay', value: dueMistakes.length + dueVocab.length, suffix: 'mục', icon: <RotateCcw className="w-4 h-4 text-indigo-600" />, sub: 'theo lịch SM-2' },
           ].map((s) => (
             <div key={s.label} className="px-4 py-4">
@@ -128,14 +151,27 @@ export const StudentDashboardPage: React.FC = () => {
             <div className="flex items-start justify-between">
               <div>
                 <p className="text-[11px] font-bold uppercase tracking-wider text-slate-500">Điểm thi thử</p>
-                <p className="font-display text-5xl font-extrabold text-slate-900 mt-2 leading-none">715</p>
+                <p className="font-display text-5xl font-extrabold text-slate-900 mt-2 leading-none">{SCORE_HISTORY.at(-1) ?? '—'}</p>
                 <p className="text-sm text-slate-500 mt-2">
-                  từ 520 điểm · <span className="text-emerald-700 font-bold">+195</span> sau 7 lần
+                  {SCORE_HISTORY.length > 1 ? (
+                    <>
+                      từ {SCORE_HISTORY[0]} điểm ·{' '}
+                      <span className={SCORE_HISTORY.at(-1)! >= SCORE_HISTORY[0] ? 'text-emerald-700 font-bold' : 'text-rose-600 font-bold'}>
+                        {SCORE_HISTORY.at(-1)! >= SCORE_HISTORY[0] ? '+' : ''}
+                        {SCORE_HISTORY.at(-1)! - SCORE_HISTORY[0]}
+                      </span>{' '}
+                      sau {SCORE_HISTORY.length} lần
+                    </>
+                  ) : SCORE_HISTORY.length === 1 ? (
+                    'Sau 1 lần thi thử'
+                  ) : (
+                    'Làm một đề TOEIC full để xem điểm quy đổi'
+                  )}
                 </p>
               </div>
-              <Badge tone="emerald">Đang tăng</Badge>
+              {SCORE_HISTORY.length > 1 && <Badge tone={SCORE_HISTORY.at(-1)! >= SCORE_HISTORY[0] ? 'emerald' : 'amber'}>{SCORE_HISTORY.at(-1)! >= SCORE_HISTORY[0] ? 'Đang tăng' : 'Cần cố gắng'}</Badge>}
             </div>
-            <Sparkline data={SCORE_HISTORY} width={320} height={90} tone="indigo" className="w-full mt-4 [&>svg]:w-full" />
+            <Sparkline data={SCORE_HISTORY.length > 1 ? SCORE_HISTORY : [0, 0]} width={320} height={90} tone="indigo" className="w-full mt-4 [&>svg]:w-full" />
             <Link to="/app/progress" className="inline-flex items-center gap-1 text-sm font-bold text-indigo-700 hover:gap-2 transition-all mt-3">
               Xem phân tích chi tiết <ChevronRight className="w-4 h-4" />
             </Link>
@@ -147,7 +183,7 @@ export const StudentDashboardPage: React.FC = () => {
       <section className="space-y-5">
         <div className="flex items-end justify-between">
           <div>
-            <p className="text-[11px] font-extrabold uppercase tracking-[0.14em] text-indigo-700">Phù hợp mức 650–750</p>
+            <p className="text-[11px] font-extrabold uppercase tracking-[0.14em] text-indigo-700">{user?.target ? `Mục tiêu ${user.target.examType} ${user.target.score}` : 'Đề mới trong kho'}</p>
             <h2 className="font-display text-2xl md:text-3xl font-extrabold text-slate-900 mt-1">Đề thi gợi ý cho bạn</h2>
           </div>
           <Link to="/app/mock-tests" className="text-sm font-bold text-slate-700 hover:text-indigo-700 inline-flex items-center gap-1">
@@ -192,7 +228,7 @@ export const StudentDashboardPage: React.FC = () => {
               </div>
               <CalendarDays className="w-5 h-5 text-slate-400" />
             </div>
-            <MiniBars data={DAILY_ACTIVITY.map((d, i) => ({ label: WEEKDAY_LABELS[i], value: d.minutes, tone: d.minutes >= 60 ? 'violet' : 'indigo' }))} height={130} />
+            <MiniBars data={DAILY_ACTIVITY.map((d) => ({ label: ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'][new Date(`${d.date}T00:00:00`).getDay()], value: d.minutes, tone: d.minutes >= 60 ? 'violet' : 'indigo' }))} height={130} />
             <p className="text-sm text-slate-600 mt-4">
               Tổng <b className="text-slate-900">{totalMin} phút</b> · {DAILY_ACTIVITY.reduce((a, d) => a + d.questions, 0)} câu hỏi
             </p>
@@ -211,6 +247,7 @@ export const StudentDashboardPage: React.FC = () => {
               </Button>
             </div>
             <ul className="divide-y divide-slate-900/10">
+              {dueMistakes.length + dueVocab.length === 0 && <li className="py-3 text-sm text-slate-500">Không có mục nào cần ôn hôm nay.</li>}
               {dueMistakes.slice(0, 3).map((m) => (
                 <li key={m.id} className="py-3 flex items-start gap-3">
                   <span className="w-7 h-7 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center shrink-0">
@@ -249,6 +286,7 @@ export const StudentDashboardPage: React.FC = () => {
               </Link>
             </div>
             <div className="grid grid-cols-4 gap-3">
+              {earned.length === 0 && <p className="col-span-4 text-sm text-slate-500">Chưa có huy hiệu. Hoàn thành bài thi đầu tiên để nhận huy hiệu đầu tiên.</p>}
               {earned.map((a, i) => (
                 <div key={a.id} className="text-center animate-pop" style={{ animationDelay: `${i * 90}ms` }} title={a.description}>
                   <div className="w-14 h-14 mx-auto rounded-full bg-amber-100 flex items-center justify-center text-2xl shadow-inner">{a.icon}</div>
@@ -256,15 +294,19 @@ export const StudentDashboardPage: React.FC = () => {
                 </div>
               ))}
             </div>
-            <div className="mt-5 pt-5 border-t border-slate-900/10">
-              <div className="flex items-center justify-between text-xs mb-1.5">
-                <span className="font-semibold text-slate-600 inline-flex items-center gap-1">
-                  <Target className="w-3.5 h-3.5" /> Chiến binh 30 ngày
-                </span>
-                <span className="font-bold text-slate-900">12/30</span>
+            {nextBadge && (
+              <div className="mt-5 pt-5 border-t border-slate-900/10">
+                <div className="flex items-center justify-between text-xs mb-1.5">
+                  <span className="font-semibold text-slate-600 inline-flex items-center gap-1">
+                    <Target className="w-3.5 h-3.5" /> {nextBadge.title}
+                  </span>
+                  <span className="font-bold text-slate-900">
+                    {Math.min(nextBadge.progress ?? 0, nextBadge.total ?? 0)}/{nextBadge.total}
+                  </span>
+                </div>
+                <ProgressBar value={((nextBadge.progress ?? 0) / (nextBadge.total ?? 1)) * 100} size="sm" tone="amber" />
               </div>
-              <ProgressBar value={40} size="sm" tone="amber" />
-            </div>
+            )}
           </Card>
         </Reveal>
       </section>
@@ -278,7 +320,7 @@ export const StudentDashboardPage: React.FC = () => {
                 <h3 className="font-display font-bold text-slate-900 text-lg">Chuỗi chuyên cần</h3>
                 <p className="text-sm text-slate-500">16 tuần gần nhất · mỗi ô là một ngày</p>
               </div>
-              <Badge tone="indigo">72% ngày có học</Badge>
+              <Badge tone="indigo">{Math.round((activeDays / (16 * 7)) * 100)}% ngày có học</Badge>
             </div>
             <Heatmap data={HEATMAP_DATA} weeks={16} />
             <div className="flex items-center gap-2 mt-4 text-[11px] text-slate-500">
@@ -294,11 +336,11 @@ export const StudentDashboardPage: React.FC = () => {
           <Card className="h-full flex flex-col justify-between">
             <div>
               <h3 className="font-display font-bold text-slate-900 text-lg">Bạn học cùng mục tiêu</h3>
-              <p className="text-sm text-slate-500 mt-1">Đang học ngay lúc này</p>
+              <p className="text-sm text-slate-500 mt-1">Bảng xếp hạng tuần này</p>
             </div>
             <div className="flex items-center gap-3 mt-5">
               <AvatarGroup names={peers.map((p) => p.name)} srcs={peers.map((p) => p.avatarUrl)} size="md" max={5} />
-              <span className="text-sm font-semibold text-slate-700">+128 người khác</span>
+              <span className="text-sm font-semibold text-slate-700">{peers.length ? `${board?.entries.length ?? 0} người có điểm tuần này` : 'Chưa có ai ghi điểm tuần này'}</span>
             </div>
             <ul className="mt-5 space-y-2.5">
               {peers.slice(0, 3).map((p) => (

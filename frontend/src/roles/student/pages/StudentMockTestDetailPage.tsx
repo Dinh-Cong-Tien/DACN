@@ -5,9 +5,9 @@ import { useDocumentTitle } from '@/shared/hooks';
 import { useAuthStore } from '@/shared/stores/authStore';
 import { Breadcrumb } from '@/shared/components/ui';
 import { Img } from '@/shared/components/media/Img';
-import { MOCK_TESTS, MOCK_ATTEMPTS, TOEIC_PARTS_INFO, VSTEP_PARTS_INFO } from '@/shared/mocks';
+import { useAttempts, usePartsInfo, useTest } from '@/shared/api/learner';
 import { cn, examSetupQuery, formatDate, formatDuration, formatNumber } from '@/shared/utils';
-import type { ExamSetup, TestPartInfo } from '@/shared/types';
+import type { ExamSetup, MockTestSummary, TestPartInfo } from '@/shared/types';
 import { ActionButton } from '@/pages/marketing/shared/PageKit';
 
 /** Phần không làm trong phòng thi (VSTEP Viết / Nói có trang luyện riêng) */
@@ -25,20 +25,45 @@ const RULES_FULL = ['Audio phát một lần, không tua lại.', 'Hết giờ h
  * Mặc định chọn đủ Part và thời gian thi thật → full test (quy đổi điểm); bỏ bớt Part hoặc đổi thời gian → luyện tập.
  */
 export const StudentMockTestDetailPage: React.FC = () => {
-  const { id } = useParams<{ id: string }>();
+  const { id = '' } = useParams<{ id: string }>();
+  const { data: test, isLoading, error } = useTest(id);
+  if (!test)
+    return (
+      <div className="space-y-6">
+        <Breadcrumb items={[{ label: 'Thi thử', to: '/app/mock-tests' }, { label: 'Đề thi' }]} />
+        <p className="text-sm text-slate-500">{isLoading ? 'Đang tải đề thi…' : error ? 'Không tìm thấy đề thi.' : ''}</p>
+      </div>
+    );
+  return <TestDetail test={test} />;
+};
+
+const TestDetail: React.FC<{ test: MockTestSummary }> = ({ test }) => {
   const navigate = useNavigate();
   const user = useAuthStore((s) => s.user);
-  const test = MOCK_TESTS.find((t) => t.id === id) ?? MOCK_TESTS[0];
   useDocumentTitle(test.title);
 
-  const info = test.examType === 'TOEIC' ? TOEIC_PARTS_INFO : VSTEP_PARTS_INFO;
-  const parts = useMemo(() => test.partIds.map((p) => info.find((x) => x.id === p)).filter(Boolean) as TestPartInfo[], [test, info]);
+  const { data: info = [] } = usePartsInfo(test.examType);
+  // Số câu từng Part lấy theo đề thật (khác số câu của đề chuẩn)
+  const parts = useMemo(
+    () =>
+      test.partIds
+        .map((p) => {
+          const x = info.find((i) => i.id === p);
+          const n = (test as MockTestSummary & { sections?: { id: string; questions: number }[] }).sections?.find((x) => x.id === p)?.questions;
+          return x ? { ...x, questions: n ?? x.questions } : undefined;
+        })
+        .filter(Boolean) as TestPartInfo[],
+    [test, info]
+  );
   const selectable = parts.filter((p) => !OUTSIDE_EXAM[p.id]);
-  const attempts = MOCK_ATTEMPTS.filter((a) => a.testId === test.id);
+  const { data: history } = useAttempts({ testId: test.slug ?? test.id });
+  const attempts = history?.items ?? [];
   const locked = !test.isFree && user?.plan === 'FREE';
 
   // Mặc định chọn đủ Part làm được trong phòng thi
-  const [picked, setPicked] = useState<string[]>(() => selectable.map((p) => p.id));
+  const [picked, setPicked] = useState<string[]>([]);
+  // Chọn sẵn đủ Part khi thông tin Part tải xong
+  React.useEffect(() => setPicked(selectable.map((p) => p.id)), [selectable.length]); // eslint-disable-line react-hooks/exhaustive-deps
   // 'auto' = thời gian thi thật khi chọn đủ Part, còn lại là tổng thời gian gợi ý; 'none' = không giới hạn
   const [time, setTime] = useState<'auto' | 'none' | number>('auto');
   const chosen = selectable.filter((p) => picked.includes(p.id));
@@ -50,7 +75,7 @@ export const StudentMockTestDetailPage: React.FC = () => {
 
   const toggle = (pid: string) => setPicked((s) => (s.includes(pid) ? s.filter((x) => x !== pid) : [...s, pid]));
   const setup: ExamSetup = full ? { mode: 'FULL', parts: test.partIds, minutes: test.durationMinutes } : { mode: 'PRACTICE', parts: chosen.map((p) => p.id), minutes };
-  const start = () => navigate(`/app/exam/${test.id}${examSetupQuery(setup)}`);
+  const start = () => navigate(`/app/exam/${test.slug ?? test.id}${examSetupQuery(setup)}`);
 
   return (
     <div className="space-y-6">
@@ -195,7 +220,7 @@ export const StudentMockTestDetailPage: React.FC = () => {
             <ul className="mt-3 divide-y divide-slate-200">
               {attempts.map((a) => (
                 <li key={a.id}>
-                  <Link to={`/app/mock-tests/${a.testId}/result`} className="flex items-center justify-between gap-3 py-3 hover:text-indigo-700">
+                  <Link to={`/app/mock-tests/${a.testId}/result?attempt=${a.id}`} className="flex items-center justify-between gap-3 py-3 hover:text-indigo-700">
                     <span>
                       <span className="block font-display text-lg font-bold tabular-nums text-slate-900">
                         {a.score}

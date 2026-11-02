@@ -2,20 +2,24 @@ import React, { useState } from 'react';
 import { CheckCircle2, FileQuestion, Inbox, Reply } from 'lucide-react';
 import { useDocumentTitle } from '@/shared/hooks';
 import { toast } from '@/shared/stores/uiStore';
-import { MOCK_COMPLAINTS } from '@/shared/mocks';
+import { headApi, useHeadComplaints, useHeadMutation, type HeadComplaint } from '@/shared/api/head';
+import { errorMessage } from '@/shared/api/client';
 import type { Complaint } from '@/shared/types';
 import { timeAgo, formatDateTime } from '@/shared/utils';
 import { Avatar, Button, EmptyState, Modal, Textarea } from '@/shared/components/ui';
-import { pravatar } from '@/shared/components/media/Img';
 import { Figures, Panel, Status, TBtn, TPageHead, TTabs, type StatusTone } from '@/roles/teacher/components/TeacherKit';
 
 const STATUS: Record<Complaint['status'], { label: string; tone: StatusTone }> = { NEW: { label: 'Mới', tone: 'red' }, IN_REVIEW: { label: 'Đang xử lý', tone: 'amber' }, RESOLVED: { label: 'Đã giải quyết', tone: 'green' } };
 
-const studentAvatar = (id: string) => pravatar(20 + (Number(id.split('-')[1]) || 1));
+const EMPTY: HeadComplaint[] = [];
 
 export const HeadComplaintsPage: React.FC = () => {
   useDocumentTitle('Khiếu nại & Phản hồi');
-  const [items, setItems] = useState<Complaint[]>(MOCK_COMPLAINTS);
+  const { data, isLoading } = useHeadComplaints();
+  const items = data ?? EMPTY;
+  const studentAvatar = (id: string) => items.find((c) => c.id === id)?.avatarUrl;
+  const setStatus = useHeadMutation((a: { id: string; status: 'NEW' | 'IN_REVIEW' | 'RESOLVED' }) => headApi.setComplaintStatus(a.id, a.status));
+  const replyM = useHeadMutation((a: { id: string; text: string }) => headApi.replyComplaint(a.id, { text: a.text, resolve: true }));
   const [tab, setTab] = useState<Complaint['status']>('NEW');
   const [replying, setReplying] = useState<Complaint | null>(null);
   const [reply, setReply] = useState('');
@@ -23,17 +27,23 @@ export const HeadComplaintsPage: React.FC = () => {
   const list = items.filter((c) => c.status === tab);
   const count = (s: Complaint['status']) => items.filter((c) => c.status === s).length;
 
-  const accept = (c: Complaint) => {
-    setItems((s) => s.map((x) => (x.id === c.id ? { ...x, status: 'IN_REVIEW' } : x)));
-    toast.info('Đã tiếp nhận', `Khiếu nại của ${c.student} đang được xử lý.`);
-  };
+  const accept = (c: Complaint) =>
+    setStatus.mutate({ id: c.id, status: 'IN_REVIEW' }, { onSuccess: () => toast.info('Đã tiếp nhận', `Khiếu nại của ${c.student} đang được xử lý.`), onError: (e) => toast.error('Không thực hiện được', errorMessage(e)) });
   const resolve = () => {
     if (!replying) return;
     if (!reply.trim()) return toast.error('Vui lòng nhập nội dung phản hồi');
-    setItems((s) => s.map((x) => (x.id === replying.id ? { ...x, status: 'RESOLVED' } : x)));
-    toast.success('Đã phản hồi & đóng', `${replying.student} sẽ nhận được thông báo.`);
-    setReplying(null);
-    setReply('');
+    const who = replying.student;
+    replyM.mutate(
+      { id: replying.id, text: reply.trim() },
+      {
+        onSuccess: () => {
+          toast.success('Đã phản hồi & đóng', `${who} sẽ nhận được thông báo.`);
+          setReplying(null);
+          setReply('');
+        },
+        onError: (e) => toast.error('Không gửi được', errorMessage(e)),
+      }
+    );
   };
 
   return (
@@ -51,7 +61,7 @@ export const HeadComplaintsPage: React.FC = () => {
 
       {list.length === 0 ? (
         <Panel>
-          <EmptyState icon={<Inbox />} title="Không có khiếu nại" description="Hộp thư ở trạng thái này đang trống." />
+          <EmptyState icon={<Inbox />} title={isLoading ? "Đang tải…" : "Không có khiếu nại"} description={isLoading ? "" : "Hộp thư ở trạng thái này đang trống."} />
         </Panel>
       ) : (
         <div className="space-y-4">

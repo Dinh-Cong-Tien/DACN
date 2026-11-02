@@ -1,6 +1,7 @@
 import React from 'react';
-import { User, Flame, Zap, Award, Target, Calendar, Pencil, FileText, BookOpen, CheckCircle2, Trophy } from 'lucide-react';
-import { MOCK_ACHIEVEMENTS } from '@/shared/mocks';
+import { User, Flame, Zap, Award, Target, Calendar, Pencil, FileText, Trophy } from 'lucide-react';
+import { useAchievements, useAttempts, useProgress } from '@/shared/api/learner';
+type TimelineItem = React.ComponentProps<typeof Timeline>['items'][number];
 import { cn, formatDate, ROLE_LABEL } from '@/shared/utils';
 import { useDocumentTitle } from '@/shared/hooks';
 import { useAuthStore } from '@/shared/stores/authStore';
@@ -12,8 +13,27 @@ const TILTS = ['tilt-1', 'tilt-2', 'tilt-3'];
 export const StudentProfilePage: React.FC = () => {
   useDocumentTitle('Hồ sơ cá nhân');
   const user = useAuthStore((s) => s.user);
+  const { data: MOCK_ACHIEVEMENTS = [] } = useAchievements();
+  const { data: progress } = useProgress();
+  const { data: history } = useAttempts({ pageSize: 5 });
   if (!user) return null;
   const earned = MOCK_ACHIEVEMENTS.filter((a) => a.earned);
+  const best = progress?.totals.bestToeic ?? null;
+  // Dòng thời gian từ dữ liệu thật: lượt làm bài gần nhất + huy hiệu đã đạt
+  const timeline: (TimelineItem & { at: string })[] = [
+    ...(history?.items ?? []).map((a) => ({
+      id: a.id,
+      title: `${a.testTitle} — ${a.score}/${a.maxScore}`,
+      description: `${a.correct}/${a.total} câu đúng${a.listening !== undefined ? ` · Listening ${a.listening} · Reading ${a.reading ?? 0}` : ''}`,
+      time: formatDate(a.date, { day: '2-digit', month: '2-digit' }),
+      tone: 'indigo' as const,
+      icon: <FileText />,
+      at: a.date,
+    })),
+    ...earned.map((a) => ({ id: a.id, title: `Mở khoá huy hiệu "${a.title}"`, description: a.description, time: a.earnedAt ? formatDate(a.earnedAt, { day: '2-digit', month: '2-digit' }) : '', tone: 'sky' as const, icon: <Award />, at: a.earnedAt ?? '' })),
+  ]
+    .sort((a, b) => b.at.localeCompare(a.at))
+    .slice(0, 6);
   const daysLeft = user.target?.examDate ? Math.max(0, Math.ceil((new Date(user.target.examDate).getTime() - Date.now()) / 86400000)) : null;
 
   return (
@@ -73,9 +93,9 @@ export const StudentProfilePage: React.FC = () => {
 
       <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
         <StatCard label="Chuỗi ngày học" value={user.streak} suffix="ngày" icon={<Flame />} tone="amber" />
-        <StatCard label="Điểm nỗ lực" value={user.effortPoints} icon={<Zap />} tone="indigo" delta={8} deltaLabel="tuần này" />
+        <StatCard label="Điểm nỗ lực" value={progress?.totals.xp ?? user.effortPoints} icon={<Zap />} tone="indigo" />
         <StatCard label="Huy hiệu" value={earned.length} suffix={`/ ${MOCK_ACHIEVEMENTS.length}`} icon={<Award />} tone="violet" />
-        <StatCard label="Điểm thi thử tốt nhất" value={715} icon={<Trophy />} tone="emerald" hint="ETS 2024 Test 1" />
+        <StatCard label="Điểm thi thử tốt nhất" value={best ?? 0} icon={<Trophy />} tone="emerald" hint={best === null ? 'Chưa làm đề TOEIC full' : 'TOEIC full test'} />
       </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-5">
@@ -91,6 +111,7 @@ export const StudentProfilePage: React.FC = () => {
             }
           />
           <div className="grid grid-cols-2 gap-3">
+            {earned.length === 0 && <p className="col-span-2 text-sm text-slate-500">Chưa có huy hiệu nào.</p>}
             {earned.map((a, i) => (
               <div key={a.id} className="flex items-center gap-3 p-3 rounded-2xl border-2 border-slate-900 bg-amber-50 animate-pop" style={{ animationDelay: `${i * 80}ms` }}>
                 <span className={cn('w-11 h-11 rounded-full bg-white border-2 border-slate-900 flex items-center justify-center text-2xl shrink-0', TILTS[i % 3])}>{a.icon}</span>
@@ -102,20 +123,12 @@ export const StudentProfilePage: React.FC = () => {
             ))}
           </div>
           <div className="mt-4">
-            <ProgressBar value={(earned.length / MOCK_ACHIEVEMENTS.length) * 100} label="Tiến độ sưu tập" showValue tone="violet" size="sm" />
+            <ProgressBar value={(earned.length / Math.max(1, MOCK_ACHIEVEMENTS.length)) * 100} label="Tiến độ sưu tập" showValue tone="violet" size="sm" />
           </div>
         </Card>
         <Card hard className="animate-fade-up" style={{ animationDelay: '160ms' }}>
           <CardHeader title="Hoạt động gần đây" subtitle="Dòng thời gian học tập" icon={<Calendar />} />
-          <Timeline
-            items={[
-              { id: 't1', title: 'Đạt 715 điểm — ETS 2024 Test 1', description: 'Listening 380 · Reading 335', time: '25/10', tone: 'emerald', icon: <Trophy /> },
-              { id: 't2', title: 'Hoàn thành Part 5 — 30 câu tốc độ', description: '24/30 câu đúng · 12 phút', time: '22/10', tone: 'indigo', icon: <FileText /> },
-              { id: 't3', title: 'Ôn 18 thẻ flashcard chủ đề Office', description: 'Nhớ tốt 15/18 thẻ', time: '21/10', tone: 'violet', icon: <BookOpen /> },
-              { id: 't4', title: 'Giải quyết 5 câu trong Sổ tay lỗi sai', description: 'Chủ đề: Word Form, Preposition', time: '20/10', tone: 'amber', icon: <CheckCircle2 /> },
-              { id: 't5', title: 'Mở khoá huy hiệu "Cú đêm chăm chỉ"', description: 'Học sau 22h trong 5 ngày', time: '30/09', tone: 'sky', icon: <Award /> },
-            ]}
-          />
+          {timeline.length ? <Timeline items={timeline} /> : <p className="text-sm text-slate-500">Chưa có hoạt động. Bài làm và huy hiệu sẽ hiện ở đây.</p>}
         </Card>
       </div>
     </div>

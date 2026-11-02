@@ -2,15 +2,13 @@ import React from 'react';
 import { LayoutDashboard, Users, Tags, FolderTree, FileQuestion, FileText, BarChart3, History, Sliders, Activity, Newspaper, School, LifeBuoy, BookOpen, PenTool, Library, CreditCard, Megaphone } from 'lucide-react';
 import { AppShell, NavGroup } from '@/shared/components/layout/AppShell';
 import { StaffNav, type StaffMenu } from '@/shared/components/layout/StaffNav';
-import { MOCK_PAYMENTS, MOCK_SERVICES, MOCK_TICKETS } from '@/shared/mocks';
+import { useAdminDashboard, useAdminSystem } from '@/shared/api/admin';
 
-const badge = (n: number) => (n ? String(n) : undefined);
-const degraded = badge(MOCK_SERVICES.filter((s) => s.status !== 'UP').length);
-const openTickets = badge(MOCK_TICKETS.filter((t) => t.status === 'OPEN').length);
-const pendingPay = badge(MOCK_PAYMENTS.filter((p) => p.status === 'PENDING').length);
+const badge = (n?: number) => (n ? String(n) : undefined);
+type Badges = { degraded?: string; openTickets?: string; pendingPay?: string };
 
 /** Menu header quản trị: người dùng → nội dung học viên dùng → vận hành → thống kê → hệ thống */
-const MENUS: StaffMenu[] = [
+const buildMenus = ({ degraded, openTickets, pendingPay }: Badges): StaffMenu[] => [
   { to: '/admin/dashboard', label: 'Tổng quan' },
   {
     label: 'Người dùng',
@@ -54,7 +52,7 @@ const MENUS: StaffMenu[] = [
 ];
 
 /** Ngăn kéo (điện thoại), thanh đáy và footer */
-const GROUPS: NavGroup[] = [
+const buildGroups = ({ degraded, openTickets, pendingPay }: Badges): NavGroup[] => [
   {
     title: 'Quản trị',
     items: [
@@ -90,6 +88,17 @@ const GROUPS: NavGroup[] = [
   },
 ];
 
-export const AdminLayout: React.FC = () => (
+export const AdminLayout: React.FC = () => {
+  const dash = useAdminDashboard();
+  const sys = useAdminSystem();
+  const b: Badges = {
+    degraded: badge(sys.data?.services.filter((x) => x.status !== 'UP').length),
+    openTickets: badge(dash.data?.openTickets),
+    pendingPay: badge(dash.data?.pendingPayments),
+  };
+  const MENUS = buildMenus(b);
+  const GROUPS = buildGroups(b);
+  return (
   <AppShell groups={GROUPS} brandTagline="Quản trị hệ thống" headerLabel="Quản trị viên" accent="rose" settingsTo="/admin/settings" notificationsTo="/admin/notifications" workspace headerNav={<StaffNav menus={MENUS} label="Menu quản trị" />} />
-);
+  );
+};
