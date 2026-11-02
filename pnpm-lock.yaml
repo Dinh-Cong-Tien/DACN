@@ -67,7 +67,7 @@ importers:
         specifier: ^6.0.1
         version: 6.19.3(typescript@5.9.3)
       tsx:
-        specifier: ^4.19.2
+        specifier: ^4.23.15
         version: 4.23.15
       typescript:
         specifier: ^5.7.0
