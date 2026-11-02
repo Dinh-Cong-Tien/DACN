@@ -10,6 +10,7 @@ import { PageTransition } from '@/shared/components/motion';
 import { ThemeToggle } from './ThemeToggle';
 import { NotificationBell } from './NotificationBell';
 import { PageBackdrop } from './PageBackdrop';
+import { StaffFooter } from './StaffFooter';
 import { RouteProgress, BackToTop } from '@/shared/components/layout/ScrollExtras';
 import { ChatWidget } from '@/shared/components/support';
 
@@ -241,13 +242,15 @@ export const AppShell: React.FC<AppShellProps> = ({ groups, brandTagline, accent
       )}
 
       {/* ===== Nội dung ===== */}
-      <main className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-10 pb-24 md:pb-12 min-w-0">
+      <main className={cn('flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-10 min-w-0', workspace ? 'pb-10 md:pb-14' : 'pb-24 md:pb-12')}>
         <StaffUiContext.Provider value={Boolean(workspace)}>
           <PageTransition>
             <Outlet />
           </PageTransition>
         </StaffUiContext.Provider>
       </main>
+
+      {workspace && <StaffFooter groups={groups} brandTagline={brandTagline} settingsTo={settingsTo} notificationsTo={notificationsTo} showSystemStatus={user?.role === 'ADMIN'} />}
 
       {/* ===== Thanh điều hướng dưới (mobile) ===== */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-slate-900 px-2 pb-[env(safe-area-inset-bottom)]">
