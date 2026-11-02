@@ -20,10 +20,16 @@ interface ExamRunnerProps {
   onSubmitExam: (result: ExamResultPayload) => void;
   onExit?: () => void;
   onSaveAnswer?: (questionId: string, key: string) => void;
+  /** Đánh dấu/bỏ đánh dấu câu (để tự lưu cùng đáp án) */
+  onToggleFlag?: (questionId: string, flagged: boolean, key?: string) => void;
+  /** Làm tiếp lượt đang dở: đáp án, cờ và thời gian đã trôi qua (giây) */
+  initialAnswers?: Record<string, string>;
+  initialFlagged?: string[];
+  initialElapsedSec?: number;
 }
 
 /** Engine thi thử: focus mode, đếm ngược, auto-submit, bảng câu hỏi, cờ đánh dấu */
-export const ExamRunner: React.FC<ExamRunnerProps> = ({ test, onSubmitExam, onExit, onSaveAnswer }) => {
+export const ExamRunner: React.FC<ExamRunnerProps> = ({ test, onSubmitExam, onExit, onSaveAnswer, onToggleFlag, initialAnswers, initialFlagged, initialElapsedSec = 0 }) => {
   const sections = test.sections;
   const allQuestions: IQuestion[] = useMemo(() => sections.flatMap((s) => s.questions), [sections]);
   // durationMinutes <= 0: luyện tập không giới hạn thời gian — đồng hồ đếm lên, không tự nộp
@@ -31,10 +37,10 @@ export const ExamRunner: React.FC<ExamRunnerProps> = ({ test, onSubmitExam, onEx
   const totalSec = test.durationMinutes * 60;
 
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [answers, setAnswers] = useState<Record<string, string>>({});
-  const [flagged, setFlagged] = useState<Set<string>>(new Set());
-  const [remaining, setRemaining] = useState(totalSec);
-  const [elapsed, setElapsed] = useState(0);
+  const [answers, setAnswers] = useState<Record<string, string>>(() => ({ ...(initialAnswers ?? {}) }));
+  const [flagged, setFlagged] = useState<Set<string>>(() => new Set(initialFlagged ?? []));
+  const [remaining, setRemaining] = useState(() => totalSec - initialElapsedSec);
+  const [elapsed, setElapsed] = useState(initialElapsedSec);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [exitOpen, setExitOpen] = useState(false);
   const [paletteOpen, setPaletteOpen] = useState(false);
@@ -100,12 +106,14 @@ export const ExamRunner: React.FC<ExamRunnerProps> = ({ test, onSubmitExam, onEx
 
   const toggleFlag = () => {
     if (!current) return;
+    const on = !flagged.has(current.id);
     setFlagged((prev) => {
       const next = new Set(prev);
-      if (next.has(current.id)) next.delete(current.id);
-      else next.add(current.id);
+      if (on) next.add(current.id);
+      else next.delete(current.id);
       return next;
     });
+    onToggleFlag?.(current.id, on, answers[current.id]);
   };
 
   const toggleFullscreen = async () => {

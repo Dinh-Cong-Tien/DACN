@@ -4,12 +4,12 @@ import { Plus, Copy, Search, Users } from 'lucide-react';
 import { useDocumentTitle } from '@/shared/hooks';
 import { toast } from '@/shared/stores/uiStore';
 import { errorMessage } from '@/shared/api/client';
-import { teacherApi, useSessions, useTeacherClasses, useTeacherMutation } from '@/shared/api/teacher';
+import { teacherApi, useArchivedClasses, useSessions, useTeacherClasses, useTeacherMutation } from '@/shared/api/teacher';
 import { addDays, isoDate } from '@/shared/constants/teacher';
 import type { ExamType } from '@/shared/types';
 import { Input, Modal, Select } from '@/shared/components/ui';
 import { cn } from '@/shared/utils';
-import { Meter, Panel, TBtn, TPageHead, inputCls } from '../components/TeacherKit';
+import { Meter, Panel, TBtn, TPageHead, TTabs, inputCls } from '../components/TeacherKit';
 import { Img, PHOTOS } from '@/shared/components/media/Img';
 import { TError, TLoading } from '../components/TeacherState';
 
@@ -23,8 +23,12 @@ export const TeacherClassesPage: React.FC = () => {
   const [form, setForm] = useState({ name: '', examType: 'TOEIC' as ExamType, schedule: '', room: '' });
   const [error, setError] = useState('');
   const createClass = useTeacherMutation(teacherApi.createClass);
+  const [view, setView] = useState<'active' | 'archived'>('active');
+  const archivedQ = useArchivedClasses(view === 'archived');
+  const reopen = useTeacherMutation((id: string) => teacherApi.archiveClass(id, false));
+  const shown = view === 'archived' ? (archivedQ.data ?? []) : classes;
 
-  const list = classes.filter((c) => c.name.toLowerCase().includes(search.toLowerCase()) || c.code.toLowerCase().includes(search.toLowerCase()));
+  const list = shown.filter((c) => c.name.toLowerCase().includes(search.toLowerCase()) || c.code.toLowerCase().includes(search.toLowerCase()));
 
   const copy = (code: string) => {
     navigator.clipboard?.writeText(code).catch(() => undefined);
@@ -63,6 +67,15 @@ export const TeacherClassesPage: React.FC = () => {
         }
       />
 
+      <TTabs
+        value={view}
+        onChange={(k) => setView(k as 'active' | 'archived')}
+        items={[
+          { key: 'active', label: 'Đang dạy', count: classes.length },
+          { key: 'archived', label: 'Đã lưu trữ', ...(archivedQ.data ? { count: archivedQ.data.length } : {}) },
+        ]}
+      />
+
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="relative sm:w-80">
           <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
@@ -76,8 +89,8 @@ export const TeacherClassesPage: React.FC = () => {
       {list.length === 0 ? (
         <Panel>
           <div className="py-10 text-center">
-            <p className="font-semibold text-slate-900">{classes.length ? 'Không tìm thấy lớp nào' : 'Bạn chưa có lớp nào'}</p>
-            <p className="mt-1 text-sm text-slate-500">{classes.length ? 'Thử tìm bằng mã lớp, hoặc tạo lớp mới.' : 'Bấm “Tạo lớp” để mở lớp đầu tiên và gửi mã mời cho học viên.'}</p>
+            <p className="font-semibold text-slate-900">{view === 'archived' ? (archivedQ.isLoading ? 'Đang tải…' : shown.length ? 'Không tìm thấy lớp nào' : 'Chưa có lớp nào được lưu trữ') : classes.length ? 'Không tìm thấy lớp nào' : 'Bạn chưa có lớp nào'}</p>
+            <p className="mt-1 text-sm text-slate-500">{view === 'archived' ? 'Lớp đã kết thúc có thể lưu trữ trong mục “Sửa lớp” để gọn danh sách.' : classes.length ? 'Thử tìm bằng mã lớp, hoặc tạo lớp mới.' : 'Bấm “Tạo lớp” để mở lớp đầu tiên và gửi mã mời cho học viên.'}</p>
           </div>
         </Panel>
       ) : (
@@ -121,9 +134,19 @@ export const TeacherClassesPage: React.FC = () => {
                       {c.code}
                       <Copy className="h-3.5 w-3.5 text-slate-400 group-hover/code:text-indigo-600" />
                     </button>
-                    <TBtn size="sm" variant="primary" to={`/teacher/classes/${c.id}`}>
-                      Vào lớp
-                    </TBtn>
+                    {view === 'archived' ? (
+                      <TBtn
+                        size="sm"
+                        disabled={reopen.isPending}
+                        onClick={() => reopen.mutate(c.id, { onSuccess: () => toast.success('Đã mở lại lớp', c.name), onError: (e) => toast.error('Không mở lại được lớp', errorMessage(e)) })}
+                      >
+                        Mở lại lớp
+                      </TBtn>
+                    ) : (
+                      <TBtn size="sm" variant="primary" to={`/teacher/classes/${c.id}`}>
+                        Vào lớp
+                      </TBtn>
+                    )}
                   </div>
                 </div>
               </article>

@@ -1,11 +1,12 @@
 import React, { useMemo, useState } from 'react';
-import { FolderTree, BookOpen, Layers, ChevronRight, Plus, Pencil, Trash2, Database, Users, Eye, ListTree } from 'lucide-react';
+import { FolderTree, BookOpen, Layers, ChevronRight, Plus, Pencil, Trash2, Database, Users, Eye, ListTree, Send, Undo2, PlayCircle, FileText, ClipboardCheck } from 'lucide-react';
 import type { CourseTreeNode } from '@/shared/types';
-import { adminApi, useAdminCourses, useAdminCourseTree, useAdminInvalidate, type AdminTreeNode } from '@/shared/api/admin';
+import { adminApi, useAdminCourses, useAdminCourseTree, useAdminInvalidate, type AdminTreeNode, type TreeLesson } from '@/shared/api/admin';
+import { LessonDialog } from '../components/LessonDialog';
 import { errorMessage } from '@/shared/api/client';
 import { cn } from '@/shared/utils';
 import { useDocumentTitle } from '@/shared/hooks';
-import { Button, ConfirmDialog, EmptyState, Input, Modal, Select } from '@/shared/components/ui';
+import { Button, ConfirmDialog, EmptyState, Input, Modal, Select, Switch, Textarea } from '@/shared/components/ui';
 import { Figures, IconTile, Panel, Status, TBtn, TPageHead, type Tone } from '@/roles/teacher/components/TeacherKit';
 import { Img, PHOTOS } from '@/shared/components/media/Img';
 import { toast } from '@/shared/stores/uiStore';
@@ -33,6 +34,7 @@ const STATUS_VI: Record<string, { tone: 'green' | 'amber' | 'red' | 'gray'; labe
   ARCHIVED: { tone: 'gray', label: 'Lưu trữ' },
 };
 const EMPTY: AdminTreeNode[] = [];
+const LESSON_ICON: Record<string, React.ElementType> = { VIDEO: PlayCircle, READING: FileText, QUIZ: ClipboardCheck, CHECKPOINT: ClipboardCheck };
 
 function countTree(nodes: CourseTreeNode[]): Record<CourseTreeNode['type'], number> {
   const out = { CATEGORY: 0, COURSE: 0, SECTION: 0 };
@@ -70,6 +72,10 @@ export const AdminCoursesPage: React.FC = () => {
   const [category, setCategory] = useState('FOUNDATION');
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState<AdminTreeNode | null>(null);
+  const [info, setInfo] = useState({ description: '', coverUrl: '', isFree: false });
+  const [lessonDlg, setLessonDlg] = useState<{ sectionId: string; lesson: TreeLesson | null } | null>(null);
+  const [deletingLesson, setDeletingLesson] = useState<TreeLesson | null>(null);
+  const [busy, setBusy] = useState(false);
 
   const counts = useMemo(() => countTree(tree), [tree]);
   const selected = (selectedId ? findNode(tree, selectedId) : null) ?? tree[0] ?? null;
@@ -96,6 +102,8 @@ export const AdminCoursesPage: React.FC = () => {
   };
   const openEdit = (node: AdminTreeNode) => {
     setTitle(node.title);
+    const c = coursesQ.data?.find((x) => x.id === node.id);
+    setInfo({ description: c?.description ?? '', coverUrl: c?.coverUrl ?? '', isFree: !!c?.isFree });
     setMode({ kind: 'edit', node });
   };
 
@@ -105,7 +113,10 @@ export const AdminCoursesPage: React.FC = () => {
     setSaving(true);
     try {
       if (mode.kind === 'edit') {
-        if (mode.node.type === 'COURSE') await adminApi.updateCourse(mode.node.id, { title: name });
+        if (mode.node.type === 'COURSE') {
+          if (info.coverUrl.trim() && !/^https?:\/\//i.test(info.coverUrl.trim())) throw new Error('Link ảnh bìa phải bắt đầu bằng http(s)://');
+          await adminApi.updateCourse(mode.node.id, { title: name, description: info.description.trim(), coverUrl: info.coverUrl.trim() || null, isFree: info.isFree });
+        }
         else if (mode.node.type === 'SECTION') await adminApi.updateSection(mode.node.id, { title: name });
         toast.success('Đã cập nhật', `"${name}" đã được lưu.`);
       } else if (newType === 'COURSE') {
@@ -139,6 +150,31 @@ export const AdminCoursesPage: React.FC = () => {
       toast.error('Không xoá được', errorMessage(e));
     } finally {
       setDeleting(null);
+    }
+  };
+
+  const setCourseStatus = async (node: AdminTreeNode, status: 'PENDING_REVIEW' | 'DRAFT') => {
+    setBusy(true);
+    try {
+      await adminApi.updateCourse(node.id, { status });
+      toast.success(status === 'DRAFT' ? 'Đã chuyển về nháp' : 'Đã gửi duyệt', status === 'DRAFT' ? `"${node.title}" không còn hiển thị với học viên.` : `"${node.title}" nằm trong hàng chờ phê duyệt của Trưởng bộ môn.`);
+      await refresh();
+    } catch (e) {
+      toast.error('Không thực hiện được', errorMessage(e));
+    } finally {
+      setBusy(false);
+    }
+  };
+  const removeLesson = async () => {
+    if (!deletingLesson) return;
+    try {
+      await adminApi.deleteLesson(deletingLesson.id);
+      toast.success('Đã xoá bài học', deletingLesson.title);
+      await refresh();
+    } catch (e) {
+      toast.error('Không xoá được', errorMessage(e));
+    } finally {
+      setDeletingLesson(null);
     }
   };
 
@@ -198,6 +234,7 @@ export const AdminCoursesPage: React.FC = () => {
   };
 
   const childType = selected ? TYPE_META[selected.type].child : null;
+  const courseStatus = selectedCourse?.status ?? selected?.status;
 
   return (
     <div className="space-y-6">
@@ -279,15 +316,56 @@ export const AdminCoursesPage: React.FC = () => {
                       Thêm {TYPE_META[childType].label.toLowerCase()}
                     </TBtn>
                   )}
+                  {selected.type === 'SECTION' && (
+                    <TBtn variant="primary" icon={<Plus />} onClick={() => setLessonDlg({ sectionId: selected.id, lesson: null })}>
+                      Thêm bài học
+                    </TBtn>
+                  )}
+                  {selected.type === 'COURSE' && courseStatus !== 'PUBLISHED' && courseStatus !== 'PENDING_REVIEW' && (
+                    <TBtn icon={<Send />} disabled={busy} onClick={() => void setCourseStatus(selected, 'PENDING_REVIEW')}>
+                      Gửi Trưởng bộ môn duyệt
+                    </TBtn>
+                  )}
+                  {selected.type === 'COURSE' && (courseStatus === 'PUBLISHED' || courseStatus === 'PENDING_REVIEW') && (
+                    <TBtn variant="ghost" icon={<Undo2 />} disabled={busy} onClick={() => void setCourseStatus(selected, 'DRAFT')}>
+                      Chuyển về nháp
+                    </TBtn>
+                  )}
                   {selected.type !== 'CATEGORY' && <div className="grid grid-cols-2 gap-2">
                     <TBtn icon={<Pencil />} onClick={() => openEdit(selected)}>
-                      Đổi tên
+                      {selected.type === 'COURSE' ? 'Sửa' : 'Đổi tên'}
                     </TBtn>
                     <TBtn variant="ghost" className="text-rose-600 hover:bg-rose-50 hover:text-rose-700" icon={<Trash2 />} onClick={() => setDeleting(selected)}>
                       Xoá
                     </TBtn>
                   </div>}
                 </div>
+                {selected.type === 'SECTION' && (
+                  <div className="mt-5">
+                    <p className="mb-2 text-[13px] font-semibold text-slate-900">Bài học trong chương ({selected.lessons?.length ?? 0})</p>
+                    {!selected.lessons?.length ? (
+                      <p className="rounded-xl bg-slate-50 px-3 py-4 text-center text-[13px] text-slate-500">Chương chưa có bài học.</p>
+                    ) : (
+                      <ul className="max-h-80 divide-y divide-slate-100 overflow-y-auto rounded-xl border border-slate-200">
+                        {selected.lessons.map((l, i) => {
+                          const Icon = LESSON_ICON[l.type] ?? PlayCircle;
+                          return (
+                            <li key={l.id} className="flex items-center gap-2 px-3 py-2">
+                              <span className="w-5 shrink-0 text-right text-[11px] tabular-nums text-slate-400">{i + 1}</span>
+                              <Icon className="h-4 w-4 shrink-0 text-slate-400" />
+                              <div className="min-w-0 flex-1">
+                                <p className="truncate text-[13px] font-medium text-slate-800">{l.title}</p>
+                                <p className="text-[11px] text-slate-500">{l.durationMin} phút{l.isFreePreview ? ' · học thử' : ''}</p>
+                              </div>
+                              <button type="button" title="Sửa bài" onClick={() => setLessonDlg({ sectionId: selected.id, lesson: l })} className="rounded-lg p-1.5 text-slate-400 hover:bg-indigo-50 hover:text-indigo-700"><Pencil className="h-3.5 w-3.5" /></button>
+                              <button type="button" title="Xoá bài" onClick={() => setDeletingLesson(l)} className="rounded-lg p-1.5 text-slate-400 hover:bg-rose-50 hover:text-rose-600"><Trash2 className="h-3.5 w-3.5" /></button>
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    )}
+                  </div>
+                )}
               </div>
             </>
           ) : (
@@ -301,8 +379,8 @@ export const AdminCoursesPage: React.FC = () => {
       <Modal
         open={!!mode}
         onClose={() => setMode(null)}
-        title={mode?.kind === 'edit' ? 'Đổi tên' : mode?.node.id === '__root' ? 'Thêm khoá học' : `Thêm vào "${mode?.node.title}"`}
-        size="sm"
+        title={mode?.kind === 'edit' ? (mode.node.type === 'COURSE' ? 'Sửa khoá học' : 'Đổi tên') : mode?.node.id === '__root' ? 'Thêm khoá học' : `Thêm vào "${mode?.node.title}"`}
+        size={mode?.kind === 'edit' && mode.node.type === 'COURSE' ? 'md' : 'sm'}
         footer={
           <>
             <Button variant="ghost" onClick={() => setMode(null)}>
@@ -314,6 +392,13 @@ export const AdminCoursesPage: React.FC = () => {
       >
         <div className="space-y-4">
           <Input label="Tên" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Nhập tên..." autoFocus required />
+          {mode?.kind === 'edit' && mode.node.type === 'COURSE' && (
+            <>
+              <Textarea label="Mô tả" rows={3} value={info.description} onChange={(e) => setInfo((x) => ({ ...x, description: e.target.value }))} />
+              <Input label="Link ảnh bìa" placeholder="https://…" value={info.coverUrl} onChange={(e) => setInfo((x) => ({ ...x, coverUrl: e.target.value }))} />
+              <Switch checked={info.isFree} onChange={(v) => setInfo((x) => ({ ...x, isFree: v }))} label="Khoá học miễn phí" description="Tắt để chỉ tài khoản VIP học được" />
+            </>
+          )}
           {mode?.kind === 'add' && mode.node.id === '__root' && (
             <Select label="Danh mục" value={category} onChange={(e) => setCategory(e.target.value)} options={CATEGORIES} />
           )}
@@ -325,6 +410,8 @@ export const AdminCoursesPage: React.FC = () => {
         </div>
       </Modal>
 
+      <LessonDialog open={!!lessonDlg} sectionId={lessonDlg?.sectionId ?? null} lesson={lessonDlg?.lesson ?? null} onClose={() => setLessonDlg(null)} />
+      <ConfirmDialog open={!!deletingLesson} onClose={() => setDeletingLesson(null)} onConfirm={removeLesson} danger title={`Xoá bài "${deletingLesson?.title}"?`} message="Tiến độ học của học viên ở bài này sẽ không còn hiển thị." confirmText="Xoá" />
       <ConfirmDialog open={!!deleting} onClose={() => setDeleting(null)} onConfirm={confirmDelete} danger title={`Xoá "${deleting?.title}"?`} message="Tất cả mục con bên trong cũng sẽ bị xoá. Hành động không thể hoàn tác." confirmText="Xoá" />
     </div>
   );

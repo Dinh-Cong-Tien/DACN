@@ -25,7 +25,7 @@ import type {
   VocabWord,
 } from '@/shared/types';
 import { useAuthStore } from '@/shared/stores/authStore';
-import { api, tokenStore } from './client';
+import { api, http, tokenStore } from './client';
 
 // ---------- Kiểu DTO ----------
 export interface Goal {
@@ -449,3 +449,13 @@ export const useRevokeSession = () => {
   const qc = useQueryClient();
   return useMutation({ mutationFn: (id: string) => api.delete<{ ok: true }>(`/learner/sessions/${id}`), onSuccess: () => qc.invalidateQueries({ queryKey: ['learner', 'sessions'] }) });
 };
+
+// ---------- Ảnh đại diện ----------
+const AVATAR_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
+/** Tải ảnh đại diện (≤ 2 MB) → backend lưu file, ghi media_files, cập nhật users.avatar_url; trả url mới */
+export async function uploadAvatar(file: File): Promise<string> {
+  if (!AVATAR_TYPES.includes(file.type)) throw new Error('Chỉ hỗ trợ ảnh JPG, PNG hoặc WebP');
+  if (file.size > 2 * 1024 * 1024) throw new Error('Ảnh tối đa 2 MB');
+  const res = await http.post<{ data: { url: string } }>('/learner/uploads/avatar', file, { headers: { 'Content-Type': file.type } });
+  return res.data.data.url;
+}

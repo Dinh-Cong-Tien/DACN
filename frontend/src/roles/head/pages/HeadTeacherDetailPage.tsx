@@ -10,7 +10,7 @@ import { addDaysLocal, mondayOf, weekdayCode, ymdLocal } from '@/shared/constant
 import { Avatar, Modal, Textarea } from '@/shared/components/ui';
 import { cn, formatDate } from '@/shared/utils';
 import { CLASS_BAR, DAY_NAME, Figures, Meter, Panel, PanelLink, Status, TBtn, classTone, tbl } from '@/roles/teacher/components/TeacherKit';
-import { ObserveDialog, Stars } from './HeadClassDetailPage';
+import { ObservationActions, ObserveDialog, Stars } from './HeadClassDetailPage';
 
 const STATUS_LABEL = { ACTIVE: ['green', 'Đang giảng dạy'], LOCKED: ['red', 'Đã khoá tài khoản'], PENDING: ['amber', 'Chờ duyệt hồ sơ'] } as const;
 
@@ -237,6 +237,7 @@ export const HeadTeacherDetailPage: React.FC = () => {
                     </div>
                     <p className="mt-0.5 text-sm font-medium text-slate-900">{o.topic}</p>
                     {o.improvements && <p className="mt-1 text-[13px] text-slate-600">Cần cải thiện: {o.improvements}</p>}
+                    <ObservationActions o={o} />
                   </li>
                 ))}
               </ul>

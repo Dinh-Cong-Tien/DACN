@@ -10,6 +10,7 @@ import { useJoinClass, useMyAssignments, useMyClasses, type ClassDetailDto } fro
 import type { Assignment, Material, MyAssignmentState } from '@/shared/types';
 import { assignmentHref, cn, formatDate, formatDateTime } from '@/shared/utils';
 import { PageHeader } from '@/shared/components/ui';
+import { fileHref } from '@/shared/api/teacher';
 
 type Row = Assignment & { me: MyAssignmentState };
 type TabKey = 'TODO' | 'SUBMITTED' | 'GRADED';
@@ -192,7 +193,7 @@ export const StudentClassesPage: React.FC = () => {
                     {classes.find((c) => c.id === m.classId)?.name} · {m.size} · {formatDate(m.uploadedAt)}
                   </span>
                 </span>
-                <button type="button" onClick={() => (m.fileUrl ? window.open(m.fileUrl, '_blank', 'noopener') : toast.info('Tài liệu chưa có tệp đính kèm', m.title))} className="inline-flex h-8 items-center gap-1.5 rounded-md px-2.5 text-[13px] text-slate-600 hover:bg-slate-900/[0.05] hover:text-slate-900">
+                <button type="button" onClick={() => (m.fileUrl ? window.open(fileHref(m.fileUrl), '_blank', 'noopener') : toast.info('Tài liệu chưa có tệp đính kèm', m.title))} className="inline-flex h-8 items-center gap-1.5 rounded-md px-2.5 text-[13px] text-slate-600 hover:bg-slate-900/[0.05] hover:text-slate-900">
                   <Download className="h-4 w-4" /> Tải
                 </button>
               </li>

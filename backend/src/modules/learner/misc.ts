@@ -45,8 +45,10 @@ miscRouter.get(
 miscRouter.post(
   '/notifications/:id/read',
   handler(async (req) => {
-    const r = await prisma.notification.updateMany({ where: { id: pid(req), userId: me(req).id, readAt: null }, data: { readAt: new Date() } });
-    return { updated: r.count };
+    const own = await prisma.notification.findFirst({ where: { id: pid(req), userId: me(req).id }, select: { id: true, readAt: true } });
+    if (!own) throw notFound('Thông báo');
+    if (!own.readAt) await prisma.notification.update({ where: { id: own.id }, data: { readAt: new Date() } });
+    return { updated: own.readAt ? 0 : 1 };
   })
 );
 
@@ -61,7 +63,8 @@ miscRouter.post(
 miscRouter.delete(
   '/notifications/:id',
   handler(async (req) => {
-    await prisma.notification.deleteMany({ where: { id: pid(req), userId: me(req).id } });
+    const r = await prisma.notification.deleteMany({ where: { id: pid(req), userId: me(req).id } });
+    if (!r.count) throw notFound('Thông báo');
     return { ok: true };
   })
 );

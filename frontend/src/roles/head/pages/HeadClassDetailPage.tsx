@@ -3,7 +3,7 @@ import { Link, useParams } from 'react-router-dom';
 import { CalendarDays, ChevronRight, ClipboardCheck, ClipboardList, Eye, MapPin, MessageSquare, Star, TrendingUp, Users } from 'lucide-react';
 import { useDocumentTitle } from '@/shared/hooks';
 import { toast } from '@/shared/stores/uiStore';
-import type { ClassStudent } from '@/shared/types';
+import type { ClassObservation, ClassStudent } from '@/shared/types';
 import { headApi, useHeadClass, useHeadClasses, useHeadInvalidate, useHeadTeachers, type HeadClass } from '@/shared/api/head';
 import { errorMessage } from '@/shared/api/client';
 import { ASSIGNMENT_TYPE_LABEL, partLabel } from '@/shared/constants/staff';
@@ -33,6 +33,88 @@ export const Stars: React.FC<{ value: number }> = ({ value }) => (
 const todayIso = () => {
   const d = new Date();
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+};
+
+/** Thao tác trên một buổi dự giờ: ghi kết quả (sau buổi học) hoặc huỷ lịch. Dùng ở chi tiết lớp và hồ sơ giáo viên. */
+export const ObservationActions: React.FC<{ o: ClassObservation }> = ({ o }) => {
+  const invalidate = useHeadInvalidate();
+  const [open, setOpen] = useState(false);
+  const [rating, setRating] = useState(4);
+  const [strengths, setStrengths] = useState('');
+  const [improvements, setImprovements] = useState('');
+  const [busy, setBusy] = useState(false);
+  if (o.status !== 'PLANNED') return null;
+  const happened = o.date <= todayIso();
+  const save = async () => {
+    setBusy(true);
+    try {
+      await headApi.recordObservation(o.id, { rating, strengths: strengths.trim() || undefined, improvements: improvements.trim() || undefined });
+      toast.success('Đã lưu biên bản dự giờ', `${o.teacher} nhận được kết quả ${rating}/5.`);
+      setOpen(false);
+      invalidate();
+    } catch (e) {
+      toast.error('Không lưu được', errorMessage(e));
+    } finally {
+      setBusy(false);
+    }
+  };
+  const cancel = async () => {
+    setBusy(true);
+    try {
+      await headApi.cancelObservation(o.id);
+      toast.info('Đã huỷ lịch dự giờ', `${formatDate(o.date)} · ${o.start}`);
+      invalidate();
+    } catch (e) {
+      toast.error('Không huỷ được', errorMessage(e));
+    } finally {
+      setBusy(false);
+    }
+  };
+  return (
+    <>
+      <div className="mt-3 flex flex-wrap gap-2">
+        {happened && (
+          <TBtn size="sm" variant="primary" disabled={busy} onClick={() => setOpen(true)}>
+            Ghi kết quả
+          </TBtn>
+        )}
+        <TBtn size="sm" variant="ghost" disabled={busy} onClick={() => void cancel()}>
+          Huỷ lịch
+        </TBtn>
+      </div>
+      <Modal
+        open={open}
+        onClose={() => setOpen(false)}
+        title="Biên bản dự giờ"
+        description={`${formatDate(o.date)} · ${o.start} · ${o.topic}`}
+        footer={
+          <>
+            <TBtn variant="ghost" onClick={() => setOpen(false)}>
+              Huỷ
+            </TBtn>
+            <TBtn variant="primary" disabled={busy} onClick={() => void save()}>
+              Lưu biên bản
+            </TBtn>
+          </>
+        }
+      >
+        <div className="space-y-4">
+          <div>
+            <p className="mb-1.5 text-sm font-medium text-slate-700">Đánh giá chung</p>
+            <div className="flex gap-1">
+              {[1, 2, 3, 4, 5].map((i) => (
+                <button key={i} type="button" aria-label={`${i} sao`} onClick={() => setRating(i)} className="rounded p-0.5">
+                  <Star className={cn('h-6 w-6', i <= rating ? 'fill-amber-400 text-amber-400' : 'text-slate-300')} />
+                </button>
+              ))}
+            </div>
+          </div>
+          <Textarea label="Điểm mạnh" rows={3} value={strengths} onChange={(e) => setStrengths(e.target.value)} />
+          <Textarea label="Cần cải thiện" rows={3} value={improvements} onChange={(e) => setImprovements(e.target.value)} />
+        </div>
+      </Modal>
+    </>
+  );
 };
 
 /** Modal lên lịch dự giờ, dùng chung cho chi tiết lớp, hồ sơ giáo viên, lịch bộ môn. `classIds` giới hạn danh sách lớp được chọn. */
@@ -425,6 +507,7 @@ export const HeadClassDetailPage: React.FC = () => {
                       <span className="font-medium text-amber-700">Cần cải thiện:</span> {o.improvements}
                     </p>
                   )}
+                  <ObservationActions o={o} />
                 </li>
               ))}
             </ul>

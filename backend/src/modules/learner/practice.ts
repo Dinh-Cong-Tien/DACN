@@ -16,6 +16,8 @@ export const practiceRouter = Router();
 
 /** Thư mục lưu file tải lên (ngoài src, đã bỏ qua trong git) */
 export const UPLOAD_DIR = path.resolve(__dirname, '../../../uploads/recordings');
+export const AVATAR_DIR = path.resolve(__dirname, '../../../uploads/avatars');
+const IMAGE_TYPES: Record<string, string> = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp' };
 const AUDIO_TYPES: Record<string, string> = { 'audio/webm': 'webm', 'audio/ogg': 'ogg', 'audio/mpeg': 'mp3', 'audio/mp4': 'm4a', 'audio/wav': 'wav', 'audio/x-wav': 'wav' };
 
 practiceRouter.get(
@@ -53,6 +55,40 @@ practiceRouter.post(
     await prisma.mediaFile.create({
       data: { ownerId: userId, storageKey: `recordings/${name}`, url, mimeType: mime, sizeBytes: BigInt(buf.length), checksumSha256: crypto.createHash('sha256').update(buf).digest('hex'), purpose: 'RECORDING', isPrivate: true },
     });
+    return { url };
+  })
+);
+
+/** Ảnh đại diện (body nhị phân image/jpeg|png|webp, tối đa 2 MB) → lưu file, ghi media_files (AVATAR), cập nhật users.avatar_url */
+practiceRouter.post(
+  '/uploads/avatar',
+  express.raw({ type: 'image/*', limit: '2mb' }),
+  handler(async (req) => {
+    const userId = me(req).id;
+    const mime = String(req.headers['content-type'] ?? '').split(';')[0].trim();
+    const ext = IMAGE_TYPES[mime];
+    const buf = req.body as Buffer;
+    if (!ext) throw badRequest('Chỉ hỗ trợ ảnh JPG, PNG hoặc WebP');
+    if (!Buffer.isBuffer(buf) || !buf.length) throw badRequest('File ảnh trống');
+    // Kiểm tra chữ ký tệp khớp loại khai báo (chặn file giả đuôi ảnh)
+    const sig =
+      ext === 'jpg' ? buf[0] === 0xff && buf[1] === 0xd8 && buf[2] === 0xff
+      : ext === 'png' ? buf.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]))
+      : buf.subarray(0, 4).toString('latin1') === 'RIFF' && buf.subarray(8, 12).toString('latin1') === 'WEBP';
+    if (!sig) throw badRequest('Tệp không phải ảnh hợp lệ');
+    fs.mkdirSync(AVATAR_DIR, { recursive: true });
+    const name = `${crypto.randomUUID()}.${ext}`;
+    fs.writeFileSync(path.join(AVATAR_DIR, name), buf);
+    const url = `/api/v1/learner/avatars/${name}`;
+    const old = await prisma.user.findUniqueOrThrow({ where: { id: userId }, select: { avatarUrl: true } });
+    await prisma.$transaction([
+      prisma.mediaFile.create({
+        data: { ownerId: userId, storageKey: `avatars/${name}`, url, mimeType: mime, sizeBytes: BigInt(buf.length), checksumSha256: crypto.createHash('sha256').update(buf).digest('hex'), purpose: 'AVATAR', isPrivate: false },
+      }),
+      prisma.user.update({ where: { id: userId }, data: { avatarUrl: url } }),
+      // Ảnh cũ do người dùng tải lên → đánh dấu xoá mềm (file vẫn giữ để không gãy link đang cache)
+      prisma.mediaFile.updateMany({ where: { ownerId: userId, purpose: 'AVATAR', url: old.avatarUrl ?? '__none__', deletedAt: null }, data: { deletedAt: new Date() } }),
+    ]);
     return { url };
   })
 );

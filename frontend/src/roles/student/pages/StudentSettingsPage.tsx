@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { User, Target, Bell, Lock, Save, Camera, Trash2, Users, KeyRound } from 'lucide-react';
 import type { ExamType } from '@/shared/types';
 import { useDocumentTitle } from '@/shared/hooks';
@@ -6,7 +6,7 @@ import { useAuthStore } from '@/shared/stores/authStore';
 import { toast } from '@/shared/stores/uiStore';
 import { authApi } from '@/shared/api/auth';
 import { api, errorMessage } from '@/shared/api/client';
-import { useGoal, useJoinClass, useSaveGoal } from '@/shared/api/learner';
+import { uploadAvatar, useGoal, useJoinClass, useSaveGoal } from '@/shared/api/learner';
 import { ROLE_LABEL, formatDate } from '@/shared/utils';
 import { Avatar, Badge, Button, Card, CardHeader, ConfirmDialog, Input, PageHeader, PasswordInput, Select, Switch, Tabs } from '@/shared/components/ui';
 
@@ -44,6 +44,21 @@ export const StudentSettingsPage: React.FC = () => {
   const [code, setCode] = useState('');
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [saving, setSaving] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+  const onAvatar = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0];
+    e.target.value = '';
+    if (!f) return;
+    setUploading(true);
+    uploadAvatar(f)
+      .then((url) => {
+        updateUser({ avatarUrl: url });
+        toast.success('Đã cập nhật ảnh đại diện');
+      })
+      .catch((err) => toast.error('Chưa tải được ảnh', errorMessage(err)))
+      .finally(() => setUploading(false));
+  };
 
   if (!user) return null;
 
@@ -132,7 +147,8 @@ export const StudentSettingsPage: React.FC = () => {
               <div className="rounded-full border-[3px] border-slate-900 bg-white p-1 shadow-hard-sm">
                 <Avatar name={user.fullName} src={user.avatarUrl} size="xl" />
               </div>
-              <button onClick={() => toast.info('Tính năng tải ảnh sẽ có trong bản tiếp theo')} className="absolute -bottom-1 -right-1 w-9 h-9 rounded-full bg-amber-300 border-2 border-slate-900 text-slate-900 flex items-center justify-center shadow-hard-sm hover:-translate-y-0.5 transition">
+              <input ref={fileRef} type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={onAvatar} />
+              <button onClick={() => fileRef.current?.click()} disabled={uploading} aria-label="Đổi ảnh đại diện" className="absolute -bottom-1 -right-1 w-9 h-9 rounded-full bg-amber-300 border-2 border-slate-900 text-slate-900 flex items-center justify-center shadow-hard-sm hover:-translate-y-0.5 transition">
                 <Camera className="w-4 h-4" />
               </button>
             </div>

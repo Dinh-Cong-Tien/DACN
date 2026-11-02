@@ -59,6 +59,7 @@ export const cmsApi = {
   team: () => api.get<TeamMember[]>('/cms/team'),
   rubric: (code: string) => api.get<PublicRubric>(`/cms/rubrics/${code}`),
   contact: (body: { name: string; email: string; topic: string; message: string; subject?: string }) => api.post<{ ticketId: string }>('/cms/contact', body),
+  newsletter: (email: string) => api.post<{ subscribed: boolean; already: boolean }>('/cms/newsletter', { email }),
   download: (id: string) => api.post<{ fileUrl: string | null; downloads: number }>(`/cms/resources/${id}/download`),
   scoreTable: () => api.get<ScoreRow[]>('/cms/score-table'),
   scoreConversion: (exam: ExamType) => api.get<Record<string, Record<string, number>>>(`/cms/score-conversion/${exam}`),

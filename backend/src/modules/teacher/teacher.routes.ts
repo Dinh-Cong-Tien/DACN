@@ -4,12 +4,16 @@
  * Luồng ghi: #7 GV chấm bài, #12 Điểm danh (KE_HOACH mục 10.7).
  */
 import crypto from 'node:crypto';
-import { Router, type Request } from 'express';
+import fs from 'node:fs';
+import path from 'node:path';
+import express, { Router, type Request } from 'express';
+import jwt from 'jsonwebtoken';
+import { env } from '../../config/env';
 import { z } from 'zod';
 import { Prisma, type ExamPart } from '@prisma/client';
 import { prisma } from '../../lib/prisma';
 import { allow, auth } from '../../core/auth';
-import { badRequest, handler, me, notFound, parse } from '../../core/http';
+import { badRequest, forbidden, handler, me, notFound, parse, unauthorized } from '../../core/http';
 import { iso, num, ymd } from '../../core/dto';
 import {
   DONE_STATUSES,
@@ -35,6 +39,66 @@ import {
 } from './teacher.service';
 
 export const teacherRouter = Router();
+
+// =====================================================================
+// FILE TÀI LIỆU LỚP — đặt TRƯỚC middleware vai trò để học viên trong lớp cũng mở được.
+// Thẻ <a>/<iframe> không gửi được header nên nhận access token qua ?token= (hoặc header Bearer).
+// =====================================================================
+export const MATERIAL_DIR = path.resolve(__dirname, '../../../uploads/materials');
+const MIME_EXT: Record<string, string> = {
+  'application/pdf': 'pdf',
+  'application/msword': 'doc',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document': 'docx',
+  'application/vnd.ms-powerpoint': 'ppt',
+  'application/vnd.openxmlformats-officedocument.presentationml.presentation': 'pptx',
+  'application/vnd.ms-excel': 'xls',
+  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': 'xlsx',
+  'text/plain': 'txt',
+  'audio/mpeg': 'mp3',
+  'audio/mp4': 'm4a',
+  'audio/wav': 'wav',
+  'audio/x-wav': 'wav',
+  'video/mp4': 'mp4',
+  'video/webm': 'webm',
+  'image/png': 'png',
+  'image/jpeg': 'jpg',
+};
+const FILE_NAME = /^[0-9a-f-]{36}\.[a-z0-9]{2,5}$/;
+
+teacherRouter.get(
+  '/files/:key',
+  handler(async (req, res) => {
+    const key = String(req.params.key);
+    if (!FILE_NAME.test(key)) throw notFound('Tài liệu');
+    const bearer = req.headers.authorization?.startsWith('Bearer ') ? req.headers.authorization.slice(7) : undefined;
+    const raw = typeof req.query.token === 'string' ? req.query.token : bearer;
+    if (!raw) throw unauthorized('Bạn cần đăng nhập để mở tài liệu');
+    let viewer: { id: string; role: string };
+    try {
+      const p = jwt.verify(raw, env.JWT_SECRET) as { sub: string; role: string };
+      viewer = { id: p.sub, role: p.role };
+    } catch {
+      throw unauthorized('Phiên đăng nhập hết hạn, tải lại trang rồi mở lại tài liệu');
+    }
+    const url = `/api/v1/teacher/files/${key}`;
+    const m = await prisma.material.findFirst({ where: { fileUrl: url, deletedAt: null }, include: { class: { select: { teacherId: true } } } });
+    if (!m || !m.classId) throw notFound('Tài liệu');
+    const member = await prisma.classMember.findFirst({ where: { classId: m.classId, studentId: viewer.id, status: 'ACTIVE' }, select: { id: true } });
+    const allowed = viewer.role === 'ADMIN' || viewer.role === 'HEAD_TEACHER' || m.class?.teacherId === viewer.id || !!member;
+    if (!allowed) throw forbidden('Chỉ thành viên lớp mới mở được tài liệu này');
+    const file = path.join(MATERIAL_DIR, key);
+    if (!fs.existsSync(file)) throw notFound('Tệp tài liệu');
+    const media = await prisma.mediaFile.findFirst({ where: { storageKey: `materials/${key}` }, select: { mimeType: true } });
+    // Học viên mở tài liệu → tính một lượt tải
+    if (member) await prisma.material.update({ where: { id: m.id }, data: { downloadsCount: { increment: 1 } } });
+    const ext = key.split('.').pop();
+    res.setHeader('Content-Type', media?.mimeType ?? 'application/octet-stream');
+    res.setHeader('Content-Disposition', `inline; filename*=UTF-8''${encodeURIComponent(`${m.title}.${ext}`)}`);
+    res.setHeader('Cache-Control', 'private, max-age=300');
+    res.sendFile(file);
+  })
+);
+
 teacherRouter.use(auth, allow('TEACHER', 'HEAD_TEACHER'));
 
 // Id trên URL phải là UUID (bài tự luyện dùng dạng `ans:<uuid>`), sai định dạng → 404 thay vì lỗi Prisma
@@ -294,8 +358,16 @@ teacherRouter.delete(
   '/classes/:id/students/:studentId',
   handler(async (req) => {
     const c = await assertClass(me(req), P(req));
-    const r = await prisma.classMember.updateMany({ where: { classId: c.id, studentId: P(req, 'studentId'), status: 'ACTIVE' }, data: { status: 'REMOVED' } });
-    if (!r.count) throw notFound('Học viên trong lớp');
+    const studentId = P(req, 'studentId');
+    const removed = await prisma.$transaction(async (tx) => {
+      const r = await tx.classMember.updateMany({ where: { classId: c.id, studentId, status: 'ACTIVE' }, data: { status: 'REMOVED' } });
+      if (!r.count) return 0;
+      // Bài chưa làm của học viên đã rời lớp không còn tính vào tiến độ lớp
+      await tx.assignmentSubmission.deleteMany({ where: { studentId, status: 'TODO', assignment: { classId: c.id } } });
+      return r.count;
+    });
+    if (!removed) throw notFound('Học viên trong lớp');
+    await recomputeRisk(c.id);
     return { ok: true };
   })
 );
@@ -528,6 +600,50 @@ teacherRouter.post(
     });
     if (b.notify !== false) await notifyUsers(await activeStudentIds(c.id), { type: 'CLASS', title: `Tài liệu mới — ${c.name}`, message: b.title, link: '/app/classes', refType: 'MATERIAL', refId: m.id });
     return toMaterial(m);
+  })
+);
+
+/** Tải file tài liệu lên (body nhị phân, tối đa 25 MB). Query: classId, title, type?, notify?; tên file gốc qua header X-File-Name (encodeURIComponent). */
+teacherRouter.post(
+  '/materials/upload',
+  express.raw({ type: () => true, limit: '25mb' }),
+  handler(async (req) => {
+    const u = me(req);
+    const q = parse(
+      z.object({ classId: uuid, title: z.string().trim().min(1).max(200), type: z.enum(['VIDEO', 'PDF', 'DOC', 'AUDIO', 'LINK']).optional(), notify: z.enum(['true', 'false']).optional() }),
+      req.query
+    );
+    const c = await assertClass(u, q.classId);
+    const buf = req.body as Buffer;
+    if (!Buffer.isBuffer(buf) || buf.length === 0) throw badRequest('Tệp tải lên trống');
+    const mime = String(req.headers['content-type'] ?? '').split(';')[0].trim().toLowerCase();
+    let original = '';
+    try {
+      original = decodeURIComponent(String(req.headers['x-file-name'] ?? ''));
+    } catch {
+      original = '';
+    }
+    const ext = MIME_EXT[mime] ?? (/\.([a-z0-9]{2,5})$/i.exec(original)?.[1].toLowerCase() ?? '');
+    if (!ext || !Object.values(MIME_EXT).includes(ext)) throw badRequest('Định dạng tệp không được hỗ trợ (PDF, Word, PowerPoint, Excel, TXT, MP3, MP4, ảnh)');
+    const type = q.type ?? (ext === 'pdf' ? 'PDF' : ['mp3', 'm4a', 'wav'].includes(ext) ? 'AUDIO' : ['mp4', 'webm'].includes(ext) ? 'VIDEO' : 'DOC');
+    const realMime = mime && mime !== 'application/octet-stream' ? mime : (Object.entries(MIME_EXT).find(([, e]) => e === ext)?.[0] ?? 'application/octet-stream');
+    fs.mkdirSync(MATERIAL_DIR, { recursive: true });
+    const key = `${crypto.randomUUID()}.${ext}`;
+    fs.writeFileSync(path.join(MATERIAL_DIR, key), buf);
+    const url = `/api/v1/teacher/files/${key}`;
+    try {
+      const m = await prisma.$transaction(async (tx) => {
+        await tx.mediaFile.create({
+          data: { ownerId: u.id, storageKey: `materials/${key}`, url, mimeType: realMime, sizeBytes: BigInt(buf.length), checksumSha256: crypto.createHash('sha256').update(buf).digest('hex'), purpose: 'MATERIAL', isPrivate: true },
+        });
+        return tx.material.create({ data: { classId: c.id, uploadedById: u.id, title: q.title, type, fileUrl: url, sizeBytes: BigInt(buf.length) } });
+      });
+      if (q.notify !== 'false') await notifyUsers(await activeStudentIds(c.id), { type: 'CLASS', title: `Tài liệu mới — ${c.name}`, message: q.title, link: '/app/classes', refType: 'MATERIAL', refId: m.id });
+      return toMaterial(m);
+    } catch (e) {
+      fs.rmSync(path.join(MATERIAL_DIR, key), { force: true });
+      throw e;
+    }
   })
 );
 

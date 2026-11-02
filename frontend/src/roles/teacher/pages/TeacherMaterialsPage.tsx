@@ -3,14 +3,15 @@ import { Upload, FileText, Video, Music, File, Trash2, ExternalLink, Link2 } fro
 import { useDocumentTitle } from '@/shared/hooks';
 import { toast } from '@/shared/stores/uiStore';
 import { errorMessage } from '@/shared/api/client';
-import { teacherApi, useMaterials, useTeacherClasses, useTeacherMutation, type MaterialType, type TMaterial } from '@/shared/api/teacher';
+import { fileHref, teacherApi, useMaterials, useTeacherClasses, useTeacherMutation, type MaterialType, type TMaterial } from '@/shared/api/teacher';
 import { cn, formatDate } from '@/shared/utils';
 import { ConfirmDialog, Input, Modal, Select } from '@/shared/components/ui';
-import { Figures, TBtn, TPageHead, inputCls, tbl } from '../components/TeacherKit';
+import { Figures, TBtn, TPageHead, TTabs, inputCls, tbl } from '../components/TeacherKit';
 import { TEmpty, TError, TLoading } from '../components/TeacherState';
 
 const ICON: Record<MaterialType, React.ElementType> = { VIDEO: Video, PDF: FileText, DOC: File, AUDIO: Music, LINK: Link2 };
 const LABEL: Record<MaterialType, string> = { VIDEO: 'Video', PDF: 'PDF', DOC: 'Word', AUDIO: 'Audio', LINK: 'Liên kết' };
+const MAX_UPLOAD_MB = 25;
 
 /** Đoán loại tài liệu theo đường dẫn */
 const typeOf = (url: string): MaterialType => {
@@ -30,16 +31,35 @@ export const TeacherMaterialsPage: React.FC = () => {
   const [deleting, setDeleting] = useState<TMaterial | null>(null);
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({ classId: '', title: '', url: '', type: 'LINK' as MaterialType });
+  const [mode, setMode] = useState<'file' | 'link'>('file');
+  const [file, setFile] = useState<File | null>(null);
   const add = useTeacherMutation(teacherApi.addMaterial);
+  const uploadFile = useTeacherMutation(teacherApi.uploadMaterial);
   const remove = useTeacherMutation(teacherApi.deleteMaterial);
   const className = (id: string) => classes.find((c) => c.id === id)?.name ?? '—';
 
   const openAdd = () => {
     setForm({ classId: classId || classes[0]?.id || '', title: '', url: '', type: 'LINK' });
+    setFile(null);
     setOpen(true);
   };
   const save = () => {
     if (!form.classId) return toast.error('Chọn lớp nhận tài liệu');
+    if (mode === 'file') {
+      if (!file) return toast.error('Chọn tệp cần tải lên');
+      if (file.size > MAX_UPLOAD_MB * 1024 * 1024) return toast.error(`Tệp vượt quá ${MAX_UPLOAD_MB} MB`, 'Hãy nén tệp hoặc dán đường dẫn Google Drive.');
+      const title = form.title.trim() || file.name.replace(/\.[^.]+$/, '');
+      return uploadFile.mutate(
+        { classId: form.classId, title, file },
+        {
+          onSuccess: () => {
+            setOpen(false);
+            toast.success('Đã tải tài liệu lên', `Lớp ${className(form.classId)} nhận được thông báo.`);
+          },
+          onError: (e) => toast.error('Không tải lên được tài liệu', errorMessage(e)),
+        }
+      );
+    }
     if (!form.title.trim()) return toast.error('Vui lòng nhập tên tài liệu');
     if (!/^https?:\/\/\S+$/.test(form.url.trim())) return toast.error('Đường dẫn chưa hợp lệ', 'Nhập link bắt đầu bằng http:// hoặc https://');
     add.mutate(
@@ -127,7 +147,7 @@ export const TeacherMaterialsPage: React.FC = () => {
                         <td className={cn(tbl.td, 'text-right tabular-nums')}>{m.downloads}</td>
                         <td className={cn(tbl.td, 'whitespace-nowrap text-right')}>
                           {m.fileUrl && (
-                            <a href={m.fileUrl} target="_blank" rel="noreferrer" title="Mở tài liệu" className="inline-flex h-8 w-8 items-center justify-center rounded-md text-slate-500 hover:bg-slate-900/[0.05] hover:text-slate-900">
+                            <a href={fileHref(m.fileUrl)} target="_blank" rel="noreferrer" title="Mở tài liệu" className="inline-flex h-8 w-8 items-center justify-center rounded-md text-slate-500 hover:bg-slate-900/[0.05] hover:text-slate-900">
                               <ExternalLink className="h-4 w-4" />
                             </a>
                           )}
@@ -149,24 +169,33 @@ export const TeacherMaterialsPage: React.FC = () => {
         open={open}
         onClose={() => setOpen(false)}
         title="Thêm tài liệu"
-        description="Học viên trong lớp nhận thông báo và mở được tài liệu ngay."
+        description={mode === 'file' ? `Tải tệp từ máy (PDF, Word, PowerPoint, Excel, MP3, MP4, ảnh · tối đa ${MAX_UPLOAD_MB} MB). Chỉ thành viên lớp mở được.` : 'Học viên trong lớp nhận thông báo và mở được tài liệu ngay.'}
         icon={<Upload />}
         footer={
           <>
             <TBtn variant="ghost" onClick={() => setOpen(false)}>
               Huỷ
             </TBtn>
-            <TBtn variant="primary" onClick={save} disabled={add.isPending}>
-              {add.isPending ? 'Đang lưu…' : 'Thêm tài liệu'}
+            <TBtn variant="primary" onClick={save} disabled={add.isPending || uploadFile.isPending}>
+              {add.isPending || uploadFile.isPending ? 'Đang lưu…' : mode === 'file' ? 'Tải lên' : 'Thêm tài liệu'}
             </TBtn>
           </>
         }
       >
         <div className="space-y-4">
+          <TTabs value={mode} onChange={(k) => setMode(k as 'file' | 'link')} items={[{ key: 'file', label: 'Tải tệp lên' }, { key: 'link', label: 'Dán đường dẫn' }]} />
           <Select label="Lớp" options={classes.map((c) => ({ value: c.id, label: c.name }))} value={form.classId} onChange={(e) => setForm((f) => ({ ...f, classId: e.target.value }))} />
-          <Input label="Tên tài liệu" required placeholder="VD: Slide buổi 5 — Part 3" value={form.title} onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))} />
-          <Input label="Đường dẫn" required placeholder="https://drive.google.com/…" value={form.url} onChange={(e) => setForm((f) => ({ ...f, url: e.target.value, type: typeOf(e.target.value) }))} />
-          <Select label="Loại" options={[{ value: 'PDF', label: 'PDF' }, { value: 'VIDEO', label: 'Video' }, { value: 'DOC', label: 'Tài liệu Word' }, { value: 'AUDIO', label: 'Audio' }, { value: 'LINK', label: 'Liên kết khác' }]} value={form.type} onChange={(e) => setForm((f) => ({ ...f, type: e.target.value as MaterialType }))} />
+          {mode === 'file' && (
+            <label className="flex cursor-pointer flex-col items-center justify-center gap-1 rounded-xl border border-dashed border-slate-300 bg-slate-50 px-4 py-6 text-center hover:border-indigo-400">
+              <Upload className="h-5 w-5 text-slate-400" />
+              <span className="text-sm font-semibold text-slate-800">{file ? file.name : 'Chọn tệp từ máy'}</span>
+              <span className="text-[12px] text-slate-500">{file ? `${(file.size / 1048576).toFixed(1)} MB` : `Tối đa ${MAX_UPLOAD_MB} MB`}</span>
+              <input type="file" className="sr-only" accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.txt,.mp3,.m4a,.wav,.mp4,.webm,.png,.jpg,.jpeg" onChange={(e) => setFile(e.target.files?.[0] ?? null)} />
+            </label>
+          )}
+          <Input label="Tên tài liệu" required={mode === 'link'} placeholder={mode === 'file' ? 'Mặc định lấy theo tên tệp' : 'VD: Slide buổi 5 — Part 3'} value={form.title} onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))} />
+          {mode === 'link' && <Input label="Đường dẫn" required placeholder="https://drive.google.com/…" value={form.url} onChange={(e) => setForm((f) => ({ ...f, url: e.target.value, type: typeOf(e.target.value) }))} />}
+          {mode === 'link' && <Select label="Loại" options={[{ value: 'PDF', label: 'PDF' }, { value: 'VIDEO', label: 'Video' }, { value: 'DOC', label: 'Tài liệu Word' }, { value: 'AUDIO', label: 'Audio' }, { value: 'LINK', label: 'Liên kết khác' }]} value={form.type} onChange={(e) => setForm((f) => ({ ...f, type: e.target.value as MaterialType }))} />}
         </div>
       </Modal>
 

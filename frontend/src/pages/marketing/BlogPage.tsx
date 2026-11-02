@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { RevealPhoto } from '@/shared/components/motion';
 import { Img } from '@/shared/components/media/Img';
-import { usePostCategories, usePosts } from '@/shared/api/cms';
+import { cmsApi, usePostCategories, usePosts } from '@/shared/api/cms';
+import { errorMessage } from '@/shared/api/client';
 import { EmptyState, SkeletonGrid } from '@/shared/components/ui';
 import { useDocumentTitle } from '@/shared/hooks';
 import { toast } from '@/shared/stores/uiStore';
@@ -116,13 +117,18 @@ export const BlogPage: React.FC = () => {
               onSubmit={(e) => {
                 e.preventDefault();
                 if (!/^[^\s@]+@[^\s@]+\.[a-z]{2,}$/i.test(email)) return toast.error('Email chưa hợp lệ', 'Kiểm tra lại địa chỉ email giúp mình nhé.');
-                toast.success('Đã đăng ký', 'Bài mới sẽ được gửi vào sáng thứ Hai hằng tuần.');
-                setEmail('');
+                cmsApi
+                  .newsletter(email)
+                  .then((r) => {
+                    toast.success(r.already ? 'Email này đã đăng ký' : 'Đã đăng ký', 'Bạn sẽ nhận bài mới khi OrbiLingo gửi bản tin.');
+                    setEmail('');
+                  })
+                  .catch((err) => toast.error('Chưa đăng ký được', errorMessage(err)));
               }}
               className="rounded-xl border border-slate-200 p-5"
             >
-              <p className="font-medium text-slate-900">Nhận bài mới mỗi thứ Hai</p>
-              <p className="mt-1 text-sm text-slate-600">Một email mỗi tuần, huỷ bất kỳ lúc nào.</p>
+              <p className="font-medium text-slate-900">Nhận bài viết mới</p>
+              <p className="mt-1 text-sm text-slate-600">Để lại email để nhận bài mới qua bản tin.</p>
               <input
                 type="email"
                 value={email}

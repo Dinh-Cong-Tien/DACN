@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Mail, MessageSquarePlus, Phone, Search } from 'lucide-react';
+import { Mail, MessageSquarePlus, Phone, Search, Trash2 } from 'lucide-react';
 import { useDocumentTitle } from '@/shared/hooks';
 import { toast } from '@/shared/stores/uiStore';
 import { errorMessage } from '@/shared/api/client';
@@ -8,7 +8,7 @@ import { teacherApi, useStudentProfile, useTeacherClasses, useTeacherMutation, u
 import { MISTAKE_CAUSE_TEXT } from '@/shared/constants/teacher';
 import type { StudentNote } from '@/shared/types';
 import { cn, formatDate, formatDateTime, timeAgo } from '@/shared/utils';
-import { Avatar } from '@/shared/components/ui';
+import { Avatar, ConfirmDialog } from '@/shared/components/ui';
 import { Meter, Panel, Status, TBtn, TPageHead, TTabs, inputCls } from '../components/TeacherKit';
 import { TEmpty, TError, TLoading } from '../components/TeacherState';
 
@@ -32,6 +32,8 @@ export const TeacherStudentsPage: React.FC = () => {
   const selected = all.find((s) => s.id === params.get('id')) ?? list[0] ?? all[0];
   const profile = useStudentProfile(selected?.id);
   const createNote = useTeacherMutation((v: { studentId: string; kind: StudentNote['kind']; text: string }) => teacherApi.addNote(v.studentId, { kind: v.kind, text: v.text }));
+  const [deletingNote, setDeletingNote] = useState<{ id: string; text: string } | null>(null);
+  const removeNote = useTeacherMutation(teacherApi.deleteNote);
   const select = (id: string) => setParams({ ...(filter === 'watch' ? { filter } : {}), id }, { replace: true });
 
   if (studentsQ.isLoading) return <TLoading />;
@@ -174,6 +176,9 @@ export const TeacherStudentsPage: React.FC = () => {
                       <span className="absolute -left-[21px] top-1.5 h-2.5 w-2.5 rounded-full border-2 border-white bg-indigo-500" />
                       <p className="flex items-center gap-2 text-[12px] text-slate-500">
                         {formatDate(n.date)} <span className={cn('rounded-md px-1.5 py-0.5 text-[11px] font-semibold', NOTE_KIND[n.kind][1])}>{NOTE_KIND[n.kind][0]}</span>
+                        <button type="button" title="Xoá ghi chú" onClick={() => setDeletingNote({ id: n.id, text: n.text })} className="ml-auto inline-flex h-7 w-7 items-center justify-center rounded-md text-slate-400 hover:bg-rose-50 hover:text-rose-600">
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
                       </p>
                       <p className="mt-1 text-sm leading-relaxed text-slate-800">{n.text}</p>
                     </li>
@@ -254,6 +259,19 @@ export const TeacherStudentsPage: React.FC = () => {
           </div>
         </div>
       </div>
+      <ConfirmDialog
+        open={!!deletingNote}
+        onClose={() => setDeletingNote(null)}
+        onConfirm={() => {
+          const d = deletingNote;
+          if (d) removeNote.mutate(d.id, { onSuccess: () => toast.success('Đã xoá ghi chú'), onError: (e) => toast.error('Không xoá được ghi chú', errorMessage(e)) });
+          setDeletingNote(null);
+        }}
+        title="Xoá ghi chú?"
+        message={deletingNote ? `"${deletingNote.text.slice(0, 120)}${deletingNote.text.length > 120 ? '…' : ''}"` : ''}
+        confirmText="Xoá"
+        danger
+      />
     </div>
   );
 };

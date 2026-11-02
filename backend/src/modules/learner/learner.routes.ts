@@ -4,7 +4,7 @@ import { attemptsRouter } from './attempts';
 import { classesRouter } from './classes';
 import { miscRouter } from './misc';
 import { pathRouter } from './path';
-import { practiceRouter, UPLOAD_DIR } from './practice';
+import { AVATAR_DIR, practiceRouter, UPLOAD_DIR } from './practice';
 import { progressRouter } from './progress';
 import { studyRouter } from './study';
 
@@ -16,6 +16,7 @@ export const learnerRouter = Router();
 
 // File ghi âm phát trong thẻ <audio> (không gửi được header Authorization) → phục vụ công khai theo tên ngẫu nhiên UUID
 learnerRouter.use('/media', express.static(UPLOAD_DIR, { fallthrough: false, maxAge: '7d' }));
+learnerRouter.use('/avatars', express.static(AVATAR_DIR, { fallthrough: false, maxAge: '30d' }));
 learnerRouter.use(auth);
 learnerRouter.use(pathRouter);
 learnerRouter.use(attemptsRouter);

@@ -7,7 +7,7 @@ import { z } from 'zod';
 import { Prisma, type ContentStatus, type ExamPart, type SkillType } from '@prisma/client';
 import { prisma } from '../../lib/prisma';
 import { allow, auth } from '../../core/auth';
-import { badRequest, forbidden, handler, me, notFound, pageQuery, paged, parse } from '../../core/http';
+import { badRequest, conflict, forbidden, handler, me, notFound, pageQuery, paged, parse } from '../../core/http';
 import { audit, notify } from '../admin/audit';
 import {
   classInclude,
@@ -844,6 +844,8 @@ headRouter.patch(
     const body = parse(z.object({ rating: z.number().int().min(1).max(5), strengths: z.string().max(2000).optional(), improvements: z.string().max(2000).optional() }), req.body);
     const s = await prisma.classSession.findFirst({ where: { id: idParam(req), observerId: { not: null }, class: classWhere(scope) }, include: { class: { select: { teacherId: true, name: true } } } });
     if (!s) throw notFound('Buổi dự giờ');
+    if (s.sessionDate > startOfToday()) throw badRequest('Chỉ ghi kết quả dự giờ khi buổi học đã diễn ra');
+    if (s.status === 'CANCELLED') throw badRequest('Buổi học đã bị huỷ, không thể ghi kết quả dự giờ');
     const updated = await prisma.classSession.update({
       where: { id: s.id },
       data: { observation: { status: 'DONE', ...body } },
@@ -859,16 +861,31 @@ headRouter.delete(
     const scope = await scopeOf(req);
     const s = await prisma.classSession.findFirst({ where: { id: idParam(req), observerId: me(req).id, class: classWhere(scope) } });
     if (!s) throw notFound('Buổi dự giờ');
+    if ((s.observation as { status?: string } | null)?.status === 'DONE') throw conflict('Buổi dự giờ đã có kết quả, không thể huỷ');
     await prisma.classSession.update({ where: { id: s.id }, data: { observerId: null, observation: Prisma.DbNull } });
     return { ok: true };
   })
 );
 
 // ======================= Khiếu nại & phúc khảo =======================
+/** Khiếu nại thuộc phạm vi: câu hỏi cùng kỳ thi với bộ môn mình phụ trách, hoặc bài nộp của lớp trong bộ môn, hoặc chưa gắn câu/bài */
+async function complaintWhere(req: Request): Promise<Prisma.TicketWhereInput> {
+  const scope = await scopeOf(req);
+  if (!scope) return { category: 'ACADEMIC' };
+  const exams = [...new Set((await prisma.department.findMany({ where: { id: { in: scope } }, select: { examType: true } })).map((d) => d.examType))];
+  return {
+    category: 'ACADEMIC',
+    OR: [
+      { question: { examType: { in: exams } } },
+      { submission: { assignment: { class: classWhere(scope) } } },
+      { questionId: null, submissionId: null },
+    ],
+  };
+}
 headRouter.get(
   '/complaints',
-  handler(async () => {
-    const rows = await prisma.ticket.findMany({ where: { category: 'ACADEMIC' }, include: ticketInclude, orderBy: { createdAt: 'desc' } });
+  handler(async (req) => {
+    const rows = await prisma.ticket.findMany({ where: await complaintWhere(req), include: ticketInclude, orderBy: { createdAt: 'desc' } });
     return rows.map(toComplaint);
   })
 );
@@ -876,7 +893,7 @@ headRouter.patch(
   '/complaints/:id',
   handler(async (req) => {
     const body = parse(z.object({ status: z.enum(['NEW', 'IN_REVIEW', 'RESOLVED']) }), req.body);
-    const t = await prisma.ticket.findFirst({ where: { id: idParam(req), category: 'ACADEMIC' } });
+    const t = await prisma.ticket.findFirst({ where: { id: idParam(req), ...(await complaintWhere(req)) } });
     if (!t) throw notFound('Khiếu nại');
     const status = body.status === 'NEW' ? 'OPEN' : body.status === 'IN_REVIEW' ? 'IN_REVIEW' : 'RESOLVED';
     const updated = await prisma.ticket.update({
@@ -891,8 +908,9 @@ headRouter.post(
   '/complaints/:id/reply',
   handler(async (req) => {
     const body = parse(z.object({ text: z.string().trim().min(1).max(5000), resolve: z.boolean().optional(), accepted: z.boolean().optional() }), req.body);
-    const t = await prisma.ticket.findFirst({ where: { id: idParam(req), category: 'ACADEMIC' } });
+    const t = await prisma.ticket.findFirst({ where: { id: idParam(req), ...(await complaintWhere(req)) } });
     if (!t) throw notFound('Khiếu nại');
+    if (body.resolve && (t.status === 'RESOLVED' || t.status === 'REJECTED')) throw conflict('Khiếu nại đã được giải quyết trước đó');
     const updated = await prisma.$transaction(async (tx) => {
       await tx.ticketMessage.create({ data: { ticketId: t.id, senderType: 'STAFF', senderId: me(req).id, text: body.text } });
       const u = await tx.ticket.update({

@@ -1,17 +1,17 @@
 import React, { useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { CalendarDays, ChevronRight, ClipboardCheck, Copy, ClipboardList, ExternalLink, Link2, MapPin, Megaphone, Pin, TrendingUp, UserPlus, Upload, FileText, Users, Video, Music, File } from 'lucide-react';
+import { Archive, Ban, CalendarDays, CalendarPlus, ChevronRight, ClipboardCheck, Copy, ClipboardList, ExternalLink, Link2, MapPin, Megaphone, Pencil, Pin, PinOff, RefreshCw, RotateCcw, Trash2, TrendingUp, UserMinus, UserPlus, Upload, FileText, Users, Video, Music, File } from 'lucide-react';
 import { useDocumentTitle } from '@/shared/hooks';
 import { toast } from '@/shared/stores/uiStore';
 import { errorMessage } from '@/shared/api/client';
-import { teacherApi, useClassAnalytics, useClassDetail, useTeacherLibrary, useTeacherMutation, type MaterialType } from '@/shared/api/teacher';
+import { fileHref, teacherApi, useClassAnalytics, useClassDetail, useTeacherLibrary, useTeacherMutation, type ClassInput, type MaterialType, type SessionInput } from '@/shared/api/teacher';
 import { ASSIGNMENT_TYPE_LABEL, describeTarget } from '@/shared/constants/teacher';
 import type { ClassStudent } from '@/shared/types';
 import { Img, PHOTOS } from '@/shared/components/media/Img';
 import { BarChart } from '@/shared/components/charts/Charts';
 import { presentRate } from './TeacherSchedulePage';
 import { cn, formatDate, formatDateTime, timeAgo } from '@/shared/utils';
-import { Avatar, Input, Modal, Select, Textarea } from '@/shared/components/ui';
+import { Avatar, ConfirmDialog, Input, Modal, Select, Textarea } from '@/shared/components/ui';
 import { Figures, IconTile, Meter, Panel, Status, TBtn, TTabs, inputCls, tbl, type StatusTone } from '../components/TeacherKit';
 import { TEmpty, TError, TLoading } from '../components/TeacherState';
 
@@ -23,6 +23,10 @@ const STATUS: Record<ClassStudent['status'], { label: string; tone: StatusTone }
 const MAT_LABEL: Record<MaterialType, string> = { VIDEO: 'Video', PDF: 'PDF', DOC: 'Word', AUDIO: 'Audio', LINK: 'Liên kết' };
 
 const MAT_ICON: Record<MaterialType, React.ElementType> = { VIDEO: Video, PDF: FileText, DOC: File, AUDIO: Music, LINK: Link2 };
+const MAX_UPLOAD_MB = 25;
+
+type Confirm = { title: string; message: string; confirmText: string; danger?: boolean; run: () => void };
+const todayYmd = () => new Date(Date.now() + 7 * 3600_000).toISOString().slice(0, 10);
 
 export const TeacherClassDetailPage: React.FC = () => {
   const { id } = useParams();
@@ -39,9 +43,27 @@ export const TeacherClassDetailPage: React.FC = () => {
   const [uploadOpen, setUploadOpen] = useState(false);
   const [emails, setEmails] = useState('');
   const [matForm, setMatForm] = useState({ title: '', type: 'PDF' as MaterialType, url: '' });
+  const [matMode, setMatMode] = useState<'file' | 'link'>('file');
+  const [matFile, setMatFile] = useState<File | null>(null);
+  const [editOpen, setEditOpen] = useState(false);
+  const [classForm, setClassForm] = useState<ClassInput | null>(null);
+  const [sessionOpen, setSessionOpen] = useState(false);
+  const [sessionForm, setSessionForm] = useState<SessionInput>({ date: todayYmd(), start: '19:00', end: '20:30', room: '', topic: '' });
+  const [newsEdit, setNewsEdit] = useState<{ id: string; title: string; body: string } | null>(null);
+  const [confirm, setConfirm] = useState<Confirm | null>(null);
   const postNews = useTeacherMutation(teacherApi.postAnnouncement);
   const addStudents = useTeacherMutation((list: string[]) => teacherApi.addStudents(id!, list));
   const addMaterial = useTeacherMutation(teacherApi.addMaterial);
+  const uploadMaterial = useTeacherMutation(teacherApi.uploadMaterial);
+  const deleteMaterial = useTeacherMutation(teacherApi.deleteMaterial);
+  const updateClass = useTeacherMutation((b: Partial<ClassInput>) => teacherApi.updateClass(id!, b));
+  const archiveClass = useTeacherMutation((archived: boolean) => teacherApi.archiveClass(id!, archived));
+  const regenCode = useTeacherMutation(() => teacherApi.regenerateCode(id!));
+  const removeStudent = useTeacherMutation((studentId: string) => teacherApi.removeStudent(id!, studentId));
+  const addSession = useTeacherMutation((b: SessionInput) => teacherApi.addSession(id!, b));
+  const setSessionStatus = useTeacherMutation((v: { id: string; status: 'UPCOMING' | 'CANCELLED' }) => teacherApi.updateSession(v.id, { status: v.status }));
+  const updateNews = useTeacherMutation((v: { id: string; title?: string; body?: string; pinned?: boolean }) => teacherApi.updateAnnouncement(v.id, { title: v.title, body: v.body, pinned: v.pinned }));
+  const deleteNews = useTeacherMutation(teacherApi.deleteAnnouncement);
 
   if (isLoading) return <TLoading />;
   if (error || !cls) return <TError error={error} onRetry={() => refetch()} />;
@@ -90,15 +112,35 @@ export const TeacherClassDetailPage: React.FC = () => {
     });
   };
 
+  const closeUpload = () => {
+    setUploadOpen(false);
+    setMatForm({ title: '', type: 'PDF', url: '' });
+    setMatFile(null);
+  };
+
   const upload = () => {
+    if (matMode === 'file') {
+      if (!matFile) return toast.error('Chọn tệp cần tải lên');
+      if (matFile.size > MAX_UPLOAD_MB * 1024 * 1024) return toast.error(`Tệp vượt quá ${MAX_UPLOAD_MB} MB`, 'Hãy nén tệp hoặc dán đường dẫn Google Drive.');
+      const title = matForm.title.trim() || matFile.name.replace(/\.[^.]+$/, '');
+      return uploadMaterial.mutate(
+        { classId: cls.id, title, file: matFile },
+        {
+          onSuccess: () => {
+            closeUpload();
+            toast.success('Đã tải tài liệu lên', `${title} · học viên trong lớp mở được ngay.`);
+          },
+          onError: (e) => toast.error('Không tải lên được tài liệu', errorMessage(e)),
+        }
+      );
+    }
     if (!matForm.title.trim()) return toast.error('Vui lòng nhập tên tài liệu');
     if (!/^https?:\/\/\S+$/.test(matForm.url.trim())) return toast.error('Đường dẫn chưa hợp lệ', 'Nhập link bắt đầu bằng http:// hoặc https://');
     addMaterial.mutate(
       { classId: cls.id, title: matForm.title.trim(), type: matForm.type, fileUrl: matForm.url.trim() },
       {
         onSuccess: () => {
-          setUploadOpen(false);
-          setMatForm({ title: '', type: 'PDF', url: '' });
+          closeUpload();
           toast.success('Đã thêm tài liệu', 'Học viên trong lớp xem được ngay ở mục Lớp của tôi.');
         },
         onError: (e) => toast.error('Không thêm được tài liệu', errorMessage(e)),
@@ -107,6 +149,72 @@ export const TeacherClassDetailPage: React.FC = () => {
   };
 
   const A_STATUS: Record<string, [StatusTone, string]> = { OPEN: ['green', 'Đang mở'], CLOSED: ['gray', 'Đã đóng'], DRAFT: ['amber', 'Bản nháp'] };
+  const fail = (what: string) => (e: unknown) => toast.error(what, errorMessage(e));
+
+  const openEdit = () => {
+    setClassForm({ name: cls.name, examType: cls.examType, schedule: cls.schedule ?? '', room: cls.room ?? '', level: cls.level ?? '', description: cls.description ?? '', maxStudents: cls.maxStudents ?? null, startDate: cls.startDate ?? null, endDate: cls.endDate ?? null });
+    setEditOpen(true);
+  };
+  const saveClass = () => {
+    if (!classForm) return;
+    if (classForm.name.trim().length < 2) return toast.error('Tên lớp cần ít nhất 2 ký tự');
+    if (classForm.startDate && classForm.endDate && classForm.endDate < classForm.startDate) return toast.error('Ngày kết thúc phải sau ngày bắt đầu');
+    updateClass.mutate(
+      { ...classForm, name: classForm.name.trim(), schedule: classForm.schedule?.trim() || null, room: classForm.room?.trim() || null, level: classForm.level?.trim() || null, description: classForm.description?.trim() || null, startDate: classForm.startDate || null, endDate: classForm.endDate || null },
+      { onSuccess: () => (setEditOpen(false), toast.success('Đã lưu thông tin lớp', classForm.name)), onError: fail('Không lưu được thông tin lớp') }
+    );
+  };
+  const askArchive = () =>
+    setConfirm({
+      title: cls.isArchived ? 'Mở lại lớp?' : 'Lưu trữ lớp?',
+      message: cls.isArchived ? `Lớp ${cls.name} sẽ xuất hiện lại trong danh sách lớp đang dạy.` : `Lớp ${cls.name} chuyển vào mục Đã lưu trữ, không còn hiện trong lịch dạy. Dữ liệu điểm và bài tập vẫn được giữ.`,
+      confirmText: cls.isArchived ? 'Mở lại' : 'Lưu trữ',
+      danger: !cls.isArchived,
+      run: () => archiveClass.mutate(!cls.isArchived, { onSuccess: () => (setEditOpen(false), toast.success(cls.isArchived ? 'Đã mở lại lớp' : 'Đã lưu trữ lớp', cls.name)), onError: fail('Không cập nhật được lớp') }),
+    });
+  const askRegen = () =>
+    setConfirm({
+      title: 'Đổi mã mời?',
+      message: `Mã ${cls.code} sẽ hết hiệu lực; học viên đã vào lớp không bị ảnh hưởng. Bạn cần gửi mã mới cho học viên chưa tham gia.`,
+      confirmText: 'Đổi mã',
+      run: () => regenCode.mutate(undefined, { onSuccess: (r) => toast.success('Đã đổi mã mời', r.code), onError: fail('Không đổi được mã mời') }),
+    });
+  const askRemove = (st: ClassStudent) =>
+    setConfirm({
+      title: 'Xoá học viên khỏi lớp?',
+      message: `${st.name} sẽ không còn thấy bảng tin, tài liệu và bài tập của lớp. Bài đã nộp và điểm vẫn được giữ.`,
+      confirmText: 'Xoá khỏi lớp',
+      danger: true,
+      run: () => removeStudent.mutate(st.id, { onSuccess: () => toast.success('Đã xoá học viên khỏi lớp', st.name), onError: fail('Không xoá được học viên') }),
+    });
+  const saveSession = () => {
+    const f = sessionForm;
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(f.date)) return toast.error('Chọn ngày học');
+    if (!f.start || !f.end || f.end <= f.start) return toast.error('Giờ kết thúc phải sau giờ bắt đầu');
+    addSession.mutate(
+      { ...f, room: f.room?.trim() || null, topic: f.topic?.trim() || null },
+      { onSuccess: () => (setSessionOpen(false), setSessionForm({ date: todayYmd(), start: f.start, end: f.end, room: '', topic: '' }), toast.success('Đã thêm buổi học', `${formatDate(f.date)} · ${f.start}–${f.end} · học viên nhận được thông báo`)), onError: fail('Không thêm được buổi học') }
+    );
+  };
+  const askCancelSession = (sid: string, date: string, start: string) =>
+    setConfirm({
+      title: 'Huỷ buổi học?',
+      message: `Buổi ${formatDate(date)} lúc ${start} chuyển sang Nghỉ và học viên trong lớp nhận được thông báo.`,
+      confirmText: 'Huỷ buổi',
+      danger: true,
+      run: () => setSessionStatus.mutate({ id: sid, status: 'CANCELLED' }, { onSuccess: () => toast.success('Đã huỷ buổi học', formatDate(date)), onError: fail('Không huỷ được buổi học') }),
+    });
+  const restoreSession = (sid: string, date: string) => setSessionStatus.mutate({ id: sid, status: 'UPCOMING' }, { onSuccess: () => toast.success('Đã khôi phục buổi học', formatDate(date)), onError: fail('Không khôi phục được buổi học') });
+  const togglePin = (n: { id: string; pinned?: boolean; title: string }) => updateNews.mutate({ id: n.id, pinned: !n.pinned }, { onSuccess: () => toast.success(n.pinned ? 'Đã bỏ ghim' : 'Đã ghim lên đầu bảng tin', n.title), onError: fail('Không cập nhật được thông báo') });
+  const saveNews = () => {
+    if (!newsEdit) return;
+    if (newsEdit.title.trim().length < 2 || !newsEdit.body.trim()) return toast.error('Nhập tiêu đề và nội dung thông báo');
+    updateNews.mutate({ id: newsEdit.id, title: newsEdit.title.trim(), body: newsEdit.body.trim() }, { onSuccess: () => (setNewsEdit(null), toast.success('Đã sửa thông báo')), onError: fail('Không sửa được thông báo') });
+  };
+  const askDeleteNews = (n: { id: string; title: string }) =>
+    setConfirm({ title: 'Xoá thông báo?', message: `"${n.title}" sẽ bị gỡ khỏi bảng tin lớp.`, confirmText: 'Xoá', danger: true, run: () => deleteNews.mutate(n.id, { onSuccess: () => toast.success('Đã xoá thông báo', n.title), onError: fail('Không xoá được thông báo') }) });
+  const askDeleteMaterial = (m: { id: string; title: string }) =>
+    setConfirm({ title: 'Xoá tài liệu?', message: `"${m.title}" sẽ không còn hiện với học viên trong lớp.`, confirmText: 'Xoá', danger: true, run: () => deleteMaterial.mutate(m.id, { onSuccess: () => toast.success('Đã xoá tài liệu', m.title), onError: fail('Không xoá được tài liệu') }) });
 
   return (
     <div className="space-y-6">
@@ -127,6 +235,7 @@ export const TeacherClassDetailPage: React.FC = () => {
         <div className="relative flex flex-col gap-6 p-6 md:flex-row md:items-end md:justify-between md:p-8">
           <div className="min-w-0">
             <span className="rounded-md bg-white/15 px-2 py-0.5 text-[12px] font-semibold backdrop-blur">{cls.examType}</span>
+            {cls.isArchived && <span className="ml-2 rounded-md bg-amber-400/90 px-2 py-0.5 text-[12px] font-semibold text-amber-950">Đã lưu trữ</span>}
             <h1 className="mt-3 font-display text-[2rem] font-extrabold leading-tight md:text-[2.6rem]">{cls.name}</h1>
             <p className="mt-2 flex flex-wrap gap-x-5 gap-y-1 text-sm text-slate-200">
               <span className="inline-flex items-center gap-1.5">
@@ -151,7 +260,13 @@ export const TeacherClassDetailPage: React.FC = () => {
               </span>
               <Copy className="h-4 w-4 text-slate-300" />
             </button>
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2 sm:justify-end">
+              <button type="button" onClick={askRegen} disabled={regenCode.isPending} title="Đổi mã mời" className="inline-flex h-10 items-center gap-1.5 rounded-xl border border-white/25 px-3 text-sm font-semibold hover:bg-white/10 disabled:opacity-60">
+                <RefreshCw className="h-4 w-4" /> Đổi mã
+              </button>
+              <button type="button" onClick={openEdit} className="inline-flex h-10 items-center gap-1.5 rounded-xl border border-white/25 px-3 text-sm font-semibold hover:bg-white/10">
+                <Pencil className="h-4 w-4" /> Sửa lớp
+              </button>
               <button type="button" onClick={() => setInviteOpen(true)} className="inline-flex h-10 items-center gap-1.5 rounded-xl border border-white/25 px-4 text-sm font-semibold hover:bg-white/10">
                 <UserPlus className="h-4 w-4" /> Mời học viên
               </button>
@@ -203,7 +318,18 @@ export const TeacherClassDetailPage: React.FC = () => {
                       {formatDateTime(n.createdAt)} · {n.readCount}/{cls.studentsCount} đã xem
                     </p>
                     <h3 className="mt-1 font-display text-[17px] font-bold text-slate-900">{n.title}</h3>
-                    <p className="mt-1.5 text-sm leading-relaxed text-slate-700">{n.body}</p>
+                    <p className="mt-1.5 whitespace-pre-line text-sm leading-relaxed text-slate-700">{n.body}</p>
+                  </div>
+                  <div className="flex shrink-0 gap-0.5">
+                    <button type="button" title={n.pinned ? 'Bỏ ghim' : 'Ghim'} onClick={() => togglePin(n)} className="inline-flex h-8 w-8 items-center justify-center rounded-md text-slate-500 hover:bg-slate-900/[0.05] hover:text-slate-900">
+                      {n.pinned ? <PinOff className="h-4 w-4" /> : <Pin className="h-4 w-4" />}
+                    </button>
+                    <button type="button" title="Sửa" onClick={() => setNewsEdit({ id: n.id, title: n.title, body: n.body })} className="inline-flex h-8 w-8 items-center justify-center rounded-md text-slate-500 hover:bg-slate-900/[0.05] hover:text-slate-900">
+                      <Pencil className="h-4 w-4" />
+                    </button>
+                    <button type="button" title="Xoá" onClick={() => askDeleteNews(n)} className="inline-flex h-8 w-8 items-center justify-center rounded-md text-slate-500 hover:bg-rose-50 hover:text-rose-600">
+                      <Trash2 className="h-4 w-4" />
+                    </button>
                   </div>
                 </div>
               </Panel>
@@ -225,7 +351,17 @@ export const TeacherClassDetailPage: React.FC = () => {
       )}
 
       {tab === 'sessions' && (
-        <Panel flush>
+        <Panel
+          title="Buổi học"
+          sub="Lịch sinh theo thời khoá biểu lớp; thêm buổi dạy bù hoặc huỷ buổi nghỉ"
+          action={
+            <TBtn size="sm" icon={<CalendarPlus />} onClick={() => setSessionOpen(true)}>
+              Thêm buổi
+            </TBtn>
+          }
+          flush
+        >
+          {sessions.length === 0 && <TEmpty title="Lớp chưa có buổi học nào" sub="Bấm “Thêm buổi” để lên lịch." />}
           <div className="overflow-x-auto">
             <table className={tbl.table}>
               <thead className={tbl.thead}>
@@ -251,10 +387,20 @@ export const TeacherClassDetailPage: React.FC = () => {
                     <td className={tbl.td}>
                       <Status tone={s.status === 'DONE' ? 'green' : s.status === 'CANCELLED' ? 'gray' : 'blue'}>{s.status === 'DONE' ? (s.attendance ? `Đã dạy · có mặt ${presentRate(s)}%` : 'Đã dạy') : s.status === 'CANCELLED' ? 'Nghỉ' : 'Sắp dạy'}</Status>
                     </td>
-                    <td className={cn(tbl.td, 'text-right')}>
+                    <td className={cn(tbl.td, 'whitespace-nowrap text-right')}>
                       {s.status !== 'CANCELLED' && (
                         <TBtn size="sm" to={`/teacher/attendance/${s.id}`}>
                           Điểm danh
+                        </TBtn>
+                      )}
+                      {s.status === 'UPCOMING' && (
+                        <TBtn size="sm" variant="ghost" icon={<Ban />} className="ml-1 text-rose-600 hover:text-rose-700" onClick={() => askCancelSession(s.id, s.date, s.start)}>
+                          Huỷ
+                        </TBtn>
+                      )}
+                      {s.status === 'CANCELLED' && (
+                        <TBtn size="sm" variant="ghost" icon={<RotateCcw />} disabled={setSessionStatus.isPending} onClick={() => restoreSession(s.id, s.date)}>
+                          Khôi phục
                         </TBtn>
                       )}
                     </td>
@@ -279,6 +425,7 @@ export const TeacherClassDetailPage: React.FC = () => {
                   <th className={cn(tbl.th, 'w-48')}>Hoàn thành bài tập</th>
                   <th className={tbl.th}>Hoạt động gần nhất</th>
                   <th className={tbl.th}>Tình trạng</th>
+                  <th className={tbl.th} />
                 </tr>
               </thead>
               <tbody>
@@ -304,6 +451,11 @@ export const TeacherClassDetailPage: React.FC = () => {
                     <td className={cn(tbl.td, 'whitespace-nowrap text-slate-600')}>{timeAgo(r.lastActive)}</td>
                     <td className={tbl.td}>
                       <Status tone={STATUS[r.status].tone}>{STATUS[r.status].label}</Status>
+                    </td>
+                    <td className={cn(tbl.td, 'text-right')}>
+                      <button type="button" title="Xoá khỏi lớp" onClick={() => askRemove(r)} className="inline-flex h-8 w-8 items-center justify-center rounded-md text-slate-500 hover:bg-rose-50 hover:text-rose-600">
+                        <UserMinus className="h-4 w-4" />
+                      </button>
                     </td>
                   </tr>
                 ))}
@@ -402,11 +554,16 @@ export const TeacherClassDetailPage: React.FC = () => {
                         <td className={cn(tbl.td, 'tabular-nums text-slate-600')}>{formatDate(m.uploadedAt)}</td>
                         <td className={cn(tbl.td, 'text-right tabular-nums')}>{m.downloads}</td>
                         <td className={cn(tbl.td, 'text-right')}>
-                          {m.fileUrl && (
-                            <a href={m.fileUrl} target="_blank" rel="noreferrer" title="Mở tài liệu" className="inline-flex h-8 w-8 items-center justify-center rounded-md text-slate-500 hover:bg-slate-900/[0.05] hover:text-slate-900">
-                              <ExternalLink className="h-4 w-4" />
-                            </a>
-                          )}
+                          <span className="inline-flex gap-0.5">
+                            {m.fileUrl && (
+                              <a href={fileHref(m.fileUrl)} target="_blank" rel="noreferrer" title="Mở tài liệu" className="inline-flex h-8 w-8 items-center justify-center rounded-md text-slate-500 hover:bg-slate-900/[0.05] hover:text-slate-900">
+                                <ExternalLink className="h-4 w-4" />
+                              </a>
+                            )}
+                            <button type="button" title="Xoá" onClick={() => askDeleteMaterial(m)} className="inline-flex h-8 w-8 items-center justify-center rounded-md text-slate-500 hover:bg-rose-50 hover:text-rose-600">
+                              <Trash2 className="h-4 w-4" />
+                            </button>
+                          </span>
                         </td>
                       </tr>
                     );
@@ -450,27 +607,147 @@ export const TeacherClassDetailPage: React.FC = () => {
 
       <Modal
         open={uploadOpen}
-        onClose={() => setUploadOpen(false)}
+        onClose={closeUpload}
         title="Thêm tài liệu"
-        description="Dán đường dẫn tài liệu (Google Drive, OneDrive, YouTube…) đã chia sẻ quyền xem."
+        description={matMode === 'file' ? `Tải tệp từ máy (PDF, Word, PowerPoint, Excel, MP3, MP4, ảnh · tối đa ${MAX_UPLOAD_MB} MB). Chỉ thành viên lớp mở được.` : 'Dán đường dẫn tài liệu (Google Drive, OneDrive, YouTube…) đã chia sẻ quyền xem.'}
         icon={<Upload />}
         footer={
           <>
-            <TBtn variant="ghost" onClick={() => setUploadOpen(false)}>
+            <TBtn variant="ghost" onClick={closeUpload}>
               Huỷ
             </TBtn>
-            <TBtn variant="primary" onClick={upload} disabled={addMaterial.isPending}>
-              {addMaterial.isPending ? 'Đang lưu…' : 'Thêm tài liệu'}
+            <TBtn variant="primary" onClick={upload} disabled={addMaterial.isPending || uploadMaterial.isPending}>
+              {addMaterial.isPending || uploadMaterial.isPending ? 'Đang lưu…' : matMode === 'file' ? 'Tải lên' : 'Thêm tài liệu'}
             </TBtn>
           </>
         }
       >
         <div className="space-y-4">
-          <Input label="Tên tài liệu" required value={matForm.title} onChange={(e) => setMatForm((f) => ({ ...f, title: e.target.value }))} />
-          <Input label="Đường dẫn" required placeholder="https://drive.google.com/…" value={matForm.url} onChange={(e) => setMatForm((f) => ({ ...f, url: e.target.value }))} />
-          <Select label="Loại" options={[{ value: 'PDF', label: 'PDF' }, { value: 'VIDEO', label: 'Video' }, { value: 'DOC', label: 'Tài liệu Word' }, { value: 'AUDIO', label: 'Audio' }, { value: 'LINK', label: 'Liên kết khác' }]} value={matForm.type} onChange={(e) => setMatForm((f) => ({ ...f, type: e.target.value as MaterialType }))} />
+          <TTabs value={matMode} onChange={(k) => setMatMode(k as 'file' | 'link')} items={[{ key: 'file', label: 'Tải tệp lên' }, { key: 'link', label: 'Dán đường dẫn' }]} />
+          {matMode === 'file' ? (
+            <>
+              <label className="flex cursor-pointer flex-col items-center justify-center gap-1 rounded-xl border border-dashed border-slate-300 bg-slate-50 px-4 py-6 text-center hover:border-indigo-400">
+                <Upload className="h-5 w-5 text-slate-400" />
+                <span className="text-sm font-semibold text-slate-800">{matFile ? matFile.name : 'Chọn tệp từ máy'}</span>
+                <span className="text-[12px] text-slate-500">{matFile ? `${(matFile.size / 1048576).toFixed(1)} MB` : `Tối đa ${MAX_UPLOAD_MB} MB`}</span>
+                <input type="file" className="sr-only" accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.txt,.mp3,.m4a,.wav,.mp4,.webm,.png,.jpg,.jpeg" onChange={(e) => setMatFile(e.target.files?.[0] ?? null)} />
+              </label>
+              <Input label="Tên tài liệu" placeholder={matFile ? matFile.name.replace(/\.[^.]+$/, '') : 'Mặc định lấy theo tên tệp'} value={matForm.title} onChange={(e) => setMatForm((f) => ({ ...f, title: e.target.value }))} />
+            </>
+          ) : (
+            <>
+              <Input label="Tên tài liệu" required value={matForm.title} onChange={(e) => setMatForm((f) => ({ ...f, title: e.target.value }))} />
+              <Input label="Đường dẫn" required placeholder="https://drive.google.com/…" value={matForm.url} onChange={(e) => setMatForm((f) => ({ ...f, url: e.target.value }))} />
+              <Select label="Loại" options={[{ value: 'PDF', label: 'PDF' }, { value: 'VIDEO', label: 'Video' }, { value: 'DOC', label: 'Tài liệu Word' }, { value: 'AUDIO', label: 'Audio' }, { value: 'LINK', label: 'Liên kết khác' }]} value={matForm.type} onChange={(e) => setMatForm((f) => ({ ...f, type: e.target.value as MaterialType }))} />
+            </>
+          )}
         </div>
       </Modal>
+
+      <Modal
+        open={editOpen}
+        onClose={() => setEditOpen(false)}
+        title="Thông tin lớp"
+        icon={<Pencil />}
+        size="lg"
+        footer={
+          <>
+            <TBtn variant="ghost" icon={<Archive />} className="mr-auto" onClick={askArchive} disabled={archiveClass.isPending}>
+              {cls.isArchived ? 'Mở lại lớp' : 'Lưu trữ lớp'}
+            </TBtn>
+            <TBtn variant="ghost" onClick={() => setEditOpen(false)}>
+              Huỷ
+            </TBtn>
+            <TBtn variant="primary" onClick={saveClass} disabled={updateClass.isPending}>
+              {updateClass.isPending ? 'Đang lưu…' : 'Lưu thay đổi'}
+            </TBtn>
+          </>
+        }
+      >
+        {classForm && (
+          <div className="grid gap-4 md:grid-cols-2">
+            <div className="md:col-span-2">
+              <Input label="Tên lớp" required value={classForm.name} onChange={(e) => setClassForm({ ...classForm, name: e.target.value })} />
+            </div>
+            <Input label="Lịch học" placeholder="T2 – T4 – T6 · 19:00" value={classForm.schedule ?? ''} onChange={(e) => setClassForm({ ...classForm, schedule: e.target.value })} />
+            <Input label="Phòng" value={classForm.room ?? ''} onChange={(e) => setClassForm({ ...classForm, room: e.target.value })} />
+            <Input label="Trình độ" placeholder="VD: 650+, B1–B2" value={classForm.level ?? ''} onChange={(e) => setClassForm({ ...classForm, level: e.target.value })} />
+            <Input label="Sĩ số tối đa" type="number" min={1} value={classForm.maxStudents ?? ''} onChange={(e) => setClassForm({ ...classForm, maxStudents: e.target.value ? Number(e.target.value) : null })} />
+            <Input label="Ngày bắt đầu" type="date" value={classForm.startDate ?? ''} onChange={(e) => setClassForm({ ...classForm, startDate: e.target.value || null })} />
+            <Input label="Ngày kết thúc" type="date" value={classForm.endDate ?? ''} onChange={(e) => setClassForm({ ...classForm, endDate: e.target.value || null })} />
+            <div className="md:col-span-2">
+              <Textarea label="Mô tả" value={classForm.description ?? ''} onChange={(e) => setClassForm({ ...classForm, description: e.target.value })} />
+            </div>
+          </div>
+        )}
+      </Modal>
+
+      <Modal
+        open={sessionOpen}
+        onClose={() => setSessionOpen(false)}
+        title="Thêm buổi học"
+        description="Buổi dạy bù hoặc buổi ngoài lịch. Học viên trong lớp nhận được thông báo."
+        icon={<CalendarPlus />}
+        footer={
+          <>
+            <TBtn variant="ghost" onClick={() => setSessionOpen(false)}>
+              Huỷ
+            </TBtn>
+            <TBtn variant="primary" onClick={saveSession} disabled={addSession.isPending}>
+              {addSession.isPending ? 'Đang lưu…' : 'Thêm buổi'}
+            </TBtn>
+          </>
+        }
+      >
+        <div className="grid gap-4 sm:grid-cols-3">
+          <Input label="Ngày" type="date" required value={sessionForm.date} onChange={(e) => setSessionForm({ ...sessionForm, date: e.target.value })} />
+          <Input label="Bắt đầu" type="time" required value={sessionForm.start} onChange={(e) => setSessionForm({ ...sessionForm, start: e.target.value })} />
+          <Input label="Kết thúc" type="time" required value={sessionForm.end} onChange={(e) => setSessionForm({ ...sessionForm, end: e.target.value })} />
+          <div className="sm:col-span-3">
+            <Input label="Phòng" placeholder={cls.room ?? 'Mặc định theo phòng của lớp'} value={sessionForm.room ?? ''} onChange={(e) => setSessionForm({ ...sessionForm, room: e.target.value })} />
+          </div>
+          <div className="sm:col-span-3">
+            <Input label="Giáo án / chủ đề" value={sessionForm.topic ?? ''} onChange={(e) => setSessionForm({ ...sessionForm, topic: e.target.value })} />
+          </div>
+        </div>
+      </Modal>
+
+      <Modal
+        open={!!newsEdit}
+        onClose={() => setNewsEdit(null)}
+        title="Sửa thông báo"
+        icon={<Megaphone />}
+        footer={
+          <>
+            <TBtn variant="ghost" onClick={() => setNewsEdit(null)}>
+              Huỷ
+            </TBtn>
+            <TBtn variant="primary" onClick={saveNews} disabled={updateNews.isPending}>
+              {updateNews.isPending ? 'Đang lưu…' : 'Lưu'}
+            </TBtn>
+          </>
+        }
+      >
+        {newsEdit && (
+          <div className="space-y-4">
+            <Input label="Tiêu đề" value={newsEdit.title} onChange={(e) => setNewsEdit({ ...newsEdit, title: e.target.value })} />
+            <Textarea label="Nội dung" rows={5} value={newsEdit.body} onChange={(e) => setNewsEdit({ ...newsEdit, body: e.target.value })} />
+          </div>
+        )}
+      </Modal>
+
+      <ConfirmDialog
+        open={!!confirm}
+        onClose={() => setConfirm(null)}
+        onConfirm={() => {
+          confirm?.run();
+          setConfirm(null);
+        }}
+        title={confirm?.title ?? ''}
+        message={confirm?.message ?? ''}
+        confirmText={confirm?.confirmText}
+        danger={confirm?.danger}
+      />
     </div>
   );
 };

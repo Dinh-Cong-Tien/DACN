@@ -149,6 +149,9 @@ export const adminApi = {
   createTest: (b: Record<string, unknown>) => api.post<AdminTestRow>('/admin/tests', b),
   updateTest: (id: string, b: Record<string, unknown>) => api.patch<AdminTestRow>(`/admin/tests/${id}`, b),
   deleteTest: (id: string) => api.delete(`/admin/tests/${id}`),
+  test: (id: string) => api.get<AdminTestRow & { questions: (QuestionRow & { questionNo: number; points: number })[] }>(`/admin/tests/${id}`),
+  setTestQuestions: (id: string, questionIds: string[]) => api.put<{ count: number }>(`/admin/tests/${id}/questions`, { questionIds }),
+  duplicateTest: (id: string) => api.post<AdminTestRow>(`/admin/tests/${id}/duplicate`),
 
   skillTags: () => api.get<AdminSkillTag[]>('/admin/skill-tags'),
   createSkillTag: (b: Record<string, unknown>) => api.post<AdminSkillTag>('/admin/skill-tags', b),

@@ -157,7 +157,12 @@ attemptsRouter.post(
     if (test) {
       const open = await prisma.examAttempt.findFirst({ where: { userId: user.id, testId: test.id, status: 'IN_PROGRESS' } });
       if (open) {
-        if (!body.restart) return attemptPayload(open.id, user.id);
+        // Chỉ làm tiếp khi cùng cấu hình (chế độ, các Part, bài giao); khác thì huỷ lượt cũ và mở lượt mới
+        const wantMode: AttemptMode = body.lessonId ? 'LESSON_QUIZ' : body.mode === 'FULL' ? 'FULL' : 'PRACTICE';
+        const wantParts = wantMode === 'PRACTICE' && body.parts?.length ? [...new Set(body.parts.flatMap(feToParts))].sort().join(',') : null;
+        const sameSetup =
+          open.mode === wantMode && (wantParts === null || [...open.selectedParts].sort().join(',') === wantParts) && (open.assignmentId ?? null) === (body.assignmentId ?? null);
+        if (!body.restart && sameSetup) return attemptPayload(open.id, user.id);
         await prisma.examAttempt.update({ where: { id: open.id }, data: { status: 'ABANDONED' } });
       }
     }

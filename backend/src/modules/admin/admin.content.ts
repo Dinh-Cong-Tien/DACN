@@ -129,6 +129,9 @@ contentRouter.patch(
   '/courses/:id',
   handler(async (req) => {
     const b = parse(courseBody.partial(), req.body);
+    const cur = await prisma.course.findFirst({ where: { id: idOf(req), deletedAt: null }, select: { lessonsCount: true } });
+    if (!cur) throw notFound('Khoá học');
+    if ((b.status === 'PENDING_REVIEW' || b.status === 'PUBLISHED') && cur.lessonsCount === 0) throw badRequest('Khoá học chưa có bài học nào, hãy thêm bài trước khi gửi duyệt');
     const c = await prisma.course.update({
       where: { id: idOf(req) },
       data: { ...b, slug: b.slug ? slugify(b.slug) : undefined, publishedAt: b.status === 'PUBLISHED' ? new Date() : undefined },
@@ -153,6 +156,7 @@ contentRouter.post(
   '/sections',
   handler(async (req) => {
     const b = parse(sectionBody, req.body);
+    if (!(await prisma.course.findFirst({ where: { id: b.courseId, deletedAt: null }, select: { id: true } }))) throw notFound('Khoá học');
     const last = await prisma.courseSection.aggregate({ where: { courseId: b.courseId }, _max: { orderIndex: true } });
     return prisma.courseSection.create({ data: { ...b, orderIndex: b.orderIndex ?? (last._max.orderIndex ?? -1) + 1 } });
   })
@@ -198,6 +202,8 @@ contentRouter.post(
   '/lessons',
   handler(async (req) => {
     const b = parse(lessonBody, req.body);
+    if (!(await prisma.courseSection.findUnique({ where: { id: b.sectionId }, select: { id: true } }))) throw notFound('Chương');
+    if (b.quizTestId && !(await prisma.mockTest.findFirst({ where: { id: b.quizTestId, deletedAt: null }, select: { id: true } }))) throw notFound('Đề kiểm tra');
     if ((b.type === 'QUIZ' || b.type === 'CHECKPOINT') && b.passScorePct == null) b.passScorePct = 70;
     const last = await prisma.lesson.aggregate({ where: { sectionId: b.sectionId }, _max: { orderIndex: true } });
     const l = await prisma.lesson.create({ data: { ...b, orderIndex: b.orderIndex ?? (last._max.orderIndex ?? -1) + 1 }, include: { section: { select: { courseId: true } } } });
@@ -367,6 +373,9 @@ contentRouter.patch(
   '/tests/:id',
   handler(async (req) => {
     const b = parse(testBody.partial(), req.body);
+    const cur = await prisma.mockTest.findFirst({ where: { id: idOf(req), deletedAt: null }, select: { totalQuestions: true } });
+    if (!cur) throw notFound('Đề thi');
+    if ((b.status === 'PENDING_REVIEW' || b.status === 'PUBLISHED') && cur.totalQuestions === 0) throw badRequest('Đề chưa có câu hỏi nào, hãy gán câu hỏi trước khi gửi duyệt');
     const t = await prisma.mockTest.update({ where: { id: idOf(req) }, data: { ...b, slug: b.slug ? slugify(b.slug) : undefined } });
     await audit(req, 'TEST_UPDATE', 'mock_test', t.id, { after: { title: t.title, fields: Object.keys(b) } });
     return testRow(t);
@@ -386,16 +395,48 @@ contentRouter.put(
   handler(async (req) => {
     const id = idOf(req);
     const { questionIds, points } = parse(z.object({ questionIds: z.array(uuid).max(300), points: z.number().min(0).max(10).default(1) }), req.body);
-    const qs = await prisma.question.findMany({ where: { id: { in: questionIds }, deletedAt: null }, select: { id: true, part: true } });
-    if (qs.length !== new Set(questionIds).size) throw badRequest('Có câu hỏi không tồn tại hoặc bị trùng');
+    const test = await prisma.mockTest.findFirst({ where: { id, deletedAt: null } });
+    if (!test) throw notFound('Đề thi');
+    if (new Set(questionIds).size !== questionIds.length) throw badRequest('Danh sách có câu hỏi bị trùng');
+    const qs = await prisma.question.findMany({ where: { id: { in: questionIds }, deletedAt: null }, select: { id: true, part: true, examType: true } });
+    if (qs.length !== questionIds.length) throw badRequest('Có câu hỏi không tồn tại hoặc đã bị xoá');
+    if (qs.some((q) => q.examType !== test.examType)) throw badRequest(`Chỉ gán được câu hỏi ${test.examType} vào đề ${test.examType}`);
     const partOf = new Map(qs.map((q) => [q.id, q.part]));
+    // Cấu trúc phần thi = các Part xuất hiện theo thứ tự câu, giữ tiêu đề/hướng dẫn cũ nếu đã có
+    const oldSections = new Map(((test.sections ?? []) as Section[]).map((s) => [s.part, s]));
+    const parts = [...new Set(questionIds.map((qid) => partOf.get(qid)!))];
+    const sections = parts.map((p, i) => ({ ...(oldSections.get(p) ?? {}), part: p, title: oldSections.get(p)?.title ?? PART_LABEL[p] ?? p, order: i + 1 }));
     await prisma.$transaction([
       prisma.mockTestQuestion.deleteMany({ where: { testId: id } }),
       prisma.mockTestQuestion.createMany({ data: questionIds.map((qid, i) => ({ testId: id, questionId: qid, part: partOf.get(qid)!, questionNo: i + 1, points })) }),
-      prisma.mockTest.update({ where: { id }, data: { totalQuestions: questionIds.length, version: { increment: 1 } } }),
+      prisma.mockTest.update({ where: { id }, data: { totalQuestions: questionIds.length, sections, version: { increment: 1 } } }),
     ]);
     await audit(req, 'TEST_QUESTIONS_SET', 'mock_test', id, { after: { count: questionIds.length } });
     return { count: questionIds.length };
+  })
+);
+
+/** Nhân bản đề (kèm danh sách câu hỏi), bản sao ở trạng thái nháp */
+contentRouter.post(
+  '/tests/:id/duplicate',
+  handler(async (req) => {
+    const src = await prisma.mockTest.findFirst({ where: { id: idOf(req), deletedAt: null }, include: { mockTestQuestionTests: true } });
+    if (!src) throw notFound('Đề thi');
+    const title = `${src.title} (bản sao)`.slice(0, 200);
+    const copy = await prisma.$transaction(async (tx) => {
+      const t = await tx.mockTest.create({
+        data: {
+          slug: uniqueSlug(title), title, examType: src.examType, kind: src.kind, level: src.level, year: src.year, durationMin: src.durationMin,
+          totalQuestions: src.totalQuestions, sections: src.sections ?? [], scoreTable: src.scoreTable ?? undefined, isFree: src.isFree, tags: src.tags,
+          coverUrl: src.coverUrl, status: 'DRAFT', authorId: me(req).id,
+        },
+      });
+      if (src.mockTestQuestionTests.length)
+        await tx.mockTestQuestion.createMany({ data: src.mockTestQuestionTests.map((m) => ({ testId: t.id, questionId: m.questionId, part: m.part, questionNo: m.questionNo, points: m.points })) });
+      return t;
+    });
+    await audit(req, 'TEST_DUPLICATE', 'mock_test', copy.id, { after: { from: src.id, title } });
+    return testRow(copy);
   })
 );
 

@@ -4,6 +4,7 @@ import { Router, type Request } from 'express';
 import { z } from 'zod';
 import { Prisma, type UserRole } from '@prisma/client';
 import { prisma } from '../../lib/prisma';
+import { logger } from '../../lib/logger';
 import { badRequest, handler, me, notFound, pageQuery, paged, parse } from '../../core/http';
 import { audit, notify } from './audit';
 import { classInclude, classStats, lastMonths, ticketInclude, toClassRoom, toSupportTicket } from '../head/shared';
@@ -298,15 +299,23 @@ async function recipients(audience: Audience): Promise<string[]> {
 }
 /** Gửi: tạo notifications cho người nhận (kênh IN_APP). Email chưa có dịch vụ gửi → chỉ ghi nhận kênh. */
 async function sendBroadcast(id: string) {
+  // Chiếm bản ghi nguyên tử (chưa SENT → SENT) để 2 lần gửi đồng thời không tạo thông báo trùng
+  const claimed = await prisma.broadcast.updateMany({ where: { id, status: { not: 'SENT' } }, data: { status: 'SENT', sentAt: new Date() } });
   const b = await prisma.broadcast.findUniqueOrThrow({ where: { id } });
+  if (!claimed.count) return b;
   const ids = await recipients(b.audience as Audience);
   const reach = b.channels.includes('IN_APP') ? await notify(ids, { type: 'SYSTEM', title: b.title, message: b.body, refType: 'BROADCAST', refId: b.id }) : ids.length;
-  return prisma.broadcast.update({ where: { id }, data: { status: 'SENT', sentAt: new Date(), reachCount: reach } });
+  return prisma.broadcast.update({ where: { id }, data: { reachCount: reach } });
 }
-/** Gửi các thông báo hẹn giờ đã tới hạn (gọi mỗi lần admin mở danh sách; chưa có job nền) */
+/** Gửi các thông báo hẹn giờ đã tới hạn: chạy định kỳ 30 giây, ngay khi server khởi động và mỗi khi admin mở danh sách */
 async function flushScheduled() {
   const due = await prisma.broadcast.findMany({ where: { status: 'SCHEDULED', scheduledAt: { lte: new Date() } }, select: { id: true } });
   for (const d of due) await sendBroadcast(d.id);
+}
+if (process.env.NODE_ENV !== 'test') {
+  const tick = () => void flushScheduled().catch((e) => logger.error({ err: e }, 'flushScheduled'));
+  setTimeout(tick, 5_000).unref(); // gửi bù ngay khi server khởi động lại
+  setInterval(tick, 30_000).unref();
 }
 async function refreshOpenCounts() {
   await prisma.$executeRaw`UPDATE broadcasts b SET open_count = s.n FROM (SELECT ref_id, count(*) FILTER (WHERE read_at IS NOT NULL)::int AS n FROM notifications WHERE ref_type = 'BROADCAST' GROUP BY ref_id) s WHERE s.ref_id = b.id`;

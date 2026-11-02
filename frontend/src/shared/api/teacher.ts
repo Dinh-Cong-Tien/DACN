@@ -4,7 +4,7 @@
  */
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { Assignment, AssignmentTarget, AssignmentType, AttendanceMark, ClassAnnouncement, ClassRoom, ClassSession, ClassStudent, CourseCategory, ExamType, StudentNote, Submission } from '@/shared/types';
-import { api } from './client';
+import { api, http, tokenStore } from './client';
 
 // ======================= Types =======================
 
@@ -233,6 +233,13 @@ export interface AssignmentInput {
   dueDate?: string | null;
   status: 'DRAFT' | 'OPEN';
 }
+export interface SessionInput {
+  date: string;
+  start: string;
+  end: string;
+  room?: string | null;
+  topic?: string | null;
+}
 export interface MaterialInput {
   classId: string;
   title: string;
@@ -252,6 +259,9 @@ export const teacherApi = {
   classDetail: (id: string) => api.get<ClassDetail>(`${T}/classes/${id}`),
   createClass: (b: ClassInput) => api.post<TClassRoom>(`${T}/classes`, b),
   updateClass: (id: string, b: Partial<ClassInput>) => api.patch<TClassRoom>(`${T}/classes/${id}`, b),
+  archiveClass: (id: string, archived: boolean) => api.post<{ id: string; isArchived: boolean }>(`${T}/classes/${id}/archive`, { archived }),
+  regenerateCode: (id: string) => api.post<{ id: string; code: string }>(`${T}/classes/${id}/regenerate-code`),
+  addSession: (classId: string, b: SessionInput) => api.post<TSession>(`${T}/classes/${classId}/sessions`, b),
   addStudents: (id: string, emails: string[]) => api.post<{ added: number; notFound: string[]; students: TClassStudent[] }>(`${T}/classes/${id}/students`, { emails }),
   removeStudent: (id: string, studentId: string) => api.delete<{ ok: true }>(`${T}/classes/${id}/students/${studentId}`),
   sessions: (q: { from?: string; to?: string; classId?: string }) => api.get<TSession[]>(`${T}/sessions`, q),
@@ -259,8 +269,19 @@ export const teacherApi = {
   updateSession: (id: string, b: { topic?: string | null; note?: string | null; status?: 'UPCOMING' | 'DONE' | 'CANCELLED' }) => api.patch<TSession>(`${T}/sessions/${id}`, b),
   saveAttendance: (id: string, b: { attendance: Record<string, AttendanceMark>; note?: string | null }) => api.put<TSession>(`${T}/sessions/${id}/attendance`, b),
   postAnnouncement: (b: { classId: string; title: string; body: string; pinned?: boolean }) => api.post<ClassAnnouncement>(`${T}/announcements`, b),
+  updateAnnouncement: (id: string, b: { title?: string; body?: string; pinned?: boolean }) => api.patch<ClassAnnouncement>(`${T}/announcements/${id}`, b),
+  deleteAnnouncement: (id: string) => api.delete<{ ok: true }>(`${T}/announcements/${id}`),
   materials: (classId?: string) => api.get<TMaterial[]>(`${T}/materials`, classId ? { classId } : undefined),
   addMaterial: (b: MaterialInput) => api.post<TMaterial>(`${T}/materials`, b),
+  /** Tải file lên máy chủ (≤ 25 MB) — lưu ở backend/uploads/materials, chỉ thành viên lớp mở được */
+  uploadMaterial: (b: { classId: string; title: string; type?: MaterialType; file: File }) =>
+    http
+      .post<{ data: TMaterial }>(`${T}/materials/upload`, b.file, {
+        params: { classId: b.classId, title: b.title, type: b.type },
+        headers: { 'Content-Type': b.file.type || 'application/octet-stream', 'X-File-Name': encodeURIComponent(b.file.name) },
+        timeout: 120_000,
+      })
+      .then((r) => r.data.data),
   deleteMaterial: (id: string) => api.delete<{ ok: true }>(`${T}/materials/${id}`),
   assignments: (q: { classId?: string; status?: string } = {}) => api.get<TAssignment[]>(`${T}/assignments`, q),
   createAssignment: (b: AssignmentInput) => api.post<TAssignment>(`${T}/assignments`, b),
@@ -272,6 +293,7 @@ export const teacherApi = {
   students: (q: { classId?: string } = {}) => api.get<TClassStudent[]>(`${T}/students`, q),
   studentProfile: (id: string) => api.get<StudentProfile>(`${T}/students/${id}`),
   addNote: (studentId: string, b: { kind: StudentNote['kind']; text: string; classId?: string | null }) => api.post<TNote>(`${T}/students/${studentId}/notes`, b),
+  deleteNote: (id: string) => api.delete<{ ok: true }>(`${T}/notes/${id}`),
   classAnalytics: (classId: string) => api.get<ClassAnalytics>(`${T}/classes/${classId}/analytics`),
   libTests: (examType?: ExamType) => api.get<LibTest[]>(`${T}/library/tests`, examType ? { examType } : undefined),
   libCourses: () => api.get<LibCourse[]>(`${T}/library/courses`),
@@ -304,6 +326,7 @@ const LIB_STALE = 10 * 60_000;
 
 export const useTeacherDashboard = () => useQuery({ queryKey: tKeys.dashboard, queryFn: teacherApi.dashboard, staleTime: 30_000 });
 export const useTeacherClasses = () => useQuery({ queryKey: tKeys.classes, queryFn: () => teacherApi.classes(), staleTime: 60_000 });
+export const useArchivedClasses = (enabled: boolean) => useQuery({ queryKey: [...tKeys.classes, 'archived'], queryFn: () => teacherApi.classes('true'), enabled });
 export const useClassDetail = (id?: string) => useQuery({ queryKey: tKeys.classDetail(id ?? ''), queryFn: () => teacherApi.classDetail(id!), enabled: !!id });
 export const useSessions = (q: { from?: string; to?: string; classId?: string }, enabled = true) => useQuery({ queryKey: tKeys.sessions(q), queryFn: () => teacherApi.sessions(q), enabled });
 export const useSessionDetail = (id?: string) => useQuery({ queryKey: tKeys.session(id ?? ''), queryFn: () => teacherApi.sessionDetail(id!), enabled: !!id });
@@ -346,4 +369,12 @@ export type TeacherLibrary = ReturnType<typeof useTeacherLibrary>;
 export function useTeacherMutation<TVars, TRes>(fn: (v: TVars) => Promise<TRes>) {
   const qc = useQueryClient();
   return useMutation({ mutationFn: fn, onSuccess: () => qc.invalidateQueries({ queryKey: tKeys.all }) });
+}
+
+/** Link mở tài liệu: file tải lên máy chủ cần kèm access token (thẻ <a> không gửi được header) */
+export function fileHref(url?: string | null) {
+  if (!url) return undefined;
+  if (!url.startsWith('/api/')) return url;
+  const t = tokenStore.get()?.accessToken;
+  return t ? `${url}${url.includes('?') ? '&' : '?'}token=${encodeURIComponent(t)}` : url;
 }

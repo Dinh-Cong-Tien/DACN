@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { ExternalLink, Plus } from 'lucide-react';
+import { ExternalLink, Pencil, Plus } from 'lucide-react';
 import { useLocation, useSearchParams } from 'react-router-dom';
 import { useDocumentTitle } from '@/shared/hooks';
 import { toast } from '@/shared/stores/uiStore';
@@ -8,7 +8,7 @@ import { teacherApi, useTeacherAssignments, useTeacherClasses, useTeacherLibrary
 import { ASSIGNMENT_TYPE_LABEL, describeTarget } from '@/shared/constants/teacher';
 import type { Assignment, AssignmentTarget } from '@/shared/types';
 import { assignmentHref, cn, formatDateTime } from '@/shared/utils';
-import { ConfirmDialog } from '@/shared/components/ui';
+import { ConfirmDialog, Input, Modal, Textarea } from '@/shared/components/ui';
 import { Figures, Meter, Panel, Status, TBtn, TPageHead, TTabs, inputCls, tbl, type StatusTone } from '../components/TeacherKit';
 import { AssignDialog } from '../components/AssignDialog';
 import { TError, TLoading } from '../components/TeacherState';
@@ -30,6 +30,22 @@ export const TeacherAssignmentsPage: React.FC = () => {
   const create = useTeacherMutation(teacherApi.createAssignment);
   const update = useTeacherMutation((v: { id: string; status: 'OPEN' | 'CLOSED' }) => teacherApi.updateAssignment(v.id, { status: v.status }));
   const remove = useTeacherMutation(teacherApi.deleteAssignment);
+  const edit = useTeacherMutation((v: { id: string; title: string; dueDate: string | null; note: string | null }) => teacherApi.updateAssignment(v.id, { title: v.title, dueDate: v.dueDate, note: v.note }));
+  const [editing, setEditing] = useState<{ id: string; title: string; due: string; note: string } | null>(null);
+  /** ISO → giá trị cho <input type="datetime-local"> theo giờ máy */
+  const toLocalInput = (iso?: string) => {
+    if (!iso) return '';
+    const d = new Date(iso);
+    return new Date(d.getTime() - d.getTimezoneOffset() * 60_000).toISOString().slice(0, 16);
+  };
+  const saveEdit = () => {
+    if (!editing) return;
+    if (editing.title.trim().length < 2) return toast.error('Tên bài tập cần ít nhất 2 ký tự');
+    edit.mutate(
+      { id: editing.id, title: editing.title.trim(), dueDate: editing.due ? new Date(editing.due).toISOString() : null, note: editing.note.trim() || null },
+      { onSuccess: () => (setEditing(null), toast.success('Đã lưu bài tập', editing.title.trim())), onError: (e) => toast.error('Không lưu được bài tập', errorMessage(e)) }
+    );
+  };
   const status = (['OPEN', 'CLOSED', 'DRAFT'].includes(params.get('status') ?? '') ? params.get('status') : 'ALL') as 'ALL' | Assignment['status'];
   const setStatus = (k: string) => setParams(k === 'ALL' ? {} : { status: k }, { replace: true });
   const [classId, setClassId] = useState('');
@@ -176,6 +192,9 @@ export const TeacherAssignmentsPage: React.FC = () => {
                               {a.status === 'OPEN' ? 'Đóng' : 'Mở lại'}
                             </TBtn>
                           )}
+                          <button type="button" title="Sửa tên, hạn nộp, lời dặn" onClick={() => setEditing({ id: a.id, title: a.title, due: toLocalInput(a.dueDate), note: a.note ?? '' })} className="inline-flex h-8 w-8 items-center justify-center rounded-md text-slate-500 hover:bg-slate-900/[0.05] hover:text-slate-900">
+                            <Pencil className="h-4 w-4" />
+                          </button>
                           <TBtn size="sm" variant="ghost" className="text-rose-600 hover:text-rose-700" onClick={() => setDeleting(a)}>
                             Xoá
                           </TBtn>
@@ -191,6 +210,32 @@ export const TeacherAssignmentsPage: React.FC = () => {
       </Panel>
 
       <AssignDialog open={open} onClose={close} onSave={save} saving={create.isPending} initial={preset?.assign ? { target: preset.assign, classId: preset.classId } : undefined} />
+
+      <Modal
+        open={!!editing}
+        onClose={() => setEditing(null)}
+        title="Sửa bài tập"
+        description="Đổi hạn nộp sẽ áp dụng cho mọi học viên trong lớp."
+        icon={<Pencil />}
+        footer={
+          <>
+            <TBtn variant="ghost" onClick={() => setEditing(null)}>
+              Huỷ
+            </TBtn>
+            <TBtn variant="primary" onClick={saveEdit} disabled={edit.isPending}>
+              {edit.isPending ? 'Đang lưu…' : 'Lưu'}
+            </TBtn>
+          </>
+        }
+      >
+        {editing && (
+          <div className="space-y-4">
+            <Input label="Tên bài tập" required value={editing.title} onChange={(e) => setEditing({ ...editing, title: e.target.value })} />
+            <Input label="Hạn nộp" type="datetime-local" hint="Để trống nếu không giới hạn" value={editing.due} onChange={(e) => setEditing({ ...editing, due: e.target.value })} />
+            <Textarea label="Lời dặn học viên" value={editing.note} onChange={(e) => setEditing({ ...editing, note: e.target.value })} />
+          </div>
+        )}
+      </Modal>
 
       <ConfirmDialog
         open={!!deleting}

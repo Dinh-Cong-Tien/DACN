@@ -1,11 +1,11 @@
-import React, { useState } from 'react';
-import { User, Lock, Bell, Shield, Save } from 'lucide-react';
+import React, { useRef, useState } from 'react';
+import { User, Lock, Bell, Shield, Save, Camera } from 'lucide-react';
 import { useAuthStore } from '@/shared/stores/authStore';
 import { toast } from '@/shared/stores/uiStore';
 import { ROLE_LABEL, formatDate, timeAgo } from '@/shared/utils';
 import { authApi } from '@/shared/api/auth';
 import { errorMessage } from '@/shared/api/client';
-import { useRevokeSession, useSessions } from '@/shared/api/learner';
+import { uploadAvatar, useRevokeSession, useSessions } from '@/shared/api/learner';
 import { useDocumentTitle } from '@/shared/hooks';
 import { Avatar, Badge, Button, Card, CardHeader, Input, PasswordInput, PageHeader, Switch, Tabs, Textarea } from '@/shared/components/ui';
 import { Img, PHOTOS } from '@/shared/components/media/Img';
@@ -25,6 +25,21 @@ export const AccountSettingsPage: React.FC = () => {
   const [notif, setNotif] = useState({ email: true, assignment: true, weekly: false, system: true, ...savedNotif });
   const [pw, setPw] = useState({ current: '', next: '', confirm: '' });
   const [saving, setSaving] = useState<'' | 'profile' | 'pw' | 'notif'>('');
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+  const onAvatar = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0];
+    e.target.value = '';
+    if (!f) return;
+    setUploading(true);
+    uploadAvatar(f)
+      .then((url) => {
+        useAuthStore.getState().updateUser({ avatarUrl: url });
+        toast.success('Đã cập nhật ảnh đại diện');
+      })
+      .catch((err) => toast.error('Chưa tải được ảnh', errorMessage(err)))
+      .finally(() => setUploading(false));
+  };
   const { data: sessions = [], isLoading: loadingSessions } = useSessions();
   const revoke = useRevokeSession();
 
@@ -93,6 +108,10 @@ export const AccountSettingsPage: React.FC = () => {
             <div className="px-5 pb-5 -mt-10 space-y-3">
               <div className="relative inline-block">
                 <Avatar name={user.fullName} src={user.avatarUrl} size="xl" ring className="[&>img]:border-2 [&>img]:border-slate-900 [&>div]:border-2 [&>div]:border-slate-900" />
+                <input ref={fileRef} type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={onAvatar} />
+                <button type="button" onClick={() => fileRef.current?.click()} disabled={uploading} aria-label="Đổi ảnh đại diện" className="absolute -bottom-1 -right-1 flex h-9 w-9 items-center justify-center rounded-full border-2 border-slate-900 bg-amber-300 text-slate-900 shadow-hard-sm transition hover:-translate-y-0.5 disabled:opacity-60">
+                  <Camera className="h-4 w-4" />
+                </button>
               </div>
               <div>
                 <p className="font-display font-bold text-slate-900">{user.fullName}</p>

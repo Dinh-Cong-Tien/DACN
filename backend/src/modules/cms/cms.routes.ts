@@ -298,6 +298,8 @@ cmsRouter.post(
     );
     let ticket = body.ticketId ? await prisma.ticket.findUnique({ where: { id: body.ticketId } }) : null;
     if (body.ticketId && !ticket) throw notFound('Cuộc trò chuyện');
+    // Ticket của tài khoản: chỉ chủ ticket nhắn tiếp (ticket của khách dùng UUID làm khoá truy cập)
+    if (ticket && ticket.userId && ticket.userId !== req.user?.id) throw notFound('Cuộc trò chuyện');
     if (!ticket) {
       if (!req.user && !body.email) throw badRequest('Vui lòng để lại email để bên mình phản hồi', 'EMAIL_REQUIRED');
       ticket = await prisma.ticket.create({
@@ -332,6 +334,8 @@ cmsRouter.get(
     if (!isUuid(id)) throw notFound('Cuộc trò chuyện');
     const t = await prisma.ticket.findUnique({ where: { id }, include: { ticketMessageTickets: { orderBy: { createdAt: 'asc' }, include: { sender: { select: { fullName: true, avatarUrl: true } } } } } });
     if (!t) throw notFound('Cuộc trò chuyện');
+    const staff = req.user && req.user.role !== 'STUDENT';
+    if (t.userId && t.userId !== req.user?.id && !staff) throw notFound('Cuộc trò chuyện');
     return {
       ticketId: t.id,
       status: t.status,
@@ -536,6 +540,28 @@ cmsRouter.post(
     });
     await prisma.ticketMessage.create({ data: { ticketId: ticket.id, senderType: 'USER', senderId: req.user?.id, text: `${body.message}\n\n— ${body.name} <${body.email}>` } });
     return { ticketId: ticket.id };
+  })
+);
+
+// POST /cms/newsletter { email } → đăng ký nhận bài mới.
+// Chưa có dịch vụ gửi email: người đã đăng nhập lưu users.settings.newsletter; khách lưu thành 1 ticket để admin có danh sách (không tạo trùng).
+const NEWSLETTER_SUBJECT = 'Đăng ký nhận bài viết mới';
+cmsRouter.post(
+  '/newsletter',
+  optionalAuth,
+  handler(async (req) => {
+    const { email } = parse(z.object({ email: z.string().trim().toLowerCase().email() }), req.body);
+    if (req.user) {
+      const u = await prisma.user.findUniqueOrThrow({ where: { id: req.user.id }, select: { settings: true } });
+      await prisma.user.update({ where: { id: req.user.id }, data: { settings: { ...(u.settings as object), newsletter: true, newsletterEmail: email } as Prisma.InputJsonObject } });
+      return { subscribed: true, already: (u.settings as { newsletter?: boolean })?.newsletter === true };
+    }
+    const exists = await prisma.ticket.findFirst({ where: { guestEmail: email, subject: NEWSLETTER_SUBJECT }, select: { id: true } });
+    if (exists) return { subscribed: true, already: true };
+    await prisma.ticket.create({
+      data: { guestEmail: email, guestName: email.split('@')[0], channel: 'EMAIL', category: 'OTHER', subject: NEWSLETTER_SUBJECT, priority: 'LOW', status: 'RESOLVED', resolution: 'Đã ghi nhận đăng ký nhận bài mới' },
+    });
+    return { subscribed: true, already: false };
   })
 );
 

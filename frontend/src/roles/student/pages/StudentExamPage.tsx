@@ -72,7 +72,12 @@ export const StudentExamPage: React.FC = () => {
     <div className="fixed inset-0 z-50 bg-paper overflow-y-auto">
       <ExamRunner
         test={test}
-        onSaveAnswer={(questionId, key) => pending.current.set(questionId, { questionId, selectedKey: key })}
+        initialAnswers={Object.fromEntries(payload.attempt.answers.filter((a) => a.selectedKey).map((a) => [a.questionId, a.selectedKey as string]))}
+        initialFlagged={payload.attempt.answers.filter((a) => a.isFlagged).map((a) => a.questionId)}
+        // Làm tiếp: thời gian tính từ lúc bắt đầu lượt (không reset khi tải lại trang)
+        initialElapsedSec={Math.max(0, Math.floor((Date.now() - new Date(payload.attempt.startedAt).getTime()) / 1000))}
+        onSaveAnswer={(questionId, key) => pending.current.set(questionId, { ...pending.current.get(questionId), questionId, selectedKey: key })}
+        onToggleFlag={(questionId, isFlagged, key) => pending.current.set(questionId, { ...pending.current.get(questionId), questionId, selectedKey: key ?? pending.current.get(questionId)?.selectedKey ?? null, isFlagged })}
         onSubmitExam={(r) => {
           pending.current.clear();
           const answers: SaveAnswerItem[] = Object.entries(r.answers).map(([questionId, selectedKey]) => ({ questionId, selectedKey, isFlagged: r.flagged.includes(questionId) || undefined }));

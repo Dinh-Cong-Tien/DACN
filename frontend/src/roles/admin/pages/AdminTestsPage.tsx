@@ -1,6 +1,6 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Eye, Copy, Clock, FileText, Flame, Layers, PlayCircle, Crown } from 'lucide-react';
+import { Eye, Copy, Clock, FileText, Flame, Layers, PlayCircle, Crown, ListOrdered, Send, Undo2 } from 'lucide-react';
 import { adminApi, useAdminInvalidate, useAdminTests, type AdminTestRow } from '@/shared/api/admin';
 import { formatNumber } from '@/shared/utils';
 import { useDocumentTitle } from '@/shared/hooks';
@@ -11,6 +11,15 @@ import { Img } from '@/shared/components/media/Img';
 import { CrudEditor, CrudField } from '@/engines';
 import { toast } from '@/shared/stores/uiStore';
 import { errorMessage } from '@/shared/api/client';
+import { TestQuestionsDialog } from '../components/TestQuestionsDialog';
+
+const STATUS: Record<string, [string, string]> = {
+  PUBLISHED: ['bg-emerald-500', 'Công khai'],
+  PENDING_REVIEW: ['bg-amber-500', 'Chờ duyệt'],
+  DRAFT: ['bg-slate-400', 'Nháp'],
+  REJECTED: ['bg-rose-500', 'Bị từ chối'],
+  ARCHIVED: ['bg-slate-400', 'Lưu trữ'],
+};
 
 type MockTestSummary = AdminTestRow;
 
@@ -46,6 +55,16 @@ const columns: Column<MockTestSummary>[] = [
   { key: 'parts', header: 'Cấu trúc', render: (t) => <span className="text-xs text-slate-600">{t.parts.join(', ')}</span> },
   { key: 'attempts', header: 'Lượt làm', align: 'right', render: (t) => <span className="text-[13px] font-semibold tabular-nums text-slate-900">{formatNumber(t.attempts)}</span> },
   {
+    key: 'status',
+    header: 'Trạng thái',
+    render: (t) => (
+      <span className="inline-flex items-center gap-1.5 whitespace-nowrap text-[13px] text-slate-700">
+        <span className={`h-1.5 w-1.5 rounded-full ${STATUS[t.status]?.[0] ?? 'bg-slate-400'}`} />
+        {STATUS[t.status]?.[1] ?? t.status}
+      </span>
+    ),
+  },
+  {
     key: 'isFree',
     header: 'Quyền',
     render: (t) =>
@@ -80,6 +99,10 @@ export const AdminTestsPage: React.FC = () => {
   const navigate = useNavigate();
   const { data, isLoading } = useAdminTests();
   const refresh = useAdminInvalidate();
+  const [editingQ, setEditingQ] = useState<MockTestSummary | null>(null);
+  const closeQ = React.useCallback(() => setEditingQ(null), []);
+  const run = (p: Promise<unknown>, ok: string, desc: string) =>
+    p.then(() => { toast.success(ok, desc); void refresh(); }).catch((e) => toast.error('Không thực hiện được', errorMessage(e)));
   const testRows = useMemo<MockTestSummary[]>(() => data ?? [], [data]);
   const years = testRows.map((t) => t.year).filter(Boolean);
   const payload = (v: Partial<MockTestSummary>) => ({ title: v.title, examType: v.examType, level: v.level || undefined, durationMin: Number(v.durationMinutes) || 120, year: v.year ? Number(v.year) : undefined, isFree: !!v.isFree });
@@ -151,21 +174,18 @@ export const AdminTestsPage: React.FC = () => {
         ]}
         defaultValues={{ examType: 'TOEIC', level: '', durationMinutes: 120, isFree: true, year: new Date().getFullYear() }}
         rowActions={(t) => [
+          { label: 'Câu hỏi trong đề', icon: <ListOrdered />, onClick: () => setEditingQ(t) },
           { label: 'Xem trước đề', icon: <Eye />, onClick: () => navigate(`/app/mock-tests/${t.slug}`) },
-          {
-            label: 'Nhân bản',
-            icon: <Copy />,
-            onClick: () =>
-              adminApi
-                .createTest({ ...payload(t), title: `${t.title} (bản sao)`, status: 'DRAFT' })
-                .then(() => {
-                  toast.success('Đã nhân bản', `Bản sao của "${t.title}" được tạo ở trạng thái nháp (chưa có câu hỏi).`);
-                  void refresh();
-                })
-                .catch((e) => toast.error('Không nhân bản được', errorMessage(e))),
-          },
+          ...(t.status === 'DRAFT' || t.status === 'REJECTED'
+            ? [{ label: 'Gửi Trưởng bộ môn duyệt', icon: <Send />, onClick: () => void run(adminApi.updateTest(t.id, { status: 'PENDING_REVIEW' }), 'Đã gửi duyệt', `"${t.title}" nằm trong hàng chờ phê duyệt của Trưởng bộ môn.`) }]
+            : []),
+          ...(t.status === 'PUBLISHED' || t.status === 'PENDING_REVIEW'
+            ? [{ label: 'Chuyển về nháp', icon: <Undo2 />, onClick: () => void run(adminApi.updateTest(t.id, { status: 'DRAFT' }), 'Đã chuyển về nháp', `"${t.title}" không còn hiển thị với học viên.`) }]
+            : []),
+          { label: 'Nhân bản', icon: <Copy />, onClick: () => void run(adminApi.duplicateTest(t.id), 'Đã nhân bản', `Bản sao của "${t.title}" (kèm ${t.totalQuestions} câu) ở trạng thái nháp.`) },
         ]}
       />
+      <TestQuestionsDialog test={editingQ} onClose={closeQ} />
     </div>
   );
 };
