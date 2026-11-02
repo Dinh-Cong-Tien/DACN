@@ -1,6 +1,8 @@
 import React, { useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useAuthStore, DEMO_USERS } from '@/shared/stores/authStore';
+import { useAuthStore } from '@/shared/stores/authStore';
+import { authApi } from '@/shared/api/auth';
+import { errorMessage } from '@/shared/api/client';
 import { toast } from '@/shared/stores/uiStore';
 import { useDocumentTitle } from '@/shared/hooks';
 import { cn } from '@/shared/utils';
@@ -31,12 +33,18 @@ export const RegisterPage: React.FC = () => {
     setErrors(er);
     if (Object.keys(er).length) return;
     setLoading(true);
-    setTimeout(() => {
-      login({ ...DEMO_USERS.STUDENT, fullName: form.name.trim(), email: form.email.trim(), streak: 0, effortPoints: 0, target: undefined, joinedAt: new Date().toISOString() }, 'demo-jwt-token');
-      setLoading(false);
-      toast.success('Đã tạo tài khoản', 'Làm bài xếp lớp để nhận lộ trình nhé.');
-      navigate('/onboarding/goal');
-    }, 700);
+    authApi
+      .register(form.name.trim(), form.email.trim(), form.password)
+      .then(({ user }) => {
+        login(user);
+        toast.success('Đã tạo tài khoản', 'Làm bài xếp lớp để nhận lộ trình nhé.');
+        navigate('/onboarding/goal');
+      })
+      .catch((err) => {
+        const msg = errorMessage(err);
+        setErrors(/email/i.test(msg) ? { email: msg } : { password: msg });
+      })
+      .finally(() => setLoading(false));
   };
 
   return (

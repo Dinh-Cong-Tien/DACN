@@ -1,43 +1,28 @@
 import { Router } from 'express';
+import { prisma } from '../lib/prisma';
 import { authRouter } from '../modules/auth/auth.routes';
-import { onboardingRouter } from '../modules/onboarding/onboarding.routes';
-import { coursesRouter } from '../modules/courses/courses.routes';
-import { lessonsRouter } from '../modules/lessons/lessons.routes';
-import { vocabularyRouter } from '../modules/vocabulary/vocabulary.routes';
-import { grammarRouter } from '../modules/grammar/grammar.routes';
-import { questionsRouter } from '../modules/questions/questions.routes';
-import { testsRouter } from '../modules/tests/tests.routes';
-import { examsRouter } from '../modules/exams/exams.routes';
-import { mistakesRouter } from '../modules/mistakes/mistakes.routes';
-import { reviewRouter } from '../modules/review/review.routes';
-import { analyticsRouter } from '../modules/analytics/analytics.routes';
-import { gradingRouter } from '../modules/grading/grading.routes';
-import { usersRouter } from '../modules/users/users.routes';
+import { catalogRouter } from '../modules/catalog/catalog.routes';
+import { cmsRouter } from '../modules/cms/cms.routes';
+import { learnerRouter } from '../modules/learner/learner.routes';
+import { teacherRouter } from '../modules/teacher/teacher.routes';
+import { headRouter } from '../modules/head/head.routes';
+import { adminRouter } from '../modules/admin/admin.routes';
 
+/**
+ * Đăng ký router của các module. Mỗi module export `xxxRouter` từ `modules/<tên>/<tên>.routes.ts`
+ * và được gắn dưới `/api/v1/<tên>`.
+ */
 export const appRouter = Router();
 
-// Health check
-appRouter.get('/health', (req, res) => {
-  res.json({
-    status: 'ok',
-    service: 'OrbiLingo API',
-    version: 'v1.0.0',
-    timestamp: new Date().toISOString(),
-  });
+appRouter.get('/health', async (_req, res) => {
+  const db = await prisma.$queryRaw`SELECT 1`.then(() => 'up').catch(() => 'down');
+  res.json({ status: db === 'up' ? 'ok' : 'degraded', db, service: 'OrbiLingo API', time: new Date().toISOString() });
 });
 
-// V1 Modular REST API Endpoints
 appRouter.use('/v1/auth', authRouter);
-appRouter.use('/v1/onboarding', onboardingRouter);
-appRouter.use('/v1/courses', coursesRouter);
-appRouter.use('/v1/lessons', lessonsRouter);
-appRouter.use('/v1/vocabulary', vocabularyRouter);
-appRouter.use('/v1/grammar', grammarRouter);
-appRouter.use('/v1/questions', questionsRouter);
-appRouter.use('/v1/tests', testsRouter);
-appRouter.use('/v1/exams', examsRouter);
-appRouter.use('/v1/mistakes', mistakesRouter);
-appRouter.use('/v1/review', reviewRouter);
-appRouter.use('/v1/analytics', analyticsRouter);
-appRouter.use('/v1/grading', gradingRouter);
-appRouter.use('/v1/admin/users', usersRouter);
+appRouter.use('/v1/catalog', catalogRouter);
+appRouter.use('/v1/cms', cmsRouter);
+appRouter.use('/v1/learner', learnerRouter);
+appRouter.use('/v1/teacher', teacherRouter);
+appRouter.use('/v1/head', headRouter);
+appRouter.use('/v1/admin', adminRouter);

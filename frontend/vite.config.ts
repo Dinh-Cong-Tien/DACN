@@ -13,5 +13,7 @@ export default defineConfig({
     port: 3000,
     // Cổng 3000 đang bận thì báo lỗi thay vì tự mở server thứ hai ở 3001
     strictPort: true,
+    // Gọi API backend (Express, cổng 5000) qua cùng origin
+    proxy: { '/api': { target: 'http://localhost:5000', changeOrigin: true } },
   },
 });

@@ -1,93 +1,19 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import type { AppRole, AppUser } from '@/shared/types';
-import { pravatar } from '@/shared/components/media/Img';
+import type { AppUser } from '@/shared/types';
+import { authApi } from '@/shared/api/auth';
+import { setSessionExpiredHandler, tokenStore } from '@/shared/api/client';
 
 interface AuthState {
   user: AppUser | null;
   token: string | null;
   onboardingDone: boolean;
   isAuthenticated: () => boolean;
-  login: (user: AppUser, token?: string) => void;
+  /** Lưu phiên sau khi authApi.login/register thành công (token đã nằm trong tokenStore) */
+  login: (user: AppUser) => void;
   logout: () => void;
   updateUser: (patch: Partial<AppUser>) => void;
   completeOnboarding: () => void;
-}
-
-export const DEMO_USERS: Record<AppRole, AppUser> = {
-  GUEST: {
-    id: 'guest',
-    fullName: 'Khách',
-    email: '',
-    role: 'GUEST',
-    status: 'ACTIVE',
-    plan: 'FREE',
-    streak: 0,
-    effortPoints: 0,
-    joinedAt: new Date().toISOString(),
-    lastActiveAt: new Date().toISOString(),
-  },
-  STUDENT: {
-    id: 'u-student-1',
-    fullName: 'Nguyễn Minh Anh',
-    email: 'student@orbi.edu.vn',
-    role: 'STUDENT',
-    avatarUrl: pravatar(11),
-    status: 'ACTIVE',
-    plan: 'FREE',
-    target: { examType: 'TOEIC', score: '750', examDate: '2026-12-20' },
-    streak: 12,
-    effortPoints: 2480,
-    joinedAt: '2026-08-15T08:00:00.000Z',
-    lastActiveAt: new Date().toISOString(),
-  },
-  TEACHER: {
-    id: 'u-teacher-1',
-    fullName: 'Trần Thu Hà',
-    email: 'teacher@orbi.edu.vn',
-    role: 'TEACHER',
-    avatarUrl: pravatar(43),
-    status: 'ACTIVE',
-    plan: 'VIP',
-    streak: 30,
-    effortPoints: 0,
-    joinedAt: '2026-05-02T08:00:00.000Z',
-    lastActiveAt: new Date().toISOString(),
-  },
-  HEAD_TEACHER: {
-    id: 'u-head-1',
-    fullName: 'Lê Quốc Bảo',
-    email: 'head@orbi.edu.vn',
-    role: 'HEAD_TEACHER',
-    avatarUrl: pravatar(44),
-    status: 'ACTIVE',
-    plan: 'VIP',
-    streak: 45,
-    effortPoints: 0,
-    joinedAt: '2026-03-10T08:00:00.000Z',
-    lastActiveAt: new Date().toISOString(),
-  },
-  ADMIN: {
-    id: 'u-admin-1',
-    fullName: 'Phạm Quản Trị',
-    email: 'admin@orbi.edu.vn',
-    role: 'ADMIN',
-    avatarUrl: pravatar(45),
-    status: 'ACTIVE',
-    plan: 'VIP',
-    streak: 0,
-    effortPoints: 0,
-    joinedAt: '2026-01-01T08:00:00.000Z',
-    lastActiveAt: new Date().toISOString(),
-  },
-};
-
-export function resolveDemoRole(email: string): AppRole {
-  const e = email.toLowerCase();
-  if (e.startsWith('admin')) return 'ADMIN';
-  if (e.startsWith('head')) return 'HEAD_TEACHER';
-  if (e.startsWith('teacher')) return 'TEACHER';
-  return 'STUDENT';
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -97,15 +23,9 @@ export const useAuthStore = create<AuthState>()(
       token: null,
       onboardingDone: false,
       isAuthenticated: () => Boolean(get().token && get().user),
-      login: (user, token = 'demo-jwt-token') => {
-        localStorage.setItem('access_token', token);
-        localStorage.setItem('user_role', user.role);
-        set({ user, token });
-      },
+      login: (user) => set({ user, token: tokenStore.get()?.accessToken ?? null }),
       logout: () => {
-        localStorage.removeItem('access_token');
-        localStorage.removeItem('token');
-        localStorage.removeItem('user_role');
+        void authApi.logout();
         set({ user: null, token: null, onboardingDone: false });
       },
       updateUser: (patch) => set((s) => (s.user ? { user: { ...s.user, ...patch } } : s)),
@@ -114,3 +34,13 @@ export const useAuthStore = create<AuthState>()(
     { name: 'orbi-auth' }
   )
 );
+
+// Refresh token hết hạn / bị thu hồi → xoá phiên trên giao diện
+setSessionExpiredHandler(() => useAuthStore.setState({ user: null, token: null }));
+
+// Khởi động: phiên cũ không có token thật (bản demo trước) → xoá; có token → đồng bộ hồ sơ từ /auth/me
+if (typeof window !== 'undefined') {
+  const st = useAuthStore.getState();
+  if (st.user && !tokenStore.get()) useAuthStore.setState({ user: null, token: null });
+  else if (tokenStore.get()) authApi.me().then((user) => useAuthStore.setState({ user, token: tokenStore.get()?.accessToken ?? null })).catch(() => undefined);
+}

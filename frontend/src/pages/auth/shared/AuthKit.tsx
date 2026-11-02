@@ -1,7 +1,6 @@
 import React, { useId, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Eye, EyeOff, Loader2 } from 'lucide-react';
-import { useAuthStore, DEMO_USERS } from '@/shared/stores/authStore';
 import { toast } from '@/shared/stores/uiStore';
 import { cn, ROLE_HOME } from '@/shared/utils';
 import type { AppRole } from '@/shared/types';
@@ -112,17 +111,16 @@ const FacebookMark = () => (
   </svg>
 );
 
-/** Đăng nhập nhanh Google / Facebook (mock: đăng nhập tài khoản học viên demo) */
-export const SocialButtons: React.FC<{ onDone: () => void }> = ({ onDone }) => {
-  const login = useAuthStore((s) => s.login);
+/** Nút Google / Facebook (OAuth chưa cấu hình → báo chưa hỗ trợ) */
+export const SocialButtons: React.FC<{ onDone?: () => void }> = () => {
   const [busy, setBusy] = useState<'google' | 'facebook' | null>(null);
   const go = (p: 'google' | 'facebook') => {
     setBusy(p);
+    // Đăng nhập mạng xã hội cần đăng ký ứng dụng OAuth với Google/Facebook — chưa cấu hình
     setTimeout(() => {
-      login(DEMO_USERS.STUDENT, 'demo-jwt-token');
-      toast.success(`Xin chào, ${DEMO_USERS.STUDENT.fullName}!`, `Đã đăng nhập bằng ${p === 'google' ? 'Google' : 'Facebook'}.`);
-      onDone();
-    }, 700);
+      setBusy(null);
+      toast.info(`Chưa hỗ trợ đăng nhập ${p === 'google' ? 'Google' : 'Facebook'}`, 'Vui lòng đăng nhập bằng email và mật khẩu.');
+    }, 300);
   };
   const btn = 'inline-flex h-12 items-center justify-center gap-2.5 rounded-lg border border-slate-300 bg-white text-sm font-medium text-slate-800 transition-colors hover:bg-slate-50 disabled:opacity-60';
   return (

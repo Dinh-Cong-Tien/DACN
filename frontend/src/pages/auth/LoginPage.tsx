@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Checkbox } from '@/shared/components/ui';
-import { useAuthStore, DEMO_USERS, resolveDemoRole } from '@/shared/stores/authStore';
+import { useAuthStore } from '@/shared/stores/authStore';
+import { authApi } from '@/shared/api/auth';
+import { errorMessage } from '@/shared/api/client';
 import { toast } from '@/shared/stores/uiStore';
 import { useDocumentTitle } from '@/shared/hooks';
 import { AuthHeading, TextField, SubmitButton, FormError, OrDivider, SocialButtons, useAfterLogin, textLink } from './shared/AuthKit';
@@ -24,14 +26,15 @@ export const LoginPage: React.FC = () => {
     }
     setError('');
     setLoading(true);
-    setTimeout(() => {
-      const role = resolveDemoRole(email);
-      const user = { ...DEMO_USERS[role], email: email.trim() };
-      login(user, 'demo-jwt-token');
-      setLoading(false);
-      toast.success(`Xin chào, ${user.fullName}!`, 'Đăng nhập thành công.');
-      afterLogin(role);
-    }, 600);
+    authApi
+      .login(email.trim(), password)
+      .then(({ user }) => {
+        login(user);
+        toast.success(`Xin chào, ${user.fullName}!`, 'Đăng nhập thành công.');
+        afterLogin(user.role);
+      })
+      .catch((err) => setError(errorMessage(err)))
+      .finally(() => setLoading(false));
   };
 
   return (

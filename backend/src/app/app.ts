@@ -9,7 +9,7 @@ export const app = express();
 
 app.use(securityMiddleware);
 app.use(corsMiddleware);
-app.use(express.json());
+app.use(express.json({ limit: '5mb' }));
 
 app.use('/api', appRouter);
 

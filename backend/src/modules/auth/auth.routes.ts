@@ -1,10 +1,119 @@
 import { Router } from 'express';
-import { AuthController } from './auth.controller';
-import { authMiddleware } from '../../middleware/auth';
+import { z } from 'zod';
+import type { Prisma } from '@prisma/client';
+import { prisma } from '../../lib/prisma';
+import { hashPassword, comparePassword } from '../../lib/password';
+import { auth, issueRefreshToken, revokeRefreshToken, rotateRefreshToken, signAccessToken } from '../../core/auth';
+import { badRequest, conflict, forbidden, handler, me, parse, unauthorized } from '../../core/http';
+import { toAppUser } from '../../core/dto';
 
 export const authRouter = Router();
-const controller = new AuthController();
 
-authRouter.post('/register', (req, res, next) => controller.register(req, res, next));
-authRouter.post('/login', (req, res, next) => controller.login(req, res, next));
-authRouter.get('/me', authMiddleware, (req, res, next) => controller.getMe(req, res, next));
+const meta = (req: { headers: Record<string, unknown>; ip?: string }) => ({ userAgent: String(req.headers['user-agent'] ?? ''), ip: req.ip?.replace('::ffff:', '') });
+
+const registerBody = z.object({
+  fullName: z.string().trim().min(2).max(120),
+  email: z.string().trim().toLowerCase().email(),
+  password: z.string().min(6).max(100),
+});
+const loginBody = z.object({ email: z.string().trim().toLowerCase().email(), password: z.string().min(1) });
+
+async function session(userId: string, req: Parameters<typeof meta>[0]) {
+  const user = await prisma.user.update({ where: { id: userId }, data: { lastActiveAt: new Date() } });
+  return {
+    user: await toAppUser(user),
+    accessToken: signAccessToken({ id: user.id, role: user.role, email: user.email }),
+    refreshToken: await issueRefreshToken(user.id, meta(req)),
+  };
+}
+
+/** Đăng ký học viên (luồng #1). Chưa có dịch vụ email nên kích hoạt ngay. */
+authRouter.post(
+  '/register',
+  handler(async (req) => {
+    const body = parse(registerBody, req.body);
+    const exists = await prisma.user.findFirst({ where: { email: body.email, deletedAt: null }, select: { id: true } });
+    if (exists) throw conflict('Email đã được sử dụng', 'EMAIL_TAKEN');
+    const user = await prisma.user.create({
+      data: { email: body.email, fullName: body.fullName, passwordHash: await hashPassword(body.password), role: 'STUDENT', status: 'ACTIVE', emailVerifiedAt: new Date() },
+    });
+    return session(user.id, req);
+  })
+);
+
+authRouter.post(
+  '/login',
+  handler(async (req) => {
+    const body = parse(loginBody, req.body);
+    const user = await prisma.user.findFirst({ where: { email: body.email, deletedAt: null } });
+    if (!user?.passwordHash || !(await comparePassword(body.password, user.passwordHash))) throw unauthorized('Email hoặc mật khẩu không đúng');
+    if (user.status === 'LOCKED') throw forbidden(user.lockedReason ? `Tài khoản đã bị khoá: ${user.lockedReason}` : 'Tài khoản đã bị khoá');
+    return session(user.id, req);
+  })
+);
+
+authRouter.post(
+  '/refresh',
+  handler(async (req) => {
+    const { refreshToken } = parse(z.object({ refreshToken: z.string().min(10) }), req.body);
+    const r = await rotateRefreshToken(refreshToken, meta(req));
+    return { accessToken: r.accessToken, refreshToken: r.refreshToken, user: await toAppUser(r.user) };
+  })
+);
+
+authRouter.post(
+  '/logout',
+  handler(async (req) => {
+    const { refreshToken } = parse(z.object({ refreshToken: z.string().optional() }), req.body ?? {});
+    if (refreshToken) await revokeRefreshToken(refreshToken);
+    return { ok: true };
+  })
+);
+
+authRouter.get(
+  '/me',
+  auth,
+  handler(async (req) => {
+    const user = await prisma.user.findUniqueOrThrow({ where: { id: me(req).id } });
+    return toAppUser(user);
+  })
+);
+
+const profileBody = z.object({
+  fullName: z.string().trim().min(2).max(120).optional(),
+  avatarUrl: z.string().url().nullable().optional(),
+  phone: z.string().max(20).nullable().optional(),
+  bio: z.string().max(2000).nullable().optional(),
+  organization: z.string().max(160).nullable().optional(),
+  city: z.string().max(80).nullable().optional(),
+  settings: z.record(z.unknown()).optional(),
+});
+
+authRouter.patch(
+  '/me',
+  auth,
+  handler(async (req) => {
+    const body = parse(profileBody, req.body);
+    const cur = await prisma.user.findUniqueOrThrow({ where: { id: me(req).id } });
+    const user = await prisma.user.update({
+      where: { id: cur.id },
+      data: { ...body, settings: body.settings ? ({ ...(cur.settings as object), ...body.settings } as Prisma.InputJsonObject) : undefined },
+    });
+    return toAppUser(user);
+  })
+);
+
+authRouter.post(
+  '/change-password',
+  auth,
+  handler(async (req) => {
+    const body = parse(z.object({ currentPassword: z.string(), newPassword: z.string().min(6).max(100) }), req.body);
+    const user = await prisma.user.findUniqueOrThrow({ where: { id: me(req).id } });
+    if (!user.passwordHash || !(await comparePassword(body.currentPassword, user.passwordHash))) throw badRequest('Mật khẩu hiện tại không đúng', 'WRONG_PASSWORD');
+    await prisma.$transaction([
+      prisma.user.update({ where: { id: user.id }, data: { passwordHash: await hashPassword(body.newPassword) } }),
+      prisma.userToken.updateMany({ where: { userId: user.id, type: 'REFRESH', revokedAt: null }, data: { revokedAt: new Date() } }),
+    ]);
+    return { ok: true };
+  })
+);
