@@ -12,10 +12,11 @@ type Exam = 'ALL' | 'TOEIC' | 'VSTEP';
 const MEDAL = ['bg-[#F2C94C] text-[#5C4300]', 'bg-[#D5D9DE] text-[#3D444D]', 'bg-[#E3A778] text-[#5A2E0E]'];
 
 const RULES = [
-  ['1 câu luyện tập làm đúng', '2 điểm'],
-  ['1 câu làm sai rồi ôn lại đúng', '3 điểm'],
-  ['1 đề full test nộp đủ giờ', '150 điểm'],
-  ['Mỗi ngày giữ chuỗi học', '20 điểm'],
+  ['Nộp một bài luyện tập hoặc đề thi', '10 điểm'],
+  ['Mỗi câu làm đúng trong bài', '2 điểm'],
+  ['Hoàn thành một bài học', '10 điểm'],
+  ['Ôn một thẻ (nhớ được / chưa nhớ)', '2 / 1 điểm'],
+  ['Bài chép chính tả', '1 điểm mỗi 10% chính xác'],
 ];
 
 export const LeaderboardPage: React.FC = () => {
@@ -42,7 +43,7 @@ export const LeaderboardPage: React.FC = () => {
         crumbs={[{ label: 'Trang chủ', to: '/' }, { label: 'Bảng vinh danh' }]}
         eyebrow="Bảng vinh danh"
         title={<>Học viên <Accent>chuyên cần</Accent> nhất</>}
-        lead="Xếp theo điểm nỗ lực: số câu luyện tập, đề thi thử đã nộp và chuỗi ngày học liên tục. Bảng tuần làm mới lúc 0:00 thứ Hai."
+        lead="Xếp theo điểm nỗ lực cộng từ bài luyện tập, đề thi thử, bài học và thẻ ôn tập. Bảng tuần làm mới lúc 0:00 thứ Hai."
       />
 
       <Section innerClassName="pt-8 md:pt-10">

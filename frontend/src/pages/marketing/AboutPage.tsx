@@ -2,17 +2,11 @@ import React from 'react';
 import { ArrowRight, Heart, Target, Users, Lightbulb } from 'lucide-react';
 import { Button, SectionTitle, Timeline, Card } from '@/shared/components/ui';
 import { Reveal, Stagger, CountUp, Doodles } from '@/shared/components/motion';
-import { Img, PHOTOS, pravatar } from '@/shared/components/media/Img';
+import { Img, PHOTOS } from '@/shared/components/media/Img';
+import { Avatar } from '@/shared/components/ui';
+import { useOverview, useTeam } from '@/shared/api/cms';
 import { useDocumentTitle } from '@/shared/hooks';
 import { cn } from '@/shared/utils';
-
-const TEAM = [
-  { name: 'Lê Quốc Bảo', role: 'Trưởng bộ môn · VSTEP C1', img: 44, note: '12 năm giảng dạy, ĐH Ngoại ngữ Đà Nẵng' },
-  { name: 'Trần Thu Hà', role: 'Giáo viên TOEIC · 985', img: 43, note: 'Chuyên Part 3–4, 3.000+ học viên' },
-  { name: 'Phạm Ngọc Linh', role: 'Giáo viên VSTEP Writing', img: 42, note: 'Chấm 1.200+ bài Writing' },
-  { name: 'Nguyễn Văn Dũng', role: 'Giáo viên TOEIC Reading', img: 41, note: 'Tác giả 7 lỗi Part 2' },
-  { name: 'Phạm Quản Trị', role: 'Kỹ thuật & Sản phẩm', img: 45, note: 'Sinh viên năm 3, Khoa CNTT' },
-];
 
 const VALUES = [
   { icon: Target, t: 'Đúng chỗ yếu', d: 'Không học lại cái đã biết. Dữ liệu bài làm quyết định bạn học gì tiếp.', bg: 'bg-indigo-100' },
@@ -23,13 +17,16 @@ const VALUES = [
 
 export const AboutPage: React.FC = () => {
   useDocumentTitle('Giới thiệu');
+  const { data: o } = useOverview();
+  const { data: team = [] } = useTeam();
+  const n = (v?: number) => (v ?? 0).toLocaleString('vi-VN');
   return (
     <div>
       <section className="relative bg-paper border-b-2 border-slate-900 overflow-hidden">
         <Doodles />
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24 grid lg:grid-cols-[1fr_1fr] gap-12 items-center">
           <div className="space-y-6">
-            <SectionTitle align="left" eyebrow="Về OrbiLingo" title={<>Sinh ra từ một lớp luyện thi <span className="mark-coral mark">ở Đà Nẵng</span>.</>} description="Năm 2025, cô Hà có 28 học viên và một cuốn sổ ghi câu sai của từng người. Sổ đó giờ là OrbiLingo." />
+            <SectionTitle align="left" eyebrow="Về OrbiLingo" title={<>Luyện thi đúng chỗ yếu, <span className="mark-coral mark">từ dữ liệu bài làm</span>.</>} description="OrbiLingo là đồ án chuyên ngành của Khoa CNTT: nền tảng luyện thi TOEIC và VSTEP với thi thử, sổ tay lỗi sai, ôn tập ngắt quãng và lớp học cùng giáo viên." />
             <Button to="/auth/register" variant="gradient" size="lg" rightIcon={<ArrowRight className="w-4 h-4" />}>
               Học thử miễn phí
             </Button>
@@ -46,12 +43,12 @@ export const AboutPage: React.FC = () => {
       </section>
 
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14">
-        <Stagger className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <Stagger key={o ? 'data' : 'loading'} className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {[
-            [24837, '+', 'học viên'],
-            [38, '', 'giáo viên & cộng tác viên'],
-            [183, '+', 'đề thi thử'],
-            [147, '', 'điểm tăng trung bình'],
+            [o?.students ?? 0, '', 'học viên'],
+            [o?.teachers ?? 0, '', 'giáo viên & trưởng bộ môn'],
+            [o?.tests ?? 0, '', 'đề thi thử'],
+            [o?.questions ?? 0, '', 'câu hỏi có đáp án'],
           ].map(([v, s, l], i) => (
             <div key={l as string} className={cn('rounded-2xl border-2 border-slate-900 p-5', ['bg-white', 'bg-amber-200', 'bg-indigo-100', 'bg-violet-100'][i])}>
               <p className="font-display text-4xl font-extrabold text-slate-900">
@@ -65,15 +62,15 @@ export const AboutPage: React.FC = () => {
 
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 grid lg:grid-cols-[360px_1fr] gap-12 items-start">
         <Reveal>
-          <SectionTitle align="left" eyebrow="Hành trình" title="Từ cuốn sổ tới nền tảng" />
+          <SectionTitle align="left" eyebrow="Hệ thống hiện tại" title="OrbiLingo hôm nay" description="Số liệu lấy trực tiếp từ cơ sở dữ liệu." />
         </Reveal>
         <Reveal delay={100}>
           <Timeline
             items={[
-              { id: '1', title: 'Tháng 3/2025 — Cuốn sổ lỗi sai', description: 'Lớp TOEIC 28 người. Mỗi buổi cô Hà ghi câu sai của từng bạn vào sổ và giao bài ôn riêng.', time: '2025', tone: 'amber' },
-              { id: '2', title: 'Tháng 8/2025 — Bản Google Sheet', description: 'Sổ chuyển sang bảng tính, tự nhắc ôn sau 1-3-7 ngày. Điểm trung bình lớp tăng 62 điểm sau 2 tháng.', time: '2025', tone: 'indigo' },
-              { id: '3', title: 'Tháng 1/2026 — Khởi động dự án', description: 'Đồ án chuyên ngành: xây nền tảng với thi thử, sổ tay lỗi sai, SM-2 và lớp học cho giáo viên.', time: '2026', tone: 'violet' },
-              { id: '4', title: 'Tháng 10/2026 — Phiên bản hiện tại', description: '5 vai trò, 183 đề, 12.614 câu hỏi được duyệt. 24.837 học viên.', time: 'Nay', tone: 'emerald' },
+              { id: '1', title: 'Ngân hàng đề', description: `${n(o?.tests)} đề thi thử, ${n(o?.questions)} câu hỏi có đáp án và ${n(o?.passages)} bài đọc / bài nghe.`, time: 'Đề thi', tone: 'amber' },
+              { id: '2', title: 'Học liệu', description: `${n(o?.courses)} khoá học với ${n(o?.lessons)} bài học, ${n(o?.words)} từ vựng có phiên âm và ví dụ.`, time: 'Học', tone: 'indigo' },
+              { id: '3', title: 'Lớp học', description: `${n(o?.teachers)} giáo viên và trưởng bộ môn phụ trách lớp, chấm Viết/Nói theo tiêu chí.`, time: 'Lớp', tone: 'violet' },
+              { id: '4', title: 'Học viên', description: `${n(o?.students)} tài khoản học viên đang hoạt động, 5 vai trò người dùng.`, time: 'Nay', tone: 'emerald' },
             ]}
           />
         </Reveal>
@@ -101,13 +98,24 @@ export const AboutPage: React.FC = () => {
           <SectionTitle align="left" eyebrow="Đội ngũ" title="Những người đứng sau" description="Giáo viên thật, có lớp thật. Bạn sẽ gặp họ trong khoá học và bàn chấm bài." />
         </Reveal>
         <Stagger className="grid sm:grid-cols-2 lg:grid-cols-5 gap-5">
-          {TEAM.map((m, i) => (
-            <Card key={m.name} hard padding="none" className={cn('overflow-hidden', i % 2 ? 'tilt-2' : 'tilt-3')}>
-              <img src={pravatar(m.img)} alt={m.name} className="w-full aspect-square object-cover border-b-2 border-slate-900" />
+          {team.map((m, i) => (
+            <Card key={m.id} hard padding="none" className={cn('overflow-hidden', i % 2 ? 'tilt-2' : 'tilt-3')}>
+              {m.avatarUrl ? (
+                <img src={m.avatarUrl} alt={m.name} className="w-full aspect-square object-cover border-b-2 border-slate-900" />
+              ) : (
+                <div className="flex aspect-square items-center justify-center border-b-2 border-slate-900 bg-indigo-100">
+                  <Avatar name={m.name} size="xl" />
+                </div>
+              )}
               <div className="p-4">
                 <p className="font-display font-extrabold text-slate-900">{m.name}</p>
-                <p className="text-xs font-bold text-violet-600">{m.role}</p>
-                <p className="text-xs text-slate-500 mt-1">{m.note}</p>
+                <p className="text-xs font-bold text-violet-600">
+                  {m.role}
+                  {m.department ? ` · ${m.department}` : ''}
+                </p>
+                <p className="text-xs text-slate-500 mt-1">
+                  {m.classes} lớp · {m.students} học viên
+                </p>
               </div>
             </Card>
           ))}

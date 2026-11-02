@@ -72,3 +72,15 @@ export const addDaysLocal = (d: Date, n: number) => {
   x.setDate(x.getDate() + n);
   return x;
 };
+
+/**
+ * Học kỳ theo lịch năm học Việt Nam, tính từ ngày hiện tại (không viết cứng):
+ * HK I: tháng 9 → tháng 1 · HK II: tháng 2 → tháng 6 · Học kỳ hè: tháng 7 → tháng 8.
+ */
+export function academicTerm(d = new Date()) {
+  const m = d.getMonth() + 1;
+  const startYear = m >= 9 ? d.getFullYear() : d.getFullYear() - 1;
+  const year = `${startYear}–${startYear + 1}`;
+  const term = m >= 9 || m === 1 ? 'Học kỳ I' : m <= 6 ? 'Học kỳ II' : 'Học kỳ hè';
+  return { term, year, label: `${term}, năm học ${year}`, short: `${term} · ${year}` };
+}

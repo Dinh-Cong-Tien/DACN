@@ -9,6 +9,9 @@ import { EmptyState, SkeletonCard } from '@/shared/components/ui';
 import { useDocumentTitle } from '@/shared/hooks';
 import { cn, formatDate } from '@/shared/utils';
 import { toast } from '@/shared/stores/uiStore';
+import { useAuthStore } from '@/shared/stores/authStore';
+import { useAddBookmark } from '@/shared/api/learner';
+import { errorMessage } from '@/shared/api/client';
 import { Eyebrow } from './shared/PageKit';
 
 /** Bộ bài Giới thiệu kỳ thi: trang kỳ thi tương ứng (breadcrumb, liên kết cuối bài) */
@@ -38,6 +41,21 @@ export const BlogDetailPage: React.FC = () => {
   const { data: post, isLoading, isError } = usePost(slug);
   const { data: same } = usePosts(post ? { category: post.categorySlug, pageSize: 200 } : undefined);
   useDocumentTitle(post?.title ?? 'Bài viết');
+  const loggedIn = useAuthStore((s) => !!s.user);
+  const addBookmark = useAddBookmark();
+  const savePost = () => {
+    if (!post) return;
+    if (!loggedIn) return toast.info('Đăng nhập để lưu bài viết', 'Bài đã lưu nằm ở mục Đã lưu của bạn.');
+    addBookmark
+      .mutateAsync({ targetType: 'POST', targetId: post.id })
+      .then(() => toast.success('Đã lưu bài viết', 'Xem lại ở mục Đã lưu.'))
+      .catch((e) => toast.error('Chưa lưu được', errorMessage(e)));
+  };
+  const sharePost = () => {
+    const url = window.location.href;
+    if (navigator.clipboard?.writeText) navigator.clipboard.writeText(url).then(() => toast.success('Đã sao chép liên kết'), () => toast.info('Liên kết bài viết', url));
+    else toast.info('Liên kết bài viết', url);
+  };
   if (isLoading) return <div className="mx-auto max-w-3xl px-4 py-14"><SkeletonCard lines={8} /></div>;
   if (isError || !post) return <EmptyState title="Không tìm thấy bài viết" description="Bài viết có thể đã bị gỡ hoặc đường dẫn chưa đúng." action={<Link to="/blog" className="font-semibold text-indigo-700">Về trang Kinh nghiệm</Link>} />;
   const series = SERIES[post.categorySlug];
@@ -89,10 +107,10 @@ export const BlogDetailPage: React.FC = () => {
                 </div>
               </div>
               <div className="flex gap-1">
-                <button type="button" onClick={() => toast.success('Đã lưu bài viết')} className="inline-flex h-9 items-center gap-1.5 rounded-lg px-3 text-sm font-medium text-slate-600 hover:bg-slate-900/[0.05] hover:text-slate-900">
+                <button type="button" onClick={savePost} className="inline-flex h-9 items-center gap-1.5 rounded-lg px-3 text-sm font-medium text-slate-600 hover:bg-slate-900/[0.05] hover:text-slate-900">
                   <Bookmark className="h-4 w-4" /> Lưu
                 </button>
-                <button type="button" onClick={() => toast.info('Đã sao chép liên kết')} className="inline-flex h-9 items-center gap-1.5 rounded-lg px-3 text-sm font-medium text-slate-600 hover:bg-slate-900/[0.05] hover:text-slate-900">
+                <button type="button" onClick={sharePost} className="inline-flex h-9 items-center gap-1.5 rounded-lg px-3 text-sm font-medium text-slate-600 hover:bg-slate-900/[0.05] hover:text-slate-900">
                   <Share2 className="h-4 w-4" /> Chia sẻ
                 </button>
               </div>

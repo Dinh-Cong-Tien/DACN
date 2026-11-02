@@ -84,7 +84,7 @@ async function pickReply(text: string, history: string[]): Promise<Reply> {
       /* mất kết nối: vẫn trả lời theo FAQ đã tải */
     }
   }
-  if (phone) return { texts: ['Dạ mình nhận được số điện thoại rồi ạ.', 'Bạn để lại thêm email giúp mình để bên mình lưu yêu cầu và gọi lại cho bạn nha.'], agentId: DEFAULT_AGENT };
+  if (phone) return { texts: ['Dạ mình nhận được số điện thoại rồi ạ.', 'Bạn để lại thêm email để yêu cầu được lưu và chuyển tới đội hỗ trợ nhé.'], agentId: DEFAULT_AGENT };
   return matchLocal(await loadReplies(), text);
 }
 

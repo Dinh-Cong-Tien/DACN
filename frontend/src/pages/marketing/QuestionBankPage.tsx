@@ -35,7 +35,7 @@ export const QuestionBankPage: React.FC = () => {
         crumbs={[{ label: 'Trang chủ', to: '/' }, { label: 'Công cụ' }, { label: 'Ngân hàng câu hỏi' }]}
         eyebrow="Ngân hàng câu hỏi"
         title={<><Accent>{TOTAL ? `${formatNumber(TOTAL)} câu hỏi` : 'Câu hỏi'}</Accent> TOEIC và VSTEP</>}
-        lead="Mỗi câu có lời giải, độ khó từ 1 đến 5 và thẻ kiến thức (thì, từ loại, paraphrase...). Câu mới chỉ được dùng trong đề sau khi trưởng bộ môn duyệt."
+        lead="Mỗi câu có đáp án, được gắn Part và chủ điểm kiến thức (thì, từ loại, mệnh đề...), phần lớn kèm lời giải và bản dịch. Câu mới chỉ được dùng trong đề sau khi trưởng bộ môn duyệt."
         facts={[
           { value: formatNumber(TOTAL), label: 'Câu hỏi đã duyệt' },
           { value: String(DISTRIBUTION.length), label: 'Phần thi' },
@@ -93,7 +93,7 @@ export const QuestionBankPage: React.FC = () => {
             <div className="text-[15px] leading-relaxed text-slate-600">
               <h2 className="text-base font-semibold text-slate-900">Quy trình duyệt câu hỏi</h2>
               <ol className="mt-3 space-y-2">
-                <li>1. Giáo viên soạn câu, gắn độ khó và thẻ kiến thức.</li>
+                <li>1. Giáo viên soạn câu, gắn Part và chủ điểm kiến thức.</li>
                 <li>2. Trưởng bộ môn kiểm tra đáp án, lời giải rồi duyệt.</li>
                 <li>3. Học viên thấy câu sai đề có thể báo lỗi ngay trong bài làm.</li>
               </ol>

@@ -15,14 +15,11 @@ export const COURSE_PART_NOTE: Record<string, string> = {
 };
 
 export const SUPPORT_INFO: SupportInfo = {
-  team: 'Tư vấn OrbiLingo',
-  agents: [
-    { id: 'thu-trang', name: 'Thu Trang', role: 'Tư vấn viên', avatar: '/images/support/thu-trang.webp' },
-    { id: 'co-hanh', name: 'Cô Hạnh', role: 'Cố vấn học tập', avatar: '/images/support/co-hanh.webp' },
-    { id: 'minh-quan', name: 'Minh Quân', role: 'Hỗ trợ kỹ thuật', avatar: '/images/support/minh-quan.webp' },
-  ],
-  replyTime: 'Thường trả lời trong vài phút',
-  teaser: 'Bạn đang ôn TOEIC hay VSTEP? Mình tư vấn lộ trình miễn phí nha.',
+  team: 'Hỗ trợ OrbiLingo',
+  // Câu trả lời tức thì là của trợ lý tự động (khớp bảng faqs); nhân viên trả lời trong ticket ở trang quản trị
+  agents: [{ id: 'bot', name: 'Trợ lý tự động', role: 'Trả lời theo câu hỏi thường gặp', avatar: '/favicon.svg' }],
+  replyTime: 'Trả lời tự động · nhân viên phản hồi trong giờ làm việc',
+  teaser: 'Bạn đang ôn TOEIC hay VSTEP? Hỏi nhanh về gói, đề thi, lớp học tại đây.',
   hotline: '0236 555 0199',
   zaloUrl: 'https://zalo.me/02365550199',
   email: 'hello@orbilingo.vn',
@@ -35,10 +32,10 @@ export const SUPPORT_INFO: SupportInfo = {
   ],
 };
 
-export const SUPPORT_GREETING = ['Chào bạn, mình là Trang bên OrbiLingo.', 'Bạn đang ôn TOEIC hay VSTEP, cần mình hỗ trợ gì không ạ?'];
-export const SUPPORT_FALLBACK = ['Dạ mình đã nhận câu hỏi rồi ạ, để mình kiểm tra rồi trả lời bạn ngay nha.', 'Nếu cần gấp bạn để lại số điện thoại, mình gọi lại liền.'];
-export const SUPPORT_CONTACT_ACK = ['Dạ mình nhận được rồi ạ.', 'Mình sẽ gọi lại cho bạn trong khoảng 15 phút nữa nha.'];
-export const SUPPORT_CONTACT_ACK_OFFLINE = ['Dạ mình nhận được rồi ạ.', 'Bên mình làm việc 8:00–22:00, sáng mai mình gọi lại sớm cho bạn nha.'];
+export const SUPPORT_GREETING = ['Chào bạn, đây là trợ lý tự động của OrbiLingo.', 'Mình trả lời ngay các câu hỏi thường gặp; câu hỏi khác sẽ được chuyển tới đội hỗ trợ.'];
+export const SUPPORT_FALLBACK = ['Trợ lý tự động chưa có câu trả lời sẵn cho câu hỏi này.', 'Bạn để lại email để câu hỏi được chuyển tới đội hỗ trợ nhé.'];
+export const SUPPORT_CONTACT_ACK = ['Đã lưu thông tin liên hệ của bạn.', 'Đội hỗ trợ sẽ phản hồi trong giờ làm việc (8:00–22:00).'];
+export const SUPPORT_CONTACT_ACK_OFFLINE = ['Đã lưu thông tin liên hệ của bạn.', 'Hiện ngoài giờ làm việc (8:00–22:00), đội hỗ trợ sẽ phản hồi vào ngày làm việc tiếp theo.'];
 
 /** Hai kỳ thi trên trang chủ. Dòng "Trên OrbiLingo" được điền số đề thật bằng `examTracks(counts)`. */
 export function examTracks(counts: { toeic: number; vstep: number }): ExamTrack[] {

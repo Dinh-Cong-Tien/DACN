@@ -4,7 +4,7 @@ import { ArrowLeft, Mail, MessageCircle, Phone, Search, Send, Crown, Inbox } fro
 import { useDocumentTitle } from '@/shared/hooks';
 import { useAuthStore } from '@/shared/stores/authStore';
 import { toast } from '@/shared/stores/uiStore';
-import { adminApi, useAdminInvalidate, useAdminTickets, useAdminUsers } from '@/shared/api/admin';
+import { adminApi, useAdminFaqs, useAdminInvalidate, useAdminTickets, useAdminUsers } from '@/shared/api/admin';
 import { errorMessage } from '@/shared/api/client';
 import type { SupportTicket, TicketStatus } from '@/shared/types';
 import { Avatar } from '@/shared/components/ui';
@@ -20,15 +20,6 @@ const PRIORITY: Record<SupportTicket['priority'], { label: string; cls: string }
   LOW: { label: 'Thấp', cls: 'bg-slate-100 text-slate-500' },
 };
 
-/** Câu trả lời mẫu theo nhóm yêu cầu */
-const QUICK: { label: string; text: string; cat?: SupportTicket['category'] }[] = [
-  { label: 'Đã kích hoạt VIP', cat: 'PAYMENT', text: 'Chào bạn, bên mình đã xác nhận thanh toán và kích hoạt gói VIP cho tài khoản. Bạn đăng xuất rồi đăng nhập lại để cập nhật nhé.' },
-  { label: 'Khôi phục bài thi', cat: 'EXAM', text: 'Chào bạn, hệ thống tự lưu bài làm mỗi 30 giây. Mình đã khôi phục bài, bạn vào Đề thi thử → Bài đang làm dở để tiếp tục nhé.' },
-  { label: 'Đặt lại mật khẩu', cat: 'ACCOUNT', text: 'Chào bạn, mình vừa gửi lại liên kết đặt lại mật khẩu, có hiệu lực trong 30 phút. Bạn kiểm tra cả mục Thư rác giúp mình nhé.' },
-  { label: 'Đã chuyển tổ chuyên môn', cat: 'CONTENT', text: 'Cảm ơn bạn đã báo lỗi. Mình đã chuyển cho tổ chuyên môn kiểm tra, sẽ phản hồi lại bạn trong 24 giờ.' },
-  { label: 'Cảm ơn & đóng yêu cầu', text: 'Cảm ơn bạn đã liên hệ OrbiLingo. Nếu cần hỗ trợ thêm, bạn cứ nhắn vào khung chat ở góc màn hình nhé.' },
-];
-
 /** Hộp thư hỗ trợ: đầu kia của khung chat hỗ trợ học viên, cộng email và hotline */
 export const AdminSupportPage: React.FC = () => {
   useDocumentTitle('Hỗ trợ học viên');
@@ -38,6 +29,8 @@ export const AdminSupportPage: React.FC = () => {
   const admins = useAdminUsers({ role: 'ADMIN' }).data?.items ?? [];
   const students = useAdminUsers({ role: 'STUDENT' }).data?.items ?? [];
   const refresh = useAdminInvalidate();
+  // Câu trả lời mẫu = FAQ bật "dùng trong chat" (quản lý ở Nội dung → Tài liệu & FAQ)
+  const quick = (useAdminFaqs().data ?? []).filter((f) => f.showInChat).slice(0, 8);
   const tickets = useMemo<(SupportTicket & { assigneeId?: string })[]>(() => ticketsQ.data ?? [], [ticketsQ.data]);
   const [sending, setSending] = useState(false);
   const [params] = useSearchParams();
@@ -202,13 +195,15 @@ export const AdminSupportPage: React.FC = () => {
                   ))}
                 </div>
                 <div className="space-y-2 border-t border-slate-100 p-4">
-                  <div className="flex flex-wrap gap-1.5">
-                    {QUICK.filter((x) => !x.cat || x.cat === shown.category).map((x) => (
-                      <button key={x.label} type="button" onClick={() => setDraft(x.text)} className="rounded-full border border-slate-200 bg-white px-3 py-1 text-[12px] text-slate-600 hover:border-indigo-300 hover:text-indigo-700">
-                        {x.label}
-                      </button>
-                    ))}
-                  </div>
+                  {quick.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5">
+                      {quick.map((f) => (
+                        <button key={f.id} type="button" title={f.answer} onClick={() => setDraft(f.answer)} className="max-w-[16rem] truncate rounded-full border border-slate-200 bg-white px-3 py-1 text-[12px] text-slate-600 hover:border-indigo-300 hover:text-indigo-700">
+                          {f.question}
+                        </button>
+                      ))}
+                    </div>
+                  )}
                   <textarea value={draft} onChange={(e) => setDraft(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) void send(); }} rows={3} placeholder={shown.channel === 'CHAT' ? 'Trả lời trong khung chat của học viên…' : `Trả lời qua email ${shown.email}…`} className={cn(inputCls, 'h-auto w-full resize-none py-2.5')} />
                   <div className="flex items-center justify-between gap-2">
                     <span className="text-[12px] text-slate-400 max-sm:hidden">Ctrl + Enter để gửi</span>

@@ -26,27 +26,27 @@ export const AdminSettingsPage: React.FC = () => {
   useDocumentTitle('Cấu hình tham số');
   const { data } = useAdminSettings();
   const refresh = useAdminInvalidate();
-  const MOCK_SETTINGS = data ?? EMPTY;
-  const groups = useMemo(() => Array.from(new Set(MOCK_SETTINGS.map((s) => s.group))), [MOCK_SETTINGS]);
+  const settingRows = data ?? EMPTY;
+  const groups = useMemo(() => Array.from(new Set(settingRows.map((s) => s.group))), [settingRows]);
   const [activeState, setActive] = useState<string>();
   const active = activeState ?? groups[0];
   const [values, setValues] = useState<Values>({});
   const [saved, setSaved] = useState<Values>({});
   useEffect(() => {
-    const v = toValues(MOCK_SETTINGS);
+    const v = toValues(settingRows);
     setValues(v);
     setSaved(v);
-  }, [MOCK_SETTINGS]);
+  }, [settingRows]);
   const [saving, setSaving] = useState(false);
   const [resetOpen, setResetOpen] = useState(false);
 
-  const dirty = useMemo(() => MOCK_SETTINGS.filter((s) => values[s.key] !== saved[s.key]).length, [values, saved]);
-  const dirtyIn = (g: string) => MOCK_SETTINGS.filter((s) => s.group === g && values[s.key] !== saved[s.key]).length;
+  const dirty = useMemo(() => settingRows.filter((s) => values[s.key] !== saved[s.key]).length, [values, saved]);
+  const dirtyIn = (g: string) => settingRows.filter((s) => s.group === g && values[s.key] !== saved[s.key]).length;
   const set = (key: string, v: SystemSetting['value']) => setValues((s) => ({ ...s, [key]: v }));
-  const maintenance = Boolean(values[MOCK_SETTINGS.find((s) => /maintenance/i.test(s.key) && s.type === 'TOGGLE')?.key ?? 'maintenance_mode']);
+  const maintenance = Boolean(values[settingRows.find((s) => /maintenance/i.test(s.key) && s.type === 'TOGGLE')?.key ?? 'maintenance_mode']);
 
   const save = async () => {
-    const changed = Object.fromEntries(MOCK_SETTINGS.filter((s) => values[s.key] !== saved[s.key]).map((s) => [s.key, values[s.key]]));
+    const changed = Object.fromEntries(settingRows.filter((s) => values[s.key] !== saved[s.key]).map((s) => [s.key, values[s.key]]));
     setSaving(true);
     try {
       await adminApi.saveSettings(changed);
@@ -147,7 +147,7 @@ export const AdminSettingsPage: React.FC = () => {
         <div className="min-w-0 space-y-6">
           {groups.map((g) => {
             const m = metaOf(g);
-            const items = MOCK_SETTINGS.filter((s) => s.group === g);
+            const items = settingRows.filter((s) => s.group === g);
             return (
               <div key={g} id={anchor(g)} className="scroll-mt-24">
                 <Panel flush title={g} sub={m.sub || `${items.length} tham số`} icon={m.icon} tone={m.tone} action={<span className="text-[12px] text-slate-400">{items.length} tham số</span>}>

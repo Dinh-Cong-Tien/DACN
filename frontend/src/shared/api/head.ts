@@ -92,7 +92,7 @@ export interface HeadTeacherDetail {
   observations: ClassObservation[];
   review: { total: number; agreed: number; adjusted: number; pending: number; avgDeviation: number };
 }
-export type ReportRow = ClassReport & { examType: ExamType; completion: number };
+export type ReportRow = ClassReport & { examType: ExamType; completion: number; /** false = chưa điểm danh buổi nào */ hasAttendance?: boolean };
 export interface HeadReports {
   classes: ReportRow[];
   monthly: { labels: string[]; attendance: number[]; completion: number[] };

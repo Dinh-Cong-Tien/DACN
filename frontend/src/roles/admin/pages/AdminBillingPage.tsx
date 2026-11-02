@@ -63,7 +63,7 @@ export const AdminBillingPage: React.FC = () => {
         items={[
           { label: 'Doanh thu tháng này', value: `${cur.toLocaleString('vi-VN')} tr`, icon: Wallet, tone: 'emerald', note: prev ? `${cur >= prev ? '+' : ''}${Math.round((cur / prev - 1) * 100)}% so với tháng trước` : 'triệu đồng' },
           { label: 'Đã thu tháng này', value: vnd(thisMonth), icon: CreditCard, tone: 'indigo', note: `${paidThisMonth.length} giao dịch thành công` },
-          { label: 'Chờ xác nhận', value: data?.summary.pending ?? 0, icon: Clock, tone: 'amber', note: 'Chuyển khoản ngân hàng' },
+          { label: 'Chờ xác nhận', value: data?.summary.pending ?? 0, icon: Clock, tone: 'amber', note: 'cần xác nhận thủ công' },
           { label: 'Hoàn tiền', value: recentRefunds, icon: RotateCcw, tone: 'rose', note: `Trong 30 ngày · ${data?.summary.activeVip ?? 0} gói VIP đang hiệu lực` },
         ]}
       />

@@ -54,6 +54,8 @@ export interface ClassStats {
   avgScore: number;
   completionRate: number;
   attendanceRate: number;
+  /** Số lượt điểm danh đã ghi (0 = chưa điểm danh buổi nào) */
+  attendanceMarks: number;
   studentIds: string[];
   perStudent: Map<string, { done: number; total: number; present: number; marks: number; scores: number[] }>;
 }
@@ -74,7 +76,8 @@ export async function classStats(classes: Pick<Class, 'id' | 'examType'>[]): Pro
   const allStudents = [...new Set(members.map((m) => m.studentId))];
   const attempts = allStudents.length
     ? await prisma.examAttempt.findMany({
-        where: { userId: { in: allStudents }, status: 'COMPLETED', scoreTotal: { not: null }, mode: { in: ['FULL', 'PRACTICE'] }, test: { isNot: null } },
+        where: { userId: { in: allStudents }, status: 'COMPLETED', scoreTotal: { not: null }, mode: 'FULL', test: { isNot: null } },
+        // Chỉ đề full mới có điểm quy đổi đúng thang (TOEIC 990 / VSTEP 10); lượt luyện vài Part bị loại
         select: { userId: true, scoreTotal: true, test: { select: { examType: true } } },
       })
     : [];
@@ -89,7 +92,8 @@ export async function classStats(classes: Pick<Class, 'id' | 'examType'>[]): Pro
         if (!p) continue;
         p.total++;
         if (DONE_STATUSES.has(s.status)) p.done++;
-        if (s.status === 'GRADED' && s.score !== null) fallbackScores.push(Number(s.score));
+        // Điểm bài giao chỉ bù cho lớp VSTEP (cùng thang 10, quy đổi theo điểm tối đa); lớp TOEIC thang 990 không trộn
+        if (c.examType === 'VSTEP' && s.status === 'GRADED' && s.score !== null && Number(a.maxScore) > 0) fallbackScores.push(round1((Number(s.score) / Number(a.maxScore)) * 10));
       }
     let present = 0;
     let marks = 0;
@@ -122,6 +126,7 @@ export async function classStats(classes: Pick<Class, 'id' | 'examType'>[]): Pro
       avgScore: scores.length ? round1(scores.reduce((a, b) => a + b, 0) / scores.length) : 0,
       completionRate: pct(done, total),
       attendanceRate: pct(present, marks),
+      attendanceMarks: marks,
       studentIds: sids,
       perStudent: per,
     });

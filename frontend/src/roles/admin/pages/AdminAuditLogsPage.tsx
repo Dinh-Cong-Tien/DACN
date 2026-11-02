@@ -30,19 +30,19 @@ export const AdminAuditLogsPage: React.FC = () => {
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
   const { data, isLoading } = useAdminAuditLogs({ pageSize: 500 });
-  const MOCK_AUDIT_LOGS = data?.items ?? EMPTY;
-  const avatarOf = (name: string) => MOCK_AUDIT_LOGS.find((l) => l.actor === name)?.actorAvatar;
+  const auditLogs = data?.items ?? EMPTY;
+  const avatarOf = (name: string) => auditLogs.find((l) => l.actor === name)?.actorAvatar;
 
   const filtered = useMemo(() => {
     const s = search.toLowerCase();
-    return MOCK_AUDIT_LOGS.filter((l) => (!severity || l.severity === severity) && (!role || l.role === role) && (!s || [l.actor, l.target, l.action].some((v) => v.toLowerCase().includes(s))));
-  }, [severity, role, search, MOCK_AUDIT_LOGS]);
+    return auditLogs.filter((l) => (!severity || l.severity === severity) && (!role || l.role === role) && (!s || [l.actor, l.target, l.action].some((v) => v.toLowerCase().includes(s))));
+  }, [severity, role, search, auditLogs]);
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const rows = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
   const count = (s: AuditLog['severity']) => data?.bySeverity[s] ?? 0;
 
   const sevTabs: { key: AuditLog['severity'] | ''; label: string; n: number }[] = [
-    { key: '', label: 'Tất cả', n: MOCK_AUDIT_LOGS.length },
+    { key: '', label: 'Tất cả', n: auditLogs.length },
     ...(Object.keys(SEVERITY) as AuditLog['severity'][]).map((k) => ({ key: k, label: SEVERITY[k].label, n: count(k) })),
   ];
 
@@ -69,7 +69,7 @@ export const AdminAuditLogsPage: React.FC = () => {
 
       <Figures
         items={[
-          { label: 'Tổng bản ghi', value: data?.total ?? 0, icon: History, tone: 'indigo', note: isLoading ? 'đang tải…' : `hiển thị ${MOCK_AUDIT_LOGS.length} bản ghi mới nhất` },
+          { label: 'Tổng bản ghi', value: data?.total ?? 0, icon: History, tone: 'indigo', note: isLoading ? 'đang tải…' : `hiển thị ${auditLogs.length} bản ghi mới nhất` },
           { label: 'Thông tin', value: count('INFO'), icon: Info, tone: 'sky' },
           { label: 'Cảnh báo', value: count('WARN'), icon: AlertTriangle, tone: 'amber' },
           { label: 'Nghiêm trọng', value: count('CRITICAL'), icon: ShieldAlert, tone: 'rose', note: 'cần xem xét' },

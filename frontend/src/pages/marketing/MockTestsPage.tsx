@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { Timer, Volume2, Flag, ClipboardCheck } from 'lucide-react';
 import { useTests } from '@/shared/api/catalog';
+import { limitText, usePlans } from '@/shared/api/cms';
 import type { MockTestSummary } from '@/shared/types';
 import { useDocumentTitle, useGate, useParamState } from '@/shared/hooks';
 import { cn } from '@/shared/utils';
@@ -24,10 +25,12 @@ export const MockTestsPage: React.FC = () => {
   const gate = useGate();
   const [exam, setExam] = useParamState<Exam>('exam', ['TOEIC', 'VSTEP'], 'TOEIC');
   const [kind, setKind] = useState<Kind>('ALL');
-  const { data: MOCK_TESTS = [], isLoading } = useTests();
+  const { data: testList = [], isLoading } = useTests();
+  const { data: plans = [] } = usePlans();
+  const freeMock = limitText(plans.find((p) => p.price === 0)?.entitlements?.MOCK_TEST, 'đề');
   const list = useMemo(
-    () => MOCK_TESTS.filter((t) => t.examType === exam).filter((t) => (kind === 'ALL' ? true : kind === 'FREE' ? t.isFree : kind === 'FULL' ? isFull(t) : !isFull(t))),
-    [exam, kind, MOCK_TESTS]
+    () => testList.filter((t) => t.examType === exam).filter((t) => (kind === 'ALL' ? true : kind === 'FREE' ? t.isFree : kind === 'FULL' ? isFull(t) : !isFull(t))),
+    [exam, kind, testList]
   );
 
   return (
@@ -36,11 +39,11 @@ export const MockTestsPage: React.FC = () => {
         crumbs={[{ label: 'Trang chủ', to: '/' }, { label: 'Đề thi thử' }]}
         eyebrow="Thi thử"
         title={<>Đề thi thử <Accent>TOEIC và VSTEP</Accent></>}
-        lead="Đề TOEIC theo format ETS mới nhất và đề VSTEP theo định dạng của Bộ GD&ĐT. Làm trên máy như thi thật, nộp bài là có điểm và giải thích."
+        lead="Đề TOEIC full 200 câu theo format Listening & Reading và đề VSTEP theo định dạng của Bộ GD&ĐT. Làm trên máy như thi thật, nộp bài là có điểm và giải thích."
         facts={[
-          { value: isLoading ? '…' : String(MOCK_TESTS.filter((t) => t.examType === 'TOEIC').length), label: 'Đề TOEIC' },
-          { value: isLoading ? '…' : String(MOCK_TESTS.filter((t) => t.examType === 'VSTEP').length), label: 'Đề VSTEP' },
-          { value: '3 đề / tuần', label: 'Miễn phí với tài khoản Free' },
+          { value: isLoading ? '…' : String(testList.filter((t) => t.examType === 'TOEIC').length), label: 'Đề TOEIC' },
+          { value: isLoading ? '…' : String(testList.filter((t) => t.examType === 'VSTEP').length), label: 'Đề VSTEP' },
+          { value: freeMock ?? '…', label: 'Thi thử với tài khoản Free' },
         ]}
       />
 
@@ -54,8 +57,8 @@ export const MockTestsPage: React.FC = () => {
               setKind('ALL');
             }}
             items={[
-              { value: 'TOEIC', label: 'TOEIC', count: MOCK_TESTS.filter((t) => t.examType === 'TOEIC').length },
-              { value: 'VSTEP', label: 'VSTEP', count: MOCK_TESTS.filter((t) => t.examType === 'VSTEP').length },
+              { value: 'TOEIC', label: 'TOEIC', count: testList.filter((t) => t.examType === 'TOEIC').length },
+              { value: 'VSTEP', label: 'VSTEP', count: testList.filter((t) => t.examType === 'VSTEP').length },
             ]}
           />
           {/* Lọc loại đề: nhóm nút liền (segmented) */}

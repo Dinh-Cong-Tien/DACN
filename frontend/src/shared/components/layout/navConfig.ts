@@ -17,7 +17,7 @@ export const STUDENT_NAV: NavGroup[] = [
   {
     title: 'Ôn luyện',
     items: [
-      { to: '/app/mistakes', label: 'Sổ tay lỗi sai', img: '/images/nav/spiral-notepad.webp', icon: AlertTriangle, badge: '5' },
+      { to: '/app/mistakes', label: 'Sổ tay lỗi sai', img: '/images/nav/spiral-notepad.webp', icon: AlertTriangle },
       { to: '/app/review', label: 'Lịch ôn ngắt quãng', img: '/images/nav/spiral-calendar.webp', icon: RotateCcw },
       { to: '/app/drills', label: 'Luyện điểm yếu', img: '/images/nav/bullseye.webp', icon: Target },
       { to: '/app/dictation', label: 'Nghe chép chính tả', img: '/images/nav/headphone.webp', icon: Headphones },
@@ -66,7 +66,7 @@ export interface MenuLink {
 /** Mục học tập cá nhân, hiện đầu menu Công cụ khi học viên đã đăng nhập */
 export const STUDENT_TOOLS: MenuLink[] = [
   { to: '/app/learning-path', label: 'Lộ trình học', img: '/images/nav/compass.webp', desc: 'Lộ trình theo ngày thi của bạn', group: 'Học tập của bạn' },
-  { to: '/app/mistakes', label: 'Sổ tay lỗi sai', img: '/images/nav/spiral-notepad.webp', desc: 'Câu làm sai được lưu để làm lại', badge: '5', group: 'Học tập của bạn' },
+  { to: '/app/mistakes', label: 'Sổ tay lỗi sai', img: '/images/nav/spiral-notepad.webp', desc: 'Câu làm sai được lưu để làm lại', group: 'Học tập của bạn' },
   { to: '/app/review', label: 'Lịch ôn ngắt quãng', img: '/images/nav/spiral-calendar.webp', desc: 'Ôn đúng lúc sắp quên', group: 'Học tập của bạn' },
   { to: '/app/progress', label: 'Tiến độ & Phân tích', img: '/images/nav/chart-increasing.webp', desc: 'Điểm thi thử, % đúng từng Part', group: 'Học tập của bạn' },
 ];
@@ -136,8 +136,8 @@ export const PUBLIC_NAV: PublicNavItem[] = [
     img: '/images/nav/toolbox.webp',
     children: [
       { to: '/score-converter', label: 'Quy đổi điểm', img: '/images/nav/abacus.webp', icon: Calculator, desc: 'TOEIC ↔ VSTEP ↔ CEFR theo bảng ETS' },
-      { to: '/resources', label: 'Kho tài liệu mở', img: '/images/nav/books.webp', icon: FolderOpen, desc: 'Ngữ pháp, từ vựng, bài mẫu Writing' },
-      { to: '/question-bank', label: 'Ngân hàng câu hỏi', img: '/images/nav/card-file-box.webp', icon: Database, desc: '12.614 câu theo từng Part, có giải thích' },
+      { to: '/resources', label: 'Kho tài liệu mở', img: '/images/nav/books.webp', icon: FolderOpen, desc: 'Từ vựng, ngữ pháp, đề Viết/Nói' },
+      { to: '/question-bank', label: 'Ngân hàng câu hỏi', img: '/images/nav/card-file-box.webp', icon: Database, desc: 'Câu hỏi theo từng Part, có giải thích' },
       { to: '/leaderboard', label: 'Bảng vinh danh', img: '/images/nav/trophy.webp', icon: Trophy, desc: 'Học viên chuyên cần nhất tuần này', appTo: '/app/leaderboard' },
     ],
   },

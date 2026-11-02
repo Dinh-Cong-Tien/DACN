@@ -8,12 +8,12 @@ import { useDocumentTitle } from '@/shared/hooks';
 import { cn } from '@/shared/utils';
 
 const TOPICS = [
-  { icon: Rocket, t: 'Bắt đầu', d: 'Tạo tài khoản, thi xếp lớp, đọc lộ trình 3 chặng.', n: 8, bg: 'bg-amber-200' },
-  { icon: FileText, t: 'Thi thử', d: 'Audio không phát, mất mạng giữa bài, xem lại đáp án.', n: 12, bg: 'bg-white' },
-  { icon: AlertTriangle, t: 'Sổ tay lỗi sai & ôn tập', d: 'Lịch SM-2 hoạt động thế nào, đánh dấu đã hiểu.', n: 6, bg: 'bg-indigo-100' },
-  { icon: CreditCard, t: 'Gói VIP & thanh toán', d: 'Chuyển khoản, kích hoạt, hoàn tiền.', n: 9, bg: 'bg-white' },
-  { icon: Users, t: 'Lớp học', d: 'Nhập mã mời, nộp bài, xem nhận xét giáo viên.', n: 7, bg: 'bg-violet-100' },
-  { icon: Settings, t: 'Tài khoản', d: 'Đổi email, mật khẩu, xoá tài khoản.', n: 5, bg: 'bg-white' },
+  { icon: Rocket, t: 'Bắt đầu', d: 'Tạo tài khoản, thi xếp lớp, đọc lộ trình 3 chặng.', bg: 'bg-amber-200' },
+  { icon: FileText, t: 'Thi thử', d: 'Audio không phát, mất mạng giữa bài, xem lại đáp án.', bg: 'bg-white' },
+  { icon: AlertTriangle, t: 'Sổ tay lỗi sai & ôn tập', d: 'Lịch SM-2 hoạt động thế nào, đánh dấu đã hiểu.', bg: 'bg-indigo-100' },
+  { icon: CreditCard, t: 'Gói VIP & thanh toán', d: 'Chuyển khoản, kích hoạt, hoàn tiền.', bg: 'bg-white' },
+  { icon: Users, t: 'Lớp học', d: 'Nhập mã mời, nộp bài, xem nhận xét giáo viên.', bg: 'bg-violet-100' },
+  { icon: Settings, t: 'Tài khoản', d: 'Đổi email, mật khẩu, xoá tài khoản.', bg: 'bg-white' },
 ];
 
 export const HelpPage: React.FC = () => {
@@ -26,7 +26,7 @@ export const HelpPage: React.FC = () => {
       <section className="bg-indigo-600 text-white border-b-2 border-slate-900">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14 md:py-20 grid lg:grid-cols-[1fr_360px] gap-10 items-center">
           <div className="space-y-6">
-            <SectionTitle dark align="left" eyebrow="Trung tâm trợ giúp" title={<>Bạn cần <span className="mark mark-full">giúp gì</span>?</>} description="Hướng dẫn từng bước kèm ảnh chụp màn hình. Cập nhật theo phiên bản hiện tại." />
+            <SectionTitle dark align="left" eyebrow="Trung tâm trợ giúp" title={<>Bạn cần <span className="mark mark-full">giúp gì</span>?</>} description="Giải đáp các thắc mắc thường gặp theo từng nhóm chức năng của phiên bản hiện tại." />
             <div className="max-w-xl">
               <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Tìm hướng dẫn... (ví dụ: mã mời lớp)" leftIcon={<Search />} inputSize="lg" />
             </div>
@@ -45,7 +45,7 @@ export const HelpPage: React.FC = () => {
               <h3 className="font-display text-xl font-extrabold text-slate-900 mt-5">{t.t}</h3>
               <p className="text-sm text-slate-600 mt-2">{t.d}</p>
               <p className="text-xs font-bold text-violet-600 mt-4 flex items-center gap-1 group-hover:gap-2 transition-all">
-                {t.n} bài hướng dẫn <ArrowRight className="w-3.5 h-3.5" />
+                Xem câu hỏi thường gặp <ArrowRight className="w-3.5 h-3.5" />
               </p>
             </Link>
           ))}

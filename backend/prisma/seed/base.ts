@@ -240,6 +240,35 @@ export async function seedBase(): Promise<SeedCtx> {
     'vip-toeic': { MOCK_TEST: { limit: null }, MOCK_TEST_VIP: { limit: null, exam: 'TOEIC' }, DICTIONARY: { limit: null }, SRS_WORDS: { limit: null }, TEACHER_GRADING: { limit: 0 } },
     'vstep-master': { MOCK_TEST: { limit: null }, MOCK_TEST_VIP: { limit: null, exam: 'VSTEP' }, DICTIONARY: { limit: null }, SRS_WORDS: { limit: null }, TEACHER_GRADING: { limit: 4, period: 'MONTH' } },
   };
+  // Quyền lợi hiển thị khớp entitlements ở trên và chức năng hệ thống đang có (không ghi tính năng chưa làm)
+  const FEATURES: Record<string, { text: string; included: boolean }[]> = {
+    free: [
+      { text: 'Bài thi xếp lớp & lộ trình 3 chặng', included: true },
+      { text: '3 đề thi thử / tuần', included: true },
+      { text: 'Luyện theo Part, sổ tay lỗi sai', included: true },
+      { text: 'Flashcard ôn ngắt quãng tối đa 200 từ', included: true },
+      { text: '50 lượt tra từ điển / ngày', included: true },
+      { text: 'Đề thi VIP', included: false },
+      { text: 'Giáo viên chấm Viết / Nói', included: false },
+    ],
+    'vip-toeic': [
+      { text: 'Tất cả quyền lợi gói Free', included: true },
+      { text: 'Không giới hạn đề thi thử', included: true },
+      { text: 'Mở các đề TOEIC VIP', included: true },
+      { text: 'Flashcard không giới hạn số từ', included: true },
+      { text: 'Tra từ điển không giới hạn', included: true },
+      { text: 'Đề VSTEP VIP', included: false },
+      { text: 'Giáo viên chấm Viết / Nói', included: false },
+    ],
+    'vstep-master': [
+      { text: 'Tất cả quyền lợi gói Free', included: true },
+      { text: 'Không giới hạn đề thi thử', included: true },
+      { text: 'Mở các đề VSTEP VIP', included: true },
+      { text: 'Flashcard không giới hạn số từ', included: true },
+      { text: 'Tra từ điển không giới hạn', included: true },
+      { text: '4 lượt giáo viên chấm Viết / Nói mỗi tháng', included: true },
+    ],
+  };
   await insertMany(
     prisma.subscriptionPlan,
     (MOCKS.PRICING_PLANS as any[]).map((p, i) => {
@@ -252,8 +281,8 @@ export async function seedBase(): Promise<SeedCtx> {
         durationDays: days ? Number(days) : null,
         examScope: p.id.includes('toeic') ? 'TOEIC' : p.id.includes('vstep') ? 'VSTEP' : null,
         entitlements: ENT[p.id] ?? {},
-        featuresDisplay: p.features,
-        badge: p.badge ?? null,
+        featuresDisplay: FEATURES[p.id] ?? [],
+        badge: null, // không tự gắn nhãn 'Phổ biến nhất' khi chưa có số liệu bán thật
         isHighlighted: !!p.highlight,
         orderIndex: i,
       };
@@ -349,44 +378,26 @@ export async function seedBase(): Promise<SeedCtx> {
   for (const p of MOCKS.BLOG_POSTS as any[]) if (!guideTitles.has(p.title)) pushPost(p, 'BLOG');
   await insertMany(prisma.post, posts);
 
-  await insertMany(
-    prisma.testimonial,
-    (MOCKS.TESTIMONIALS as any[]).map((t) => {
-      const [dd, mm, yy] = String(t.examDate ?? '').split('/');
-      return {
-        name: t.name,
-        roleText: t.role,
-        avatarUrl: t.avatar,
-        examType: t.exam,
-        testName: t.test,
-        scoreBefore: String(t.before),
-        scoreAfter: String(t.after),
-        weeks: t.weeks,
-        examDate: yy ? new Date(`${yy}-${mm}-${dd}`) : null,
-        venue: t.venue,
-        quote: t.quote,
-        consentAt: now,
-        isPublished: true,
-      };
-    })
-  );
+  // Cảm nhận học viên: không nạp dữ liệu mẫu (người và điểm số bịa). Chỉ thêm khi có học viên thật đồng ý công khai.
 
-  const sizeBytes = (s?: string) => {
-    const m = /([\d.]+)\s*(KB|MB|GB)/i.exec(s ?? '');
-    return m ? BigInt(Math.round(Number(m[1]) * { KB: 1e3, MB: 1e6, GB: 1e9 }[m[2].toUpperCase() as 'KB'])) : null;
-  };
+  const DOCS = [
+    { key: 'tu-vung-toeic', title: 'Từ vựng TOEIC theo chủ đề (có phiên âm, ví dụ)', category: 'Từ vựng', description: 'Toàn bộ các bộ từ vựng TOEIC trong hệ thống: từ, loại từ, phiên âm, nghĩa và câu ví dụ.' },
+    { key: 'ngu-phap', title: 'Tóm tắt các chủ điểm ngữ pháp', category: 'Ngữ pháp', description: 'Các chủ điểm ngữ pháp đã xuất bản kèm quy tắc và ví dụ.' },
+    { key: 'quy-doi-diem', title: 'Bảng quy đổi điểm TOEIC – VSTEP – CEFR – IELTS', category: 'Quy đổi điểm', description: 'Bảng tương đương đang dùng trong công cụ quy đổi điểm của hệ thống.' },
+    { key: 'chep-chinh-ta', title: 'Lời thoại các bài nghe chép chính tả', category: 'Luyện nghe', description: 'Transcript của các bài chép chính tả trong mục Luyện nghe.' },
+    { key: 'de-viet-noi', title: 'Đề Viết và Nói', category: 'Viết & Nói', description: 'Đề Viết/Nói VSTEP và đề TOEIC Speaking trong ngân hàng câu hỏi.' },
+  ];
   await insertMany(
     prisma.material,
-    (MOCKS.RESOURCES as any[]).map((r) => ({
+    DOCS.map((d) => ({
       classId: null,
       uploadedById: adminId,
-      title: r.title,
-      description: r.description,
-      type: ['VIDEO', 'PDF', 'DOC', 'AUDIO', 'LINK'].includes(r.type) ? r.type : 'DOC',
-      category: r.category,
-      sizeBytes: sizeBytes(r.size),
-      pages: r.pages ?? null,
-      isVip: !!r.vip,
+      title: d.title,
+      description: d.description,
+      type: 'DOC',
+      category: d.category,
+      fileUrl: `/api/v1/cms/resources/files/${d.key}`,
+      isVip: false,
     }))
   );
   log('settings', settings.length, 'posts', posts.length, 'rubrics', rubricRows.length);

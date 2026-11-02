@@ -92,7 +92,7 @@ async function avgScoreByStudent(studentIds: string[], examType?: 'TOEIC' | 'VST
   if (!studentIds.length) return new Map<string, number>();
   const rows = await prisma.examAttempt.groupBy({
     by: ['userId'],
-    where: { userId: { in: studentIds }, status: 'COMPLETED', scoreTotal: { not: null }, mode: { in: ['FULL', 'PRACTICE'] }, ...(examType ? { test: { examType } } : {}) },
+    where: { userId: { in: studentIds }, status: 'COMPLETED', scoreTotal: { not: null }, mode: 'FULL', test: examType ? { examType } : { isNot: null } },
     _avg: { scoreTotal: true },
   });
   return new Map(rows.map((r) => [r.userId, round1(Number(r._avg.scoreTotal ?? 0))]));

@@ -4,6 +4,7 @@ import { HelpCircle, LifeBuoy, Mail, Phone, Settings, Bell } from 'lucide-react'
 import { Logo } from '@/shared/components/ui';
 import { useAdminSystem } from '@/shared/api/admin';
 import type { NavGroup } from './AppShell';
+import { academicTerm } from '@/shared/constants/staff';
 
 export interface StaffFooterProps {
   /** Các nhóm menu của vai trò — mỗi nhóm thành một cột liên kết nhanh */
@@ -54,14 +55,14 @@ export const StaffFooter: React.FC<StaffFooterProps> = ({ groups, brandTagline, 
 
       <div className="relative border-t border-white/10">
         <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-2 px-4 py-5 text-center text-xs text-slate-500 sm:px-6 md:flex-row md:text-left lg:px-8">
-          <span>© 2026 OrbiLingo · Đồ án chuyên ngành, Khoa CNTT. Bảo lưu mọi quyền.</span>
+          <span>© {new Date().getFullYear()} OrbiLingo · Đồ án chuyên ngành, Khoa CNTT. Bảo lưu mọi quyền.</span>
           {showSystemStatus ? (
             <span className="flex items-center gap-1.5">
-              <span className={degraded ? 'h-2 w-2 rounded-full bg-amber-400' : 'h-2 w-2 animate-pulse rounded-full bg-emerald-400'} />
-              {degraded ? `${degraded} dịch vụ đang chậm, hệ thống vẫn hoạt động` : 'Hệ thống hoạt động ổn định'} · Phiên bản 1.0
+              <span className={sys.isError ? 'h-2 w-2 rounded-full bg-rose-500' : !sys.data ? 'h-2 w-2 rounded-full bg-slate-500' : degraded ? 'h-2 w-2 rounded-full bg-amber-400' : 'h-2 w-2 animate-pulse rounded-full bg-emerald-400'} />
+              {sys.isError ? 'Không kết nối được máy chủ API' : !sys.data ? 'Đang kiểm tra trạng thái…' : degraded ? `${degraded} dịch vụ đang chậm, hệ thống vẫn hoạt động` : 'Hệ thống hoạt động ổn định'} · Phiên bản 1.0
             </span>
           ) : (
-            <span>Phiên bản 1.0 · Học kỳ I, năm học 2026–2027</span>
+            <span>Phiên bản 1.0 · {academicTerm().label}</span>
           )}
         </div>
       </div>

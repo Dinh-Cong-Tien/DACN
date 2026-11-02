@@ -1,10 +1,13 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Check } from 'lucide-react';
 import { toast } from '@/shared/stores/uiStore';
 import { useDocumentTitle } from '@/shared/hooks';
+import { useAuthStore } from '@/shared/stores/authStore';
+import { authApi } from '@/shared/api/auth';
+import { errorMessage } from '@/shared/api/client';
 import { cn } from '@/shared/utils';
-import { AuthHeading, TextField, SubmitButton } from './shared/AuthKit';
+import { AuthHeading, TextField, SubmitButton, textLink } from './shared/AuthKit';
 
 const RULES = [
   { label: 'Ít nhất 8 ký tự', test: (p: string) => p.length >= 8 },
@@ -12,35 +15,65 @@ const RULES = [
   { label: 'Có chữ số', test: (p: string) => /[0-9]/.test(p) },
 ];
 
+/**
+ * Đặt mật khẩu mới sau khi đăng nhập bằng mật khẩu tạm (quản trị viên cấp) — gọi /auth/change-password.
+ * Chưa đăng nhập thì hướng sang trang Quên mật khẩu (chưa có liên kết đặt lại qua email).
+ */
 export const ResetPasswordPage: React.FC = () => {
   useDocumentTitle('Đặt lại mật khẩu');
   const navigate = useNavigate();
+  const user = useAuthStore((s) => s.user);
+  const logout = useAuthStore((s) => s.logout);
+  const [current, setCurrent] = useState('');
   const [pw, setPw] = useState('');
   const [confirm, setConfirm] = useState('');
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
 
+  if (!user) {
+    return (
+      <>
+        <AuthHeading title="Đặt mật khẩu mới" sub="Đăng nhập bằng mật khẩu tạm quản trị viên gửi cho bạn, sau đó đặt mật khẩu mới tại đây." />
+        <Link to="/auth/login" className="inline-flex h-11 w-full items-center justify-center rounded-lg bg-indigo-600 text-[15px] font-semibold text-white hover:bg-indigo-700">
+          Đăng nhập
+        </Link>
+        <p className="mt-6 text-sm text-slate-600">
+          Chưa có mật khẩu tạm?{' '}
+          <Link to="/auth/forgot-password" className={textLink}>
+            Gửi yêu cầu đặt lại
+          </Link>
+        </p>
+      </>
+    );
+  }
+
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
     const er: Record<string, string> = {};
+    if (!current) er.current = 'Nhập mật khẩu hiện tại (hoặc mật khẩu tạm).';
     if (!RULES.every((r) => r.test(pw))) er.pw = 'Mật khẩu chưa đủ các điều kiện bên dưới.';
     if (confirm !== pw) er.confirm = 'Hai mật khẩu chưa khớp nhau.';
     setErrors(er);
     if (Object.keys(er).length) return;
     setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
-      toast.success('Đã đổi mật khẩu', 'Đăng nhập lại bằng mật khẩu mới.');
-      navigate('/auth/login');
-    }, 600);
+    authApi
+      .changePassword(current, pw)
+      .then(() => {
+        toast.success('Đã đổi mật khẩu', 'Đăng nhập lại bằng mật khẩu mới.');
+        logout();
+        navigate('/auth/login');
+      })
+      .catch((err) => setErrors({ current: errorMessage(err) }))
+      .finally(() => setLoading(false));
   };
 
   return (
     <>
-      <AuthHeading title="Đặt mật khẩu mới" sub="Mật khẩu mới sẽ dùng cho cả web và ứng dụng." />
+      <AuthHeading title="Đặt mật khẩu mới" sub={`Tài khoản ${user.email}. Sau khi lưu, bạn cần đăng nhập lại.`} />
       <form onSubmit={submit} className="space-y-4" noValidate>
+        <TextField label="Mật khẩu hiện tại / mật khẩu tạm" type="password" value={current} onChange={(e) => setCurrent(e.target.value)} error={errors.current} autoComplete="current-password" autoFocus />
         <div>
-          <TextField label="Mật khẩu mới" type="password" value={pw} onChange={(e) => setPw(e.target.value)} error={errors.pw} autoComplete="new-password" autoFocus />
+          <TextField label="Mật khẩu mới" type="password" value={pw} onChange={(e) => setPw(e.target.value)} error={errors.pw} autoComplete="new-password" />
           <ul className="mt-2.5 space-y-1">
             {RULES.map((r) => {
               const ok = r.test(pw);

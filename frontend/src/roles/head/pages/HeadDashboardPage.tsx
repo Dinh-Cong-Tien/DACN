@@ -1,3 +1,4 @@
+import { academicTerm } from '@/shared/constants/staff';
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { AlertTriangle, BarChart3, CalendarCheck, CheckSquare, ClipboardList, Database, Eye, FileCheck2, MessageSquareWarning, PenTool, School, TrendingDown, TrendingUp, UserRoundX, Users } from 'lucide-react';
@@ -17,7 +18,7 @@ const dm = (s: string) => `${s.slice(8, 10)}/${s.slice(5, 7)}`;
 
 const TYPE_LABEL: Record<ApprovalRequest['type'], string> = { TEST: 'Đề thi', QUESTION: 'Câu hỏi', LESSON: 'Bài giảng', POST: 'Bài viết' };
 const TYPE_CHIP: Record<ApprovalRequest['type'], string> = { TEST: 'bg-indigo-400/20 text-indigo-100', QUESTION: 'bg-violet-400/20 text-violet-100', LESSON: 'bg-sky-400/20 text-sky-100', POST: 'bg-amber-400/20 text-amber-100' };
-const GRADE_CLS: Record<ClassReport['grade'], string> = { A: 'bg-emerald-500/10 text-emerald-700', B: 'bg-sky-500/10 text-sky-700', C: 'bg-amber-500/15 text-amber-800', D: 'bg-rose-500/10 text-rose-700' };
+const GRADE_CLS: Record<NonNullable<ClassReport['grade']>, string> = { A: 'bg-emerald-500/10 text-emerald-700', B: 'bg-sky-500/10 text-sky-700', C: 'bg-amber-500/15 text-amber-800', D: 'bg-rose-500/10 text-rose-700' };
 
 export const HeadDashboardPage: React.FC = () => {
   useDocumentTitle('Tổng quan bộ môn');
@@ -25,23 +26,23 @@ export const HeadDashboardPage: React.FC = () => {
   const now = new Date();
   const today = iso(now);
   const dash = useHeadDashboard().data;
-  const MOCK_SUBJECTS = useHeadSubjects().data ?? [];
-  const MOCK_TEACHERS = useHeadTeachers().data ?? [];
+  const subjectList = useHeadSubjects().data ?? [];
+  const teacherList = useHeadTeachers().data ?? [];
   const DEPT_CLASSES = useHeadClasses().data ?? [];
-  const MOCK_COMPLAINTS = useHeadComplaints().data ?? [];
-  const MOCK_CLASS_REPORTS = useHeadReports(6).data?.classes ?? [];
+  const complaintList = useHeadComplaints().data ?? [];
+  const classReports = useHeadReports(6).data?.classes ?? [];
   const pending = (useHeadApprovals().data ?? []).filter((a) => a.status === 'PENDING');
   const reviews = (useHeadReviews().data ?? []).filter((r) => r.status === 'PENDING');
-  const teacherByName = (name: string) => MOCK_TEACHERS.find((t) => t.name === name);
-  const newComplaints = MOCK_COMPLAINTS.filter((c) => c.status === 'NEW');
+  const teacherByName = (name: string) => teacherList.find((t) => t.name === name);
+  const newComplaints = complaintList.filter((c) => c.status === 'NEW');
   const planned = (useHeadObservations().data ?? []).filter((o) => o.status === 'PLANNED' && o.date >= today).sort((a, b) => `${a.date}${a.start}`.localeCompare(`${b.date}${b.start}`));
   const conflictCount = dash?.roomConflicts ?? 0;
   const orphan = dash?.classesNeedTeacher ?? [];
-  const activeTeachers = MOCK_TEACHERS.filter((t) => t.status === 'ACTIVE');
+  const activeTeachers = teacherList.filter((t) => t.status === 'ACTIVE');
   const totalStudents = DEPT_CLASSES.reduce((a, c) => a + c.studentsCount, 0);
-  const totalQuestions = MOCK_SUBJECTS.reduce((a, s) => a + s.questionsCount, 0);
-  const toeicReports = MOCK_CLASS_REPORTS.filter((r) => r.examType === 'TOEIC' && r.avgScore > 0);
-  const lowAttendance = MOCK_CLASS_REPORTS.filter((r) => r.attendance > 0 && r.attendance < 80);
+  const totalQuestions = subjectList.reduce((a, s) => a + s.questionsCount, 0);
+  const toeicReports = classReports.filter((r) => r.examType === 'TOEIC' && r.avgScore > 0);
+  const lowAttendance = classReports.filter((r) => r.attendance > 0 && r.attendance < 80);
 
   const todos: { icon: React.ElementType; tone: Tone; text: string; to: string; cta: string }[] = [
     ...(pending.length ? [{ icon: CheckSquare, tone: 'indigo' as Tone, text: `Duyệt ${pending.length} học liệu giáo viên gửi lên`, to: '/head/approvals', cta: 'Duyệt' }] : []),
@@ -57,13 +58,13 @@ export const HeadDashboardPage: React.FC = () => {
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <p className="text-[12px] font-bold uppercase tracking-[0.16em] text-amber-600">
-            {WEEKDAY[now.getDay()]}, {dm(today)}/{now.getFullYear()} · Học kỳ 1, năm học 2026–2027
+            {WEEKDAY[now.getDay()]}, {dm(today)}/{now.getFullYear()} · {academicTerm(now).label}
           </p>
           <h1 className="mt-1.5 font-display text-[2rem] font-extrabold leading-[1.12] tracking-tight text-slate-900 md:text-[2.6rem]">
             <GradientTail text="Tổng quan bộ môn" />
           </h1>
           <p className="mt-1 text-[15px] text-slate-500">
-            {user?.fullName} · {MOCK_SUBJECTS.length} môn học · {DEPT_CLASSES.length} lớp · {MOCK_TEACHERS.length} giáo viên
+            {user?.fullName} · {subjectList.length} môn học · {DEPT_CLASSES.length} lớp · {teacherList.length} giáo viên
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -137,14 +138,14 @@ export const HeadDashboardPage: React.FC = () => {
       <Figures
         items={[
           { label: 'Lớp đang mở', value: DEPT_CLASSES.length, note: `${totalStudents} học viên`, icon: School, tone: 'indigo' },
-          { label: 'Giáo viên', value: MOCK_TEACHERS.length, note: `${activeTeachers.length} đang giảng dạy`, icon: Users, tone: 'emerald' },
+          { label: 'Giáo viên', value: teacherList.length, note: `${activeTeachers.length} đang giảng dạy`, icon: Users, tone: 'emerald' },
           { label: 'Chờ kiểm định chấm', value: reviews.length, note: 'bài Viết / Nói', icon: PenTool, tone: 'violet' },
-          { label: 'Khiếu nại mới', value: newComplaints.length, note: `${MOCK_COMPLAINTS.filter((c) => c.status === 'IN_REVIEW').length} đang phúc khảo`, icon: MessageSquareWarning, tone: 'rose' },
+          { label: 'Khiếu nại mới', value: newComplaints.length, note: `${complaintList.filter((c) => c.status === 'IN_REVIEW').length} đang phúc khảo`, icon: MessageSquareWarning, tone: 'rose' },
         ]}
       />
 
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)]">
-        <Panel title="Điểm trung bình các lớp TOEIC" sub="Kỳ thi thử gần nhất · ETS 2024 Test 2" icon={BarChart3} tone="sky" action={<PanelLink to="/head/reports">Báo cáo</PanelLink>}>
+        <Panel title="Điểm trung bình các lớp TOEIC" sub="Trung bình bài thi thử (đề full) của học viên trong lớp · thang 990" icon={BarChart3} tone="sky" action={<PanelLink to="/head/reports">Báo cáo</PanelLink>}>
           {toeicReports.length ? (
             <BarChart ariaLabel="Điểm trung bình các lớp TOEIC" data={toeicReports.map((r) => ({ label: r.className.replace('TOEIC ', '').replace('Ngữ pháp nền tảng ', 'NP ').replace(' Intensive', '').replace('Foundation Sáng', 'Found.'), value: r.avgScore }))} height={220} unit=" điểm" />
           ) : (
@@ -168,13 +169,13 @@ export const HeadDashboardPage: React.FC = () => {
 
         <Panel title="Ngân hàng câu hỏi" sub={`${formatNumber(totalQuestions)} câu đã xuất bản`} icon={Database} tone="amber" action={<PanelLink to="/head/question-bank">Mở</PanelLink>}>
           <ul className="space-y-4">
-            {MOCK_SUBJECTS.map((s) => (
+            {subjectList.map((s) => (
               <li key={s.id}>
                 <div className="mb-1.5 flex items-center justify-between gap-3 text-sm">
                   <span className="truncate font-medium text-slate-800">{s.name}</span>
                   <span className="shrink-0 font-semibold tabular-nums text-slate-900">{formatNumber(s.questionsCount)}</span>
                 </div>
-                <Meter value={(s.questionsCount / Math.max(1, ...MOCK_SUBJECTS.map((x) => x.questionsCount))) * 100} tone={s.examType === 'TOEIC' ? 'indigo' : 'green'} />
+                <Meter value={(s.questionsCount / Math.max(1, ...subjectList.map((x) => x.questionsCount))) * 100} tone={s.examType === 'TOEIC' ? 'indigo' : 'green'} />
                 <p className="mt-1 text-xs text-slate-500">
                   {s.code} · {s.classesCount} lớp · {s.teachersCount} giáo viên
                 </p>
@@ -185,9 +186,9 @@ export const HeadDashboardPage: React.FC = () => {
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
-        <Panel title="Giáo viên bộ môn" sub={`${activeTeachers.length}/${MOCK_TEACHERS.length} đang giảng dạy`} icon={Users} tone="emerald" action={<PanelLink to="/head/teachers">Tất cả</PanelLink>} flush>
+        <Panel title="Giáo viên bộ môn" sub={`${activeTeachers.length}/${teacherList.length} đang giảng dạy`} icon={Users} tone="emerald" action={<PanelLink to="/head/teachers">Tất cả</PanelLink>} flush>
           <ul className="divide-y divide-slate-100">
-            {MOCK_TEACHERS.map((t) => (
+            {teacherList.map((t) => (
               <li key={t.id} className="flex items-center gap-3 px-5 py-3">
                 <Avatar name={t.name} src={t.avatarUrl} size="sm" />
                 <div className="min-w-0 flex-1">
@@ -250,11 +251,11 @@ export const HeadDashboardPage: React.FC = () => {
               </tr>
             </thead>
             <tbody>
-              {MOCK_CLASS_REPORTS.map((r) => (
+              {classReports.map((r) => (
                 <tr key={r.classId} className={tbl.tr}>
                   <td className={tbl.td}>
                     <div className="flex items-center gap-3">
-                      <span className={cn('flex h-9 w-9 shrink-0 items-center justify-center rounded-xl font-display text-sm font-extrabold', GRADE_CLS[r.grade])}>{r.grade}</span>
+                      <span className={cn('flex h-9 w-9 shrink-0 items-center justify-center rounded-xl font-display text-sm font-extrabold', r.grade ? GRADE_CLS[r.grade] : 'bg-slate-100 text-slate-400')} title={r.grade ? undefined : 'Chưa có điểm thi và điểm danh'}>{r.grade ?? '—'}</span>
                       <div className="min-w-0">
                         <Link to={`/head/classes/${r.classId}`} className="block truncate font-semibold text-slate-900 hover:text-indigo-700">
                           {r.className}
@@ -269,19 +270,29 @@ export const HeadDashboardPage: React.FC = () => {
                       <span className="text-slate-700">{r.teacher}</span>
                     </div>
                   </td>
-                  <td className={cn(tbl.td, 'text-right font-semibold tabular-nums text-slate-900')}>{r.avgScore}</td>
+                  <td className={cn(tbl.td, 'text-right font-semibold tabular-nums text-slate-900')}>{r.avgScore > 0 ? r.avgScore : <span className="font-normal text-slate-400">—</span>}</td>
                   <td className={cn(tbl.td, 'max-sm:hidden')}>
                     <div className="flex items-center gap-2">
-                      <Meter value={r.attendance} tone={r.attendance < 75 ? 'red' : r.attendance < 85 ? 'amber' : 'green'} className="flex-1" />
-                      <span className="w-10 text-right text-xs tabular-nums text-slate-600">{r.attendance}%</span>
+                      {r.hasAttendance === false ? (
+                        <span className="text-xs text-slate-400">Chưa điểm danh</span>
+                      ) : (
+                        <>
+                          <Meter value={r.attendance} tone={r.attendance < 75 ? 'red' : r.attendance < 85 ? 'amber' : 'green'} className="flex-1" />
+                          <span className="w-10 text-right text-xs tabular-nums text-slate-600">{r.attendance}%</span>
+                        </>
+                      )}
                     </div>
                   </td>
                   <td className={cn(tbl.td, 'text-right')}>
-                    <span className={cn('inline-flex items-center gap-0.5 text-xs font-bold', r.trend >= 0 ? 'text-emerald-700' : 'text-rose-600')}>
-                      {r.trend >= 0 ? <TrendingUp className="h-3.5 w-3.5" /> : <TrendingDown className="h-3.5 w-3.5" />}
-                      {r.trend >= 0 ? '+' : ''}
-                      {r.trend}%
-                    </span>
+                    {r.trend === null ? (
+                      <span className="text-xs text-slate-400">—</span>
+                    ) : (
+                      <span className={cn('inline-flex items-center gap-0.5 text-xs font-bold', r.trend >= 0 ? 'text-emerald-700' : 'text-rose-600')}>
+                        {r.trend >= 0 ? <TrendingUp className="h-3.5 w-3.5" /> : <TrendingDown className="h-3.5 w-3.5" />}
+                        {r.trend >= 0 ? '+' : ''}
+                        {r.trend}%
+                      </span>
+                    )}
                   </td>
                 </tr>
               ))}

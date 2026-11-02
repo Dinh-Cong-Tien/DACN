@@ -51,9 +51,9 @@ export const HeadSchedulePage: React.FC = () => {
   nextMonday.setDate(monday.getDate() + 7);
   const scheduleQ = useHeadSchedule(days[0], iso(nextMonday));
   const DEPT_CLASSES = useHeadClasses().data ?? EMPTY_C;
-  const MOCK_TEACHERS = useHeadTeachers().data ?? [];
+  const teacherList = useHeadTeachers().data ?? [];
   const obs = useHeadObservations().data ?? [];
-  const teacherByName = (name: string) => MOCK_TEACHERS.find((t) => t.name === name);
+  const teacherByName = (name: string) => teacherList.find((t) => t.name === name);
   const clsOf = (id: string) => DEPT_CLASSES.find((c) => c.id === id) ?? ({ id, name: '—', teacherName: '—' } as HeadClass);
   const toneOf = (id: string) => classTone(`cl-${DEPT_CLASSES.findIndex((c) => c.id === id) + 1}`);
   const weekAll = scheduleQ.data?.sessions ?? EMPTY_S;
@@ -98,7 +98,7 @@ export const HeadSchedulePage: React.FC = () => {
       <div className="flex flex-col gap-3 md:flex-row md:items-center">
         <select value={teacher} onChange={(e) => setTeacher(e.target.value)} className={cn(inputCls, 'md:w-64')} aria-label="Lọc theo giáo viên">
           <option value="ALL">Tất cả giáo viên</option>
-          {MOCK_TEACHERS.map((t) => (
+          {teacherList.map((t) => (
             <option key={t.id} value={t.name}>
               {t.name}
             </option>
@@ -199,7 +199,7 @@ export const HeadSchedulePage: React.FC = () => {
           </Panel>
           <Panel title="Khối lượng giảng dạy tuần này">
             <ul className="space-y-2.5">
-              {MOCK_TEACHERS.filter((t) => t.status !== 'PENDING').map((t) => {
+              {teacherList.filter((t) => t.status !== 'PENDING').map((t) => {
                 const n = weekAll.filter((s) => s.status !== 'CANCELLED' && clsOf(s.classId).teacherName === t.name).length;
                 return (
                   <li key={t.id} className="flex items-center justify-between gap-2 text-sm">

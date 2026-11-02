@@ -6,60 +6,50 @@ import { useExamGuides, useScoreTable } from '@/shared/api/cms';
 import { TOEIC_GUIDE_SLUG } from '@/shared/constants/public';
 import { useDocumentTitle, useGate } from '@/shared/hooks';
 import { cn } from '@/shared/utils';
+import type { PartInfo } from '@/shared/api/catalog';
 import { Accent, PageHeader, Section, SectionHead, ActionLink, CtaStrip } from './shared/PageKit';
 import { TestList } from './shared/TestList';
 import { ExamGuideList } from './shared/ExamGuideList';
 
-/** Hình minh hoạ phiếu kết quả thi thử (số liệu minh hoạ, không phải bài làm của học viên) */
-const SAMPLE_REPORT = { testTitle: 'Phiếu kết quả minh hoạ · TOEIC full test', score: 715, listening: 380, reading: 335 };
-const SAMPLE_PARTS = [
-  { skill: 'Part 1', score: 83 },
-  { skill: 'Part 2', score: 72 },
-  { skill: 'Part 3', score: 68 },
-  { skill: 'Part 4', score: 61 },
-  { skill: 'Part 5', score: 80 },
-  { skill: 'Part 6', score: 70 },
-  { skill: 'Part 7', score: 55 },
-];
-const ScoreReportPreview: React.FC = () => {
-  const a = SAMPLE_REPORT;
+/** Ngân hàng câu hỏi TOEIC theo Part (số câu thật trong CSDL) */
+const BankPreview: React.FC<{ parts: PartInfo[] }> = ({ parts }) => {
+  const total = parts.reduce((a, p) => a + (p.bankCount ?? 0), 0);
+  const sum = (skill: string) => parts.filter((p) => p.skill === skill).reduce((a, p) => a + (p.bankCount ?? 0), 0);
+  const max = Math.max(1, ...parts.map((p) => p.bankCount ?? 0));
   return (
     <figure className="rounded-xl border border-slate-200 bg-white shadow-[0_1px_2px_rgba(16,24,40,0.04),0_12px_32px_-12px_rgba(16,24,40,0.14)]">
       <div className="flex items-center justify-between border-b border-slate-200 px-5 py-3.5">
         <div>
-          <p className="text-sm font-semibold text-slate-900">{a.testTitle}</p>
-          <p className="text-[12px] text-slate-500">Ví dụ phiếu điểm sau khi nộp bài · 1 giờ 54 phút</p>
+          <p className="text-sm font-semibold text-slate-900">Ngân hàng câu hỏi TOEIC</p>
+          <p className="text-[12px] text-slate-500">Số câu đã duyệt, dùng cho luyện Part và đề thi thử</p>
         </div>
-        <span className="rounded-md bg-emerald-50 px-2 py-1 text-[12px] font-medium text-emerald-700">Đã chấm</span>
+        <span className="rounded-md bg-emerald-50 px-2 py-1 text-[12px] font-medium text-emerald-700">Cập nhật trực tiếp</span>
       </div>
       <div className="grid grid-cols-3 divide-x divide-slate-200 border-b border-slate-200">
         {[
-          ['Tổng điểm', String(a.score), '/990'],
-          ['Listening', String(a.listening), '/495'],
-          ['Reading', String(a.reading), '/495'],
-        ].map(([l, v, m]) => (
-          <div key={l} className="px-5 py-4">
+          ['Tổng số câu', total],
+          ['Listening', sum('Listening')],
+          ['Reading', sum('Reading')],
+        ].map(([l, v]) => (
+          <div key={l as string} className="px-5 py-4">
             <p className="text-[12px] text-slate-500">{l}</p>
-            <p className="mt-1 text-2xl font-semibold tabular-nums text-slate-900">
-              {v}
-              <span className="text-sm font-normal text-slate-400">{m}</span>
-            </p>
+            <p className="mt-1 text-2xl font-semibold tabular-nums text-slate-900">{(v as number).toLocaleString('vi-VN')}</p>
           </div>
         ))}
       </div>
       <div className="space-y-2.5 px-5 py-4">
-        <p className="text-[12px] text-slate-500">Tỉ lệ đúng theo Part</p>
-        {SAMPLE_PARTS.map((s) => (
-          <div key={s.skill} className="grid grid-cols-[3.5rem_1fr_2.5rem] items-center gap-3 text-[13px]">
-            <span className="text-slate-600">{s.skill}</span>
+        <p className="text-[12px] text-slate-500">Số câu theo Part</p>
+        {parts.map((p) => (
+          <div key={p.id} className="grid grid-cols-[3.5rem_1fr_3.5rem] items-center gap-3 text-[13px]">
+            <span className="text-slate-600">{p.name}</span>
             <span className="h-1.5 rounded-full bg-slate-100">
-              <span className={cn('block h-full rounded-full', s.score < 62 ? 'bg-violet-500' : 'bg-indigo-600')} style={{ width: `${s.score}%` }} />
+              <span className="block h-full rounded-full bg-indigo-600" style={{ width: `${((p.bankCount ?? 0) / max) * 100}%` }} />
             </span>
-            <span className="text-right tabular-nums text-slate-700">{s.score}%</span>
+            <span className="text-right tabular-nums text-slate-700">{(p.bankCount ?? 0).toLocaleString('vi-VN')}</span>
           </div>
         ))}
       </div>
-      <figcaption className="border-t border-slate-200 px-5 py-3 text-[12px] text-slate-500">Part 4 và Part 7 dưới 62% → được xếp vào lộ trình tuần tới.</figcaption>
+      <figcaption className="border-t border-slate-200 px-5 py-3 text-[12px] text-slate-500">Sau mỗi bài làm, phiếu điểm cho biết tỉ lệ đúng từng Part và đưa Part yếu vào lộ trình.</figcaption>
     </figure>
   );
 };
@@ -98,7 +88,7 @@ export const ToeicPage: React.FC = () => {
           { value: '10 – 990', label: 'Thang điểm' },
           { value: `${allTests.length} đề`, label: 'Full test trên OrbiLingo' },
         ]}
-        aside={<ScoreReportPreview />}
+        aside={<BankPreview parts={TOEIC_PARTS_INFO} />}
       />
 
       {/* Bộ bài giới thiệu kỳ thi */}
@@ -205,10 +195,10 @@ export const ToeicPage: React.FC = () => {
 
       {/* Đề thi thử */}
       <Section muted>
-        <SectionHead title="Đề TOEIC trên OrbiLingo" desc="Đề ETS các năm và mini test theo kỹ năng. Đề miễn phí làm được ngay sau khi đăng ký." action={{ label: 'Tất cả đề thi', to: '/mock-tests' }} />
+        <SectionHead title="Đề TOEIC trên OrbiLingo" desc="Đề full test 200 câu, có audio, đáp án và lời giải. Đề miễn phí làm được ngay sau khi đăng ký." action={{ label: 'Tất cả đề thi', to: '/mock-tests' }} />
         <TestList tests={tests} />
         <div className="mt-12">
-          <CtaStrip title="Chưa biết mình đang ở mức nào?" text="Bài xếp lớp 20 câu, khoảng 15 phút, có điểm ước lượng và lộ trình tới ngày thi." action={{ label: 'Làm bài xếp lớp', to: gate('/onboarding/goal', '/try') }} />
+          <CtaStrip title="Chưa biết mình đang ở mức nào?" text="Bài xếp lớp ngắn khoảng 15 phút, có điểm ước lượng và lộ trình tới ngày thi." action={{ label: 'Làm bài xếp lớp', to: gate('/onboarding/goal', '/try') }} />
         </div>
       </Section>
     </div>

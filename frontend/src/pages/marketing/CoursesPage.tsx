@@ -107,9 +107,9 @@ const GROUPS = [
 export const CoursesPage: React.FC = () => {
   useDocumentTitle('Khoá học');
   const isStudent = useAuthStore((s) => s.user?.role === 'STUDENT');
-  const { data: MOCK_COURSES = [], isLoading } = useCourses();
-  const lessons = MOCK_COURSES.reduce((a, c) => a + c.lessonsCount, 0);
-  const hours = Math.round(MOCK_COURSES.reduce((a, c) => a + c.durationHours, 0));
+  const { data: courseList = [], isLoading } = useCourses();
+  const lessons = courseList.reduce((a, c) => a + c.lessonsCount, 0);
+  const hours = Math.round(courseList.reduce((a, c) => a + c.durationHours, 0));
 
   return (
     <div className="bg-page">
@@ -123,7 +123,7 @@ export const CoursesPage: React.FC = () => {
         }
         lead="Mỗi khoá là một chuỗi video bài giảng đánh số từ Bài 1, học xong bài trước mới mở bài sau. Bắt đầu với Ngữ pháp và Từ vựng, sau đó chọn khoá kỹ năng để dùng tiếng Anh, hoặc khoá nền tảng của kỳ thi bạn sẽ thi."
         facts={[
-          { value: String(MOCK_COURSES.length), label: 'Khoá học' },
+          { value: String(courseList.length), label: 'Khoá học' },
           { value: String(lessons), label: 'Bài giảng' },
           { value: `${hours} giờ`, label: 'Tổng thời lượng' },
         ]}
@@ -131,14 +131,14 @@ export const CoursesPage: React.FC = () => {
       <Section innerClassName="py-12 md:py-16">
         <div className="space-y-14">
           {isLoading && <SkeletonGrid count={3} cols="grid-cols-1" />}
-          {GROUPS.filter((g) => isLoading || MOCK_COURSES.some(g.match)).map((g) => (
+          {GROUPS.filter((g) => isLoading || courseList.some(g.match)).map((g) => (
             <section key={g.key} aria-labelledby={`g-${g.key}`}>
               <h2 id={`g-${g.key}`} className="font-display text-2xl font-extrabold tracking-tight text-slate-900 md:text-[1.9rem]">
                 {g.title}
               </h2>
               <p className="mt-2 max-w-2xl text-slate-600">{g.desc}</p>
               <div className="mt-6 space-y-6">
-                {MOCK_COURSES.filter(g.match).map((c) => (
+                {courseList.filter(g.match).map((c) => (
                   <TrackRow key={c.id} course={c} isStudent={isStudent} />
                 ))}
               </div>

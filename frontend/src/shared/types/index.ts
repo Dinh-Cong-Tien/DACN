@@ -27,6 +27,12 @@ export interface AppUser {
   effortPoints: number;
   joinedAt: string;
   lastActiveAt: string;
+  /** Hồ sơ mở rộng trả về từ /auth/me */
+  phone?: string;
+  bio?: string;
+  organization?: string;
+  city?: string;
+  settings?: Record<string, unknown>;
 }
 
 // ---------- COURSES / LESSONS ----------
@@ -472,8 +478,10 @@ export interface ClassReport {
   students: number;
   avgScore: number;
   attendance: number;
-  grade: 'A' | 'B' | 'C' | 'D';
-  trend: number;
+  /** null = chưa có điểm thi lẫn điểm danh nên chưa xếp loại */
+  grade: 'A' | 'B' | 'C' | 'D' | null;
+  /** % thay đổi điểm TB 30 ngày gần nhất so với 30 ngày trước; null = chưa đủ dữ liệu 2 kỳ */
+  trend: number | null;
 }
 
 /** Kiểm định chấm bài: trưởng bộ môn chấm lại bài Viết/Nói giáo viên đã chấm, cùng bộ tiêu chí */

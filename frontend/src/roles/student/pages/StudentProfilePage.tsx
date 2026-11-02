@@ -13,11 +13,11 @@ const TILTS = ['tilt-1', 'tilt-2', 'tilt-3'];
 export const StudentProfilePage: React.FC = () => {
   useDocumentTitle('Hồ sơ cá nhân');
   const user = useAuthStore((s) => s.user);
-  const { data: MOCK_ACHIEVEMENTS = [] } = useAchievements();
+  const { data: achievements = [] } = useAchievements();
   const { data: progress } = useProgress();
   const { data: history } = useAttempts({ pageSize: 5 });
   if (!user) return null;
-  const earned = MOCK_ACHIEVEMENTS.filter((a) => a.earned);
+  const earned = achievements.filter((a) => a.earned);
   const best = progress?.totals.bestToeic ?? null;
   // Dòng thời gian từ dữ liệu thật: lượt làm bài gần nhất + huy hiệu đã đạt
   const timeline: (TimelineItem & { at: string })[] = [
@@ -94,7 +94,7 @@ export const StudentProfilePage: React.FC = () => {
       <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
         <StatCard label="Chuỗi ngày học" value={user.streak} suffix="ngày" icon={<Flame />} tone="amber" />
         <StatCard label="Điểm nỗ lực" value={progress?.totals.xp ?? user.effortPoints} icon={<Zap />} tone="indigo" />
-        <StatCard label="Huy hiệu" value={earned.length} suffix={`/ ${MOCK_ACHIEVEMENTS.length}`} icon={<Award />} tone="violet" />
+        <StatCard label="Huy hiệu" value={earned.length} suffix={`/ ${achievements.length}`} icon={<Award />} tone="violet" />
         <StatCard label="Điểm thi thử tốt nhất" value={best ?? 0} icon={<Trophy />} tone="emerald" hint={best === null ? 'Chưa làm đề TOEIC full' : 'TOEIC full test'} />
       </div>
 
@@ -123,7 +123,7 @@ export const StudentProfilePage: React.FC = () => {
             ))}
           </div>
           <div className="mt-4">
-            <ProgressBar value={(earned.length / Math.max(1, MOCK_ACHIEVEMENTS.length)) * 100} label="Tiến độ sưu tập" showValue tone="violet" size="sm" />
+            <ProgressBar value={(earned.length / Math.max(1, achievements.length)) * 100} label="Tiến độ sưu tập" showValue tone="violet" size="sm" />
           </div>
         </Card>
         <Card hard className="animate-fade-up" style={{ animationDelay: '160ms' }}>

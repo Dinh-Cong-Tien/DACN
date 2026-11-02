@@ -15,20 +15,20 @@ export const StudentMockTestsPage: React.FC = () => {
   const navigate = useNavigate();
   const [tab, setTab] = useParamState('exam', ['TOEIC', 'VSTEP'], 'TOEIC');
   const [filter, setFilter] = useState<Filter>('ALL');
-  const { data: MOCK_TESTS = [], isLoading } = useTests();
+  const { data: testList = [], isLoading } = useTests();
   const { data: history } = useAttempts();
-  const MOCK_ATTEMPTS = history?.items ?? [];
-  const best = MOCK_ATTEMPTS.filter((a) => a.examType === 'TOEIC' && a.maxScore >= 900).reduce((m, a) => Math.max(m, a.score), 0);
+  const attemptList = history?.items ?? [];
+  const best = attemptList.filter((a) => a.examType === 'TOEIC' && a.maxScore >= 900).reduce((m, a) => Math.max(m, a.score), 0);
 
   const tests = useMemo(
     () =>
-      MOCK_TESTS.filter((t) => t.examType === tab).filter((t) => {
+      testList.filter((t) => t.examType === tab).filter((t) => {
         if (filter === 'FULL') return t.totalQuestions >= 150 || t.parts.length >= 4;
         if (filter === 'MINI') return t.totalQuestions < 150 && t.parts.length < 4;
         if (filter === 'FREE') return t.isFree;
         return true;
       }),
-    [tab, filter, MOCK_TESTS]
+    [tab, filter, testList]
   );
 
   const columns: Column<AttemptSummary>[] = [
@@ -61,7 +61,7 @@ export const StudentMockTestsPage: React.FC = () => {
           </>
         }
         description="Đề chuẩn format ETS / Bộ GD&ĐT, bấm giờ thật, audio phát một lần. Kết quả tự động phân tích và lưu lỗi sai."
-        actions={<Tabs variant="pill" value={tab} onChange={setTab} items={[{ key: 'TOEIC', label: 'TOEIC', count: MOCK_TESTS.filter((t) => t.examType === 'TOEIC').length }, { key: 'VSTEP', label: 'VSTEP', count: MOCK_TESTS.filter((t) => t.examType === 'VSTEP').length }]} />}
+        actions={<Tabs variant="pill" value={tab} onChange={setTab} items={[{ key: 'TOEIC', label: 'TOEIC', count: testList.filter((t) => t.examType === 'TOEIC').length }, { key: 'VSTEP', label: 'VSTEP', count: testList.filter((t) => t.examType === 'VSTEP').length }]} />}
       />
 
       <div className="flex gap-2 flex-wrap mb-5 animate-fade-down">
@@ -127,8 +127,8 @@ export const StudentMockTestsPage: React.FC = () => {
       </div>
 
       <Card hard className="animate-fade-up">
-        <CardHeader title="Lịch sử làm bài" subtitle={`${MOCK_ATTEMPTS.length} lượt thi gần nhất`} icon={<History />} action={best > 0 ? <Badge tone="emerald" solid icon={<Trophy className="w-3 h-3" />}>Cao nhất: {best}</Badge> : undefined} />
-        <DataTable columns={columns} rows={MOCK_ATTEMPTS} emptyTitle="Chưa có lượt thi nào" emptyDescription="Chọn một đề ở trên để bắt đầu." onRowClick={(r) => navigate(`/app/mock-tests/${r.testId}/result?attempt=${r.id}`)} dense />
+        <CardHeader title="Lịch sử làm bài" subtitle={`${attemptList.length} lượt thi gần nhất`} icon={<History />} action={best > 0 ? <Badge tone="emerald" solid icon={<Trophy className="w-3 h-3" />}>Cao nhất: {best}</Badge> : undefined} />
+        <DataTable columns={columns} rows={attemptList} emptyTitle="Chưa có lượt thi nào" emptyDescription="Chọn một đề ở trên để bắt đầu." onRowClick={(r) => navigate(`/app/mock-tests/${r.testId}/result?attempt=${r.id}`)} dense />
       </Card>
     </div>
   );

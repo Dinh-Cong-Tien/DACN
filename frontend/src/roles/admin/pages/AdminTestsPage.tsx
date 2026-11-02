@@ -80,10 +80,10 @@ export const AdminTestsPage: React.FC = () => {
   const navigate = useNavigate();
   const { data, isLoading } = useAdminTests();
   const refresh = useAdminInvalidate();
-  const MOCK_TESTS = useMemo<MockTestSummary[]>(() => data ?? [], [data]);
-  const years = MOCK_TESTS.map((t) => t.year).filter(Boolean);
+  const testRows = useMemo<MockTestSummary[]>(() => data ?? [], [data]);
+  const years = testRows.map((t) => t.year).filter(Boolean);
   const payload = (v: Partial<MockTestSummary>) => ({ title: v.title, examType: v.examType, level: v.level || undefined, durationMin: Number(v.durationMinutes) || 120, year: v.year ? Number(v.year) : undefined, isFree: !!v.isFree });
-  const totalAttempts = MOCK_TESTS.reduce((a, t) => a + t.attempts, 0);
+  const totalAttempts = testRows.reduce((a, t) => a + t.attempts, 0);
   return (
     <div className="space-y-6">
       <TPageHead
@@ -98,9 +98,9 @@ export const AdminTestsPage: React.FC = () => {
       />
       <Figures
         items={[
-          { label: 'Tổng đề thi', value: MOCK_TESTS.length, note: 'đang phát hành', icon: FileText, tone: 'indigo' },
-          { label: 'Đề TOEIC', value: MOCK_TESTS.filter((t) => t.examType === 'TOEIC').length, note: years.length ? `${Math.min(...years)}–${Math.max(...years)}` : '—', icon: Layers, tone: 'violet' },
-          { label: 'Đề VSTEP', value: MOCK_TESTS.filter((t) => t.examType === 'VSTEP').length, note: 'B1 · B2 · C1', icon: Layers, tone: 'emerald' },
+          { label: 'Tổng đề thi', value: testRows.length, note: 'đang phát hành', icon: FileText, tone: 'indigo' },
+          { label: 'Đề TOEIC', value: testRows.filter((t) => t.examType === 'TOEIC').length, note: years.length ? `${Math.min(...years)}–${Math.max(...years)}` : '—', icon: Layers, tone: 'violet' },
+          { label: 'Đề VSTEP', value: testRows.filter((t) => t.examType === 'VSTEP').length, note: [...new Set(testRows.filter((t) => t.examType === 'VSTEP').map((t) => t.level).filter(Boolean))].join(' · ') || '—', icon: Layers, tone: 'emerald' },
           { label: 'Tổng lượt làm', value: formatNumber(totalAttempts), note: 'từ khi phát hành', icon: PlayCircle, tone: 'amber' },
         ]}
       />
@@ -112,12 +112,12 @@ export const AdminTestsPage: React.FC = () => {
           ariaLabel="Lượt làm theo đề thi"
           labelWidth={150}
           format={(v) => formatNumber(v)}
-          data={[...MOCK_TESTS].sort((x, y) => y.attempts - x.attempts).slice(0, 6).map((t) => ({ label: t.title, value: t.attempts }))}
+          data={[...testRows].sort((x, y) => y.attempts - x.attempts).slice(0, 6).map((t) => ({ label: t.title, value: t.attempts }))}
         />
         )}
       </Panel>
       <CrudEditor<MockTestSummary>
-        rows={MOCK_TESTS}
+        rows={testRows}
         loading={isLoading}
         onCreate={async (v) => {
           const t = await adminApi.createTest(payload(v));

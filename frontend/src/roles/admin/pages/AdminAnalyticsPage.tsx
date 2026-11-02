@@ -6,7 +6,10 @@ import { useDocumentTitle } from '@/shared/hooks';
 import { BarChart, HBarChart, LineChart } from '@/shared/components/charts/Charts';
 import { Figures, Panel, TPageHead, tbl } from '@/roles/teacher/components/TeacherKit';
 
-const Delta: React.FC<{ v: number }> = ({ v }) => (
+const Delta: React.FC<{ v: number | null | undefined }> = ({ v }) =>
+  v === null || v === undefined ? (
+    <span>chưa có số liệu kỳ trước</span>
+  ) : (
   <span className="inline-flex items-center gap-1">
     <span className={cn('inline-flex items-center gap-0.5 rounded-md px-1.5 py-0.5 font-semibold', v >= 0 ? 'bg-emerald-500/10 text-emerald-700' : 'bg-rose-500/10 text-rose-600')}>
       {v >= 0 ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
@@ -15,7 +18,7 @@ const Delta: React.FC<{ v: number }> = ({ v }) => (
     </span>
     so với kỳ trước
   </span>
-);
+  );
 
 const ROLE_VI: Record<string, string> = { STUDENT: 'Học viên', TEACHER: 'Giáo viên', HEAD_TEACHER: 'Trưởng bộ môn', ADMIN: 'Quản trị viên' };
 const pct = (a: number, total: number) => (total ? Math.round((a / total) * 100) : 0);
@@ -60,9 +63,9 @@ export const AdminAnalyticsPage: React.FC = () => {
 
       <Figures
         items={[
-          { label: 'Người dùng hoạt động', value: formatNumber(f?.activeUsers.value ?? 0), icon: Users, tone: 'indigo', note: <Delta v={f?.activeUsers.change ?? 0} /> },
-          { label: 'Phút học', value: formatNumber(f?.studyMinutes.value ?? 0), icon: Activity, tone: 'sky', note: <Delta v={f?.studyMinutes.change ?? 0} /> },
-          { label: 'Lượt làm bài', value: formatNumber(f?.attempts.value ?? 0), icon: FileText, tone: 'violet', note: <Delta v={f?.attempts.change ?? 0} /> },
+          { label: 'Người dùng hoạt động', value: formatNumber(f?.activeUsers.value ?? 0), icon: Users, tone: 'indigo', note: <Delta v={f?.activeUsers.change} /> },
+          { label: 'Phút học', value: formatNumber(f?.studyMinutes.value ?? 0), icon: Activity, tone: 'sky', note: <Delta v={f?.studyMinutes.change} /> },
+          { label: 'Lượt làm bài', value: formatNumber(f?.attempts.value ?? 0), icon: FileText, tone: 'violet', note: <Delta v={f?.attempts.change} /> },
           { label: 'Thời gian TB / phiên', value: `${f?.avgSessionMin.value ?? 0}m`, icon: Clock, tone: 'emerald', note: 'phút học / lượt hoạt động' },
         ]}
       />
@@ -87,7 +90,7 @@ export const AdminAnalyticsPage: React.FC = () => {
           )}
         </Panel>
         <div className="grid gap-6">
-          <Panel title="Thiết bị làm bài" sub="% lượt làm bài theo loại thiết bị" icon={Monitor} tone="indigo">
+          <Panel title="Thiết bị truy cập" sub="% lượt đăng nhập theo loại thiết bị" icon={Monitor} tone="indigo">
             {devTotal ? (
               <HBarChart ariaLabel="Tỷ lệ thiết bị" data={[{ label: 'Máy tính', value: pct(devices.desktop, devTotal) }, { label: 'Điện thoại', value: pct(devices.mobile, devTotal) }, { label: 'Máy tính bảng', value: pct(devices.tablet, devTotal) }]} max={100} unit="%" labelWidth={100} />
             ) : (

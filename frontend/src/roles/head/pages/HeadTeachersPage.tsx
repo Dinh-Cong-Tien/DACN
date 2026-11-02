@@ -58,9 +58,9 @@ export const HeadTeachersPage: React.FC = () => {
   const navigate = useNavigate();
   const { data, isLoading } = useHeadTeachers();
   const obs = useHeadObservations().data ?? [];
-  const MOCK_SUBJECTS = useHeadSubjects().data ?? [];
+  const subjectList = useHeadSubjects().data ?? [];
   const pendingReview = useHeadDashboard().data?.pendingReviews ?? 0;
-  const MOCK_TEACHERS = useMemo<TeacherSummary[]>(() => data ?? [], [data]);
+  const teacherList = useMemo<TeacherSummary[]>(() => data ?? [], [data]);
   const columns = makeColumns(obs);
   const setStatus = useHeadMutation((a: { id: string; status: 'ACTIVE' | 'LOCKED'; reason?: string }) => headApi.setTeacherStatus(a.id, a.status, a.reason));
   const change = (row: TeacherSummary, status: 'ACTIVE' | 'LOCKED', ok: string, desc: string) =>
@@ -71,15 +71,15 @@ export const HeadTeachersPage: React.FC = () => {
 
       <Figures
         items={[
-          { label: 'Tổng giáo viên', value: MOCK_TEACHERS.length, icon: Users, tone: 'indigo' },
-          { label: 'Đang giảng dạy', value: MOCK_TEACHERS.filter((t) => t.status === 'ACTIVE').length, icon: UserCheck, tone: 'emerald' },
-          { label: 'Chờ duyệt hồ sơ', value: MOCK_TEACHERS.filter((t) => t.status === 'PENDING').length, icon: Clock, tone: 'amber' },
+          { label: 'Tổng giáo viên', value: teacherList.length, icon: Users, tone: 'indigo' },
+          { label: 'Đang giảng dạy', value: teacherList.filter((t) => t.status === 'ACTIVE').length, icon: UserCheck, tone: 'emerald' },
+          { label: 'Chờ duyệt hồ sơ', value: teacherList.filter((t) => t.status === 'PENDING').length, icon: Clock, tone: 'amber' },
           { label: 'Bài chờ kiểm định', value: pendingReview, note: 'bài Viết/Nói GV đã chấm', icon: Star, tone: 'rose' },
         ]}
       />
 
       <CrudEditor<TeacherSummary>
-        rows={MOCK_TEACHERS}
+        rows={teacherList}
         loading={isLoading}
         readOnly
         columns={columns}
@@ -89,7 +89,7 @@ export const HeadTeachersPage: React.FC = () => {
         searchKeys={['name', 'email', 'subject']}
         filters={[
           { key: 'status', label: 'Trạng thái', options: Object.entries(STATUS).map(([v, s]) => ({ value: v, label: s.label })) },
-          { key: 'subject', label: 'Môn', options: MOCK_SUBJECTS.map((s) => ({ value: s.name, label: s.name })) },
+          { key: 'subject', label: 'Môn', options: subjectList.map((s) => ({ value: s.name, label: s.name })) },
         ]}
         fields={[]}
         rowActions={(row) => [

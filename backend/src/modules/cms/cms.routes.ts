@@ -138,6 +138,7 @@ cmsRouter.get(
       examScope: p.examScope ?? undefined,
       description: p.description ?? '',
       features: (p.featuresDisplay as { text: string; included: boolean }[]) ?? [],
+      entitlements: (p.entitlements as Record<string, { limit?: number | null; period?: string; exam?: string }>) ?? {},
       highlight: p.isHighlighted || undefined,
       badge: p.badge ?? undefined,
     }));
@@ -196,6 +197,7 @@ cmsRouter.get(
       size: sizeText(m.sizeBytes),
       description: m.description ?? '',
       isVip: m.isVip,
+      updatedAt: m.updatedAt.toISOString(),
       // Tài liệu VIP chỉ trả link khi đã đăng nhập
       fileUrl: m.isVip && !req.user ? undefined : (m.fileUrl ?? undefined),
     }));
@@ -279,7 +281,7 @@ cmsRouter.get(
   handler(async () => (await prisma.faq.findMany({ where: { showInChat: true }, orderBy: { orderIndex: 'asc' } })).map(toReply))
 );
 
-const FALLBACK = ['Dạ mình đã nhận câu hỏi rồi ạ, để mình kiểm tra rồi trả lời bạn ngay nha.', 'Nếu cần gấp bạn để lại số điện thoại, mình gọi lại liền.'];
+const FALLBACK = ['Trợ lý tự động chưa có câu trả lời sẵn cho câu hỏi này.', 'Câu hỏi đã được lưu và chuyển tới đội hỗ trợ. Phản hồi của nhân viên sẽ hiện trong cuộc trò chuyện này (và gửi tới email bạn để lại, nếu có).'];
 
 /**
  * POST /cms/support/messages { ticketId?, text, name?, email? }
@@ -328,7 +330,7 @@ cmsRouter.get(
   handler(async (req) => {
     const id = String(req.params.id);
     if (!isUuid(id)) throw notFound('Cuộc trò chuyện');
-    const t = await prisma.ticket.findUnique({ where: { id }, include: { ticketMessageTickets: { orderBy: { createdAt: 'asc' } } } });
+    const t = await prisma.ticket.findUnique({ where: { id }, include: { ticketMessageTickets: { orderBy: { createdAt: 'asc' }, include: { sender: { select: { fullName: true, avatarUrl: true } } } } } });
     if (!t) throw notFound('Cuộc trò chuyện');
     return {
       ticketId: t.id,
@@ -337,6 +339,7 @@ cmsRouter.get(
         id: m.id,
         from: m.senderType === 'USER' ? 'user' : m.senderType === 'SYSTEM' ? 'system' : 'agent',
         text: m.text,
+        sender: m.senderType === 'STAFF' ? { name: m.sender?.fullName ?? 'Nhân viên hỗ trợ', avatarUrl: m.sender?.avatarUrl ?? undefined } : m.senderType === 'BOT' ? { name: 'Trợ lý tự động', bot: true } : undefined,
         at: m.createdAt.toISOString(),
         links: (m.links as { label: string; to: string }[] | null) ?? undefined,
       })),
@@ -414,3 +417,198 @@ cmsRouter.get(
     return { period: q.period, from: cur.range.from, to: shiftDays(cur.range.to, -1), entries };
   })
 );
+
+// ---------------- Số liệu & đội ngũ (trang chủ, giới thiệu, trang tài khoản) ----------------
+
+// GET /cms/overview → số liệu thật dùng chung cho các trang công khai
+cmsRouter.get(
+  '/overview',
+  handler(async () => {
+    const [students, teachers, questions, tests, lessons, courses, words, passages, rating, top, avatars, lastContent] = await Promise.all([
+      prisma.user.count({ where: { role: 'STUDENT', deletedAt: null, status: 'ACTIVE' } }),
+      prisma.user.count({ where: { role: { in: ['TEACHER', 'HEAD_TEACHER'] }, deletedAt: null, status: 'ACTIVE' } }),
+      prisma.question.count({ where: PUBLISHED }),
+      prisma.mockTest.count({ where: { ...PUBLISHED, kind: { in: ['FULL', 'MINI'] } } }),
+      prisma.lesson.count({ where: PUBLISHED }),
+      prisma.course.count({ where: PUBLISHED }),
+      prisma.word.count(),
+      prisma.passage.count({ where: { ...PUBLISHED, purpose: 'EXAM' } }),
+      prisma.courseEnrollment.aggregate({ _avg: { rating: true }, _count: { rating: true }, where: { rating: { not: null } } }),
+      prisma.user.findFirst({
+        where: { role: 'STUDENT', deletedAt: null, streakCurrent: { gt: 0 } },
+        orderBy: { streakCurrent: 'desc' },
+        select: { fullName: true, streakCurrent: true, settings: true },
+      }),
+      prisma.user.findMany({ where: { role: 'STUDENT', deletedAt: null, status: 'ACTIVE', avatarUrl: { not: null } }, orderBy: { createdAt: 'desc' }, take: 5, select: { avatarUrl: true } }),
+      prisma.question.aggregate({ _max: { updatedAt: true }, where: PUBLISHED }),
+    ]);
+    const showTop = !!top && (top.settings as { showOnLeaderboard?: boolean } | null)?.showOnLeaderboard !== false;
+    return {
+      students,
+      teachers,
+      questions,
+      tests,
+      lessons,
+      courses,
+      words,
+      passages,
+      rating: rating._count.rating ? { avg: Math.round(Number(rating._avg.rating) * 10) / 10, count: rating._count.rating } : null,
+      topStreak: showTop && top ? { name: top.fullName.split(' ').slice(-1)[0], days: top.streakCurrent } : null,
+      studentAvatars: avatars.map((a) => a.avatarUrl as string),
+      contentUpdatedAt: lastContent._max.updatedAt?.toISOString() ?? null,
+    };
+  })
+);
+
+// GET /cms/team → giáo viên & trưởng bộ môn thật (hồ sơ, số lớp, số học viên đang dạy)
+cmsRouter.get(
+  '/team',
+  handler(async () => {
+    const rows = await prisma.user.findMany({
+      where: { role: { in: ['HEAD_TEACHER', 'TEACHER'] }, deletedAt: null, status: 'ACTIVE' },
+      select: {
+        id: true,
+        fullName: true,
+        avatarUrl: true,
+        bio: true,
+        role: true,
+        department: { select: { name: true } },
+        classTeachers: { where: { deletedAt: null, isArchived: false }, select: { _count: { select: { classMemberClasss: { where: { status: 'ACTIVE' } } } } } },
+      },
+      orderBy: [{ role: 'desc' }, { createdAt: 'asc' }],
+    });
+    return rows.map((u) => ({
+      id: u.id,
+      name: u.fullName,
+      avatarUrl: u.avatarUrl ?? undefined,
+      role: u.role === 'HEAD_TEACHER' ? 'Trưởng bộ môn' : 'Giáo viên',
+      department: u.department?.name ?? undefined,
+      bio: u.bio ?? undefined,
+      classes: u.classTeachers.length,
+      students: u.classTeachers.reduce((a, c) => a + c._count.classMemberClasss, 0),
+    }));
+  })
+);
+
+// GET /cms/rubrics/:code → tiêu chí chấm công khai (VSTEP_WRITING_T2…)
+cmsRouter.get(
+  '/rubrics/:code',
+  handler(async (req) => {
+    const r = await prisma.rubric.findUnique({ where: { code: String(req.params.code).toUpperCase() } });
+    if (!r) throw notFound('Bộ tiêu chí');
+    return {
+      code: r.code,
+      name: r.name,
+      examType: r.examType,
+      skill: r.skill,
+      scaleMax: Number(r.scaleMax),
+      criteria: r.criteria as { key: string; label: string; description?: string; weight: number }[],
+    };
+  })
+);
+
+// POST /cms/contact { name, email, topic, message } → ticket kênh EMAIL (admin xử lý ở Hỗ trợ học viên)
+const CONTACT_CATEGORY = { support: 'ACCOUNT', billing: 'PAYMENT', teacher: 'OTHER', school: 'OTHER', other: 'OTHER', password: 'ACCOUNT' } as const;
+cmsRouter.post(
+  '/contact',
+  optionalAuth,
+  handler(async (req) => {
+    const body = parse(
+      z.object({
+        name: z.string().trim().min(1).max(120),
+        email: z.string().trim().email(),
+        topic: z.enum(['support', 'billing', 'teacher', 'school', 'other', 'password']).default('other'),
+        message: z.string().trim().min(1).max(5000),
+        subject: z.string().trim().max(200).optional(),
+      }),
+      req.body
+    );
+    const ticket = await prisma.ticket.create({
+      data: {
+        userId: req.user?.id,
+        guestName: req.user ? null : body.name,
+        guestEmail: req.user ? null : body.email,
+        channel: 'EMAIL',
+        category: CONTACT_CATEGORY[body.topic],
+        subject: (body.subject ?? body.message).slice(0, 200),
+        priority: body.topic === 'password' ? 'HIGH' : 'NORMAL',
+      },
+    });
+    await prisma.ticketMessage.create({ data: { ticketId: ticket.id, senderType: 'USER', senderId: req.user?.id, text: `${body.message}\n\n— ${body.name} <${body.email}>` } });
+    return { ticketId: ticket.id };
+  })
+);
+
+// ---------------- Tài liệu sinh trực tiếp từ dữ liệu trong CSDL ----------------
+const esc = (s: unknown) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c] as string);
+const docPage = (title: string, body: string) =>
+  `<!doctype html><html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(title)}</title>` +
+  '<style>body{font-family:system-ui,Segoe UI,Arial,sans-serif;max-width:900px;margin:32px auto;padding:0 16px;color:#1e293b;line-height:1.55}h1{font-size:26px}h2{font-size:19px;margin-top:28px;border-bottom:1px solid #e2e8f0;padding-bottom:4px}table{border-collapse:collapse;width:100%;font-size:14px}td,th{border:1px solid #e2e8f0;padding:6px 8px;text-align:left;vertical-align:top}th{background:#f8fafc}.muted{color:#64748b;font-size:13px}@media print{body{margin:0}}</style></head>' +
+  `<body><h1>${esc(title)}</h1><p class="muted">OrbiLingo · tạo lúc ${new Date().toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' })} từ dữ liệu hệ thống. Dùng Ctrl+P để lưu PDF.</p>${body}</body></html>`;
+
+const RESOURCE_BUILDERS: Record<string, () => Promise<{ title: string; html: string }>> = {
+  'tu-vung-toeic': async () => {
+    const topics = await prisma.vocabTopic.findMany({
+      where: { deletedAt: null, slug: { startsWith: 'toeic-vocab-set' } },
+      orderBy: { orderIndex: 'asc' },
+      include: { wordTopics: { orderBy: { orderInTopic: 'asc' } } },
+    });
+    const body = topics
+      .map(
+        (t) =>
+          `<h2>${esc(t.name)} (${t.wordTopics.length} từ)</h2><table><tr><th>Từ</th><th>Loại</th><th>Phiên âm</th><th>Nghĩa</th><th>Ví dụ</th></tr>` +
+          t.wordTopics
+            .map((w) => `<tr><td><b>${esc(w.headword)}</b></td><td>${esc(w.pos)}</td><td>${esc(w.ipaUs ?? w.ipaUk ?? '')}</td><td>${esc(w.meaningVi)}</td><td>${esc(w.exampleEn ?? '')}${w.exampleVi ? `<br><span class="muted">${esc(w.exampleVi)}</span>` : ''}</td></tr>`)
+            .join('') +
+          '</table>'
+      )
+      .join('');
+    return { title: 'Từ vựng TOEIC theo chủ đề', html: body };
+  },
+  'ngu-phap': async () => {
+    const rows = await prisma.grammarTopic.findMany({ where: PUBLISHED, orderBy: [{ category: 'asc' }, { orderIndex: 'asc' }] });
+    const body = rows
+      .map((g) => {
+        const rules = (Array.isArray(g.rules) ? g.rules : []) as { title?: string; detailMd?: string; example?: string }[];
+        return `<h2>${esc(g.title)} <span class="muted">· ${esc(g.category)}${g.level ? ` · ${g.level}` : ''}</span></h2><p>${esc(g.summary)}</p>${rules
+          .map((r) => `<p><b>${esc(r.title ?? '')}</b><br>${esc(r.detailMd ?? '')}${r.example ? `<br><i>${esc(r.example)}</i>` : ''}</p>`)
+          .join('')}`;
+      })
+      .join('');
+    return { title: 'Tóm tắt các chủ điểm ngữ pháp', html: body };
+  },
+  'quy-doi-diem': async () => {
+    const s = await prisma.systemSetting.findUnique({ where: { key: 'score.equivalences' } });
+    const rows = (Array.isArray(s?.value) ? s?.value : []) as Record<string, string>[];
+    return {
+      title: 'Bảng quy đổi điểm TOEIC – VSTEP – CEFR – IELTS',
+      html:
+        '<table><tr><th>CEFR</th><th>VSTEP</th><th>TOEIC</th><th>IELTS</th><th>TOEFL iBT</th><th>Mô tả</th></tr>' +
+        rows.map((r) => `<tr><td><b>${esc(r.cefr)}</b></td><td>${esc(r.vstep)}</td><td>${esc(r.toeic)}</td><td>${esc(r.ielts)}</td><td>${esc(r.toefl)}</td><td>${esc(r.description)}</td></tr>`).join('') +
+        '</table><p class="muted">Chỉ mang tính tham khảo, mỗi trường có quy định riêng.</p>',
+    };
+  },
+  'chep-chinh-ta': async () => {
+    const rows = await prisma.passage.findMany({ where: { purpose: 'DICTATION', ...PUBLISHED }, orderBy: { createdAt: 'asc' } });
+    return { title: 'Bài nghe chép chính tả — lời thoại', html: rows.map((p, i) => `<h2>${i + 1}. ${esc(p.title ?? 'Bài nghe')}</h2><p>${esc(p.transcript ?? '').replace(/\n/g, '<br>')}</p>`).join('') };
+  },
+  'de-viet-noi': async () => {
+    const vstep = await prisma.question.findMany({ where: { ...PUBLISHED, type: { in: ['ESSAY', 'SPEAKING_RESPONSE'] }, examType: 'VSTEP' }, orderBy: [{ skill: 'asc' }, { part: 'asc' }] });
+    const toeic = await prisma.question.findMany({ where: { ...PUBLISHED, type: 'SPEAKING_RESPONSE', examType: 'TOEIC' }, orderBy: { createdAt: 'asc' }, take: 33 });
+    const li = (q: { stem: string }) => `<li>${esc(q.stem).replace(/\n/g, '<br>')}</li>`;
+    return { title: 'Đề Viết và Nói', html: `<h2>VSTEP — Viết &amp; Nói</h2><ol>${vstep.map(li).join('')}</ol><h2>TOEIC Speaking (3 đề đầu)</h2><ol>${toeic.map(li).join('')}</ol>` };
+  },
+};
+
+// GET /cms/resources/files/:key → tài liệu HTML in được, nội dung lấy trực tiếp từ CSDL
+cmsRouter.get('/resources/files/:key', async (req, res, next) => {
+  try {
+    const build = RESOURCE_BUILDERS[String(req.params.key)];
+    if (!build) throw notFound('Tài liệu');
+    const { title, html } = await build();
+    res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    res.send(docPage(title, html));
+  } catch (e) {
+    next(e);
+  }
+});

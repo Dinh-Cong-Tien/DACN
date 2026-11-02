@@ -56,21 +56,21 @@ export const HeadSubjectsPage: React.FC = () => {
   const { data, isLoading } = useHeadSubjects();
   const teachers = useHeadTeachers().data ?? [];
   const refresh = useHeadInvalidate();
-  const MOCK_SUBJECTS = useMemo<Subject[]>(() => data ?? [], [data]);
-  const columns = makeColumns(Math.max(0, ...MOCK_SUBJECTS.map((s) => s.questionsCount)), (n) => teachers.find((t) => t.name === n)?.avatarUrl);
+  const subjectList = useMemo<Subject[]>(() => data ?? [], [data]);
+  const columns = makeColumns(Math.max(0, ...subjectList.map((s) => s.questionsCount)), (n) => teachers.find((t) => t.name === n)?.avatarUrl);
   return (
     <div className="space-y-6">
       <TPageHead eyebrow="Bộ môn" title="Danh mục môn học" sub="Môn học thuộc bộ môn, mã môn, giáo viên phụ trách và quy mô lớp, ngân hàng câu hỏi của từng môn." />
       <Figures
         items={[
-          { label: 'Môn học', value: MOCK_SUBJECTS.length, note: `${MOCK_SUBJECTS.filter((s) => s.examType === 'TOEIC').length} TOEIC · ${MOCK_SUBJECTS.filter((s) => s.examType === 'VSTEP').length} VSTEP`, icon: BookMarked, tone: 'amber' },
-          { label: 'Lớp đang mở', value: MOCK_SUBJECTS.reduce((a, s) => a + s.classesCount, 0), note: 'tất cả môn', icon: School, tone: 'indigo' },
-          { label: 'Lượt phân công GV', value: MOCK_SUBJECTS.reduce((a, s) => a + s.teachersCount, 0), note: 'giáo viên × môn', icon: Users, tone: 'emerald' },
-          { label: 'Câu hỏi', value: formatNumber(MOCK_SUBJECTS.reduce((a, s) => a + s.questionsCount, 0)), note: 'đã xuất bản theo kỳ thi', icon: Database, tone: 'violet' },
+          { label: 'Môn học', value: subjectList.length, note: `${subjectList.filter((s) => s.examType === 'TOEIC').length} TOEIC · ${subjectList.filter((s) => s.examType === 'VSTEP').length} VSTEP`, icon: BookMarked, tone: 'amber' },
+          { label: 'Lớp đang mở', value: subjectList.reduce((a, s) => a + s.classesCount, 0), note: 'tất cả môn', icon: School, tone: 'indigo' },
+          { label: 'Lượt phân công GV', value: subjectList.reduce((a, s) => a + s.teachersCount, 0), note: 'giáo viên × môn', icon: Users, tone: 'emerald' },
+          { label: 'Câu hỏi', value: formatNumber(subjectList.reduce((a, s) => a + s.questionsCount, 0)), note: 'đã xuất bản theo kỳ thi', icon: Database, tone: 'violet' },
         ]}
       />
       <CrudEditor<Subject>
-        rows={MOCK_SUBJECTS}
+        rows={subjectList}
         loading={isLoading}
         onCreate={async (v) => {
           const r = await headApi.createSubject({ name: String(v.name), code: String(v.code), examType: v.examType ?? 'TOEIC' });

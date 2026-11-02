@@ -275,7 +275,7 @@ async function classAnalytics(classId: string, examType: 'TOEIC' | 'VSTEP') {
   if (!ids.length) return { trend: { labels: [] as string[], values: [] as number[] }, accuracy: [] as { part: string; rate: number; total: number }[] };
   const ms = lastMonths(6);
   const attempts = await prisma.examAttempt.findMany({
-    where: { userId: { in: ids }, status: 'COMPLETED', scoreTotal: { not: null }, submittedAt: { gte: ms[0].start }, test: { examType } },
+    where: { userId: { in: ids }, status: 'COMPLETED', mode: 'FULL', scoreTotal: { not: null }, submittedAt: { gte: ms[0].start }, test: { examType } },
     select: { scoreTotal: true, submittedAt: true },
   });
   const trend = {
@@ -930,7 +930,7 @@ headRouter.get(
     const allStudents = [...new Set([...stats.values()].flatMap((s) => s.studentIds))];
     const attempts = allStudents.length
       ? await prisma.examAttempt.findMany({
-          where: { userId: { in: allStudents }, status: 'COMPLETED', scoreTotal: { not: null }, submittedAt: { gte: prev } },
+          where: { userId: { in: allStudents }, status: 'COMPLETED', mode: 'FULL', scoreTotal: { not: null }, submittedAt: { gte: prev } },
           select: { userId: true, scoreTotal: true, submittedAt: true, test: { select: { examType: true } } },
         })
       : [];
@@ -940,7 +940,8 @@ headRouter.get(
       const mine = attempts.filter((a) => a.test?.examType === c.examType && s.studentIds.includes(a.userId));
       const r = mine.filter((a) => a.submittedAt! >= recent).map((a) => Number(a.scoreTotal));
       const p = mine.filter((a) => a.submittedAt! < recent).map((a) => Number(a.scoreTotal));
-      const trend = r.length && p.length && avg(p) ? Math.round(((avg(r) - avg(p)) / avg(p)) * 1000) / 10 : 0;
+      // Cần điểm ở cả 2 kỳ (30 ngày gần nhất và 30 ngày trước đó) mới có xu hướng; thiếu thì null
+      const trend = r.length && p.length && avg(p) ? Math.round(((avg(r) - avg(p)) / avg(p)) * 1000) / 10 : null;
       return {
         classId: c.id,
         className: c.name,
@@ -950,7 +951,9 @@ headRouter.get(
         avgScore: s.avgScore,
         attendance: s.attendanceRate,
         completion: s.completionRate,
-        grade: gradeOf(c.examType, s.avgScore, s.attendanceRate),
+        // Chưa có điểm thi lẫn điểm danh thì chưa xếp loại
+        hasAttendance: s.attendanceMarks > 0,
+        grade: s.avgScore > 0 || s.attendanceMarks > 0 ? gradeOf(c.examType, s.avgScore, s.attendanceRate) : null,
         trend,
       };
     });

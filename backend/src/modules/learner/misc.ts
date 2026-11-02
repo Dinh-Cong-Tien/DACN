@@ -225,3 +225,64 @@ miscRouter.post(
     return { ok: true };
   })
 );
+
+// ---------------- Phiên đăng nhập (refresh token còn hiệu lực trong user_tokens) ----------------
+const sessionLabel = (ua: string | null) => {
+  const s = ua ?? '';
+  const os = /windows/i.test(s) ? 'Windows' : /iphone|ipad/i.test(s) ? 'iOS' : /android/i.test(s) ? 'Android' : /mac os/i.test(s) ? 'macOS' : /linux/i.test(s) ? 'Linux' : 'Thiết bị khác';
+  const br = /edg\//i.test(s) ? 'Edge' : /chrome\//i.test(s) ? 'Chrome' : /firefox\//i.test(s) ? 'Firefox' : /safari\//i.test(s) ? 'Safari' : 'Trình duyệt';
+  return `${os} · ${br}`;
+};
+const tokenHash = (raw?: string) => (raw ? crypto.createHash('sha256').update(raw).digest('hex') : '');
+
+/** POST /learner/sessions { refreshToken? } → danh sách phiên; refreshToken (của chính trình duyệt) để đánh dấu phiên hiện tại */
+miscRouter.post(
+  '/sessions',
+  handler(async (req) => {
+    const { refreshToken } = parse(z.object({ refreshToken: z.string().optional() }), req.body ?? {});
+    const cur = tokenHash(refreshToken);
+    const rows = await prisma.userToken.findMany({
+      where: { userId: me(req).id, type: 'REFRESH', revokedAt: null, usedAt: null, expiresAt: { gt: new Date() } },
+      orderBy: { createdAt: 'desc' },
+      take: 20,
+    });
+    return rows.map((t) => ({ id: t.id, device: sessionLabel(t.userAgent), ip: t.ipAddress ?? undefined, lastActiveAt: t.createdAt.toISOString(), current: !!cur && t.tokenHash === cur }));
+  })
+);
+
+/** DELETE /learner/sessions/:id → thu hồi một phiên (đăng xuất thiết bị đó) */
+miscRouter.delete(
+  '/sessions/:id',
+  handler(async (req) => {
+    const r = await prisma.userToken.updateMany({ where: { id: pid(req), userId: me(req).id, type: 'REFRESH', revokedAt: null }, data: { revokedAt: new Date() } });
+    if (!r.count) throw notFound('Phiên đăng nhập');
+    return { ok: true };
+  })
+);
+
+// ---------------- Báo lỗi câu hỏi → khiếu nại học thuật (tickets ACADEMIC, trưởng bộ môn xử lý) ----------------
+miscRouter.post(
+  '/questions/:id/report',
+  handler(async (req) => {
+    const user = me(req);
+    const body = parse(z.object({ issue: z.enum(['WRONG_KEY', 'TYPO', 'AUDIO_ISSUE', 'EXPLANATION']).default('WRONG_KEY'), note: z.string().trim().max(2000).optional() }), req.body ?? {});
+    const q = await prisma.question.findFirst({ where: { id: pid(req), deletedAt: null }, select: { id: true, part: true, stem: true } });
+    if (!q) throw notFound('Câu hỏi');
+    // Mỗi học viên chỉ mở 1 khiếu nại đang xử lý cho cùng một câu
+    const open = await prisma.ticket.findFirst({ where: { userId: user.id, questionId: q.id, status: { in: ['OPEN', 'IN_REVIEW', 'PENDING'] } }, select: { id: true } });
+    if (open) return { ticketId: open.id, duplicated: true };
+    const label = { WRONG_KEY: 'Nghi sai đáp án', TYPO: 'Lỗi chính tả / nội dung', AUDIO_ISSUE: 'Lỗi audio', EXPLANATION: 'Giải thích chưa đúng' }[body.issue];
+    const t = await prisma.ticket.create({
+      data: {
+        userId: user.id,
+        channel: 'IN_APP',
+        category: 'ACADEMIC',
+        academicIssue: body.issue,
+        questionId: q.id,
+        subject: `${label} · ${partToFe(q.part)}`.slice(0, 200),
+        ticketMessageTickets: { create: { senderType: 'USER', senderId: user.id, text: body.note || `${label}: "${q.stem.slice(0, 300)}"` } },
+      },
+    });
+    return { ticketId: t.id, duplicated: false };
+  })
+);

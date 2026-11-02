@@ -20,11 +20,11 @@ export const AdminClassesPage: React.FC = () => {
   const usersQ = useAdminUsers();
   const refresh = useAdminInvalidate();
   const rows = useMemo<Row[]>(() => (classesQ.data ?? EMPTY).map((c) => ({ ...c, locked: !!c.isArchived })), [classesQ.data]);
-  const MOCK_TEACHERS = useMemo(
+  const teacherList = useMemo(
     () => (usersQ.data?.items ?? []).filter((u) => u.role === 'TEACHER' || u.role === 'HEAD_TEACHER').map((u) => ({ id: u.id, name: u.fullName, status: u.status, subject: u.role === 'HEAD_TEACHER' ? 'Trưởng bộ môn' : 'Giáo viên' })),
     [usersQ.data]
   );
-  const teacherStatus = (id: string) => MOCK_TEACHERS.find((t) => t.id === id)?.status;
+  const teacherStatus = (id: string) => teacherList.find((t) => t.id === id)?.status;
   const [reassign, setReassign] = useState<Row | null>(null);
   const [teacher, setTeacher] = useState('');
   const [saving, setSaving] = useState(false);
@@ -38,7 +38,7 @@ export const AdminClassesPage: React.FC = () => {
       toast.error('Không thực hiện được', errorMessage(e));
     }
   };
-  const orphan = rows.filter((r) => MOCK_TEACHERS.length && teacherStatus(r.teacherId) !== 'ACTIVE').length;
+  const orphan = rows.filter((r) => teacherList.length && teacherStatus(r.teacherId) !== 'ACTIVE').length;
 
   const columns: Column<Row>[] = [
     {
@@ -64,7 +64,7 @@ export const AdminClassesPage: React.FC = () => {
       render: (r) => (
         <div className="whitespace-nowrap text-[13px]">
           <p className="text-slate-800">{r.teacherName}</p>
-          {MOCK_TEACHERS.length > 0 && teacherStatus(r.teacherId) !== 'ACTIVE' && <p className="text-[11px] text-rose-600">Tài khoản giáo viên không hoạt động</p>}
+          {teacherList.length > 0 && teacherStatus(r.teacherId) !== 'ACTIVE' && <p className="text-[11px] text-rose-600">Tài khoản giáo viên không hoạt động</p>}
         </div>
       ),
     },
@@ -109,11 +109,11 @@ export const AdminClassesPage: React.FC = () => {
           { key: 'examType', label: 'Kỳ thi', options: [{ value: 'TOEIC', label: 'TOEIC' }, { value: 'VSTEP', label: 'VSTEP' }] },
           { key: 'teacherName', label: 'Giáo viên', options: [...new Set(rows.map((r) => r.teacherName))].map((n) => ({ value: n, label: n })) },
         ]}
-        defaultValues={{ examType: 'TOEIC', teacherId: MOCK_TEACHERS.find((t) => t.status === 'ACTIVE')?.id, room: '' }}
+        defaultValues={{ examType: 'TOEIC', teacherId: teacherList.find((t) => t.status === 'ACTIVE')?.id, room: '' }}
         fields={[
           { key: 'name', label: 'Tên lớp', required: true, colSpan: 2 },
           { key: 'examType', label: 'Kỳ thi', type: 'select', options: [{ value: 'TOEIC', label: 'TOEIC' }, { value: 'VSTEP', label: 'VSTEP' }] },
-          { key: 'teacherId', label: 'Giáo viên phụ trách', type: 'select', required: true, options: MOCK_TEACHERS.filter((t) => t.status === 'ACTIVE').map((t) => ({ value: t.id, label: t.name })) },
+          { key: 'teacherId', label: 'Giáo viên phụ trách', type: 'select', required: true, options: teacherList.filter((t) => t.status === 'ACTIVE').map((t) => ({ value: t.id, label: t.name })) },
           { key: 'schedule', label: 'Lịch học', placeholder: 'T2 – T4 · 19:00' },
           { key: 'room', label: 'Phòng / hình thức', placeholder: 'Phòng 302 hoặc Online · Google Meet' },
         ]}
@@ -141,7 +141,7 @@ export const AdminClassesPage: React.FC = () => {
               onClick={async () => {
                 if (!reassign) return;
                 setSaving(true);
-                await run(() => adminApi.updateClass(reassign.id, { teacherId: teacher }), 'Đã đổi giáo viên', `${reassign.name} → ${MOCK_TEACHERS.find((t) => t.id === teacher)?.name ?? ''}`);
+                await run(() => adminApi.updateClass(reassign.id, { teacherId: teacher }), 'Đã đổi giáo viên', `${reassign.name} → ${teacherList.find((t) => t.id === teacher)?.name ?? ''}`);
                 setSaving(false);
                 setReassign(null);
               }}
@@ -156,7 +156,7 @@ export const AdminClassesPage: React.FC = () => {
           placeholder="Chọn giáo viên"
           value={teacher}
           onChange={(e) => setTeacher(e.target.value)}
-          options={MOCK_TEACHERS.filter((t) => t.status === 'ACTIVE' && t.id !== reassign?.teacherId).map((t) => ({ value: t.id, label: `${t.name} · ${t.subject}` }))}
+          options={teacherList.filter((t) => t.status === 'ACTIVE' && t.id !== reassign?.teacherId).map((t) => ({ value: t.id, label: `${t.name} · ${t.subject}` }))}
         />
         <p className="mt-3 text-[13px] text-slate-500">Bài tập, bảng điểm và lịch sử điểm danh của lớp được giữ nguyên. Giáo viên mới nhận thông báo ngay.</p>
       </Modal>

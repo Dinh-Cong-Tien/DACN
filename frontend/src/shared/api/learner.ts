@@ -25,7 +25,7 @@ import type {
   VocabWord,
 } from '@/shared/types';
 import { useAuthStore } from '@/shared/stores/authStore';
-import { api } from './client';
+import { api, tokenStore } from './client';
 
 // ---------- Kiểu DTO ----------
 export interface Goal {
@@ -432,3 +432,20 @@ export const usePracticeTasks = (kind: 'writing' | 'speaking', params: { examTyp
 export const useDictationList = () => useQuery({ queryKey: ['catalog', 'dictation'], queryFn: () => api.get<DictationPassage[]>('/catalog/practice/dictation') });
 export const useDictationPassage = (id?: string) =>
   useQuery({ queryKey: ['catalog', 'dictation', id], queryFn: () => api.get<DictationPassage>(`/catalog/practice/dictation/${id}`), enabled: !!id });
+
+// ---------- Phiên đăng nhập (dùng chung mọi vai trò) ----------
+export interface LoginSession {
+  id: string;
+  device: string;
+  ip?: string;
+  lastActiveAt: string;
+  current: boolean;
+}
+export const useSessions = () => {
+  const uid = useAuthStore((st) => st.user?.id);
+  return useQuery({ queryKey: ['learner', 'sessions', uid], enabled: !!uid, queryFn: () => api.post<LoginSession[]>('/learner/sessions', { refreshToken: tokenStore.get()?.refreshToken }) });
+};
+export const useRevokeSession = () => {
+  const qc = useQueryClient();
+  return useMutation({ mutationFn: (id: string) => api.delete<{ ok: true }>(`/learner/sessions/${id}`), onSuccess: () => qc.invalidateQueries({ queryKey: ['learner', 'sessions'] }) });
+};

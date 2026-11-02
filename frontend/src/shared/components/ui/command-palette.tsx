@@ -183,43 +183,43 @@ export const CommandPalette: React.FC = () => {
   const dataQ = useQuery({ queryKey: ['palette', role, user?.id ?? 'guest'], queryFn: () => loadPaletteData(role), enabled: open, staleTime: 5 * 60_000 });
   const pd = dataQ.data ?? EMPTY_DATA;
   const all = useMemo<Cmd[]>(() => {
-    const MOCK_CLASSES = pd.classes;
+    const classList = pd.classes;
     const DEPT_CLASSES = pd.classes;
-    const MOCK_CLASS_STUDENTS = pd.students as ClassStudent[];
+    const classStudents = pd.students as ClassStudent[];
     const DEPT_STUDENTS = pd.students as DeptStudent[];
-    const MOCK_ASSIGNMENTS = pd.assignments;
-    const MOCK_TESTS = pd.tests;
-    const MOCK_COURSES = pd.courses;
+    const assignmentList = pd.assignments;
+    const testList = pd.tests;
+    const courseList = pd.courses;
     const GRAMMAR_TOPICS = pd.grammar;
-    const MOCK_TEACHERS = pd.teachers;
-    const MOCK_USERS = pd.users;
-    const MOCK_TICKETS = pd.tickets;
+    const teacherList = pd.teachers;
+    const userRows = pd.users;
+    const ticketRows = pd.tickets;
     // Mỗi vai trò chỉ tìm trong phần việc của mình
     if (role === 'TEACHER') {
-      const classes: Cmd[] = MOCK_CLASSES.map((c) => ({ id: `cl-${c.id}`, label: c.name, hint: `${c.examType} · ${c.schedule} · ${c.studentsCount} học viên`, group: 'Lớp học', to: `/teacher/classes/${c.id}`, icon: Users, keywords: c.code }));
-      const students: Cmd[] = MOCK_CLASS_STUDENTS.map((s) => ({ id: `st-${s.id}`, label: s.name, hint: `${s.email} · điểm ${s.avgScore}`, group: 'Học viên', to: `/teacher/students?id=${s.id}`, icon: Users }));
-      const assignments: Cmd[] = MOCK_ASSIGNMENTS.map((a) => ({ id: `as-${a.id}`, label: a.title, hint: `${a.className} · đã nộp ${a.submitted}/${a.total}`, group: 'Bài tập', to: `/teacher/assignments${a.status === 'DRAFT' ? '?status=DRAFT' : ''}`, icon: ClipboardList }));
-      const tests: Cmd[] = MOCK_TESTS.map((t) => ({ id: `t-${t.id}`, label: t.title, hint: `${t.examType} · ${t.totalQuestions} câu · ${t.durationMinutes} phút`, group: 'Ngân hàng đề', to: `/teacher/library/tests?tab=${t.examType}`, icon: FileText }));
-      const courses: Cmd[] = MOCK_COURSES.map((c) => ({ id: `c-${c.id}`, label: c.title, hint: `${c.lessonsCount} bài giảng`, group: 'Khoá học', to: `/teacher/library/courses?open=${c.id}`, icon: PlayCircle }));
+      const classes: Cmd[] = classList.map((c) => ({ id: `cl-${c.id}`, label: c.name, hint: `${c.examType} · ${c.schedule} · ${c.studentsCount} học viên`, group: 'Lớp học', to: `/teacher/classes/${c.id}`, icon: Users, keywords: c.code }));
+      const students: Cmd[] = classStudents.map((s) => ({ id: `st-${s.id}`, label: s.name, hint: `${s.email} · điểm ${s.avgScore}`, group: 'Học viên', to: `/teacher/students?id=${s.id}`, icon: Users }));
+      const assignments: Cmd[] = assignmentList.map((a) => ({ id: `as-${a.id}`, label: a.title, hint: `${a.className} · đã nộp ${a.submitted}/${a.total}`, group: 'Bài tập', to: `/teacher/assignments${a.status === 'DRAFT' ? '?status=DRAFT' : ''}`, icon: ClipboardList }));
+      const tests: Cmd[] = testList.map((t) => ({ id: `t-${t.id}`, label: t.title, hint: `${t.examType} · ${t.totalQuestions} câu · ${t.durationMinutes} phút`, group: 'Ngân hàng đề', to: `/teacher/library/tests?tab=${t.examType}`, icon: FileText }));
+      const courses: Cmd[] = courseList.map((c) => ({ id: `c-${c.id}`, label: c.title, hint: `${c.lessonsCount} bài giảng`, group: 'Khoá học', to: `/teacher/library/courses?open=${c.id}`, icon: PlayCircle }));
       return [...TEACHER, ...classes, ...students, ...assignments, ...tests, ...courses];
     }
     if (role === 'HEAD_TEACHER') {
       const classes: Cmd[] = DEPT_CLASSES.map((c) => ({ id: `cl-${c.id}`, label: c.name, hint: `${c.teacherName} · ${c.schedule} · ${c.studentsCount} học viên`, group: 'Lớp học', to: `/head/classes/${c.id}`, icon: Users, keywords: c.code }));
-      const teachers: Cmd[] = MOCK_TEACHERS.map((t) => ({ id: `tc-${t.id}`, label: t.name, hint: `${t.subject} · ${t.email}`, group: 'Giáo viên', to: `/head/teachers/${t.id}`, icon: Users }));
+      const teachers: Cmd[] = teacherList.map((t) => ({ id: `tc-${t.id}`, label: t.name, hint: `${t.subject} · ${t.email}`, group: 'Giáo viên', to: `/head/teachers/${t.id}`, icon: Users }));
       const students: Cmd[] = DEPT_STUDENTS.map((s) => ({ id: `st-${s.id}`, label: s.name, hint: `${DEPT_CLASSES.find((c) => c.id === s.classId)?.name ?? ''} · điểm ${s.avgScore}`, group: 'Học viên', to: `/head/students?q=${encodeURIComponent(s.name)}`, icon: Users }));
       return [...HEAD, ...classes, ...teachers, ...students];
     }
     if (role === 'ADMIN') {
-      const users: Cmd[] = MOCK_USERS.map((u) => ({ id: `u-${u.id}`, label: u.fullName, hint: u.email, group: 'Tài khoản', to: `/admin/users?q=${encodeURIComponent(u.email)}`, icon: Users }));
+      const users: Cmd[] = userRows.map((u) => ({ id: `u-${u.id}`, label: u.fullName, hint: u.email, group: 'Tài khoản', to: `/admin/users?q=${encodeURIComponent(u.email)}`, icon: Users }));
       const classes: Cmd[] = DEPT_CLASSES.map((c) => ({ id: `cl-${c.id}`, label: c.name, hint: `${c.teacherName} · mã ${c.code}`, group: 'Lớp học', to: '/admin/classes', icon: Users, keywords: c.code }));
-      const tickets: Cmd[] = MOCK_TICKETS.map((t) => ({ id: `tk-${t.id}`, label: t.subject, hint: `${t.userName} · #${t.id.slice(0, 8)}`, group: 'Yêu cầu hỗ trợ', to: `/admin/support?id=${t.id}`, icon: AlertTriangle }));
-      const courses: Cmd[] = MOCK_COURSES.map((c) => ({ id: `c-${c.id}`, label: c.title, hint: `${c.lessonsCount} bài giảng`, group: 'Khoá học', to: '/admin/courses', icon: PlayCircle }));
+      const tickets: Cmd[] = ticketRows.map((t) => ({ id: `tk-${t.id}`, label: t.subject, hint: `${t.userName} · #${t.id.slice(0, 8)}`, group: 'Yêu cầu hỗ trợ', to: `/admin/support?id=${t.id}`, icon: AlertTriangle }));
+      const courses: Cmd[] = courseList.map((c) => ({ id: `c-${c.id}`, label: c.title, hint: `${c.lessonsCount} bài giảng`, group: 'Khoá học', to: '/admin/courses', icon: PlayCircle }));
       return [...ADMIN, ...users, ...classes, ...tickets, ...courses];
     }
     const nav = role === 'STUDENT' ? STUDENT : GUEST;
     const isAuth = role !== 'GUEST';
-    const tests: Cmd[] = MOCK_TESTS.map((t) => ({ id: `t-${t.id}`, label: t.title, hint: `${t.examType} · ${t.durationMinutes} phút · ${t.totalQuestions} câu`, group: 'Đề thi thử', to: isAuth ? `/app/mock-tests/${t.slug ?? t.id}` : '/mock-tests', icon: FileText, keywords: t.tags?.join(' ') }));
-    const courses: Cmd[] = MOCK_COURSES.map((c) => ({ id: `c-${c.id}`, label: c.title, hint: `${c.lessonsCount} bài · ${c.durationHours} giờ`, group: 'Khoá học', to: courseHref(c), icon: PlayCircle }));
+    const tests: Cmd[] = testList.map((t) => ({ id: `t-${t.id}`, label: t.title, hint: `${t.examType} · ${t.durationMinutes} phút · ${t.totalQuestions} câu`, group: 'Đề thi thử', to: isAuth ? `/app/mock-tests/${t.slug ?? t.id}` : '/mock-tests', icon: FileText, keywords: t.tags?.join(' ') }));
+    const courses: Cmd[] = courseList.map((c) => ({ id: `c-${c.id}`, label: c.title, hint: `${c.lessonsCount} bài · ${c.durationHours} giờ`, group: 'Khoá học', to: courseHref(c), icon: PlayCircle }));
     const grammar: Cmd[] = isAuth ? GRAMMAR_TOPICS.map((g) => ({ id: `g-${g.id}`, label: g.title, hint: `${g.category} · ${g.level}`, group: 'Ngữ pháp', to: `/app/grammar/${g.slug}`, icon: BookOpen })) : [];
     return [...nav, ...tests, ...courses, ...grammar];
   }, [role, pd]);

@@ -1,6 +1,6 @@
 import React from 'react';
 import { usePartsInfo, useTests } from '@/shared/api/catalog';
-import { useExamGuides } from '@/shared/api/cms';
+import { useExamGuides, useRubric } from '@/shared/api/cms';
 import { VSTEP_GUIDE_SLUG } from '@/shared/constants/public';
 import { useDocumentTitle, useGate } from '@/shared/hooks';
 import { Accent, PageHeader, Section, SectionHead, ActionLink, CtaStrip } from './shared/PageKit';
@@ -15,39 +15,35 @@ const LEVELS = [
 
 const GRADING: Record<string, string> = { Listening: 'Chấm tự động', Reading: 'Chấm tự động', Writing: 'Giáo viên chấm theo 4 tiêu chí', Speaking: 'Giáo viên chấm bản ghi âm' };
 
-/** Bản xem trước phiếu chấm Writing của giáo viên (nội dung mẫu) */
-const WritingFeedbackPreview: React.FC = () => (
-  <figure className="rounded-xl border border-slate-200 bg-white shadow-[0_1px_2px_rgba(16,24,40,0.04),0_12px_32px_-12px_rgba(16,24,40,0.14)]">
-    <div className="flex items-center justify-between border-b border-slate-200 px-5 py-3.5">
-      <div>
-        <p className="text-sm font-semibold text-slate-900">Writing Task 2 · Đề mẫu B2 số 1</p>
-        <p className="text-[12px] text-slate-500">256 từ · nộp 19/10/2026 · chấm sau 31 giờ</p>
-      </div>
-      <p className="text-right">
-        <span className="block text-2xl font-semibold tabular-nums text-slate-900">6.0</span>
-        <span className="text-[12px] text-slate-500">/10 · B2</span>
-      </p>
-    </div>
-    <dl className="divide-y divide-slate-200 text-sm">
-      {[
-        ['Hoàn thành nhiệm vụ', '6.5', 'Đủ ba ý, ví dụ ở đoạn 2 còn chung chung.'],
-        ['Tổ chức bài', '6.0', 'Thiếu câu chuyển giữa đoạn 2 và 3.'],
-        ['Từ vựng', '5.5', 'Lặp "important" 5 lần; thử "crucial", "vital".'],
-        ['Ngữ pháp', '6.0', 'Sai mạo từ ở 4 chỗ, đã gạch chân trong bài.'],
-      ].map(([c, s, n]) => (
-        <div key={c} className="grid grid-cols-[1fr_auto] gap-x-4 px-5 py-3">
-          <dt className="text-slate-700">{c}</dt>
-          <dd className="font-semibold tabular-nums text-slate-900">{s}</dd>
-          <dd className="col-span-2 mt-0.5 text-[13px] text-slate-500">{n}</dd>
+/** Tiêu chí chấm Viết (bảng rubrics trong CSDL) — giáo viên chấm theo đúng bộ này */
+const RubricPreview: React.FC = () => {
+  const { data: r } = useRubric('VSTEP_WRITING_T2');
+  if (!r) return null;
+  return (
+    <figure className="rounded-xl border border-slate-200 bg-white shadow-[0_1px_2px_rgba(16,24,40,0.04),0_12px_32px_-12px_rgba(16,24,40,0.14)]">
+      <div className="flex items-start justify-between gap-4 border-b border-slate-200 px-5 py-3.5">
+        <div>
+          <p className="text-sm font-semibold text-slate-900">{r.name}</p>
+          <p className="text-[12px] text-slate-500">Bộ tiêu chí giáo viên dùng khi chấm bài</p>
         </div>
-      ))}
-    </dl>
-    <figcaption className="flex items-center gap-2.5 border-t border-slate-200 px-5 py-3 text-[12px] text-slate-500">
-      <img src="/images/support/co-hanh.webp" alt="" className="w-7 h-7 rounded-full object-cover" />
-      Chấm bởi cô Nguyễn Thu Hạnh · giảng viên VSTEP
-    </figcaption>
-  </figure>
-);
+        <p className="text-right leading-none">
+          <span className="block text-2xl font-semibold tabular-nums text-slate-900">{r.scaleMax}</span>
+          <span className="text-[12px] text-slate-500">điểm tối đa</span>
+        </p>
+      </div>
+      <dl className="divide-y divide-slate-200 px-5">
+        {r.criteria.map((c) => (
+          <div key={c.key} className="grid grid-cols-[1fr_auto] gap-x-4 py-3 text-sm">
+            <dt className="text-slate-700">{c.label}</dt>
+            <dd className="font-semibold tabular-nums text-slate-900">{Math.round(c.weight * 100)}%</dd>
+            {c.description && <dd className="col-span-2 mt-0.5 text-[13px] text-slate-500">{c.description}</dd>}
+          </div>
+        ))}
+      </dl>
+      <figcaption className="border-t border-slate-200 px-5 py-3 text-[12px] text-slate-500">Điểm bài = trung bình có trọng số của các tiêu chí, kèm nhận xét của giáo viên.</figcaption>
+    </figure>
+  );
+};
 
 export const VstepPage: React.FC = () => {
   useDocumentTitle('Luyện thi VSTEP');
@@ -79,7 +75,7 @@ export const VstepPage: React.FC = () => {
           { value: '0 – 10', label: 'Thang điểm' },
           { value: `${tests.length} đề`, label: 'Đề mẫu trên OrbiLingo' },
         ]}
-        aside={<WritingFeedbackPreview />}
+        aside={<RubricPreview />}
       />
 
       {/* Bộ bài giới thiệu kỳ thi */}

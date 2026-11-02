@@ -22,12 +22,13 @@ export const StudentProgressPage: React.FC = () => {
   const SKILL_SCORES = progress?.skillScores ?? [];
   // Lượt làm bài trong khoảng thời gian đang chọn
   const since = Date.now() - Number(range) * 86400000;
-  const MOCK_ATTEMPTS = (history?.items ?? []).filter((a) => new Date(a.date).getTime() >= since);
+  const attemptList = (history?.items ?? []).filter((a) => new Date(a.date).getTime() >= since);
   const current = SCORE_HISTORY[SCORE_HISTORY.length - 1] ?? 0;
   const prev = SCORE_HISTORY[SCORE_HISTORY.length - 2];
-  const target = Number(user?.target?.score ?? 750) || 750;
+  // Chỉ có mục tiêu khi học viên đã đặt điểm TOEIC (không tự gán 750)
+  const target = user?.target?.examType === 'TOEIC' ? Number(user.target.score) || null : null;
   const totalMinutes = DAILY_ACTIVITY.reduce((a, d) => a + d.minutes, 0);
-  const accuracy = MOCK_ATTEMPTS.length ? Math.round((MOCK_ATTEMPTS.reduce((a, x) => a + x.correct / Math.max(1, x.total), 0) / MOCK_ATTEMPTS.length) * 100) : 0;
+  const accuracy = attemptList.length ? Math.round((attemptList.reduce((a, x) => a + x.correct / Math.max(1, x.total), 0) / attemptList.length) * 100) : 0;
 
   const toneFor = (v: number) => (v >= 75 ? 'emerald' : v >= 60 ? 'amber' : 'violet');
 
@@ -62,15 +63,15 @@ export const StudentProgressPage: React.FC = () => {
       />
 
       <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
-        <StatCard label="Điểm hiện tại" value={current} suffix={`/ ${target}`} icon={<Target />} tone="indigo" delta={prev ? Math.round(((current - prev) / prev) * 100) : undefined} deltaLabel={prev ? 'so với lần trước' : undefined} hint={SCORE_HISTORY.length ? undefined : 'Chưa có đề TOEIC full'} />
-        <StatCard label="Đề đã làm" value={MOCK_ATTEMPTS.length} icon={<FileText />} tone="violet" hint={`${range} ngày gần nhất`} />
+        <StatCard label="Điểm hiện tại" value={current} suffix={target ? `/ ${target}` : undefined} icon={<Target />} tone="indigo" delta={prev ? Math.round(((current - prev) / prev) * 100) : undefined} deltaLabel={prev ? 'so với lần trước' : undefined} hint={SCORE_HISTORY.length ? undefined : 'Chưa có đề TOEIC full'} />
+        <StatCard label="Đề đã làm" value={attemptList.length} icon={<FileText />} tone="violet" hint={`${range} ngày gần nhất`} />
         <StatCard label="Giờ học tuần này" value={Math.round((totalMinutes / 60) * 10) / 10} suffix="h" icon={<Clock />} tone="emerald" hint={`${totalMinutes} phút trong 7 ngày`} />
         <StatCard label="Độ chính xác" value={accuracy} suffix="%" icon={<CheckCircle2 />} tone="amber" hint="trung bình các đề" />
       </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-5">
         <Card hard className="xl:col-span-2 animate-fade-up">
-          <CardHeader title="Xu hướng điểm thi thử" subtitle={`${SCORE_HISTORY.length} lần gần nhất · mục tiêu ${target}`} icon={<TrendingUp />} action={SCORE_HISTORY.length > 1 ? <span className="sticker tilt-2 !bg-emerald-200">{current - SCORE_HISTORY[0] >= 0 ? '+' : ''}{current - SCORE_HISTORY[0]} điểm</span> : undefined} />
+          <CardHeader title="Xu hướng điểm thi thử" subtitle={`${SCORE_HISTORY.length} lần gần nhất${target ? ` · mục tiêu ${target}` : ''}`} icon={<TrendingUp />} action={SCORE_HISTORY.length > 1 ? <span className="sticker tilt-2 !bg-emerald-200">{current - SCORE_HISTORY[0] >= 0 ? '+' : ''}{current - SCORE_HISTORY[0]} điểm</span> : undefined} />
           <div className="overflow-x-auto">
             <Sparkline data={SCORE_HISTORY.length > 1 ? SCORE_HISTORY : [0, 0]} width={640} height={160} className="w-full [&>svg]:w-full [&>svg]:h-auto" />
           </div>
@@ -81,9 +82,11 @@ export const StudentProgressPage: React.FC = () => {
               </span>
             ))}
           </div>
-          <div className="mt-4">
-            <ProgressBar value={(current / target) * 100} label="Tiến tới mục tiêu" showValue tone="indigo" />
-          </div>
+          {target && (
+            <div className="mt-4">
+              <ProgressBar value={(current / target) * 100} label="Tiến tới mục tiêu" showValue tone="indigo" />
+            </div>
+          )}
         </Card>
         <Card hard tone="cream" className="animate-fade-up flex flex-col items-center" style={{ animationDelay: '80ms' }}>
           <CardHeader title="Bản đồ kỹ năng" subtitle="Điểm mạnh / yếu tổng quát" className="self-stretch" />
@@ -129,7 +132,7 @@ export const StudentProgressPage: React.FC = () => {
           <div className="p-5 pb-0">
             <CardHeader title="Lịch sử thi thử" subtitle="Nhấn vào đề để xem phân tích chi tiết" />
           </div>
-          <DataTable columns={cols} rows={MOCK_ATTEMPTS} emptyTitle="Chưa có lượt làm bài" emptyDescription="Làm một bài luyện tập hoặc đề thi thử để xem lịch sử ở đây." className="border-0 rounded-none rounded-b-2xl border-t-2 !border-t-slate-900" />
+          <DataTable columns={cols} rows={attemptList} emptyTitle="Chưa có lượt làm bài" emptyDescription="Làm một bài luyện tập hoặc đề thi thử để xem lịch sử ở đây." className="border-0 rounded-none rounded-b-2xl border-t-2 !border-t-slate-900" />
         </Card>
       </Reveal>
     </div>

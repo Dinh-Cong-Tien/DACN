@@ -5,6 +5,8 @@ import { cn, getCorrectKey } from '@/shared/utils';
 import { AudioPlayer } from '@/shared/components/media/AudioPlayer';
 import { Badge } from '@/shared/components/ui';
 import { toast } from '@/shared/stores/uiStore';
+import { useAuthStore } from '@/shared/stores/authStore';
+import { api, errorMessage } from '@/shared/api/client';
 
 /** Nhãn chủ điểm dạng chữ; bỏ id kỹ thuật (UUID của skill_tags) trả về từ API */
 const readableTags = (tags?: string[]) => (tags ?? []).filter((t) => !/^[0-9a-f]{8}-[0-9a-f]{4}-/i.test(t));
@@ -75,10 +77,19 @@ export const QuestionRenderer: React.FC<QuestionRendererProps> = ({
   const correctKey = getCorrectKey(question);
   const isCorrect = selectedAnswer === correctKey;
   const [reported, setReported] = useState(false);
+  const loggedIn = useAuthStore((s) => !!s.user);
 
+  /** Báo lỗi câu hỏi → tạo khiếu nại học thuật (tickets ACADEMIC) cho trưởng bộ môn xử lý */
   const report = () => {
+    if (!loggedIn) return toast.info('Cần đăng nhập', 'Đăng nhập để gửi báo lỗi câu hỏi tới trưởng bộ môn.');
     setReported(true);
-    toast.success('Đã gửi phản hồi', 'Trưởng bộ môn sẽ xem xét câu hỏi này. Cảm ơn đóng góp của bạn!');
+    api
+      .post<{ ticketId: string; duplicated: boolean }>(`/learner/questions/${question.id}/report`, { issue: 'WRONG_KEY' })
+      .then((r) => toast.success(r.duplicated ? 'Bạn đã báo lỗi câu này' : 'Đã gửi phản hồi', 'Trưởng bộ môn sẽ xem xét câu hỏi này. Cảm ơn đóng góp của bạn!'))
+      .catch((e) => {
+        setReported(false);
+        toast.error('Chưa gửi được', errorMessage(e));
+      });
   };
 
   return (

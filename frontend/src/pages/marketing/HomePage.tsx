@@ -4,9 +4,9 @@ import { Link, useLocation } from 'react-router-dom';
 import { ArrowRight, Star, CheckCircle2, Play, Flame, Target, BookOpen, Users, FileText, AlertTriangle, RotateCcw, Compass, Headphones } from 'lucide-react';
 import { Button, Card, SectionTitle } from '@/shared/components/ui';
 import { Reveal, Stagger, CountUp, Doodles, TypeLoop, RevealPhoto } from '@/shared/components/motion';
-import { Img, PHOTOS, pravatar } from '@/shared/components/media/Img';
-import { useCourses, useTests } from '@/shared/api/catalog';
-import { useHomeStats, usePlans, useTestimonials } from '@/shared/api/cms';
+import { Img, PHOTOS } from '@/shared/components/media/Img';
+import { useCourses, usePartsInfo, useTests } from '@/shared/api/catalog';
+import { useHomeStats, useOverview, usePlans, useTestimonials } from '@/shared/api/cms';
 import { examTracks } from '@/shared/constants/public';
 import { useDocumentTitle, useGate, useInView } from '@/shared/hooks';
 import { formatCurrency, cn } from '@/shared/utils';
@@ -18,29 +18,16 @@ import { ExamTrackCard } from './home/ExamTrackCard';
 import { CourseTile } from './home/CourseTile';
 import { TestimonialCard } from './home/TestimonialCard';
 
-/** Trường của học viên (logo chính thức lấy từ Wikimedia, lưu tại public/images/universities) */
-const PARTNERS: { name: string; logo: string }[] = [
-  { name: 'ĐH Đà Nẵng', logo: 'udn' },
-  { name: 'ĐH Duy Tân', logo: 'dtu' },
-  { name: 'ĐH Bách khoa Hà Nội', logo: 'hust' },
-  { name: 'ĐH FPT', logo: 'fpt' },
-  { name: 'ĐHQG Hà Nội', logo: 'vnu' },
-  { name: 'ĐH Kinh tế Quốc dân', logo: 'neu' },
-  { name: 'ĐH Ngoại ngữ – ĐHQGHN', logo: 'ulis' },
-  { name: 'HUTECH', logo: 'hutech' },
-  { name: 'ĐH Sư phạm Hà Nội', logo: 'hnue' },
-];
-
-const MARQUEE_POINTS = ['TOEIC 450 → 990', 'VSTEP B1 · B2 · C1', 'Đề ETS 2024–2025', 'Audio phát một lần', 'Sổ tay lỗi sai', 'Ôn tập SM-2', 'Giáo viên chấm bài', 'Lớp học có mã mời'];
+const MARQUEE_POINTS = ['TOEIC 450 → 990', 'VSTEP B1 · B2 · C1', 'Đề full test 200 câu', 'Audio phát một lần', 'Sổ tay lỗi sai', 'Ôn tập SM-2', 'Giáo viên chấm bài', 'Lớp học có mã mời'];
 
 const HERO_WORDS = ['BỨT PHÁ', 'CHINH PHỤC', 'LÀM CHỦ'];
 
 const LOOP = [
-  { n: '01', title: 'Thi xếp lớp 15 phút', text: '20 câu rải đều 7 Part. Hệ thống ước lượng trình độ hiện tại, chỉ ra Part nào đang kéo điểm bạn xuống.', photo: PHOTOS.notes, tag: 'Chẩn đoán' },
+  { n: '01', title: 'Thi xếp lớp 15 phút', text: 'Câu Nghe, Ngữ pháp và Đọc chọn ngẫu nhiên từ ngân hàng đề. Kết quả ước lượng trình độ hiện tại và chỉ ra phần đang kéo điểm bạn xuống.', photo: PHOTOS.notes, tag: 'Chẩn đoán' },
   { n: '02', title: 'Lộ trình 3 chặng theo ngày thi', text: 'Nền tảng → Chuyên sâu → Thực chiến. Mỗi tuần có mục tiêu cụ thể, tự giãn hoặc nén theo thời gian còn lại.', photo: PHOTOS.desk, tag: 'Cá nhân hoá' },
-  { n: '03', title: 'Thi thử như thi thật', text: 'Đề chuẩn ETS 2024–2025 và format Bộ GD&ĐT. Audio phát một lần, không tua, tự nộp khi hết giờ.', photo: PHOTOS.headphones, tag: 'Luyện đề' },
+  { n: '03', title: 'Thi thử như thi thật', text: 'Đề full 200 câu theo format TOEIC và đề mẫu VSTEP. Audio phát một lần, không tua, tự nộp khi hết giờ.', photo: PHOTOS.headphones, tag: 'Luyện đề' },
   { n: '04', title: 'Sổ tay lỗi sai tự động', text: 'Câu sai được lưu kèm lời giải và nguyên nhân: ngữ pháp, từ vựng hay bẫy nghe. Không phải ghi chép tay.', photo: PHOTOS.writing, tag: 'Phân tích' },
-  { n: '05', title: 'Ôn đúng lúc sắp quên', text: 'Thuật toán SM-2 nhắc lại sau 1, 3, 7, 14, 30 ngày. Mỗi sáng chỉ cần 10 phút ôn phần hệ thống gợi ý.', photo: PHOTOS.studying, tag: 'Ghi nhớ' },
+  { n: '05', title: 'Ôn đúng lúc sắp quên', text: 'Thuật toán SM-2 giãn dần khoảng cách ôn theo mức bạn còn nhớ. Mỗi ngày chỉ ôn đúng những thẻ đã đến hạn.', photo: PHOTOS.studying, tag: 'Ghi nhớ' },
 ];
 
 /**
@@ -137,10 +124,13 @@ export const HomePage: React.FC = () => {
   const isDark = useResolvedTheme() === 'dark';
   const isStudent = useAuthStore((s) => s.isAuthenticated() && s.user?.role === 'STUDENT');
   const { data: stats = [] } = useHomeStats();
-  const { data: MOCK_COURSES = [] } = useCourses();
+  const { data: courseList = [] } = useCourses();
   const { data: TESTIMONIALS = [] } = useTestimonials();
   const { data: PRICING_PLANS = [] } = usePlans();
   const { data: tests = [] } = useTests();
+  const { data: overview } = useOverview();
+  const { data: toeicParts = [] } = usePartsInfo('TOEIC');
+  const part5Bank = toeicParts.find((p) => p.id === 'PART_5')?.bankCount ?? 0;
   // 4 số liệu thật: học viên, câu hỏi, đề thi, bài học
   const HOME_STATS = stats.filter((s) => s.key !== 'courses').slice(0, 4);
   const HOME_EXAM_TRACKS = examTracks({ toeic: tests.filter((t) => t.examType === 'TOEIC').length, vstep: tests.filter((t) => t.examType === 'VSTEP').length });
@@ -205,18 +195,24 @@ export const HomePage: React.FC = () => {
             </div>
 
             <div className="flex items-center gap-4 animate-fade-up delay-300">
-              <div className="flex -space-x-3">
-                {[21, 22, 23, 24, 25].map((n) => (
-                  <img key={n} src={pravatar(n)} alt="" className="w-10 h-10 rounded-full border-2 border-slate-950 light:border-white object-cover" />
-                ))}
-              </div>
-              <div>
-                <div className="flex items-center gap-1 text-amber-300">
-                  {Array.from({ length: 5 }).map((_, i) => (
-                    <Star key={i} className="w-4 h-4 fill-current" />
+              {!!overview?.studentAvatars.length && (
+                <div className="flex -space-x-3">
+                  {overview.studentAvatars.map((src) => (
+                    <img key={src} src={src} alt="" className="w-10 h-10 rounded-full border-2 border-slate-950 light:border-white object-cover" />
                   ))}
-                  <span className="text-xs font-bold text-white light:text-slate-900 ml-1">4.9/5</span>
                 </div>
+              )}
+              <div>
+                {overview?.rating && (
+                  <div className="flex items-center gap-1 text-amber-300">
+                    {Array.from({ length: 5 }).map((_, i) => (
+                      <Star key={i} className={cn('w-4 h-4', i < Math.round(overview.rating!.avg) && 'fill-current')} />
+                    ))}
+                    <span className="text-xs font-bold text-white light:text-slate-900 ml-1">
+                      {overview.rating.avg}/5 · {overview.rating.count} đánh giá
+                    </span>
+                  </div>
+                )}
                 <p className="text-xs text-slate-400 light:text-slate-500 font-semibold">
                   <b className="text-white light:text-slate-900">{(stats.find((x) => x.key === 'students')?.value ?? 0).toLocaleString('vi-VN')}</b> học viên đang học
                 </p>
@@ -248,21 +244,25 @@ export const HomePage: React.FC = () => {
               className="relative h-full w-auto object-contain object-bottom animate-fade-up delay-200 [filter:drop-shadow(0_20px_40px_rgba(0,0,0,0.45))_drop-shadow(0_0_24px_rgba(250,83,48,0.25))]"
             />
             {/* Thẻ nổi: lớp ngoài bồng bềnh lên xuống, lớp trong giữ hiệu ứng hiện ra + độ nghiêng */}
-            <div className="hero-bob absolute -right-10 top-10">
-              <div className="bg-amber-300 text-slate-900 rounded-2xl px-4 py-3 shadow-card animate-fade-up delay-700 tilt-2 flex items-center gap-2">
-                <Flame className="hero-flame w-6 h-6 text-violet-600 fill-violet-500" />
-                <div>
-                  <p className="font-display text-xl font-extrabold leading-none">61 ngày</p>
-                  <p className="text-[10px] font-bold text-slate-700">streak của Long</p>
+            {overview?.topStreak && (
+              <div className="hero-bob absolute -right-10 top-10">
+                <div className="bg-amber-300 text-slate-900 rounded-2xl px-4 py-3 shadow-card animate-fade-up delay-700 tilt-2 flex items-center gap-2">
+                  <Flame className="hero-flame w-6 h-6 text-violet-600 fill-violet-500" />
+                  <div>
+                    <p className="font-display text-xl font-extrabold leading-none">{overview.topStreak.days} ngày</p>
+                    <p className="text-[10px] font-bold text-slate-700">chuỗi học của {overview.topStreak.name}</p>
+                  </div>
                 </div>
               </div>
-            </div>
-            <div className="hero-bob hero-bob--late absolute -left-8 bottom-8">
-              <div className="bg-indigo-600 text-white rounded-2xl px-4 py-3 shadow-card animate-fade-up delay-700 tilt-3">
-                <p className="text-[10px] font-extrabold uppercase tracking-wider text-indigo-100">Part 5 hôm nay</p>
-                <p className="font-display text-2xl font-extrabold">28/30</p>
+            )}
+            {part5Bank > 0 && (
+              <div className="hero-bob hero-bob--late absolute -left-8 bottom-8">
+                <div className="bg-indigo-600 text-white rounded-2xl px-4 py-3 shadow-card animate-fade-up delay-700 tilt-3">
+                  <p className="text-[10px] font-extrabold uppercase tracking-wider text-indigo-100">Câu Part 5 để luyện</p>
+                  <p className="font-display text-2xl font-extrabold">{part5Bank.toLocaleString('vi-VN')}</p>
+                </div>
               </div>
-            </div>
+            )}
           </div>
         </div>
       </section>
@@ -282,20 +282,6 @@ export const HomePage: React.FC = () => {
       <section className="relative isolate border-y border-white/10 bg-white/[0.02] light:border-slate-900/10 light:bg-white/50 py-5 space-y-3">
         <div aria-hidden className="pointer-events-none absolute -z-10 rounded-full -left-40 -top-24 w-[520px] h-[260px] bg-violet-500/20 blur-[100px]" />
         <div aria-hidden className="pointer-events-none absolute -z-10 rounded-full -right-40 -bottom-24 w-[520px] h-[260px] bg-indigo-500/20 blur-[100px]" />
-        <p className="text-center text-[11px] font-extrabold uppercase tracking-[0.2em] text-slate-400 light:text-slate-500">Học viên đến từ</p>
-        <div className="marquee">
-          <div className="marquee-track whitespace-nowrap">
-            {[...PARTNERS, ...PARTNERS].map((p, i) => (
-              <span key={i} aria-hidden={i >= PARTNERS.length || undefined} className="mx-3 inline-flex items-center gap-2.5 pl-1.5 pr-4 py-1.5 rounded-xl border border-white/10 bg-white/5 font-display font-bold text-sm md:text-base text-slate-100 light:border-slate-200 light:bg-white light:text-slate-800 transition-colors hover:bg-amber-300 hover:text-slate-900 hover:border-amber-300">
-                {/* nền trắng để logo trong suốt / màu tối vẫn rõ trên nền đêm */}
-                <span className="w-9 h-9 rounded-lg bg-white p-1 flex items-center justify-center shrink-0">
-                  <img src={`/images/universities/${p.logo}.webp`} alt={`Logo ${p.name}`} loading="lazy" decoding="async" className="max-w-full max-h-full object-contain" />
-                </span>
-                {p.name}
-              </span>
-            ))}
-          </div>
-        </div>
         <div className="marquee">
           <div className="marquee-track reverse whitespace-nowrap">
             {[...MARQUEE_POINTS, ...MARQUEE_POINTS].map((t, i) => (
@@ -366,13 +352,13 @@ export const HomePage: React.FC = () => {
           </Reveal>
           <div className="grid md:grid-cols-3 gap-4 md:gap-5">
             <Reveal className="md:col-span-2 md:row-span-2">
-              <FeatureCard to="/mock-tests" photo={PHOTOS.library} icon={<FileText />} iconClass="bg-indigo-500" title="Phòng thi thử chuẩn ETS & Bộ GD&ĐT" text="Đồng hồ, audio phát một lần, chấm điểm ngay khi nộp." badge="183 đề" cta="Vào phòng thi" large />
+              <FeatureCard to="/mock-tests" photo={PHOTOS.library} icon={<FileText />} iconClass="bg-indigo-500" title="Phòng thi thử chuẩn ETS & Bộ GD&ĐT" text="Đồng hồ, audio phát một lần, chấm điểm ngay khi nộp." badge={overview ? `${overview.tests} đề` : undefined} cta="Vào phòng thi" large />
             </Reveal>
             <Reveal delay={100}>
               <FeatureCard to={gate('/app/mistakes', '/auth/register')} photo={PHOTOS.lecture} icon={<AlertTriangle />} iconClass="bg-amber-300 text-slate-900" title="Sổ tay lỗi sai" text="Câu sai tự lưu, luyện lại đúng chỗ yếu." />
             </Reveal>
             <Reveal delay={200}>
-              <FeatureCard to={gate('/app/review', '/auth/register')} photo={PHOTOS.books} icon={<RotateCcw />} iconClass="bg-violet-500" title="Flashcard SM-2" text="600 từ Business, nhắc ôn đúng ngày." />
+              <FeatureCard to={gate('/app/review', '/auth/register')} photo={PHOTOS.books} icon={<RotateCcw />} iconClass="bg-violet-500" title="Flashcard SM-2" text={overview ? `${overview.words.toLocaleString('vi-VN')} từ vựng, nhắc ôn đúng ngày.` : 'Nhắc ôn từ vựng đúng ngày.'} />
             </Reveal>
             <Reveal delay={150}>
               <FeatureCard to="/courses" photo={PHOTOS.classroom} icon={<Users />} iconClass="bg-emerald-500" title="Lớp học với giáo viên" text="Mã mời, bài tập, chấm theo rubric." />
@@ -380,7 +366,7 @@ export const HomePage: React.FC = () => {
             <Reveal delay={250} className="md:col-span-2">
               <FeatureCard to={gate('/app/learning-path', '/auth/register')} photo={PHOTOS.meeting} icon={<Compass />} iconClass="bg-sky-500" title="Lộ trình 3 chặng" text="Tự chia tuần theo ngày thi của bạn.">
                 <div className="flex gap-2 mt-3 flex-wrap">
-                  {['Nền tảng · 4 tuần', 'Chuyên sâu · 5 tuần', 'Thực chiến · 3 tuần'].map((t) => (
+                  {['Nền tảng', 'Chuyên sâu', 'Thực chiến'].map((t) => (
                     <span key={t} className="px-2.5 py-1 rounded-md bg-white/15 backdrop-blur-sm text-xs font-semibold text-white">
                       {t}
                     </span>
@@ -417,22 +403,23 @@ export const HomePage: React.FC = () => {
           <Reveal className="flex flex-col md:flex-row md:items-end justify-between gap-4">
             <SectionTitle dark={isDark} align="left" eyebrow="Khoá học" title={<>Lộ trình học, <span className="hero-gradient-text">video có bản ghi.</span></>} description="Nhấn vào từ trong transcript để tra nghĩa. Mỗi bài có quiz củng cố." />
             <Link to="/courses" className="group inline-flex shrink-0 items-center gap-1.5 font-semibold text-slate-200 hover:text-white light:text-slate-700 light:hover:text-slate-900">
-              Xem tất cả {MOCK_COURSES.length} khoá học <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" />
+              Xem tất cả {courseList.length} khoá học <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" />
             </Link>
           </Reveal>
           <Stagger className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
-            {MOCK_COURSES.slice(0, 3).map((c) => (
+            {courseList.slice(0, 3).map((c) => (
               <CourseTile key={c.id} course={c} />
             ))}
           </Stagger>
         </div>
       </section>
 
-      {/* ================= TESTIMONIALS ================= */}
+      {/* ================= TESTIMONIALS (chỉ khi có cảm nhận học viên đã đồng ý công khai) ================= */}
+      {TESTIMONIALS.length > 0 && (
       <section className="relative isolate max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24 space-y-12">
         <div aria-hidden className="night-divider -z-10" />
         <Reveal>
-          <SectionTitle dark={isDark} eyebrow="Học viên nói gì" title={<>Điểm số thật, <span className="hero-gradient-text">người thật.</span></>} description="Ba trong số hàng nghìn học viên đã tăng điểm trong năm nay." />
+          <SectionTitle dark={isDark} eyebrow="Học viên nói gì" title={<>Điểm số thật, <span className="hero-gradient-text">người thật.</span></>} description="Cảm nhận của học viên đã đồng ý công khai kết quả thi." />
         </Reveal>
         <Stagger className="grid md:grid-cols-3 gap-10 md:gap-8">
           {TESTIMONIALS.map((t) => (
@@ -440,6 +427,7 @@ export const HomePage: React.FC = () => {
           ))}
         </Stagger>
       </section>
+      )}
 
       {/* ================= PRICING SHORT ================= */}
       <section className="relative isolate max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-16 md:pb-24">
@@ -452,7 +440,7 @@ export const HomePage: React.FC = () => {
               <h3 className="font-display text-3xl md:text-4xl font-extrabold text-white light:text-slate-900 mt-3">
                 Bắt đầu miễn phí. <span className="hero-gradient-text">Nâng cấp khi cần.</span>
               </h3>
-              <p className="text-slate-400 light:text-slate-600 mt-3 max-w-xl">Gói Free đủ để thi xếp lớp, luyện Part và dùng sổ tay lỗi sai. Gói VIP mở kho đề 2025 và không giới hạn flashcard.</p>
+              <p className="text-slate-400 light:text-slate-600 mt-3 max-w-xl">Gói Free đủ để thi xếp lớp, luyện Part và dùng sổ tay lỗi sai. Gói VIP mở các đề VIP và bỏ giới hạn đề thi thử, flashcard, tra từ.</p>
             </div>
             <div className="grid grid-cols-3 gap-3">
               {PRICING_PLANS.map((p) => (

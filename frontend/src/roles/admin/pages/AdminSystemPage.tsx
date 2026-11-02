@@ -26,7 +26,6 @@ export const AdminSystemPage: React.FC = () => {
   const services = data?.services ?? [];
   const up = services.filter((s) => s.status === 'UP').length;
   const allUp = !isError && services.length > 0 && up === services.length;
-  const avgLatency = services.length ? Math.round(services.reduce((a, s) => a + s.latencyMs, 0) / services.length) : 0;
   const host = data?.host;
   const proc = data?.process;
   const db = data?.database;
@@ -43,7 +42,7 @@ export const AdminSystemPage: React.FC = () => {
     { label: 'CPU (tải 1 phút)', value: host && host.load[0] ? Math.min(100, Math.round((host.load[0] / host.cpus) * 100)) : 0, icon: Cpu, tone: 'indigo', detail: host ? `${host.cpus} nhân · ${host.platform}${host.load[0] ? '' : ' · hệ điều hành không báo tải'}` : '—' },
     { label: 'RAM máy chủ', value: host ? Math.round((ramUsed / host.totalMemMb) * 100) : 0, icon: MemoryStick, tone: 'violet', detail: host ? `${(ramUsed / 1024).toFixed(1)} / ${(host.totalMemMb / 1024).toFixed(1)} GB` : '—' },
     { label: 'Bộ nhớ tiến trình API', value: proc ? Math.round((proc.heapUsedMb / proc.heapTotalMb) * 100) : 0, icon: HardDrive, tone: 'amber', detail: proc ? `Heap ${proc.heapUsedMb} / ${proc.heapTotalMb} MB · RSS ${proc.rssMb} MB` : '—' },
-    { label: 'Kết nối CSDL', value: db ? Math.min(100, db.connections) : 0, icon: Database, tone: 'sky', detail: db ? `${db.connections} kết nối · ${db.tables} bảng · ${db.size}` : '—' },
+    { label: 'Kết nối CSDL', value: db?.maxConnections ? Math.round((db.connections / db.maxConnections) * 100) : 0, icon: Database, tone: 'sky', detail: db ? `${db.connections}${db.maxConnections ? ` / ${db.maxConnections}` : ''} kết nối · ${db.tables} bảng · ${db.size}` : '—' },
   ];
 
   return (
@@ -80,7 +79,7 @@ export const AdminSystemPage: React.FC = () => {
               {[
                 { k: 'Đang chạy', v: `${up}/${services.length}` },
                 { k: 'API chạy liên tục', v: services[0]?.uptime ?? '—' },
-                { k: 'Độ trễ CSDL', v: `${avgLatency} ms` },
+                { k: 'Độ trễ CSDL', v: services.find((x) => x.name === 'PostgreSQL') ? `${services.find((x) => x.name === 'PostgreSQL')!.latencyMs} ms` : '—' },
               ].map((x) => (
                 <div key={x.k} className="rounded-2xl bg-white/[0.06] p-3 ring-1 ring-white/10">
                   <dt className="text-[11px] text-white/50">{x.k}</dt>

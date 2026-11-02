@@ -10,7 +10,19 @@ export type Paged<T> = { items: T[]; total: number; page: number; pageSize: numb
 export type PostDetail = BlogPost & { related?: BlogPost[] };
 export type PostCategory = { slug: string; name: string; count: number };
 export type HomeStat = { key: string; label: string; value: number; suffix: string };
-export type PlanDto = PricingPlan & { code?: string };
+export type Entitlement = { limit?: number | null; period?: 'DAY' | 'WEEK' | 'MONTH' | string; exam?: ExamType };
+export type PlanDto = PricingPlan & { code?: string; entitlements?: Record<string, Entitlement> };
+export type ResourceDto = ResourceDoc & { updatedAt?: string; fileUrl?: string; isVip?: boolean };
+/** Số liệu thật dùng chung cho trang công khai (GET /cms/overview) */
+export type Overview = {
+  students: number; teachers: number; questions: number; tests: number; lessons: number; courses: number; words: number; passages: number;
+  rating: { avg: number; count: number } | null;
+  topStreak: { name: string; days: number } | null;
+  studentAvatars: string[];
+  contentUpdatedAt: string | null;
+};
+export type TeamMember = { id: string; name: string; avatarUrl?: string; role: string; department?: string; bio?: string; classes: number; students: number };
+export type PublicRubric = { code: string; name: string; scaleMax: number; criteria: { key: string; label: string; description?: string; weight: number }[] };
 export type SupportSendResult = { ticketId: string; reply: SupportReply | null; matched: boolean };
 export type PublicLeaderboard = { period: 'week' | 'month'; from: string; to: string; entries: LeaderboardEntry[] };
 export type SupportHistoryMessage = { id: string; from: 'USER' | 'STAFF' | 'BOT' | 'SYSTEM'; text: string; at: string; links?: ChatLink[] };
@@ -29,6 +41,9 @@ export const cmsKeys = {
   homeStats: ['cms', 'home-stats'] as const,
   supportReplies: ['cms', 'support-replies'] as const,
   leaderboard: (p: object) => ['cms', 'leaderboard', p] as const,
+  overview: ['cms', 'overview'] as const,
+  team: ['cms', 'team'] as const,
+  rubric: (code: string) => ['cms', 'rubric', code] as const,
 };
 
 export const cmsApi = {
@@ -39,7 +54,11 @@ export const cmsApi = {
   faqs: (category?: string) => api.get<FaqItem[]>('/cms/faqs', category ? { category } : undefined),
   plans: () => api.get<PlanDto[]>('/cms/plans'),
   testimonials: (exam?: string) => api.get<Testimonial[]>('/cms/testimonials', exam ? { exam } : undefined),
-  resources: () => api.get<ResourceDoc[]>('/cms/resources'),
+  resources: () => api.get<ResourceDto[]>('/cms/resources'),
+  overview: () => api.get<Overview>('/cms/overview'),
+  team: () => api.get<TeamMember[]>('/cms/team'),
+  rubric: (code: string) => api.get<PublicRubric>(`/cms/rubrics/${code}`),
+  contact: (body: { name: string; email: string; topic: string; message: string; subject?: string }) => api.post<{ ticketId: string }>('/cms/contact', body),
   download: (id: string) => api.post<{ fileUrl: string | null; downloads: number }>(`/cms/resources/${id}/download`),
   scoreTable: () => api.get<ScoreRow[]>('/cms/score-table'),
   scoreConversion: (exam: ExamType) => api.get<Record<string, Record<string, number>>>(`/cms/score-conversion/${exam}`),
@@ -66,3 +85,14 @@ export const useHomeStats = () => useQuery({ queryKey: cmsKeys.homeStats, queryF
 export const usePublicLeaderboard = (p: { period: 'week' | 'month'; exam: 'ALL' | 'TOEIC' | 'VSTEP'; limit?: number }) =>
   useQuery({ queryKey: cmsKeys.leaderboard(p), queryFn: () => cmsApi.leaderboard(p) });
 export const useSupportReplies = () => useQuery({ queryKey: cmsKeys.supportReplies, queryFn: cmsApi.supportReplies, staleTime: Infinity });
+export const useOverview = () => useQuery({ queryKey: cmsKeys.overview, queryFn: cmsApi.overview, staleTime: LONG });
+export const useTeam = () => useQuery({ queryKey: cmsKeys.team, queryFn: cmsApi.team, staleTime: LONG });
+export const useRubric = (code: string) => useQuery({ queryKey: cmsKeys.rubric(code), queryFn: () => cmsApi.rubric(code), staleTime: Infinity });
+/** Hạn mức của một gói theo mã quyền (MOCK_TEST, DICTIONARY…) → chuỗi hiển thị; undefined nếu gói không có quyền đó */
+export const limitText = (e: Entitlement | undefined, unit: string) => {
+  if (!e) return undefined;
+  if (e.limit === null || e.limit === undefined) return 'Không giới hạn';
+  if (e.limit === 0) return undefined;
+  const per = e.period === 'DAY' ? ' / ngày' : e.period === 'WEEK' ? ' / tuần' : e.period === 'MONTH' ? ' / tháng' : '';
+  return `${e.limit} ${unit}${per}`;
+};

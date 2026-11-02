@@ -3,7 +3,8 @@ import { Link, useLocation, useOutlet } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { Logo } from '@/shared/components/ui';
 import { SUPPORT_INFO } from '@/shared/constants/public';
-import { useTestimonials } from '@/shared/api/cms';
+import { useOverview, useTestimonials } from '@/shared/api/cms';
+import { usePartsInfo } from '@/shared/api/catalog';
 import { cn } from '@/shared/utils';
 import './AuthLayout.css';
 
@@ -34,81 +35,82 @@ const HEADLINE: Record<AsideVariant, { title: string; sub: string }> = {
 
 const card = 'rounded-2xl bg-white text-slate-900 shadow-[0_18px_40px_-14px_rgba(3,24,19,0.55)] ring-1 ring-black/5';
 
-/** Thẻ kết quả thi thử mẫu (giống màn hình trong app) */
-const ScoreCard: React.FC = () => (
-  <div className={cn(card, 'w-[244px] p-4')}>
-    <div className="flex items-start justify-between gap-3">
-      <div>
-        <p className="text-[13px] font-semibold">ETS 2025 · Test 3</p>
-        <p className="text-[11px] text-slate-500">Nộp 21:47, 28/10</p>
-      </div>
-      <p className="text-right leading-none">
-        <span className="text-[1.45rem] font-semibold tabular-nums">785</span>
-        <span className="text-[11px] text-slate-500">/990</span>
-      </p>
-    </div>
-    <dl className="mt-3 space-y-1.5 text-[12px]">
-      {(
-        [
-          ['Listening', 410],
-          ['Reading', 375],
-        ] as const
-      ).map(([k, v]) => (
-        <div key={k} className="grid grid-cols-[58px_1fr_28px] items-center gap-2.5">
-          <dt className="text-slate-600">{k}</dt>
-          <dd className="h-1.5 overflow-hidden rounded-full bg-slate-100">
-            <span className="block h-full rounded-full bg-indigo-600" style={{ width: `${(v / 495) * 100}%` }} />
-          </dd>
-          <dd className="text-right tabular-nums">{v}</dd>
+const fmtN = (n?: number) => (n ?? 0).toLocaleString('vi-VN');
+
+/** Thẻ kho đề: số đề, số câu Nghe/Đọc thật trong ngân hàng */
+const ScoreCard: React.FC = () => {
+  const { data: o } = useOverview();
+  const { data: parts = [] } = usePartsInfo('TOEIC');
+  const sum = (skill: string) => parts.filter((p) => p.skill === skill).reduce((a, p) => a + (p.bankCount ?? 0), 0);
+  const rows: [string, number][] = [
+    ['Listening', sum('Listening')],
+    ['Reading', sum('Reading')],
+  ];
+  const max = Math.max(1, ...rows.map(([, v]) => v));
+  return (
+    <div className={cn(card, 'w-[244px] p-4')}>
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <p className="text-[13px] font-semibold">Kho đề TOEIC</p>
+          <p className="text-[11px] text-slate-500">Full test 200 câu, có lời giải</p>
         </div>
-      ))}
-    </dl>
-    <p className="mt-3 border-t border-slate-100 pt-2.5 text-[11px] font-medium text-emerald-700">+70 điểm so với Test 2</p>
-  </div>
-);
-
-/** Thẻ kết quả bài xếp lớp mẫu */
-const PlacementCard: React.FC = () => (
-  <div className={cn(card, 'w-[244px] p-4')}>
-    <p className="text-[13px] font-semibold">Kết quả xếp lớp</p>
-    <p className="text-[11px] text-slate-500">40 câu · làm trong 14 phút</p>
-    <div className="mt-3 flex items-end justify-between">
-      <p className="leading-none">
-        <span className="text-[11px] text-slate-500">Hiện tại </span>
-        <span className="text-[1.45rem] font-semibold tabular-nums">545</span>
-      </p>
-      <p className="text-right text-[12px] leading-tight">
-        <span className="block text-slate-500">Mục tiêu</span>
-        <span className="font-semibold tabular-nums">750</span>
-      </p>
-    </div>
-    <div className="mt-2.5 h-1.5 overflow-hidden rounded-full bg-slate-100">
-      <span className="block h-full w-[72%] rounded-full bg-indigo-600" />
-    </div>
-    <p className="mt-3 border-t border-slate-100 pt-2.5 text-[11px] text-slate-600">
-      Lộ trình gợi ý <b className="font-semibold text-slate-900">14 tuần</b> · 45 phút/ngày
-    </p>
-  </div>
-);
-
-/** Thẻ nhỏ thứ hai ở mép phải vòm */
-const MiniCard: React.FC<{ variant: AsideVariant }> = ({ variant }) =>
-  variant === 'register' ? (
-    <div className={cn(card, 'w-[176px] px-3.5 py-3')}>
-      <p className="text-[11px] text-slate-500">Cần ưu tiên</p>
-      <p className="mt-0.5 text-[13px] font-semibold">Part 3 · đúng 52%</p>
-    </div>
-  ) : (
-    <div className={cn(card, 'w-[176px] px-3.5 py-3')}>
-      <p className="text-[11px] text-slate-500">Hôm nay</p>
-      <p className="mt-0.5 text-[13px] font-semibold">3/4 bài · 38 phút</p>
-      <div className="mt-2 grid grid-cols-4 gap-1">
-        {[1, 2, 3, 4].map((i) => (
-          <span key={i} className={cn('h-1 rounded-full', i <= 3 ? 'bg-indigo-600' : 'bg-slate-200')} />
-        ))}
+        <p className="text-right leading-none">
+          <span className="text-[1.45rem] font-semibold tabular-nums">{fmtN(o?.tests)}</span>
+          <span className="text-[11px] text-slate-500"> đề</span>
+        </p>
       </div>
+      <dl className="mt-3 space-y-1.5 text-[12px]">
+        {rows.map(([k, v]) => (
+          <div key={k} className="grid grid-cols-[58px_1fr_44px] items-center gap-2">
+            <dt className="text-slate-600">{k}</dt>
+            <dd className="h-1.5 overflow-hidden rounded-full bg-slate-100">
+              <span className="block h-full rounded-full bg-indigo-600" style={{ width: `${(v / max) * 100}%` }} />
+            </dd>
+            <dd className="text-right tabular-nums text-slate-700">{fmtN(v)}</dd>
+          </div>
+        ))}
+      </dl>
+      <p className="mt-3 border-t border-slate-100 pt-2.5 text-[11px] font-medium text-emerald-700">{fmtN(o?.questions)} câu hỏi có đáp án</p>
     </div>
   );
+};
+
+/** Thẻ học liệu sẵn có (số liệu thật) */
+const PlacementCard: React.FC = () => {
+  const { data: o } = useOverview();
+  return (
+    <div className={cn(card, 'w-[244px] p-4')}>
+      <p className="text-[13px] font-semibold">Học liệu sẵn có</p>
+      <p className="text-[11px] text-slate-500">Mở ngay sau khi tạo tài khoản</p>
+      <dl className="mt-3 space-y-1.5 text-[12px]">
+        {[
+          ['Bài học video', o?.lessons],
+          ['Từ vựng có phiên âm', o?.words],
+          ['Bài đọc / bài nghe', o?.passages],
+        ].map(([k, v]) => (
+          <div key={k as string} className="flex items-center justify-between">
+            <dt className="text-slate-600">{k as string}</dt>
+            <dd className="font-semibold tabular-nums">{fmtN(v as number)}</dd>
+          </div>
+        ))}
+      </dl>
+      <p className="mt-3 border-t border-slate-100 pt-2.5 text-[11px] text-slate-600">Lộ trình 3 chặng sinh từ kết quả bài xếp lớp</p>
+    </div>
+  );
+};
+
+/** Thẻ nhỏ thứ hai ở mép phải vòm: số câu luyện của một Part (thật) */
+const MiniCard: React.FC<{ variant: AsideVariant }> = ({ variant }) => {
+  const { data: parts = [] } = usePartsInfo('TOEIC');
+  const p = parts.find((x) => x.id === (variant === 'register' ? 'PART_3' : 'PART_5'));
+  if (!p?.bankCount) return null;
+  return (
+    <div className={cn(card, 'w-[176px] px-3.5 py-3')}>
+      <p className="text-[11px] text-slate-500">Luyện {p.name}</p>
+      <p className="mt-0.5 text-[13px] font-semibold">{fmtN(p.bankCount)} câu · {p.nameVi}</p>
+    </div>
+  );
+};
 
 /** Cảm nhận học viên gọn ở chân khối */
 const Quote: React.FC<{ variant: AsideVariant }> = ({ variant }) => {

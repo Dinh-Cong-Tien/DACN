@@ -20,9 +20,9 @@ const TILTS = ['tilt-1', 'tilt-2', 'tilt-3', 'tilt-2', 'tilt-1'];
 export const StudentAchievementsPage: React.FC = () => {
   useDocumentTitle('Huy hiệu thành tích');
   const [tab, setTab] = useState('all');
-  const { data: MOCK_ACHIEVEMENTS = [] } = useAchievements();
-  const earned = MOCK_ACHIEVEMENTS.filter((a) => a.earned);
-  const list = MOCK_ACHIEVEMENTS.filter((a) => (tab === 'all' ? true : tab === 'earned' ? a.earned : !a.earned));
+  const { data: achievements = [] } = useAchievements();
+  const earned = achievements.filter((a) => a.earned);
+  const list = achievements.filter((a) => (tab === 'all' ? true : tab === 'earned' ? a.earned : !a.earned));
 
   return (
     <div className="space-y-6">
@@ -39,19 +39,19 @@ export const StudentAchievementsPage: React.FC = () => {
       <Card hard tone="ink" className="relative overflow-hidden animate-fade-up">
         <Doodles tone="light" className="opacity-40" />
         <div className="relative flex flex-col sm:flex-row items-center gap-6">
-          <RingProgress value={(earned.length / Math.max(1, MOCK_ACHIEVEMENTS.length)) * 100} size={128} stroke={12} tone="amber" trackClass="stroke-white/15">
+          <RingProgress value={(earned.length / Math.max(1, achievements.length)) * 100} size={128} stroke={12} tone="amber" trackClass="stroke-white/15">
             <div className="text-center">
               <p className="font-display text-3xl font-extrabold text-white">{earned.length}</p>
-              <p className="text-[10px] font-bold text-slate-400 uppercase">/ {MOCK_ACHIEVEMENTS.length}</p>
+              <p className="text-[10px] font-bold text-slate-400 uppercase">/ {achievements.length}</p>
             </div>
           </RingProgress>
           <div className="flex-1 text-center sm:text-left">
             <h2 className="font-display text-2xl font-extrabold text-white">Bạn đã mở khoá {earned.length} huy hiệu</h2>
-            <p className="text-sm text-slate-300 mt-1">Còn {MOCK_ACHIEVEMENTS.length - earned.length} huy hiệu đang chờ. {earned.length ? `Huy hiệu gần nhất: ${earned[earned.length - 1].title}.` : 'Hoàn thành bài thi đầu tiên để nhận huy hiệu.'}</p>
+            <p className="text-sm text-slate-300 mt-1">Còn {achievements.length - earned.length} huy hiệu đang chờ. {earned.length ? `Huy hiệu gần nhất: ${earned[earned.length - 1].title}.` : 'Hoàn thành bài thi đầu tiên để nhận huy hiệu.'}</p>
             <div className="flex flex-wrap gap-2 mt-4 justify-center sm:justify-start">
               {(Object.keys(RARITY) as Achievement['rarity'][]).map((r, i) => (
                 <span key={r} className={cn('sticker !text-[10px] !py-1', TILTS[i], r === 'LEGENDARY' && '!bg-amber-300', r === 'EPIC' && '!bg-violet-200', r === 'RARE' && '!bg-sky-200')}>
-                  {RARITY[r].label}: {MOCK_ACHIEVEMENTS.filter((a) => a.rarity === r && a.earned).length}/{MOCK_ACHIEVEMENTS.filter((a) => a.rarity === r).length}
+                  {RARITY[r].label}: {achievements.filter((a) => a.rarity === r && a.earned).length}/{achievements.filter((a) => a.rarity === r).length}
                 </span>
               ))}
             </div>
@@ -64,9 +64,9 @@ export const StudentAchievementsPage: React.FC = () => {
         value={tab}
         onChange={setTab}
         items={[
-          { key: 'all', label: 'Tất cả', count: MOCK_ACHIEVEMENTS.length },
+          { key: 'all', label: 'Tất cả', count: achievements.length },
           { key: 'earned', label: 'Đã đạt', count: earned.length },
-          { key: 'progress', label: 'Đang tiến hành', count: MOCK_ACHIEVEMENTS.length - earned.length },
+          { key: 'progress', label: 'Đang tiến hành', count: achievements.length - earned.length },
         ]}
       />
 

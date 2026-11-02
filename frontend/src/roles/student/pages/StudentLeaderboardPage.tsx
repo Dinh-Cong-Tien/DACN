@@ -32,10 +32,10 @@ export const StudentLeaderboardPage: React.FC = () => {
   useDocumentTitle('Bảng vinh danh');
   const [scope, setScope] = useState<'week' | 'month' | 'all'>('week');
   const { data, isLoading } = useLeaderboard(scope);
-  const MOCK_LEADERBOARD = data?.entries ?? [];
-  const me = MOCK_LEADERBOARD.find((e) => e.isMe);
-  const rest = MOCK_LEADERBOARD.filter((e) => e.rank > 3);
-  const byRank = (r: number) => MOCK_LEADERBOARD.find((e) => e.rank === r) as LeaderboardEntry | undefined;
+  const leaderboard = data?.entries ?? [];
+  const me = leaderboard.find((e) => e.isMe);
+  const rest = leaderboard.filter((e) => e.rank > 3);
+  const byRank = (r: number) => leaderboard.find((e) => e.rank === r) as LeaderboardEntry | undefined;
 
   return (
     <div className="space-y-6">
@@ -55,7 +55,7 @@ export const StudentLeaderboardPage: React.FC = () => {
           <Card hard tone="cream" className="relative overflow-hidden" padding="lg">
             <Doodles className="opacity-40" />
             <div className="relative flex items-end justify-center gap-3 sm:gap-6">
-              {MOCK_LEADERBOARD.length === 0 && <p className="py-10 text-sm text-slate-600">{isLoading ? 'Đang tải…' : 'Chưa có ai ghi điểm trong khoảng thời gian này. Học và làm bài để lên bảng!'}</p>}
+              {leaderboard.length === 0 && <p className="py-10 text-sm text-slate-600">{isLoading ? 'Đang tải…' : 'Chưa có ai ghi điểm trong khoảng thời gian này. Học và làm bài để lên bảng!'}</p>}
               {PODIUM.map((p, i) => {
                 const e = byRank(p.rank);
                 if (!e) return null;
@@ -94,7 +94,7 @@ export const StudentLeaderboardPage: React.FC = () => {
                         </Badge>
                       )}
                     </p>
-                    <p className="text-[11px] text-slate-500">Mục tiêu {e.target}</p>
+                    {e.target && <p className="text-[11px] text-slate-500">Mục tiêu {e.target}</p>}
                   </div>
                   <span className="hidden sm:inline-flex items-center gap-1 text-xs font-bold text-violet-600">
                     <Flame className="w-3.5 h-3.5 fill-violet-500" /> {e.streak}

@@ -28,13 +28,13 @@ export const HeadClassesPage: React.FC = () => {
   useDocumentTitle('Lớp học bộ môn');
   const classesQ = useHeadClasses();
   const classes = classesQ.data ?? EMPTY;
-  const MOCK_TEACHERS = useHeadTeachers().data ?? [];
+  const teacherList = useHeadTeachers().data ?? [];
   const refresh = useHeadInvalidate();
   const today = new Date();
   const upcoming = useHeadSchedule(ymdLocal(today), ymdLocal(addDaysLocal(today, 14))).data?.sessions ?? [];
-  const teacherByName = (name: string) => MOCK_TEACHERS.find((t) => t.name === name);
+  const teacherByName = (name: string) => teacherList.find((t) => t.name === name);
   /** null = GV không còn trong bộ môn / bị xoá; undefined = đang tải */
-  const statusOf = (c: HeadClass) => (MOCK_TEACHERS.length ? (MOCK_TEACHERS.find((t) => t.id === c.teacherId)?.status ?? null) : undefined);
+  const statusOf = (c: HeadClass) => (teacherList.length ? (teacherList.find((t) => t.id === c.teacherId)?.status ?? null) : undefined);
   const [saving, setSaving] = useState(false);
   const [exam, setExam] = useState<'ALL' | ExamType>('ALL');
   const [teacher, setTeacher] = useState('ALL');
@@ -52,7 +52,7 @@ export const HeadClassesPage: React.FC = () => {
       (c.name.toLowerCase().includes(q.toLowerCase()) || c.code.toLowerCase().includes(q.toLowerCase()))
   );
   const issues = classes.filter((c) => classIssue(c, statusOf(c))).length;
-  const activeTeachers = MOCK_TEACHERS.filter((t) => t.status === 'ACTIVE');
+  const activeTeachers = teacherList.filter((t) => t.status === 'ACTIVE');
 
   const create = async () => {
     if (!form.name.trim()) return setError('Vui lòng nhập tên lớp');
@@ -74,7 +74,7 @@ export const HeadClassesPage: React.FC = () => {
   };
 
   const reassign = async (c: HeadClass, teacherId: string) => {
-    const name = MOCK_TEACHERS.find((t) => t.id === teacherId)?.name ?? '';
+    const name = teacherList.find((t) => t.id === teacherId)?.name ?? '';
     try {
       await headApi.updateClass(c.id, { teacherId });
       toast.success('Đã phân công lại', `${c.name} → ${name}`);
@@ -119,7 +119,7 @@ export const HeadClassesPage: React.FC = () => {
           </select>
           <select value={teacher} onChange={(e) => setTeacher(e.target.value)} className={cn(inputCls, 'max-w-[220px]')} aria-label="Lọc theo giáo viên">
             <option value="ALL">Tất cả giáo viên</option>
-            {MOCK_TEACHERS.map((t) => (
+            {teacherList.map((t) => (
               <option key={t.id} value={t.name}>
                 {t.name}
               </option>

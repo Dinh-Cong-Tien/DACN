@@ -1,3 +1,4 @@
+import { academicTerm } from '@/shared/constants/staff';
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { AlarmClock, CalendarDays, ChevronRight, ClipboardCheck, ClipboardList, Clock, FileWarning, MapPin, Megaphone, NotebookPen, PenTool, School, UserRoundX, Users } from 'lucide-react';
@@ -54,6 +55,8 @@ export const TeacherDashboardPage: React.FC = () => {
   const watch = [...data.atRisk].sort((a, b) => a.completion - b.completion);
   const totalStudents = data.stats.students;
   const weekCount = data.stats.sessionsThisWeek;
+  // Buổi sắp dạy trong tuần chưa ghi giáo án (topic trống)
+  const noPlan = sessions.filter((s) => s.status === 'UPCOMING' && s.date >= today && weekDays.includes(s.date) && !s.topic?.trim());
   const className = (id: string, fallback?: string) => classes.find((c) => c.id === id)?.name ?? fallback ?? '';
 
   const todos: { icon: React.ElementType; tone: Tone; text: string; to: string; cta: string }[] = [
@@ -61,14 +64,14 @@ export const TeacherDashboardPage: React.FC = () => {
     ...(pendingCount ? [{ icon: PenTool, tone: 'violet' as Tone, text: `Chấm ${pendingCount} bài Viết / Nói (${lateCount} bài nộp muộn)`, to: '/teacher/grading', cta: 'Chấm bài' }] : []),
     ...(overdueOpen.length ? [{ icon: FileWarning, tone: 'rose' as Tone, text: `${overdueOpen.length} bài tập đã quá hạn nhưng chưa đóng`, to: '/teacher/assignments?status=OPEN', cta: 'Xem' }] : []),
     ...(watch.length ? [{ icon: UserRoundX, tone: 'amber' as Tone, text: watch.some((s) => s.status === 'RISK') ? `Liên hệ ${watch.filter((s) => s.status === 'RISK').length} học viên có nguy cơ bỏ học` : `Nhắc ${watch.length} học viên cần theo dõi`, to: '/teacher/students?filter=watch', cta: 'Hồ sơ' }] : []),
-    { icon: NotebookPen, tone: 'sky' as Tone, text: 'Soạn giáo án cho các buổi dạy tuần này', to: '/teacher/schedule', cta: 'Lịch dạy' },
+    ...(noPlan.length ? [{ icon: NotebookPen, tone: 'sky' as Tone, text: `Soạn giáo án cho ${noPlan.length} buổi dạy tuần này chưa có nội dung`, to: '/teacher/schedule', cta: 'Lịch dạy' }] : []),
   ];
 
   return (
     <div className="space-y-6">
       <div>
         <p className="text-[12px] font-bold uppercase tracking-[0.16em] text-amber-600">
-          {WEEKDAY[now.getDay()]}, {dm(today)}/{now.getFullYear()} · Học kỳ 1, năm học 2026–2027
+          {WEEKDAY[now.getDay()]}, {dm(today)}/{now.getFullYear()} · {academicTerm(now).label}
         </p>
         <h1 className="mt-1.5 font-display text-[2rem] font-extrabold leading-[1.12] tracking-tight text-slate-900 md:text-[2.6rem]"><GradientTail text="Tổng quan giảng dạy" /></h1>
         <p className="mt-1 text-[15px] text-slate-500">
@@ -130,6 +133,7 @@ export const TeacherDashboardPage: React.FC = () => {
         {/* Việc cần làm */}
         <Panel title="Việc cần làm hôm nay" sub={`${todos.length} việc`} icon={ClipboardList} tone="indigo" flush>
           <ul className="divide-y divide-slate-100">
+            {!todos.length && <li className="px-5 py-6 text-center text-sm text-slate-500">Không có việc nào cần xử lý hôm nay.</li>}
             {todos.map((t) => (
               <li key={t.text} className="flex items-center gap-3 px-5 py-3">
                 <IconTile icon={t.icon} tone={t.tone} size="sm" />

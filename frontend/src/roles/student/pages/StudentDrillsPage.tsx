@@ -32,7 +32,7 @@ export const StudentDrillsPage: React.FC = () => {
   const qc = useQueryClient();
   const { data: allMistakes = [] } = useMistakes({ resolved: false });
   const { data: progress } = useProgress();
-  const MOCK_MISTAKES = allMistakes;
+  const mistakeList = allMistakes;
   const RADAR_SKILLS = progress?.radar ?? [];
   const SKILL_SCORES = progress?.skillScores ?? [];
 
@@ -136,13 +136,13 @@ export const StudentDrillsPage: React.FC = () => {
                 <p className="text-xs font-extrabold uppercase tracking-wider text-slate-500 mb-2">Nhóm nguyên nhân</p>
                 <div className="flex flex-wrap gap-2">
                   <Chip active={cause === 'ALL'} onClick={() => setCause('ALL')}>
-                    Tất cả ({MOCK_MISTAKES.filter((m) => !m.isResolved).length})
+                    Tất cả ({mistakeList.filter((m) => !m.isResolved).length})
                   </Chip>
                   {(Object.keys(MISTAKE_CAUSE_LABEL) as MistakeCause[])
-                    .filter((c) => MOCK_MISTAKES.some((m) => !m.isResolved && m.cause === c))
+                    .filter((c) => mistakeList.some((m) => !m.isResolved && m.cause === c))
                     .map((c) => (
                       <Chip key={c} active={cause === c} onClick={() => setCause(c)} tone={MISTAKE_CAUSE_LABEL[c].tone}>
-                        {MISTAKE_CAUSE_LABEL[c].label} ({MOCK_MISTAKES.filter((m) => !m.isResolved && m.cause === c).length})
+                        {MISTAKE_CAUSE_LABEL[c].label} ({mistakeList.filter((m) => !m.isResolved && m.cause === c).length})
                       </Chip>
                     ))}
                 </div>

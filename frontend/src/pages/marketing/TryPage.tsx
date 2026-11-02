@@ -5,9 +5,9 @@ import { ArrowRight, CheckCircle2, Clock, Headphones, PenLine, Sparkles, ShieldC
 import { useDocumentTitle } from '@/shared/hooks';
 import { useAuthStore } from '@/shared/stores/authStore';
 import { PracticeEngine } from '@/engines';
-import { Button, Card, Badge, Avatar } from '@/shared/components/ui';
+import { Button, Card, Badge } from '@/shared/components/ui';
 import { Reveal, Doodles } from '@/shared/components/motion';
-import { Img, PHOTOS, pravatar } from '@/shared/components/media/Img';
+import { Img, PHOTOS } from '@/shared/components/media/Img';
 import { usePracticeSet } from '@/shared/api/catalog';
 
 type Pack = 'TOEIC' | 'VSTEP';
@@ -43,7 +43,7 @@ export const TryPage: React.FC = () => {
               Tạo tài khoản miễn phí để lưu kết quả này, làm bài xếp lớp 15 phút và nhận lộ trình học theo ngày thi của bạn.
             </p>
             <ul className="space-y-2.5">
-              {['Lưu các câu sai vào Sổ tay lỗi sai, nhắc ôn đúng lúc', 'Lộ trình 3 chặng theo ngày thi và mục tiêu điểm', '3 đề thi thử chuẩn ETS mỗi tuần, hoàn toàn miễn phí'].map((t) => (
+              {['Lưu các câu sai vào Sổ tay lỗi sai, nhắc ôn đúng lúc', 'Lộ trình 3 chặng theo ngày thi và mục tiêu điểm', 'Thi thử full test, có điểm quy đổi và lời giải từng câu'].map((t) => (
                 <li key={t} className="flex items-center gap-3 text-sm text-slate-700">
                   <CheckCircle2 className="w-5 h-5 text-indigo-600 shrink-0" /> {t}
                 </li>
@@ -118,16 +118,6 @@ export const TryPage: React.FC = () => {
             Học thử <span className="mark-coral mark">5 phút</span>, xem bạn hợp cách học này không.
           </h1>
           <p className="text-lg text-slate-600 leading-relaxed">Chọn một bộ câu hỏi mẫu. Mỗi câu trả lời xong sẽ hiện ngay đáp án và lời giải, đúng như khi học thật. Không cần đăng ký, không cần thẻ.</p>
-          <div className="flex items-center gap-3 text-sm text-slate-500">
-            <div className="flex -space-x-2">
-              {[21, 22, 23, 24].map((n) => (
-                <Avatar key={n} name={`HV ${n}`} src={pravatar(n)} size="sm" ring />
-              ))}
-            </div>
-            <span>
-              <b className="text-slate-900">1.240</b> người đã học thử hôm nay
-            </span>
-          </div>
         </div>
 
         <div className="grid md:grid-cols-2 gap-6 mt-12">
@@ -143,9 +133,9 @@ export const TryPage: React.FC = () => {
             },
             {
               key: 'VSTEP' as Pack,
-              title: 'VSTEP — Bài đọc mẫu B1–B2',
-              desc: 'Một bài đọc về urban farming với 3 câu: ý chính, từ vựng trong ngữ cảnh và chi tiết.',
-              meta: ['3 câu', '≈ 4 phút', 'Đọc hiểu'],
+              title: 'VSTEP — Đọc hiểu',
+              desc: 'Câu đọc hiểu VSTEP chọn ngẫu nhiên từ ngân hàng câu hỏi: ý chính, từ vựng trong ngữ cảnh và chi tiết.',
+              meta: ['5 câu', '≈ 5 phút', 'Đọc hiểu'],
               icon: <PenLine className="w-5 h-5" />,
               photo: PHOTOS.writing,
               tone: 'bg-violet-500',

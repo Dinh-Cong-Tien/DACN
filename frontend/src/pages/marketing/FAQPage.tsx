@@ -2,7 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { Search, MessageCircle, ArrowRight } from 'lucide-react';
 import { Accordion, Input, SectionTitle, Chip, EmptyState, Button } from '@/shared/components/ui';
 import { Reveal } from '@/shared/components/motion';
-import { Img, PHOTOS, pravatar } from '@/shared/components/media/Img';
+import { Img, PHOTOS } from '@/shared/components/media/Img';
 import { useFaqs } from '@/shared/api/cms';
 import { SkeletonCard } from '@/shared/components/ui';
 import { useDocumentTitle } from '@/shared/hooks';
@@ -36,13 +36,8 @@ export const FAQPage: React.FC = () => {
           <Img src={PHOTOS.team} alt="Đội ngũ hỗ trợ" ratio="4/3" fallbackClass="bg-amber-200" />
         </div>
         <div className="bg-white rounded-2xl border-2 border-slate-900 shadow-hard p-5 space-y-3">
-          <div className="flex -space-x-2">
-            {[43, 44, 42].map((n) => (
-              <img key={n} src={pravatar(n)} alt="" className="w-9 h-9 rounded-full border-2 border-white object-cover" />
-            ))}
-          </div>
           <p className="font-display font-extrabold text-slate-900">Chưa thấy câu trả lời?</p>
-          <p className="text-sm text-slate-600">Đội hỗ trợ trả lời trong 2 giờ, từ 8:00–22:00 mỗi ngày kể cả cuối tuần.</p>
+          <p className="text-sm text-slate-600">Gửi câu hỏi cho đội hỗ trợ (8:00–22:00 mỗi ngày), phản hồi gửi về email của bạn.</p>
           <Button to="/contact" variant="gradient" size="sm" fullWidth leftIcon={<MessageCircle className="w-4 h-4" />} rightIcon={<ArrowRight className="w-4 h-4" />}>
             Gửi câu hỏi
           </Button>

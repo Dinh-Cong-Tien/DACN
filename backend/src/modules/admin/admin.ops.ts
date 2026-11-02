@@ -456,7 +456,8 @@ opsRouter.get(
       prisma.user.findMany({ where: { deletedAt: null, createdAt: { gte: ms[0].start } }, select: { createdAt: true } }),
       prisma.examAttempt.findMany({ where: { createdAt: { gte: from }, test: { isNot: null } }, select: { test: { select: { examType: true } } } }),
       prisma.user.groupBy({ by: ['role'], where: { deletedAt: null }, _count: true }),
-      prisma.examAttempt.findMany({ where: { createdAt: { gte: from }, clientInfo: { not: Prisma.DbNull } }, select: { clientInfo: true } }),
+      // Thiết bị = user-agent lưu ở mỗi lần đăng nhập (refresh token), không suy đoán
+      prisma.userToken.findMany({ where: { type: 'REFRESH', createdAt: { gte: from }, userAgent: { not: null } }, select: { userAgent: true } }),
     ]);
     const series = Array.from({ length: days }, (_, i) => {
       const d = dayStart(days - 1 - i);
@@ -465,7 +466,8 @@ opsRouter.get(
       return { date: d.toISOString().slice(0, 10), label: days <= 7 ? ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'][d.getUTCDay()] : d.toISOString().slice(5, 10), active: row?._count.userId ?? 0, prevActive: prev?._count.userId ?? 0, minutes: row?._sum.minutes ?? 0, questions: row?._sum.questionsAnswered ?? 0 };
     });
     const sum = (xs: number[]) => xs.reduce((a, b) => a + b, 0);
-    const change = (a: number, b: number) => (b ? Math.round(((a - b) / b) * 100) : 0);
+    // Kỳ trước không có số liệu → null (không bịa 0%)
+    const change = (a: number, b: number): number | null => (b ? Math.round(((a - b) / b) * 100) : null);
     const active = new Set((await prisma.dailyActivity.findMany({ where: { activityDate: { gte: from } }, select: { userId: true } })).map((r) => r.userId)).size;
     const prevActiveN = new Set((await prisma.dailyActivity.findMany({ where: { activityDate: { gte: prevFrom, lt: from } }, select: { userId: true } })).map((r) => r.userId)).size;
     const minutes = sum(series.map((s) => s.minutes));
@@ -474,7 +476,7 @@ opsRouter.get(
     const toeic = attemptsByExam.filter((a) => a.test?.examType === 'TOEIC').length;
     const devices = { desktop: 0, mobile: 0, tablet: 0 };
     for (const r of devicesRaw) {
-      const ua = String((r.clientInfo as { userAgent?: string } | null)?.userAgent ?? '');
+      const ua = r.userAgent ?? '';
       if (!ua) continue;
       if (/ipad|tablet/i.test(ua)) devices.tablet++;
       else if (/mobi|android|iphone/i.test(ua)) devices.mobile++;
@@ -485,7 +487,7 @@ opsRouter.get(
         activeUsers: { value: active, change: change(active, prevActiveN) },
         studyMinutes: { value: minutes, change: change(minutes, prevMinutes) },
         attempts: { value: attempts, change: change(attempts, prevAttempts) },
-        avgSessionMin: { value: sessions ? Math.round(minutes / sessions) : 0, change: 0 },
+        avgSessionMin: { value: sessions ? Math.round(minutes / sessions) : 0, change: null },
       },
       daily: series,
       signupsMonthly: { labels: ms.map((m) => m.label), values: ms.map((m) => signups.filter((s) => s.createdAt >= m.start && s.createdAt < m.end).length) },
@@ -508,17 +510,22 @@ opsRouter.get(
       dbOk = false;
     }
     const dbLatency = Math.round(performance.now() - t0);
+    // Độ trễ API = độ trễ vòng sự kiện Node đo thật (thời gian chờ tới lượt xử lý tiếp theo)
+    const t1 = performance.now();
+    await new Promise((r) => setImmediate(r));
+    const loopLagMs = Math.round(performance.now() - t1);
     const [info] = dbOk
-      ? await prisma.$queryRaw<{ version: string; size: string; conns: number; tables: number }[]>`
+      ? await prisma.$queryRaw<{ version: string; size: string; conns: number; tables: number; max_conns: number }[]>`
           SELECT version() AS version, pg_size_pretty(pg_database_size(current_database())) AS size,
                  (SELECT count(*)::int FROM pg_stat_activity WHERE datname = current_database()) AS conns,
+                 current_setting('max_connections')::int AS max_conns,
                  (SELECT count(*)::int FROM information_schema.tables WHERE table_schema = 'public' AND table_type = 'BASE TABLE') AS tables`
       : [];
     const mem = process.memoryUsage();
     const uptimeSec = Math.round((Date.now() - startedAt) / 1000);
     const fmtUp = (s: number) => (s >= 86400 ? `${Math.floor(s / 86400)} ngày ${Math.floor((s % 86400) / 3600)} giờ` : s >= 3600 ? `${Math.floor(s / 3600)} giờ ${Math.floor((s % 3600) / 60)} phút` : `${Math.floor(s / 60)} phút`);
     const services = [
-      { name: 'API Server', status: 'UP' as const, latencyMs: 0, uptime: fmtUp(uptimeSec), description: `Express REST API · Node ${process.version}` },
+      { name: 'API Server', status: (loopLagMs > 200 ? 'DEGRADED' : 'UP') as 'UP' | 'DEGRADED', latencyMs: loopLagMs, uptime: fmtUp(uptimeSec), description: `Express REST API · Node ${process.version} · độ trễ vòng sự kiện` },
       { name: 'PostgreSQL', status: (dbOk ? (dbLatency > 200 ? 'DEGRADED' : 'UP') : 'DOWN') as 'UP' | 'DEGRADED' | 'DOWN', latencyMs: dbLatency, uptime: dbOk ? 'đang kết nối' : 'mất kết nối', description: info ? `${info.version.split(' ').slice(0, 2).join(' ')} · ${info.tables} bảng · ${info.size} · ${info.conns} kết nối` : 'Không kết nối được' },
     ];
     const lastAudit = await prisma.auditLog.findFirst({ orderBy: { createdAt: 'desc' }, select: { createdAt: true } }).catch(() => null);
@@ -527,7 +534,7 @@ opsRouter.get(
       checkedAt: new Date().toISOString(),
       process: { uptimeSec, rssMb: Math.round(mem.rss / 1048576), heapUsedMb: Math.round(mem.heapUsed / 1048576), heapTotalMb: Math.round(mem.heapTotal / 1048576), node: process.version, pid: process.pid },
       host: { platform: `${os.platform()} ${os.release()}`, cpus: os.cpus().length, load: os.loadavg(), totalMemMb: Math.round(os.totalmem() / 1048576), freeMemMb: Math.round(os.freemem() / 1048576) },
-      database: info ? { version: info.version, size: info.size, connections: info.conns, tables: info.tables, latencyMs: dbLatency } : null,
+      database: info ? { version: info.version, size: info.size, connections: info.conns, maxConnections: info.max_conns, tables: info.tables, latencyMs: dbLatency } : null,
       lastActivityAt: lastAudit?.createdAt.toISOString(),
     };
   })

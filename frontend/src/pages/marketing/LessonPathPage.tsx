@@ -45,8 +45,8 @@ const PathView: React.FC<{ course: Course }> = ({ course }) => {
   const copy = copyOf(course);
   // Học song song: luôn gợi ý 2 khoá kiến thức chung; khoá kỹ năng gợi ý thêm các khoá kỹ năng khác, không gợi ý khoá nền tảng kỳ thi
   const general = (c: Course) => c.category === 'GRAMMAR' || c.category === 'VOCABULARY';
-  const { data: MOCK_COURSES = [] } = useCourses();
-  const others = MOCK_COURSES.filter((c) => c.id !== course.id && (general(c) || (course.category === 'SKILL' ? c.category === 'SKILL' : general(course) && c.category === 'FOUNDATION')));
+  const { data: courseList = [] } = useCourses();
+  const others = courseList.filter((c) => c.id !== course.id && (general(c) || (course.category === 'SKILL' ? c.category === 'SKILL' : general(course) && c.category === 'FOUNDATION')));
   useDocumentTitle(course.title);
   const gate = useGate();
   const isStudent = useAuthStore((s) => s.user?.role === 'STUDENT');

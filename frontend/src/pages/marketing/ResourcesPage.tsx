@@ -27,6 +27,7 @@ export const ResourcesPage: React.FC = () => {
     return RESOURCES.filter((r) => (cat === 'Tất cả' || r.category === cat) && (!key || r.title.toLowerCase().includes(key))).sort((a, b) => b.downloads - a.downloads);
   }, [cat, q, RESOURCES]);
   const total = RESOURCES.reduce((a, r) => a + r.downloads, 0);
+  const updated = RESOURCES.map((r) => r.updatedAt ?? '').sort().pop();
 
   return (
     <div className="bg-page">
@@ -34,11 +35,11 @@ export const ResourcesPage: React.FC = () => {
         crumbs={[{ label: 'Trang chủ', to: '/' }, { label: 'Công cụ' }, { label: 'Kho tài liệu' }]}
         eyebrow="Tài liệu miễn phí"
         title={<>Kho <Accent>tài liệu</Accent> ôn thi</>}
-        lead="Tóm tắt ngữ pháp, từ vựng theo chủ đề, bài mẫu Writing và audio luyện nghe do giáo viên OrbiLingo biên soạn. Tải miễn phí, in ra học được."
+        lead="Tài liệu tạo trực tiếp từ dữ liệu học tập trên hệ thống: từ vựng theo chủ đề, tóm tắt ngữ pháp, bảng quy đổi điểm, lời thoại bài nghe và đề Viết/Nói. Mở ra là in được."
         facts={[
           { value: String(RESOURCES.length), label: 'Tài liệu' },
           { value: formatNumber(total), label: 'Lượt tải' },
-          { value: '09/2026', label: 'Cập nhật gần nhất' },
+          { value: updated ? `${updated.slice(5, 7)}/${updated.slice(0, 4)}` : '—', label: 'Cập nhật gần nhất' },
         ]}
       />
 
@@ -91,7 +92,8 @@ export const ResourcesPage: React.FC = () => {
                         <p className="mt-0.5 text-[14px] text-slate-600">{r.description}</p>
                         <p className="mt-1.5 text-[12px] text-slate-500">
                           {r.category} · {r.pages ? `${r.pages} trang · ` : ''}
-                          {r.size} · {formatNumber(r.downloads)} lượt tải
+                          {r.size ? `${r.size} · ` : ''}
+                          {formatNumber(r.downloads)} lượt tải
                         </p>
                       </div>
                       <button

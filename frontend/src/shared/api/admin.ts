@@ -28,7 +28,7 @@ export interface AdminDashboard {
   recentUsers: { id: string; fullName: string; email: string; role: string; avatarUrl?: string | null; createdAt: string }[];
 }
 export interface AdminAnalytics {
-  figures: Record<'activeUsers' | 'studyMinutes' | 'attempts' | 'avgSessionMin', { value: number; change: number }>;
+  figures: Record<'activeUsers' | 'studyMinutes' | 'attempts' | 'avgSessionMin', { value: number; change: number | null }>;
   daily: { date: string; label: string; active: number; prevActive: number; minutes: number; questions: number }[];
   signupsMonthly: { labels: string[]; values: number[] };
   attemptsByExam: { TOEIC: number; VSTEP: number };
@@ -40,7 +40,7 @@ export interface SystemInfo {
   checkedAt: string;
   process: { uptimeSec: number; rssMb: number; heapUsedMb: number; heapTotalMb: number; node: string; pid: number };
   host: { platform: string; cpus: number; load: number[]; totalMemMb: number; freeMemMb: number };
-  database: { version: string; size: string; connections: number; tables: number; latencyMs: number } | null;
+  database: { version: string; size: string; connections: number; maxConnections?: number; tables: number; latencyMs: number } | null;
   lastActivityAt?: string;
 }
 export type AdminTxn = PaymentTxn & { orderCode: string; avatarUrl?: string; planCode: string; planName: string; discount: number; paidAt?: string; refundedAt?: string; refundReason?: string };
