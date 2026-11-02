@@ -8,6 +8,7 @@ import { Column, Modal, Select } from '@/shared/components/ui';
 import { cn } from '@/shared/utils';
 import { Figures, Panel, Status, TPageHead } from '@/roles/teacher/components/TeacherKit';
 import { CrudEditor, QuestionRenderer, type CrudField } from '@/engines';
+import { WordImportButton } from '@/shared/components/import/WordImportDialog';
 import { errorMessage } from '@/shared/api/client';
 import { toast } from '@/shared/stores/uiStore';
 import { headApi, useHeadQuestionBank, type QuestionRow } from '@/shared/api/head';
@@ -113,7 +114,12 @@ export const HeadQuestionBankPage: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <TPageHead eyebrow="Học liệu bộ môn" title="Ngân hàng câu hỏi" sub="Tra cứu, hiệu đính (sửa nội dung, đáp án, giải thích) và lưu trữ câu hỏi thuộc bộ môn; xem trước đúng như học viên làm bài. Bảng hiển thị tối đa 200 câu theo bộ lọc Part." />
+      <TPageHead
+        eyebrow="Học liệu bộ môn"
+        title="Ngân hàng câu hỏi"
+        sub="Tra cứu, hiệu đính (sửa nội dung, đáp án, giải thích) và lưu trữ câu hỏi thuộc bộ môn; xem trước đúng như học viên làm bài. Nhập đề từ file Word tự chia Part 1–7. Bảng hiển thị tối đa 200 câu theo bộ lọc Part."
+        actions={<WordImportButton canChooseStatus onDone={() => void refresh()} />}
+      />
       <Figures
         items={[
           { label: 'Tổng câu hỏi', value: total.toLocaleString('vi-VN'), note: `${byPart.length} Part / kỹ năng`, icon: Database, tone: 'amber' },

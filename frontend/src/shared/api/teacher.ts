@@ -425,6 +425,8 @@ const C = '/teacher/content';
 export const authoringApi = {
   questions: (q: QuestionQuery) => api.get<QuestionPage>(`${C}/questions`, q),
   bank: (q: QuestionQuery) => api.get<QuestionPage>(`${C}/bank`, q),
+  /** Chi tiết 1 câu (kèm đoạn văn) để xem trước */
+  bankQuestion: (id: string) => api.get<QuestionRow & { passage?: { id: string; title?: string | null; contentMd?: string | null; transcript?: string | null; audioUrl?: string | null; imageUrl?: string | null } }>(`${C}/bank/${id}`),
   createQuestion: (b: AuthorQuestionInput) => api.post<QuestionRow>(`${C}/questions`, b),
   updateQuestion: (id: string, b: Partial<AuthorQuestionInput>) => api.patch<QuestionRow>(`${C}/questions/${id}`, b),
   deleteQuestion: (id: string) => api.delete<{ ok: true }>(`${C}/questions/${id}`),

@@ -7,6 +7,7 @@ import { learnerRouter } from '../modules/learner/learner.routes';
 import { teacherRouter } from '../modules/teacher/teacher.routes';
 import { headRouter } from '../modules/head/head.routes';
 import { adminRouter } from '../modules/admin/admin.routes';
+import { importRouter } from '../modules/import/import.routes';
 
 /**
  * Đăng ký router của các module. Mỗi module export `xxxRouter` từ `modules/<tên>/<tên>.routes.ts`
@@ -26,3 +27,4 @@ appRouter.use('/v1/learner', learnerRouter);
 appRouter.use('/v1/teacher', teacherRouter);
 appRouter.use('/v1/head', headRouter);
 appRouter.use('/v1/admin', adminRouter);
+appRouter.use('/v1/import', importRouter);

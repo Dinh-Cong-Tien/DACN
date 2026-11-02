@@ -15,6 +15,7 @@ import { TeacherStudentsPage } from '@/roles/teacher/pages/TeacherStudentsPage';
 import { TeacherMaterialsPage } from '@/roles/teacher/pages/TeacherMaterialsPage';
 import { TeacherAnalyticsPage } from '@/roles/teacher/pages/TeacherAnalyticsPage';
 import { TeacherAuthoringPage } from '@/roles/teacher/pages/TeacherAuthoringPage';
+import { TeacherQuestionBankPage } from '@/roles/teacher/pages/TeacherQuestionBankPage';
 import { NotificationsPage } from '@/roles/common/NotificationsPage';
 import { AccountSettingsPage } from '@/roles/common/AccountSettingsPage';
 
@@ -39,6 +40,7 @@ export const teacherRoutes: RouteObject[] = [
               { path: 'library', element: <Navigate to="/teacher/library/courses" replace /> },
               { path: 'library/:kind', element: <TeacherLibraryPage /> },
               { path: 'authoring', element: <TeacherAuthoringPage /> },
+              { path: 'question-bank', element: <TeacherQuestionBankPage /> },
               { path: 'schedule', element: <TeacherSchedulePage /> },
               { path: 'attendance', element: <TeacherAttendancePage /> },
               { path: 'attendance/:sessionId', element: <TeacherAttendancePage /> },

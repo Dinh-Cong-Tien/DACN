@@ -9,6 +9,7 @@ import { BarChart } from '@/shared/components/charts/Charts';
 import { Column, Modal, Select } from '@/shared/components/ui';
 import { Figures, Panel, TPageHead } from '@/roles/teacher/components/TeacherKit';
 import { CrudEditor, CrudField, QuestionRenderer } from '@/engines';
+import { WordImportButton } from '@/shared/components/import/WordImportDialog';
 
 const SKILL_TONE: Record<SkillType, string> = {
   LISTENING: 'bg-sky-50 text-sky-700 ring-sky-200/70',
@@ -109,6 +110,7 @@ export const AdminQuestionsPage: React.FC = () => {
         eyebrow="Nội dung · Ngân hàng đề"
         title="Ngân hàng câu hỏi"
         sub={`Tạo, sửa, xoá và phân loại câu hỏi theo kỳ thi, Part và kỹ năng. Kho hiện có ${total.toLocaleString('vi-VN')} câu; bảng hiển thị tối đa 200 câu theo bộ lọc Kỳ thi / Part.`}
+        actions={<WordImportButton canChooseStatus onDone={() => void refresh()} />}
       />
 
       <Figures

@@ -63,6 +63,18 @@ contentRouter.get(
   '/bank',
   handler((req) => listQuestions(req.query, { OR: [{ status: 'PUBLISHED' }, { authorId: me(req).id, status: { not: 'ARCHIVED' } }] }))
 );
+/** Chi tiết 1 câu trong ngân hàng (kèm đoạn văn/hội thoại) để xem trước — chỉ câu đã xuất bản hoặc của chính mình */
+contentRouter.get(
+  '/bank/:id',
+  handler(async (req) => {
+    const q = await prisma.question.findFirst({
+      where: { id: idOf(req), deletedAt: null, OR: [{ status: 'PUBLISHED' }, { authorId: me(req).id }] },
+      include: { passage: { select: { id: true, title: true, contentMd: true, transcript: true, audioUrl: true, imageUrl: true } } },
+    });
+    if (!q) throw notFound('Câu hỏi');
+    return { ...toQuestionRow(q), passage: q.passage ?? undefined };
+  })
+);
 
 const teacherQuestionBody = questionBody.omit({ status: true, rubricId: true, tagIds: true, passageId: true, orderInPassage: true });
 
