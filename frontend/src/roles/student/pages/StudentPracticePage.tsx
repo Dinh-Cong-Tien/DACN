@@ -116,11 +116,11 @@ export const StudentPracticePage: React.FC = () => {
                 <p className="font-display text-sm font-extrabold text-slate-900">Writing & Speaking</p>
                 <p className="text-xs text-slate-600 mt-1">Hai kỹ năng tự luận có không gian luyện riêng với đề mẫu và nộp bài cho giáo viên.</p>
                 <div className="flex gap-3 mt-3">
-                  <Link to="/app/writing" className="text-xs font-extrabold text-indigo-700 hover:underline">
-                    Luyện Viết →
+                  <Link to="/app/writing" className="inline-flex items-center gap-1 text-xs font-extrabold text-indigo-700 hover:underline">
+                    Luyện Viết <ArrowRight className="h-3.5 w-3.5" />
                   </Link>
-                  <Link to="/app/speaking" className="text-xs font-extrabold text-indigo-700 hover:underline">
-                    Luyện Nói →
+                  <Link to="/app/speaking" className="inline-flex items-center gap-1 text-xs font-extrabold text-indigo-700 hover:underline">
+                    Luyện Nói <ArrowRight className="h-3.5 w-3.5" />
                   </Link>
                 </div>
               </Card>

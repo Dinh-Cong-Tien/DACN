@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { CalendarCheck, ChevronRight, ClipboardList, Flame, Mail, Phone, Target, TrendingUp } from 'lucide-react';
+import { CalendarCheck, ChevronRight, ClipboardList, Flame, Mail, Phone, Target, TrendingUp, ArrowLeft } from 'lucide-react';
 import { useDocumentTitle } from '@/shared/hooks';
 import { useHeadStudent } from '@/shared/api/head';
 import { Avatar } from '@/shared/components/ui';
@@ -24,7 +24,7 @@ export const HeadStudentDetailPage: React.FC = () => {
   if (!q.data) {
     return (
       <div className="space-y-6">
-        <p className="text-[13px] text-slate-500">← {back}</p>
+        <p className="flex items-center gap-1 text-[13px] text-slate-500"><ArrowLeft className="h-3.5 w-3.5" /> {back}</p>
         <Panel>
           <p className="py-12 text-center text-sm text-slate-500">{q.isError ? 'Không tìm thấy học viên trong phạm vi bạn quản lý.' : 'Đang tải…'}</p>
         </Panel>

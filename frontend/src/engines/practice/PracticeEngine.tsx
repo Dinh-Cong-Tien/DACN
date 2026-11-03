@@ -57,7 +57,7 @@ export const PracticeEngine: React.FC<PracticeEngineProps> = ({ title = 'Luyện
         const n = c + 1;
         setBestCombo((b) => Math.max(b, n));
         if (n === 3) toast.success('Combo x3!', 'Phong độ tuyệt vời, tiếp tục nào!');
-        if (n === 5) toast.success('Combo x5 🔥', 'Bạn đang cực kỳ tập trung!');
+        if (n === 5) toast.success('Combo x5', 'Bạn đang cực kỳ tập trung!');
         return n;
       });
     } else {

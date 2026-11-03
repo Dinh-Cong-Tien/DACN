@@ -10,6 +10,7 @@ import { Column, Modal, Select } from '@/shared/components/ui';
 import { Figures, Panel, TPageHead } from '@/roles/teacher/components/TeacherKit';
 import { CrudEditor, CrudField, QuestionRenderer } from '@/engines';
 import { WordImportButton } from '@/shared/components/import/WordImportDialog';
+import { Stars } from '@/shared/components/ui/named-icon';
 
 const SKILL_TONE: Record<SkillType, string> = {
   LISTENING: 'bg-sky-50 text-sky-700 ring-sky-200/70',
@@ -41,10 +42,7 @@ const columns: Column<QuestionRow>[] = [
     key: 'difficulty',
     header: 'Độ khó',
     render: (q) => (
-      <span className="text-amber-500 text-xs tracking-wider">
-        {'★'.repeat(stars(q.difficulty))}
-        <span className="text-slate-300">{'★'.repeat(Math.max(0, 5 - stars(q.difficulty)))}</span>
-      </span>
+      <Stars value={stars(q.difficulty)} label={`Độ khó ${stars(q.difficulty)}/5`} />
     ),
   },
   {

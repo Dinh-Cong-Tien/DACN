@@ -515,7 +515,7 @@ contentRouter.delete('/grammar/:id', handler(async (req) => {
 }));
 
 // ============================ TỪ VỰNG ============================
-const topicRow = (t: Prisma.VocabTopicGetPayload<object>) => ({ id: t.id, slug: t.slug, name: t.name, icon: t.icon ?? '📘', total: t.wordsCount, learned: 0, gradient: t.themeGradient ?? gradientOf(t.slug), examType: t.examType ?? undefined, level: t.level ?? undefined, isFree: t.isFree, orderIndex: t.orderIndex });
+const topicRow = (t: Prisma.VocabTopicGetPayload<object>) => ({ id: t.id, slug: t.slug, name: t.name, icon: t.icon ?? 'BookOpen', total: t.wordsCount, learned: 0, gradient: t.themeGradient ?? gradientOf(t.slug), examType: t.examType ?? undefined, level: t.level ?? undefined, isFree: t.isFree, orderIndex: t.orderIndex });
 contentRouter.get('/vocab-topics', handler(async () => (await prisma.vocabTopic.findMany({ where: { deletedAt: null }, orderBy: [{ orderIndex: 'asc' }, { name: 'asc' }] })).map(topicRow)));
 const topicBody = z.object({ name: z.string().trim().min(1).max(120), slug: z.string().max(120).optional(), icon: z.string().max(40).nullish(), themeGradient: z.string().max(80).nullish(), examType: EXAM.nullish(), level: CEFR.nullish(), isFree: z.boolean().optional(), orderIndex: z.number().int().optional() });
 contentRouter.post('/vocab-topics', handler(async (req) => {

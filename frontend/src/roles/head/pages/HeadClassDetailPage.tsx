@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { CalendarDays, ChevronRight, ClipboardCheck, ClipboardList, Eye, MapPin, MessageSquare, Star, TrendingUp, Users } from 'lucide-react';
+import { CalendarDays, ChevronRight, ClipboardCheck, ClipboardList, Eye, MapPin, MessageSquare, Star, TrendingUp, Users, ArrowLeft } from 'lucide-react';
 import { useDocumentTitle } from '@/shared/hooks';
 import { toast } from '@/shared/stores/uiStore';
 import type { ClassObservation, ClassStudent } from '@/shared/types';
@@ -13,6 +13,7 @@ import { cn, formatDate, timeAgo, staffPath } from '@/shared/utils';
 import { Avatar, Input, Modal, Textarea } from '@/shared/components/ui';
 import { Figures, Meter, Panel, Status, TBtn, TTabs, tbl, type StatusTone } from '@/roles/teacher/components/TeacherKit';
 import { classIssue } from './HeadClassesPage';
+import { Stars as SharedStars } from '@/shared/components/ui/named-icon';
 
 export const STUDENT_STATUS: Record<ClassStudent['status'], { label: string; tone: StatusTone }> = {
   GOOD: { label: 'Ổn định', tone: 'green' },
@@ -22,13 +23,8 @@ export const STUDENT_STATUS: Record<ClassStudent['status'], { label: string; ton
 const EMPTY_C: HeadClass[] = [];
 const A_STATUS: Record<string, [StatusTone, string]> = { OPEN: ['green', 'Đang mở'], CLOSED: ['gray', 'Đã đóng'], DRAFT: ['amber', 'Bản nháp'] };
 
-export const Stars: React.FC<{ value: number }> = ({ value }) => (
-  <span className="inline-flex items-center gap-0.5" aria-label={`${value}/5 điểm`}>
-    {[1, 2, 3, 4, 5].map((i) => (
-      <Star key={i} className={cn('h-3.5 w-3.5', i <= value ? 'fill-amber-400 text-amber-400' : 'text-slate-300')} />
-    ))}
-  </span>
-);
+/** Thang sao dùng chung (shared/components/ui) — giữ export để các trang dự giờ import như cũ */
+export const Stars: React.FC<{ value: number }> = ({ value }) => <SharedStars value={value} label={`${value}/5 điểm`} />;
 
 const todayIso = () => {
   const d = new Date();
@@ -210,7 +206,7 @@ export const HeadClassDetailPage: React.FC = () => {
     return (
       <div className="space-y-6">
         <Link to={staffPath('/classes')} className="text-[13px] text-slate-500 hover:text-slate-900">
-          ← Lớp học bộ môn
+          <ArrowLeft className="mr-1 inline h-3.5 w-3.5 align-[-2px]" />Lớp học bộ môn
         </Link>
         <Panel>
           <p className="py-12 text-center text-sm text-slate-500">{q.isError ? 'Không tìm thấy lớp học hoặc lớp không thuộc bộ môn của bạn.' : 'Đang tải…'}</p>

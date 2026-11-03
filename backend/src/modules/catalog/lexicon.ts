@@ -36,7 +36,7 @@ lexiconRouter.get(
       id: t.id,
       slug: t.slug,
       name: t.name,
-      icon: t.icon ?? '📘',
+      icon: t.icon ?? 'BookOpen',
       total: t._count.wordTopics || t.wordsCount,
       learned: learned.get(t.id) ?? 0,
       gradient: t.themeGradient ?? gradientAt(i),
@@ -58,7 +58,7 @@ lexiconRouter.get(
     const cards = req.user ? await prisma.srsCard.findMany({ where: { userId: req.user.id, wordId: { in: words.map((w) => w.id) } } }) : [];
     const byWord = new Map<string, SrsCard>(cards.map((c) => [c.wordId as string, c]));
     return {
-      topic: { id: t.id, slug: t.slug, name: t.name, icon: t.icon ?? '📘', total: words.length, learned: cards.filter((c) => c.repetitions > 0).length, gradient: t.themeGradient ?? gradientAt(t.orderIndex), isFree: t.isFree },
+      topic: { id: t.id, slug: t.slug, name: t.name, icon: t.icon ?? 'BookOpen', total: words.length, learned: cards.filter((c) => c.repetitions > 0).length, gradient: t.themeGradient ?? gradientAt(t.orderIndex), isFree: t.isFree },
       words: words.map((w) => toVocabWord(w, t.name, byWord.get(w.id))),
     };
   })

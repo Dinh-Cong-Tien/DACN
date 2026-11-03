@@ -19,16 +19,16 @@ interface AchievementDef {
 }
 
 export const ACHIEVEMENTS: AchievementDef[] = [
-  { code: 'FIRST_TEST', title: 'Bước chân đầu tiên', description: 'Hoàn thành bài làm đầu tiên', icon: '🚀', total: 1, rarity: 'COMMON' },
-  { code: 'STREAK_7', title: 'Chuỗi 7 ngày', description: 'Học liên tục 7 ngày', icon: '🔥', total: 7, rarity: 'COMMON' },
-  { code: 'STREAK_30', title: 'Chiến binh 30 ngày', description: 'Học liên tục 30 ngày', icon: '⚡', total: 30, rarity: 'RARE' },
-  { code: 'MISTAKE_HUNTER_50', title: 'Thợ săn lỗi', description: 'Giải quyết 50 câu trong Sổ tay lỗi sai', icon: '🎯', total: 50, rarity: 'RARE' },
-  { code: 'VOCAB_500', title: 'Bậc thầy từ vựng', description: 'Thuộc 500 từ vựng', icon: '📚', total: 500, rarity: 'EPIC' },
-  { code: 'SCORE_700', title: 'Vượt mốc 700', description: 'Đạt 700+ trong bài thi thử TOEIC', icon: '🏆', total: 1, rarity: 'EPIC' },
-  { code: 'NIGHT_OWL_5', title: 'Cú đêm chăm chỉ', description: 'Học sau 22h trong 5 ngày', icon: '🦉', total: 5, rarity: 'COMMON' },
-  { code: 'PERFECT_20', title: 'Hoàn hảo', description: 'Đạt 100% một bài luyện tập 20+ câu', icon: '💎', total: 1, rarity: 'LEGENDARY' },
-  { code: 'TOP10_WEEK', title: 'Top 10 tuần', description: 'Vào top 10 bảng xếp hạng tuần', icon: '🥇', total: 1, rarity: 'EPIC' },
-  { code: 'CONTRIBUTOR_5', title: 'Người đóng góp', description: 'Báo cáo 5 câu hỏi có vấn đề được duyệt', icon: '🛠️', total: 5, rarity: 'RARE' },
+  { code: 'FIRST_TEST', title: 'Bước chân đầu tiên', description: 'Hoàn thành bài làm đầu tiên', icon: 'Rocket', total: 1, rarity: 'COMMON' },
+  { code: 'STREAK_7', title: 'Chuỗi 7 ngày', description: 'Học liên tục 7 ngày', icon: 'Flame', total: 7, rarity: 'COMMON' },
+  { code: 'STREAK_30', title: 'Chiến binh 30 ngày', description: 'Học liên tục 30 ngày', icon: 'Zap', total: 30, rarity: 'RARE' },
+  { code: 'MISTAKE_HUNTER_50', title: 'Thợ săn lỗi', description: 'Giải quyết 50 câu trong Sổ tay lỗi sai', icon: 'Target', total: 50, rarity: 'RARE' },
+  { code: 'VOCAB_500', title: 'Bậc thầy từ vựng', description: 'Thuộc 500 từ vựng', icon: 'Library', total: 500, rarity: 'EPIC' },
+  { code: 'SCORE_700', title: 'Vượt mốc 700', description: 'Đạt 700+ trong bài thi thử TOEIC', icon: 'Trophy', total: 1, rarity: 'EPIC' },
+  { code: 'NIGHT_OWL_5', title: 'Cú đêm chăm chỉ', description: 'Học sau 22h trong 5 ngày', icon: 'Moon', total: 5, rarity: 'COMMON' },
+  { code: 'PERFECT_20', title: 'Hoàn hảo', description: 'Đạt 100% một bài luyện tập 20+ câu', icon: 'Gem', total: 1, rarity: 'LEGENDARY' },
+  { code: 'TOP10_WEEK', title: 'Top 10 tuần', description: 'Vào top 10 bảng xếp hạng tuần', icon: 'Medal', total: 1, rarity: 'EPIC' },
+  { code: 'CONTRIBUTOR_5', title: 'Người đóng góp', description: 'Báo cáo 5 câu hỏi có vấn đề được duyệt', icon: 'Wrench', total: 5, rarity: 'RARE' },
 ];
 
 async function achievementProgress(userId: string): Promise<Record<string, number>> {
@@ -76,7 +76,7 @@ export async function evaluateAchievements(userId: string) {
     });
     if (newlyEarned)
       await prisma.notification.create({
-        data: { userId, type: 'ACHIEVEMENT', title: `Huy hiệu mới: ${def.title} ${def.icon}`, message: def.description, link: '/app/achievements' },
+        data: { userId, type: 'ACHIEVEMENT', title: `Huy hiệu mới: ${def.title}`, message: def.description, link: '/app/achievements' },
       });
   }
 }

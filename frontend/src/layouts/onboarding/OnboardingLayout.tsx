@@ -1,6 +1,6 @@
 import React from 'react';
 import { Outlet, useLocation, Link } from 'react-router-dom';
-import { X } from 'lucide-react';
+import { X, Hand } from 'lucide-react';
 import { Logo, Stepper, Avatar } from '@/shared/components/ui';
 import { PageTransition, Doodles } from '@/shared/components/motion';
 import { useAuthStore } from '@/shared/stores/authStore';
@@ -33,7 +33,7 @@ export const OnboardingLayout: React.FC = () => {
             {user && (
               <span className="hidden sm:flex items-center gap-2 text-xs font-bold text-slate-700">
                 <Avatar name={user.fullName} src={user.avatarUrl} size="xs" />
-                Xin chào, {user.fullName.split(' ').slice(-1)[0]} 👋
+                Xin chào, {user.fullName.split(' ').slice(-1)[0]} <Hand className="h-3.5 w-3.5 text-amber-500" aria-hidden />
               </span>
             )}
             <Link to="/" className="p-2 rounded-xl border-2 border-slate-900 bg-white text-slate-700 shadow-hard-sm hover:-translate-y-0.5 transition" title="Bỏ qua, vào Dashboard">

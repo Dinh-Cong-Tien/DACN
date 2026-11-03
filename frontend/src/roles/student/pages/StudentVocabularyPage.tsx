@@ -10,6 +10,7 @@ import { useAuthStore } from '@/shared/stores/authStore';
 import { toast } from '@/shared/stores/uiStore';
 import { Badge, Button, Card, Chip, Input, Modal, PageHeader, ProgressBar, SearchInput, StatCard, EmptyState, Textarea } from '@/shared/components/ui';
 import { Img, PHOTOS } from '@/shared/components/media/Img';
+import { NamedIcon } from '@/shared/components/ui/named-icon';
 
 const STATUS_META: Record<VocabWord['status'], { label: string; tone: 'amber' | 'sky' | 'emerald' }> = {
   LEARNING: { label: 'Đang học', tone: 'amber' },
@@ -131,7 +132,8 @@ export const StudentVocabularyPage: React.FC = () => {
                   <Img src={TOPIC_PHOTO[t.id] ?? TOPIC_PHOTOS[i % TOPIC_PHOTOS.length]} alt={t.name} wrapperClass="absolute inset-0" fallbackClass="bg-indigo-200" />
                   <div className="absolute inset-0 bg-slate-900/25" />
                   <span className="absolute top-3 left-3 sticker tilt-1 !py-1 !text-[10px]">
-                    {t.icon} {t.total} từ
+                    <NamedIcon name={t.icon} className="mr-1 inline h-3 w-3 align-[-2px]" />
+                    {t.total} từ
                   </span>
                   {pct === 0 && <span className="absolute top-3 right-3 sticker tilt-2 !bg-violet-500 !text-white !py-1 !text-[10px]">Mới</span>}
                   {pct > 0 && (

@@ -205,7 +205,7 @@ export async function importVocabulary(ctx: SeedCtx, examVocab: any[]) {
         orderInTopic: i + 1,
       });
     });
-    topics.push({ id, slug: `toeic-vocab-set-${n}`, name: `Từ vựng TOEIC — Bộ ${n}`, icon: '📘', themeGradient: GRADIENTS[n % GRADIENTS.length], examType: 'TOEIC', isFree: n <= 3, wordsCount: seen.size, orderIndex: n });
+    topics.push({ id, slug: `toeic-vocab-set-${n}`, name: `Từ vựng TOEIC — Bộ ${n}`, icon: 'BookOpen', themeGradient: GRADIENTS[n % GRADIENTS.length], examType: 'TOEIC', isFree: n <= 3, wordsCount: seen.size, orderIndex: n });
   });
 
   // Từ trong đề thi: gom theo Part thành bộ "Từ vựng đề thi Part x"
@@ -216,7 +216,7 @@ export async function importVocabulary(ctx: SeedCtx, examVocab: any[]) {
   }
   for (const [part, list] of [...byPart.entries()].sort((a, b) => a[0] - b[0])) {
     const id = uuid();
-    topics.push({ id, slug: `toeic-exam-vocab-part-${part}`, name: `Từ vựng đề thi TOEIC Part ${part}`, icon: '📝', themeGradient: GRADIENTS[part % GRADIENTS.length], examType: 'TOEIC', isFree: true, wordsCount: list.length, orderIndex: 20 + part });
+    topics.push({ id, slug: `toeic-exam-vocab-part-${part}`, name: `Từ vựng đề thi TOEIC Part ${part}`, icon: 'NotebookPen', themeGradient: GRADIENTS[part % GRADIENTS.length], examType: 'TOEIC', isFree: true, wordsCount: list.length, orderIndex: 20 + part });
     list.forEach((w, i) => {
       const { part: _p, ...rest } = w;
       words.push({ ...rest, topicId: id, orderInTopic: i + 1 });

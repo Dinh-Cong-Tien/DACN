@@ -7,6 +7,7 @@ import { useDocumentTitle } from '@/shared/hooks';
 import { Badge, Card, PageHeader, ProgressBar, RingProgress, Tabs, EmptyState } from '@/shared/components/ui';
 import { Tone } from '@/shared/components/ui';
 import { Doodles } from '@/shared/components/motion';
+import { NamedIcon } from '@/shared/components/ui/named-icon';
 
 const RARITY: Record<Achievement['rarity'], { label: string; tone: Tone; ring: string; bg: string }> = {
   COMMON: { label: 'Thường', tone: 'slate', ring: 'bg-slate-200', bg: 'bg-white' },
@@ -86,7 +87,7 @@ export const StudentAchievementsPage: React.FC = () => {
               >
                 {/* Huy hiệu tròn kiểu sticker */}
                 <div className={cn('relative w-20 h-20 rounded-full border-[3px] border-slate-900 flex items-center justify-center text-4xl mt-1', a.earned ? cn(r.ring, 'shadow-hard-sm', TILTS[i % TILTS.length]) : 'bg-slate-200 grayscale opacity-60')}>
-                  {a.earned ? <span className="drop-shadow-[1px_1px_0_rgba(0,0,0,0.25)]">{a.icon}</span> : <Lock className="w-7 h-7 text-slate-500" />}
+                  {a.earned ? <NamedIcon name={a.icon} fallback="Award" className="h-9 w-9 text-slate-900 drop-shadow-[1px_1px_0_rgba(0,0,0,0.15)]" /> : <Lock className="w-7 h-7 text-slate-500" />}
                   {a.earned && a.rarity === 'LEGENDARY' && <Sparkles className="absolute -top-2 -right-2 w-6 h-6 text-amber-500 animate-wiggle" />}
                 </div>
                 <p className={cn('font-display font-bold text-sm mt-3 leading-tight', a.earned ? 'text-slate-900' : 'text-slate-500')}>{a.title}</p>

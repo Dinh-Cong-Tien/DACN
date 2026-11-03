@@ -9,6 +9,7 @@ import { Column } from '@/shared/components/ui';
 import { CrudEditor, type CrudField, type CrudFilter } from '@/engines';
 import { cn, formatNumber } from '@/shared/utils';
 import { TPageHead } from '@/roles/teacher/components/TeacherKit';
+import { ICON_OPTIONS, NamedIcon } from '@/shared/components/ui/named-icon';
 
 type Kind = 'grammar' | 'vocab' | 'words' | 'writing' | 'speaking' | 'resources' | 'faq';
 
@@ -111,11 +112,11 @@ function buildConfig(d: Data): Record<Kind, LearnConfig<{ id: string }>> {
       rows: d.topics,
       loading: d.loading.vocab,
       searchKeys: ['name'],
-      defaultValues: { icon: '📘' },
+      defaultValues: { icon: 'BookOpen' },
       columns: [
         { key: 'name', header: 'Bộ từ vựng', render: (r) => (
           <span className="flex items-center gap-3 font-semibold text-slate-900">
-            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-100 text-lg">{r.icon}</span>
+            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-100 text-slate-700"><NamedIcon name={r.icon} className="h-[18px] w-[18px]" /></span>
             {r.name}
           </span>
         ) },
@@ -124,7 +125,7 @@ function buildConfig(d: Data): Record<Kind, LearnConfig<{ id: string }>> {
       ],
       fields: [
         { key: 'name', label: 'Tên bộ từ', required: true },
-        { key: 'icon', label: 'Biểu tượng (emoji)' },
+        { key: 'icon', label: 'Biểu tượng', type: 'select', options: ICON_OPTIONS },
       ],
       preview: (r) => `/app/vocabulary/flashcards/${r.slug ?? r.id}`,
       create: (v) => adminApi.createVocabTopic({ name: v.name, icon: v.icon || undefined }),

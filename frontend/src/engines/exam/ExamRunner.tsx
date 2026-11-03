@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { IMockTest, IQuestion } from '@toeic-vstep/shared';
-import { Clock, Flag, Send, ChevronLeft, ChevronRight, AlertTriangle, Maximize2, Minimize2, Grid3X3, X } from 'lucide-react';
+import { Clock, Flag, Send, ChevronLeft, ChevronRight, AlertTriangle, Maximize2, Minimize2, Grid3X3, X, ArrowLeft, ArrowRight } from 'lucide-react';
 import { QuestionRenderer, PassageBlock } from './QuestionRenderer';
 import { cn, formatClock } from '@/shared/utils';
 import { Button, Modal, Logo, Badge } from '@/shared/components/ui';
@@ -279,7 +279,7 @@ export const ExamRunner: React.FC<ExamRunnerProps> = ({ test, onSubmitExam, onEx
             )}
           </div>
           <p className="text-center text-[11px] text-slate-400">
-            Phím tắt: <b>←</b> <b>→</b> chuyển câu · <b>A B C D</b> chọn đáp án · <b>F</b> đánh dấu
+            Phím tắt: <ArrowLeft className="inline h-3 w-3 align-[-1px]" aria-label="mũi tên trái" /> <ArrowRight className="inline h-3 w-3 align-[-1px]" aria-label="mũi tên phải" /> chuyển câu · <b>A B C D</b> chọn đáp án · <b>F</b> đánh dấu
           </p>
         </div>
 

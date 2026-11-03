@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { BookOpenCheck, CheckCheck, ClipboardCheck, UserCheck, UserMinus, UserX } from 'lucide-react';
+import { BookOpenCheck, CheckCheck, ClipboardCheck, UserCheck, UserMinus, UserX, Check } from 'lucide-react';
 import { useDocumentTitle } from '@/shared/hooks';
 import { toast } from '@/shared/stores/uiStore';
 import { errorMessage } from '@/shared/api/client';
@@ -14,7 +14,7 @@ import { TEmpty, TError, TLoading } from '../components/TeacherState';
 
 const MARKS: AttendanceMark[] = ['PRESENT', 'LATE', 'EXCUSED', 'ABSENT'];
 const MARK_ON: Record<AttendanceMark, string> = { PRESENT: 'bg-emerald-600 text-white', LATE: 'bg-amber-500 text-white', EXCUSED: 'bg-sky-600 text-white', ABSENT: 'bg-rose-600 text-white' };
-const MARK_CELL: Record<AttendanceMark, [string, string]> = { PRESENT: ['✓', 'text-emerald-600'], LATE: ['M', 'text-amber-600'], EXCUSED: ['P', 'text-sky-600'], ABSENT: ['V', 'font-bold text-rose-600'] };
+const MARK_CELL: Record<AttendanceMark, [React.ReactNode, string]> = { PRESENT: [<Check key="p" className="mx-auto h-4 w-4" aria-label="có mặt" />, 'text-emerald-600'], LATE: ['M', 'text-amber-600'], EXCUSED: ['P', 'text-sky-600'], ABSENT: ['V', 'font-bold text-rose-600'] };
 const dm = (s: string) => `${s.slice(8, 10)}/${s.slice(5, 7)}`;
 
 /** Điểm danh một buổi + sổ điểm danh cả khoá của lớp */
@@ -198,7 +198,7 @@ export const TeacherAttendancePage: React.FC = () => {
         </Panel>
       </div>
 
-      <Panel title="Sổ điểm danh" sub={`${cls?.name ?? session.className ?? ''} · ${done.length} buổi đã điểm danh · ✓ có mặt · M muộn · P có phép · V vắng`} flush>
+      <Panel title="Sổ điểm danh" sub={<span className="inline-flex flex-wrap items-center gap-x-1">{`${cls?.name ?? session.className ?? ''} · ${done.length} buổi đã điểm danh ·`} <Check className="h-3.5 w-3.5 text-emerald-600" aria-hidden /> có mặt · M muộn · P có phép · V vắng</span>} flush>
         {done.length === 0 ? (
           <TEmpty title="Chưa có buổi nào được điểm danh" sub="Lưu điểm danh buổi này để bắt đầu sổ điểm danh của lớp." />
         ) : (

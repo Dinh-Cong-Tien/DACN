@@ -14,6 +14,7 @@ import { toast } from '@/shared/stores/uiStore';
 import { headApi, useHeadQuestionBank, type QuestionRow } from '@/shared/api/head';
 import { EXAM_PARTS, partLabel, partShort, SKILL_VI, stars, toIQuestion } from '@/shared/constants/staff';
 import type { SkillType } from '@/shared/types';
+import { Stars } from '@/shared/components/ui/named-icon';
 
 const chip = 'inline-flex items-center whitespace-nowrap rounded-md px-2 py-0.5 text-[11px] font-semibold';
 const SKILL_OPTS = (Object.keys(SKILL_VI) as SkillType[]).map((s) => ({ value: s, label: SKILL_VI[s] }));
@@ -67,10 +68,7 @@ const columns: Column<QForm>[] = [
     header: 'Độ khó',
     align: 'center',
     render: (r) => (
-      <span className="text-amber-500 text-xs tracking-tight">
-        {'★'.repeat(stars(r.difficulty))}
-        <span className="text-slate-300">{'★'.repeat(5 - stars(r.difficulty))}</span>
-      </span>
+      <Stars value={stars(r.difficulty)} label={`Độ khó ${stars(r.difficulty)}/5`} />
     ),
   },
   { key: 'status', header: 'Trạng thái', render: (r) => <Status tone={STATUS_VI[r.status]?.tone ?? 'gray'}>{STATUS_VI[r.status]?.label ?? r.status}</Status> },

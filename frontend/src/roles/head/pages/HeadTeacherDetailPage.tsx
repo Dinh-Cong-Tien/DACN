@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { ChevronRight, ClipboardCheck, Eye, Mail, MessageSquare, PenTool, School, Star, TrendingUp, Users } from 'lucide-react';
+import { ChevronRight, ClipboardCheck, Eye, Mail, MessageSquare, PenTool, School, Star, TrendingUp, Users, ArrowLeft } from 'lucide-react';
 import { useDocumentTitle } from '@/shared/hooks';
 import { toast } from '@/shared/stores/uiStore';
 import type { GradingReview } from '@/shared/types';
@@ -36,7 +36,7 @@ export const HeadTeacherDetailPage: React.FC = () => {
     return (
       <div className="space-y-6">
         <Link to={staffPath('/teachers')} className="text-[13px] text-slate-500 hover:text-slate-900">
-          ← Giáo viên bộ môn
+          <ArrowLeft className="mr-1 inline h-3.5 w-3.5 align-[-2px]" />Giáo viên bộ môn
         </Link>
         <Panel>
           <p className="py-12 text-center text-sm text-slate-500">{q.isError ? 'Không tìm thấy giáo viên trong bộ môn của bạn.' : 'Đang tải…'}</p>

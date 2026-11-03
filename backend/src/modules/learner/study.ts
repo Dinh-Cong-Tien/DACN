@@ -138,7 +138,7 @@ studyRouter.get(
       id: t.id,
       slug: t.slug,
       name: t.name,
-      icon: t.icon ?? '📘',
+      icon: t.icon ?? 'BookOpen',
       total: t.wordsCount,
       learned: lmap.get(t.id) ?? 0,
       gradient: t.themeGradient ?? 'from-indigo-500 to-violet-500',
@@ -158,7 +158,7 @@ studyRouter.get(
     const words = await prisma.word.findMany({ where: { topicId: topic.id }, include: { topic: { select: { name: true } } }, orderBy: [{ orderInTopic: 'asc' }, { headword: 'asc' }] });
     const cards = await prisma.srsCard.findMany({ where: { userId, wordId: { in: words.map((w) => w.id) } } });
     const cmap = new Map(cards.map((c) => [c.wordId, c]));
-    return { topic: { id: topic.id, slug: topic.slug, name: topic.name, icon: topic.icon ?? '📘', total: words.length }, words: words.map((w) => toVocabWord(w, cmap.get(w.id))) };
+    return { topic: { id: topic.id, slug: topic.slug, name: topic.name, icon: topic.icon ?? 'BookOpen', total: words.length }, words: words.map((w) => toVocabWord(w, cmap.get(w.id))) };
   })
 );
 
