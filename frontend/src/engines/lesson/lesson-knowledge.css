@@ -1,115 +1,159 @@
-/* Cây mạo từ (LessonKnowledge): dạng sơ đồ nhánh như trong sách — dòng chữ thường, đường kẻ mảnh nối nhánh cha → con */
-.kt-tree,
-.kt-branch {
-  margin: 0;
-  padding: 0;
-  list-style: none;
+/* Sơ đồ mạo từ (LessonKnowledge): 3 tầng node chữ nhật viền mảnh, đường nối SVG vẽ theo vị trí node */
+.kt-scroll {
+  overflow-x: auto;
 }
-.kt-tree {
+.kt-graph {
+  position: relative;
   display: grid;
-  gap: 0.25rem;
+  gap: 2.25rem;
+  min-width: max-content;
+  padding: 0.25rem 0.25rem 0.5rem;
 }
-.kt-root {
-  border-bottom: 1px solid rgb(var(--slate-200));
-  padding-bottom: 0.25rem;
+@media (min-width: 640px) {
+  .kt-graph {
+    min-width: 0;
+  }
 }
-.kt-root:last-child {
-  border-bottom: 0;
-}
-
-.kt-row {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.5rem;
+.kt-lines {
+  position: absolute;
+  inset: 0;
   width: 100%;
-  padding: 0.45rem 0.5rem;
-  border-radius: 0.375rem;
-  text-align: left;
-  font-size: 0.875rem;
-  line-height: 1.45;
-  color: rgb(var(--slate-700));
-}
-.kt-row--toggle {
-  cursor: pointer;
-}
-.kt-row--toggle:hover {
-  background: rgb(var(--slate-100));
-}
-.kt-row--toggle:focus-visible {
-  outline: 2px solid #4f46e5;
-  outline-offset: 1px;
-}
-
-.kt-caret {
-  flex: none;
-  width: 1rem;
-  height: 1rem;
-  margin-top: 0.15rem;
-  color: rgb(var(--slate-500));
-  transition: transform 0.15s ease;
-}
-.kt-caret--open {
-  transform: rotate(90deg);
-}
-.kt-label {
-  font-weight: 600;
-  color: rgb(var(--slate-900));
-}
-.kt-label--root {
-  font-size: 0.95rem;
-}
-.kt-meaning {
-  color: rgb(var(--slate-600));
-}
-.kt-example {
-  display: block;
-  margin-top: 0.1rem;
-  font-size: 0.8125rem;
-  font-style: italic;
-  color: rgb(var(--slate-500));
-}
-.kt-count {
-  flex: none;
-  margin-left: auto;
-  padding: 0 0.4rem;
-  border: 1px solid rgb(var(--slate-300));
-  border-radius: 0.25rem;
-  font-size: 0.6875rem;
-  font-weight: 600;
-  line-height: 1.2rem;
-  color: rgb(var(--slate-500));
-}
-
-/* nhánh con: đường dọc từ nhánh cha + gạch ngang tới từng dòng (├ └) */
-.kt-branch {
-  position: relative;
-  margin-left: 0.95rem;
-  padding-left: 1.1rem;
-}
-.kt-branch > li {
-  position: relative;
-}
-.kt-branch > li::before {
-  content: '';
-  position: absolute;
-  left: -1.1rem;
-  top: 0;
-  bottom: 0;
-  border-left: 1px solid rgb(var(--slate-300));
-}
-.kt-branch > li:last-child::before {
-  bottom: auto;
-  height: 1.15rem;
-}
-.kt-branch > li::after {
-  content: '';
-  position: absolute;
-  left: -1.1rem;
-  top: 1.15rem;
-  width: 0.85rem;
-  border-top: 1px solid rgb(var(--slate-300));
-}
-.kt-branch > li::before,
-.kt-branch > li::after {
+  height: 100%;
+  overflow: visible;
   pointer-events: none;
+}
+.kt-lines path {
+  fill: none;
+  stroke: rgb(var(--slate-400));
+  stroke-width: 1;
+}
+.kt-level {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+}
+@media (min-width: 640px) {
+  .kt-level {
+    gap: 2rem;
+  }
+  /* tầng từ: xuống dòng khi nhiều từ, vẫn nối đúng nhờ đường SVG */
+  .kt-level--leaves {
+    flex-wrap: wrap;
+    gap: 0.75rem;
+  }
+}
+.kt-level--leaves {
+  gap: 0.75rem;
+}
+
+.kt-node {
+  position: relative;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.1rem;
+  min-width: 4.5rem;
+  max-width: 11rem;
+  padding: 0.45rem 0.8rem;
+  border: 1px solid rgb(var(--slate-300));
+  border-radius: 0.375rem;
+  background: rgb(var(--surface));
+  color: rgb(var(--slate-800));
+  font-size: 0.8125rem;
+  font-weight: 600;
+  line-height: 1.3;
+  text-align: center;
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.05);
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+button.kt-node:hover {
+  border-color: rgb(var(--slate-500));
+}
+.kt-node:focus-visible {
+  outline: 2px solid #4f46e5;
+  outline-offset: 2px;
+}
+.kt-node--root {
+  min-width: 6rem;
+  border-color: rgb(var(--slate-800));
+  background: rgb(var(--slate-800));
+  color: rgb(var(--surface));
+}
+.kt-node--branch {
+  min-width: 5.5rem;
+  font-size: 0.9375rem;
+  border-color: rgb(var(--slate-400));
+}
+.kt-node--open,
+button.kt-node--open:hover {
+  border-color: #4f46e5;
+  color: #4338ca;
+  background: rgb(79 70 229 / 0.06);
+}
+.kt-node--selected,
+button.kt-node--selected:hover {
+  border-color: #4f46e5;
+  box-shadow: 0 0 0 1px #4f46e5;
+}
+.kt-node__label {
+  overflow-wrap: anywhere;
+}
+.kt-node__hint {
+  font-size: 0.6875rem;
+  font-weight: 500;
+  color: rgb(var(--slate-500));
+}
+.kt-node--open .kt-node__hint {
+  color: #6366f1;
+}
+.dark .kt-node--open,
+.dark button.kt-node--open:hover {
+  color: #a5b4fc;
+  border-color: #818cf8;
+}
+.dark .kt-node--selected,
+.dark button.kt-node--selected:hover {
+  border-color: #818cf8;
+  box-shadow: 0 0 0 1px #818cf8;
+}
+
+/* màn hình hẹp: node gọn hơn */
+@media (max-width: 639px) {
+  .kt-graph {
+    gap: 1.75rem;
+  }
+  .kt-level {
+    gap: 0.5rem;
+  }
+  .kt-node {
+    min-width: 3.25rem;
+    max-width: 7rem;
+    padding: 0.4rem 0.55rem;
+    font-size: 0.75rem;
+  }
+  .kt-node--branch {
+    min-width: 3.75rem;
+    font-size: 0.8125rem;
+  }
+}
+
+/* các node từ mới sinh ra: hiện dần */
+.kt-level--leaves .kt-node {
+  animation: kt-in 0.18s ease-out both;
+}
+@keyframes kt-in {
+  /* chỉ đổi độ mờ, không dịch vị trí — đường nối SVG đo theo vị trí cuối */
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .kt-level--leaves .kt-node {
+    animation: none;
+  }
 }

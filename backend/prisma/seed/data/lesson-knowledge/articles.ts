@@ -78,6 +78,9 @@ const NOTE = {
   zero: leaf('Cụm cố định không có mạo từ', 'phương tiện, bữa ăn, nơi chốn quen thuộc', 'by bus, have lunch, at home, go to work'),
 };
 
+/** Lưu ý của từng mạo từ hiện trong khung chi tiết khi bấm vào mạo từ đó */
+const note = (n: KnowledgeNode) => `${n.label}: ${n.meaningVi} — ${n.example}`;
+
 export function articleTree(k: LessonKnowledge): KnowledgeNode[] {
   const nouns = nounsOf(k);
   const countable = nouns.filter((n) => !UNCOUNTABLE.has(n.word) && !PLURAL.has(n.word) && !THE_ONLY.has(n.word) && !NO_ARTICLE.has(n.word));
@@ -95,13 +98,14 @@ export function articleTree(k: LessonKnowledge): KnowledgeNode[] {
   };
 
   return [
-    { label: 'a', meaningVi: 'trước danh từ đếm được số ít bắt đầu bằng âm phụ âm (nhắc lần đầu)', children: [...pick(aList, 'a', FALLBACK.a), NOTE.a] },
-    { label: 'an', meaningVi: 'trước danh từ đếm được số ít bắt đầu bằng âm nguyên âm', children: [...pick(anList, 'an', FALLBACK.an), NOTE.an] },
-    { label: 'the', meaningVi: 'khi người nghe đã biết là người / vật nào', children: [...pick(theList, 'the', FALLBACK.the), NOTE.the] },
+    { label: 'a', meaningVi: 'trước danh từ đếm được số ít bắt đầu bằng âm phụ âm (nhắc lần đầu)', example: note(NOTE.a), children: pick(aList, 'a', FALLBACK.a) },
+    { label: 'an', meaningVi: 'trước danh từ đếm được số ít bắt đầu bằng âm nguyên âm', example: note(NOTE.an), children: pick(anList, 'an', FALLBACK.an) },
+    { label: 'the', meaningVi: 'khi người nghe đã biết là người / vật nào', example: note(NOTE.the), children: pick(theList, 'the', FALLBACK.the) },
     {
       label: 'Không dùng mạo từ',
       meaningVi: 'danh từ không đếm được hoặc số nhiều nói chung',
-      children: [...(zeroList.length ? zeroList.map((n) => leaf(n.word, `${n.meaningVi} — không dùng a/an`, n.example)) : FALLBACK.zero), NOTE.zero],
+      example: note(NOTE.zero),
+      children: zeroList.length ? zeroList.map((n) => leaf(n.word, `${n.meaningVi} — không dùng a/an`, n.example)) : FALLBACK.zero,
     },
   ];
 }
