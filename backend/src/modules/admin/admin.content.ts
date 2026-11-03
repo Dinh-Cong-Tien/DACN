@@ -8,6 +8,7 @@ import { audit } from './audit';
 import { gradientOf } from '../head/shared';
 import { knowledgeToText, parseKnowledgeText, toKnowledge } from '../catalog/lesson-knowledge';
 import { completedAttempts, courseStats, ratingOf } from '../catalog/counts';
+import { byTitleNatural, levelLabel } from '../catalog/mappers';
 import { listQuestions, toQuestionRow } from '../head/head.routes';
 
 export const contentRouter = Router();
@@ -356,7 +357,7 @@ export const testRow = (t: Prisma.MockTestGetPayload<object>, attempts = 0) => {
 contentRouter.get(
   '/tests',
   handler(async () => {
-    const tests = await prisma.mockTest.findMany({ where: { deletedAt: null }, orderBy: [{ examType: 'asc' }, { createdAt: 'desc' }] });
+    const tests = (await prisma.mockTest.findMany({ where: { deletedAt: null }, orderBy: [{ examType: 'asc' }, { createdAt: 'desc' }] })).sort((a, b) => a.examType.localeCompare(b.examType) || byTitleNatural(a, b));
     const attempts = await completedAttempts(tests.map((t) => t.id));
     return tests.map((t) => testRow(t, attempts.get(t.id) ?? 0));
   })

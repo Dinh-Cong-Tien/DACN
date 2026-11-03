@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { FileText, Clock, Users, Lock, ArrowRight, History, Trophy } from 'lucide-react';
 import { useDocumentTitle, useParamState } from '@/shared/hooks';
 import { Badge, Button, Card, CardHeader, Chip, Column, DataTable, PageHeader, Tabs } from '@/shared/components/ui';
+import { TestCover } from '@/shared/components/media/TestCover';
 import { Img } from '@/shared/components/media/Img';
 import { useAttempts, useTests } from '@/shared/api/learner';
 import type { AttemptSummary } from '@/shared/types';
@@ -85,7 +86,7 @@ export const StudentMockTestsPage: React.FC = () => {
           <Link key={t.id} to={`/app/mock-tests/${t.id}`} className="group block animate-fade-up" style={{ animationDelay: `${i * 50}ms` }}>
             <Card hard hover padding="none" className="h-full flex flex-col overflow-hidden">
               <div className="relative">
-                <Img src={t.coverUrl} ratio="video" alt={t.title} fallbackClass={t.examType === 'TOEIC' ? 'bg-indigo-300' : 'bg-emerald-300'} className="group-hover:scale-105 transition-transform duration-700" />
+                <Img src={t.coverUrl} ratio="video" alt={t.title} fallbackClass={t.examType === 'TOEIC' ? 'bg-indigo-50' : 'bg-emerald-50'} className="group-hover:scale-105 transition-transform duration-700" fallback={<TestCover examType={t.examType} title={t.title} totalQuestions={t.totalQuestions} durationMinutes={t.durationMinutes} className="pt-12" />} />
                 <div className="absolute top-3 left-3 flex gap-1.5 flex-wrap">
                   <Badge tone={t.examType === 'TOEIC' ? 'indigo' : 'emerald'} solid size="xs">
                     {t.examType}

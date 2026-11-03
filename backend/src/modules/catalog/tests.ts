@@ -6,7 +6,7 @@ import { optionalAuth } from '../../core/auth';
 import { handler, notFound, parse } from '../../core/http';
 import { isUuid } from './courses';
 import { completedAttempts } from './counts';
-import { PART_TITLE, partId, partsOf, sortPartIds, toPassage, toQuestion, toTestSummary, type QuestionWithPassage } from './mappers';
+import { byTitleNatural, PART_TITLE, partId, partsOf, sortPartIds, toPassage, toQuestion, toTestSummary, type QuestionWithPassage } from './mappers';
 import { TOEIC_PARTS_INFO, VSTEP_PARTS_INFO } from './parts-info';
 
 export const testsRouter = Router();
@@ -49,7 +49,7 @@ testsRouter.get(
       kind: q.kind ?? { in: ['FULL', 'MINI'] },
       ...(q.q ? { title: { contains: q.q, mode: 'insensitive' } } : {}),
     };
-    const tests = await prisma.mockTest.findMany({ where, orderBy: [{ year: 'desc' }, { createdAt: 'asc' }] });
+    const tests = (await prisma.mockTest.findMany({ where, orderBy: [{ year: 'desc' }, { createdAt: 'asc' }] })).sort((a, b) => (b.year ?? 0) - (a.year ?? 0) || byTitleNatural(a, b));
     const [parts, attempts] = await Promise.all([partIdsByTest(tests.map((t) => t.id)), completedAttempts(tests.map((t) => t.id))]);
     return tests.map((t) => toTestSummary(t, parts.get(t.id) ?? [], attempts.get(t.id) ?? 0));
   })

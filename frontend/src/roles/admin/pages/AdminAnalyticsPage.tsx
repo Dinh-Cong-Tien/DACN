@@ -111,8 +111,9 @@ export const AdminAnalyticsPage: React.FC = () => {
             <Empty />
           )}
         </Panel>
-        <Panel flush title="Chi tiết theo ngày" sub="Người hoạt động · phút học · số câu đã làm" icon={Eye} tone="amber">
+        <Panel flush title="Tài khoản & chi tiết theo ngày" sub="Số tài khoản theo vai trò · người hoạt động, phút học, số câu mỗi ngày" icon={Eye} tone="amber">
           <div className="p-5 pb-3">
+            <p className="mb-2 text-xs font-semibold text-slate-500">Tài khoản theo vai trò</p>
             {roles.length ? <HBarChart ariaLabel="Tài khoản theo vai trò" data={roles} format={(v) => formatNumber(v)} labelWidth={120} /> : <Empty />}
           </div>
           <div className="max-h-[320px] overflow-auto">

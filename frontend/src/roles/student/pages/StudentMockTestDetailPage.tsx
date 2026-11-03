@@ -4,6 +4,7 @@ import { Check, ChevronRight, Lock, Play } from 'lucide-react';
 import { useDocumentTitle } from '@/shared/hooks';
 import { useAuthStore } from '@/shared/stores/authStore';
 import { Breadcrumb } from '@/shared/components/ui';
+import { TestCover } from '@/shared/components/media/TestCover';
 import { Img } from '@/shared/components/media/Img';
 import { useAttempts, usePartsInfo, useTest } from '@/shared/api/learner';
 import { cn, examSetupQuery, formatDate, formatDuration, formatNumber } from '@/shared/utils';
@@ -83,7 +84,7 @@ const TestDetail: React.FC<{ test: MockTestSummary }> = ({ test }) => {
 
       {/* Đầu trang */}
       <div className="grid gap-6 rounded-2xl border border-slate-200 bg-white p-4 md:grid-cols-[280px_1fr] md:p-5">
-        <Img src={test.coverUrl} alt={test.title} ratio="video" wrapperClass="rounded-xl" fallbackClass="bg-slate-200" />
+        <Img src={test.coverUrl} alt={test.title} ratio="video" wrapperClass="rounded-xl" fallbackClass="bg-slate-200" fallback={<TestCover examType={test.examType} title={test.title} totalQuestions={test.totalQuestions} durationMinutes={test.durationMinutes} />} />
         <div className="flex flex-col justify-center">
           <p className="text-[13px] font-medium text-slate-500">
             {test.examType} · {test.level} · Năm {test.year}

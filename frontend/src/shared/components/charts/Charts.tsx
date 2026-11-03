@@ -54,11 +54,15 @@ const Legend: React.FC<{ items: { name: string; slot: Slot }[] }> = ({ items }) 
 );
 
 /** Cột dọc một chuỗi: phân bố, so sánh giữa các nhóm */
+/** Lề trái đủ chứa nhãn trục Y dài nhất (~6.5px/ký tự ở cỡ 11px) */
+const axisPad = (ticks: number[], format: (v: number) => string) => Math.max(28, Math.ceil(Math.max(...ticks.map((v) => format(v).length)) * 6.5) + 12);
+
 export const BarChart: React.FC<{ data: { label: string; value: number }[]; height?: number; max?: number; unit?: string; format?: (v: number) => string; highlight?: string; className?: string; ariaLabel: string }> = ({ data, height = 220, max, unit = '', format = fmtDefault, highlight, className, ariaLabel }) => {
   const [ref, w] = useWidth<HTMLDivElement>();
   const [hover, setHover] = useState<number | null>(null);
-  const pad = { l: 36, r: 8, t: 12, b: 28 };
   const ticks = niceTicks(max ?? Math.max(...data.map((d) => d.value), 1), 4, { exact: max !== undefined, integer: data.every((d) => Number.isInteger(d.value)) });
+  // lề trái theo nhãn trục dài nhất (vd "15.000") để không bị cắt chữ số
+  const pad = { l: axisPad(ticks, format), r: 8, t: 12, b: 28 };
   const top = ticks[ticks.length - 1];
   const iw = Math.max(0, w - pad.l - pad.r);
   const ih = height - pad.t - pad.b;
@@ -131,8 +135,8 @@ export const HBarChart: React.FC<{ data: { label: string; value: number; note?: 
 export const LineChart: React.FC<{ labels: string[]; series: { name: string; values: number[]; slot?: Slot }[]; height?: number; min?: number; max?: number; unit?: string; format?: (v: number) => string; className?: string; ariaLabel: string }> = ({ labels, series, height = 220, min = 0, max, unit = '', format = fmtDefault, className, ariaLabel }) => {
   const [ref, w] = useWidth<HTMLDivElement>();
   const [hover, setHover] = useState<number | null>(null);
-  const pad = { l: 40, r: 26, t: 12, b: 28 };
   const ticks = niceTicks((max ?? Math.max(...series.flatMap((s) => s.values), 1)) - min, 4, { exact: max !== undefined }).map((t) => t + min);
+  const pad = { l: Math.max(40, axisPad(ticks, format)), r: 26, t: 12, b: 28 };
   const top = ticks[ticks.length - 1];
   const iw = Math.max(0, w - pad.l - pad.r);
   const ih = height - pad.t - pad.b;

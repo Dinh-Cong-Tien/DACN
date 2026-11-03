@@ -119,12 +119,17 @@ export function toQuestion(q: QuestionWithPassage, tagSlugs: Map<string, string>
 }
 
 // ---------- Đề ----------
+/** Mức độ đề lưu dạng easy / medium / hard → nhãn tiếng Việt; giá trị khác (B1–B2…) giữ nguyên */
+const LEVEL_VI: Record<string, string> = { easy: 'Dễ', medium: 'Trung bình', hard: 'Khó' };
+export const levelLabel = (level: string | null | undefined) => (level ? (LEVEL_VI[level.toLowerCase()] ?? level) : '');
+/** Sắp tên đề theo số tự nhiên: Test 2 trước Test 10 */
+export const byTitleNatural = <T extends { title: string }>(a: T, b: T) => a.title.localeCompare(b.title, 'vi', { numeric: true, sensitivity: 'base' });
 export const toTestSummary = (t: MockTest, partIds: string[], attempts = 0) => ({
   id: t.id,
   slug: t.slug,
   title: t.title,
   examType: t.examType,
-  level: t.level ?? '',
+  level: levelLabel(t.level),
   durationMinutes: t.durationMin,
   totalQuestions: t.totalQuestions,
   parts: partLabels(t.examType, partIds),

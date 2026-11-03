@@ -6,18 +6,22 @@ interface ImgProps extends React.ImgHTMLAttributes<HTMLImageElement> {
   fallbackClass?: string;
   ratio?: 'video' | 'square' | '4/3' | '3/4' | 'auto';
   wrapperClass?: string;
+  /** Nội dung hiện khi không có ảnh hoặc ảnh lỗi (vd bìa chữ của đề thi) */
+  fallback?: React.ReactNode;
 }
 
 /** Ảnh có skeleton khi tải và nền màu dự phòng khi lỗi (ảnh Unsplash/pravatar ngoài mạng) */
-export const Img: React.FC<ImgProps> = ({ fallbackClass = 'bg-indigo-200', ratio = 'auto', wrapperClass, className, alt = '', ...rest }) => {
+export const Img: React.FC<ImgProps> = ({ fallbackClass = 'bg-indigo-200', ratio = 'auto', wrapperClass, className, alt = '', fallback, ...rest }) => {
   const [state, setState] = useState<'loading' | 'ok' | 'error'>('loading');
   const r = { video: 'aspect-video', square: 'aspect-square', '4/3': 'aspect-[4/3]', '3/4': 'aspect-[3/4]', auto: '' }[ratio];
+  // wrapperClass định vị riêng (absolute / fixed) thì không gắn `relative` — trong CSS Tailwind `relative` đứng sau nên sẽ đè `absolute`
+  const pos = /\b(absolute|fixed|sticky)\b/.test(wrapperClass ?? '') ? '' : 'relative';
+  // không có ảnh → hiện nền dự phòng ngay (không để skeleton tải mãi)
+  if (!rest.src) return <div className={cn(pos, 'overflow-hidden', r, wrapperClass, fallbackClass)}>{fallback}</div>;
   return (
-    <div className={cn('relative overflow-hidden', r, wrapperClass, state !== 'ok' && fallbackClass)}>
+    <div className={cn(pos, 'overflow-hidden', r, wrapperClass, state !== 'ok' && fallbackClass)}>
       {state === 'loading' && <div className="absolute inset-0 skeleton rounded-none" />}
-      {state === 'error' && (
-        <div className="absolute inset-0 bg-lines opacity-60" />
-      )}
+      {state === 'error' && (fallback ?? <div className="absolute inset-0 bg-lines opacity-60" />)}
       <img
         alt={alt}
         loading="lazy"

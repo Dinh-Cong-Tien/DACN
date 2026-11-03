@@ -284,7 +284,7 @@ export const AdminCoursesPage: React.FC = () => {
               <div className="p-5">
                 <dl className="divide-y divide-slate-100 text-sm">
                   <div className="flex justify-between gap-4 py-2.5">
-                    <dt className="text-slate-500">Mô tả</dt>
+                    <dt className="text-slate-500">Tóm tắt</dt>
                     <dd className="text-right text-slate-800">{selected.meta ?? '—'}</dd>
                   </div>
                   <div className="flex justify-between gap-4 py-2.5">

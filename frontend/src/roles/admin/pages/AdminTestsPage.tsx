@@ -13,6 +13,8 @@ import { toast } from '@/shared/stores/uiStore';
 import { errorMessage } from '@/shared/api/client';
 import { TestQuestionsDialog } from '../components/TestQuestionsDialog';
 
+/** easy / medium / hard lưu trong CSDL → nhãn hiển thị */
+const LEVEL_VI: Record<string, string> = { easy: 'Dễ', medium: 'Trung bình', hard: 'Khó' };
 const STATUS: Record<string, [string, string]> = {
   PUBLISHED: ['bg-emerald-500', 'Công khai'],
   PENDING_REVIEW: ['bg-amber-500', 'Chờ duyệt'],
@@ -40,7 +42,7 @@ const columns: Column<MockTestSummary>[] = [
     ),
   },
   { key: 'examType', header: 'Kỳ thi', render: (t) => <span className={`inline-flex rounded-lg px-2 py-0.5 text-xs font-semibold text-white ${t.examType === 'TOEIC' ? 'bg-indigo-600' : 'bg-emerald-600'}`}>{t.examType}</span> },
-  { key: 'level', header: 'Cấp độ', render: (t) => <span className="whitespace-nowrap text-[13px] text-slate-700">{t.level}</span> },
+  { key: 'level', header: 'Cấp độ', render: (t) => <span className="whitespace-nowrap text-[13px] text-slate-700">{LEVEL_VI[t.level?.toLowerCase() ?? ''] ?? t.level}</span> },
   {
     key: 'durationMinutes',
     header: 'Thời gian',
@@ -52,7 +54,8 @@ const columns: Column<MockTestSummary>[] = [
     ),
   },
   { key: 'totalQuestions', header: 'Số câu', align: 'center', render: (t) => <span className="font-semibold tabular-nums text-slate-900">{t.totalQuestions}</span> },
-  { key: 'parts', header: 'Cấu trúc', render: (t) => <span className="text-xs text-slate-600">{t.parts.join(', ')}</span> },
+  // gọn 1 dòng: số phần + rê chuột xem danh sách (tránh dòng bảng cao hàng trăm px)
+  { key: 'parts', header: 'Cấu trúc', render: (t) => <span className="whitespace-nowrap text-xs text-slate-600" title={t.parts.join(', ')}>{t.parts.length ? `${t.parts.length} phần` : '—'}</span> },
   { key: 'attempts', header: 'Lượt làm', align: 'right', render: (t) => <span className="text-[13px] font-semibold tabular-nums text-slate-900">{formatNumber(t.attempts)}</span> },
   {
     key: 'status',
@@ -69,7 +72,7 @@ const columns: Column<MockTestSummary>[] = [
     header: 'Quyền',
     render: (t) =>
       t.isFree ? (
-        <span className="inline-flex items-center gap-1.5 text-[13px] text-slate-700"><span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />Miễn phí</span>
+        <span className="inline-flex items-center gap-1.5 whitespace-nowrap text-[13px] text-slate-700"><span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />Miễn phí</span>
       ) : (
         <span className="inline-flex items-center gap-1 rounded-lg bg-gradient-to-r from-amber-400 to-orange-500 px-2 py-0.5 text-[11px] font-bold text-white"><Crown className="h-3 w-3" /> VIP</span>
       ),

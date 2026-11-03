@@ -8,7 +8,7 @@ import { partLabel } from '@/shared/constants/staff';
 import { Column } from '@/shared/components/ui';
 import { CrudEditor, type CrudField, type CrudFilter } from '@/engines';
 import { cn, formatNumber } from '@/shared/utils';
-import { TPageHead } from '@/roles/teacher/components/TeacherKit';
+import { TBtn, TPageHead } from '@/roles/teacher/components/TeacherKit';
 import { ICON_OPTIONS, NamedIcon } from '@/shared/components/ui/named-icon';
 
 type Kind = 'grammar' | 'vocab' | 'words' | 'dictation' | 'writing' | 'speaking' | 'rubrics' | 'resources' | 'faq';
@@ -64,7 +64,18 @@ const SPEAKING_PARTS = [
   { value: 'VSTEP_S2', label: 'VSTEP Part 2 — Solution Discussion' },
   { value: 'VSTEP_S3', label: 'VSTEP Part 3 — Topic Development' },
 ];
-const taskLabel = (q: QuestionRow) => `${q.examType} · ${partLabel(q.part)}`;
+/** Dạng đề: TOEIC Viết/Nói lấy từ task_config (label / title, đề gốc + số câu); VSTEP theo part */
+const taskLabel = (q: QuestionRow) => {
+  const c = (q.taskConfig ?? {}) as { label?: string; title?: string; test?: string; questionNo?: number };
+  if (q.examType === 'TOEIC' && (c.label || c.title)) {
+    const src = c.test ? `${c.test.replace(/^TOEIC (Speaking|Writing)\s*/i, '')}${c.questionNo ? ` · Câu ${c.questionNo}` : ''}` : '';
+    return `TOEIC · ${c.label ?? c.title}${src ? ` (${src})` : ''}`;
+  }
+  return `${q.examType} · ${partLabel(q.part)}`;
+};
+
+/** Sắp theo số tự nhiên: Đề 2 trước Đề 10, TEST 01 trước TEST 07 */
+const byTask = (a: QuestionRow, b: QuestionRow) => taskLabel(a).localeCompare(taskLabel(b), 'vi', { numeric: true });
 
 function buildConfig(d: Data): Record<Kind, LearnConfig<{ id: string }>> {
   const topicName = (id?: string) => d.topics.find((t) => t.id === id)?.name ?? '';
@@ -81,7 +92,7 @@ function buildConfig(d: Data): Record<Kind, LearnConfig<{ id: string }>> {
       entityName: 'bài chép chính tả',
       createLabel: 'Thêm bài',
       idPrefix: 'dc',
-      rows: d.dictation,
+      rows: [...d.dictation].sort((a, b) => a.title.localeCompare(b.title, 'vi', { numeric: true })),
       loading: d.loading.dictation,
       searchKeys: ['title', 'segmentsText'],
       filters: [
@@ -260,7 +271,7 @@ function buildConfig(d: Data): Record<Kind, LearnConfig<{ id: string }>> {
       entityName: 'đề viết',
       createLabel: 'Thêm đề viết',
       idPrefix: 'w',
-      rows: d.writing,
+      rows: [...d.writing].sort(byTask),
       loading: d.loading.writing,
       searchKeys: ['stem', 'part'],
       filters: [{ key: 'examType', label: 'Kỳ thi', options: opts(['TOEIC', 'VSTEP']) }],
@@ -284,7 +295,7 @@ function buildConfig(d: Data): Record<Kind, LearnConfig<{ id: string }>> {
       entityName: 'đề nói',
       createLabel: 'Thêm đề nói',
       idPrefix: 's',
-      rows: d.speaking,
+      rows: [...d.speaking].sort(byTask),
       loading: d.loading.speaking,
       searchKeys: ['stem', 'part'],
       filters: [{ key: 'examType', label: 'Kỳ thi', options: opts(['TOEIC', 'VSTEP']) }],
@@ -385,6 +396,34 @@ const GROUPS: { label: string; tabs: Kind[] }[] = [
 ];
 const TAB_LABEL: Record<Kind, string> = { grammar: 'Ngữ pháp', vocab: 'Bộ từ vựng', words: 'Từ vựng', dictation: 'Chép chính tả', writing: 'Đề Viết', speaking: 'Đề Nói', rubrics: 'Tiêu chí chấm', resources: 'Tài liệu mở', faq: 'FAQ' };
 
+/** Loại có quá nhiều dòng để tải hết: tìm kiếm + phân trang trên máy chủ (không cắt cụt ở 200/500 dòng) */
+const SERVER_KINDS = ['words', 'writing', 'speaking'] as const;
+type ServerKind = (typeof SERVER_KINDS)[number];
+const PAGE = 200;
+
+const ServerPager: React.FC<{ q: string; onQ: (q: string) => void; page: number; total: number; onPage: (p: number) => void; placeholder: string }> = ({ q, onQ, page, total, onPage, placeholder }) => {
+  const [text, setText] = React.useState(q);
+  React.useEffect(() => {
+    const id = setTimeout(() => text !== q && onQ(text), 350);
+    return () => clearTimeout(id);
+  }, [text]); // eslint-disable-line react-hooks/exhaustive-deps
+  const last = Math.max(1, Math.ceil(total / PAGE));
+  return (
+    <div className="flex flex-wrap items-center gap-2">
+      <input value={text} onChange={(e) => setText(e.target.value)} placeholder={placeholder} aria-label={placeholder} className="h-9 w-56 rounded-lg border border-slate-200 bg-white px-3 text-sm outline-none focus:border-indigo-400" />
+      <span className="whitespace-nowrap text-xs tabular-nums text-slate-500">
+        {total ? `${(page - 1) * PAGE + 1}–${Math.min(page * PAGE, total)} / ${formatNumber(total)}` : '0 kết quả'}
+      </span>
+      <TBtn variant="ghost" disabled={page <= 1} onClick={() => onPage(page - 1)}>
+        Trước
+      </TBtn>
+      <TBtn variant="ghost" disabled={page >= last} onClick={() => onPage(page + 1)}>
+        Sau
+      </TBtn>
+    </div>
+  );
+};
+
 /** Quản trị nội dung học tập học viên đang dùng: mỗi loại là một cấu hình của CRUD Editor engine */
 export const AdminLearningPage: React.FC = () => {
   const { kind = 'grammar' } = useParams();
@@ -392,9 +431,11 @@ export const AdminLearningPage: React.FC = () => {
   const refresh = useAdminInvalidate();
   const grammar = useAdminGrammar();
   const topics = useAdminVocabTopics();
-  const words = useAdminWords({ pageSize: 500 });
-  const writing = useAdminQuestions({ type: 'ESSAY', pageSize: 200 });
-  const speaking = useAdminQuestions({ type: 'SPEAKING_RESPONSE', pageSize: 200 });
+  const [srv, setSrv] = React.useState<Record<ServerKind, { q: string; page: number }>>({ words: { q: '', page: 1 }, writing: { q: '', page: 1 }, speaking: { q: '', page: 1 } });
+  const setServer = (k: ServerKind, v: Partial<{ q: string; page: number }>) => setSrv((s) => ({ ...s, [k]: { ...s[k], ...v } }));
+  const words = useAdminWords({ pageSize: PAGE, page: srv.words.page, ...(srv.words.q ? { q: srv.words.q } : {}) });
+  const writing = useAdminQuestions({ type: 'ESSAY', pageSize: PAGE, page: srv.writing.page, ...(srv.writing.q ? { q: srv.writing.q } : {}) });
+  const speaking = useAdminQuestions({ type: 'SPEAKING_RESPONSE', pageSize: PAGE, page: srv.speaking.page, ...(srv.speaking.q ? { q: srv.speaking.q } : {}) });
   const resources = useAdminResources();
   const faqs = useAdminFaqs();
   const dictation = useAdminDictation();
@@ -460,7 +501,19 @@ export const AdminLearningPage: React.FC = () => {
         }}
         columns={cfg.columns}
         fields={cfg.fields}
-        searchKeys={cfg.searchKeys}
+        searchKeys={(SERVER_KINDS as readonly string[]).includes(kind) ? [] : cfg.searchKeys}
+        toolbarExtra={
+          (SERVER_KINDS as readonly string[]).includes(kind) ? (
+            <ServerPager
+              q={srv[kind as ServerKind].q}
+              onQ={(q) => setServer(kind as ServerKind, { q, page: 1 })}
+              page={srv[kind as ServerKind].page}
+              total={counts[kind as Kind]}
+              onPage={(page) => setServer(kind as ServerKind, { page })}
+              placeholder={kind === 'words' ? 'Tìm từ…' : 'Tìm trong đề…'}
+            />
+          ) : undefined
+        }
         filters={cfg.filters}
         entityName={cfg.entityName}
         createLabel={cfg.createLabel}

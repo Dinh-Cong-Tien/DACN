@@ -42,6 +42,7 @@ import { contentRouter } from './teacher.content';
 import { insightsRouter } from './teacher.insights';
 import { MODE_LABEL, mistakeSummaryOf, selfStudyOf } from './insights.service';
 import { completedAttempts } from '../catalog/counts';
+import { byTitleNatural, levelLabel } from '../catalog/mappers';
 
 export const teacherRouter = Router();
 
@@ -1426,6 +1427,8 @@ teacherRouter.get(
       where: { deletedAt: null, status: 'PUBLISHED', examType: q.examType, kind: { in: ['FULL', 'MINI', 'QUIZ'] }, ...(q.q ? { title: { contains: q.q, mode: 'insensitive' } } : {}) },
       orderBy: [{ examType: 'asc' }, { year: 'desc' }, { title: 'asc' }],
     });
+    // Test 2 trước Test 10
+    tests.sort((a, b) => a.examType.localeCompare(b.examType) || (b.year ?? 0) - (a.year ?? 0) || byTitleNatural(a, b));
     const counts = tests.length ? await prisma.mockTestQuestion.groupBy({ by: ['testId', 'part'], where: { testId: { in: tests.map((t) => t.id) } }, _count: { _all: true } }) : [];
     const [used, attempts] = await Promise.all([usedCounts(), completedAttempts(tests.map((t) => t.id))]);
     /** Gộp Part theo nhóm frontend (TOEIC: PART_n; VSTEP: theo kỹ năng) */
@@ -1446,7 +1449,7 @@ teacherRouter.get(
       isFree: t.isFree,
       coverUrl: t.coverUrl ?? undefined,
       tags: t.tags,
-      level: t.level ?? undefined,
+      level: levelLabel(t.level) || undefined,
       attemptsCount: attempts.get(t.id) ?? 0,
       usedCount: used.get(t.id) ?? 0,
       parts: partsOf(t.id),

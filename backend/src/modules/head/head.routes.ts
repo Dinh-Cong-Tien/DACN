@@ -643,6 +643,8 @@ export const toQuestionRow = (q: Prisma.QuestionGetPayload<{ include: { passage:
   translationVi: q.translationVi ?? undefined,
   audioUrl: q.audioUrl ?? undefined,
   imageUrl: q.imageUrl ?? undefined,
+  // dạng bài Viết / Nói (TOEIC S&W chưa có part riêng trong enum → nhận diện qua task_config)
+  taskConfig: (q.taskConfig as Record<string, unknown> | null) ?? undefined,
   passageId: q.passageId ?? undefined,
   passageTitle: q.passage?.title ?? undefined,
   tagIds: q.tagIds,
