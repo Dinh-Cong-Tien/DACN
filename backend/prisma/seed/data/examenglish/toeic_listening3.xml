@@ -1,0 +1,346 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<DOC>
+<random>yes</random>
+<title>TOEIC Listening test, part 3</title>
+<instructions>You are going to listen to ten short conversations, each with 3 questions. For each question, choose the answer which you think fits best according to what you hear.</instructions>
+
+<passage><audio>Toeic_3_1.mp3</audio><script><![CDATA[<p>Man:  Hello, Tom Wilson’s, can I help you?<br />
+  Woman: Hi there, it’s Emma Lloyd here. I’m calling about my motorbike. Is it ready to be collected yet?<br />
+  Man:  Can you remind me, what’s the make of the bike?<br />
+  Woman: It’s a City Zip. It’s blue. <br />
+  Man:  Oh yes. We had to order in some parts, but they still haven’t arrived yet I’m afraid.<br />
+  Woman: Do you know when the bike will be ready to pick up?<br />
+  Man:  Sorry, I don’t know. But I’ll call our suppliers and find out if they’ve sent out the spare parts yet. Once the parts are here we can fix the bike in two or three days. <br />
+  Woman: Okay, I’ll give you a call at the end of the week, then.<br />
+  Man:  Sure.</p>]]></script>
+<item><text><![CDATA[Where is the woman calling?]]></text><choice feedback='Incorrect'>an office</choice><choice feedback='Correct'>a garage</choice><choice feedback='Incorrect'>a doctor’s surgery</choice><choice feedback='Incorrect'>a factory</choice></item>
+
+
+
+
+<item><text><![CDATA[What information does that man ask for?]]></text><choice feedback='Incorrect'>the woman’s name</choice><choice feedback='Incorrect'>the registration number of the bike</choice><choice feedback='Correct'>the make of the bike</choice><choice feedback='Incorrect'>the woman’s phone number</choice></item>
+
+
+
+
+<item><text><![CDATA[What is the man going to do?]]></text><choice feedback='Correct'>telephone the suppliers</choice><choice feedback='Incorrect'>call the woman back</choice><choice feedback='Incorrect'>order a new part</choice><choice feedback='Incorrect'>pick up the motorbike</choice></item>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</passage><passage><audio>Toeic_3_2.mp3</audio><script><![CDATA[<p>Man:  Excuse me, I’ve got an appointment to see the manager. Can you tell me where his office is please?<br />
+  Woman: Sure. You need to go up to the second floor, to the household good department. There’s a door to the right of the cash desk. Go through the door and go along the corridor. The manager’s office is on the right hand side. It’s opposite the staff kitchen.<br />
+  Man:  Is there an elevator?<br />
+  Woman: Yes, there is. It’s just over there, next to the changing rooms.<br />
+  Man:   Is there a bathroom I can use, please?<br />
+  Woman: Yes, on the lower ground floor, near the restaurant.</p>]]></script>
+<item><text><![CDATA[Where are they?]]></text><choice feedback='Correct'>in a shop</choice><choice feedback='Incorrect'>in a college</choice><choice feedback='Incorrect'>in the street</choice><choice feedback='Incorrect'>in a factory</choice></item>
+
+
+
+
+<item><text><![CDATA[Where is the manager’s office?]]></text><choice feedback='Correct'>on the second floor</choice><choice feedback='Incorrect'>near the restaurant</choice><choice feedback='Incorrect'>next to the changing rooms</choice><choice feedback='Incorrect'>next to the staff kitchen</choice></item>
+
+
+
+
+<item><text><![CDATA[What is on the lower ground floor?]]></text><choice feedback='Incorrect'>the household goods department</choice><choice feedback='Incorrect'>the staff kitchen</choice><choice feedback='Correct'>the restaurant</choice><choice feedback='Incorrect'>the changing rooms</choice></item>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</passage><passage><audio>Toeic_3_3.mp3</audio><script><![CDATA[<p>Woman: My plane leaves at eight o’clock this evening, doesn’t it?<br />
+  Man:  No, it leaves at seven.<br />
+  Woman: Oh dear, I don’t have as much time as I thought. <br />
+  Man:  Don’t worry, I’ve already booked a taxi to take you to the airport. It’s coming at four thirty.<br />
+  Woman: Oh, thanks Duncan. Have you any idea what time it gets in?<br />
+  Man:  I’ll have a look at your booking... Here we are. Flight time is two and a half hours, and you get into Chicago at eight thirty local time. <br />
+  Woman: That’s great. Hopefully I’ll be at the hotel by half nine.&nbsp; </p>]]></script>
+<item><text><![CDATA[What is the woman doing this evening?]]></text><choice feedback='Incorrect'>catching a train</choice><choice feedback='Correct'>taking a flight</choice><choice feedback='Incorrect'>going on holiday</choice><choice feedback='Incorrect'>meeting a friend</choice></item>
+
+
+
+
+<item><text><![CDATA[What time is the taxi coming?]]></text><choice feedback='Incorrect'>8 o’clock</choice><choice feedback='Incorrect'>7 o’clock</choice><choice feedback='Correct'>half past four</choice><choice feedback='Incorrect'>half past two</choice></item>
+
+
+
+
+<item><text><![CDATA[How long will the woman’s journey take?]]></text><choice feedback='Incorrect'>1½ hours</choice><choice feedback='Correct'>2½ hours</choice><choice feedback='Incorrect'>4½ hours</choice><choice feedback='Incorrect'>8½ hours</choice></item>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</passage><passage><audio>Toeic_3_4.mp3</audio><script><![CDATA[<p>Man:  Hi Jenny, did you have a good weekend?<br />
+  Woman: Yes, it was fantastic. We went to the National Park and went walking in the mountains.<br />
+  Man:  Brilliant. Well, you had a great day for it.<br />
+  Woman: Absolutely. There wasn’t a cloud in the sky. We could see for miles from the top. What about you, what did you get up to?<br />
+  Man:  I was preparing for the wedding. We had a few last minute jobs to do, you know, sorting out the drinks and the tables.<br />
+  Woman: Of course! I forgot you’re getting married. It’s on Friday isn’t it?<br />
+  Man:  Yes. Five days till the big day.<br />
+  Woman: Well, I bet you’re looking forward to it. </p>]]></script>
+<item><text><![CDATA[Where did the woman go at the weekend?]]></text><choice feedback='Incorrect'>to a city</choice><choice feedback='Incorrect'>to the beach</choice><choice feedback='Correct'>to the countryside</choice><choice feedback='Incorrect'>to visit a friend</choice></item>
+
+
+
+
+<item><text><![CDATA[What was the weather like at the weekend?]]></text><choice feedback='Correct'>sunny</choice><choice feedback='Incorrect'>cloudy</choice><choice feedback='Incorrect'>rainy</choice><choice feedback='Incorrect'>snowy</choice></item>
+
+
+
+
+<item><text><![CDATA[What did the man do at the weekend?]]></text><choice feedback='Incorrect'>he got married</choice><choice feedback='Incorrect'>he had a party</choice><choice feedback='Incorrect'>he went out for a drink</choice><choice feedback='Correct'>he prepared for his wedding</choice></item>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</passage><passage><audio>Toeic_3_5.mp3</audio><script><![CDATA[<p>Woman: I’m doing a stationery order, Clive. Do you need anything?<br />
+  Man:  Hmm, let me think. I need some more pens.<br />
+  Woman: What colour? Red? Blue?<br />
+  Man:  Oh no. I’ve got enough red ones. But I’m short of black ones. I never seem to have any.<br />
+  Woman: Really? Have you looked in the drawer? There are usually lots of pens in there.<br />
+  Man:  Which drawer? <br />
+  Woman: The drawer in the desk next to the photocopier.<br />
+  Man:  I thought the stationery was kept in the cupboard at reception.<br />
+  Woman: No, we moved it about six weeks ago. I’ll check it, and bring some to you. Do you need anything else?<br />
+  Man:  Some staples and some paper clips please.<br />
+  Woman: Sure.</p>]]></script>
+<item><text><![CDATA[What does the man need?]]></text><choice feedback='Incorrect'>red pens</choice><choice feedback='Incorrect'>blue pens</choice><choice feedback='Correct'>black pens</choice><choice feedback='Incorrect'>green pens</choice></item>
+
+
+
+
+<item><text><![CDATA[The man thought that stationery was kept...]]></text><choice feedback='Incorrect'>in a drawer</choice><choice feedback='Incorrect'>in a desk</choice><choice feedback='Incorrect'>on a shelf</choice><choice feedback='Correct'>in a cupboard</choice></item>
+
+
+
+
+<item><text><![CDATA[The man wants to order some equipment to...]]></text><choice feedback='Incorrect'>make corrections</choice><choice feedback='Correct'>hold documents together</choice><choice feedback='Incorrect'>print out documents</choice><choice feedback='Incorrect'>file documents away</choice></item>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</passage><passage><audio>Toeic_3_6.mp3</audio><script><![CDATA[<p>Woman: Hello, Regent Hotel. How can I help you?<br />
+  Man:  Hi, I’d like to book some rooms please.<br />
+  Woman: Sure, when is your booking for?<br />
+  Man:  For three nights, from the 8th to the 11th April.<br />
+  Woman: Okay. And how many rooms would you like?<br />
+  Man:  Twelve single rooms please.<br />
+  Woman: Twelve? That’s a lot. That might be difficult. We have a wedding that weekend. Let me see. I can offer you four singles and four doubles. The singles are $85 and the doubles are $1That’s all we have left, I’m afraid. Would anyone in your party be prepared to share?<br />
+  Man:  I’ll have to ask and get back to you.<br />
+  Woman: Okay. I’ll reserve the rooms for you. Please get in touch by the end of the day if you want to make a booking.   </p>]]></script>
+<item><text><![CDATA[How long does the man want to stay at the hotel?]]></text><choice feedback='Incorrect'>3rd – 8th April</choice><choice feedback='Correct'>8th – 11th April</choice><choice feedback='Incorrect'>3rd – 11th April</choice><choice feedback='Incorrect'>8th – 12th April</choice></item>
+
+
+
+
+
+<item><text><![CDATA[What is the problem?]]></text><choice feedback='Incorrect'>There are only four single rooms in the hotel.</choice><choice feedback='Incorrect'>Only expensive rooms are available.</choice><choice feedback='Incorrect'>The hotel doesn’t like large groups of people.</choice><choice feedback='Correct'>The hotel is busy at that time.</choice></item>
+
+
+
+
+
+<item><text><![CDATA[What is the man going to find out?]]></text><choice feedback='Correct'>if some of his friends will share a room</choice><choice feedback='Incorrect'>if there are any other hotels nearby</choice><choice feedback='Incorrect'>if the rooms are too expensive</choice><choice feedback='Incorrect'>if some friends will stay at a different hotel</choice></item>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</passage><passage><audio>Toeic_3_7.mp3</audio><script><![CDATA[<p>Man:  Have you chosen a place for the staff social evening yet?<br />
+  Woman: Yes, we’re going to the Blue Zebra.<br />
+  Man:  The Blue Zebra?<br />
+  Woman: Yes, it’s a vegetarian restaurant near the cinema. It serves organic food. It’s really good, and quite cheap.<br />
+  Man:  But that’s not very fair, is it? What about the people who aren’t vegetarians? <br />
+  Woman: You can eat vegetarian food for one night!<br />
+  Man:  Yes, but certainly &nbsp;I don’t want to pay for food that I don’t want to eat. Why don’t we go to The Gray Fox? They have a big menu with vegetarian <em>and</em> meat dishes. <br />
+  Woman: No. I went there before, and my meal was really greasy and fatty. </p>]]></script>
+
+<item><text><![CDATA[What are they discussing?]]></text><choice feedback='Incorrect'>a party</choice><choice feedback='Correct'>a trip to a restaurant</choice><choice feedback='Incorrect'>a trip to the cinema</choice><choice feedback='Incorrect'>a trip to a supermarket</choice></item>
+
+
+
+
+
+<item><text><![CDATA[Why doesn’t the man like the choice?]]></text><choice feedback='Incorrect'>it is too cheap</choice><choice feedback='Incorrect'>it is too far</choice><choice feedback='Correct'>it doesn’t serve meat</choice><choice feedback='Incorrect'>it doesn’t serve vegetables</choice></item>
+
+
+
+
+
+<item><text><![CDATA[The woman doesn’t want to go to The Gray Fox <br>because...]]></text><choice feedback='Correct'>the food is unhealthy.</choice><choice feedback='Incorrect'>it’s too expensive.</choice><choice feedback='Incorrect'>it only serves meat dishes.</choice><choice feedback='Incorrect'>the servings are small.</choice></item>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</passage><passage><audio>Toeic_3_8.mp3</audio><script><![CDATA[<p>Man:  The business is losing money, so we need to cut costs. What do you think we should do?<br />
+  Woman: The best way to save money is to make some staff reductions.<br />
+  Man:  I don’t like that idea. It will make the remaining staff unhappy. They may become more unproductive.<br />
+  Woman: I disagree. They may work harder. They will be worried about losing their jobs too. <br />
+  Man:  I think we should reduce the perks.&nbsp; We could stop supplying free tea and coffee and stop the free gym membership.<br />
+  Woman: I don’t think cutting perks will save us much money. </p>]]></script>
+<item><text><![CDATA[What are the couple discussing?]]></text><choice feedback='Incorrect'>How their business can make more money</choice><choice feedback='Correct'>How their business can save money</choice><choice feedback='Incorrect'>How they can make their staff happier</choice><choice feedback='Incorrect'>How they can make their staff work harder.</choice></item>
+
+
+
+
+<item><text><![CDATA[The woman wants to...]]></text><choice feedback='Incorrect'>hire more staff.</choice><choice feedback='Incorrect'>tell the staff to work harder.</choice><choice feedback='Correct'>fire some staff.</choice><choice feedback='Incorrect'>cut perks to save money.</choice></item>
+
+
+
+
+<item><text><![CDATA[The man wants to...]]></text><choice feedback='Incorrect'>supply free tea and coffee.</choice><choice feedback='Incorrect'>give staff free gym membership.</choice><choice feedback='Incorrect'>make some staff redundant.</choice><choice feedback='Correct'>reduce staff benefits.</choice></item>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</passage><passage><audio>Toeic_3_9.mp3</audio><script><![CDATA[<p>Woman: What exams did you take at school?<br />
+  Man:  I took English, Maths and Psychology. I got two Bs and a C.<br />
+  Woman: Okay, and do you have any office experience?<br />
+  Man:  I helped out in my dad’s office during the summer holidays. I did data entry, filing, answering the telephone, that sort of thing.<br />
+  Woman: That’s great. Have you done any audio typing?<br />
+  Man:  No, I haven’t, but I’m sure I can pick it up. I’m used to using computers.<br />
+  Woman: When would you be able to start work?<br />
+  Man:  I’m available right away. Tomorrow if you like.<br />
+  Woman: That’s great. Well, thanks for coming in. I’ll call you later on this afternoon.</p>]]></script>
+<item><text><![CDATA[What is happening in this recording?]]></text><choice feedback='Correct'>The man is at a job interview.</choice><choice feedback='Incorrect'>The man is applying to do a course.</choice><choice feedback='Incorrect'>This is the man’s first day at a new job.</choice><choice feedback='Incorrect'>Two friends are talking about their exam results.</choice></item>
+
+
+
+
+
+<item><text><![CDATA[The man has NO experience of...]]></text><choice feedback='Incorrect'>working in an office</choice><choice feedback='Incorrect'>filing</choice><choice feedback='Correct'>audio typing</choice><choice feedback='Incorrect'>using a computer</choice></item>
+
+
+
+
+
+<item><text><![CDATA[What is going to happen next?]]></text><choice feedback='Incorrect'>The man is going to start work tomorrow.</choice><choice feedback='Correct'>The woman is going to phone the man.</choice><choice feedback='Incorrect'>The man is going to call the woman.</choice><choice feedback='Incorrect'>The man is going to start work straight away.</choice></item>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</passage><passage><audio>Toeic_3_10.mp3</audio><script><![CDATA[<p>Man:  Excuse me, I wondered if I could book some time off work.<br />
+  Woman: Sure, is it for a holiday?<br />
+  Man:  No, my wife’s having some treatment at the hospital, so I need to be with her. But I only need to take a morning off.<br />
+  Woman: Well, if you only need a few hours, why don’t you come in early and stay late for a few days? You can just make up the time.<br />
+  Man:  Oh okay.<br />
+  Woman: When will you be off work? <br />
+  Man:  It will be either Wednesday or Thursday next week. I won’t know which day until Friday. I’ll tell you as soon as I know for sure.</p>]]></script>
+<item><text><![CDATA[The man needs time off work because:]]></text><choice feedback='Incorrect'>he is going on holiday.</choice><choice feedback='Incorrect'>he is having treatment at the hospital.</choice><choice feedback='Correct'>he needs to look after his wife.</choice><choice feedback='Incorrect'>he is getting married.</choice></item>
+
+
+
+
+<item><text><![CDATA[How much time does the man need to take off?]]></text><choice feedback='Correct'>a few hours</choice><choice feedback='Incorrect'>a few days</choice><choice feedback='Incorrect'>a week</choice><choice feedback='Incorrect'>one day</choice></item>
+
+
+
+
+<item><text><![CDATA[What will happen on Friday?]]></text><choice feedback='Incorrect'>The man will take time off.</choice><choice feedback='Correct'>The man will know when he will be off work.</choice><choice feedback='Incorrect'>The man will come to work early.</choice><choice feedback='Incorrect'>The man will stay late after work.</choice></item></passage>
+</DOC>

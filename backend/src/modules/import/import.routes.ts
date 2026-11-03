@@ -71,9 +71,8 @@ const serve = (dir: string, mimeOf: (ext: string) => string | undefined) => (req
   if (!SAFE_FILE.test(file)) return next(notFound('Tệp'));
   const p = path.join(dir, file);
   if (!fs.existsSync(p)) return next(notFound('Tệp'));
-  res.setHeader('Content-Type', mimeOf(file.split('.').pop()!.toLowerCase()) ?? 'application/octet-stream');
-  res.setHeader('Cache-Control', file.startsWith(TMP_PREFIX) ? 'no-store' : 'public, max-age=604800');
-  fs.createReadStream(p).pipe(res);
+  // sendFile: có Content-Length + Range (206) → trình duyệt biết thời lượng audio và tua được
+  res.sendFile(p, { headers: { 'Content-Type': mimeOf(file.split('.').pop()!.toLowerCase()) ?? 'application/octet-stream', 'Cache-Control': file.startsWith(TMP_PREFIX) ? 'no-store' : 'public, max-age=604800' } }, (err) => err && next(err));
 };
 importRouter.get('/images/:file', serve(IMG_DIR, (e) => IMG_MIME[e]));
 importRouter.get('/audio/:file', serve(AUDIO_DIR, (e) => AUDIO_MIME[e]));

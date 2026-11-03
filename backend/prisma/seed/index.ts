@@ -6,8 +6,9 @@
  */
 import { DEMO_PASSWORD, seedBase } from './base';
 import { seedCourses, seedGrammar, seedVstep } from './content';
-import { importDictation, importGrammarExercises, importReading, importSpeaking, importToeicTests, importVideoCourse, importVocabulary, importWriting } from './import-data';
+import { importDictation, importGrammarExercises, importVocabQuiz, importReading, importSpeaking, importToeicTests, importVideoCourse, importVocabulary, importWriting } from './import-data';
 import { DATA_DIR, exists, log, prisma } from './lib';
+import { importExamEnglish } from './import-examenglish';
 
 async function truncateAll() {
   const rows = await prisma.$queryRaw<{ tablename: string }[]>`SELECT tablename FROM pg_tables WHERE schemaname = 'public' AND tablename <> '_prisma_migrations'`;
@@ -36,10 +37,12 @@ async function main() {
   await importVocabulary(ctx, examVocab);
   await importVideoCourse(ctx);
   await importGrammarExercises(ctx, topicTag);
+  await importVocabQuiz(ctx);
   await importReading(ctx);
   await importDictation(ctx);
   await importWriting(ctx);
   await importSpeaking(ctx);
+  await importExamEnglish(ctx);
   await seedVstep(ctx);
   await ctx.flushTags();
   await refreshCaches();

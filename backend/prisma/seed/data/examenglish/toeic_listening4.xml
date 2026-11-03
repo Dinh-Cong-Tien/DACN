@@ -1,0 +1,218 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<DOC>
+<random>yes</random>
+<title>TOEIC Listening test, part 3</title>
+<instructions>You are going to listen to ten short talks, each with 3 questions. For each question, choose the answer which you think fits best according to what you hear.</instructions>
+
+<passage><audio>Toeic_4_1.mp3</audio><script><![CDATA[<p>Today, I’m going to give you some advice about record-keeping. Keeping accurate records is very important, because if a patient is unhappy about his treatment, he may want to make a complaint to the surgeon. These records will help us to make a case. Always write your name, the date and the time on all the records. Don’t use pencil, or coloured pens. Use black ink. If you make a mistake, just cross it out with a single line. Don’t use correction fluid. Don’t try to file the records away yourself, or they may get lost. Put them in this box here. The administration manager will make sure they are filed away correctly.</p>]]></script>
+<item><text><![CDATA[Where does the woman work?]]></text><choice feedback='Incorrect'>in a shop</choice><choice feedback='Correct'>in a doctor’s surgery</choice><choice feedback='Incorrect'>in a train station</choice><choice feedback='Incorrect'>in a factory</choice></item>
+
+
+
+
+
+<item><text><![CDATA[What should someone do if they make a mistake on the records?]]></text><choice feedback='Incorrect'>correct the mistake using pencil</choice><choice feedback='Incorrect'>use correction fluid</choice><choice feedback='Correct'>draw one line through the mistake</choice><choice feedback='Incorrect'>use a coloured pen to highlight the mistake</choice></item>
+
+
+
+
+
+<item><text><![CDATA[What does the woman tell her colleagues to do with the records?]]></text><choice feedback='Incorrect'>file them away</choice><choice feedback='Incorrect'>give them to the administration manager</choice><choice feedback='Correct'>put them in a box</choice><choice feedback='Incorrect'>give them to the patient</choice></item>
+
+
+
+
+
+
+
+
+
+</passage><passage><audio>Toeic_4_2.mp3</audio><script><![CDATA[<p>Good afternoon and welcome to the 6.54 service to London, calling at Nottingham, Leicester, Bedford and Luton. I’d like to apologize for our late running, which is currently 18 – one eight – minutes behind schedule. This was due to a signal failure. However, we are confident that we will be able to make up for this lost time and arrive in London on schedule. There is a buffet service towards the rear of the train in coach C, serving hot and cold drinks and snacks. Coach D is a quiet zone, so please keep conversation levels down and make sure any music that you are listening to on headphones is turned down.</p>]]></script>
+<item><text><![CDATA[4. Where does this announcement take place?]]></text><choice feedback='Incorrect'>on a coach</choice><choice feedback='Correct'>on a train</choice><choice feedback='Incorrect'>a train station</choice><choice feedback='Incorrect'>an airport</choice></item>
+
+
+
+
+<item><text><![CDATA[When will they arrive in London?]]></text><choice feedback='Incorrect'>8 minutes late</choice><choice feedback='Incorrect'>18 minutes late</choice><choice feedback='Incorrect'>80 minutes late</choice><choice feedback='Correct'>on time</choice></item>
+
+
+
+
+<item><text><![CDATA[In Coach D...]]></text><choice feedback='Incorrect'>you cannot listen to music.</choice><choice feedback='Incorrect'>you can buy food and drinks.</choice><choice feedback='Correct'>you need to be quiet.</choice><choice feedback='Incorrect'>you can hear on the train speakers.</choice></item>
+
+
+
+
+
+
+
+
+
+</passage><passage><audio>Toeic_4_3.mp3</audio><script><![CDATA[<p>Good morning ladies and gentlemen. I’d like to welcome you all to our 15th annual conference of traffic signs and signals. It’s nice to see so many people here. Let me give you the agenda for the day. For the first hour we will hear from our managing director, finance manager and our C.E.O. Then we’ll break for half an hour at eleven o’clock for tea and coffee. Then we’ll meet again for a fascinating lecture about the future of road travel. Lunch will be served at 12.30 in the Angel Room. Go out of the hall, turn right, go down two levels and the Angel Room is on your right. </p>]]></script>
+<item><text><![CDATA[The people at the conference make signs for...]]></text><choice feedback='Correct'>roads</choice><choice feedback='Incorrect'>shops</choice><choice feedback='Incorrect'>advertisements</choice><choice feedback='Incorrect'>restaurants</choice></item>
+
+
+
+
+<item><text><![CDATA[What time will the lecture begin?]]></text><choice feedback='Incorrect'>11.00</choice><choice feedback='Correct'>11.30</choice><choice feedback='Incorrect'>12.00</choice><choice feedback='Incorrect'>12.30</choice></item>
+
+
+
+
+<item><text><![CDATA[Where is the Angel Room?]]></text><choice feedback='Incorrect'>on this floor</choice><choice feedback='Incorrect'>on the next floor up</choice><choice feedback='Incorrect'>on the next floor down</choice><choice feedback='Correct'>two floors down.</choice></item>
+
+
+
+
+
+
+
+
+
+
+</passage><passage><audio>Toeic_4_4.mp3</audio><script><![CDATA[<p>First I’d like to tell you briefly about the library. The ground floor is a social area where you can meet for discussions, and there are plenty of computers to use. The information desk is over there, near the stairs. The photocopiers are at the rear. The books are on the two upper floors. Arts subjects are on the first floor and science subjects are on the second. Journals and periodicals are kept in the basement. There are also three small meeting rooms downstairs. You can book these out for no charge. You just need to sign up on the timetable on the door. They aren’t locked; you can go straight in. </p>]]></script>
+<item><text><![CDATA[ What is NOT available on the ground floor of the library?]]></text><choice feedback='Incorrect'>computers</choice><choice feedback='Incorrect'>information desk</choice><choice feedback='Incorrect'>photocopying facilities</choice><choice feedback='Correct'>books</choice></item>
+
+
+
+
+<item><text><![CDATA[Where can you find science books?]]></text><choice feedback='Incorrect'>in the basement</choice><choice feedback='Incorrect'>on the ground floor</choice><choice feedback='Incorrect'>on the first floor</choice><choice feedback='Correct'>on the second floor</choice></item>
+
+
+
+
+<item><text><![CDATA[Which of the following is true about meeting rooms?]]></text><choice feedback='Incorrect'>They are on the ground floor.</choice><choice feedback='Correct'>You don’t have to pay to use them.</choice><choice feedback='Incorrect'>You need to book them at the information desk.</choice><choice feedback='Incorrect'>The meeting rooms are usually locked.</choice></item>
+
+
+
+
+
+
+
+
+
+
+</passage><passage><audio>Toeic_4_5.mp3</audio><script><![CDATA[<p>Well, it’s great to see you, George. I hope you enjoy working for us here. Now, let me brief you on what we have to do this morning. First, your hours. You will do an eight hour day, but you can start any time between seven and half past nine, so you can organise your own hours and leave early if you want. This morning, I’d like you to read some health and safety information on the computer. You’ll need to complete a quiz on the computer after you’ve read it. Later on, I’ll give you a tour of the building.</p>]]></script>
+<item><text><![CDATA[Who is the woman talking to?]]></text><choice feedback='Incorrect'>her boss</choice><choice feedback='Correct'>a new employee</choice><choice feedback='Incorrect'>her secretary</choice><choice feedback='Incorrect'>an important visitor</choice></item>
+
+
+
+
+<item><text><![CDATA[What time can the man start work?]]></text><choice feedback='Incorrect'>7.00</choice><choice feedback='Incorrect'>8.00</choice><choice feedback='Correct'>between 7.00 and 9.30</choice><choice feedback='Incorrect'>between 8.00 and 9.30</choice></item>
+
+
+
+
+<item><text><![CDATA[What does the woman want the man to do first?]]></text><choice feedback='Correct'>read some information</choice><choice feedback='Incorrect'>a quiz</choice><choice feedback='Incorrect'>fix the computers</choice><choice feedback='Incorrect'>see the building</choice></item>
+
+
+
+
+
+
+
+
+
+</passage><passage><audio>Toeic_4_6.mp3</audio><script><![CDATA[<p>you want to get free electricity, and earn money at the same time? We, at PV Lec, would like to offer you a great deal. Install photovoltaic panels on your roof and you can generate your own electricity from the sun! You will save money on your electricity bills, and you can sell any electricity you don’t use back to your electricity supplier. If that isn’t a great enough deal, you’ll also get a tax-free payment from the government, simply as a ‘thank you’ for generating carbon-free energy. Call PV Lec now on 08004778599 for a free survey to determine which size unit is suitable for your home.</p>]]></script>
+<item><text><![CDATA[What is the man advertising?]]></text><choice feedback='Incorrect'>an electricity supplier</choice><choice feedback='Incorrect'>wind turbines</choice><choice feedback='Correct'>solar panels</choice><choice feedback='Incorrect'>a roofing company</choice></item>
+
+
+
+
+<item><text><![CDATA[The offer allows you to...]]></text><choice feedback='Incorrect'>buy the product at half price</choice><choice feedback='Incorrect'>get two products for the price of one</choice><choice feedback='Correct'>receive money from the government</choice><choice feedback='Incorrect'>buy the product without paying tax</choice></item>
+
+
+
+
+<item><text><![CDATA[PV Lec...]]></text><choice feedback='Incorrect'>installs units free of charge</choice><choice feedback='Incorrect'>is a government company</choice><choice feedback='Incorrect'>supplies electricity</choice><choice feedback='Correct'>offers different sized units</choice></item>
+
+
+
+
+
+
+
+
+
+</passage><passage><audio>Toeic_4_7.mp3</audio><script><![CDATA[<p>And now for the weather. Today it will be another warm, dry day, but it won’t be as sunny as yesterday. Most areas of the region will be overcast. But temperatures will be high, around seventy degrees, with some light breezes on the coast. Unfortunately this spell isn’t going to last, I’m afraid. Tomorrow, a band of rain is going to creep in from the south west, and it’s going to feel a lot colder.&nbsp; </p>]]></script>
+<item><text><![CDATA[ Today the weather will be:]]></text><choice feedback='Correct'>cloudy and dry</choice><choice feedback='Incorrect'>warm and sunny</choice><choice feedback='Incorrect'>sunny and dry</choice><choice feedback='Incorrect'>cloudy and wet</choice></item>
+
+
+
+
+<item><text><![CDATA[Today, it will be quite windy...]]></text><choice feedback='Incorrect'>in the south west</choice><choice feedback='Incorrect'>in most areas of the region</choice><choice feedback='Incorrect'>in the mountains</choice><choice feedback='Correct'>by the sea</choice></item>
+
+
+
+
+<item><text><![CDATA[Tomorrow, the weather will be...]]></text><choice feedback='Incorrect'>similar to the weather today.</choice><choice feedback='Correct'>wetter than today.</choice><choice feedback='Incorrect'>warmer than today.</choice><choice feedback='Incorrect'>more windy than today.</choice></item>
+
+
+
+
+
+
+
+
+
+</passage><passage><audio>Toeic_4_8.mp3</audio><script><![CDATA[<p>I used to own a little clothes shop, but it was in a back street, away from the town centre, so we didn’t do very well. One day, I went to my supplier, and bought a hundred leather jackets for fifty pounds. They were seconds, with broken zips and holes in the lining. Then I put an ad in the paper saying that I was selling leather jackets for a pound each. &nbsp;I could have sold them for more, but I wanted the publicity for my shop. Five days before the sale, I saw a girl sitting on the street outside the shop. She was waiting to buy a jacket! On the morning of the sale, there were about 800 girls in the queue, and we only had a hundred jackets! </p>]]></script>
+<item><text><![CDATA[The shop was doing badly because:]]></text><choice feedback='Incorrect'>the clothes were poor quality.</choice><choice feedback='Incorrect'>nobody wanted to buy clothes.</choice><choice feedback='Correct'>it was not in the middle of town.</choice><choice feedback='Incorrect'>the clothes were too expensive.</choice></item>
+
+
+
+
+<item><text><![CDATA[The jackets...]]></text><choice feedback='Correct'>were not in perfect condition.</choice><choice feedback='Incorrect'>cost the man a pound each.</choice><choice feedback='Incorrect'>were not made of real leather.</choice><choice feedback='Incorrect'>were not popular with girls.</choice></item>
+
+
+
+
+<item><text><![CDATA[The story describes...]]></text><choice feedback='Incorrect'>how the man made a lot of money.</choice><choice feedback='Incorrect'>how the man tricked his customers.</choice><choice feedback='Incorrect'>how the newspaper made a mistake.</choice><choice feedback='Correct'>how the man promoted his shop.</choice></item>
+
+
+
+
+
+
+
+
+
+</passage><passage><audio>Toeic_4_9.mp3</audio><script><![CDATA[<p>You may be interested in opening a bank account with us. We give 4% interest, as long as you pay $2500 into your account every month. You don’t even have to worry about switching over your direct debits and standing orders from your previous bank account. We’ll do that for you. We’ll also give you $100 if this is your first current account with us. To be eligible for this deal, you must be over 18 and be a US citizen. Apply online today, and your account will be set up within one week.</p>]]></script>
+<item><text><![CDATA[To get 4% interest, customers need to...]]></text><choice feedback='Incorrect'>pay $100.</choice><choice feedback='Correct'>pay $2500 every month.</choice><choice feedback='Incorrect'>switch over their direct debits.</choice><choice feedback='Incorrect'>apply for account online.</choice></item>
+
+
+
+
+
+<item><text><![CDATA[Customers will receive $100 if they...]]></text><choice feedback='Incorrect'>are more than 18 years of age.</choice><choice feedback='Correct'>don’t already have an account with this bank.</choice><choice feedback='Incorrect'>apply for the account online.</choice><choice feedback='Incorrect'>have an account with another bank.</choice></item>
+
+
+
+
+
+<item><text><![CDATA[To open an account, you must...]]></text><choice feedback='Incorrect'>apply online.</choice><choice feedback='Incorrect'>it within one week.</choice><choice feedback='Incorrect'>be exactly 18 years old.</choice><choice feedback='Correct'>be American.</choice></item>
+
+
+
+
+
+
+
+
+
+
+</passage><passage><audio>Toeic_4_10.mp3</audio><script><![CDATA[<p>In the last year, I’m happy to say that sales of our pies have increased. The marketing team did a great job in promoting our products. Unfortunately, however, our costs have increased too. This is partly due to the advertising costs which were fifty percent higher than we expected to pay. But the other problem is the growing price of oil. This is increasing the cost of all our supplies. I think we should consider finding local food suppliers to reduce these costs. As for packaging, we may be able to find cheaper suppliers overseas.</p>]]></script>
+<item><text><![CDATA[The man is happy because:]]></text><choice feedback='Incorrect'>The company is making more money.</choice><choice feedback='Incorrect'>The marketing team reduced their costs.</choice><choice feedback='Correct'>The company’s products are more popular.</choice><choice feedback='Incorrect'>The suppliers have reduced their costs.</choice></item>
+
+
+
+
+
+<item><text><![CDATA[All the following have increased except...]]></text><choice feedback='Incorrect'>the number of pies sold.</choice><choice feedback='Incorrect'>the cost of supplies.</choice><choice feedback='Incorrect'>the cost of advertising.</choice><choice feedback='Correct'>the price of the pies.</choice></item>
+
+
+
+
+
+<item><text><![CDATA[The man suggests that they...]]></text><choice feedback='Incorrect'>Buy food from overseas.</choice><choice feedback='Correct'>Buy food locally.</choice><choice feedback='Incorrect'>Buy packaging locally.</choice><choice feedback='Incorrect'>Use less packaging.</choice></item>
+</passage>
+</DOC>

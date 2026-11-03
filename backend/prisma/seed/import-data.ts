@@ -353,11 +353,11 @@ const GRAMMAR_KEYMAP: [RegExp, string[]][] = [
 ];
 
 /** Bài tập ngữ pháp → questions TOEIC_P5 (GRAMMAR), gắn chủ điểm ngữ pháp qua nhãn kỹ năng. */
-export async function importGrammarExercises(ctx: SeedCtx, topicTagByKey: (fileTitle: string) => string | undefined) {
+/** skipStems: đề bài đã có trong CSDL (nạp bổ sung không tạo trùng) */
+export async function importGrammarExercises(ctx: SeedCtx, topicTagByKey: (fileTitle: string) => string | undefined, skipStems = new Set<string>()) {
   const dir = etsDir('Grammar Tests');
   if (!exists(dir)) return;
   const rows: any[] = [];
-  const PER_FILE = 40;
   for (const f of fs.readdirSync(dir).filter((x) => x.endsWith('.txt'))) {
     const items = parseEts(path.join(dir, f));
     if (!items.length) continue;
@@ -369,9 +369,10 @@ export async function importGrammarExercises(ctx: SeedCtx, topicTagByKey: (fileT
       .filter((t): t is string => !!t);
     const seen = new Set<string>();
     for (const it of items) {
-      if (seen.size >= PER_FILE) break;
       if (seen.has(it.stem)) continue;
       seen.add(it.stem);
+      if (skipStems.has(it.context ? `${it.context}
+${it.stem}` : it.stem)) continue;
       rows.push({
         examType: 'TOEIC',
         part: 'TOEIC_P5',
@@ -389,8 +390,56 @@ export async function importGrammarExercises(ctx: SeedCtx, topicTagByKey: (fileT
     }
   }
   await ctx.flushTags();
-  await insertMany(prisma.question, rows);
+  await insertMany(prisma.question, rows, 500);
   log('grammar exercises', rows.length);
+}
+
+/**
+ * Bài trắc nghiệm từ vựng englishteststore (Vocabulary Tests) → questions skill VOCABULARY trong ngân hàng câu hỏi.
+ * Nạp: TOEIC Vocabulary, Basic Vocabulary, Phonetics - Stress, Irregular or Regular.
+ * Bỏ: SAT/GRE/GMAT (ngoài phạm vi TOEIC/VSTEP); Phonetics - Sound (dữ liệu mất phần gạch chân → không làm được);
+ * Picture Description / by Pictures (không có ảnh); các file chỉ có tiêu đề.
+ */
+const VOCAB_SETS: { re: RegExp; tag: [string, string]; stem: (w: string) => string; level: CefrLevel }[] = [
+  { re: /^TOEIC Vocabulary/i, tag: ['vocab-toeic', 'Từ vựng TOEIC'], stem: (w) => `Chọn nghĩa đúng của từ "${w}".`, level: 'B1' },
+  { re: /^Basic Vocabulary/i, tag: ['vocab-basic', 'Từ vựng cơ bản'], stem: (w) => `Chọn nghĩa đúng của từ "${w}".`, level: 'A2' },
+  { re: /^Phonetics - Stress/i, tag: ['vocab-stress', 'Trọng âm'], stem: (w) => w, level: 'B1' },
+  { re: /^Irregular Verbs - Irregular or Regular/i, tag: ['vocab-irregular-verbs', 'Động từ bất quy tắc'], stem: (w) => `Động từ "${w}" là động từ có quy tắc hay bất quy tắc?`, level: 'A2' },
+];
+
+export async function importVocabQuiz(ctx: SeedCtx) {
+  const dir = etsDir('Vocabulary Tests');
+  if (!exists(dir)) return;
+  const rows: any[] = [];
+  const seen = new Set<string>();
+  for (const f of fs.readdirSync(dir).filter((x) => x.endsWith('.txt'))) {
+    const set = VOCAB_SETS.find((v) => v.re.test(f));
+    if (!set) continue;
+    const tagId = ctx.tags.get(set.tag[0]) ?? ctx.addTag(set.tag[0], set.tag[1], 'VOCABULARY', null);
+    const level: CefrLevel = /hard/i.test(f) ? 'B2' : /easy/i.test(f) ? 'A2' : set.level;
+    for (const it of parseEts(path.join(dir, f))) {
+      const key = `${set.tag[0]}|${it.stem}|${it.answer}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      rows.push({
+        examType: 'TOEIC',
+        part: 'TOEIC_P5',
+        skill: 'VOCABULARY',
+        type: 'SINGLE_CHOICE',
+        tagIds: [tagId],
+        stem: set.stem(it.stem),
+        options: it.options.map((o) => ({ key: o.key, text: o.text.replace(/^\([a-f]\)\s*/i, '') })),
+        correctAnswer: { keys: [it.answer] },
+        level,
+        source: 'IMPORT',
+        status: 'PUBLISHED',
+        authorId: ctx.adminId,
+      });
+    }
+  }
+  await ctx.flushTags();
+  await insertMany(prisma.question, rows, 500);
+  log('vocabulary quiz', rows.length);
 }
 
 /** Đọc hiểu có văn bản tiếng Anh đầy đủ → passages (TOEIC_P7) + questions. */
