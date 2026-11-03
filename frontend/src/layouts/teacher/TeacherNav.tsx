@@ -1,7 +1,6 @@
 import React, { useMemo } from 'react';
 import { BarChart3, Briefcase, CalendarDays, ClipboardCheck, ClipboardList, Database, FileEdit, FileText, FolderOpen, GraduationCap, Languages, Plus, Presentation, Sheet, UserRoundX, Users } from 'lucide-react';
 import { useGradingQueue, useTeacherAssignments, useTeacherClasses, type TClassRoom } from '@/shared/api/teacher';
-import { CLASS_IMG } from '@/shared/components/layout/staffIcons';
 import { StaffNav, type StaffMenu } from '@/shared/components/layout/StaffNav';
 
 
@@ -15,7 +14,7 @@ export const buildTeacherMenus = (classes: TClassRoom[], toGrade: number, drafts
     to: '/teacher/classes',
     children: [
       { to: '/teacher/classes', label: 'Tất cả lớp', icon: Users, desc: 'Mã mời, lịch học, sĩ số, tạo lớp mới', exact: true },
-      ...classes.map((c) => ({ to: `/teacher/classes/${c.id}`, label: c.name, icon: c.examType === 'TOEIC' ? Briefcase : GraduationCap, img: CLASS_IMG[c.examType], desc: `${c.schedule || 'Chưa có lịch'} · ${c.studentsCount} học viên`, group: 'Lớp đang dạy' })),
+      ...classes.map((c) => ({ to: `/teacher/classes/${c.id}`, label: c.name, icon: c.examType === 'TOEIC' ? Briefcase : GraduationCap, desc: `${c.schedule || 'Chưa có lịch'} · ${c.studentsCount} học viên`, group: 'Lớp đang dạy' })),
     ],
   },
   {

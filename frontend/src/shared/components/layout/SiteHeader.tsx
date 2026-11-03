@@ -9,6 +9,7 @@ import { Logo, Button, Badge } from '@/shared/components/ui';
 import { PUBLIC_NAV, STUDENT_NAV, STUDENT_TOOLS, type MenuLink } from './navConfig';
 import { ThemeToggle } from './ThemeToggle';
 import { LanguageSwitcher } from './LanguageSwitcher';
+import { NavIconTile, NavTopIcon } from './NavIcon';
 import { useT } from '@/shared/i18n';
 import { UserMenu } from './UserMenu';
 import { useResolvedTheme } from '@/shared/stores/themeStore';
@@ -62,10 +63,10 @@ export const SiteHeader: React.FC = () => {
     return location.pathname === path && (!query || location.search === `?${query}`);
   };
 
-  const dropdown = (label: string, img: string | undefined, items: MenuLink[], active = false, className?: string) => (
+  const dropdown = (label: string, icon: React.ElementType | undefined, items: MenuLink[], active = false, className?: string) => (
     <div key={label} className={cn('relative shrink-0 group/menu', className)}>
       <button className={cn('px-2 py-2 rounded-xl text-sm font-bold flex items-center gap-1 transition whitespace-nowrap', active ? (onDarkHero ? 'bg-white/10 text-amber-300' : 'bg-slate-900/[0.06] text-indigo-700') : onDarkHero ? 'text-slate-200 hover:bg-white/10 hover:text-white' : 'text-slate-700 hover:bg-slate-900/5 hover:text-slate-900')}>
-        {img && <img src={img} alt="" className="w-5 h-5 hidden min-[1440px]:block" />}
+        <NavTopIcon icon={icon} />
         {t(label)}
         {items.some((i) => i.badge) && !active && <span className="w-1.5 h-1.5 rounded-full bg-violet-500" />}
         <ChevronDown className="hidden xl:block w-3.5 h-3.5 transition-transform group-hover/menu:rotate-180" />
@@ -78,7 +79,7 @@ export const SiteHeader: React.FC = () => {
               <p className={cn('px-2.5 pb-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-400', ci > 0 ? 'mt-1.5 border-t border-slate-200 pt-2.5' : 'pt-1')}>{t(c.group)}</p>
             )}
             <NavLink to={c.to} end className={() => cn('group/item flex items-center gap-3 px-2.5 py-2 rounded-lg text-sm transition-colors', isHere(c.to) ? 'bg-slate-100 text-slate-900' : 'text-slate-700 hover:bg-slate-50 hover:text-slate-900')}>
-              {c.img && <img src={c.img} alt="" className={cn('shrink-0 transition-transform duration-200 group-hover/item:scale-110', c.desc ? 'h-9 w-9' : 'h-7 w-7')} />}
+              <NavIconTile icon={c.icon} active={isHere(c.to)} size={c.desc ? 'md' : 'sm'} />
               <span className="min-w-0 flex-1">
                 <span className="block font-medium">{t(c.label)}</span>
                 {c.desc && <span className="block truncate text-[12px] text-slate-500">{t(c.desc)}</span>}
@@ -107,10 +108,10 @@ export const SiteHeader: React.FC = () => {
   });
   const desktopNav = mainNav.map((item) =>
     item.children ? (
-      dropdown(item.label, item.img, item.children, location.pathname === item.to || item.children.some((c) => here === c.to || (!c.to.includes('?') && location.pathname.startsWith(c.to))))
+      dropdown(item.label, item.icon, item.children, location.pathname === item.to || item.children.some((c) => here === c.to || (!c.to.includes('?') && location.pathname.startsWith(c.to))))
     ) : (
       <NavLink key={item.label} to={item.to} className={linkCls}>
-        <img src={item.img} alt="" className="w-5 h-5 hidden min-[1440px]:block" />
+        <NavTopIcon icon={item.icon} />
         {t(item.label)}
       </NavLink>
     )
@@ -118,7 +119,7 @@ export const SiteHeader: React.FC = () => {
 
   // ===== Menu mobile (phẳng theo nhóm) =====
   const mobileGroups: { title?: string; items: MenuLink[] }[] = [
-    { items: mainNav.filter((i) => !i.children).map((i) => ({ to: i.to, label: i.label, img: i.img })) },
+    { items: mainNav.filter((i) => !i.children).map((i) => ({ to: i.to, label: i.label, icon: i.icon })) },
     ...mainNav.filter((i) => i.children).map((i) => ({ title: i.label, items: i.children! })),
     // Học viên: thêm các nhóm học tập còn lại (bỏ mục đã có ở trên)
     ...(isStudent
@@ -196,7 +197,7 @@ export const SiteHeader: React.FC = () => {
                   {g.title && <p className="px-3 pb-1 text-[10px] font-extrabold uppercase tracking-[0.14em] text-slate-400">{t(g.title)}</p>}
                   {g.items.map((c) => (
                     <NavLink key={c.to} to={c.to} end={c.to === '/'} className={({ isActive }) => cn('flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold', isActive ? 'bg-slate-900/[0.06] text-indigo-700' : 'text-slate-700 hover:bg-slate-900/5')}>
-                      {c.img && <img src={c.img} alt="" className="w-6 h-6 shrink-0" />}
+                      <NavIconTile icon={c.icon} size="sm" />
                       <span className="flex-1">{t(c.label)}</span>
                       {c.badge && (
                         <Badge tone="violet" solid size="xs">
