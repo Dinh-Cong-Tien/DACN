@@ -1,6 +1,6 @@
 import { academicTerm } from '@/shared/constants/staff';
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { Award, BarChart3, CalendarCheck, CheckCircle2, Download, LineChart as LineIcon, School, Table2, TrendingDown, TrendingUp, Users } from 'lucide-react';
 import { useDocumentTitle } from '@/shared/hooks';
 import { toast } from '@/shared/stores/uiStore';
@@ -9,7 +9,8 @@ import { BarChart, HBarChart, LineChart } from '@/shared/components/charts/Chart
 import type { ClassReport } from '@/shared/types';
 import { cn, staffPath } from '@/shared/utils';
 import { Avatar } from '@/shared/components/ui';
-import { Figures, Meter, Panel, TBtn, TPageHead, inputCls, tbl } from '@/roles/teacher/components/TeacherKit';
+import { Figures, Meter, Panel, TBtn, TPageHead, TTabs, inputCls, tbl } from '@/roles/teacher/components/TeacherKit';
+import { HeadReportSummary } from './HeadReportSummary';
 
 const GRADE_CLS: Record<NonNullable<ClassReport['grade']>, string> = { A: 'bg-emerald-500/10 text-emerald-700', B: 'bg-sky-500/10 text-sky-700', C: 'bg-amber-500/15 text-amber-800', D: 'bg-rose-500/10 text-rose-700' };
 const GRADE_LABEL: Record<NonNullable<ClassReport['grade']>, string> = { A: 'Xuất sắc', B: 'Khá', C: 'Trung bình', D: 'Cần cải thiện' };
@@ -17,6 +18,9 @@ const GRADE_LABEL: Record<NonNullable<ClassReport['grade']>, string> = { A: 'Xu�
 export const HeadReportsPage: React.FC = () => {
   useDocumentTitle('Báo cáo tổng kết');
   const [subject, setSubject] = useState('');
+  const [params, setParams] = useSearchParams();
+  const tab = params.get('tab') === 'summary' ? 'summary' : 'classes';
+  const [months, setMonths] = useState(6);
   const subjectList = useHeadSubjects().data ?? [];
   const teachers = useHeadTeachers().data ?? [];
   const teacherByName = (name: string) => teachers.find((t) => t.name === name);
@@ -43,9 +47,16 @@ export const HeadReportsPage: React.FC = () => {
       <TPageHead
         eyebrow={academicTerm().short}
         title="Báo cáo tổng kết"
-        sub="Điểm số, chuyên cần và xếp loại học tập các lớp trong bộ môn."
+        sub="Điểm số, chuyên cần và xếp loại học tập các lớp trong bộ môn; thống kê tổng kết toàn bộ môn bằng biểu đồ."
         actions={
           <>
+            {tab === 'summary' && (
+              <select aria-label="Giai đoạn" className={cn(inputCls, 'w-40')} value={months} onChange={(e) => setMonths(Number(e.target.value))}>
+                <option value={3}>3 tháng</option>
+                <option value={6}>6 tháng</option>
+                <option value={12}>12 tháng</option>
+              </select>
+            )}
             <select aria-label="Môn học" className={cn(inputCls, 'w-56')} value={subject} onChange={(e) => setSubject(e.target.value)}>
               <option value="">Tất cả môn học</option>
               {subjectList.map((s) => (
@@ -54,13 +65,28 @@ export const HeadReportsPage: React.FC = () => {
                 </option>
               ))}
             </select>
-            <TBtn variant="primary" icon={<Download />} disabled={!rows.length} onClick={exportCsv}>
-              Xuất báo cáo
-            </TBtn>
+            {tab === 'classes' && (
+              <TBtn variant="primary" icon={<Download />} disabled={!rows.length} onClick={exportCsv}>
+                Xuất báo cáo
+              </TBtn>
+            )}
           </>
         }
       />
 
+      <TTabs
+        value={tab}
+        onChange={(k) => setParams(k === 'classes' ? {} : { tab: k }, { replace: true })}
+        items={[
+          { key: 'classes', label: 'Báo cáo theo lớp' },
+          { key: 'summary', label: 'Thống kê tổng kết' },
+        ]}
+      />
+
+      {tab === 'summary' ? (
+        <HeadReportSummary months={months} departmentId={subject || undefined} />
+      ) : (
+      <>
       <Figures
         items={[
           { label: 'Lớp', value: rows.length, note: `${grades[0].n} lớp xếp loại A`, icon: School, tone: 'amber' },
@@ -189,6 +215,8 @@ export const HeadReportsPage: React.FC = () => {
           </table>
         </div>
       </Panel>
+      </>
+      )}
     </div>
   );
 };

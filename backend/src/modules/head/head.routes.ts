@@ -24,10 +24,12 @@ import {
   toComplaint,
 } from './shared';
 import { oversightRouter } from './head.oversight';
+import { summaryRouter } from './head.summary';
 
 export const headRouter = Router();
 headRouter.use(auth, allow('HEAD_TEACHER'), refreshLiveAfterWrite);
 headRouter.use(oversightRouter);
+headRouter.use(summaryRouter);
 
 const scopeOf = (req: Request) => deptScope(me(req));
 const uuid = z.string().uuid();

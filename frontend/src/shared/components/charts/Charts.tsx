@@ -4,7 +4,7 @@ import './charts.css';
 
 /**
  * Biểu đồ SVG dùng chung cho các trang thống kê (giáo viên, giáo viên bậc cao, quản trị):
- * cột dọc, cột ngang, đường. Nét mảnh, đầu cột bo 4px, lưới mờ, tooltip khi rê chuột,
+ * cột dọc, cột ngang, đường, thanh tỷ lệ (cột chồng 100%). Nét mảnh, đầu cột bo 4px, lưới mờ, tooltip khi rê chuột,
  * chú thích khi có từ 2 chuỗi trở lên. Một trục y duy nhất.
  */
 
@@ -85,7 +85,7 @@ export const BarChart: React.FC<{ data: { label: string; value: number }[]; heig
             return (
               <g key={d.label} onMouseEnter={() => setHover(i)} onMouseLeave={() => setHover(null)}>
                 <rect x={pad.l + band * i} y={pad.t} width={band} height={ih} fill="transparent" />
-                <path d={`M${x},${y(0)} v${-Math.max(0, h - 4)} q0,-4 4,-4 h${bw - 8} q4,0 4,4 v${Math.max(0, h - 4)} z`} fill="var(--viz-series-1)" opacity={dim ? 0.45 : 1} />
+                {d.value > 0 && <path d={`M${x},${y(0)} v${-Math.max(0, h - 4)} q0,-4 4,-4 h${bw - 8} q4,0 4,4 v${Math.max(0, h - 4)} z`} fill="var(--viz-series-1)" opacity={dim ? 0.45 : 1} />}
                 <text x={pad.l + band * i + band / 2} y={height - 8} textAnchor="middle" className="fill-slate-500 text-[11px]">
                   {d.label}
                 </text>
@@ -190,6 +190,51 @@ export const LineChart: React.FC<{ labels: string[]; series: { name: string; val
           ))}
         </Tooltip>
       )}
+    </div>
+  );
+};
+
+/** Màu đoạn của thanh tỷ lệ: 4 slot phân loại (đã kiểm tra CVD) hoặc màu trạng thái */
+export type SegmentColor = 'series-1' | 'series-2' | 'series-3' | 'series-4' | 'good' | 'warn' | 'serious' | 'bad' | 'neutral';
+
+/**
+ * Thanh tỷ lệ (cột chồng 100%): cơ cấu của một tổng — ít nhóm (≤ 5).
+ * Khe 2px giữa các đoạn, đầu thanh bo 4px; chú thích luôn có nhãn + số + % (màu không mang nghĩa một mình).
+ */
+export const StackedBar: React.FC<{ data: { label: string; value: number; color: SegmentColor }[]; unit?: string; format?: (v: number) => string; className?: string; ariaLabel: string }> = ({ data, unit = '', format = fmtDefault, className, ariaLabel }) => {
+  const total = data.reduce((s, d) => s + d.value, 0);
+  const [hover, setHover] = useState<number | null>(null);
+  const pct = (v: number) => (total ? Math.round((v / total) * 1000) / 10 : 0);
+  return (
+    <div className={cn('viz', className)} role="img" aria-label={`${ariaLabel}: ${data.map((d) => `${d.label} ${format(d.value)}${unit}`).join(', ')}`}>
+      <div className="flex h-3 w-full gap-[2px] overflow-hidden rounded bg-slate-100">
+        {data
+          .map((d, i) => ({ d, i }))
+          .filter(({ d }) => d.value > 0)
+          .map(({ d, i }) => (
+            <span
+              key={d.label}
+              className="h-full first:rounded-l last:rounded-r transition-opacity"
+              style={{ width: `${pct(d.value)}%`, background: `var(--viz-${d.color})`, opacity: hover !== null && hover !== i ? 0.45 : 1 }}
+              onMouseEnter={() => setHover(i)}
+              onMouseLeave={() => setHover(null)}
+              title={`${d.label}: ${format(d.value)}${unit} (${pct(d.value)}%)`}
+            />
+          ))}
+      </div>
+      <ul className="mt-3 grid gap-y-1.5">
+        {data.map((d, i) => (
+          <li key={d.label} className={cn('flex items-center gap-2 text-[13px] transition-opacity', hover !== null && hover !== i && 'opacity-50')} onMouseEnter={() => setHover(i)} onMouseLeave={() => setHover(null)}>
+            <span className="h-2.5 w-2.5 shrink-0 rounded-sm" style={{ background: `var(--viz-${d.color})` }} />
+            <span className="min-w-0 flex-1 truncate text-slate-600">{d.label}</span>
+            <span className="font-semibold tabular-nums text-slate-900">
+              {format(d.value)}
+              {unit}
+            </span>
+            <span className="w-11 text-right tabular-nums text-slate-500">{pct(d.value)}%</span>
+          </li>
+        ))}
+      </ul>
     </div>
   );
 };

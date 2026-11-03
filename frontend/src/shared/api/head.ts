@@ -210,6 +210,19 @@ export interface StudentDossier {
   notes: { id: string; kind: string; text: string; date: string; teacherName: string; className?: string }[];
 }
 
+type KV = { key: string; value: number };
+/** Thống kê tổng kết bộ môn — chuỗi theo tháng cùng độ dài `months` */
+export interface HeadSummary {
+  months: string[];
+  students: { total: number; byExam: KV[]; byRisk: KV[]; joined: number[]; left: number };
+  teachers: { name: string; classes: number; students: number }[];
+  teaching: { classes: number; sessionsDone: number[]; sessionsCancelled: number; sessionsUpcoming: number; marks: KV[]; observed: number };
+  assignments: { created: number[]; byType: KV[]; submissions: KV[] };
+  results: { attempts: number[]; fullTests: number; toeicBands: KV[]; avgToeicByMonth: (number | null)[] };
+  content: { byPart: KV[]; questionsByStatus: KV[]; testsByStatus: KV[] };
+  quality: { reviews: KV[]; complaints: KV[] };
+}
+
 export type QuestionQuery = { page?: number; pageSize?: number; q?: string; examType?: ExamType; part?: string; skill?: string; status?: string; type?: string };
 
 // ---------- gọi API ----------
@@ -256,6 +269,7 @@ export const headApi = {
   removeMaterial: (id: string, reason: string) => http.delete(`/head/materials/${id}`, { data: { reason } }),
   removeAnnouncement: (id: string, reason: string) => http.delete(`/head/announcements/${id}`, { data: { reason } }),
   student: (id: string) => api.get<StudentDossier>(`/head/students/${id}`),
+  summary: (months = 6, departmentId?: string) => api.get<HeadSummary>('/head/reports/summary', { months, departmentId }),
   reports: (months = 6, departmentId?: string) => api.get<HeadReports>('/head/reports', { months, departmentId }),
 };
 
@@ -283,6 +297,7 @@ export const headKeys = {
   materials: [...K, 'materials'] as const,
   announcements: [...K, 'announcements'] as const,
   student: (id: string) => [...K, 'student', id] as const,
+  summary: (months: number, dep?: string) => [...K, 'summary', months, dep ?? 'all'] as const,
 };
 
 export const useHeadDashboard = () => useQuery({ queryKey: headKeys.dashboard, queryFn: headApi.dashboard, staleTime: 30_000 });
@@ -298,6 +313,7 @@ export const useHeadQuestionBank = (q: QuestionQuery) => useQuery({ queryKey: he
 export const useHeadReviews = () => useQuery({ queryKey: headKeys.reviews, queryFn: headApi.gradingReviews });
 export const useHeadObservations = () => useQuery({ queryKey: headKeys.observations, queryFn: headApi.observations });
 export const useHeadComplaints = () => useQuery({ queryKey: headKeys.complaints, queryFn: headApi.complaints });
+export const useHeadSummary = (months = 6, dep?: string) => useQuery({ queryKey: headKeys.summary(months, dep), queryFn: () => headApi.summary(months, dep) });
 export const useHeadReports = (months = 6, dep?: string) => useQuery({ queryKey: headKeys.reports(months, dep), queryFn: () => headApi.reports(months, dep) });
 
 export const useHeadAssignments = (q: { classId?: string; status?: string; q?: string }) => useQuery({ queryKey: headKeys.assignments(q), queryFn: () => headApi.assignments(q), placeholderData: (p) => p });
