@@ -21,10 +21,10 @@ interface FormView {
   delay: number;
 }
 
-/** Ảnh chụp thật học sinh Việt Nam (Pexels: 5480895 phòng thi, 5530476 phòng máy) đã cắt sẵn 4:5 theo khung vòm */
+/** Ảnh chụp thật giáo viên châu Á đứng lớp (Pexels: 11563212, 8617768) đã cắt sẵn 4:5 theo khung vòm */
 const VISUAL: Record<AsideVariant, { src: string; pos: string }> = {
-  login: { src: '/images/auth/login-exam.webp', pos: '50% 30%' },
-  register: { src: '/images/auth/register-lab.webp', pos: '50% 25%' },
+  login: { src: '/images/auth/login-teacher.webp', pos: '50% 20%' },
+  register: { src: '/images/auth/register-teacher.webp', pos: '50% 20%' },
 };
 
 /** Tiêu đề trên khối ảnh theo từng trang */
