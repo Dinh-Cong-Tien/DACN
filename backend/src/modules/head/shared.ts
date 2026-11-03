@@ -155,12 +155,15 @@ export const hhmm = (d: Date) => d.toISOString().slice(11, 16);
 
 /** SupportTicket / Complaint */
 type TicketFull = Prisma.TicketGetPayload<{
-  include: { user: true; assignee: { select: { fullName: true } }; question: { select: { id: true; part: true; stem: true } }; ticketMessageTickets: true };
+  include: { user: true; assignee: { select: { fullName: true } }; question: { select: { id: true; part: true; stem: true } }; submission: { select: typeof submissionRef }; ticketMessageTickets: true };
 }>;
+/** Bài nộp được phúc khảo: tên bài, lớp, điểm hiện tại */
+const submissionRef = { id: true, score: true, assignment: { select: { title: true, type: true, maxScore: true, class: { select: { id: true, name: true } } } } } as const;
 export const ticketInclude = {
   user: true,
   assignee: { select: { fullName: true } },
   question: { select: { id: true, part: true, stem: true } },
+  submission: { select: submissionRef },
   ticketMessageTickets: { orderBy: { createdAt: 'asc' } },
 } satisfies Prisma.TicketInclude;
 
@@ -196,8 +199,15 @@ export function toComplaint(t: TicketFull) {
     studentEmail: t.user?.email ?? t.guestEmail ?? undefined,
     avatarUrl: t.user?.avatarUrl ?? undefined,
     subject: t.subject,
-    questionRef: t.question ? `${PART_LABEL(t.question.part)} · ${t.question.stem.slice(0, 60)}` : (t.academicIssue ?? ''),
+    questionRef: t.question
+      ? `${PART_LABEL(t.question.part)} · ${t.question.stem.slice(0, 60)}`
+      : t.submission
+        ? `${t.submission.assignment.class.name} · ${t.submission.assignment.title} · ${t.submission.score === null ? 'chưa có điểm' : `${Number(t.submission.score)}/${Number(t.submission.assignment.maxScore)}`}`
+        : (t.academicIssue ?? ''),
     questionId: t.questionId ?? undefined,
+    /** Phúc khảo bài nộp (Viết / Nói) */
+    submissionId: t.submissionId ?? undefined,
+    kind: t.submissionId ? ('APPEAL' as const) : t.questionId ? ('QUESTION' as const) : ('OTHER' as const),
     issue: t.academicIssue ?? undefined,
     content: first?.text ?? '',
     status: COMPLAINT_STATUS[t.status] ?? 'NEW',

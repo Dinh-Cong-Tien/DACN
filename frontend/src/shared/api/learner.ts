@@ -172,6 +172,8 @@ export interface ClassDetailDto {
   assignments: AssignmentDto[];
   myAssignments: Record<string, MyAssignmentState>;
   upcomingSessions: { id: string; classId: string; date: string; start: string; end: string; room: string; topic: string; status: string }[];
+  /** Điểm danh của tôi ở các buổi đã dạy */
+  attendance: { sessionId: string; date: string; start: string; topic: string; mark: 'PRESENT' | 'LATE' | 'ABSENT' | 'EXCUSED'; note?: string }[];
 }
 export interface MyAssignmentsDto {
   assignments: AssignmentDto[];
@@ -349,6 +351,18 @@ export const useLeaderboard = (period: 'week' | 'month' | 'all' = 'week') =>
 export const useMyClasses = () => useQuery({ queryKey: K.classes, queryFn: () => api.get<ClassRoomDto[]>('/learner/classes'), enabled: useAuthed() });
 export const useClassDetail = (id?: string) => useQuery({ queryKey: K.classDetail(id ?? ''), queryFn: () => api.get<ClassDetailDto>(`/learner/classes/${id}`), enabled: !!id && useAuthed() });
 export const useMyAssignments = () => useQuery({ queryKey: K.assignments, queryFn: () => api.get<MyAssignmentsDto>('/learner/assignments'), enabled: useAuthed() });
+/** Phúc khảo bài Viết / Nói đã có điểm */
+export function useAppealAssignment() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (v: { id: string; reason: string }) => api.post<{ ticketId: string }>(`/learner/assignments/${v.id}/appeal`, { reason: v.reason }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: K.assignments });
+      qc.invalidateQueries({ queryKey: ['learner', 'classes'] });
+    },
+  });
+}
+
 export function useJoinClass() {
   const qc = useQueryClient();
   return useMutation({

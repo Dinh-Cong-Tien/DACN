@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
-import { CheckCircle2, FileQuestion, Inbox, Reply } from 'lucide-react';
+import { CheckCircle2, ClipboardCheck, FileQuestion, Inbox, Reply } from 'lucide-react';
 import { useDocumentTitle } from '@/shared/hooks';
 import { toast } from '@/shared/stores/uiStore';
 import { headApi, useHeadComplaints, useHeadMutation, type HeadComplaint } from '@/shared/api/head';
 import { errorMessage } from '@/shared/api/client';
 import type { Complaint } from '@/shared/types';
-import { timeAgo, formatDateTime } from '@/shared/utils';
+import { timeAgo, formatDateTime, staffPath } from '@/shared/utils';
 import { Avatar, Button, EmptyState, Modal, Textarea } from '@/shared/components/ui';
 import { Figures, Panel, Status, TBtn, TPageHead, TTabs, type StatusTone } from '@/roles/teacher/components/TeacherKit';
 
@@ -21,7 +21,7 @@ export const HeadComplaintsPage: React.FC = () => {
   const setStatus = useHeadMutation((a: { id: string; status: 'NEW' | 'IN_REVIEW' | 'RESOLVED' }) => headApi.setComplaintStatus(a.id, a.status));
   const replyM = useHeadMutation((a: { id: string; text: string; accepted: boolean }) => headApi.replyComplaint(a.id, { text: a.text, resolve: true, accepted: a.accepted }));
   const [tab, setTab] = useState<Complaint['status']>('NEW');
-  const [replying, setReplying] = useState<Complaint | null>(null);
+  const [replying, setReplying] = useState<HeadComplaint | null>(null);
   const [reply, setReply] = useState('');
 
   const list = items.filter((c) => c.status === tab);
@@ -38,7 +38,7 @@ export const HeadComplaintsPage: React.FC = () => {
       { id: replying.id, text: reply.trim(), accepted },
       {
         onSuccess: () => {
-          toast.success(accepted ? 'Đã chấp nhận & đóng khiếu nại' : 'Đã từ chối & đóng khiếu nại', accepted && replying?.questionRef ? `${who} được cộng điểm ghi nhận đóng góp và nhận thông báo.` : `${who} sẽ nhận được thông báo.`);
+          toast.success(accepted ? 'Đã chấp nhận & đóng khiếu nại' : 'Đã từ chối & đóng khiếu nại', accepted && replying?.questionId ? `${who} được cộng điểm ghi nhận đóng góp và nhận thông báo.` : `${who} sẽ nhận được thông báo.`);
           setReplying(null);
           setReply('');
         },
@@ -82,13 +82,18 @@ export const HeadComplaintsPage: React.FC = () => {
                       {formatDateTime(c.createdAt)} ({timeAgo(c.createdAt)})
                     </span>
                     <span className="inline-flex items-center gap-1 rounded-md bg-slate-100 px-2 py-0.5 text-xs text-slate-600">
-                      <FileQuestion className="h-3 w-3" /> {c.questionRef}
+                      {c.kind === 'APPEAL' ? <ClipboardCheck className="h-3 w-3" /> : <FileQuestion className="h-3 w-3" />} {c.questionRef}
                     </span>
                   </p>
                   <blockquote className="mt-3 rounded-xl border-l-4 border-violet-400 bg-violet-500/[0.05] px-4 py-3 text-sm leading-relaxed text-slate-800">{c.content}</blockquote>
                 </div>
                 <div className="flex shrink-0 gap-2 md:flex-col">
                   {c.status === 'NEW' && <TBtn onClick={() => accept(c)}>Tiếp nhận</TBtn>}
+                  {c.kind === 'APPEAL' && c.status !== 'RESOLVED' && (
+                    <TBtn to={staffPath('/grading-review')} icon={<ClipboardCheck />}>
+                      Xem lại điểm
+                    </TBtn>
+                  )}
                   {c.status !== 'RESOLVED' && (
                     <TBtn variant="primary" icon={<Reply />} onClick={() => setReplying(c)}>
                       Phản hồi & đóng
@@ -127,7 +132,11 @@ export const HeadComplaintsPage: React.FC = () => {
         }
       >
         {replying && <p className="mb-4 rounded-xl border-l-4 border-violet-400 bg-violet-500/[0.05] p-3 text-xs text-slate-600">"{replying.content}"</p>}
-        <p className="mb-3 text-xs text-slate-500">Chấp nhận khi khiếu nại đúng (đã hiệu đính câu hỏi trong Ngân hàng câu hỏi hoặc đã điều chỉnh điểm). Học viên báo lỗi câu hỏi được chấp nhận sẽ được cộng 20 điểm ghi nhận đóng góp.</p>
+        <p className="mb-3 text-xs text-slate-500">
+          {replying?.kind === 'APPEAL'
+            ? 'Phúc khảo: kết luận điểm ở Kiểm định chấm điểm (giữ hoặc điều chỉnh) trước, rồi phản hồi tại đây. Học viên và giáo viên chấm đều nhận được thông báo.'
+            : 'Chấp nhận khi khiếu nại đúng (đã hiệu đính câu hỏi trong Ngân hàng câu hỏi hoặc đã điều chỉnh điểm). Học viên báo lỗi câu hỏi được chấp nhận sẽ được cộng 20 điểm ghi nhận đóng góp.'}
+        </p>
         <Textarea label="Nội dung phản hồi" required value={reply} onChange={(e) => setReply(e.target.value)} placeholder="Giải thích kết luận chuyên môn, kết quả phúc khảo hoặc hướng xử lý..." />
       </Modal>
     </div>

@@ -397,9 +397,10 @@ headRouter.post(
     const studentId = idParam(req);
     const { classId, note } = parse(z.object({ classId: uuid, note: z.string().max(500).optional() }), req.body);
     const c = await scopedClass(req, classId);
-    const s = await prisma.user.findUnique({ where: { id: studentId }, select: { fullName: true } });
-    if (!s) throw notFound('Học viên');
-    await notify([c.teacherId], { type: 'CLASS', title: `Theo dõi học viên ${s.fullName}`, message: note ?? `Trưởng bộ môn đề nghị liên hệ học viên ${s.fullName} (lớp ${c.name}).`, link: `/teacher/students/${studentId}`, refType: 'CLASS', refId: c.id });
+    const member = await prisma.classMember.findUnique({ where: { classId_studentId: { classId: c.id, studentId } }, include: { student: { select: { fullName: true } } } });
+    if (!member || member.status !== 'ACTIVE') throw notFound('Học viên trong lớp');
+    const s = member.student;
+    await notify([c.teacherId], { type: 'CLASS', title: `Theo dõi học viên ${s.fullName}`, message: note ?? `Trưởng bộ môn đề nghị liên hệ học viên ${s.fullName} (lớp ${c.name}).`, link: `/teacher/students?id=${studentId}`, refType: 'CLASS', refId: c.id });
     return { ok: true };
   })
 );
@@ -1043,6 +1044,10 @@ headRouter.post(
           update: { xp: { increment: CONTRIBUTION_XP } },
         });
         await tx.user.update({ where: { id: t.userId }, data: { xpTotal: { increment: CONTRIBUTION_XP } } });
+      }
+      if (body.resolve && t.submissionId) {
+        const sub = await tx.assignmentSubmission.findUnique({ where: { id: t.submissionId }, select: { assignment: { select: { title: true, class: { select: { teacherId: true } } } } } });
+        if (sub) await notify([sub.assignment.class.teacherId], { type: 'REVIEW', title: accepted ? 'Phúc khảo được chấp nhận' : 'Phúc khảo không được chấp nhận', message: `"${sub.assignment.title}": ${body.text.slice(0, 240)}`, link: '/teacher/grading', refType: 'TICKET', refId: t.id }, tx);
       }
       if (body.resolve) await audit(req, 'COMPLAINT_RESOLVE', 'ticket', t.id, { tx, after: { accepted: body.accepted !== false } });
       return u;

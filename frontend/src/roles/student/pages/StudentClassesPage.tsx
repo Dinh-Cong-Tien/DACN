@@ -1,22 +1,29 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, Download, FileText, Music, Video, File } from 'lucide-react';
+import { ArrowRight, Download, FileText, Music, Video, File, Megaphone, Pin } from 'lucide-react';
 import { useDocumentTitle } from '@/shared/hooks';
 import { toast } from '@/shared/stores/uiStore';
 import { useQueries } from '@tanstack/react-query';
 import { ASSIGNMENT_TYPE_LABEL, describeTarget } from '@/shared/constants/student';
 import { api, errorMessage } from '@/shared/api/client';
 import { useAuthStore } from '@/shared/stores/authStore';
-import { useJoinClass, useMyAssignments, useMyClasses, type ClassDetailDto } from '@/shared/api/learner';
+import { useAppealAssignment, useJoinClass, useMyAssignments, useMyClasses, type ClassDetailDto } from '@/shared/api/learner';
 import type { Assignment, Material, MyAssignmentState } from '@/shared/types';
 import { assignmentHref, cn, formatDate, formatDateTime } from '@/shared/utils';
-import { PageHeader } from '@/shared/components/ui';
+import { Button, Modal, PageHeader, Textarea } from '@/shared/components/ui';
 import { fileHref } from '@/shared/api/teacher';
 
 type Row = Assignment & { me: MyAssignmentState };
 type TabKey = 'TODO' | 'SUBMITTED' | 'GRADED';
 
 const MAT_ICON: Record<Material['type'], React.ElementType> = { VIDEO: Video, PDF: FileText, DOC: File, AUDIO: Music };
+const MARK: Record<ClassDetailDto['attendance'][number]['mark'], { label: string; cls: string }> = {
+  PRESENT: { label: 'Có mặt', cls: 'text-emerald-700' },
+  LATE: { label: 'Đi muộn', cls: 'text-amber-700' },
+  ABSENT: { label: 'Vắng', cls: 'text-rose-600' },
+  EXCUSED: { label: 'Vắng có phép', cls: 'text-slate-600' },
+};
+const APPEAL_TEXT = { OPEN: 'Đang phúc khảo', RESOLVED: 'Đã phúc khảo', REJECTED: 'Phúc khảo không chấp nhận' } as const;
 
 /** Bài đã nộp đang chờ chấm, bài trắc nghiệm / bài giảng đã làm xong thì không cần giáo viên chấm */
 const doneText = (r: Row) => (r.type === 'ESSAY' || r.type === 'SPEAKING' ? 'Đã nộp, chờ giáo viên chấm' : 'Đã hoàn thành');
@@ -53,6 +60,35 @@ export const StudentClassesPage: React.FC = () => {
     GRADED: rows.filter((r) => r.me.status === 'GRADED'),
   };
   const materials = details.flatMap((d) => d.data?.materials ?? []);
+  const detailOf = (classId: string) => details[classes.findIndex((c) => c.id === classId)]?.data;
+  // Bảng tin của các lớp: tin ghim lên đầu, sau đó mới nhất
+  const news = details
+    .flatMap((d) => d.data?.announcements ?? [])
+    .sort((a, b) => Number(!!b.pinned) - Number(!!a.pinned) || b.createdAt.localeCompare(a.createdAt))
+    .slice(0, 6);
+  const attendance = details
+    .flatMap((d) => (d.data?.attendance ?? []).map((x) => ({ ...x, className: d.data!.class.name })))
+    .sort((a, b) => b.date.localeCompare(a.date) || b.start.localeCompare(a.start));
+  // Ngày hôm nay theo giờ máy (yyyy-mm-dd) để bỏ buổi đã qua mà giáo viên chưa điểm danh
+  const todayIso = new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 10);
+  const appeal = useAppealAssignment();
+  const [appealing, setAppealing] = useState<Row | null>(null);
+  const [reason, setReason] = useState('');
+  const sendAppeal = () => {
+    if (!appealing) return;
+    if (reason.trim().length < 10) return toast.error('Nêu rõ lý do phúc khảo', 'Ít nhất 10 ký tự để trưởng bộ môn xem xét.');
+    appeal.mutate(
+      { id: appealing.id, reason: reason.trim() },
+      {
+        onSuccess: () => {
+          toast.success('Đã gửi phúc khảo', 'Trưởng bộ môn sẽ xem lại điểm và phản hồi qua thông báo.');
+          setAppealing(null);
+          setReason('');
+        },
+        onError: (e) => toast.error('Chưa gửi được', errorMessage(e)),
+      }
+    );
+  };
   // Bài trắc nghiệm được giao: gắn ?assignment= để lượt làm bài cập nhật bài nộp
   const hrefOf = (r: Row) => {
     const h = assignmentHref(r.target);
@@ -100,6 +136,29 @@ export const StudentClassesPage: React.FC = () => {
                 <dt className="w-20 shrink-0 text-slate-500">Bài cần làm</dt>
                 <dd className="text-slate-800">{groups.TODO.filter((r) => r.classId === c.id).length}</dd>
               </div>
+              {(() => {
+                const d = detailOf(c.id);
+                const next = d?.upcomingSessions.find((x) => x.status !== 'DONE' && x.date >= todayIso);
+                const marks = d?.attendance ?? [];
+                const present = marks.filter((m) => m.mark === 'PRESENT' || m.mark === 'LATE').length;
+                return (
+                  <>
+                    {next && (
+                      <div className="flex gap-2">
+                        <dt className="w-20 shrink-0 text-slate-500">Buổi tới</dt>
+                        <dd className="text-slate-800">
+                          {formatDate(next.date)} · {next.start}
+                          {next.topic && <span className="text-slate-500"> · {next.topic}</span>}
+                        </dd>
+                      </div>
+                    )}
+                    <div className="flex gap-2">
+                      <dt className="w-20 shrink-0 text-slate-500">Chuyên cần</dt>
+                      <dd className="text-slate-800">{marks.length ? `${present}/${marks.length} buổi có mặt` : 'Chưa điểm danh'}</dd>
+                    </div>
+                  </>
+                );
+              })()}
             </dl>
           </article>
         ))}
@@ -114,6 +173,26 @@ export const StudentClassesPage: React.FC = () => {
           </div>
         </div>}
       </section>
+
+      {news.length > 0 && (
+        <section>
+          <h2 className="text-[17px] font-semibold text-slate-900">Bảng tin lớp</h2>
+          <ul className="mt-3 divide-y divide-slate-200 rounded-xl border border-slate-200 bg-white">
+            {news.map((n) => (
+              <li key={n.id} className="flex gap-3 px-4 py-3">
+                {n.pinned ? <Pin className="mt-0.5 h-4 w-4 shrink-0 text-indigo-500" /> : <Megaphone className="mt-0.5 h-4 w-4 shrink-0 text-slate-400" />}
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-medium text-slate-900">{n.title}</p>
+                  <p className="mt-0.5 whitespace-pre-line text-[13px] text-slate-600">{n.body}</p>
+                  <p className="mt-1 text-[12px] text-slate-500">
+                    {classes.find((c) => c.id === n.classId)?.name} · {formatDateTime(n.createdAt)}
+                  </p>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       <section>
         <div className="flex gap-5 overflow-x-auto border-b border-slate-200" role="tablist">
@@ -145,6 +224,11 @@ export const StudentClassesPage: React.FC = () => {
                     <h3 className="mt-0.5 font-semibold text-slate-900">{r.title}</h3>
                     <p className="mt-0.5 text-[13px] text-slate-600">{describeTarget(r.target)}</p>
                     {r.note && tab === 'TODO' && <p className="mt-1.5 border-l-2 border-slate-200 pl-3 text-[13px] text-slate-600">Giáo viên dặn: {r.note}</p>}
+                    {tab === 'GRADED' && r.me.appeal?.resolution && (
+                      <p className="mt-1.5 border-l-2 border-amber-300 pl-3 text-[13px] text-slate-700">
+                        <span className="text-slate-500">Kết quả phúc khảo:</span> {r.me.appeal.resolution}
+                      </p>
+                    )}
                     {tab === 'GRADED' && r.me.feedback && (
                       <p className="mt-1.5 border-l-2 border-indigo-300 pl-3 text-[13px] text-slate-700">
                         <span className="text-slate-500">Nhận xét của {classes.find((c) => c.id === r.classId)?.teacherName}:</span> {r.me.feedback}
@@ -168,10 +252,18 @@ export const StudentClassesPage: React.FC = () => {
                         {r.me.submittedAt && <span className="block tabular-nums text-slate-500">Nộp lúc {formatDateTime(r.me.submittedAt)}</span>}
                       </span>
                     ) : (
-                      <span className="text-right">
-                        <span className="block text-lg font-semibold tabular-nums text-slate-900">{scoreText(r)}</span>
-                        {r.me.submittedAt && <span className="block text-[12px] tabular-nums text-slate-500">Nộp ngày {formatDate(r.me.submittedAt)}</span>}
-                      </span>
+                      <>
+                        <span className="text-right">
+                          <span className="block text-lg font-semibold tabular-nums text-slate-900">{scoreText(r)}</span>
+                          {r.me.submittedAt && <span className="block text-[12px] tabular-nums text-slate-500">Nộp ngày {formatDate(r.me.submittedAt)}</span>}
+                          {r.me.appeal && <span className={cn('block text-[12px]', r.me.appeal.status === 'OPEN' ? 'text-amber-700' : 'text-slate-500')}>{APPEAL_TEXT[r.me.appeal.status]}</span>}
+                        </span>
+                        {isStudent && (r.type === 'ESSAY' || r.type === 'SPEAKING') && r.me.appeal?.status !== 'OPEN' && (
+                          <button type="button" onClick={() => setAppealing(r)} className="inline-flex h-8 shrink-0 items-center rounded-md border border-slate-300 px-3 text-[13px] text-slate-700 hover:bg-slate-900/[0.04]">
+                            Phúc khảo
+                          </button>
+                        )}
+                      </>
                     )}
                   </div>
                 </li>
@@ -204,6 +296,45 @@ export const StudentClassesPage: React.FC = () => {
           })}
         </ul>
       </section>
+
+      <section>
+        <h2 className="text-[17px] font-semibold text-slate-900">Điểm danh của tôi</h2>
+        <ul className="mt-3 divide-y divide-slate-200 rounded-xl border border-slate-200 bg-white">
+          {attendance.length === 0 && <li className="px-4 py-3 text-sm text-slate-500">{isLoading ? 'Đang tải…' : 'Giáo viên chưa điểm danh buổi nào.'}</li>}
+          {attendance.slice(0, 12).map((a) => (
+            <li key={a.sessionId} className="flex items-center gap-3 px-4 py-3">
+              <span className="min-w-0 flex-1">
+                <span className="block truncate text-sm font-medium text-slate-900">{a.topic || 'Buổi học'}</span>
+                <span className="block text-[12px] text-slate-500">
+                  {a.className} · {formatDate(a.date)} · {a.start}
+                  {a.note && ` · ${a.note}`}
+                </span>
+              </span>
+              <span className={cn('shrink-0 text-[13px] font-medium', MARK[a.mark].cls)}>{MARK[a.mark].label}</span>
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      <Modal
+        open={!!appealing}
+        onClose={() => setAppealing(null)}
+        title="Phúc khảo bài làm"
+        description={appealing ? `${appealing.title} · ${scoreText(appealing)}` : ''}
+        footer={
+          <>
+            <Button variant="ghost" onClick={() => setAppealing(null)}>
+              Huỷ
+            </Button>
+            <Button onClick={sendAppeal} disabled={appeal.isPending}>
+              Gửi phúc khảo
+            </Button>
+          </>
+        }
+      >
+        <p className="mb-3 text-[13px] text-slate-600">Trưởng bộ môn sẽ chấm lại theo cùng tiêu chí, giữ hoặc điều chỉnh điểm, rồi phản hồi qua thông báo.</p>
+        <Textarea label="Lý do phúc khảo" required value={reason} onChange={(e) => setReason(e.target.value)} placeholder="Nêu phần bạn cho là chấm chưa đúng, ví dụ: bài đã đủ ý theo đề, dùng đúng cấu trúc..." />
+      </Modal>
     </div>
   );
 };

@@ -89,11 +89,27 @@ async function toAssignment(a: AsgRow) {
 }
 
 /** MyAssignmentState */
-function myState(s: AssignmentSubmission | undefined, a: Assignment) {
+function myState(s: AssignmentSubmission | undefined, a: Assignment, appeal?: AppealState) {
   if (!s) return { status: 'TODO' as const };
   const overdue = !!a.dueAt && a.dueAt < new Date();
   const status = s.status === 'GRADED' ? 'GRADED' : s.status === 'SUBMITTED' || s.status === 'LATE' ? 'SUBMITTED' : s.status === 'MISSED' || (s.status === 'TODO' && overdue && !a.allowLate) ? 'MISSED' : 'TODO';
-  return { status, submittedAt: iso(s.submittedAt), score: s.score === null ? undefined : Number(s.score), feedback: s.feedback ?? undefined } as const;
+  return { status, submittedAt: iso(s.submittedAt), score: s.score === null ? undefined : Number(s.score), feedback: s.feedback ?? undefined, appeal } as const;
+}
+
+// ---------------- Phúc khảo bài Viết / Nói đã chấm (ticket ACADEMIC gắn submission, trưởng bộ môn xử lý) ----------------
+type AppealState = { status: 'OPEN' | 'RESOLVED' | 'REJECTED'; resolution?: string };
+const OPEN_TICKET = ['OPEN', 'IN_REVIEW', 'PENDING'] as const;
+
+/** Phúc khảo mới nhất của từng bài nộp */
+async function appealsOf(submissionIds: string[]) {
+  if (!submissionIds.length) return new Map<string, AppealState>();
+  const rows = await prisma.ticket.findMany({ where: { submissionId: { in: submissionIds }, category: 'ACADEMIC' }, orderBy: { createdAt: 'asc' }, select: { submissionId: true, status: true, resolution: true } });
+  return new Map(
+    rows.map((t) => [
+      t.submissionId!,
+      { status: (OPEN_TICKET as readonly string[]).includes(t.status) ? 'OPEN' : t.status === 'REJECTED' ? 'REJECTED' : 'RESOLVED', resolution: t.resolution ?? undefined } as AppealState,
+    ])
+  );
 }
 
 classesRouter.get(
@@ -158,14 +174,27 @@ classesRouter.get(
       prisma.assignment.findMany({ where: { classId: c.id, deletedAt: null, status: { not: 'DRAFT' } }, include: { class: { select: { name: true } } }, orderBy: { dueAt: 'asc' } }),
       prisma.classSession.findMany({ where: { classId: c.id, status: { not: 'CANCELLED' }, sessionDate: { gte: new Date(Date.now() - 86400_000) } }, orderBy: [{ sessionDate: 'asc' }, { startTime: 'asc' }], take: 10 }),
     ]);
-    const subs = await prisma.assignmentSubmission.findMany({ where: { studentId: userId, assignmentId: { in: assignments.map((a) => a.id) } } });
+    const [subs, done] = await Promise.all([
+      prisma.assignmentSubmission.findMany({ where: { studentId: userId, assignmentId: { in: assignments.map((a) => a.id) } } }),
+      prisma.classSession.findMany({ where: { classId: c.id, status: 'DONE' }, orderBy: [{ sessionDate: 'desc' }, { startTime: 'desc' }], select: { id: true, sessionDate: true, startTime: true, topic: true, attendance: true } }),
+    ]);
     const smap = new Map(subs.map((s) => [s.assignmentId, s]));
+    const appeals = await appealsOf(subs.map((s) => s.id));
+    // Điểm danh của tôi: chỉ những buổi giáo viên đã điểm danh có tên mình
+    const attendance = done
+      .map((s) => {
+        const v = (s.attendance as Record<string, { mark?: string; note?: string } | string> | null)?.[userId];
+        const mark = typeof v === 'string' ? v : v?.mark;
+        return mark ? { sessionId: s.id, date: s.sessionDate.toISOString().slice(0, 10), start: s.startTime.toISOString().slice(11, 16), topic: s.topic ?? '', mark, note: typeof v === 'object' ? v?.note : undefined } : null;
+      })
+      .filter((x): x is NonNullable<typeof x> => !!x);
     return {
       class: { ...(await toClassRoom(c)), teacherAvatarUrl: c.teacher.avatarUrl ?? undefined, teacherEmail: c.teacher.email },
       announcements: announcements.map((a) => ({ id: a.id, classId: a.classId, title: a.title, body: a.body, createdAt: a.createdAt.toISOString(), pinned: a.isPinned, readCount: a.readCount })),
       materials: materials.map(toMaterial),
       assignments: await Promise.all(assignments.map(toAssignment)),
-      myAssignments: Object.fromEntries(assignments.map((a) => [a.id, myState(smap.get(a.id), a)])),
+      myAssignments: Object.fromEntries(assignments.map((a) => [a.id, myState(smap.get(a.id), a, appeals.get(smap.get(a.id)?.id ?? ''))])),
+      attendance,
       upcomingSessions: sessions.map((s) => ({
         id: s.id,
         classId: s.classId,
@@ -207,9 +236,10 @@ classesRouter.get(
       include: { assignment: { include: { class: { select: { name: true } } } } },
       orderBy: { assignment: { dueAt: 'asc' } },
     });
+    const appeals = await appealsOf(subs.filter((s) => s.status === 'GRADED').map((s) => s.id));
     return {
       assignments: await Promise.all(subs.map((s) => toAssignment(s.assignment))),
-      states: Object.fromEntries(subs.map((s) => [s.assignmentId, myState(s, s.assignment)])),
+      states: Object.fromEntries(subs.map((s) => [s.assignmentId, myState(s, s.assignment, appeals.get(s.id))])),
     };
   })
 );
@@ -242,5 +272,50 @@ classesRouter.post(
       return s;
     });
     return myState(updated, a);
+  })
+);
+
+/**
+ * Phúc khảo bài Viết / Nói đã có điểm: tạo khiếu nại học thuật gắn bài nộp (trưởng bộ môn xử lý ở "Khiếu nại & phúc khảo"),
+ * đưa lượt chấm vào hàng kiểm định điểm để trưởng bộ môn giữ hoặc điều chỉnh, báo trưởng bộ môn và giáo viên chấm.
+ */
+classesRouter.post(
+  '/assignments/:id/appeal',
+  onlyStudent,
+  handler(async (req) => {
+    const userId = me(req).id;
+    const { reason } = parse(z.object({ reason: z.string().trim().min(10, 'Nêu rõ lý do phúc khảo (ít nhất 10 ký tự)').max(2000) }), req.body);
+    const sub = await prisma.assignmentSubmission.findUnique({
+      where: { assignmentId_studentId: { assignmentId: pid(req), studentId: userId } },
+      include: { assignment: { include: { class: { select: { id: true, name: true, teacherId: true, department: { select: { headId: true } } } } } } },
+    });
+    if (!sub || sub.assignment.deletedAt) throw notFound('Bài tập');
+    const a = sub.assignment;
+    if (a.type !== 'ESSAY' && a.type !== 'SPEAKING') throw badRequest('Chỉ phúc khảo bài Viết, Nói do giáo viên chấm', 'NOT_APPEALABLE');
+    if (sub.status !== 'GRADED') throw badRequest('Bài chưa có điểm', 'NOT_GRADED');
+    const open = await prisma.ticket.findFirst({ where: { submissionId: sub.id, status: { in: [...OPEN_TICKET] } }, select: { id: true } });
+    if (open) throw conflict('Bài này đang được phúc khảo', 'APPEAL_OPEN');
+    const student = await prisma.user.findUniqueOrThrow({ where: { id: userId }, select: { fullName: true } });
+    const ticket = await prisma.$transaction(async (tx) => {
+      const t = await tx.ticket.create({
+        data: {
+          userId,
+          channel: 'IN_APP',
+          category: 'ACADEMIC',
+          submissionId: sub.id,
+          subject: `Phúc khảo · ${a.title}`.slice(0, 200),
+          ticketMessageTickets: { create: { senderType: 'USER', senderId: userId, text: reason } },
+        },
+      });
+      // Lượt chấm cuối của giáo viên vào hàng kiểm định (nếu chưa có kết luận đang chờ)
+      const g = await tx.grading.findFirst({ where: { submissionId: sub.id, graderType: 'TEACHER', isFinal: true }, orderBy: { gradedAt: 'desc' } });
+      if (g && g.reviewStatus !== 'PENDING') await tx.grading.update({ where: { id: g.id }, data: { reviewStatus: 'PENDING', reviewerId: null, reviewedAt: null } });
+      const msg = `${student.fullName} xin phúc khảo "${a.title}" (lớp ${a.class.name}, điểm ${Number(sub.score)}/${Number(a.maxScore)}).`;
+      const heads = a.class.department?.headId ? [a.class.department.headId] : [];
+      if (heads.length) await tx.notification.createMany({ data: heads.map((h) => ({ userId: h, type: 'REVIEW' as const, title: 'Yêu cầu phúc khảo', message: msg, link: '/head/complaints', refType: 'TICKET', refId: t.id })) });
+      await tx.notification.create({ data: { userId: a.class.teacherId, type: 'REVIEW', title: 'Yêu cầu phúc khảo', message: `${msg} Trưởng bộ môn sẽ xem lại điểm.`, link: '/teacher/grading', refType: 'TICKET', refId: t.id } });
+      return t;
+    });
+    return { ticketId: ticket.id, appeal: { status: 'OPEN' } as AppealState };
   })
 );

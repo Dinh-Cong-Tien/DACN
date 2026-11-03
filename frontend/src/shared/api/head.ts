@@ -59,7 +59,17 @@ export interface HeadDashboard {
   classesNeedTeacher: { id: string; name: string; teacherName: string }[];
 }
 export type HeadApproval = ApprovalRequest & { resourceType: string; authorAvatar?: string; reviewer?: string; note?: string };
-export type HeadComplaint = Complaint & { studentEmail?: string; avatarUrl?: string; questionId?: string; issue?: string; resolution?: string; messages: { from: string; text: string; at: string }[] };
+export type HeadComplaint = Complaint & {
+  studentEmail?: string;
+  avatarUrl?: string;
+  questionId?: string;
+  /** Phúc khảo bài nộp Viết / Nói */
+  submissionId?: string;
+  kind?: 'APPEAL' | 'QUESTION' | 'OTHER';
+  issue?: string;
+  resolution?: string;
+  messages: { from: string; text: string; at: string }[];
+};
 export type HeadGradingReview = GradingReview & {
   taskTitle: string;
   audioUrl?: string;

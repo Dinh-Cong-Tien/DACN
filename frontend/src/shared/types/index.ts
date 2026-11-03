@@ -340,6 +340,8 @@ export interface MyAssignmentState {
   submittedAt?: string;
   score?: number;
   feedback?: string;
+  /** Phúc khảo gần nhất (bài Viết / Nói đã có điểm) */
+  appeal?: { status: 'OPEN' | 'RESOLVED' | 'REJECTED'; resolution?: string };
 }
 
 /** Tiêu chí chấm bài tự luận: dùng chung cho trang Luyện Viết / Luyện Nói của học viên và bàn chấm của giáo viên */
