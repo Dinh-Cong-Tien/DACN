@@ -15,6 +15,8 @@ const PART_META: Record<number, { title: string; skill: SkillType; minutes: numb
   6: { title: 'Part 6 — Hoàn thành đoạn văn', skill: 'READING', minutes: 8 },
   7: { title: 'Part 7 — Đọc hiểu', skill: 'READING', minutes: 57 },
 };
+/** IPA thống nhất dạng /…/ (nguồn lúc có lúc không có dấu gạch chéo) */
+const ipa = (s: string | null | undefined) => (s ? `/${s.trim().replace(/^\/+|\/+$/g, '')}/` : null);
 const clean = (s: unknown) => (typeof s === 'string' && s.trim() && s.trim() !== 'None' ? s.trim() : null);
 
 // =====================================================================
@@ -107,8 +109,8 @@ export async function importToeicTests(ctx: SeedCtx) {
         vocab.set(key, {
           headword: cut(head, 80),
           pos,
-          ipaUk: cut(clean(w.ipa_uk), 80),
-          ipaUs: cut(clean(w.ipa_us), 80),
+          ipaUk: cut(ipa(clean(w.ipa_uk)), 80),
+          ipaUs: cut(ipa(clean(w.ipa_us)), 80),
           meaningVi: clean(w.meaning_vi),
           exampleEn: clean(w.example_en),
           exampleVi: clean(w.example_vi),
@@ -194,8 +196,8 @@ export async function importVocabulary(ctx: SeedCtx, examVocab: any[]) {
         topicId: id,
         headword: cut(w.headword, 80),
         pos: cut(w.pos, 12),
-        ipaUk: cut(w.ipaUk, 80),
-        ipaUs: cut(w.ipaUs, 80),
+        ipaUk: cut(ipa(w.ipaUk), 80),
+        ipaUs: cut(ipa(w.ipaUs), 80),
         meaningVi: w.meaningVi,
         exampleEn: w.exampleEn,
         exampleVi: w.exampleVi,
@@ -241,7 +243,9 @@ export async function importVideoCourse(ctx: SeedCtx) {
       const t = String(l.lesson_type);
       const type = t === 'quiz' ? 'QUIZ' : t === 'vocabulary' ? 'READING' : 'VIDEO';
       const min = Math.max(1, Math.round((l.duration_seconds ?? 0) / 60)) || 10;
-      total += min;
+      // Nguồn không có video / nội dung cho bài khoá kín → để nháp (học viên không thấy bài rỗng; admin bổ sung sau)
+      const empty = (type === 'VIDEO' && !clean(l.video_url)) || (type === 'READING' && !clean(l.article_content));
+      if (!empty) total += min;
       lessons.push({
         sectionId: sid,
         title: cut(String(l.title).trim(), 200),
@@ -253,7 +257,7 @@ export async function importVideoCourse(ctx: SeedCtx) {
         durationMin: min,
         isFreePreview: l.access_level === 'free',
         orderIndex: li + 1,
-        status: 'PUBLISHED',
+        status: empty ? 'DRAFT' : 'PUBLISHED',
       });
     });
   });
@@ -273,7 +277,7 @@ export async function importVideoCourse(ctx: SeedCtx) {
       departmentId: ctx.depts.get('TOEIC-LR'),
       status: 'PUBLISHED',
       reviewedById: ctx.headId,
-      lessonsCount: lessons.length,
+      lessonsCount: lessons.filter((l) => l.status === 'PUBLISHED').length,
       durationMin: total,
       publishedAt: new Date(),
     },
@@ -358,6 +362,7 @@ export async function importGrammarExercises(ctx: SeedCtx, topicTagByKey: (fileT
   const dir = etsDir('Grammar Tests');
   if (!exists(dir)) return;
   const rows: any[] = [];
+  const byKey = new Map<string, any>();
   for (const f of fs.readdirSync(dir).filter((x) => x.endsWith('.txt'))) {
     const items = parseEts(path.join(dir, f));
     if (!items.length) continue;
@@ -367,26 +372,40 @@ export async function importGrammarExercises(ctx: SeedCtx, topicTagByKey: (fileT
       .flatMap(([, slugs]) => slugs)
       .map((s) => ctx.tags.get(`grammar-${s}`))
       .filter((t): t is string => !!t);
-    const seen = new Set<string>();
     for (const it of items) {
-      if (seen.has(it.stem)) continue;
-      seen.add(it.stem);
-      if (skipStems.has(it.context ? `${it.context}
-${it.stem}` : it.stem)) continue;
-      rows.push({
+      const stem = it.context ? `${it.context}\n${it.stem}` : it.stem;
+      // Bỏ phương án rỗng (nguồn có câu thiếu chữ ở D), đánh lại khoá A, B, C… cho liền mạch
+      const kept = it.options.filter((o) => o.text.trim());
+      if (kept.length < 2 || !kept.some((o) => o.key === it.answer)) continue;
+      // Phương án trùng chữ (câu tìm lỗi sai mất gạch chân, hoặc lỗi nguồn) → không xác định được đáp án
+      if (new Set(kept.map((o) => o.text.trim().toLowerCase())).size < kept.length) continue;
+      const options = kept.map((o, i) => ({ key: 'ABCDEF'[i], text: o.text }));
+      const answer = options[kept.findIndex((o) => o.key === it.answer)].key;
+      // Cùng một câu xuất hiện ở nhiều file (vd. Relative Clauses & Relative Pronouns) → giữ 1 câu, gộp nhãn chủ điểm
+      const key = `${stem}|${JSON.stringify(options)}|${answer}`;
+      const tags = [tagId, ...extraTags, ctx.tags.get('toeic-p5')!];
+      const dup = byKey.get(key);
+      if (dup) {
+        dup.tagIds = [...new Set([...dup.tagIds, ...tags])];
+        continue;
+      }
+      if (skipStems.has(stem)) continue;
+      const row = {
         examType: 'TOEIC',
         part: 'TOEIC_P5',
         skill: 'GRAMMAR',
         type: 'SINGLE_CHOICE',
-        tagIds: [...new Set([tagId, ...extraTags, ctx.tags.get('toeic-p5')!])],
-        stem: it.context ? `${it.context}\n${it.stem}` : it.stem,
-        options: it.options,
-        correctAnswer: { keys: [it.answer] },
+        tagIds: [...new Set(tags)],
+        stem,
+        options,
+        correctAnswer: { keys: [answer] },
         source: 'IMPORT',
         status: 'PUBLISHED',
         authorId: ctx.adminId,
         level: /advanced/i.test(f) ? 'B2' : /basic|elementary/i.test(f) ? 'A2' : 'B1',
-      });
+      };
+      byKey.set(key, row);
+      rows.push(row);
     }
   }
   await ctx.flushTags();
@@ -455,6 +474,8 @@ export async function importReading(ctx: SeedCtx) {
     let order = 0;
     for (const it of parseEts(path.join(dir, f))) {
       if (!it.context) continue;
+      // Part 7 TOEIC: đúng 4 phương án, không trùng chữ (bài đọc phổ thông 2–3 phương án không đúng dạng đề)
+      if (it.options.length !== 4 || new Set(it.options.map((o) => o.text.trim().toLowerCase())).size < 4) continue;
       const key = `${it.test}|${it.context.slice(0, 200)}`;
       if (key !== curKey) {
         curKey = key;
@@ -539,6 +560,7 @@ export async function importWriting(ctx: SeedCtx) {
       // exam_part chưa có giá trị riêng cho TOEIC Writing → dùng TOEIC_P1 (đề dựa trên tranh), phân biệt bằng skill = WRITING
       part: 'TOEIC_P1',
       skill: 'WRITING',
+        tagIds: [ctx.addTag('toeic-writing', 'TOEIC Writing', 'WRITING', 'TOEIC')],
       type: 'ESSAY',
       stem: `Write ONE sentence based on the picture. You must use the two words: ${w.keywords.join(' / ')}`,
       taskConfig: {
@@ -555,6 +577,7 @@ export async function importWriting(ctx: SeedCtx) {
       status: 'PUBLISHED',
       authorId: ctx.adminId,
     }));
+  await ctx.flushTags();
   await insertMany(prisma.question, rows);
   log('writing prompts', rows.length);
 }
@@ -596,6 +619,7 @@ export async function importSpeaking(ctx: SeedCtx) {
         examType: 'TOEIC',
         part: 'TOEIC_P1', // exam_part chưa có giá trị TOEIC Speaking → phân biệt bằng skill = SPEAKING
         skill: 'SPEAKING',
+        tagIds: [ctx.addTag('toeic-speaking', 'TOEIC Speaking', 'SPEAKING', 'TOEIC')],
         type: 'SPEAKING_RESPONSE',
         stem,
         audioUrl: clean(q.audio_src),
@@ -608,6 +632,7 @@ export async function importSpeaking(ctx: SeedCtx) {
       });
     });
   }
+  await ctx.flushTags();
   await insertMany(prisma.question, rows);
   log('speaking prompts', rows.length);
 }

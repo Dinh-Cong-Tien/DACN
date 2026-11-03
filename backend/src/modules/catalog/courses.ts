@@ -96,7 +96,8 @@ function toCourse(c: CourseRow, i: number, states: Map<string, { completed: bool
     isFree: c.isFree,
     progress: enrolledPct ?? (lessons.length ? Math.round((done / lessons.length) * 100) : 0),
     teacherName: c.author?.fullName ?? 'OrbiLingo',
-    sections: c.courseSectionCourses.map((s) => ({
+    // Ẩn chặng không còn bài nào hiển thị (bài nguồn không có video đang ở trạng thái nháp)
+    sections: c.courseSectionCourses.filter((s) => s.lessonSections.length).map((s) => ({
       id: s.id,
       title: s.title,
       part: s.partTitle ?? undefined,

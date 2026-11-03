@@ -69,14 +69,14 @@ function parseTxt(file: string): Group[] {
   return groups;
 }
 
-/** Đáp án gốc từ XML examenglish: chỉ số phương án có feedback='Correct' theo thứ tự <item> */
-function answerKeys(file: string): string[] {
-  const xml = fs.readFileSync(path.join(KEYS, file), 'latin1');
+/** Đáp án gốc từ XML examenglish (theo thứ tự <item>): khoá đáp án đúng + chữ các phương án (đọc kép: txt không có phương án) */
+function answerKeys(file: string): { key: string; options: Opt[] }[] {
+  const xml = fs.readFileSync(path.join(KEYS, file), 'utf8').replace(/�/g, '’');
   return [...xml.matchAll(/<item>([\s\S]*?)<\/item>/g)].map((m) => {
-    const choices = [...m[1].matchAll(/<choice\s+feedback=['"](\w+)['"]/g)].map((c) => c[1]);
-    const i = choices.findIndex((c) => c === 'Correct');
+    const choices = [...m[1].matchAll(/<choice\s+feedback=['"](\w+)['"][^>]*>([\s\S]*?)<\/choice>/g)];
+    const i = choices.findIndex((c) => c[1] === 'Correct');
     if (i < 0) throw new Error(`examenglish: thiếu đáp án trong ${file}`);
-    return 'ABCD'[i];
+    return { key: 'ABCD'[i], options: choices.map((c, k) => ({ key: 'ABCD'[k], text: stripHtml(c[2].replace(/<!\[CDATA\[|\]\]>/g, '')).trim(), correct: k === i })) };
   });
 }
 
@@ -178,7 +178,8 @@ export async function importExamEnglish(ctx: SeedCtx) {
         authorId: ctx.adminId,
       });
       g.questions.forEach((q, qi) => {
-        add(part, { passageId: pid, orderInPassage: qi + 1, stem: q.stem, options: opts(q), correctAnswer: { keys: [keys[k++]] } });
+        const key = keys[k++];
+        add(part, { passageId: pid, orderInPassage: qi + 1, stem: q.stem, options: q.options.length ? opts(q) : key.options.map((o) => ({ key: o.key, text: o.text })), correctAnswer: { keys: [key.key] } });
       });
     });
     if (k !== keys.length) throw new Error(`examenglish ${part}: ${k} câu nhưng XML có ${keys.length} đáp án`);
@@ -218,7 +219,10 @@ export async function importExamEnglish(ctx: SeedCtx) {
         authorId: ctx.adminId,
       });
       pendingHtml = [];
-      g.questions.forEach((q, qi) => add('TOEIC_P7', { passageId: pid, orderInPassage: qi + 1, stem: q.stem, options: opts(q), correctAnswer: { keys: [keys[k++]] } }));
+      g.questions.forEach((q, qi) => {
+        const key = keys[k++];
+        add('TOEIC_P7', { passageId: pid, orderInPassage: qi + 1, stem: q.stem, options: q.options.length ? opts(q) : key.options.map((o) => ({ key: o.key, text: o.text })), correctAnswer: { keys: [key.key] } });
+      });
     });
     if (k !== keys.length) throw new Error(`examenglish ${prefix}: ${k} câu nhưng XML có ${keys.length} đáp án`);
   }

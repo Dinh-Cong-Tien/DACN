@@ -176,7 +176,8 @@ export async function seedBase(): Promise<SeedCtx> {
     const createdAt = new Date(Math.max(start.getTime() - 7 * DAY_MS, teacherJoined.getTime()));
     classRows.push({
       id,
-      departmentId: teacher.departmentId,
+      // Lớp thuộc bộ môn cùng kỳ thi: bộ môn của giáo viên nếu khớp, không thì bộ môn đầu tiên của kỳ thi đó
+      departmentId: deptRows.find((d) => d.id === teacher.departmentId)?.examType === c.examType ? teacher.departmentId : deptRows.find((d) => d.examType === c.examType)?.id ?? teacher.departmentId,
       teacherId,
       name: c.name,
       code: c.code,

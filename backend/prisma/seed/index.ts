@@ -16,12 +16,12 @@ async function truncateAll() {
 }
 
 async function refreshCaches() {
-  // Số câu theo nhãn kỹ năng, tổng câu của đề
+  // Số câu theo nhãn kỹ năng, tổng câu của đề; số bài / thời lượng khoá chỉ tính bài đã xuất bản (bài nháp học viên không thấy)
   await prisma.$executeRawUnsafe(`UPDATE skill_tags t SET questions_count = (SELECT count(*) FROM questions q WHERE t.id = ANY (q.tag_ids) AND q.deleted_at IS NULL)`);
   await prisma.$executeRawUnsafe(`UPDATE mock_tests m SET total_questions = (SELECT count(*) FROM mock_test_questions x WHERE x.test_id = m.id)`);
   await prisma.$executeRawUnsafe(`UPDATE vocab_topics v SET words_count = (SELECT count(*) FROM words w WHERE w.topic_id = v.id)`);
   await prisma.$executeRawUnsafe(`UPDATE courses c SET lessons_count = s.n, duration_min = s.m FROM (
-      SELECT cs.course_id, count(l.id) n, coalesce(sum(l.duration_min), 0) m FROM course_sections cs LEFT JOIN lessons l ON l.section_id = cs.id GROUP BY cs.course_id) s WHERE s.course_id = c.id`);
+      SELECT cs.course_id, count(l.id) n, coalesce(sum(l.duration_min), 0) m FROM course_sections cs LEFT JOIN lessons l ON l.section_id = cs.id AND l.status = 'PUBLISHED' AND l.deleted_at IS NULL GROUP BY cs.course_id) s WHERE s.course_id = c.id`);
   await prisma.$executeRawUnsafe(`REFRESH MATERIALIZED VIEW mv_question_stats`);
   await prisma.$executeRawUnsafe(`REFRESH MATERIALIZED VIEW mv_class_stats`);
 }

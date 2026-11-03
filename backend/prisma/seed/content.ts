@@ -143,6 +143,14 @@ export async function seedVstep(ctx: SeedCtx) {
   const links: any[] = [];
   let no = 0;
   const mcq = [...(MOCKS.VSTEP_LISTENING as any[]), ...(MOCKS.VSTEP_READING as any[])];
+  const SKILL_TAG: Record<string, string> = {
+    LISTENING: ctx.addTag('vstep-listening', 'VSTEP Listening', 'LISTENING', 'VSTEP'),
+    READING: ctx.addTag('vstep-reading', 'VSTEP Reading', 'READING', 'VSTEP'),
+    WRITING: ctx.addTag('vstep-writing', 'VSTEP Writing', 'WRITING', 'VSTEP'),
+    SPEAKING: ctx.addTag('vstep-speaking', 'VSTEP Speaking', 'SPEAKING', 'VSTEP'),
+  };
+  await ctx.flushTags();
+  const orderIn = new Map<string, number>();
   for (const q of mcq) {
     const part = VSTEP_PART[q.partOrSkill] ?? 'VSTEP_R1';
     let passageId: string | null = null;
@@ -151,12 +159,13 @@ export async function seedVstep(ctx: SeedCtx) {
       if (!passageId) {
         passageId = uuid();
         passages.set(q.passage.id, passageId);
-        passageRows.push({ id: passageId, purpose: 'EXAM', examType: 'VSTEP', part, title: q.passage.title ?? null, contentMd: q.passage.content || null, audioUrl: q.passage.audioUrl ?? null, level: cefrOf(q.level), status: 'PUBLISHED', authorId: ctx.adminId });
+        passageRows.push({ id: passageId, purpose: 'EXAM', examType: 'VSTEP', part, title: q.passage.title ?? `VSTEP ${q.skillType === 'LISTENING' ? 'Listening' : 'Reading'} — ${part.replace('VSTEP_', '')}`, contentMd: q.passage.content || null, audioUrl: q.passage.audioUrl ?? null, level: cefrOf(q.level), status: 'PUBLISHED', authorId: ctx.adminId });
       }
     }
     const id = uuid();
     qRows.push({
-      id, passageId, examType: 'VSTEP', part, skill: q.skillType, type: 'SINGLE_CHOICE', level: cefrOf(q.level), stem: q.stem, options: q.options,
+      id, passageId, orderInPassage: passageId ? (orderIn.set(passageId, (orderIn.get(passageId) ?? 0) + 1), orderIn.get(passageId)) : null,
+      examType: 'VSTEP', part, skill: q.skillType, type: 'SINGLE_CHOICE', tagIds: [SKILL_TAG[q.skillType]], level: cefrOf(q.level), stem: q.stem, options: q.options,
       correctAnswer: { keys: [q.correctAnswer?.key] }, explanationMd: q.explanation ?? null, source: 'ORIGINAL', status: 'PUBLISHED', authorId: ctx.adminId,
     });
     links.push({ testId, questionId: id, part, questionNo: ++no });
@@ -165,7 +174,7 @@ export async function seedVstep(ctx: SeedCtx) {
     const id = uuid();
     const part: ExamPart = i === 0 ? 'VSTEP_W1' : 'VSTEP_W2';
     qRows.push({
-      id, examType: 'VSTEP', part, skill: 'WRITING', type: 'ESSAY', level: 'B2', stem: w.prompt,
+      id, examType: 'VSTEP', part, skill: 'WRITING', type: 'ESSAY', tagIds: [SKILL_TAG.WRITING], level: 'B2', stem: w.prompt,
       taskConfig: { title: w.task, minutes: w.minutes, minWords: w.minWords }, rubricId: ctx.rubrics.get(i === 0 ? 'VSTEP_WRITING_T1' : 'VSTEP_WRITING_T2'),
       source: 'ORIGINAL', status: 'PUBLISHED', authorId: ctx.adminId,
     });
@@ -175,7 +184,7 @@ export async function seedVstep(ctx: SeedCtx) {
     const id = uuid();
     const part = (['VSTEP_S1', 'VSTEP_S2', 'VSTEP_S3'] as ExamPart[])[i] ?? 'VSTEP_S3';
     qRows.push({
-      id, examType: 'VSTEP', part, skill: 'SPEAKING', type: 'SPEAKING_RESPONSE', level: 'B2', stem: s.prompt,
+      id, examType: 'VSTEP', part, skill: 'SPEAKING', type: 'SPEAKING_RESPONSE', tagIds: [SKILL_TAG.SPEAKING], level: 'B2', stem: s.prompt,
       taskConfig: { title: s.part, minutes: s.minutes, prepSec: i === 0 ? 0 : 60, responseSec: s.minutes * 60 }, rubricId: ctx.rubrics.get(`VSTEP_SPEAKING_P${i + 1}`),
       source: 'ORIGINAL', status: 'PUBLISHED', authorId: ctx.adminId,
     });
