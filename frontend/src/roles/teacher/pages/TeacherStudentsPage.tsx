@@ -1,17 +1,17 @@
 import React, { useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { BookOpenCheck, ChevronRight, Mail, MessageSquarePlus, Phone, Search, Target, Trash2 } from 'lucide-react';
+import { ChevronRight, Mail, MessageSquarePlus, Phone, Search, Trash2 } from 'lucide-react';
 import { useDocumentTitle } from '@/shared/hooks';
 import { toast } from '@/shared/stores/uiStore';
 import { errorMessage } from '@/shared/api/client';
 import { teacherApi, useStudentProfile, useTeacherClasses, useTeacherMutation, useTeacherStudents } from '@/shared/api/teacher';
-import { MISTAKE_CAUSE_TEXT } from '@/shared/constants/teacher';
 import type { StudentNote } from '@/shared/types';
 import { cn, formatDate, formatDateTime, timeAgo } from '@/shared/utils';
 import { Avatar, ConfirmDialog } from '@/shared/components/ui';
 import { Meter, Panel, Status, TBtn, TPageHead, TTabs, inputCls } from '../components/TeacherKit';
 import { TEmpty, TError, TLoading } from '../components/TeacherState';
 import { StudentAttemptDrawer } from '../components/StudentAttemptDrawer';
+import { MistakesPanel, SelfStudyPanel } from '../components/StudentInsights';
 
 const STATUS = { GOOD: ['green', 'Ổn định'], WARNING: ['amber', 'Cần nhắc'], RISK: ['red', 'Nguy cơ bỏ học'] } as const;
 const NOTE_KIND: Record<StudentNote['kind'], [string, string]> = { NOTE: ['Ghi chú', 'bg-slate-100 text-slate-600'], REMINDER: ['Nhắc nhở', 'bg-amber-500/15 text-amber-700'], CONTACT: ['Đã liên hệ', 'bg-sky-500/10 text-sky-700'] };
@@ -154,58 +154,7 @@ export const TeacherStudentsPage: React.FC = () => {
             </dl>
           </section>
 
-          {profile.data?.self && (
-            <Panel title="Tự học" sub="Những gì học viên tự học ngoài bài tập của lớp" icon={BookOpenCheck} tone="emerald">
-              <div className="grid gap-5 lg:grid-cols-[1fr_1.2fr]">
-                <div className="space-y-3">
-                  <p className="flex items-start gap-2.5 text-sm">
-                    <Target className="mt-0.5 h-4 w-4 shrink-0 text-indigo-600" />
-                    {profile.data.self.goal ? (
-                      <span>
-                        Mục tiêu <b className="text-slate-900">{profile.data.self.goal.examType} {profile.data.self.goal.score}</b>
-                        {profile.data.self.goal.examDate && <> · thi ngày {formatDate(profile.data.self.goal.examDate)}</>}
-                      </span>
-                    ) : (
-                      <span className="text-slate-500">Học viên chưa đặt mục tiêu thi</span>
-                    )}
-                  </p>
-                  <dl className="grid grid-cols-2 gap-2 text-sm">
-                    {[
-                      ['Học 7 ngày qua', `${profile.data.self.week.minutes} phút · ${profile.data.self.week.activeDays}/7 ngày`],
-                      ['Câu đã luyện (7 ngày)', String(profile.data.self.week.questions)],
-                      ['Từ vựng đã thuộc', `${profile.data.self.vocab.learned} từ`],
-                      ['Thẻ đến hạn ôn', String(profile.data.self.vocab.due)],
-                      ['Lỗi sai chưa xử lý', String(profile.data.self.openMistakes)],
-                      ['Hoạt động gần nhất', timeAgo(profile.data.self.lastActiveAt)],
-                    ].map(([k, v]) => (
-                      <div key={k} className="rounded-lg bg-slate-50 px-3 py-2">
-                        <dt className="text-[12px] text-slate-500">{k}</dt>
-                        <dd className="font-semibold tabular-nums text-slate-900">{v}</dd>
-                      </div>
-                    ))}
-                  </dl>
-                </div>
-                <div>
-                  <p className="mb-2 text-[13px] font-medium text-slate-700">Khoá học đang học</p>
-                  {profile.data.self.courses.length ? (
-                    <ul className="space-y-2.5">
-                      {profile.data.self.courses.map((c) => (
-                        <li key={c.slug} className="text-sm">
-                          <div className="mb-1 flex justify-between gap-3">
-                            <span className="truncate text-slate-800">{c.title}</span>
-                            <span className="shrink-0 tabular-nums text-slate-500">{c.completed ? 'Hoàn thành' : `${c.progress}%`}</span>
-                          </div>
-                          <Meter value={c.completed ? 100 : c.progress} tone={c.completed ? 'green' : 'indigo'} />
-                        </li>
-                      ))}
-                    </ul>
-                  ) : (
-                    <p className="text-sm text-slate-500">Chưa ghi danh khoá học nào.</p>
-                  )}
-                </div>
-              </div>
-            </Panel>
-          )}
+          {profile.data?.self && <SelfStudyPanel self={profile.data.self} />}
 
           <div className="grid items-start gap-6 xl:grid-cols-2">
             <Panel title="Nhật ký trao đổi" sub="Chỉ giáo viên và quản lý thấy" icon={MessageSquarePlus} tone="violet">
@@ -298,24 +247,7 @@ export const TeacherStudentsPage: React.FC = () => {
                 </ul>
               )}
             </Panel>
-            <Panel title="Lỗi sai thường gặp" sub="Từ Sổ tay lỗi sai của học viên">
-              {(profile.data?.mistakeCauses.length ?? 0) === 0 ? (
-                <p className="text-sm text-slate-500">{profile.isLoading ? 'Đang tải…' : 'Chưa có lỗi sai nào được ghi nhận.'}</p>
-              ) : (
-                <ul className="space-y-2.5">
-                  {profile.data!.mistakeCauses.map((c) => {
-                    const total = profile.data!.mistakeCauses.reduce((x, y) => x + y.count, 0);
-                    return (
-                      <li key={c.cause} className="flex items-center gap-3 text-sm">
-                        <span className="w-36 shrink-0 text-slate-700">{MISTAKE_CAUSE_TEXT[c.cause] ?? c.cause}</span>
-                        <Meter value={(c.count / total) * 100} className="flex-1" />
-                        <span className="w-14 text-right tabular-nums text-slate-600">{c.count} câu</span>
-                      </li>
-                    );
-                  })}
-                </ul>
-              )}
-            </Panel>
+            <MistakesPanel causes={profile.data?.mistakeCauses} weakTags={profile.data?.weakTags} loading={profile.isLoading} />
           </div>
         </div>
       </div>

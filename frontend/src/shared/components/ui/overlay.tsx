@@ -119,14 +119,20 @@ export const Drawer: React.FC<{ open: boolean; onClose: () => void; side?: 'left
   children,
   width = 'max-w-md',
 }) => {
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose();
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [open, onClose]);
   if (!open) return null;
   return createPortal(
-    <div className="fixed inset-0 z-[100] animate-fade-in">
+    <div className="fixed inset-0 z-[100] animate-fade-in" role="dialog" aria-modal>
       <div className="absolute inset-0 bg-slate-900/50 backdrop-blur-sm" onClick={onClose} />
       <div className={cn('absolute top-0 bottom-0 w-full bg-white shadow-2xl flex flex-col', width, side === 'right' ? 'right-0 animate-slide-in-right' : 'left-0 animate-slide-in-left')}>
         <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
           <h3 className="font-bold text-slate-900">{title}</h3>
-          <button onClick={onClose} className="p-2 rounded-xl text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition">
+          <button onClick={onClose} aria-label="Đóng" className="p-2 rounded-xl text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition">
             <X className="w-5 h-5" />
           </button>
         </div>

@@ -124,16 +124,18 @@ export interface StudentProfile {
   attendance: { sessionId: string; classId: string; date: string; mark: AttendanceMark }[];
   notes: TNote[];
   /** Tự học (như học viên thấy ở Lộ trình / Tiến độ / Từ vựng / Sổ tay lỗi sai) */
-  self?: {
-    goal: { examType: ExamType; score: string; examDate?: string } | null;
-    week: { minutes: number; questions: number; lessons: number; cards: number; activeDays: number };
-    streak: number;
-    xp: number;
-    lastActiveAt: string;
-    vocab: { learned: number; due: number };
-    openMistakes: number;
-    courses: { slug: string; title: string; progress: number; completed: boolean }[];
-  };
+  self?: SelfStudy;
+}
+
+export interface SelfStudy {
+  goal: { examType: ExamType; score: string; examDate?: string } | null;
+  week: { minutes: number; questions: number; lessons: number; cards: number; activeDays: number };
+  streak: number;
+  xp: number;
+  lastActiveAt: string;
+  vocab: { learned: number; due: number };
+  openMistakes: number;
+  courses: { slug: string; title: string; progress: number; completed: boolean }[];
 }
 
 /** Chi tiết một lượt làm bài của học viên (giống trang Kết quả bài thi của học viên) */
@@ -340,8 +342,9 @@ export const teacherApi = {
   gradebook: (classId: string) => api.get<Gradebook>(`${T}/classes/${classId}/gradebook`),
   students: (q: { classId?: string } = {}) => api.get<TClassStudent[]>(`${T}/students`, q),
   studentProfile: (id: string) => api.get<StudentProfile>(`${T}/students/${id}`),
-  studentAttempt: (id: string, attemptId: string) => api.get<StudentAttemptDetail>(`${T}/students/${id}/attempts/${attemptId}`),
-  classLeaderboard: (classId: string, period: ClassLeaderboard['period']) => api.get<ClassLeaderboard>(`${T}/classes/${classId}/leaderboard`, { period }),
+  /** base: '/teacher' hoặc '/head' (trưởng bộ môn, admin) — cùng DTO */
+  studentAttempt: (id: string, attemptId: string, base: string = T) => api.get<StudentAttemptDetail>(`${base}/students/${id}/attempts/${attemptId}`),
+  classLeaderboard: (classId: string, period: ClassLeaderboard['period'], base: string = T) => api.get<ClassLeaderboard>(`${base}/classes/${classId}/leaderboard`, { period }),
   addNote: (studentId: string, b: { kind: StudentNote['kind']; text: string; classId?: string | null }) => api.post<TNote>(`${T}/students/${studentId}/notes`, b),
   deleteNote: (id: string) => api.delete<{ ok: true }>(`${T}/notes/${id}`),
   classAnalytics: (classId: string) => api.get<ClassAnalytics>(`${T}/classes/${classId}/analytics`),
@@ -385,8 +388,8 @@ export const useTeacherAssignments = (q: { classId?: string; status?: string } =
 export const useGradingQueue = (status: 'pending' | 'graded' | 'all' = 'all') => useQuery({ queryKey: tKeys.grading(status), queryFn: () => teacherApi.grading(status) });
 export const useGradebook = (classId?: string) => useQuery({ queryKey: tKeys.gradebook(classId ?? ''), queryFn: () => teacherApi.gradebook(classId!), enabled: !!classId });
 export const useTeacherStudents = (q: { classId?: string } = {}) => useQuery({ queryKey: tKeys.students(q), queryFn: () => teacherApi.students(q) });
-export const useStudentAttempt = (studentId?: string, attemptId?: string) => useQuery({ queryKey: ['teacher', 'student', studentId, 'attempt', attemptId], queryFn: () => teacherApi.studentAttempt(studentId!, attemptId!), enabled: !!studentId && !!attemptId });
-export const useClassLeaderboard = (classId: string | undefined, period: ClassLeaderboard['period']) => useQuery({ queryKey: ['teacher', 'class', classId, 'leaderboard', period], queryFn: () => teacherApi.classLeaderboard(classId!, period), enabled: !!classId });
+export const useStudentAttempt = (studentId?: string, attemptId?: string, base: string = T) => useQuery({ queryKey: [base, 'student', studentId, 'attempt', attemptId], queryFn: () => teacherApi.studentAttempt(studentId!, attemptId!, base), enabled: !!studentId && !!attemptId });
+export const useClassLeaderboard = (classId: string | undefined, period: ClassLeaderboard['period'], base: string = T) => useQuery({ queryKey: [base, 'class', classId, 'leaderboard', period], queryFn: () => teacherApi.classLeaderboard(classId!, period, base), enabled: !!classId });
 export const useStudentProfile = (id?: string) => useQuery({ queryKey: tKeys.student(id ?? ''), queryFn: () => teacherApi.studentProfile(id!), enabled: !!id });
 export const useClassAnalytics = (classId?: string) => useQuery({ queryKey: tKeys.analytics(classId ?? ''), queryFn: () => teacherApi.classAnalytics(classId!), enabled: !!classId });
 

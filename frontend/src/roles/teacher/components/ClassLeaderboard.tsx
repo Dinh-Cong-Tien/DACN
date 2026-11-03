@@ -8,9 +8,9 @@ import { Panel, TTabs, tbl } from './TeacherKit';
 const MEDAL = ['text-amber-500', 'text-slate-400', 'text-orange-700'];
 
 /** Bảng xếp hạng lớp — cùng cách tính điểm nỗ lực với Bảng vinh danh của học viên, chỉ gồm học viên trong lớp */
-export const ClassLeaderboardPanel: React.FC<{ classId: string }> = ({ classId }) => {
+export const ClassLeaderboardPanel: React.FC<{ classId: string; /** '/head' cho trưởng bộ môn, admin */ apiBase?: string }> = ({ classId, apiBase }) => {
   const [period, setPeriod] = useState<LB['period']>('week');
-  const { data, isLoading } = useClassLeaderboard(classId, period);
+  const { data, isLoading } = useClassLeaderboard(classId, period, apiBase);
   const rows = data?.entries ?? [];
   return (
     <Panel title="Xếp hạng trong lớp" sub="Điểm nỗ lực từ bài làm, ôn tập, bài học, giống Bảng vinh danh của học viên" icon={Trophy} tone="amber" flush>

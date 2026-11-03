@@ -13,6 +13,7 @@ import { cn, formatDate, timeAgo, staffPath } from '@/shared/utils';
 import { Avatar, Input, Modal, Textarea } from '@/shared/components/ui';
 import { Figures, Meter, Panel, Status, TBtn, TTabs, tbl, type StatusTone } from '@/roles/teacher/components/TeacherKit';
 import { classIssue } from './HeadClassesPage';
+import { ClassLeaderboardPanel } from '@/roles/teacher/components/ClassLeaderboard';
 import { Stars as SharedStars } from '@/shared/components/ui/named-icon';
 
 export const STUDENT_STATUS: Record<ClassStudent['status'], { label: string; tone: StatusTone }> = {
@@ -310,6 +311,7 @@ export const HeadClassDetailPage: React.FC = () => {
           { key: 'students', label: 'Học viên', count: students.length },
           { key: 'sessions', label: 'Buổi học & chuyên cần', count: sessions.length },
           { key: 'assignments', label: 'Bài tập', count: assignments.length },
+          { key: 'ranking', label: 'Xếp hạng' },
           { key: 'observe', label: 'Dự giờ', count: obs.length },
         ]}
       />
@@ -468,6 +470,8 @@ export const HeadClassDetailPage: React.FC = () => {
           )}
         </Panel>
       )}
+
+      {tab === 'ranking' && <ClassLeaderboardPanel classId={cls.id} apiBase="/head" />}
 
       {tab === 'observe' && (
         <Panel

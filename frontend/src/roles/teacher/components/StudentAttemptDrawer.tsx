@@ -9,8 +9,8 @@ import { Meter, TTabs } from './TeacherKit';
 const mmss = (sec: number) => `${Math.floor(sec / 60)} phút ${String(sec % 60).padStart(2, '0')} giây`;
 
 /** Chi tiết một lượt làm bài của học viên — cùng nội dung trang Kết quả bài thi của học viên: theo Part + từng câu */
-export const StudentAttemptDrawer: React.FC<{ studentId?: string; attemptId?: string; studentName?: string; onClose: () => void }> = ({ studentId, attemptId, studentName, onClose }) => {
-  const { data: d, isLoading, isError } = useStudentAttempt(studentId, attemptId);
+export const StudentAttemptDrawer: React.FC<{ studentId?: string; attemptId?: string; studentName?: string; onClose: () => void; /** '/head' cho trưởng bộ môn, admin */ apiBase?: string }> = ({ studentId, attemptId, studentName, onClose, apiBase }) => {
+  const { data: d, isLoading, isError } = useStudentAttempt(studentId, attemptId, apiBase);
   const [filter, setFilter] = useState<'wrong' | 'all'>('wrong');
   const answers = (d?.answers ?? []).filter((a) => filter === 'all' || a.isCorrect === false);
   const wrong = (d?.answers ?? []).filter((a) => a.isCorrect === false).length;

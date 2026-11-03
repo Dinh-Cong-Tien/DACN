@@ -12,6 +12,8 @@ import { audit, notify } from '../admin/audit';
 import { classWhere, deptScope } from './shared';
 import { marksOf } from '../../core/metrics';
 import { submissionInclude, toAssignments, toSubmission, formatSize } from '../teacher/teacher.service';
+import { attemptDetailOf, classLeaderboardOf, mistakeSummaryOf, selfStudyOf } from '../teacher/insights.service';
+import { periodQuery } from '../teacher/teacher.insights';
 
 export const oversightRouter = Router();
 
@@ -19,6 +21,15 @@ const uuid = z.string().uuid();
 const P = (req: Request) => parse(uuid, req.params.id);
 const DONE_ATTEMPT = ['SUBMITTED', 'GRADING', 'COMPLETED'] as const;
 const MODE_LABEL: Record<string, string> = { FULL: 'Thi thử', PRACTICE: 'Luyện Part', ADAPTIVE: 'Thích ứng', DRILL: 'Luyện điểm yếu', PART_SESSION: 'Luyện Part', LESSON_QUIZ: 'Bài kiểm tra', DICTATION: 'Chép chính tả' };
+
+/** Học viên trong phạm vi: trưởng bộ môn chỉ xem học viên trong lớp thuộc bộ môn; admin xem mọi học viên */
+async function scopeStudent(req: Request, id: string) {
+  const classes = await scopeClasses(req);
+  const memberships = await prisma.classMember.findMany({ where: { studentId: id, classId: { in: classes.map((c) => c.id) } }, orderBy: { joinedAt: 'desc' } });
+  const user = await prisma.user.findFirst({ where: { id, deletedAt: null, role: 'STUDENT' } });
+  if (!user || (me(req).role !== 'ADMIN' && !memberships.length)) throw notFound('Học viên');
+  return { user, classes, memberships };
+}
 
 /** Các lớp trong phạm vi (có thể lọc 1 lớp) */
 async function scopeClasses(req: Request, classId?: string) {
@@ -244,19 +255,17 @@ oversightRouter.delete(
 oversightRouter.get(
   '/students/:id',
   handler(async (req) => {
-    const id = P(req);
-    const classes = await scopeClasses(req);
-    const memberships = await prisma.classMember.findMany({ where: { studentId: id, classId: { in: classes.map((c) => c.id) } }, orderBy: { joinedAt: 'desc' } });
-    const user = await prisma.user.findFirst({ where: { id, deletedAt: null, role: 'STUDENT' } });
-    // Trưởng bộ môn chỉ xem học viên trong lớp thuộc bộ môn; admin xem mọi học viên
-    if (!user || (me(req).role !== 'ADMIN' && !memberships.length)) throw notFound('Học viên');
+    const { user, classes, memberships } = await scopeStudent(req, P(req));
+    const id = user.id;
     const classIds = memberships.map((m) => m.classId);
-    const [goal, attempts, subs, notes, sessions] = await Promise.all([
+    const [goal, attempts, subs, notes, sessions, self, mistakes] = await Promise.all([
       prisma.learningGoal.findFirst({ where: { userId: id, isActive: true } }),
       prisma.examAttempt.findMany({ where: { userId: id, status: { in: [...DONE_ATTEMPT] } }, include: { test: { select: { title: true, examType: true } } }, orderBy: { submittedAt: 'desc' }, take: 20 }),
       prisma.assignmentSubmission.findMany({ where: { studentId: id, assignment: { classId: { in: classIds }, deletedAt: null, status: { not: 'DRAFT' } } }, include: { ...submissionInclude, assignment: { select: { id: true, title: true, type: true, maxScore: true, classId: true, dueAt: true } } }, orderBy: { updatedAt: 'desc' }, take: 40 }),
       prisma.studentNote.findMany({ where: { studentId: id, deletedAt: null, OR: [{ classId: { in: classIds } }, { classId: null }] }, include: { teacher: { select: { fullName: true } } }, orderBy: [{ noteDate: 'desc' }, { createdAt: 'desc' }], take: 30 }),
       prisma.classSession.findMany({ where: { classId: { in: classIds }, status: 'DONE' }, select: { classId: true, sessionDate: true, attendance: true }, orderBy: { sessionDate: 'desc' } }),
+      selfStudyOf(user),
+      mistakeSummaryOf(id),
     ]);
     const classRows = memberships.map((m) => {
       const c = classes.find((x) => x.id === m.classId)!;
@@ -309,6 +318,27 @@ oversightRouter.get(
       })),
       submissions: subs.map((s) => ({ ...toSubmission(s), state: s.status, dueDate: iso(s.assignment.dueAt), className: classes.find((c) => c.id === s.assignment.classId)?.name ?? '' })),
       notes: notes.map((n) => ({ id: n.id, kind: n.kind, text: n.content, date: ymd(n.noteDate)!, teacherName: n.teacher.fullName, className: classes.find((c) => c.id === n.classId)?.name })),
+      self,
+      ...mistakes,
     };
+  })
+);
+
+/** Chi tiết 1 lượt làm bài của học viên trong phạm vi */
+oversightRouter.get(
+  '/students/:id/attempts/:attemptId',
+  handler(async (req) => {
+    const { user } = await scopeStudent(req, P(req));
+    return attemptDetailOf(user.id, parse(uuid, req.params.attemptId));
+  })
+);
+
+/** Xếp hạng trong lớp — như tab Xếp hạng của giáo viên */
+oversightRouter.get(
+  '/classes/:id/leaderboard',
+  handler(async (req) => {
+    const [c] = await scopeClasses(req, P(req));
+    if (!c) throw notFound('Lớp');
+    return classLeaderboardOf(c.id, parse(periodQuery, req.query).period);
   })
 );

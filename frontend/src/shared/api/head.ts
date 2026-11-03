@@ -5,6 +5,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { ApprovalRequest, ClassObservation, ClassReport, ClassRoom, Complaint, DeptStudent, ExamType, GradingReview, Subject, TeacherSummary } from '@/shared/types';
 import { api, http } from './client';
+import type { SelfStudy } from './teacher';
 
 // ---------- DTO ----------
 export type HeadClass = ClassRoom & {
@@ -208,6 +209,10 @@ export interface StudentDossier {
   attempts: { id: string; testTitle: string; examType?: ExamType; mode: string; score?: number; listening?: number; reading?: number; cefr?: string; correct?: number; total: number; durationSec: number; submittedAt?: string }[];
   submissions: OversightSubmission[];
   notes: { id: string; kind: string; text: string; date: string; teacherName: string; className?: string }[];
+  /** Tự học + Sổ tay lỗi sai — cùng DTO hồ sơ học viên của giáo viên */
+  self: SelfStudy;
+  mistakeCauses: { cause: string; count: number }[];
+  weakTags: { tagId: string; name: string; count: number }[];
 }
 
 type KV = { key: string; value: number };

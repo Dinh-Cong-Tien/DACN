@@ -213,6 +213,7 @@ const en: LocaleDef = {
     'Giao từng bài giảng theo lộ trình': 'Assign lessons along the roadmap',
     'Thi thử TOEIC, VSTEP · đề Viết, đề Nói': 'TOEIC, VSTEP mock tests · Writing, Speaking prompts',
     'Chủ điểm ngữ pháp, bộ flashcard': 'Grammar topics, flashcard decks',
+    'Ngữ pháp, flashcard, chép chính tả': 'Grammar, flashcards, dictation',
     'Học liệu của tôi': 'My materials',
     'Soạn câu hỏi, đề kiểm tra · gửi duyệt': 'Write questions and quizzes · submit for review',
     'Tài liệu lớp': 'Class files',

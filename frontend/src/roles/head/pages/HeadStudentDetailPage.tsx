@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { CalendarCheck, ChevronRight, ClipboardList, Flame, Mail, Phone, Target, TrendingUp, ArrowLeft } from 'lucide-react';
 import { useDocumentTitle } from '@/shared/hooks';
@@ -8,6 +8,8 @@ import { cn, formatDate, formatDateTime, staffPath, timeAgo } from '@/shared/uti
 import { Figures, Meter, Panel, Status, TPageHead, tbl } from '@/roles/teacher/components/TeacherKit';
 import { ASSIGN_TYPE, SUB_STATE } from './HeadAssignmentsPage';
 import { MODE_LABEL, durationText } from './HeadResultsPage';
+import { StudentAttemptDrawer } from '@/roles/teacher/components/StudentAttemptDrawer';
+import { MistakesPanel, SelfStudyPanel } from '@/roles/teacher/components/StudentInsights';
 
 const NOTE_KIND: Record<string, string> = { NOTE: 'Ghi chú', REMINDER: 'Nhắc nhở', CONTACT: 'Liên hệ' };
 
@@ -15,6 +17,7 @@ const NOTE_KIND: Record<string, string> = { NOTE: 'Ghi chú', REMINDER: 'Nhắc 
 export const HeadStudentDetailPage: React.FC = () => {
   const { id } = useParams();
   const q = useHeadStudent(id);
+  const [attemptId, setAttemptId] = useState<string>();
   useDocumentTitle(q.data?.student.name ?? 'Hồ sơ học viên');
   const back = (
     <Link to={staffPath('/students')} className="hover:text-slate-900 hover:underline underline-offset-2">
@@ -135,27 +138,32 @@ export const HeadStudentDetailPage: React.FC = () => {
         </div>
       </Panel>
 
+      {q.data.self && <SelfStudyPanel self={q.data.self} />}
+
       <div className="grid gap-6 xl:grid-cols-2">
-        <Panel title="Kết quả làm bài" sub="20 bài gần nhất" flush>
+        <Panel title="Kết quả làm bài" sub="20 bài gần nhất · bấm để xem từng câu" flush>
           <ul className="divide-y divide-slate-100">
             {attempts.map((a) => (
-              <li key={a.id} className="flex items-center gap-3 px-5 py-3">
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-medium text-slate-900">{a.testTitle}</p>
-                  <p className="text-[12px] text-slate-500">
-                    {MODE_LABEL[a.mode] ?? a.mode} · {durationText(a.durationSec)}
-                    {a.submittedAt && ` · ${formatDateTime(a.submittedAt)}`}
-                  </p>
-                </div>
-                <div className="text-right">
-                  <p className="text-sm font-semibold tabular-nums text-slate-900">{a.score ?? (a.correct !== undefined ? `${a.correct}/${a.total}` : '—')}</p>
-                  {a.listening !== undefined && a.reading !== undefined && (
-                    <p className="text-[12px] tabular-nums text-slate-500">
-                      L {a.listening} · R {a.reading}
+              <li key={a.id}>
+                <button type="button" onClick={() => setAttemptId(a.id)} title="Xem chi tiết từng câu" className="group flex w-full items-center gap-3 px-5 py-3 text-left hover:bg-slate-50">
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-medium text-slate-900">{a.testTitle}</p>
+                    <p className="text-[12px] text-slate-500">
+                      {MODE_LABEL[a.mode] ?? a.mode} · {durationText(a.durationSec)}
+                      {a.submittedAt && ` · ${formatDateTime(a.submittedAt)}`}
                     </p>
-                  )}
-                  {a.cefr && <p className="text-[12px] text-slate-500">{a.cefr}</p>}
-                </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-sm font-semibold tabular-nums text-slate-900">{a.score ?? (a.correct !== undefined ? `${a.correct}/${a.total}` : '—')}</p>
+                    {a.listening !== undefined && a.reading !== undefined && (
+                      <p className="text-[12px] tabular-nums text-slate-500">
+                        L {a.listening} · R {a.reading}
+                      </p>
+                    )}
+                    {a.cefr && <p className="text-[12px] text-slate-500">{a.cefr}</p>}
+                  </div>
+                  <ChevronRight className="h-4 w-4 shrink-0 text-slate-300 group-hover:text-slate-500" />
+                </button>
               </li>
             ))}
             {!attempts.length && <li className="px-5 py-8 text-center text-sm text-slate-500">Chưa nộp bài nào.</li>}
@@ -188,20 +196,24 @@ export const HeadStudentDetailPage: React.FC = () => {
         </Panel>
       </div>
 
-      <Panel title="Ghi chú của giáo viên" sub="Giáo viên chủ nhiệm ghi lại khi theo dõi học viên" flush>
-        <ul className="divide-y divide-slate-100">
-          {notes.map((n) => (
-            <li key={n.id} className="px-5 py-3">
-              <p className="text-[12px] text-slate-500">
-                <Status tone={n.kind === 'REMINDER' ? 'amber' : n.kind === 'CONTACT' ? 'blue' : 'gray'}>{NOTE_KIND[n.kind] ?? n.kind}</Status> {formatDate(n.date)} · {n.teacherName}
-                {n.className && ` · ${n.className}`}
-              </p>
-              <p className="mt-1 whitespace-pre-line text-sm text-slate-700">{n.text}</p>
-            </li>
-          ))}
-          {!notes.length && <li className="px-5 py-8 text-center text-sm text-slate-500">Chưa có ghi chú.</li>}
-        </ul>
-      </Panel>
+      <div className="grid items-start gap-6 xl:grid-cols-2">
+        <MistakesPanel causes={q.data.mistakeCauses} weakTags={q.data.weakTags} />
+        <Panel title="Ghi chú của giáo viên" sub="Giáo viên chủ nhiệm ghi lại khi theo dõi học viên" flush>
+          <ul className="divide-y divide-slate-100">
+            {notes.map((n) => (
+              <li key={n.id} className="px-5 py-3">
+                <p className="text-[12px] text-slate-500">
+                  <Status tone={n.kind === 'REMINDER' ? 'amber' : n.kind === 'CONTACT' ? 'blue' : 'gray'}>{NOTE_KIND[n.kind] ?? n.kind}</Status> {formatDate(n.date)} · {n.teacherName}
+                  {n.className && ` · ${n.className}`}
+                </p>
+                <p className="mt-1 whitespace-pre-line text-sm text-slate-700">{n.text}</p>
+              </li>
+            ))}
+            {!notes.length && <li className="px-5 py-8 text-center text-sm text-slate-500">Chưa có ghi chú.</li>}
+          </ul>
+        </Panel>
+      </div>
+      <StudentAttemptDrawer studentId={s.id} studentName={s.name} attemptId={attemptId} onClose={() => setAttemptId(undefined)} apiBase="/head" />
     </div>
   );
 };

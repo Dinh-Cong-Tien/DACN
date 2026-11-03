@@ -40,6 +40,7 @@ import {
 
 import { contentRouter } from './teacher.content';
 import { insightsRouter } from './teacher.insights';
+import { MODE_LABEL, mistakeSummaryOf, selfStudyOf } from './insights.service';
 
 export const teacherRouter = Router();
 
@@ -1165,8 +1166,6 @@ teacherRouter.get(
   })
 );
 
-const MODE_LABEL: Record<string, string> = { FULL: 'Thi thử', PRACTICE: 'Luyện Part', ADAPTIVE: 'Thích ứng', DRILL: 'Luyện điểm yếu', PART_SESSION: 'Luyện Part', LESSON_QUIZ: 'Bài kiểm tra', DICTATION: 'Chép chính tả' };
-
 teacherRouter.get(
   '/students/:id',
   handler(async (req) => {
@@ -1174,40 +1173,19 @@ teacherRouter.get(
     const user = await assertStudent(u, P(req));
     const classIds = await myClassIds(u);
     const [card] = (await toClassStudents(classIds)).filter((s) => s.id === user.id);
-    const weekAgo = new Date(Date.now() - 7 * 86400_000);
-    const [goal, activity, cardsLearned, cardsDue, openMistakes, enrollments] = await Promise.all([
-      prisma.learningGoal.findFirst({ where: { userId: user.id, isActive: true } }),
-      prisma.dailyActivity.findMany({ where: { userId: user.id, activityDate: { gte: weekAgo } }, select: { minutes: true, questionsAnswered: true, lessonsCompleted: true, cardsReviewed: true } }),
-      prisma.srsCard.count({ where: { userId: user.id, repetitions: { gt: 0 } } }),
-      prisma.srsCard.count({ where: { userId: user.id, nextReviewAt: { lte: new Date() } } }),
-      prisma.mistakeEntry.count({ where: { userId: user.id, isResolved: false } }),
-      prisma.courseEnrollment.findMany({ where: { userId: user.id }, include: { course: { select: { title: true, slug: true } } }, orderBy: { updatedAt: 'desc' }, take: 6 }),
-    ]);
-    const sum = (k: 'minutes' | 'questionsAnswered' | 'lessonsCompleted' | 'cardsReviewed') => activity.reduce((a, d) => a + d[k], 0);
-    const self = {
-      goal: goal ? { examType: goal.examType, score: goal.targetScore ? String(goal.targetScore) : (goal.targetLevel ?? ''), examDate: ymd(goal.targetDate) } : null,
-      week: { minutes: sum('minutes'), questions: sum('questionsAnswered'), lessons: sum('lessonsCompleted'), cards: sum('cardsReviewed'), activeDays: activity.filter((d) => d.minutes > 0 || d.questionsAnswered > 0).length },
-      streak: user.streakCurrent,
-      xp: user.xpTotal,
-      lastActiveAt: (user.lastActiveAt ?? user.createdAt).toISOString(),
-      vocab: { learned: cardsLearned, due: cardsDue },
-      openMistakes,
-      courses: enrollments.map((e) => ({ slug: e.course.slug, title: e.course.title, progress: Math.round(Number(e.progressPct)), completed: !!e.completedAt })),
-    };
-    const [attempts, causes, tags, subs, notes, sessions] = await Promise.all([
+    const self = await selfStudyOf(user);
+    const [attempts, mistakes, subs, notes, sessions] = await Promise.all([
       prisma.examAttempt.findMany({
         where: { userId: user.id, status: { in: ['COMPLETED', 'SUBMITTED', 'GRADING'] } },
         include: { test: { select: { title: true, examType: true } } },
         orderBy: { submittedAt: 'desc' },
         take: 15,
       }),
-      prisma.mistakeEntry.groupBy({ by: ['cause'], where: { userId: user.id, isResolved: false }, _count: { _all: true } }),
-      prisma.mistakeEntry.groupBy({ by: ['tagId'], where: { userId: user.id, isResolved: false, tagId: { not: null } }, _count: { _all: true }, orderBy: { _count: { tagId: 'desc' } }, take: 5 }),
+      mistakeSummaryOf(user.id),
       prisma.assignmentSubmission.findMany({ where: { studentId: user.id, assignment: { classId: { in: classIds }, deletedAt: null, status: { not: 'DRAFT' } } }, include: submissionInclude, orderBy: { updatedAt: 'desc' }, take: 30 }),
       prisma.studentNote.findMany({ where: { studentId: user.id, deletedAt: null, ...(u.role === 'ADMIN' ? {} : { teacherId: u.id }) }, orderBy: [{ noteDate: 'desc' }, { createdAt: 'desc' }] }),
       prisma.classSession.findMany({ where: { classId: { in: classIds }, status: 'DONE' }, select: { id: true, classId: true, sessionDate: true, attendance: true }, orderBy: { sessionDate: 'desc' } }),
     ]);
-    const tagRows = tags.length ? await prisma.skillTag.findMany({ where: { id: { in: tags.map((t) => t.tagId!) } }, select: { id: true, name: true } }) : [];
     const attendanceLog = sessions
       .map((s) => ({ sessionId: s.id, classId: s.classId, date: ymd(s.sessionDate)!, mark: (s.attendance as Record<string, { mark: string } | string> | null)?.[user.id] }))
       .filter((r) => r.mark)
@@ -1227,8 +1205,7 @@ teacherRouter.get(
         durationSec: a.timeSpentSec,
         submittedAt: iso(a.submittedAt),
       })),
-      mistakeCauses: causes.map((c) => ({ cause: c.cause, count: c._count._all })).sort((a, b) => b.count - a.count),
-      weakTags: tags.map((t) => ({ tagId: t.tagId!, name: tagRows.find((r) => r.id === t.tagId)?.name ?? '', count: t._count._all })),
+      ...mistakes,
       submissions: subs.map((s) => ({ ...toSubmission(s), state: s.status })),
       attendance: attendanceLog,
       notes: notes.map(toNote),
