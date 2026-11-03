@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Check, Search } from 'lucide-react';
 import { useTeacherClasses, useTeacherLibrary, type AssignmentInput, type LibPrompt } from '@/shared/api/teacher';
+import { useDictationList } from '@/shared/api/learner';
 import { OUTSIDE_PARTS, PART_FORMAT, describeTarget, partName, promptName } from '@/shared/constants/teacher';
 import type { AssignmentTarget, AssignmentType } from '@/shared/types';
 import { assignmentHref, cn } from '@/shared/utils';
@@ -16,6 +17,7 @@ const KINDS: { key: AssignKind; label: string }[] = [
   { key: 'VOCAB', label: 'Từ vựng' },
   { key: 'WRITING', label: 'Đề Viết' },
   { key: 'SPEAKING', label: 'Đề Nói' },
+  { key: 'DICTATION', label: 'Chép chính tả' },
 ];
 
 const TIMES = [10, 15, 20, 30, 45, 60, 90, 120];
@@ -50,6 +52,8 @@ export const AssignDialog: React.FC<{ open: boolean; onClose: () => void; onSave
   const [topicId, setTopicId] = useState('');
   const [taskId, setTaskId] = useState('');
   const [partId, setPartId] = useState('');
+  const [passageId, setPassageId] = useState('');
+  const dictations = useDictationList().data ?? [];
   const [promptQ, setPromptQ] = useState('');
   const [title, setTitle] = useState('');
   const [titleEdited, setTitleEdited] = useState(false);
@@ -73,6 +77,7 @@ export const AssignDialog: React.FC<{ open: boolean; onClose: () => void; onSave
     setTopicId(t?.kind === 'VOCAB' ? lib.vocab.find((v) => v.id === t.topicId || v.slug === t.topicId)?.id ?? '' : '');
     setTaskId(t?.kind === 'WRITING' ? t.taskId : '');
     setPartId(t?.kind === 'SPEAKING' ? t.partId : '');
+    setPassageId(t?.kind === 'DICTATION' ? t.passageId : '');
     setPromptQ('');
     setTime('auto');
     setTitleEdited(false);
@@ -95,6 +100,7 @@ export const AssignDialog: React.FC<{ open: boolean; onClose: () => void; onSave
   const shownPrompts = prompts.filter((p) => !promptQ.trim() || p.prompt.toLowerCase().includes(promptQ.trim().toLowerCase())).slice(0, 60);
   const writing = lib.writing.find((w) => w.id === taskId) ?? lib.writing.find((w) => w.examType === exam);
   const speaking = lib.speaking.find((w) => w.id === partId) ?? lib.speaking.find((w) => w.examType === exam);
+  const dictation = dictations.find((d) => d.id === passageId) ?? dictations[0];
 
   const target: AssignmentTarget | null = useMemo(() => {
     switch (kind) {
@@ -115,8 +121,10 @@ export const AssignDialog: React.FC<{ open: boolean; onClose: () => void; onSave
         return writing ? { kind, taskId: writing.id } : null;
       case 'SPEAKING':
         return speaking ? { kind, partId: speaking.id } : null;
+      case 'DICTATION':
+        return dictation ? { kind, passageId: dictation.id } : null;
     }
-  }, [kind, parts, test, full, testParts, time, suggested, lessonIds, course, lessons, grammar, vocab, writing, speaking]);
+  }, [kind, parts, test, full, testParts, time, suggested, lessonIds, course, lessons, grammar, vocab, writing, speaking, dictation]);
 
   const type: AssignmentType = kind === 'EXAM' ? (full ? 'MOCK_TEST' : 'PRACTICE') : kind === 'WRITING' ? 'ESSAY' : kind;
 
@@ -142,8 +150,10 @@ export const AssignDialog: React.FC<{ open: boolean; onClose: () => void; onSave
         return writing ? `Writing · ${promptName(writing, 'WRITING')}` : 'Writing';
       case 'SPEAKING':
         return speaking ? `Speaking · ${promptName(speaking, 'SPEAKING')}` : 'Speaking';
+      case 'DICTATION':
+        return `Chép chính tả — ${dictation?.title ?? ''}`;
     }
-  }, [target, full, test, testParts, parts, lessons, course, grammar, vocab, writing, speaking]);
+  }, [target, full, test, testParts, parts, lessons, course, grammar, vocab, writing, speaking, dictation]);
   useEffect(() => {
     if (!titleEdited) setTitle(autoTitle);
   }, [autoTitle, titleEdited]);
@@ -325,6 +335,22 @@ export const AssignDialog: React.FC<{ open: boolean; onClose: () => void; onSave
                   </option>
                 ))}
               </select>
+            </label>
+          )}
+
+          {kind === 'DICTATION' && (
+            <label className="block">
+              <Label>Bài chép chính tả</Label>
+              <select value={dictation?.id ?? ''} onChange={(e) => setPassageId(e.target.value)} className={fieldCls}>
+                {dictations.map((d) => (
+                  <option key={d.id} value={d.id}>
+                    {d.title}
+                    {d.segments?.length ? ` · ${d.segments.length} câu` : ''}
+                    {d.level ? ` · ${d.level}` : ''}
+                  </option>
+                ))}
+              </select>
+              <span className="mt-1.5 block text-[12px] text-slate-500">Học viên nghe và chép từng câu; điểm là % chép đúng, chấm tự động khi nộp.</span>
             </label>
           )}
 

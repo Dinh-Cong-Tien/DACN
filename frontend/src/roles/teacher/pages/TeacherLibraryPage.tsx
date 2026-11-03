@@ -9,6 +9,7 @@ import type { AssignmentTarget, ExamType } from '@/shared/types';
 import { cn } from '@/shared/utils';
 import { Panel, TBtn, TPageHead, tbl } from '../components/TeacherKit';
 import { TEmpty, TError, TLoading } from '../components/TeacherState';
+import { useDictationList } from '@/shared/api/learner';
 
 type Kind = 'courses' | 'tests' | 'practice';
 
@@ -94,18 +95,19 @@ export const TeacherLibraryPage: React.FC<LibraryPageProps> = ({ base = '/teache
 /** Ngữ pháp & Từ vựng: hai tab, tab Từ vựng lọc thêm theo kỳ thi */
 const PracticeView: React.FC<{ assign: Assign }> = ({ assign }) => {
   const [params, setParams] = useSearchParams();
-  const tab = params.get('tab') === 'vocab' ? 'vocab' : 'grammar';
+  const tab = params.get('tab') === 'vocab' ? 'vocab' : params.get('tab') === 'dictation' ? 'dictation' : 'grammar';
   const vocabExam = params.get('exam');
   const grammarQ = useLibGrammar();
   const vocabQ = useLibVocab();
+  const dictationQ = useDictationList();
   const grammarList = grammarQ.data ?? [];
   const allVocab = vocabQ.data ?? [];
   const vocab = allVocab.filter((v) => !vocabExam || (v.examType ?? 'TOEIC') === vocabExam);
   return (
     <div className="space-y-5">
       <GroupTabs
-        value={tab === 'vocab' ? `vocab-${vocabExam ?? 'all'}` : 'grammar'}
-        onChange={(k) => setParams(k === 'grammar' ? { tab: 'grammar' } : k === 'vocab-all' ? { tab: 'vocab' } : { tab: 'vocab', exam: k.slice(6) }, { replace: true })}
+        value={tab === 'vocab' ? `vocab-${vocabExam ?? 'all'}` : tab}
+        onChange={(k) => setParams(k === 'grammar' || k === 'dictation' ? { tab: k } : k === 'vocab-all' ? { tab: 'vocab' } : { tab: 'vocab', exam: k.slice(6) }, { replace: true })}
         groups={[
           { label: 'Ngữ pháp', tabs: [{ key: 'grammar', label: 'Chủ điểm ngữ pháp', count: grammarList.length }] },
           {
@@ -116,9 +118,44 @@ const PracticeView: React.FC<{ assign: Assign }> = ({ assign }) => {
               { key: 'vocab-VSTEP', label: 'VSTEP' },
             ],
           },
+          { label: 'Nghe', tabs: [{ key: 'dictation', label: 'Chép chính tả', count: dictationQ.data?.length }] },
         ]}
       />
-      {tab === 'grammar' ? (
+      {tab === 'dictation' ? (
+        <QueryGate q={dictationQ}>
+          <Panel title="Bài chép chính tả" sub="Học viên nghe và chép từng câu; điểm là % chép đúng, chấm tự động" flush>
+            <div className="overflow-x-auto">
+              <table className={tbl.table}>
+                <thead className={tbl.thead}>
+                  <tr>
+                    <th className={tbl.th}>Bài nghe</th>
+                    <th className={tbl.th}>Mức độ</th>
+                    <th className={cn(tbl.th, 'text-right')}>Số câu</th>
+                    <th className={tbl.th} />
+                  </tr>
+                </thead>
+                <tbody>
+                  {(dictationQ.data ?? []).map((d) => (
+                    <tr key={d.id} className={tbl.tr}>
+                      <td className={cn(tbl.td, 'font-medium text-slate-900')}>{d.title}</td>
+                      <td className={cn(tbl.td, 'text-slate-600')}>{d.level ?? '—'}</td>
+                      <td className={cn(tbl.td, 'text-right tabular-nums')}>{d.segments?.length ?? '—'}</td>
+                      <td className={cn(tbl.td, 'whitespace-nowrap text-right')}>
+                        <PreviewLink href={`/app/dictation?passage=${d.id}`} />
+                        {assign && (
+                          <TBtn size="sm" onClick={() => assign({ kind: 'DICTATION', passageId: d.id })}>
+                            Giao bài
+                          </TBtn>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </Panel>
+        </QueryGate>
+      ) : tab === 'grammar' ? (
         <QueryGate q={grammarQ}>
         <Panel title="Chủ điểm ngữ pháp" sub="Học viên làm bài tập sau mỗi chủ điểm, chấm tự động" flush>
           <div className="overflow-x-auto">

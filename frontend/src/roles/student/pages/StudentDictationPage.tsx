@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Headphones, Play, Check, ArrowRight, RotateCcw, Trophy, Eye, EyeOff, Volume2 } from 'lucide-react';
 import { useDocumentTitle } from '@/shared/hooks';
 import { Badge, Button, Card, CardHeader, PageHeader, ProgressBar, RingProgress, StatCard, Textarea } from '@/shared/components/ui';
@@ -37,6 +38,15 @@ export const StudentDictationPage: React.FC = () => {
   // Bài nghe thật trong ngân hàng (passages DICTATION); mỗi câu của bài là một lượt chép
   const { data: list = [] } = useDictationList();
   const [passageIdx, setPassageIdx] = useState(0);
+  // Bài giáo viên giao: /app/dictation?passage=<id>&assignment=<id> → mở đúng bài, nộp kèm mã bài tập
+  const [params] = useSearchParams();
+  const assignedPassage = params.get('passage');
+  const assignmentId = params.get('assignment') ?? undefined;
+  useEffect(() => {
+    if (!assignedPassage || !list.length) return;
+    const i = list.findIndex((p) => p.id === assignedPassage);
+    if (i >= 0) setPassageIdx(i);
+  }, [assignedPassage, list]);
   const passageId = list[passageIdx]?.id;
   const { data: passage, isLoading } = useDictationPassage(passageId);
   const ITEMS: DictationItem[] = useMemo(
@@ -95,8 +105,8 @@ export const StudentDictationPage: React.FC = () => {
       setFinished(true);
       // Lưu kết quả cả bài (exam_attempts DICTATION) để tính thời gian học, streak, lịch sử
       if (passageId)
-        submitDictation({ passageId, typedText: typedAll.current.join(' '), timeSpentSec: Math.round((Date.now() - started.current) / 1000) })
-          .then(() => ['progress', 'attempts'].forEach((k) => qc.invalidateQueries({ queryKey: ['learner', k] })))
+        submitDictation({ passageId, typedText: typedAll.current.join(' '), timeSpentSec: Math.round((Date.now() - started.current) / 1000), assignmentId: passageId === assignedPassage ? assignmentId : undefined })
+          .then(() => ['progress', 'attempts', 'assignments'].forEach((k) => qc.invalidateQueries({ queryKey: ['learner', k] })))
           .catch(() => undefined);
     }
   };

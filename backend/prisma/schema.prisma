@@ -218,6 +218,7 @@ enum AssignmentType {
   VOCAB
   ESSAY
   SPEAKING
+  DICTATION
 
   @@map("assignment_type")
 }

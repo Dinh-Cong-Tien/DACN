@@ -321,7 +321,7 @@ export interface ClassStudent {
 }
 
 /** MOCK_TEST: full đề thi thử · PRACTICE: một số Part của đề · LESSON: bài giảng trong Khoá học · GRAMMAR: chủ điểm ngữ pháp · VOCAB: bộ flashcard từ vựng · ESSAY / SPEAKING: đề Luyện Viết / Luyện Nói */
-export type AssignmentType = 'MOCK_TEST' | 'PRACTICE' | 'LESSON' | 'GRAMMAR' | 'VOCAB' | 'ESSAY' | 'SPEAKING';
+export type AssignmentType = 'MOCK_TEST' | 'PRACTICE' | 'LESSON' | 'GRAMMAR' | 'VOCAB' | 'ESSAY' | 'SPEAKING' | 'DICTATION';
 export type AssignmentStatus = 'OPEN' | 'CLOSED' | 'DRAFT';
 
 /** Nội dung bài giao trỏ thẳng tới chức năng học viên đang dùng, để học viên bấm là làm được ngay */
@@ -331,7 +331,8 @@ export type AssignmentTarget =
   | { kind: 'GRAMMAR'; slug: string }
   | { kind: 'VOCAB'; topicId: string }
   | { kind: 'WRITING'; taskId: string }
-  | { kind: 'SPEAKING'; partId: string };
+  | { kind: 'SPEAKING'; partId: string }
+  | { kind: 'DICTATION'; passageId: string };
 
 /** Tình trạng một bài được giao, nhìn từ phía học viên */
 export interface MyAssignmentState {

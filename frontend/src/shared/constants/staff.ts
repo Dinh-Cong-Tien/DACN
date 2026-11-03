@@ -55,7 +55,7 @@ export const toIQuestion = (q: QuestionRow, passage?: { id: string; title?: stri
 export const SKILL_VI: Record<SkillType, string> = { LISTENING: 'Nghe', READING: 'Đọc', WRITING: 'Viết', SPEAKING: 'Nói', VOCABULARY: 'Từ vựng', GRAMMAR: 'Ngữ pháp' };
 
 /** Loại bài giao */
-export const ASSIGNMENT_TYPE_LABEL: Record<string, string> = { MOCK_TEST: 'Đề thi thử', PRACTICE: 'Luyện Part', LESSON: 'Bài giảng', GRAMMAR: 'Ngữ pháp', VOCAB: 'Từ vựng', ESSAY: 'Bài viết', SPEAKING: 'Bài nói' };
+export const ASSIGNMENT_TYPE_LABEL: Record<string, string> = { MOCK_TEST: 'Đề thi thử', PRACTICE: 'Luyện Part', LESSON: 'Bài giảng', GRAMMAR: 'Ngữ pháp', VOCAB: 'Từ vựng', ESSAY: 'Bài viết', SPEAKING: 'Bài nói', DICTATION: 'Chép chính tả' };
 
 /** Ngày thứ trong tuần từ ISO date (T2…CN) */
 export const weekdayCode = (isoDate: string) => ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'][new Date(`${isoDate}T00:00:00`).getDay()];

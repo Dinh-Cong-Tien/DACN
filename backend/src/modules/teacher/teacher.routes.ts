@@ -39,6 +39,7 @@ import {
 } from './teacher.service';
 
 import { contentRouter } from './teacher.content';
+import { insightsRouter } from './teacher.insights';
 
 export const teacherRouter = Router();
 
@@ -108,6 +109,7 @@ teacherRouter.get(
 teacherRouter.use(auth, allow('TEACHER', 'HEAD_TEACHER'));
 /** Học liệu giáo viên tự soạn, gửi trưởng bộ môn duyệt */
 teacherRouter.use('/content', contentRouter);
+teacherRouter.use(insightsRouter);
 
 // Id trên URL phải là UUID (bài tự luyện dùng dạng `ans:<uuid>`), sai định dạng → 404 thay vì lỗi Prisma
 for (const name of ['id', 'studentId']) {
@@ -705,9 +707,10 @@ const targetSchema = z.discriminatedUnion('kind', [
   z.object({ kind: z.literal('VOCAB'), topicId: z.string().min(1) }),
   z.object({ kind: z.literal('WRITING'), taskId: z.string().min(1) }),
   z.object({ kind: z.literal('SPEAKING'), partId: z.string().min(1) }),
+  z.object({ kind: z.literal('DICTATION'), passageId: z.string().min(1) }),
 ]);
 type Target = z.infer<typeof targetSchema>;
-const KIND_OF: Record<string, Target['kind']> = { MOCK_TEST: 'EXAM', PRACTICE: 'EXAM', LESSON: 'LESSON', GRAMMAR: 'GRAMMAR', VOCAB: 'VOCAB', ESSAY: 'WRITING', SPEAKING: 'SPEAKING' };
+const KIND_OF: Record<string, Target['kind']> = { MOCK_TEST: 'EXAM', PRACTICE: 'EXAM', LESSON: 'LESSON', GRAMMAR: 'GRAMMAR', VOCAB: 'VOCAB', ESSAY: 'WRITING', SPEAKING: 'SPEAKING', DICTATION: 'DICTATION' };
 
 /** Kiểm tra nội dung bài giao có thật trong DB; trả target_id (uuid) và điểm tối đa mặc định. */
 async function resolveTarget(type: string, t: Target, examType: 'TOEIC' | 'VSTEP'): Promise<{ targetId: string; maxScore: number; target: Target }> {
@@ -747,6 +750,12 @@ async function resolveTarget(type: string, t: Target, examType: 'TOEIC' | 'VSTEP
       if (!v) throw badRequest('Bộ từ vựng không tồn tại');
       return { targetId: v.id, maxScore: 10, target: t };
     }
+    case 'DICTATION': {
+      const p = isUuid(t.passageId) ? await prisma.passage.findFirst({ where: { id: t.passageId, purpose: 'DICTATION', deletedAt: null, status: 'PUBLISHED' } }) : null;
+      if (!p) throw badRequest('Bài chép chính tả không tồn tại');
+      // Điểm = % chép đúng (0–100), chấm tự động khi học viên nộp ở trang Chép chính tả
+      return { targetId: p.id, maxScore: 100, target: t };
+    }
     case 'WRITING':
     case 'SPEAKING': {
       const qid = t.kind === 'WRITING' ? t.taskId : t.partId;
@@ -761,7 +770,7 @@ async function resolveTarget(type: string, t: Target, examType: 'TOEIC' | 'VSTEP
 const assignBody = z.object({
   classId: uuid,
   title: z.string().trim().min(2).max(200),
-  type: z.enum(['MOCK_TEST', 'PRACTICE', 'LESSON', 'GRAMMAR', 'VOCAB', 'ESSAY', 'SPEAKING']),
+  type: z.enum(['MOCK_TEST', 'PRACTICE', 'LESSON', 'GRAMMAR', 'VOCAB', 'ESSAY', 'SPEAKING', 'DICTATION']),
   target: targetSchema,
   note: z.string().max(5000).nullish(),
   dueDate: z.string().datetime({ offset: true }).nullish(),
@@ -1165,6 +1174,26 @@ teacherRouter.get(
     const user = await assertStudent(u, P(req));
     const classIds = await myClassIds(u);
     const [card] = (await toClassStudents(classIds)).filter((s) => s.id === user.id);
+    const weekAgo = new Date(Date.now() - 7 * 86400_000);
+    const [goal, activity, cardsLearned, cardsDue, openMistakes, enrollments] = await Promise.all([
+      prisma.learningGoal.findFirst({ where: { userId: user.id, isActive: true } }),
+      prisma.dailyActivity.findMany({ where: { userId: user.id, activityDate: { gte: weekAgo } }, select: { minutes: true, questionsAnswered: true, lessonsCompleted: true, cardsReviewed: true } }),
+      prisma.srsCard.count({ where: { userId: user.id, repetitions: { gt: 0 } } }),
+      prisma.srsCard.count({ where: { userId: user.id, nextReviewAt: { lte: new Date() } } }),
+      prisma.mistakeEntry.count({ where: { userId: user.id, isResolved: false } }),
+      prisma.courseEnrollment.findMany({ where: { userId: user.id }, include: { course: { select: { title: true, slug: true } } }, orderBy: { updatedAt: 'desc' }, take: 6 }),
+    ]);
+    const sum = (k: 'minutes' | 'questionsAnswered' | 'lessonsCompleted' | 'cardsReviewed') => activity.reduce((a, d) => a + d[k], 0);
+    const self = {
+      goal: goal ? { examType: goal.examType, score: goal.targetScore ? String(goal.targetScore) : (goal.targetLevel ?? ''), examDate: ymd(goal.targetDate) } : null,
+      week: { minutes: sum('minutes'), questions: sum('questionsAnswered'), lessons: sum('lessonsCompleted'), cards: sum('cardsReviewed'), activeDays: activity.filter((d) => d.minutes > 0 || d.questionsAnswered > 0).length },
+      streak: user.streakCurrent,
+      xp: user.xpTotal,
+      lastActiveAt: (user.lastActiveAt ?? user.createdAt).toISOString(),
+      vocab: { learned: cardsLearned, due: cardsDue },
+      openMistakes,
+      courses: enrollments.map((e) => ({ slug: e.course.slug, title: e.course.title, progress: Math.round(Number(e.progressPct)), completed: !!e.completedAt })),
+    };
     const [attempts, causes, tags, subs, notes, sessions] = await Promise.all([
       prisma.examAttempt.findMany({
         where: { userId: user.id, status: { in: ['COMPLETED', 'SUBMITTED', 'GRADING'] } },
@@ -1203,6 +1232,7 @@ teacherRouter.get(
       submissions: subs.map((s) => ({ ...toSubmission(s), state: s.status })),
       attendance: attendanceLog,
       notes: notes.map(toNote),
+      self,
     };
   })
 );

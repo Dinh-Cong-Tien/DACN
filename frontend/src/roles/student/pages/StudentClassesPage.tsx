@@ -56,7 +56,7 @@ export const StudentClassesPage: React.FC = () => {
   // Bài trắc nghiệm được giao: gắn ?assignment= để lượt làm bài cập nhật bài nộp
   const hrefOf = (r: Row) => {
     const h = assignmentHref(r.target);
-    return r.target.kind === 'EXAM' ? `${h}${h.includes('?') ? '&' : '?'}assignment=${r.id}` : h;
+    return r.target.kind === 'EXAM' || r.target.kind === 'DICTATION' ? `${h}${h.includes('?') ? '&' : '?'}assignment=${r.id}` : h;
   };
 
   const join = () => {

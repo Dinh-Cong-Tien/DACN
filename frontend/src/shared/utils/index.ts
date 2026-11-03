@@ -120,6 +120,8 @@ export function assignmentHref(t: AssignmentTarget): string {
       return `/app/writing?task=${t.taskId}`;
     case 'SPEAKING':
       return `/app/speaking?part=${t.partId}`;
+    case 'DICTATION':
+      return `/app/dictation?passage=${t.passageId}`;
   }
 }
 

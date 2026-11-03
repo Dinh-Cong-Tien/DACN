@@ -417,7 +417,7 @@ export const usePracticeOverview = () =>
   useQuery({ queryKey: ['learner', 'practice-overview'], queryFn: () => api.get<{ byPart: Record<string, number>; total: number }>('/learner/practice/overview'), enabled: useAuthed() });
 
 // ---------- Chép chính tả ----------
-export const submitDictation = (body: { passageId: string; typedText: string; segmentIndex?: number; replays?: number; timeSpentSec?: number }) => api.post<DictationResult>('/learner/dictation', body);
+export const submitDictation = (body: { passageId: string; typedText: string; segmentIndex?: number; replays?: number; timeSpentSec?: number; assignmentId?: string }) => api.post<DictationResult>('/learner/dictation', body);
 
 // ---------- Nội dung dùng cho trang học viên (catalog) ----------
 export const useTests = (params: { examType?: ExamType; kind?: string } = {}) =>

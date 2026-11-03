@@ -7,7 +7,7 @@ import { Avatar, Drawer } from '@/shared/components/ui';
 import { cn, formatDate, staffPath } from '@/shared/utils';
 import { Figures, Meter, Panel, Status, type StatusTone, TPageHead, TTabs, inputCls, tbl } from '@/roles/teacher/components/TeacherKit';
 
-export const ASSIGN_TYPE: Record<string, string> = { MOCK_TEST: 'Đề thi thử', PRACTICE: 'Luyện tập', LESSON: 'Bài giảng', GRAMMAR: 'Ngữ pháp', VOCAB: 'Từ vựng', ESSAY: 'Bài Viết', SPEAKING: 'Bài Nói' };
+export const ASSIGN_TYPE: Record<string, string> = { MOCK_TEST: 'Đề thi thử', PRACTICE: 'Luyện tập', LESSON: 'Bài giảng', GRAMMAR: 'Ngữ pháp', VOCAB: 'Từ vựng', ESSAY: 'Bài Viết', SPEAKING: 'Bài Nói', DICTATION: 'Chép chính tả' };
 export const SUB_STATE: Record<OversightSubmission['state'], { tone: StatusTone; label: string }> = {
   TODO: { tone: 'gray', label: 'Chưa nộp' },
   MISSING: { tone: 'red', label: 'Quá hạn chưa nộp' },

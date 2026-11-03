@@ -75,7 +75,8 @@ async function pickPracticeQuestions(parts: ExamPart[], perPart: number, examTyp
   const out: string[] = [];
   for (const part of parts) {
     const pool = await prisma.question.findMany({
-      where: { part, status: 'PUBLISHED', deletedAt: null, type: { notIn: ['ESSAY', 'SPEAKING_RESPONSE'] }, ...(examType ? { examType } : {}) },
+      // Luyện theo Part = câu đúng dạng đề (Nghe/Đọc); bài tập Ngữ pháp / Từ vựng có trang luyện riêng
+      where: { part, status: 'PUBLISHED', deletedAt: null, skill: { in: ['LISTENING', 'READING'] }, type: { notIn: ['ESSAY', 'SPEAKING_RESPONSE'] }, ...(examType ? { examType } : {}) },
       select: { id: true, passageId: true, orderInPassage: true },
     });
     // gom theo passage, xáo trộn nhóm
@@ -510,7 +511,7 @@ export function toAttemptSummary(a: {
 }
 
 /** Kết quả chi tiết: tóm tắt + đáp án từng câu */
-async function resultOf(attemptId: string) {
+export async function resultOf(attemptId: string) {
   const a = await prisma.examAttempt.findUniqueOrThrow({ where: { id: attemptId }, include: { test: true, attemptAnswerAttempts: true } });
   const gradings = await prisma.grading.findMany({ where: { answerId: { in: a.attemptAnswerAttempts.map((x) => x.id) }, isFinal: true } });
   const gmap = new Map(gradings.map((g) => [g.answerId, g]));

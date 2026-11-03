@@ -63,7 +63,7 @@ testsRouter.get(
     // Số câu trắc nghiệm đã xuất bản trong ngân hàng theo từng phần (để hiện "x câu luyện tập")
     const counts = await prisma.question.groupBy({
       by: ['part'],
-      where: { ...PUBLISHED, type: { notIn: ['ESSAY', 'SPEAKING_RESPONSE'] }, ...(examType ? { examType } : {}) },
+      where: { ...PUBLISHED, skill: { in: ['LISTENING', 'READING'] }, type: { notIn: ['ESSAY', 'SPEAKING_RESPONSE'] }, ...(examType ? { examType } : {}) },
       _count: { _all: true },
     });
     const byId = new Map<string, number>();

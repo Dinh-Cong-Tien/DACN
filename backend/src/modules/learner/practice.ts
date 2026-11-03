@@ -25,7 +25,7 @@ practiceRouter.get(
   handler(async () => {
     const rows = await prisma.question.groupBy({
       by: ['part'],
-      where: { status: 'PUBLISHED', deletedAt: null, type: { notIn: ['ESSAY', 'SPEAKING_RESPONSE'] } },
+      where: { status: 'PUBLISHED', deletedAt: null, skill: { in: ['LISTENING', 'READING'] }, type: { notIn: ['ESSAY', 'SPEAKING_RESPONSE'] } },
       _count: { _all: true },
     });
     const byPart: Record<string, number> = {};

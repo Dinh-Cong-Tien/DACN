@@ -330,7 +330,7 @@ studyRouter.post(
   handler(async (req) => {
     const userId = me(req).id;
     const body = parse(
-      z.object({ passageId: z.string().uuid(), typedText: z.string().max(20000), segmentIndex: z.number().int().min(0).optional(), replays: z.number().int().min(0).max(999).optional(), timeSpentSec: z.number().int().min(0).max(36000).optional() }),
+      z.object({ passageId: z.string().uuid(), typedText: z.string().max(20000), segmentIndex: z.number().int().min(0).optional(), replays: z.number().int().min(0).max(999).optional(), timeSpentSec: z.number().int().min(0).max(36000).optional(), assignmentId: z.string().uuid().optional() }),
       req.body
     );
     const p = await prisma.passage.findFirst({ where: { id: body.passageId, purpose: 'DICTATION', deletedAt: null } });
@@ -357,6 +357,17 @@ studyRouter.post(
         },
       });
       await recordActivity(tx, userId, { minutes: Math.max(1, Math.round((body.timeSpentSec ?? 60) / 60)), xp: Math.round(accuracy / 10) });
+      // Bài chép chính tả giáo viên giao: chấm tự động theo % chép đúng (giữ điểm cao nhất nếu làm lại)
+      if (body.assignmentId && body.segmentIndex === undefined) {
+        const sub = await tx.assignmentSubmission.findUnique({ where: { assignmentId_studentId: { assignmentId: body.assignmentId, studentId: userId } }, include: { assignment: true } });
+        const asg = sub?.assignment;
+        if (!sub || !asg || asg.deletedAt || asg.type !== 'DICTATION' || asg.targetId !== p.id) throw badRequest('Bài tập chép chính tả không hợp lệ');
+        if (asg.status === 'CLOSED') throw badRequest('Bài tập đã đóng', 'CLOSED');
+        const now = new Date();
+        if (asg.dueAt && asg.dueAt < now && !asg.allowLate) throw badRequest('Đã quá hạn nộp', 'OVERDUE');
+        const best = Math.max(accuracy, sub.score === null ? 0 : Number(sub.score));
+        await tx.assignmentSubmission.update({ where: { id: sub.id }, data: { attemptId: a.id, submittedAt: now, status: 'GRADED', score: best, gradedAt: now } });
+      }
       return a;
     });
     return { attemptId: at.id, accuracy, matched, total: ref.length, diff, reference: refText };

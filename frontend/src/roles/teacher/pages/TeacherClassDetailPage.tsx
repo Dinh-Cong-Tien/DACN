@@ -14,6 +14,7 @@ import { cn, formatDate, formatDateTime, timeAgo } from '@/shared/utils';
 import { Avatar, ConfirmDialog, Input, Modal, Select, Textarea } from '@/shared/components/ui';
 import { Figures, IconTile, Meter, Panel, Status, TBtn, TTabs, inputCls, tbl, type StatusTone } from '../components/TeacherKit';
 import { TEmpty, TError, TLoading } from '../components/TeacherState';
+import { ClassLeaderboardPanel } from '../components/ClassLeaderboard';
 
 const STATUS: Record<ClassStudent['status'], { label: string; tone: StatusTone }> = {
   GOOD: { label: 'Ổn định', tone: 'green' },
@@ -299,6 +300,7 @@ export const TeacherClassDetailPage: React.FC = () => {
           { key: 'assignments', label: 'Bài tập', count: assignments.length },
           { key: 'materials', label: 'Tài liệu', count: materials.length },
           { key: 'progress', label: 'Tiến độ bài tập' },
+          { key: 'ranking', label: 'Xếp hạng' },
         ]}
       />
 
@@ -576,6 +578,8 @@ export const TeacherClassDetailPage: React.FC = () => {
           )}
         </Panel>
       )}
+
+      {tab === 'ranking' && <ClassLeaderboardPanel classId={cls.id} />}
 
       {tab === 'progress' && (
         <Panel title="Tỷ lệ học viên đã nộp từng bài tập" sub="Theo thứ tự hạn nộp, tính trên sĩ số lớp">

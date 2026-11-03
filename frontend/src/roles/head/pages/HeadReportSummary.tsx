@@ -12,7 +12,7 @@ const SUB: Record<string, [string, SegmentColor]> = { GRADED: ['Đã chấm', 'g
 const REVIEW: Record<string, [string, SegmentColor]> = { AGREED: ['Đồng ý điểm GV', 'good'], ADJUSTED: ['Điều chỉnh điểm', 'serious'], PENDING: ['Chờ kiểm định', 'neutral'] };
 const TICKET: Record<string, [string, SegmentColor]> = { OPEN: ['Mới', 'bad'], IN_REVIEW: ['Đang xem xét', 'warn'], PENDING: ['Chờ phản hồi', 'neutral'], RESOLVED: ['Đã giải quyết', 'good'], REJECTED: ['Không chấp nhận', 'serious'] };
 const EXAM: Record<string, [string, SegmentColor]> = { TOEIC: ['TOEIC', 'series-1'], VSTEP: ['VSTEP', 'series-2'] };
-const ASSIGN: Record<string, string> = { MOCK_TEST: 'Đề thi thử', PRACTICE: 'Luyện tập', LESSON: 'Bài giảng', GRAMMAR: 'Ngữ pháp', VOCAB: 'Từ vựng', ESSAY: 'Bài Viết', SPEAKING: 'Bài Nói' };
+const ASSIGN: Record<string, string> = { MOCK_TEST: 'Đề thi thử', PRACTICE: 'Luyện tập', LESSON: 'Bài giảng', GRAMMAR: 'Ngữ pháp', VOCAB: 'Từ vựng', ESSAY: 'Bài Viết', SPEAKING: 'Bài Nói', DICTATION: 'Chép chính tả' };
 
 const seg = (rows: { key: string; value: number }[], map: Record<string, [string, SegmentColor]>) => rows.filter((r) => map[r.key]).map((r) => ({ label: map[r.key][0], value: r.value, color: map[r.key][1] }));
 const sum = (xs: number[]) => xs.reduce((a, b) => a + b, 0);

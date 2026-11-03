@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Mail, MessageSquarePlus, Phone, Search, Trash2 } from 'lucide-react';
+import { BookOpenCheck, ChevronRight, Mail, MessageSquarePlus, Phone, Search, Target, Trash2 } from 'lucide-react';
 import { useDocumentTitle } from '@/shared/hooks';
 import { toast } from '@/shared/stores/uiStore';
 import { errorMessage } from '@/shared/api/client';
@@ -11,6 +11,7 @@ import { cn, formatDate, formatDateTime, timeAgo } from '@/shared/utils';
 import { Avatar, ConfirmDialog } from '@/shared/components/ui';
 import { Meter, Panel, Status, TBtn, TPageHead, TTabs, inputCls } from '../components/TeacherKit';
 import { TEmpty, TError, TLoading } from '../components/TeacherState';
+import { StudentAttemptDrawer } from '../components/StudentAttemptDrawer';
 
 const STATUS = { GOOD: ['green', 'Ổn định'], WARNING: ['amber', 'Cần nhắc'], RISK: ['red', 'Nguy cơ bỏ học'] } as const;
 const NOTE_KIND: Record<StudentNote['kind'], [string, string]> = { NOTE: ['Ghi chú', 'bg-slate-100 text-slate-600'], REMINDER: ['Nhắc nhở', 'bg-amber-500/15 text-amber-700'], CONTACT: ['Đã liên hệ', 'bg-sky-500/10 text-sky-700'] };
@@ -33,6 +34,7 @@ export const TeacherStudentsPage: React.FC = () => {
   const profile = useStudentProfile(selected?.id);
   const createNote = useTeacherMutation((v: { studentId: string; kind: StudentNote['kind']; text: string }) => teacherApi.addNote(v.studentId, { kind: v.kind, text: v.text }));
   const [deletingNote, setDeletingNote] = useState<{ id: string; text: string } | null>(null);
+  const [attemptId, setAttemptId] = useState<string>();
   const removeNote = useTeacherMutation(teacherApi.deleteNote);
   const select = (id: string) => setParams({ ...(filter === 'watch' ? { filter } : {}), id }, { replace: true });
 
@@ -152,6 +154,59 @@ export const TeacherStudentsPage: React.FC = () => {
             </dl>
           </section>
 
+          {profile.data?.self && (
+            <Panel title="Tự học" sub="Những gì học viên tự học ngoài bài tập của lớp" icon={BookOpenCheck} tone="emerald">
+              <div className="grid gap-5 lg:grid-cols-[1fr_1.2fr]">
+                <div className="space-y-3">
+                  <p className="flex items-start gap-2.5 text-sm">
+                    <Target className="mt-0.5 h-4 w-4 shrink-0 text-indigo-600" />
+                    {profile.data.self.goal ? (
+                      <span>
+                        Mục tiêu <b className="text-slate-900">{profile.data.self.goal.examType} {profile.data.self.goal.score}</b>
+                        {profile.data.self.goal.examDate && <> · thi ngày {formatDate(profile.data.self.goal.examDate)}</>}
+                      </span>
+                    ) : (
+                      <span className="text-slate-500">Học viên chưa đặt mục tiêu thi</span>
+                    )}
+                  </p>
+                  <dl className="grid grid-cols-2 gap-2 text-sm">
+                    {[
+                      ['Học 7 ngày qua', `${profile.data.self.week.minutes} phút · ${profile.data.self.week.activeDays}/7 ngày`],
+                      ['Câu đã luyện (7 ngày)', String(profile.data.self.week.questions)],
+                      ['Từ vựng đã thuộc', `${profile.data.self.vocab.learned} từ`],
+                      ['Thẻ đến hạn ôn', String(profile.data.self.vocab.due)],
+                      ['Lỗi sai chưa xử lý', String(profile.data.self.openMistakes)],
+                      ['Hoạt động gần nhất', timeAgo(profile.data.self.lastActiveAt)],
+                    ].map(([k, v]) => (
+                      <div key={k} className="rounded-lg bg-slate-50 px-3 py-2">
+                        <dt className="text-[12px] text-slate-500">{k}</dt>
+                        <dd className="font-semibold tabular-nums text-slate-900">{v}</dd>
+                      </div>
+                    ))}
+                  </dl>
+                </div>
+                <div>
+                  <p className="mb-2 text-[13px] font-medium text-slate-700">Khoá học đang học</p>
+                  {profile.data.self.courses.length ? (
+                    <ul className="space-y-2.5">
+                      {profile.data.self.courses.map((c) => (
+                        <li key={c.slug} className="text-sm">
+                          <div className="mb-1 flex justify-between gap-3">
+                            <span className="truncate text-slate-800">{c.title}</span>
+                            <span className="shrink-0 tabular-nums text-slate-500">{c.completed ? 'Hoàn thành' : `${c.progress}%`}</span>
+                          </div>
+                          <Meter value={c.completed ? 100 : c.progress} tone={c.completed ? 'green' : 'indigo'} />
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="text-sm text-slate-500">Chưa ghi danh khoá học nào.</p>
+                  )}
+                </div>
+              </div>
+            </Panel>
+          )}
+
           <div className="grid items-start gap-6 xl:grid-cols-2">
             <Panel title="Nhật ký trao đổi" sub="Chỉ giáo viên và quản lý thấy" icon={MessageSquarePlus} tone="violet">
               <div className="flex gap-2">
@@ -224,7 +279,8 @@ export const TeacherStudentsPage: React.FC = () => {
               ) : (
                 <ul className="divide-y divide-slate-100">
                   {profile.data!.attempts.slice(0, 8).map((a) => (
-                    <li key={a.id} className="flex items-center justify-between gap-3 py-2.5 first:pt-0 last:pb-0">
+                    <li key={a.id} className="first:pt-0 last:pb-0">
+                      <button type="button" onClick={() => setAttemptId(a.id)} className="group flex w-full items-center justify-between gap-3 rounded-lg py-2.5 text-left hover:bg-slate-50" title="Xem chi tiết từng câu">
                       <span className="min-w-0">
                         <span className="block truncate text-sm font-semibold text-slate-900">{a.testTitle}</span>
                         <span className="block text-[12px] text-slate-500">
@@ -232,7 +288,11 @@ export const TeacherStudentsPage: React.FC = () => {
                           {a.correct !== undefined ? ` · đúng ${a.correct}/${a.total}` : ''}
                         </span>
                       </span>
-                      <span className="font-display text-lg font-extrabold tabular-nums text-slate-900">{a.score ?? '—'}</span>
+                      <span className="flex items-center gap-1.5">
+                        <span className="font-display text-lg font-extrabold tabular-nums text-slate-900">{a.score ?? '—'}</span>
+                        <ChevronRight className="h-4 w-4 text-slate-300 group-hover:text-slate-500" />
+                      </span>
+                      </button>
                     </li>
                   ))}
                 </ul>
@@ -259,6 +319,7 @@ export const TeacherStudentsPage: React.FC = () => {
           </div>
         </div>
       </div>
+      <StudentAttemptDrawer studentId={selected?.id} studentName={selected?.name} attemptId={attemptId} onClose={() => setAttemptId(undefined)} />
       <ConfirmDialog
         open={!!deletingNote}
         onClose={() => setDeletingNote(null)}

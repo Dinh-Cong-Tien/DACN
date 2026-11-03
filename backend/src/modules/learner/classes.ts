@@ -230,6 +230,7 @@ classesRouter.post(
     if (late && !a.allowLate) throw badRequest('Đã quá hạn nộp', 'OVERDUE');
     if ((a.type === 'ESSAY' || a.type === 'SPEAKING') && !body.content && !body.audioUrl) throw badRequest('Bài nộp trống');
     if (a.type === 'MOCK_TEST' || a.type === 'PRACTICE') throw badRequest('Bài trắc nghiệm được nộp qua phòng thi', 'USE_EXAM');
+    if (a.type === 'DICTATION') throw badRequest('Bài chép chính tả được nộp ở trang Chép chính tả', 'USE_DICTATION');
     const updated = await prisma.$transaction(async (tx) => {
       const s = await tx.assignmentSubmission.update({
         where: { id: sub.id },

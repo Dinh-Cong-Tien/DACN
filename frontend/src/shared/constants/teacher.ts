@@ -5,7 +5,7 @@
 import type { AssignmentTarget, AssignmentType, AttendanceMark } from '@/shared/types';
 import type { TeacherLibrary } from '@/shared/api/teacher';
 
-export const ASSIGNMENT_TYPE_LABEL: Record<AssignmentType, string> = { MOCK_TEST: 'Đề thi thử', PRACTICE: 'Luyện theo Part', LESSON: 'Bài giảng', GRAMMAR: 'Ngữ pháp', VOCAB: 'Từ vựng', ESSAY: 'Bài viết', SPEAKING: 'Bài nói' };
+export const ASSIGNMENT_TYPE_LABEL: Record<AssignmentType, string> = { MOCK_TEST: 'Đề thi thử', PRACTICE: 'Luyện theo Part', LESSON: 'Bài giảng', GRAMMAR: 'Ngữ pháp', VOCAB: 'Từ vựng', ESSAY: 'Bài viết', SPEAKING: 'Bài nói', DICTATION: 'Chép chính tả' };
 
 export const ATTENDANCE_LABEL: Record<AttendanceMark, string> = { PRESENT: 'Có mặt', LATE: 'Đi muộn', ABSENT: 'Vắng', EXCUSED: 'Vắng có phép' };
 
@@ -80,6 +80,8 @@ export function describeTarget(t: AssignmentTarget, lib: Pick<TeacherLibrary, 't
       const s = lib.speaking.find((x) => x.id === t.partId);
       return s ? `Luyện Nói · ${promptName(s, 'SPEAKING')}` : 'Luyện Nói';
     }
+    case 'DICTATION':
+      return 'Chép chính tả · nghe và chép từng câu, chấm theo % chép đúng';
   }
 }
 

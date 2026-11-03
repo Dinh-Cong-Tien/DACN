@@ -27,6 +27,7 @@ export const ASSIGNMENT_TYPE_LABEL: Record<AssignmentType, string> = {
   VOCAB: 'Từ vựng',
   ESSAY: 'Bài viết',
   SPEAKING: 'Bài nói',
+  DICTATION: 'Chép chính tả',
 };
 
 const PART_LABEL: Record<string, string> = {
