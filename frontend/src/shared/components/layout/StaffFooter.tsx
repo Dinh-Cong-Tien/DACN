@@ -3,6 +3,7 @@ import { useAdminSystem } from '@/shared/api/admin';
 import type { NavGroup } from './AppShell';
 import { academicTerm } from '@/shared/constants/staff';
 import { FooterStatus, SiteFooter, type FooterLink } from './SiteFooter';
+import { useT } from '@/shared/i18n';
 
 export interface StaffFooterProps {
   /** Các nhóm menu của vai trò — nhóm đầu thành cột "truy cập nhanh" */
@@ -17,6 +18,7 @@ export interface StaffFooterProps {
 /** Footer khu quản lý: dùng đúng footer chuẩn của website học viên, chỉ đổi nội dung cột theo vai trò */
 export const StaffFooter: React.FC<StaffFooterProps> = ({ groups, brandTagline, settingsTo, notificationsTo, showSystemStatus }) => {
   const sys = useAdminSystem(!!showSystemStatus);
+  const t = useT();
   const degraded = sys.data?.services.filter((s) => s.status !== 'UP').length ?? 0;
   const [first] = groups;
   const support = [
@@ -28,10 +30,10 @@ export const StaffFooter: React.FC<StaffFooterProps> = ({ groups, brandTagline, 
 
   const status = showSystemStatus ? (
     <FooterStatus tone={sys.isError ? 'error' : !sys.data ? 'idle' : degraded ? 'warn' : 'ok'}>
-      {sys.isError ? 'Không kết nối được máy chủ API' : !sys.data ? 'Đang kiểm tra trạng thái…' : degraded ? `${degraded} dịch vụ đang chậm, hệ thống vẫn hoạt động` : 'Hệ thống hoạt động ổn định'} · Phiên bản 1.0
+      {t(sys.isError ? 'Không kết nối được máy chủ API' : !sys.data ? 'Đang kiểm tra trạng thái…' : degraded ? `${degraded} dịch vụ đang chậm, hệ thống vẫn hoạt động` : 'Hệ thống hoạt động ổn định')} · {t('Phiên bản 1.0')}
     </FooterStatus>
   ) : (
-    <FooterStatus>Phiên bản 1.0 · {academicTerm().label}</FooterStatus>
+    <FooterStatus>{t('Phiên bản 1.0')} · {t(academicTerm().label)}</FooterStatus>
   );
 
   return (

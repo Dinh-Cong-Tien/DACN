@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Link, NavLink, useLocation } from 'react-router-dom';
 import { Award, ChevronDown, LayoutDashboard, LogOut, Settings, User, Users } from 'lucide-react';
 import { Avatar, Badge } from '@/shared/components/ui';
+import { useT } from '@/shared/i18n';
 import { cn, ROLE_HOME, ROLE_LABEL } from '@/shared/utils';
 import type { AppUser } from '@/shared/types';
 
@@ -21,6 +22,7 @@ const SectionLabel: React.FC<{ children: React.ReactNode }> = ({ children }) => 
  * Giáo viên / Trưởng bộ môn / Admin: thông tin + link khu quản lý + Đăng xuất.
  */
 export const UserMenu: React.FC<{ user: AppUser; onLogout: () => void; onDark?: boolean }> = ({ user, onLogout, onDark }) => {
+  const t = useT();
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const { pathname } = useLocation();
@@ -49,7 +51,7 @@ export const UserMenu: React.FC<{ user: AppUser; onLogout: () => void; onDark?: 
         onClick={() => setOpen((o) => !o)}
         aria-haspopup="menu"
         aria-expanded={open}
-        aria-label="Tài khoản"
+        aria-label={t('Tài khoản')}
         className={cn('flex items-center gap-1.5 rounded-xl py-1 pl-1 pr-2 transition', onDark ? 'hover:bg-white/10' : 'hover:bg-slate-900/5')}
       >
         <Avatar name={user.fullName} src={user.avatarUrl} size="sm" ring status="online" />
@@ -73,17 +75,17 @@ export const UserMenu: React.FC<{ user: AppUser; onLogout: () => void; onDark?: 
             {isStudent ? (
               <div className="mt-3.5 flex items-center justify-between rounded-xl bg-slate-900/[0.03] px-3 py-2.5 ring-1 ring-inset ring-slate-200">
                 <span className="text-[13px] text-slate-600">
-                  Gói hiện tại: <span className="font-semibold text-slate-900">{user.plan === 'FREE' ? 'Free' : user.plan}</span>
+                  {t('Gói hiện tại')}: <span className="font-semibold text-slate-900">{user.plan === 'FREE' ? 'Free' : user.plan}</span>
                 </span>
                 {user.plan === 'FREE' && (
                   <Link to="/pricing" className="text-[13px] font-bold text-violet-600 hover:underline underline-offset-2">
-                    Nâng cấp
+                    {t('Nâng cấp')}
                   </Link>
                 )}
               </div>
             ) : (
               <Badge tone="indigo" size="xs" className="mt-3">
-                {ROLE_LABEL[user.role]}
+                {t(`Vai trò ${ROLE_LABEL[user.role]}`).replace(/^Vai trò /, '')}
               </Badge>
             )}
           </div>
@@ -92,12 +94,12 @@ export const UserMenu: React.FC<{ user: AppUser; onLogout: () => void; onDark?: 
             <>
               {/* 2. Cá nhân */}
               <div className="px-2 pt-4">
-                <SectionLabel>Cá nhân</SectionLabel>
+                <SectionLabel>{t('Cá nhân')}</SectionLabel>
                 <div className="flex flex-col">
                   {PERSONAL.map((a) => (
                     <NavLink key={a.to} to={a.to} role="menuitem" className={rowCls}>
                       <a.icon className="h-4 w-4 shrink-0 text-slate-400" />
-                      {a.label}
+                      {t(a.label)}
                     </NavLink>
                   ))}
                 </div>
@@ -107,7 +109,7 @@ export const UserMenu: React.FC<{ user: AppUser; onLogout: () => void; onDark?: 
             <div className="px-2 pt-3">
               <NavLink to={ROLE_HOME[user.role]} role="menuitem" className={rowCls}>
                 <LayoutDashboard className="h-4 w-4 shrink-0 text-slate-400" />
-                Khu {ROLE_LABEL[user.role].toLowerCase()}
+                {t(`Khu ${ROLE_LABEL[user.role].toLowerCase()}`)}
               </NavLink>
             </div>
           )}
@@ -116,7 +118,7 @@ export const UserMenu: React.FC<{ user: AppUser; onLogout: () => void; onDark?: 
           <div className="mt-3 border-t border-slate-200 p-2">
             <button type="button" role="menuitem" onClick={onLogout} className="flex w-full items-center gap-3 rounded-lg px-2 py-2 text-sm text-rose-600 transition-colors hover:bg-rose-500/10">
               <LogOut className="h-4 w-4" />
-              Đăng xuất
+              {t('Đăng xuất')}
             </button>
           </div>
         </div>

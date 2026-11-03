@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Facebook, Youtube, Mail, MapPin, Phone, Instagram } from 'lucide-react';
 import { Logo } from '@/shared/components/ui';
 import { cn } from '@/shared/utils';
+import { useT } from '@/shared/i18n';
 
 export interface FooterLink {
   to: string;
@@ -75,15 +76,17 @@ export const SiteFooter: React.FC<SiteFooterProps> = ({
   columns = PUBLIC_COLUMNS,
   email = 'hello@orbilingo.vn',
   contactLinks = PUBLIC_CONTACT_LINKS,
-  status = <FooterStatus>Hệ thống hoạt động ổn định</FooterStatus>,
+  status,
   className,
-}) => (
+}) => {
+  const t = useT();
+  return (
   <footer className={cn('relative overflow-hidden border-t border-white/10 bg-slate-950 text-slate-300', className)}>
     <div aria-hidden className="absolute inset-0 bg-dots opacity-10" />
     <div className="relative mx-auto grid max-w-7xl grid-cols-1 gap-10 px-4 py-14 sm:px-6 md:grid-cols-2 lg:grid-cols-5 lg:px-8">
       <div className="space-y-4 lg:col-span-2">
-        <Logo size="md" dark tagline={tagline} />
-        <p className="max-w-sm text-sm leading-relaxed text-slate-400">{description}</p>
+        <Logo size="md" dark tagline={tagline && t(tagline)} />
+        <p className="max-w-sm text-sm leading-relaxed text-slate-400">{t(description)}</p>
         <div className="flex items-center gap-2">
           {[Facebook, Youtube, Instagram, Mail].map((Icon, i) => (
             <a key={i} href="#" className="flex h-10 w-10 items-center justify-center rounded-xl border-2 border-white/10 bg-white/5 transition-all hover:-translate-y-0.5 hover:border-amber-300 hover:bg-amber-300 hover:text-slate-900">
@@ -94,12 +97,12 @@ export const SiteFooter: React.FC<SiteFooterProps> = ({
       </div>
       {columns.map((c) => (
         <div key={c.title}>
-          <h4 className="font-display mb-4 text-sm font-bold text-white">{c.title}</h4>
+          <h4 className="font-display mb-4 text-sm font-bold text-white">{t(c.title)}</h4>
           <ul className="space-y-2.5 text-sm">
             {c.links.map((l) => (
               <li key={l.to}>
                 <Link to={l.to} className="inline-block transition hover:translate-x-0.5 hover:text-amber-300">
-                  {l.label}
+                  {t(l.label)}
                 </Link>
               </li>
             ))}
@@ -107,10 +110,10 @@ export const SiteFooter: React.FC<SiteFooterProps> = ({
         </div>
       ))}
       <div>
-        <h4 className="font-display mb-4 text-sm font-bold text-white">Liên hệ</h4>
+        <h4 className="font-display mb-4 text-sm font-bold text-white">{t('Liên hệ')}</h4>
         <ul className="space-y-3 text-sm">
           <li className="flex items-start gap-2.5">
-            <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-amber-300" /> 54 Nguyễn Lương Bằng, Liên Chiểu, Đà Nẵng
+            <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-amber-300" /> {t('54 Nguyễn Lương Bằng, Liên Chiểu, Đà Nẵng')}
           </li>
           <li className="flex items-center gap-2.5">
             <Phone className="h-4 w-4 text-amber-300" /> 0236 555 0199
@@ -122,7 +125,7 @@ export const SiteFooter: React.FC<SiteFooterProps> = ({
         <div className="mt-4 flex gap-3 text-xs text-slate-400">
           {contactLinks.map((l) => (
             <Link key={l.to} to={l.to} className="hover:text-white">
-              {l.label}
+              {t(l.label)}
             </Link>
           ))}
         </div>
@@ -130,9 +133,10 @@ export const SiteFooter: React.FC<SiteFooterProps> = ({
     </div>
     <div className="relative border-t border-white/10">
       <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-2 px-4 py-6 text-xs text-slate-500 md:flex-row">
-        <span>© 2026 OrbiLingo · Đồ án chuyên ngành, Khoa CNTT. Bảo lưu mọi quyền.</span>
-        {status}
+        <span>{t('© 2026 OrbiLingo · Đồ án chuyên ngành, Khoa CNTT. Bảo lưu mọi quyền.')}</span>
+        {status ?? <FooterStatus>{t('Hệ thống hoạt động ổn định')}</FooterStatus>}
       </div>
     </div>
   </footer>
-);
+  );
+};

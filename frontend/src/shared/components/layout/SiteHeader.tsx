@@ -8,6 +8,8 @@ import { useUiStore, toast } from '@/shared/stores/uiStore';
 import { Logo, Button, Badge } from '@/shared/components/ui';
 import { PUBLIC_NAV, STUDENT_NAV, STUDENT_TOOLS, type MenuLink } from './navConfig';
 import { ThemeToggle } from './ThemeToggle';
+import { LanguageSwitcher } from './LanguageSwitcher';
+import { useT } from '@/shared/i18n';
 import { UserMenu } from './UserMenu';
 import { useResolvedTheme } from '@/shared/stores/themeStore';
 import { useNotifications } from '@/shared/api/learner';
@@ -38,13 +40,14 @@ export const SiteHeader: React.FC = () => {
 
   const handleLogout = () => {
     logout();
-    toast.info('Đã đăng xuất', 'Hẹn gặp lại bạn!');
+    toast.info(t('Đã đăng xuất'), t('Hẹn gặp lại bạn!'));
     navigate('/');
   };
 
   // Trang chủ: header nằm đè lên hero (trong suốt khi chưa cuộn, kính mờ khi cuộn).
   // Chế độ tối → chữ sáng + giữ bảng màu gốc; chế độ sáng → header sáng như các trang khác.
   const isDark = useResolvedTheme() === 'dark';
+  const t = useT();
   const overHero = location.pathname === '/';
   const onDarkHero = overHero && isDark;
   const linkCls = ({ isActive }: { isActive: boolean }) =>
@@ -63,7 +66,7 @@ export const SiteHeader: React.FC = () => {
     <div key={label} className={cn('relative shrink-0 group/menu', className)}>
       <button className={cn('px-2 py-2 rounded-xl text-sm font-bold flex items-center gap-1 transition whitespace-nowrap', active ? (onDarkHero ? 'bg-white/10 text-amber-300' : 'bg-slate-900/[0.06] text-indigo-700') : onDarkHero ? 'text-slate-200 hover:bg-white/10 hover:text-white' : 'text-slate-700 hover:bg-slate-900/5 hover:text-slate-900')}>
         {img && <img src={img} alt="" className="w-5 h-5 hidden min-[1440px]:block" />}
-        {label}
+        {t(label)}
         {items.some((i) => i.badge) && !active && <span className="w-1.5 h-1.5 rounded-full bg-violet-500" />}
         <ChevronDown className="hidden xl:block w-3.5 h-3.5 transition-transform group-hover/menu:rotate-180" />
       </button>
@@ -72,13 +75,13 @@ export const SiteHeader: React.FC = () => {
           {items.map((c, ci) => (
             <React.Fragment key={c.to}>
             {c.group && c.group !== items[ci - 1]?.group && (
-              <p className={cn('px-2.5 pb-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-400', ci > 0 ? 'mt-1.5 border-t border-slate-200 pt-2.5' : 'pt-1')}>{c.group}</p>
+              <p className={cn('px-2.5 pb-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-400', ci > 0 ? 'mt-1.5 border-t border-slate-200 pt-2.5' : 'pt-1')}>{t(c.group)}</p>
             )}
             <NavLink to={c.to} end className={() => cn('group/item flex items-center gap-3 px-2.5 py-2 rounded-lg text-sm transition-colors', isHere(c.to) ? 'bg-slate-100 text-slate-900' : 'text-slate-700 hover:bg-slate-50 hover:text-slate-900')}>
               {c.img && <img src={c.img} alt="" className={cn('shrink-0 transition-transform duration-200 group-hover/item:scale-110', c.desc ? 'h-9 w-9' : 'h-7 w-7')} />}
               <span className="min-w-0 flex-1">
-                <span className="block font-medium">{c.label}</span>
-                {c.desc && <span className="block truncate text-[12px] text-slate-500">{c.desc}</span>}
+                <span className="block font-medium">{t(c.label)}</span>
+                {c.desc && <span className="block truncate text-[12px] text-slate-500">{t(c.desc)}</span>}
               </span>
               {c.badge && (
                 <Badge tone="violet" solid size="xs">
@@ -108,7 +111,7 @@ export const SiteHeader: React.FC = () => {
     ) : (
       <NavLink key={item.label} to={item.to} className={linkCls}>
         <img src={item.img} alt="" className="w-5 h-5 hidden min-[1440px]:block" />
-        {item.label}
+        {t(item.label)}
       </NavLink>
     )
   );
@@ -144,7 +147,7 @@ export const SiteHeader: React.FC = () => {
       >
         <div className="max-w-7xl min-[1440px]:max-w-[1360px] mx-auto px-4 sm:px-6 lg:px-8 h-[72px] flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <button onClick={() => setOpen((o) => !o)} className={cn('lg:hidden p-2 rounded-xl border-2', onDarkHero ? 'border-white/30 bg-white/10 text-white' : 'border-slate-900 bg-white')} aria-label="Menu">
+            <button onClick={() => setOpen((o) => !o)} className={cn('lg:hidden p-2 rounded-xl border-2', onDarkHero ? 'border-white/30 bg-white/10 text-white' : 'border-slate-900 bg-white')} aria-label={t('Menu')}>
               {open ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </button>
             <Logo size="md" dark={onDarkHero} to="/" />
@@ -153,14 +156,15 @@ export const SiteHeader: React.FC = () => {
           <nav className="hidden lg:flex items-center gap-0.5">{desktopNav}</nav>
 
           <div className="flex items-center gap-1.5 md:gap-2">
+            <LanguageSwitcher onDark={onDarkHero} className={cn(isAuth && 'hidden sm:block')} />
             <ThemeToggle onDark={onDarkHero} className={cn(isAuth && 'hidden sm:block')} />
             {isAuth && user ? (
               <>
-                <button onClick={() => setPalette(true)} className={cn('hidden sm:inline-flex p-2 rounded-xl transition', onDarkHero ? 'text-slate-200 hover:bg-white/10' : 'text-slate-700 hover:bg-slate-900/5')} aria-label="Tìm kiếm (⌘K)" title="Tìm kiếm (⌘K)">
+                <button onClick={() => setPalette(true)} className={cn('hidden sm:inline-flex p-2 rounded-xl transition', onDarkHero ? 'text-slate-200 hover:bg-white/10' : 'text-slate-700 hover:bg-slate-900/5')} aria-label={t('Tìm kiếm (⌘K)')} title={t('Tìm kiếm (⌘K)')}>
                   <Search className="w-5 h-5" />
                 </button>
                 {isStudent && (
-                  <NavLink to="/app/notifications" className={cn('relative p-2 rounded-xl transition', onDarkHero ? 'text-slate-200 hover:bg-white/10' : 'text-slate-700 hover:bg-slate-900/5')} aria-label="Thông báo">
+                  <NavLink to="/app/notifications" className={cn('relative p-2 rounded-xl transition', onDarkHero ? 'text-slate-200 hover:bg-white/10' : 'text-slate-700 hover:bg-slate-900/5')} aria-label={t('Thông báo')}>
                     <Bell className={cn('w-5 h-5', unread > 0 && 'animate-ring-bell')} />
                     {unread > 0 && <span className="absolute top-1 right-1 min-w-[16px] h-4 px-1 rounded-full bg-violet-500 text-white text-[9px] font-black flex items-center justify-center ring-2 ring-cream">{unread}</span>}
                   </NavLink>
@@ -168,16 +172,16 @@ export const SiteHeader: React.FC = () => {
                 <UserMenu user={user} onLogout={handleLogout} onDark={onDarkHero} />
                 {/* Cùng vị trí nút cam "Học thử miễn phí" của khách */}
                 <Button to={isStudent ? '/#goc-hoc-tap' : ROLE_HOME[user.role]} variant="gradient" size="sm" rightIcon={<ArrowRight className="w-4 h-4" />} className="hidden xl:inline-flex">
-                  {isStudent ? 'Vào học' : 'Trang quản lý'}
+                  {t(isStudent ? 'Vào học' : 'Trang quản lý')}
                 </Button>
               </>
             ) : (
               <div className="hidden lg:flex items-center gap-2">
                 <Button to="/auth/login" variant="ghost" size="sm" leftIcon={<LogIn className="w-4 h-4" />} className={cn(onDarkHero && '!text-slate-200 hover:!bg-white/10 hover:!text-white')}>
-                  <span className="sr-only xl:not-sr-only xl:whitespace-nowrap">Đăng nhập</span>
+                  <span className="sr-only xl:not-sr-only xl:whitespace-nowrap">{t('Đăng nhập')}</span>
                 </Button>
                 <Button to="/try" variant="gradient" size="sm" rightIcon={<ArrowRight className="w-4 h-4" />}>
-                  Học thử<span className="hidden xl:inline"> miễn phí</span>
+                  {t('Học thử')}<span className="hidden xl:inline"> {t('miễn phí')}</span>
                 </Button>
               </div>
             )}
@@ -189,11 +193,11 @@ export const SiteHeader: React.FC = () => {
             <div className="px-4 py-4 space-y-4">
               {mobileGroups.map((g, gi) => (
                 <div key={gi} className="space-y-1">
-                  {g.title && <p className="px-3 pb-1 text-[10px] font-extrabold uppercase tracking-[0.14em] text-slate-400">{g.title}</p>}
+                  {g.title && <p className="px-3 pb-1 text-[10px] font-extrabold uppercase tracking-[0.14em] text-slate-400">{t(g.title)}</p>}
                   {g.items.map((c) => (
                     <NavLink key={c.to} to={c.to} end={c.to === '/'} className={({ isActive }) => cn('flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold', isActive ? 'bg-slate-900/[0.06] text-indigo-700' : 'text-slate-700 hover:bg-slate-900/5')}>
                       {c.img && <img src={c.img} alt="" className="w-6 h-6 shrink-0" />}
-                      <span className="flex-1">{c.label}</span>
+                      <span className="flex-1">{t(c.label)}</span>
                       {c.badge && (
                         <Badge tone="violet" solid size="xs">
                           {c.badge}
@@ -206,18 +210,21 @@ export const SiteHeader: React.FC = () => {
               {isAuth && (
                 <div className="flex items-center justify-between border-t border-slate-900/10 px-3 pt-3 sm:hidden">
                   <button type="button" onClick={() => setPalette(true)} className="inline-flex items-center gap-2 text-sm font-bold text-slate-700">
-                    <Search className="w-4 h-4" /> Tìm kiếm
+                    <Search className="w-4 h-4" /> {t('Tìm kiếm')}
                   </button>
-                  <ThemeToggle />
+                  <span className="flex items-center gap-1">
+                    <LanguageSwitcher />
+                    <ThemeToggle />
+                  </span>
                 </div>
               )}
               {!isAuth && (
                 <div className="pt-3 flex gap-2">
                   <Button to="/auth/login" variant="outline" fullWidth>
-                    Đăng nhập
+                    {t('Đăng nhập')}
                   </Button>
                   <Button to="/try" variant="gradient" fullWidth>
-                    Học thử miễn phí
+                    {t('Học thử miễn phí')}
                   </Button>
                 </div>
               )}
@@ -235,13 +242,13 @@ export const SiteHeader: React.FC = () => {
               return (
                 <NavLink key={item.to} to={item.to} end={item.end} className={({ isActive }) => cn('flex flex-col items-center justify-center gap-1 text-[10px] font-bold transition-colors', isActive ? 'text-amber-300' : 'text-slate-400')}>
                   <Icon className="w-5 h-5" />
-                  <span className="truncate max-w-[64px]">{item.label}</span>
+                  <span className="truncate max-w-[64px]">{t(item.label)}</span>
                 </NavLink>
               );
             })}
             <button onClick={() => setOpen(true)} className="flex flex-col items-center justify-center gap-1 text-[10px] font-bold text-slate-400">
               <Menu className="w-5 h-5" />
-              Thêm
+              {t('Thêm')}
             </button>
           </div>
         </nav>

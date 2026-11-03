@@ -3,6 +3,7 @@ import { Link, NavLink, useLocation } from 'react-router-dom';
 import { ChevronDown, type LucideIcon } from 'lucide-react';
 import { cn } from '@/shared/utils';
 import { STAFF_IMG } from './staffIcons';
+import { useT } from '@/shared/i18n';
 
 export interface StaffMenuLink {
   to: string;
@@ -50,6 +51,7 @@ const TopImg: React.FC<{ src?: string }> = ({ src }) => (src ? <img src={src} al
 /** Menu header khu vực quản lý: mục đơn hoặc dropdown có mô tả, nhóm, đếm số */
 export const StaffNav: React.FC<{ menus: StaffMenu[]; label: string }> = ({ menus, label }) => {
   const { pathname, search } = useLocation();
+  const t = useT();
   /** Menu xổ ra từ mép trái nút của nó (không đè lên mục bên cạnh); nếu sẽ tràn mép phải màn hình thì chỉ lùi sang trái đúng phần tràn */
   const [shift, setShift] = React.useState<Record<string, number>>({});
   const measure = (key: string) => (e: React.SyntheticEvent<HTMLDivElement>) => {
@@ -58,13 +60,13 @@ export const StaffNav: React.FC<{ menus: StaffMenu[]; label: string }> = ({ menu
     setShift((s) => (s[key] === over ? s : { ...s, [key]: over }));
   };
   return (
-    <nav className="hidden items-center gap-0.5 md:flex" aria-label={label}>
+    <nav className="hidden items-center gap-0.5 md:flex" aria-label={t(label)}>
       {menus.map((m) => {
         if (!m.children)
           return (
             <NavLink key={m.label} to={m.to!} className={({ isActive }) => topCls(isActive)}>
               <TopImg src={m.img ?? STAFF_IMG[m.label]} />
-              {m.label}
+              {t(m.label)}
               {m.badge && <Count n={m.badge} />}
             </NavLink>
           );
@@ -73,7 +75,7 @@ export const StaffNav: React.FC<{ menus: StaffMenu[]; label: string }> = ({ menu
           <div key={m.label} className="group/menu relative" onMouseEnter={measure(m.label)} onFocus={measure(m.label)}>
             <button type="button" className={topCls(Boolean(active))} aria-haspopup="true">
               <TopImg src={m.img ?? STAFF_IMG[m.label]} />
-              {m.label}
+              {t(m.label)}
               <ChevronDown className="h-3.5 w-3.5 text-slate-400 transition-transform group-hover/menu:rotate-180" />
             </button>
             <div className={cn('pointer-events-none absolute top-full z-50 pt-2 opacity-0 transition-opacity duration-150 group-focus-within/menu:pointer-events-auto group-focus-within/menu:opacity-100 group-hover/menu:pointer-events-auto group-hover/menu:opacity-100')} style={{ left: -(shift[m.label] ?? 0) }}>
@@ -85,7 +87,7 @@ export const StaffNav: React.FC<{ menus: StaffMenu[]; label: string }> = ({ menu
                   const head = c.group && c.group !== m.children![i - 1]?.group;
                   return (
                     <React.Fragment key={c.to + c.label}>
-                      {head && <p className={cn('px-2.5 pb-1 pt-2 text-[12px] font-medium text-slate-400', i > 0 && 'mt-1 border-t border-slate-100')}>{c.group}</p>}
+                      {head && <p className={cn('px-2.5 pb-1 pt-2 text-[12px] font-medium text-slate-400', i > 0 && 'mt-1 border-t border-slate-100')}>{t(c.group)}</p>}
                       <Link to={c.to} className={cn('group/item flex items-start gap-2.5 rounded-md px-2.5 py-2 transition-colors', here ? 'bg-slate-100' : 'hover:bg-slate-50')}>
                         {img ? (
                           <img src={img} alt="" className="mt-0.5 h-6 w-6 shrink-0 transition-transform duration-200 group-hover/item:scale-105" />
@@ -94,10 +96,10 @@ export const StaffNav: React.FC<{ menus: StaffMenu[]; label: string }> = ({ menu
                         )}
                         <span className="min-w-0 flex-1">
                           <span className={cn('flex items-center gap-2 text-sm font-medium', here ? 'text-indigo-700' : 'text-slate-900')}>
-                            <span className="truncate">{c.label}</span>
+                            <span className="truncate">{t(c.label)}</span>
                             {c.badge && <Count n={c.badge} />}
                           </span>
-                          <span className="mt-0.5 block text-[12px] leading-snug text-slate-500">{c.desc}</span>
+                          <span className="mt-0.5 block text-[12px] leading-snug text-slate-500">{t(c.desc)}</span>
                         </span>
                       </Link>
                     </React.Fragment>
