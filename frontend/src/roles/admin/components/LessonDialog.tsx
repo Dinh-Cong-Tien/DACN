@@ -13,8 +13,20 @@ const TYPES = [
   { value: 'CHECKPOINT', label: 'Kiểm tra giữa khoá' },
 ];
 
-type Form = { title: string; type: string; videoUrl: string; durationMin: string; summary: string; contentMd: string; isFreePreview: boolean };
-const EMPTY: Form = { title: '', type: 'VIDEO', videoUrl: '', durationMin: '10', summary: '', contentMd: '', isFreePreview: false };
+type Form = { title: string; type: string; videoUrl: string; durationMin: string; summary: string; contentMd: string; isFreePreview: boolean; knowledgeText: string };
+const EMPTY: Form = { title: '', type: 'VIDEO', videoUrl: '', durationMin: '10', summary: '', contentMd: '', isFreePreview: false, knowledgeText: '' };
+
+const KNOWLEDGE_HINT = [
+  '# Ngữ pháp',
+  'Câu bị động | S + be + V3/ed (+ by O) | Nhấn mạnh đối tượng chịu tác động | The report was written by Anna.',
+  '# Từ vựng',
+  'deadline | /ˈdedlaɪn/ | n | hạn chót | We must meet the deadline.',
+  '# Mệnh đề',
+  'Mệnh đề quan hệ | who, which, that, whose | Bổ nghĩa cho danh từ đứng trước | The man who called you is my boss.',
+  '# Giới từ',
+  'in | trong',
+  '  interested in | quan tâm đến | She is interested in music.',
+].join('\n');
 
 /** Thêm / sửa bài học trong một chương (POST/PATCH /admin/lessons). `lesson` = null → thêm mới vào `sectionId`. */
 export const LessonDialog: React.FC<{ open: boolean; sectionId: string | null; lesson: TreeLesson | null; onClose: () => void }> = ({ open, sectionId, lesson, onClose }) => {
@@ -23,9 +35,20 @@ export const LessonDialog: React.FC<{ open: boolean; sectionId: string | null; l
   const [saving, setSaving] = useState(false);
   const set = <K extends keyof Form>(k: K, v: Form[K]) => setF((x) => ({ ...x, [k]: v }));
 
+  const [knowledgeLoaded, setKnowledgeLoaded] = useState(false);
+
   useEffect(() => {
     if (!open) return;
     setF(lesson ? { ...EMPTY, title: lesson.title, type: lesson.type, videoUrl: lesson.videoUrl ?? '', durationMin: String(lesson.durationMin), isFreePreview: lesson.isFreePreview } : EMPTY);
+    setKnowledgeLoaded(!lesson);
+    if (lesson)
+      adminApi
+        .lessonKnowledge(lesson.id)
+        .then((r) => {
+          setF((x) => ({ ...x, knowledgeText: r.knowledgeText }));
+          setKnowledgeLoaded(true);
+        })
+        .catch(() => undefined);
   }, [open, lesson]);
 
   const save = async () => {
@@ -41,6 +64,8 @@ export const LessonDialog: React.FC<{ open: boolean; sectionId: string | null; l
       isFreePreview: f.isFreePreview,
       ...(f.summary.trim() ? { summary: f.summary.trim().slice(0, 300) } : {}),
       ...(f.contentMd.trim() ? { contentMd: f.contentMd.trim() } : {}),
+      // chỉ gửi khi đã tải xong kiến thức cũ — tránh ghi đè rỗng
+      ...(f.type === 'VIDEO' && knowledgeLoaded ? { knowledgeText: f.knowledgeText } : {}),
     };
     setSaving(true);
     try {
@@ -90,6 +115,20 @@ export const LessonDialog: React.FC<{ open: boolean; sectionId: string | null; l
         <div className="md:col-span-2">
           <Textarea label="Nội dung bài (Markdown)" rows={5} value={f.contentMd} onChange={(e) => set('contentMd', e.target.value)} hint={lesson ? 'Để trống để giữ nội dung hiện tại' : undefined} />
         </div>
+        {f.type === 'VIDEO' && (
+          <div className="md:col-span-2">
+            <Textarea
+              label="Kiến thức trong video"
+              rows={8}
+              className="font-mono text-xs"
+              disabled={!knowledgeLoaded}
+              placeholder={KNOWLEDGE_HINT}
+              value={f.knowledgeText}
+              onChange={(e) => set('knowledgeText', e.target.value)}
+              hint="Hiện dưới video cho học viên. Mục: # Ngữ pháp, # Từ vựng, # Mệnh đề, # Giới từ. Các trường cách nhau dấu |. Giới từ: thụt 2 dấu cách để tạo node con."
+            />
+          </div>
+        )}
         <div className="md:col-span-2">
           <Switch checked={f.isFreePreview} onChange={(v) => set('isFreePreview', v)} label="Cho học thử" description="Khách chưa đăng nhập xem được bài này" />
         </div>

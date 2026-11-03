@@ -1,9 +1,11 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { BookOpen, CheckCircle2, ChevronRight, Languages, Lock, Play, Volume2, X, BookmarkPlus, FileText, HelpCircle, Video } from 'lucide-react';
-import type { Course, DictionaryEntry, Lesson, TranscriptLine } from '@/shared/types';
+import { BookOpen, CheckCircle2, ChevronRight, History, Lock, RotateCcw, Volume2, X, BookmarkPlus, FileText, HelpCircle, Video } from 'lucide-react';
+import type { Course, DictionaryEntry, Lesson } from '@/shared/types';
+import { LessonKnowledge } from './LessonKnowledge';
 import { catalogApi } from '@/shared/api/catalog';
 import { api, errorMessage, tokenStore } from '@/shared/api/client';
 import { cn, formatClock } from '@/shared/utils';
+import { embedSrc, useWatchPosition, videoSource } from './useWatchPosition';
 import { Badge, Button, Card, ProgressBar } from '@/shared/components/ui';
 import { toast } from '@/shared/stores/uiStore';
 
@@ -15,15 +17,6 @@ interface LessonEngineProps {
 }
 
 const LESSON_ICON = { VIDEO: Video, READING: FileText, QUIZ: HelpCircle } as const;
-
-/** Link Vimeo / YouTube → link nhúng iframe; file video trực tiếp → null (dùng thẻ <video>) */
-const embedUrl = (url: string): string | null => {
-  const vimeo = url.match(/vimeo\.com\/(?:video\/)?(\d+)/);
-  if (vimeo) return `https://player.vimeo.com/video/${vimeo[1]}`;
-  const yt = url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([\w-]{11})/);
-  if (yt) return `https://www.youtube.com/embed/${yt[1]}`;
-  return null;
-};
 
 type WordEntry = DictionaryEntry & { id?: string };
 
@@ -95,34 +88,17 @@ const DictionaryPopover: React.FC<{ entry: WordEntry; x: number; y: number; onCl
   );
 };
 
-/** Engine bài học: video + transcript đồng bộ + từ điển popover + mục lục khoá học */
+/** Engine bài học: video (không hiện script) + kiến thức trong bài (ngữ pháp, từ vựng, mệnh đề, cây giới từ) + từ điển popover + mục lục khoá học */
 export const LessonEngine: React.FC<LessonEngineProps> = ({ course, lesson, onSelectLesson, onComplete }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
-  const [time, setTime] = useState(0);
-  const [showVi, setShowVi] = useState(true);
+  const iframeRef = useRef<HTMLIFrameElement>(null);
   const [popover, setPopover] = useState<{ entry: WordEntry; x: number; y: number } | null>(null);
   const [done, setDone] = useState(lesson.isCompleted);
-  const activeRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     setDone(lesson.isCompleted);
-    setTime(0);
     setPopover(null);
   }, [lesson.id, lesson.isCompleted]);
-
-  const transcript = lesson.transcript ?? [];
-  const activeIdx = useMemo(() => transcript.findIndex((l) => time >= l.start && time < l.end), [transcript, time]);
-
-  useEffect(() => {
-    activeRef.current?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
-  }, [activeIdx]);
-
-  const jumpTo = (line: TranscriptLine) => {
-    const v = videoRef.current;
-    if (!v) return;
-    v.currentTime = line.start;
-    v.play().catch(() => undefined);
-  };
 
   const onWordClick = (e: React.MouseEvent, word: string) => {
     e.stopPropagation();
@@ -138,7 +114,10 @@ export const LessonEngine: React.FC<LessonEngineProps> = ({ course, lesson, onSe
     onComplete?.(lesson.id);
     toast.success('Hoàn thành bài học!', 'Bài tiếp theo đã được mở khoá.');
   };
-  const embed = lesson.videoUrl ? embedUrl(lesson.videoUrl) : null;
+  const source = useMemo(() => (lesson.type === 'VIDEO' && lesson.videoUrl ? videoSource(lesson.videoUrl) : null), [lesson.type, lesson.videoUrl]);
+  // vị trí đã xem lần trước — chốt 1 lần khi có link video để iframe không bị nạp lại
+  const resumeAt = useMemo(() => (source ? Math.floor(lesson.lastPositionSec ?? 0) : 0), [source]); // eslint-disable-line react-hooks/exhaustive-deps
+  const watch = useWatchPosition({ lessonId: lesson.id, source, resumeAt, iframeRef, videoRef, onEnded: markDone });
 
   const allLessons = course.sections.flatMap((s) => s.lessons);
   const idx = allLessons.findIndex((l) => l.id === lesson.id);
@@ -150,13 +129,13 @@ export const LessonEngine: React.FC<LessonEngineProps> = ({ course, lesson, onSe
       <div className="space-y-5 min-w-0">
         {/* Player */}
         <Card padding="none" className="overflow-hidden animate-scale-in">
-          {lesson.type === 'VIDEO' && embed ? (
+          {source && source.kind !== 'file' ? (
             <div className="relative bg-black aspect-video">
-              <iframe src={embed} title={lesson.title} className="w-full h-full" allow="autoplay; fullscreen; picture-in-picture" allowFullScreen />
+              <iframe ref={iframeRef} src={embedSrc(source, resumeAt)} title={lesson.title} className="w-full h-full" allow="autoplay; fullscreen; picture-in-picture" allowFullScreen />
             </div>
-          ) : lesson.type === 'VIDEO' && lesson.videoUrl ? (
+          ) : source ? (
             <div className="relative bg-black aspect-video">
-              <video ref={videoRef} src={lesson.videoUrl} controls className="w-full h-full" onTimeUpdate={(e) => setTime(e.currentTarget.currentTime)} onEnded={markDone} controlsList="nodownload" />
+              <video ref={videoRef} src={source.url} controls className="w-full h-full" controlsList="nodownload" {...watch.videoProps} />
             </div>
           ) : lesson.type === 'READING' ? (
             <div className="p-6 md:p-8 space-y-4">
@@ -177,6 +156,16 @@ export const LessonEngine: React.FC<LessonEngineProps> = ({ course, lesson, onSe
               <Button to="/app/practice/session/PART_5" rightIcon={<ChevronRight className="w-4 h-4" />}>
                 Bắt đầu làm bài
               </Button>
+            </div>
+          )}
+          {source && resumeAt > 0 && !watch.restarted && (
+            <div className="flex flex-wrap items-center justify-between gap-2 px-5 py-2.5 bg-amber-50 border-t border-amber-100 text-sm">
+              <span className="inline-flex items-center gap-2 text-amber-900">
+                <History className="w-4 h-4" /> Bạn đã học tới <b>{formatClock(resumeAt)}</b> — video đang phát tiếp từ đây
+              </span>
+              <button type="button" onClick={() => watch.seek(0)} className="inline-flex items-center gap-1.5 text-xs font-bold text-amber-900 hover:underline">
+                <RotateCcw className="w-3.5 h-3.5" /> Xem lại từ đầu
+              </button>
             </div>
           )}
           <div className="p-5 flex flex-col md:flex-row md:items-center justify-between gap-3 border-t border-slate-100">
@@ -210,48 +199,8 @@ export const LessonEngine: React.FC<LessonEngineProps> = ({ course, lesson, onSe
           </div>
         </Card>
 
-        {/* Transcript */}
-        {transcript.length > 0 && (
-          <Card className="animate-fade-up" padding="none">
-            <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
-              <div>
-                <p className="font-bold text-slate-900 text-sm">Transcript</p>
-                <p className="text-[11px] text-slate-500">Nhấn vào dòng để tua video · Nhấn vào từ để tra nghĩa</p>
-              </div>
-              <button onClick={() => setShowVi((v) => !v)} className={cn('inline-flex items-center gap-1.5 h-8 px-3 rounded-lg text-xs font-bold border transition', showVi ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white border-slate-200 text-slate-600')}>
-                <Languages className="w-3.5 h-3.5" /> Song ngữ
-              </button>
-            </div>
-            <div className="max-h-[420px] overflow-y-auto p-3 space-y-1">
-              {transcript.map((line, i) => {
-                const active = i === activeIdx;
-                return (
-                  <button
-                    key={i}
-                    ref={active ? activeRef : undefined}
-                    onClick={() => jumpTo(line)}
-                    className={cn('w-full text-left px-3 py-2.5 rounded-xl transition-all duration-300 flex gap-3 group', active ? 'bg-amber-100 border-2 border-slate-900' : 'hover:bg-slate-50 border-2 border-transparent')}
-                  >
-                    <span className={cn('text-[11px] font-mono font-bold shrink-0 mt-0.5 w-10 flex items-center gap-1', active ? 'text-indigo-600' : 'text-slate-400')}>
-                      {active && <Play className="w-3 h-3 fill-current" />}
-                      {formatClock(line.start)}
-                    </span>
-                    <span className="min-w-0">
-                      <span className={cn('text-sm leading-relaxed', active ? 'text-slate-900 font-semibold' : 'text-slate-700')}>
-                        {line.text.split(' ').map((w, wi) => (
-                          <span key={wi} onClick={(e) => onWordClick(e, w)} className="hover:bg-amber-200/70 hover:text-slate-900 rounded px-0.5 cursor-pointer transition-colors">
-                            {w}{' '}
-                          </span>
-                        ))}
-                      </span>
-                      {showVi && line.textVi && <span className="block text-xs text-slate-500 mt-0.5">{line.textVi}</span>}
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
-          </Card>
-        )}
+        {/* Kiến thức trong bài (thay cho script) */}
+        {lesson.knowledge && <LessonKnowledge knowledge={lesson.knowledge} onWord={onWordClick} />}
       </div>
 
       {/* Course outline */}
@@ -290,6 +239,7 @@ export const LessonEngine: React.FC<LessonEngineProps> = ({ course, lesson, onSe
                           <span className={cn('block text-sm truncate', isActive ? 'font-bold text-indigo-900' : 'font-medium text-slate-700')}>{l.title}</span>
                           <span className="block text-[11px] text-slate-400">
                             Bài {allLessons.indexOf(l) + 1} · {l.durationMin} phút
+                            {!isDone && (isActive ? watch.position : l.lastPositionSec ?? 0) >= 5 && <span className="text-amber-700 font-semibold"> · đã học tới {formatClock(isActive ? watch.position : l.lastPositionSec ?? 0)}</span>}
                           </span>
                         </span>
                       </button>

@@ -1,11 +1,12 @@
 /** /api/v1/admin — quản lý nội dung học tập (dùng cho CrudEditor và cây khoá học) */
 import { Router, type Request } from 'express';
 import { z } from 'zod';
-import type { Prisma } from '@prisma/client';
+import { Prisma } from '@prisma/client';
 import { prisma } from '../../lib/prisma';
 import { badRequest, conflict, handler, me, notFound, parse } from '../../core/http';
 import { audit } from './audit';
 import { gradientOf } from '../head/shared';
+import { knowledgeToText, parseKnowledgeText, toKnowledge } from '../catalog/lesson-knowledge';
 import { listQuestions, toQuestionRow } from '../head/head.routes';
 
 export const contentRouter = Router();
@@ -193,7 +194,12 @@ const lessonBody = z.object({
   isFreePreview: z.boolean().optional(),
   orderIndex: z.number().int().min(0).optional(),
   status: CONTENT_STATUS.optional(),
+  /** Kiến thức đi kèm video (định dạng văn bản, xem lesson-knowledge.ts); chuỗi rỗng = xoá */
+  knowledgeText: z.string().max(30000).nullish(),
 });
+/** knowledgeText → cột knowledge; không gửi → giữ nguyên */
+const lessonData = <T extends { knowledgeText?: string | null }>({ knowledgeText, ...rest }: T) =>
+  knowledgeText === undefined ? rest : { ...rest, knowledge: parseKnowledgeText(knowledgeText ?? '') ?? Prisma.DbNull };
 async function refreshCourseCache(courseId: string) {
   const agg = await prisma.lesson.aggregate({ where: { deletedAt: null, section: { courseId } }, _count: true, _sum: { durationMin: true } });
   await prisma.course.update({ where: { id: courseId }, data: { lessonsCount: agg._count, durationMin: agg._sum.durationMin ?? 0 } });
@@ -206,7 +212,7 @@ contentRouter.post(
     if (b.quizTestId && !(await prisma.mockTest.findFirst({ where: { id: b.quizTestId, deletedAt: null }, select: { id: true } }))) throw notFound('Đề kiểm tra');
     if ((b.type === 'QUIZ' || b.type === 'CHECKPOINT') && b.passScorePct == null) b.passScorePct = 70;
     const last = await prisma.lesson.aggregate({ where: { sectionId: b.sectionId }, _max: { orderIndex: true } });
-    const l = await prisma.lesson.create({ data: { ...b, orderIndex: b.orderIndex ?? (last._max.orderIndex ?? -1) + 1 }, include: { section: { select: { courseId: true } } } });
+    const l = await prisma.lesson.create({ data: { ...lessonData(b), orderIndex: b.orderIndex ?? (last._max.orderIndex ?? -1) + 1 }, include: { section: { select: { courseId: true } } } });
     await refreshCourseCache(l.section.courseId);
     return l;
   })
@@ -215,9 +221,17 @@ contentRouter.patch(
   '/lessons/:id',
   handler(async (req) => {
     const b = parse(lessonBody.omit({ sectionId: true }).partial(), req.body);
-    const l = await prisma.lesson.update({ where: { id: idOf(req) }, data: b, include: { section: { select: { courseId: true } } } });
+    const l = await prisma.lesson.update({ where: { id: idOf(req) }, data: lessonData(b), include: { section: { select: { courseId: true } } } });
     await refreshCourseCache(l.section.courseId);
     return l;
+  })
+);
+contentRouter.get(
+  '/lessons/:id/knowledge',
+  handler(async (req) => {
+    const l = await prisma.lesson.findFirst({ where: { id: idOf(req), deletedAt: null }, select: { knowledge: true } });
+    if (!l) throw notFound('Bài học');
+    return { knowledgeText: knowledgeToText(toKnowledge(l.knowledge)) };
   })
 );
 contentRouter.delete(

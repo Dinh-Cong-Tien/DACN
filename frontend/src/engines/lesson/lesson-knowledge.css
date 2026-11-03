@@ -1,0 +1,152 @@
+/* Cây giới từ (LessonKnowledge): node cha ở trên, các từ đi kèm toả xuống, nối bằng đường kẻ */
+.kt-scroll {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem 2rem;
+  overflow-x: auto;
+  padding-bottom: 0.25rem;
+}
+.kt-tree,
+.kt-tree ul {
+  display: flex;
+  justify-content: center;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.kt-tree ul {
+  position: relative;
+  padding-top: 1.5rem;
+}
+.kt-tree li {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 1.5rem 0.4rem 0;
+}
+.kt-tree > li {
+  padding-top: 0;
+}
+/* đường ngang nối các node anh em + đoạn dọc xuống từng node con */
+.kt-tree ul > li::before,
+.kt-tree ul > li::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  width: 50%;
+  height: 1.5rem;
+  border-top: 2px solid #94a3b8;
+}
+.kt-tree ul > li::before {
+  right: 50%;
+}
+.kt-tree ul > li::after {
+  left: 50%;
+  border-left: 2px solid #94a3b8;
+}
+.kt-tree ul > li::before,
+.kt-tree ul > li::after,
+.kt-tree ul::before {
+  pointer-events: none;
+}
+/* chỉ 1 node con: không cần thanh ngang, đường dọc của ul nối thẳng xuống */
+.kt-tree ul > li:only-child::before,
+.kt-tree ul > li:only-child::after {
+  display: none;
+}
+.kt-tree ul > li:only-child {
+  padding-top: 0;
+}
+.kt-tree ul > li:first-child::before,
+.kt-tree ul > li:last-child::after {
+  border-top: 0;
+}
+.kt-tree ul > li:last-child::before {
+  border-right: 2px solid #94a3b8;
+  border-radius: 0 6px 0 0;
+}
+.kt-tree ul > li:first-child::after {
+  border-radius: 6px 0 0 0;
+}
+/* đoạn dọc từ node cha xuống thanh ngang */
+.kt-tree ul::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  height: 1.5rem;
+  border-left: 2px solid #94a3b8;
+}
+
+.kt-node {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  min-width: 3rem;
+  min-height: 3rem;
+  max-width: 11rem;
+  padding: 0.5rem 0.9rem;
+  border: 2px solid #0f172a;
+  border-radius: 9999px;
+  background: #2563eb;
+  color: #fff;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  line-height: 1.2;
+  text-align: center;
+  justify-content: center;
+  transition: transform 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease;
+}
+.kt-node:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgb(37 99 235 / 0.3);
+}
+.kt-node:focus-visible {
+  outline: 3px solid #fbbf24;
+  outline-offset: 2px;
+}
+.kt-node--parent {
+  background: #1d4ed8;
+  font-size: 0.875rem;
+}
+.kt-node--selected {
+  background: #f59e0b;
+  color: #0f172a;
+}
+.kt-node__label {
+  overflow-wrap: anywhere;
+}
+.kt-node__count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.25rem;
+  height: 1.25rem;
+  padding: 0 0.25rem;
+  border-radius: 9999px;
+  background: #fff;
+  color: #1d4ed8;
+  font-size: 0.6875rem;
+  font-weight: 800;
+}
+/* node con mới mở: hiện dần */
+.kt-tree ul {
+  animation: kt-grow 0.22s ease-out;
+}
+@keyframes kt-grow {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .kt-tree ul {
+    animation: none;
+  }
+}

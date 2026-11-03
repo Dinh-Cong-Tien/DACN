@@ -643,6 +643,7 @@ model Lesson {
   videoUrl String? @map("video_url")
   audioUrl String? @map("audio_url")
   transcript Json?
+  knowledge Json?
   quizTestId String? @db.Uuid @map("quiz_test_id")
   quizTest MockTest? @relation("Lesson_quizTest", fields: [quizTestId], references: [id], onDelete: Restrict)
   passScorePct Int? @db.SmallInt @map("pass_score_pct")

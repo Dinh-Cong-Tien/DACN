@@ -53,6 +53,21 @@ export interface TranscriptLine {
   textVi?: string;
 }
 
+/** Kiến thức đi kèm video bài giảng — khớp backend catalog/lesson-knowledge.ts */
+export interface KnowledgeNode {
+  label: string;
+  meaningVi?: string;
+  example?: string;
+  children?: KnowledgeNode[];
+}
+export interface LessonKnowledge {
+  grammar: { title: string; formula?: string; note?: string; example?: string }[];
+  vocab: { word: string; ipa?: string; pos?: string; meaningVi: string; example?: string }[];
+  clauses: { title: string; markers: string[]; note?: string; example?: string }[];
+  /** Cây giới từ: node cha → các cụm đi kèm (bấm để mở / thu gọn) */
+  prepositions: KnowledgeNode[];
+}
+
 export interface Lesson {
   id: string;
   title: string;
@@ -60,6 +75,9 @@ export interface Lesson {
   durationMin: number;
   videoUrl?: string;
   transcript?: TranscriptLine[];
+  knowledge?: LessonKnowledge;
+  /** Vị trí video đã xem tới (giây) — để học tiếp đúng chỗ */
+  lastPositionSec?: number;
   content?: string;
   /** Mô tả ngắn hiển thị trong danh sách bài của lộ trình */
   summary?: string;

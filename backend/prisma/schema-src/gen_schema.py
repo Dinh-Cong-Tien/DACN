@@ -257,6 +257,7 @@ skill SkillType?
 videoUrl String?
 audioUrl String?
 transcript Json?
+knowledge Json?
 quizTestId -> MockTest Restrict ?
 passScorePct Int? @db.SmallInt
 durationMin Int @default(10) @db.SmallInt

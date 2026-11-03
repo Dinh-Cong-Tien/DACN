@@ -44,9 +44,12 @@ export function formatDuration(totalSec: number): string {
 }
 
 export function formatClock(totalSec: number): string {
-  const m = Math.floor(totalSec / 60);
-  const s = totalSec % 60;
-  return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+  const t = Math.max(0, Math.floor(totalSec));
+  const h = Math.floor(t / 3600);
+  const m = Math.floor((t % 3600) / 60);
+  const s = t % 60;
+  const mm = `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+  return h ? `${h}:${mm}` : mm;
 }
 
 export function initials(name: string): string {

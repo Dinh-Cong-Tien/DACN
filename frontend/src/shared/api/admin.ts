@@ -168,6 +168,7 @@ export const adminApi = {
   deleteSection: (id: string) => api.delete(`/admin/sections/${id}`),
   createLesson: (b: Record<string, unknown>) => api.post('/admin/lessons', b),
   updateLesson: (id: string, b: Record<string, unknown>) => api.patch(`/admin/lessons/${id}`, b),
+  lessonKnowledge: (id: string) => api.get<{ knowledgeText: string }>(`/admin/lessons/${id}/knowledge`),
   deleteLesson: (id: string) => api.delete(`/admin/lessons/${id}`),
 
   questions: (q: QuestionQuery) => api.get<QuestionPage>('/admin/questions', q),

@@ -7,6 +7,7 @@ import { forbidden, handler, me, notFound, parse } from '../../core/http';
 import { num } from '../../core/dto';
 import { recordActivity } from './activity';
 import { gradientAt } from './mappers';
+import { toKnowledge } from './lesson-knowledge';
 
 export const coursesRouter = Router();
 
@@ -36,7 +37,7 @@ const toTranscript = (t: Prisma.JsonValue | null) =>
 const lessonType = (t: DbLesson['type']) => (t === 'CHECKPOINT' ? 'QUIZ' : t);
 
 /** Lesson DTO. `full` = kèm nội dung/transcript/video (trang học), ngược lại chỉ thông tin danh sách. */
-function toLesson(l: DbLesson, state: { completed: boolean; locked: boolean }, full = false) {
+function toLesson(l: DbLesson, state: { completed: boolean; locked: boolean; positionSec?: number }, full = false) {
   return {
     id: l.id,
     title: l.title,
@@ -47,8 +48,10 @@ function toLesson(l: DbLesson, state: { completed: boolean; locked: boolean }, f
     isLocked: state.locked,
     isFree: l.isFreePreview,
     skill: l.skill ?? undefined,
+    // vị trí video đã xem tới (bài đang học dở) — hiện "đã học tới mm:ss" trong mục lục
+    ...(l.type === 'VIDEO' && !state.completed && state.positionSec ? { lastPositionSec: state.positionSec } : {}),
     ...(full && !state.locked
-      ? { videoUrl: l.videoUrl ?? undefined, audioUrl: l.audioUrl ?? undefined, content: l.contentMd ?? undefined, transcript: toTranscript(l.transcript), quizTestId: l.quizTestId ?? undefined, passScorePct: l.passScorePct ?? undefined }
+      ? { videoUrl: l.videoUrl ?? undefined, audioUrl: l.audioUrl ?? undefined, content: l.contentMd ?? undefined, knowledge: toKnowledge(l.knowledge), quizTestId: l.quizTestId ?? undefined, passScorePct: l.passScorePct ?? undefined }
       : {}),
   };
 }
@@ -59,12 +62,12 @@ function toLesson(l: DbLesson, state: { completed: boolean; locked: boolean }, f
  */
 function lessonStates(c: CourseRow, progress: Map<string, LessonProgress>, loggedIn: boolean) {
   const flat = c.courseSectionCourses.flatMap((s) => s.lessonSections);
-  const states = new Map<string, { completed: boolean; locked: boolean }>();
+  const states = new Map<string, { completed: boolean; locked: boolean; positionSec?: number }>();
   let prevDone = true;
   flat.forEach((l, i) => {
     const completed = progress.get(l.id)?.status === 'COMPLETED';
     const locked = loggedIn ? c.isSequential && !prevDone && i > 0 : i > 0 && !l.isFreePreview;
-    states.set(l.id, { completed, locked: locked && !l.isFreePreview });
+    states.set(l.id, { completed, locked: locked && !l.isFreePreview, positionSec: progress.get(l.id)?.lastPositionSec });
     prevDone = completed;
   });
   return states;
