@@ -21,10 +21,10 @@ interface FormView {
   delay: number;
 }
 
-/** Ảnh chụp thật giáo viên châu Á đứng lớp (Pexels: 11563212, 8617768) đã cắt sẵn 4:5 theo khung vòm */
+/** Ảnh chụp thật giáo viên châu Á đứng lớp (Pexels: 8617757 giảng viên trước bảng, 1708912 giảng đường) đã cắt sẵn 4:5 theo khung vòm */
 const VISUAL: Record<AsideVariant, { src: string; pos: string }> = {
-  login: { src: '/images/auth/login-teacher.webp', pos: '50% 20%' },
-  register: { src: '/images/auth/register-teacher.webp', pos: '50% 20%' },
+  login: { src: '/images/auth/login-teacher.webp', pos: '50% 0%' },
+  register: { src: '/images/auth/register-lecture.webp', pos: '50% 30%' },
 };
 
 /** Tiêu đề trên khối ảnh theo từng trang */
