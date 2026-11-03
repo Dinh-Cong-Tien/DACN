@@ -45,7 +45,7 @@ const Count: React.FC<{ n: string }> = ({ n }) => <span className="flex h-[18px]
 const DROPDOWN_W = 340;
 
 /** Icon 3D cạnh nhãn menu cấp 1 — như header trang chủ: chỉ hiện khi màn hình đủ rộng */
-const TopImg: React.FC<{ src?: string }> = ({ src }) => (src ? <img src={src} alt="" className="hidden h-5 w-5 shrink-0 min-[1440px]:block" /> : null);
+const TopImg: React.FC<{ src?: string }> = ({ src }) => (src ? <img src={src} alt="" className="hidden h-[18px] w-[18px] shrink-0 min-[1440px]:block" /> : null);
 
 /** Menu header khu vực quản lý: mục đơn hoặc dropdown có mô tả, nhóm, đếm số */
 export const StaffNav: React.FC<{ menus: StaffMenu[]; label: string }> = ({ menus, label }) => {
@@ -86,11 +86,11 @@ export const StaffNav: React.FC<{ menus: StaffMenu[]; label: string }> = ({ menu
                   return (
                     <React.Fragment key={c.to + c.label}>
                       {head && <p className={cn('px-2.5 pb-1 pt-2 text-[12px] font-medium text-slate-400', i > 0 && 'mt-1 border-t border-slate-100')}>{c.group}</p>}
-                      <Link to={c.to} className={cn('group/item flex items-center gap-3 rounded-md px-2.5 py-2 transition-colors', here ? 'bg-slate-100' : 'hover:bg-slate-50')}>
+                      <Link to={c.to} className={cn('group/item flex items-start gap-2.5 rounded-md px-2.5 py-2 transition-colors', here ? 'bg-slate-100' : 'hover:bg-slate-50')}>
                         {img ? (
-                          <img src={img} alt="" className="h-9 w-9 shrink-0 transition-transform duration-200 group-hover/item:scale-110" />
+                          <img src={img} alt="" className="mt-0.5 h-6 w-6 shrink-0 transition-transform duration-200 group-hover/item:scale-105" />
                         ) : (
-                          <Icon className={cn('h-4 w-4 shrink-0', here ? 'text-indigo-700' : 'text-slate-400')} />
+                          <Icon className={cn('mt-1 h-4 w-4 shrink-0', here ? 'text-indigo-700' : 'text-slate-400')} />
                         )}
                         <span className="min-w-0 flex-1">
                           <span className={cn('flex items-center gap-2 text-sm font-medium', here ? 'text-indigo-700' : 'text-slate-900')}>
