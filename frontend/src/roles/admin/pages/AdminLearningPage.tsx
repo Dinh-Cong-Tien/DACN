@@ -2,7 +2,7 @@ import React, { useMemo } from 'react';
 import { Navigate, useNavigate, useParams } from 'react-router-dom';
 import { ExternalLink } from 'lucide-react';
 import { useDocumentTitle } from '@/shared/hooks';
-import { adminApi, useAdminFaqs, useAdminGrammar, useAdminInvalidate, useAdminQuestions, useAdminResources, useAdminVocabTopics, useAdminWords, type AdminFaq, type AdminGrammar, type AdminResource, type AdminVocabTopic, type AdminWord } from '@/shared/api/admin';
+import { adminApi, useAdminDictation, useAdminFaqs, useAdminGrammar, useAdminInvalidate, useAdminQuestions, useAdminResources, useAdminRubrics, useAdminVocabTopics, useAdminWords, type AdminDictation, type AdminFaq, type AdminGrammar, type AdminResource, type AdminRubric, type AdminVocabTopic, type AdminWord } from '@/shared/api/admin';
 import type { QuestionRow } from '@/shared/api/head';
 import { partLabel } from '@/shared/constants/staff';
 import { Column } from '@/shared/components/ui';
@@ -11,7 +11,7 @@ import { cn, formatNumber } from '@/shared/utils';
 import { TPageHead } from '@/roles/teacher/components/TeacherKit';
 import { ICON_OPTIONS, NamedIcon } from '@/shared/components/ui/named-icon';
 
-type Kind = 'grammar' | 'vocab' | 'words' | 'writing' | 'speaking' | 'resources' | 'faq';
+type Kind = 'grammar' | 'vocab' | 'words' | 'dictation' | 'writing' | 'speaking' | 'rubrics' | 'resources' | 'faq';
 
 
 /** Cấu hình một loại nội dung cho CRUD Editor engine */
@@ -27,8 +27,8 @@ interface LearnConfig<T extends { id: string }> {
   searchKeys: (keyof T & string)[];
   filters?: CrudFilter<T>[];
   defaultValues?: Partial<T>;
-  /** Đường dẫn trang học viên tương ứng ("Xem như học viên") */
-  preview: (row: T) => string;
+  /** Đường dẫn trang học viên tương ứng ("Xem như học viên"); bỏ trống khi học viên không có trang riêng */
+  preview?: (row: T) => string;
   loading: boolean;
   create: (v: Partial<T>) => Promise<T>;
   update: (row: T, v: Partial<T>) => Promise<T>;
@@ -50,6 +50,8 @@ type Data = {
   speaking: QuestionRow[];
   resources: AdminResource[];
   faqs: AdminFaq[];
+  dictation: AdminDictation[];
+  rubrics: AdminRubric[];
   loading: Record<Kind, boolean>;
 };
 
@@ -67,7 +69,91 @@ const taskLabel = (q: QuestionRow) => `${q.examType} · ${partLabel(q.part)}`;
 function buildConfig(d: Data): Record<Kind, LearnConfig<{ id: string }>> {
   const topicName = (id?: string) => d.topics.find((t) => t.id === id)?.name ?? '';
   const grammarCats = opts(d.grammar.map((g) => g.category));
+  const STATUS_OPTS = [
+    { value: 'PUBLISHED', label: 'Đang dùng' },
+    { value: 'DRAFT', label: 'Bản nháp (ẩn với học viên)' },
+  ];
+  const statusText = (s: string) => (s === 'PUBLISHED' ? 'Đang dùng' : s === 'DRAFT' ? 'Bản nháp' : 'Đã ẩn');
   return {
+    dictation: define<AdminDictation>({
+      title: 'Bài chép chính tả',
+      sub: 'Bài nghe học viên chép từng câu ở mục Chép chính tả; giáo viên giao cho lớp và hệ thống chấm theo % chép đúng.',
+      entityName: 'bài chép chính tả',
+      createLabel: 'Thêm bài',
+      idPrefix: 'dc',
+      rows: d.dictation,
+      loading: d.loading.dictation,
+      searchKeys: ['title', 'segmentsText'],
+      filters: [
+        { key: 'level', label: 'Cấp độ', options: opts(d.dictation.map((x) => x.level ?? '').filter(Boolean)) },
+        { key: 'status', label: 'Trạng thái', options: STATUS_OPTS },
+      ],
+      defaultValues: { status: 'PUBLISHED', examType: 'TOEIC', isFree: true, segmentsText: '' },
+      columns: [
+        { key: 'title', header: 'Bài nghe', render: (r) => (
+          <div className="min-w-[260px]">
+            <p className="font-semibold text-slate-900">{r.title}</p>
+            <p className="line-clamp-1 text-[12px] text-slate-500">{r.segmentsText.split('\n')[0]}</p>
+          </div>
+        ) },
+        { key: 'level', header: 'Cấp độ', render: (r) => muted(`${r.examType ?? 'Chung'} · ${r.level ?? '—'}`) },
+        { key: 'sentences', header: 'Số câu', align: 'right', render: (r) => num(r.sentences) },
+        { key: 'assigned', header: 'Đã giao', align: 'right', render: (r) => num(r.assigned) },
+        { key: 'attempts', header: 'Lượt làm', align: 'right', render: (r) => num(r.attempts) },
+        { key: 'status', header: 'Trạng thái', render: (r) => muted(statusText(r.status)) },
+      ],
+      fields: [
+        { key: 'title', label: 'Tên bài', required: true, colSpan: 2 },
+        { key: 'examType', label: 'Kỳ thi', type: 'select', options: opts(['TOEIC', 'VSTEP']) },
+        { key: 'level', label: 'Cấp độ', type: 'select', options: opts(['A1', 'A2', 'B1', 'B2', 'C1', 'C2']) },
+        { key: 'status', label: 'Trạng thái', type: 'select', options: STATUS_OPTS },
+        { key: 'isFree', label: 'Miễn phí', type: 'toggle' },
+        { key: 'audioUrl', label: 'Đường dẫn audio', placeholder: 'https://…', hint: 'Bỏ trống: học viên nghe bằng giọng đọc tự động', colSpan: 2 },
+        { key: 'segmentsText', label: 'Nội dung (mỗi dòng một câu)', type: 'textarea', required: true, hint: 'Học viên nghe và chép lần lượt từng câu theo thứ tự này', colSpan: 2 },
+      ],
+      preview: (r) => `/app/dictation?passage=${r.id}`,
+      create: (v) => adminApi.createDictation({ title: v.title, examType: v.examType || null, level: v.level || null, status: v.status || 'PUBLISHED', isFree: !!v.isFree, audioUrl: v.audioUrl || null, segmentsText: v.segmentsText ?? '' }),
+      update: (r, v) => adminApi.updateDictation(r.id, { title: v.title, examType: v.examType || null, level: v.level || null, status: v.status || r.status, isFree: !!v.isFree, audioUrl: v.audioUrl || null, segmentsText: v.segmentsText ?? r.segmentsText }),
+      remove: (r) => adminApi.deleteDictation(r.id),
+    }),
+    rubrics: define<AdminRubric>({
+      title: 'Tiêu chí chấm',
+      sub: 'Rubric giáo viên dùng khi chấm bài Viết, Nói và trưởng bộ môn dùng khi kiểm định điểm. Điểm bài = trung bình có trọng số các tiêu chí.',
+      entityName: 'bộ tiêu chí',
+      createLabel: 'Thêm bộ tiêu chí',
+      idPrefix: 'rb',
+      rows: d.rubrics,
+      loading: d.loading.rubrics,
+      searchKeys: ['code', 'name', 'criteriaText'],
+      filters: [
+        { key: 'examType', label: 'Kỳ thi', options: opts(['TOEIC', 'VSTEP']) },
+        { key: 'skill', label: 'Kỹ năng', options: [{ value: 'WRITING', label: 'Viết' }, { value: 'SPEAKING', label: 'Nói' }] },
+      ],
+      defaultValues: { examType: 'VSTEP', skill: 'WRITING', scaleMax: 10, criteriaText: 'task | Task Fulfilment | 1 | Trả lời đủ các ý của đề\ncoherence | Coherence & Cohesion | 1 | Bố cục rõ, từ nối hợp lý' },
+      columns: [
+        { key: 'name', header: 'Bộ tiêu chí', render: (r) => (
+          <div className="min-w-[260px]">
+            <p className="font-semibold text-slate-900">{r.name}</p>
+            <p className="font-mono text-[11px] text-slate-500">{r.code}</p>
+          </div>
+        ) },
+        { key: 'skill', header: 'Kỹ năng', render: (r) => muted(`${r.examType} · ${r.skill === 'WRITING' ? 'Viết' : 'Nói'}`) },
+        { key: 'criteriaCount', header: 'Tiêu chí', align: 'right', render: (r) => num(r.criteriaCount) },
+        { key: 'scaleMax', header: 'Thang', align: 'right', render: (r) => num(r.scaleMax) },
+        { key: 'gradings', header: 'Lượt chấm', align: 'right', render: (r) => num(r.gradings) },
+      ],
+      fields: [
+        { key: 'name', label: 'Tên bộ tiêu chí', required: true, colSpan: 2 },
+        { key: 'code', label: 'Mã', required: true, placeholder: 'VSTEP_WRITING_T1', hint: 'Chữ in hoa, số, gạch dưới' },
+        { key: 'scaleMax', label: 'Thang điểm', type: 'number', hint: 'Không đổi khi đã có lượt chấm' },
+        { key: 'examType', label: 'Kỳ thi', type: 'select', required: true, options: opts(['TOEIC', 'VSTEP']) },
+        { key: 'skill', label: 'Kỹ năng', type: 'select', required: true, options: [{ value: 'WRITING', label: 'Viết' }, { value: 'SPEAKING', label: 'Nói' }] },
+        { key: 'criteriaText', label: 'Tiêu chí (mỗi dòng: khoá | tên | trọng số | mô tả)', type: 'textarea', required: true, hint: 'Khi đã có lượt chấm chỉ sửa tên, trọng số, mô tả; giữ nguyên các khoá', colSpan: 2 },
+      ],
+      create: (v) => adminApi.createRubric({ code: v.code, name: v.name, examType: v.examType, skill: v.skill, scaleMax: v.scaleMax ? Number(v.scaleMax) : 10, criteriaText: v.criteriaText ?? '' }),
+      update: (r, v) => adminApi.updateRubric(r.id, { code: v.code, name: v.name, examType: v.examType, skill: v.skill, scaleMax: v.scaleMax ? Number(v.scaleMax) : r.scaleMax, criteriaText: v.criteriaText ?? r.criteriaText }),
+      remove: (r) => adminApi.deleteRubric(r.id),
+    }),
     grammar: define<AdminGrammar>({
       title: 'Chủ điểm ngữ pháp',
       sub: 'Các chủ điểm học viên học ở mục Ngữ pháp: lý thuyết, ví dụ và bài tập chấm tự động.',
@@ -293,11 +379,11 @@ function buildConfig(d: Data): Record<Kind, LearnConfig<{ id: string }>> {
 }
 
 const GROUPS: { label: string; tabs: Kind[] }[] = [
-  { label: 'Luyện tập', tabs: ['grammar', 'vocab', 'words'] },
-  { label: 'Tự luận', tabs: ['writing', 'speaking'] },
+  { label: 'Luyện tập', tabs: ['grammar', 'vocab', 'words', 'dictation'] },
+  { label: 'Tự luận', tabs: ['writing', 'speaking', 'rubrics'] },
   { label: 'Website', tabs: ['resources', 'faq'] },
 ];
-const TAB_LABEL: Record<Kind, string> = { grammar: 'Ngữ pháp', vocab: 'Bộ từ vựng', words: 'Từ vựng', writing: 'Đề Viết', speaking: 'Đề Nói', resources: 'Tài liệu mở', faq: 'FAQ' };
+const TAB_LABEL: Record<Kind, string> = { grammar: 'Ngữ pháp', vocab: 'Bộ từ vựng', words: 'Từ vựng', dictation: 'Chép chính tả', writing: 'Đề Viết', speaking: 'Đề Nói', rubrics: 'Tiêu chí chấm', resources: 'Tài liệu mở', faq: 'FAQ' };
 
 /** Quản trị nội dung học tập học viên đang dùng: mỗi loại là một cấu hình của CRUD Editor engine */
 export const AdminLearningPage: React.FC = () => {
@@ -311,6 +397,8 @@ export const AdminLearningPage: React.FC = () => {
   const speaking = useAdminQuestions({ type: 'SPEAKING_RESPONSE', pageSize: 200 });
   const resources = useAdminResources();
   const faqs = useAdminFaqs();
+  const dictation = useAdminDictation();
+  const rubrics = useAdminRubrics();
   const CONFIG = useMemo(
     () =>
       buildConfig({
@@ -321,11 +409,13 @@ export const AdminLearningPage: React.FC = () => {
         speaking: speaking.data?.items ?? [],
         resources: resources.data ?? [],
         faqs: faqs.data ?? [],
-        loading: { grammar: grammar.isLoading, vocab: topics.isLoading, words: words.isLoading, writing: writing.isLoading, speaking: speaking.isLoading, resources: resources.isLoading, faq: faqs.isLoading },
+        dictation: dictation.data ?? [],
+        rubrics: rubrics.data ?? [],
+        loading: { dictation: dictation.isLoading, rubrics: rubrics.isLoading, grammar: grammar.isLoading, vocab: topics.isLoading, words: words.isLoading, writing: writing.isLoading, speaking: speaking.isLoading, resources: resources.isLoading, faq: faqs.isLoading },
       }),
-    [grammar.data, topics.data, words.data, writing.data, speaking.data, resources.data, faqs.data, grammar.isLoading, topics.isLoading, words.isLoading, writing.isLoading, speaking.isLoading, resources.isLoading, faqs.isLoading]
+    [dictation.data, rubrics.data, dictation.isLoading, rubrics.isLoading, grammar.data, topics.data, words.data, writing.data, speaking.data, resources.data, faqs.data, grammar.isLoading, topics.isLoading, words.isLoading, writing.isLoading, speaking.isLoading, resources.isLoading, faqs.isLoading]
   );
-  const counts: Record<Kind, number> = { grammar: grammar.data?.length ?? 0, vocab: topics.data?.length ?? 0, words: words.data?.total ?? 0, writing: writing.data?.total ?? 0, speaking: speaking.data?.total ?? 0, resources: resources.data?.length ?? 0, faq: faqs.data?.length ?? 0 };
+  const counts: Record<Kind, number> = { dictation: dictation.data?.length ?? 0, rubrics: rubrics.data?.length ?? 0, grammar: grammar.data?.length ?? 0, vocab: topics.data?.length ?? 0, words: words.data?.total ?? 0, writing: writing.data?.total ?? 0, speaking: speaking.data?.total ?? 0, resources: resources.data?.length ?? 0, faq: faqs.data?.length ?? 0 };
   const cfg = CONFIG[kind as Kind];
   useDocumentTitle(cfg?.title ?? 'Nội dung học tập');
   if (!cfg) return <Navigate to="/admin/learning/grammar" replace />;
@@ -376,7 +466,7 @@ export const AdminLearningPage: React.FC = () => {
         createLabel={cfg.createLabel}
         idPrefix={cfg.idPrefix}
         defaultValues={cfg.defaultValues}
-        rowActions={(row) => [{ label: 'Xem như học viên', icon: <ExternalLink />, onClick: () => window.open(cfg.preview(row), '_blank', 'noopener') }]}
+        rowActions={cfg.preview ? (row) => [{ label: 'Xem như học viên', icon: <ExternalLink />, onClick: () => window.open(cfg.preview!(row), '_blank', 'noopener') }] : undefined}
       />
     </div>
   );

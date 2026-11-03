@@ -3,7 +3,7 @@ import { Router, type Request } from 'express';
 import { z } from 'zod';
 import type { Prisma } from '@prisma/client';
 import { prisma } from '../../lib/prisma';
-import { badRequest, handler, me, notFound, parse } from '../../core/http';
+import { badRequest, conflict, handler, me, notFound, parse } from '../../core/http';
 import { audit } from './audit';
 import { gradientOf } from '../head/shared';
 import { listQuestions, toQuestionRow } from '../head/head.routes';
@@ -690,5 +690,176 @@ contentRouter.post('/resources', handler(async (req) => {
 contentRouter.patch('/resources/:id', handler(async (req) => resourceRow(await prisma.material.update({ where: { id: idOf(req) }, data: resourceData(parse(resourceBody.partial(), req.body)) as Prisma.MaterialUncheckedUpdateInput }))));
 contentRouter.delete('/resources/:id', handler(async (req) => {
   await prisma.material.update({ where: { id: idOf(req) }, data: { deletedAt: new Date() } });
+  return { ok: true };
+}));
+
+// ============================ CHÉP CHÍNH TẢ (passages purpose DICTATION) ============================
+// Học viên luyện ở /app/dictation, giáo viên giao bài, trưởng bộ môn xem ở kho học liệu → admin quản lý nội dung.
+type DictSegment = { index: number; text: string; startMs: number | null; endMs: number | null };
+const dictRow = (p: Prisma.PassageGetPayload<object>, use: { assigned: number; attempts: number }) => {
+  const segs = (Array.isArray(p.segments) ? p.segments : []) as DictSegment[];
+  return {
+    id: p.id,
+    title: p.title ?? 'Bài nghe',
+    examType: p.examType ?? undefined,
+    level: p.level ?? undefined,
+    audioUrl: p.audioUrl ?? undefined,
+    isFree: p.isFree,
+    status: p.status,
+    sentences: segs.length,
+    /** Mỗi dòng một câu, đúng thứ tự học viên nghe và chép */
+    segmentsText: segs.map((s) => s.text).join('\n'),
+    assigned: use.assigned,
+    attempts: use.attempts,
+    updatedAt: p.updatedAt.toISOString(),
+  };
+};
+async function dictUsage(ids: string[]) {
+  const [assigned, attempts] = await Promise.all([
+    prisma.assignment.groupBy({ by: ['targetId'], where: { type: 'DICTATION', deletedAt: null, targetId: { in: ids } }, _count: { _all: true } }),
+    prisma.examAttempt.groupBy({ by: ['passageId'], where: { mode: 'DICTATION', passageId: { in: ids } }, _count: { _all: true } }),
+  ]);
+  return (id: string) => ({ assigned: assigned.find((a) => a.targetId === id)?._count._all ?? 0, attempts: attempts.find((a) => a.passageId === id)?._count._all ?? 0 });
+}
+const dictBody = z.object({
+  title: z.string().trim().min(2).max(200),
+  examType: EXAM.nullish(),
+  level: CEFR.nullish(),
+  audioUrl: z.string().url().nullish().or(z.literal('').transform(() => null)),
+  isFree: z.boolean().optional(),
+  status: z.enum(['DRAFT', 'PUBLISHED', 'ARCHIVED']).optional(),
+  segmentsText: z.string().max(20000),
+});
+/** Mỗi dòng một câu → segments + transcript (giữ mốc thời gian cũ theo vị trí nếu có) */
+function dictData(b: Partial<z.infer<typeof dictBody>>, old?: DictSegment[]) {
+  const { segmentsText, ...rest } = b;
+  if (segmentsText === undefined) return rest;
+  const lines = segmentsText.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+  if (!lines.length) throw badRequest('Nhập ít nhất một câu (mỗi dòng một câu)', 'EMPTY_SEGMENTS');
+  const segments = lines.map((text, index) => ({ index, text, startMs: old?.[index]?.startMs ?? null, endMs: old?.[index]?.endMs ?? null }));
+  return { ...rest, segments, transcript: lines.join(' ') };
+}
+contentRouter.get('/dictation', handler(async () => {
+  const rows = await prisma.passage.findMany({ where: { purpose: 'DICTATION', deletedAt: null }, orderBy: { createdAt: 'asc' } });
+  const use = await dictUsage(rows.map((r) => r.id));
+  return rows.map((r) => dictRow(r, use(r.id)));
+}));
+contentRouter.post('/dictation', handler(async (req) => {
+  const b = parse(dictBody, req.body);
+  const p = await prisma.passage.create({ data: { ...dictData(b), purpose: 'DICTATION', status: b.status ?? 'PUBLISHED', authorId: me(req).id } as Prisma.PassageUncheckedCreateInput });
+  await audit(req, 'CONTENT_CREATE', 'passage', p.id, { after: { target: p.title, kind: 'DICTATION' } });
+  return dictRow(p, { assigned: 0, attempts: 0 });
+}));
+contentRouter.patch('/dictation/:id', handler(async (req) => {
+  const b = parse(dictBody.partial(), req.body);
+  const cur = await prisma.passage.findFirst({ where: { id: idOf(req), purpose: 'DICTATION', deletedAt: null } });
+  if (!cur) throw notFound('Bài chép chính tả');
+  const use = (await dictUsage([cur.id]))(cur.id);
+  if (b.status && b.status !== 'PUBLISHED' && use.assigned) await assertNotOpenAssigned(cur.id);
+  const p = await prisma.passage.update({ where: { id: cur.id }, data: dictData(b, cur.segments as DictSegment[] | undefined) as Prisma.PassageUncheckedUpdateInput });
+  return dictRow(p, use);
+}));
+contentRouter.delete('/dictation/:id', handler(async (req) => {
+  const cur = await prisma.passage.findFirst({ where: { id: idOf(req), purpose: 'DICTATION', deletedAt: null } });
+  if (!cur) throw notFound('Bài chép chính tả');
+  await assertNotOpenAssigned(cur.id);
+  await prisma.passage.update({ where: { id: cur.id }, data: { deletedAt: new Date(), status: 'ARCHIVED' } });
+  await audit(req, 'CONTENT_DELETE', 'passage', cur.id, { severity: 'WARN', before: { target: cur.title, kind: 'DICTATION' } });
+  return { ok: true };
+}));
+/** Bài đang được giao cho lớp (chưa đóng) thì không gỡ khỏi hệ thống — học viên sẽ không mở được bài */
+async function assertNotOpenAssigned(passageId: string) {
+  const open = await prisma.assignment.count({ where: { type: 'DICTATION', targetId: passageId, deletedAt: null, status: { not: 'CLOSED' } } });
+  if (open) throw conflict(`Bài đang được giao ở ${open} bài tập chưa đóng — đóng bài tập trước khi ẩn hoặc xoá`, 'IN_USE');
+}
+
+// ============================ TIÊU CHÍ CHẤM (rubrics) ============================
+// Giáo viên chấm bài Viết / Nói và trưởng bộ môn kiểm định theo rubric → admin quản lý tiêu chí, trọng số.
+type RubricCriterion = { key: string; label: string; weight: number; description?: string };
+const rubricRow = (r: Prisma.RubricGetPayload<object>, use: { gradings: number; questions: number }) => {
+  const criteria = (r.criteria as RubricCriterion[]) ?? [];
+  return {
+    id: r.id,
+    code: r.code,
+    name: r.name,
+    examType: r.examType,
+    skill: r.skill,
+    scaleMax: Number(r.scaleMax),
+    criteriaCount: criteria.length,
+    /** Mỗi dòng: khoá | tên tiêu chí | trọng số | mô tả */
+    criteriaText: criteria.map((c) => [c.key, c.label, c.weight ?? 1, c.description ?? ''].join(' | ')).join('\n'),
+    gradings: use.gradings,
+    questions: use.questions,
+  };
+};
+async function rubricUsage(ids: string[]) {
+  const [g, q] = await Promise.all([
+    prisma.grading.groupBy({ by: ['rubricId'], where: { rubricId: { in: ids } }, _count: { _all: true } }),
+    prisma.question.groupBy({ by: ['rubricId'], where: { rubricId: { in: ids }, deletedAt: null }, _count: { _all: true } }),
+  ]);
+  return (id: string) => ({ gradings: g.find((x) => x.rubricId === id)?._count._all ?? 0, questions: q.find((x) => x.rubricId === id)?._count._all ?? 0 });
+}
+function parseCriteria(text: string): RubricCriterion[] {
+  const lines = text.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+  if (!lines.length) throw badRequest('Cần ít nhất một tiêu chí', 'EMPTY_CRITERIA');
+  const out = lines.map((l, i) => {
+    const [key, label, weight, ...desc] = l.split('|').map((x) => x.trim());
+    const w = weight === undefined || weight === '' ? 1 : Number(weight.replace(',', '.'));
+    if (!key || !/^[a-z][a-z0-9_]{1,30}$/.test(key)) throw badRequest(`Dòng ${i + 1}: khoá tiêu chí chỉ gồm chữ thường, số, gạch dưới (vd. task, coherence)`, 'BAD_CRITERIA');
+    if (!label) throw badRequest(`Dòng ${i + 1}: thiếu tên tiêu chí`, 'BAD_CRITERIA');
+    if (!Number.isFinite(w) || w <= 0 || w > 10) throw badRequest(`Dòng ${i + 1}: trọng số phải là số dương`, 'BAD_CRITERIA');
+    return { key, label, weight: w, ...(desc.join('|') ? { description: desc.join('|') } : {}) };
+  });
+  const dup = out.find((c, i) => out.findIndex((x) => x.key === c.key) !== i);
+  if (dup) throw badRequest(`Khoá tiêu chí bị trùng: ${dup.key}`, 'BAD_CRITERIA');
+  return out;
+}
+const rubricBody = z.object({
+  code: z.string().trim().toUpperCase().regex(/^[A-Z0-9_]{3,40}$/, 'Mã gồm chữ in hoa, số, gạch dưới'),
+  name: z.string().trim().min(2).max(160),
+  examType: EXAM,
+  skill: z.enum(['WRITING', 'SPEAKING']),
+  scaleMax: z.number().positive().max(100).optional(),
+  criteriaText: z.string().max(10000),
+});
+contentRouter.get('/rubrics', handler(async () => {
+  const rows = await prisma.rubric.findMany({ orderBy: [{ examType: 'asc' }, { skill: 'asc' }, { code: 'asc' }] });
+  const use = await rubricUsage(rows.map((r) => r.id));
+  return rows.map((r) => rubricRow(r, use(r.id)));
+}));
+contentRouter.post('/rubrics', handler(async (req) => {
+  const b = parse(rubricBody, req.body);
+  if (await prisma.rubric.findUnique({ where: { code: b.code }, select: { id: true } })) throw conflict('Mã tiêu chí đã tồn tại', 'CODE_TAKEN');
+  const r = await prisma.rubric.create({ data: { code: b.code, name: b.name, examType: b.examType, skill: b.skill, scaleMax: b.scaleMax ?? 10, criteria: parseCriteria(b.criteriaText) } });
+  await audit(req, 'RUBRIC_CREATE', 'rubric', r.id, { after: { target: r.name } });
+  return rubricRow(r, { gradings: 0, questions: 0 });
+}));
+contentRouter.patch('/rubrics/:id', handler(async (req) => {
+  const b = parse(rubricBody.partial(), req.body);
+  const cur = await prisma.rubric.findUnique({ where: { id: idOf(req) } });
+  if (!cur) throw notFound('Tiêu chí chấm');
+  const use = (await rubricUsage([cur.id]))(cur.id);
+  const criteria = b.criteriaText !== undefined ? parseCriteria(b.criteriaText) : undefined;
+  if (use.gradings) {
+    // Bài đã chấm lưu điểm theo khoá tiêu chí → giữ nguyên bộ khoá, kỳ thi, kỹ năng, thang điểm
+    const oldKeys = ((cur.criteria as RubricCriterion[]) ?? []).map((c) => c.key).sort().join(',');
+    if (criteria && criteria.map((c) => c.key).sort().join(',') !== oldKeys) throw conflict(`Đã có ${use.gradings} lượt chấm theo tiêu chí này — chỉ sửa tên, trọng số, mô tả; không thêm, bớt hay đổi khoá tiêu chí`, 'IN_USE');
+    if ((b.examType && b.examType !== cur.examType) || (b.skill && b.skill !== cur.skill) || (b.scaleMax !== undefined && b.scaleMax !== Number(cur.scaleMax))) throw conflict('Tiêu chí đã dùng để chấm: không đổi kỳ thi, kỹ năng hay thang điểm', 'IN_USE');
+  }
+  if (b.code && b.code !== cur.code && (await prisma.rubric.findUnique({ where: { code: b.code }, select: { id: true } }))) throw conflict('Mã tiêu chí đã tồn tại', 'CODE_TAKEN');
+  const r = await prisma.rubric.update({
+    where: { id: cur.id },
+    data: { code: b.code, name: b.name, examType: b.examType, skill: b.skill, scaleMax: b.scaleMax, ...(criteria ? { criteria } : {}) },
+  });
+  await audit(req, 'RUBRIC_UPDATE', 'rubric', r.id, { severity: 'WARN', before: { criteria: cur.criteria }, after: { target: r.name, criteria: r.criteria } });
+  return rubricRow(r, use);
+}));
+contentRouter.delete('/rubrics/:id', handler(async (req) => {
+  const cur = await prisma.rubric.findUnique({ where: { id: idOf(req) } });
+  if (!cur) throw notFound('Tiêu chí chấm');
+  const use = (await rubricUsage([cur.id]))(cur.id);
+  if (use.gradings || use.questions) throw conflict(`Tiêu chí đang dùng (${use.gradings} lượt chấm, ${use.questions} đề) — không thể xoá`, 'IN_USE');
+  await prisma.rubric.delete({ where: { id: cur.id } });
+  await audit(req, 'RUBRIC_DELETE', 'rubric', cur.id, { severity: 'WARN', before: { target: cur.name } });
   return { ok: true };
 }));

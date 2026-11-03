@@ -2,6 +2,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import React, { useMemo } from 'react';
 import { Users, Lock, Unlock, KeyRound, UserCheck, UserPlus, Crown, GraduationCap, BookUser } from 'lucide-react';
 import { adminApi, useAdminInvalidate, useAdminUsers } from '@/shared/api/admin';
+import { useHeadSubjects } from '@/shared/api/head';
 import { errorMessage } from '@/shared/api/client';
 import type { AppRole, AppUser } from '@/shared/types';
 import { formatDate, timeAgo, ROLE_LABEL } from '@/shared/utils';
@@ -60,7 +61,7 @@ const columns: Column<AppUser>[] = [
   { key: 'lastActiveAt', header: 'Hoạt động cuối', render: (u) => <span className="text-xs text-slate-500">{timeAgo(u.lastActiveAt)}</span> },
 ];
 
-const fields: CrudField<AppUser>[] = [
+const baseFields: CrudField<AppUser>[] = [
   { key: 'fullName', label: 'Họ và tên', type: 'text', required: true, placeholder: 'Nguyễn Văn A' },
   { key: 'email', label: 'Email', type: 'email', required: true, placeholder: 'name@orbi.edu.vn' },
   {
@@ -97,6 +98,29 @@ export const AdminUsersPage: React.FC = () => {
   const { data, isLoading } = useAdminUsers();
   const refresh = useAdminInvalidate();
   const users = useMemo<AppUser[]>(() => data?.items ?? [], [data]);
+  const depts = useHeadSubjects().data ?? [];
+  const deptName = (id?: string | null) => depts.find((d) => d.id === id)?.name;
+  // Bộ môn quyết định trưởng bộ môn nào quản lý lớp của giáo viên
+  const fields = useMemo<CrudField<AppUser>[]>(
+    () => [
+      ...baseFields,
+      {
+        key: 'departmentId',
+        label: 'Bộ môn',
+        type: 'select',
+        options: [{ value: '', label: 'Không thuộc bộ môn' }, ...depts.map((d) => ({ value: d.id, label: `${d.name} · ${d.examType}` }))],
+        hint: 'Bắt buộc với giáo viên. Học viên, quản trị viên bỏ trống.',
+        colSpan: 2,
+      },
+    ],
+    [depts]
+  );
+  const cols = useMemo<Column<AppUser>[]>(() => {
+    const i = columns.findIndex((c) => c.key === 'role');
+    const dept: Column<AppUser> = { key: 'departmentId', header: 'Bộ môn', render: (u) => <span className="whitespace-nowrap text-[13px] text-slate-600">{deptName(u.departmentId) ?? '—'}</span> };
+    return [...columns.slice(0, i + 1), dept, ...columns.slice(i + 1)];
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [depts]);
   const byStatus = data?.stats.byStatus ?? {};
   const total = Object.values(data?.stats.byRole ?? {}).reduce<number>((a, b) => a + (b ?? 0), 0);
 
@@ -140,7 +164,7 @@ export const AdminUsersPage: React.FC = () => {
       <CrudEditor<AppUser>
         rows={users}
         loading={isLoading}
-        columns={columns}
+        columns={cols}
         fields={fields}
         entityName="tài khoản"
         createLabel="Tạo tài khoản"
@@ -170,13 +194,13 @@ export const AdminUsersPage: React.FC = () => {
         ]}
         defaultValues={{ role: 'STUDENT', status: 'ACTIVE' }}
         onCreate={async (v) => {
-          const u = await adminApi.createUser({ fullName: v.fullName, email: v.email, role: v.role, status: v.status });
+          const u = await adminApi.createUser({ fullName: v.fullName, email: v.email, role: v.role, status: v.status, departmentId: v.departmentId || null });
           if (u.temporaryPassword) toast.info('Mật khẩu tạm thời', `${u.email}: ${u.temporaryPassword} — gửi cho người dùng và yêu cầu đổi sau khi đăng nhập.`);
           void refresh();
           return u;
         }}
         onUpdate={async (row, v) => {
-          const u = await adminApi.updateUser(row.id, { fullName: v.fullName, email: v.email, role: v.role, status: v.status });
+          const u = await adminApi.updateUser(row.id, { fullName: v.fullName, email: v.email, role: v.role, status: v.status, departmentId: v.departmentId || null });
           void refresh();
           return u;
         }}

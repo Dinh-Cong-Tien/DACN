@@ -112,6 +112,36 @@ export interface AdminTestRow {
   version: number;
 }
 export type AdminGrammar = GrammarTopic & { status?: string; orderIndex?: number; tagId?: string };
+/** Bài chép chính tả (passages purpose DICTATION) */
+export interface AdminDictation {
+  id: string;
+  title: string;
+  examType?: ExamType;
+  level?: string;
+  audioUrl?: string;
+  isFree: boolean;
+  status: string;
+  sentences: number;
+  /** Mỗi dòng một câu */
+  segmentsText: string;
+  assigned: number;
+  attempts: number;
+  updatedAt: string;
+}
+/** Tiêu chí chấm bài Viết / Nói */
+export interface AdminRubric {
+  id: string;
+  code: string;
+  name: string;
+  examType: ExamType;
+  skill: 'WRITING' | 'SPEAKING';
+  scaleMax: number;
+  criteriaCount: number;
+  /** Mỗi dòng: khoá | tên tiêu chí | trọng số | mô tả */
+  criteriaText: string;
+  gradings: number;
+  questions: number;
+}
 export type AdminVocabTopic = VocabTopic & { slug?: string; examType?: ExamType; isFree?: boolean; orderIndex?: number };
 export type AdminWord = VocabWord & { ipaUk?: string; ipaUs?: string; meaningEn?: string; exampleVi?: string; topicId?: string };
 export type AdminPost = BlogPost & { kind?: string; status?: string; examType?: ExamType; seriesOrder?: number; authorAvatar?: string };
@@ -158,6 +188,14 @@ export const adminApi = {
   updateSkillTag: (id: string, b: Record<string, unknown>) => api.patch<AdminSkillTag>(`/admin/skill-tags/${id}`, b),
   deleteSkillTag: (id: string) => api.delete(`/admin/skill-tags/${id}`),
 
+  dictation: () => api.get<AdminDictation[]>('/admin/dictation'),
+  createDictation: (b: Record<string, unknown>) => api.post<AdminDictation>('/admin/dictation', b),
+  updateDictation: (id: string, b: Record<string, unknown>) => api.patch<AdminDictation>(`/admin/dictation/${id}`, b),
+  deleteDictation: (id: string) => api.delete(`/admin/dictation/${id}`),
+  rubrics: () => api.get<AdminRubric[]>('/admin/rubrics'),
+  createRubric: (b: Record<string, unknown>) => api.post<AdminRubric>('/admin/rubrics', b),
+  updateRubric: (id: string, b: Record<string, unknown>) => api.patch<AdminRubric>(`/admin/rubrics/${id}`, b),
+  deleteRubric: (id: string) => api.delete(`/admin/rubrics/${id}`),
   grammar: () => api.get<AdminGrammar[]>('/admin/grammar'),
   createGrammar: (b: Record<string, unknown>) => api.post<AdminGrammar>('/admin/grammar', b),
   updateGrammar: (id: string, b: Record<string, unknown>) => api.patch<AdminGrammar>(`/admin/grammar/${id}`, b),
@@ -223,6 +261,8 @@ export const useAdminQuestions = (params: QuestionQuery) => useQuery({ ...q(['qu
 export const useAdminTests = () => useQuery(q(['tests'], adminApi.tests));
 export const useAdminSkillTags = () => useQuery(q(['skill-tags'], adminApi.skillTags));
 export const useAdminGrammar = () => useQuery(q(['grammar'], adminApi.grammar));
+export const useAdminDictation = () => useQuery(q(['dictation'], adminApi.dictation));
+export const useAdminRubrics = () => useQuery(q(['rubrics'], adminApi.rubrics));
 export const useAdminVocabTopics = () => useQuery(q(['vocab-topics'], adminApi.vocabTopics));
 export const useAdminWords = (params: Record<string, unknown> = {}) => useQuery(q(['words', params], () => adminApi.words(params)));
 export const useAdminPosts = () => useQuery(q(['posts'], adminApi.posts));

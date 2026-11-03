@@ -90,6 +90,7 @@ usersRouter.post(
   handler(async (req) => {
     const body = parse(userBody, req.body);
     if (await prisma.user.findFirst({ where: { email: body.email, deletedAt: null }, select: { id: true } })) throw conflict('Email đã được sử dụng', 'EMAIL_TAKEN');
+    await assertDepartment(body.role, body.departmentId);
     const password = body.password ?? Math.random().toString(36).slice(2, 10) + 'A1';
     const { password: _p, ...data } = body;
     const u = await prisma.user.create({ data: { ...data, passwordHash: await hashPassword(password), emailVerifiedAt: body.status === 'ACTIVE' ? new Date() : null } });
@@ -109,6 +110,11 @@ usersRouter.patch(
     if (id === me(req).id && ((body.role && body.role !== cur.role) || body.status === 'LOCKED')) throw badRequest('Không thể tự đổi vai trò hoặc khoá tài khoản của chính mình');
     if (body.email && body.email !== cur.email && (await prisma.user.findFirst({ where: { email: body.email, deletedAt: null, NOT: { id } }, select: { id: true } }))) throw conflict('Email đã được sử dụng', 'EMAIL_TAKEN');
     const { password, ...data } = body;
+    const nextRole = body.role ?? cur.role;
+    const nextDept = body.departmentId === undefined ? cur.departmentId : body.departmentId;
+    if (body.role !== undefined || body.departmentId !== undefined) await assertDepartment(nextRole, nextDept);
+    // Học viên, admin không thuộc bộ môn
+    if (nextRole === 'STUDENT' || nextRole === 'ADMIN') data.departmentId = null;
     const u = await prisma.user.update({
       where: { id },
       data: { ...data, ...(password ? { passwordHash: await hashPassword(password) } : {}), lockedReason: body.status && body.status !== 'LOCKED' ? null : data.lockedReason },
@@ -119,10 +125,18 @@ usersRouter.patch(
     }
     if (body.status && body.status !== cur.status) await lockAudit(req, cur.id, cur.fullName, cur.status, body.status, body.lockedReason);
     if (password) await prisma.userToken.updateMany({ where: { userId: id, type: 'REFRESH', revokedAt: null }, data: { revokedAt: new Date() } });
+    // Lớp của giáo viên chưa thuộc bộ môn nào → về bộ môn vừa gán (để trưởng bộ môn quản lý được)
+    if (u.departmentId && u.departmentId !== cur.departmentId) await prisma.class.updateMany({ where: { teacherId: id, departmentId: null, deletedAt: null }, data: { departmentId: u.departmentId } });
     if (!body.role && !body.status) await audit(req, 'USER_UPDATE', 'user', id, { after: { target: u.fullName, fields: Object.keys(body) } });
     return toAppUser(u);
   })
 );
+
+/** Giáo viên phải thuộc một bộ môn (trưởng bộ môn quản lý lớp theo bộ môn); bộ môn phải tồn tại */
+async function assertDepartment(role: UserRole | undefined, departmentId: string | null | undefined) {
+  if (departmentId && !(await prisma.department.findFirst({ where: { id: departmentId, deletedAt: null }, select: { id: true } }))) throw badRequest('Bộ môn không tồn tại', 'DEPARTMENT_NOT_FOUND');
+  if (role === 'TEACHER' && !departmentId) throw badRequest('Chọn bộ môn cho giáo viên để trưởng bộ môn quản lý được lớp của họ', 'DEPARTMENT_REQUIRED');
+}
 
 async function lockAudit(req: Request, id: string, name: string, from: UserStatus, to: UserStatus, reason?: string | null) {
   await audit(req, to === 'LOCKED' ? 'USER_LOCK' : 'USER_UNLOCK', 'user', id, { severity: to === 'LOCKED' ? 'CRITICAL' : 'WARN', before: { status: from }, after: { status: to, reason, target: name } });
@@ -175,7 +189,11 @@ usersRouter.post(
     if (body.action === 'DELETE') count = (await prisma.user.updateMany({ where: { ...where, classTeachers: { none: { deletedAt: null, isArchived: false } } }, data: { deletedAt: new Date(), status: 'LOCKED' } })).count;
     if (body.action === 'SET_ROLE') {
       if (!body.role) throw badRequest('Thiếu vai trò');
-      count = (await prisma.user.updateMany({ where, data: { role: body.role as UserRole } })).count;
+      if (body.role === 'TEACHER') {
+        const noDept = await prisma.user.count({ where: { ...where, departmentId: null } });
+        if (noDept) throw badRequest(`${noDept} tài khoản chưa thuộc bộ môn — sửa từng tài khoản để chọn bộ môn trước khi chuyển thành giáo viên`, 'DEPARTMENT_REQUIRED');
+      }
+      count =(await prisma.user.updateMany({ where, data: { role: body.role as UserRole } })).count;
     }
     if (body.action !== 'UNLOCK' && body.action !== 'SET_ROLE') await prisma.userToken.updateMany({ where: { userId: { in: ids }, revokedAt: null }, data: { revokedAt: new Date() } });
     await audit(req, `USER_BULK_${body.action}`, 'user', null, { severity: body.action === 'UNLOCK' ? 'WARN' : 'CRITICAL', after: { ids, role: body.role, count, target: `${count} tài khoản` } });

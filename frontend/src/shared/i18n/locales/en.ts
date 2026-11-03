@@ -278,6 +278,8 @@ const en: LocaleDef = {
     'Nhãn kỹ năng': 'Skill tags',
     'Gắn nhãn câu hỏi để phân tích điểm yếu': 'Tag questions to analyse weak points',
     'Chủ điểm ngữ pháp, bộ flashcard, thẻ từ': 'Grammar topics, flashcard decks, word cards',
+    'Ngữ pháp, flashcard, thẻ từ, chép chính tả': 'Grammar, flashcards, word cards, dictation',
+    'Đề Viết, Nói và tiêu chí chấm': 'Writing, Speaking prompts and rubrics',
     'Đề Viết & Nói': 'Writing & Speaking prompts',
     'Đề VSTEP Writing, Speaking cho học viên luyện': 'VSTEP Writing and Speaking prompts for practice',
     'Tài liệu & FAQ': 'Resources & FAQ',

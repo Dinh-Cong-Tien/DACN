@@ -46,5 +46,6 @@ export async function toAppUser(u: User) {
     organization: u.organization ?? undefined,
     city: u.city ?? undefined,
     settings: u.settings,
+    departmentId: u.departmentId ?? undefined,
   };
 }

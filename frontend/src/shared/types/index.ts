@@ -21,6 +21,8 @@ export interface AppUser {
   role: AppRole;
   avatarUrl?: string | null;
   status: UserStatus;
+  /** Bộ môn của giáo viên / trưởng bộ môn */
+  departmentId?: string | null;
   plan: PlanType;
   target?: { examType: ExamType; score: string; examDate?: string };
   streak: number;
