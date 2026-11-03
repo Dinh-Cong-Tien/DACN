@@ -249,15 +249,14 @@ export const Kbd: React.FC<{ children: React.ReactNode }> = ({ children }) => (
 
 // ============ LOGO ============
 export const Logo: React.FC<{ size?: 'sm' | 'md' | 'lg'; dark?: boolean; tagline?: string; to?: string }> = ({ size = 'md', dark, tagline, to = '/' }) => {
-  const dims = { sm: 'w-8 h-8 rounded-lg p-0.5', md: 'w-10 h-10 rounded-xl p-[3px]', lg: 'w-12 h-12 rounded-2xl p-1' }[size];
+  // Biểu tượng đứng riêng cạnh chữ (không khung), cỡ cân với chiều cao chữ
+  const mark = { sm: 'h-7 w-7', md: 'h-[34px] w-[34px]', lg: 'h-10 w-10' }[size];
   const text = { sm: 'text-base', md: 'text-xl', lg: 'text-2xl' }[size];
   return (
-    <Link to={to} className="flex items-center gap-2.5 group">
-      <div className={cn('keep-palette shrink-0 bg-white shadow-sm ring-1 ring-slate-900/10 transition-transform duration-300 group-hover:-rotate-6', dims)}>
-        <BrandMark className="w-full h-full" />
-      </div>
+    <Link to={to} className="flex items-center gap-2" aria-label="OrbiLingo — Trang chủ">
+      <BrandMark className={cn('shrink-0', mark, dark && 'brand-mark--on-dark')} />
       <div className="leading-tight">
-        <span className={cn('font-display font-extrabold tracking-tight', text, dark ? 'text-white' : 'text-slate-900')}>
+        <span className={cn('font-display font-extrabold tracking-[-0.02em]', text, dark ? 'text-white' : 'text-slate-900')}>
           Orbi<span className={dark ? 'text-amber-300' : 'text-amber-500 dark:text-amber-300'}>Lingo</span>
         </span>
         {tagline && <span className={cn('block text-[10px] font-semibold', dark ? 'text-slate-400' : 'text-slate-500')}>{tagline}</span>}

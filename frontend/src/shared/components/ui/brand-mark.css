@@ -1,0 +1,9 @@
+/* Màu biểu tượng thương hiệu: tím chàm đậm trên nền sáng, sáng hơn trên nền tối để vòng không chìm */
+.brand-mark__ring-a { stop-color: #4338ca; }
+.brand-mark__ring-b { stop-color: #7c3aed; }
+
+.dark .brand-mark__ring-a,
+.brand-mark--on-dark .brand-mark__ring-a { stop-color: #6366f1; }
+.dark .brand-mark__ring-b,
+.brand-mark--on-dark .brand-mark__ring-b { stop-color: #a78bfa; }
+
