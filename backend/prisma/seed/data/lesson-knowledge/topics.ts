@@ -43,6 +43,81 @@ Chọn câu điền vào đoạn | Câu phải nối ý với câu trước/sau 
 Từ nối | however, therefore, in addition, as a result | Dựa vào quan hệ ý: trái ngược, kết quả, bổ sung | In addition, we offer free delivery.`,
   },
 
+  // ---------- Giới từ (trình bày dạng ngữ pháp) ----------
+  {
+    match: /giới từ thời gian|giới từ (chỉ )?thời gian|in, on, at|giới từ và cụm giới từ|giới từ \(prepositions\)|^giới từ/,
+    text: `# Ngữ pháp
+in + tháng / năm / mùa / buổi | in May, in 2026, in summer, in the morning | Khoảng thời gian dài | The office opened in 2020.
+on + thứ / ngày cụ thể | on Monday, on 15 March, on my birthday | | The meeting is on Friday.
+at + giờ / thời điểm | at 9 a.m., at noon, at night, at the weekend | | The train leaves at 7:30.
+in / at / on chỉ nơi chốn | in + không gian bao quanh; at + một điểm; on + bề mặt, tầng | | in the room, at the airport, on the third floor
+by / until | by + mốc = chậm nhất là; until + mốc = kéo dài đến | | Please reply by Friday. / The shop is open until 10 p.m.
+for / since | for + khoảng thời gian; since + mốc thời gian | Thường đi với thì hiện tại hoàn thành | I have worked here for five years / since 2020.
+Giới từ + V-ing | interested in, good at, responsible for + V-ing | Sau giới từ dùng danh từ hoặc V-ing | She is good at managing people.`,
+  },
+  {
+    match: /đi lại|hỏi đường|chỉ đường|nơi chốn|phương hướng/,
+    text: `# Ngữ pháp
+Hỏi đường | Excuse me, how do I get to …? / Where is the nearest …? | | How do I get to the station?
+Chỉ đường | Go straight; Turn left / right; Take the second street on the left | Dùng câu mệnh lệnh | Turn right at the traffic lights.
+Vị trí | next to, opposite, between … and …, in front of, behind | | The bank is opposite the post office.
+# Từ vựng
+intersection | /ˌɪntərˈsekʃən/ | n | ngã tư | Turn left at the intersection.
+block | /blɒk/ | n | dãy nhà | It's two blocks away.
+landmark | /ˈlændmɑːrk/ | n | địa danh dễ nhận biết | The tower is a famous landmark.
+ticket | /ˈtɪkɪt/ | n | vé | I bought a return ticket.`,
+  },
+  {
+    match: /lịch, hạn chót|cuộc hẹn|đặt lịch hẹn/,
+    text: `# Ngữ pháp
+Đặt lịch | Are you available on …? / How about …? | | Are you available on Thursday afternoon?
+Hoãn / huỷ | I'm afraid I have to reschedule / cancel … | | I'm afraid I have to cancel our appointment.
+# Từ vựng
+appointment | /əˈpɔɪntmənt/ | n | cuộc hẹn | I have an appointment with the dentist.
+schedule | /ˈʃedjuːl/ | n, v | lịch trình; lên lịch | The schedule has changed.
+deadline | /ˈdedlaɪn/ | n | hạn chót | We must meet the deadline.
+reschedule | /ˌriːˈʃedjuːl/ | v | dời lịch | Can we reschedule the meeting?
+calendar | /ˈkælɪndər/ | n | lịch | I'll check my calendar.`,
+  },
+  {
+    match: /collocation|những từ hay đi cùng/,
+    text: `# Ngữ pháp
+make + N | make a decision, make a mistake, make progress, make an effort | make: tạo ra kết quả | She made a decision quickly.
+do + N | do homework, do business, do research, do your best | do: thực hiện công việc | We do business with Japan.
+take + N | take a break, take notes, take part in, take responsibility | | Let's take a break.
+have + N | have a meeting, have lunch, have a look | | Can I have a look?
+# Từ vựng
+heavy traffic | | n | giao thông đông đúc | We were late because of heavy traffic.
+strong coffee | | n | cà phê đậm | I need a strong coffee.
+fast food | | n | đồ ăn nhanh | Fast food is cheap but unhealthy.`,
+  },
+  {
+    match: /cụm động từ|phrasal/,
+    text: `# Ngữ pháp
+Cụm động từ | V + tiểu từ (up, off, out, on…) | Nghĩa thường khác động từ gốc | She turned down the offer.
+Tách được | turn off the light / turn the light off | Đại từ phải nằm giữa: turn it off | Please turn it off.
+# Từ vựng
+look for | | phrasal v | tìm kiếm | I'm looking for my keys.
+look after | | phrasal v | chăm sóc | Can you look after my cat?
+set up | | phrasal v | thành lập, lắp đặt | They set up a new company.
+fill out | | phrasal v | điền (mẫu đơn) | Please fill out this form.
+carry out | | phrasal v | thực hiện | We carried out a survey.
+turn down | | phrasal v | từ chối | She turned down the job offer.`,
+  },
+  {
+    match: /part 5 luyện tập|câu 1\d\d/,
+    text: `# Ngữ pháp
+Bước 1: xem 4 đáp án | Cùng gốc khác đuôi → câu từ loại; khác thì → câu chia động từ; khác nghĩa → câu từ vựng | |
+Câu từ loại | Xác định vị trí trống: trước N → adj; sau be → adj; giữa be và V3 → adv; sau mạo từ → N | | The company offers a (competitive) salary.
+Câu chia động từ | Tìm dấu hiệu thời gian và chủ ngữ số ít/số nhiều; có tân ngữ → chủ động | | The report will be submitted next week.
+Giới từ hay liên từ | Sau chỗ trống là N/V-ing → giới từ (despite, because of); là S + V → liên từ (although, because) | | Despite the rain, the event continued.
+Đại từ | Trước N → tính từ sở hữu; làm tân ngữ trùng chủ ngữ → đại từ phản thân | | She completed the task by herself.
+# Từ vựng
+competitive | /kəmˈpetətɪv/ | adj | cạnh tranh | We offer competitive prices.
+submit | /səbˈmɪt/ | v | nộp | Please submit the form by Friday.
+proposal | /prəˈpəʊzəl/ | n | đề xuất | The proposal was approved.
+invoice | /ˈɪnvɔɪs/ | n | hoá đơn | The invoice is attached.`,
+  },
   // ---------- Phát âm ----------
   {
     match: /đuôi s|s\/es|-s\/-es/,
@@ -131,14 +206,7 @@ call it a day | | idiom | kết thúc công việc hôm nay | We're tired, let's
 thirteen / thirty | /θɜːrˈtiːn/ – /ˈθɜːrti/ | num | 13 nhấn âm sau, 30 nhấn âm đầu |
 quarter past / to | | phrase | hơn 15 phút / kém 15 phút | It's a quarter to nine.
 the third of May | | phrase | ngày 3 tháng 5 (Anh–Anh) |
-$19.99 | | phrase | nineteen ninety-nine |
-# Giới từ
-at | thời điểm
-  at 7:30 | lúc 7 giờ 30
-on | ngày
-  on the 3rd of May | vào ngày 3/5
-in | tháng / năm
-  in 2026 | vào năm 2026`,
+$19.99 | | phrase | nineteen ninety-nine |`,
   },
   {
     match: /gia đình|ngoại hình|tính cách|con người/,
@@ -176,12 +244,7 @@ Giới thiệu | I'm …; I work as a/an …; I'm in charge of … | Hiện tạ
 Hỏi thăm | How's it going? / Nice to meet you. | |
 # Từ vựng
 colleague | /ˈkɒliːɡ/ | n | đồng nghiệp | This is my colleague, Lan.
-department | /dɪˈpɑːrtmənt/ | n | phòng ban | I work in the sales department.
-# Giới từ
-work | làm việc
-  work for + công ty | làm cho | I work for ABC Corp.
-  work in + lĩnh vực / phòng | làm trong | She works in marketing.
-  work as + nghề | làm nghề | He works as a designer.`,
+department | /dɪˈpɑːrtmənt/ | n | phòng ban | I work in the sales department.`,
   },
   {
     match: /hỏi lại|chưa nghe rõ|giữ cuộc trò chuyện|sở thích|thời gian rảnh/,
@@ -189,14 +252,7 @@ work | làm việc
 Sorry, could you repeat that? | | phrase | Xin lỗi, bạn nhắc lại được không? |
 What do you mean by …? | | phrase | Ý bạn … là gì? |
 Really? Tell me more. | | phrase | Thật à? Kể thêm đi |
-be into sth | | phrase | thích, mê | I'm really into photography.
-# Giới từ
-good | giỏi / thích
-  good at + V-ing | giỏi về | She is good at cooking.
-keen | thích
-  keen on + V-ing | thích làm | I'm keen on hiking.
-fond | thích
-  fond of | thích | He is fond of music.`,
+be into sth | | phrase | thích, mê | I'm really into photography.`,
   },
   {
     match: /gọi điện|lời nhắn|điện thoại|tin nhắn thoại/,
@@ -223,22 +279,14 @@ reservation | /ˌrezərˈveɪʃən/ | n | sự đặt chỗ | I have a reservati
 symptom | /ˈsɪmptəm/ | n | triệu chứng | What are your symptoms?
 prescription | /prɪˈskrɪpʃən/ | n | đơn thuốc | You need a prescription.
 lost and found | | n | quầy đồ thất lạc | Ask at the lost and found.
-forecast | /ˈfɔːrkɑːst/ | n | dự báo | The forecast says it will rain.
-# Giới từ
-suffer | chịu đựng
-  suffer from | bị (bệnh) | He suffers from back pain.`,
+forecast | /ˈfɔːrkɑːst/ | n | dự báo | The forecast says it will rain.`,
   },
   {
     match: /đồng ý|không đồng ý|đưa lời khuyên|gợi ý|bài luận nêu ý kiến/,
     text: `# Ngữ pháp
 Đồng ý | I completely agree. / That's a good point. | |
 Không đồng ý lịch sự | I see your point, but … / I'm not sure about that. | Dùng but để nêu ý khác |
-Lời khuyên | You should / You'd better / If I were you, I would … | | If I were you, I would take the job.
-# Giới từ
-agree | đồng ý
-  agree with + người / ý kiến | đồng ý với | I agree with you.
-  agree on + vấn đề chung | thống nhất về | We agreed on the price.
-  agree to + đề nghị / V | chấp thuận | He agreed to the terms.`,
+Lời khuyên | You should / You'd better / If I were you, I would … | | If I were you, I would take the job.`,
   },
   {
     match: /kể chuyện|trải nghiệm|kể chuyến đi|đoạn văn kể/,
@@ -269,13 +317,7 @@ position | /pəˈzɪʃən/ | n | vị trí công việc | I'm applying for the p
 qualification | /ˌkwɒlɪfɪˈkeɪʃən/ | n | bằng cấp, trình độ | She has the right qualifications.
 experience | /ɪkˈspɪəriəns/ | n | kinh nghiệm | I have three years of experience.
 supervisor | /ˈsuːpərvaɪzər/ | n | người giám sát | My supervisor approved the leave.
-STAR | | n | Situation – Task – Action – Result: cách kể kinh nghiệm |
-# Giới từ
-apply | nộp đơn
-  apply for + vị trí | xin vị trí | I'd like to apply for the job.
-  apply to + công ty | nộp vào | She applied to three companies.
-experience | kinh nghiệm
-  experience in + lĩnh vực | kinh nghiệm trong | experience in sales`,
+STAR | | n | Situation – Task – Action – Result: cách kể kinh nghiệm |`,
   },
   {
     match: /công nghệ|mạng xã hội/,

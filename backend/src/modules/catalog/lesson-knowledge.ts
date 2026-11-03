@@ -6,21 +6,21 @@ import { badRequest } from '../../core/http';
  *   # Ngữ pháp   → tiêu đề | công thức | ghi chú | ví dụ
  *   # Từ vựng    → từ | phiên âm | từ loại | nghĩa | ví dụ
  *   # Mệnh đề    → tên mệnh đề | từ dẫn (cách nhau dấu phẩy) | ghi chú | ví dụ
- *   # Giới từ    → nhãn | nghĩa | ví dụ   (thụt 2 dấu cách = node con, bấm node cha để mở / thu gọn)
+ *   # Mạo từ     → nhãn | nghĩa | ví dụ   (cây: a / an / the / không mạo từ → các từ đi kèm; thụt 2 dấu cách = node con)
  */
 export interface KnowledgeNode { label: string; meaningVi?: string; example?: string; children?: KnowledgeNode[] }
 export interface GrammarPoint { title: string; formula?: string; note?: string; example?: string }
 export interface VocabItem { word: string; ipa?: string; pos?: string; meaningVi: string; example?: string }
 export interface ClausePoint { title: string; markers: string[]; note?: string; example?: string }
-export interface LessonKnowledge { grammar: GrammarPoint[]; vocab: VocabItem[]; clauses: ClausePoint[]; prepositions: KnowledgeNode[] }
+export interface LessonKnowledge { grammar: GrammarPoint[]; vocab: VocabItem[]; clauses: ClausePoint[]; articles: KnowledgeNode[] }
 
-const SECTION: Record<string, keyof LessonKnowledge> = { 'ngữ pháp': 'grammar', 'từ vựng': 'vocab', 'mệnh đề': 'clauses', 'giới từ': 'prepositions' };
-const HEAD: Record<keyof LessonKnowledge, string> = { grammar: 'Ngữ pháp', vocab: 'Từ vựng', clauses: 'Mệnh đề', prepositions: 'Giới từ' };
+const SECTION: Record<string, keyof LessonKnowledge> = { 'ngữ pháp': 'grammar', 'từ vựng': 'vocab', 'mệnh đề': 'clauses', 'mạo từ': 'articles' };
+const HEAD: Record<keyof LessonKnowledge, string> = { grammar: 'Ngữ pháp', vocab: 'Từ vựng', clauses: 'Mệnh đề', articles: 'Mạo từ' };
 const opt = (s?: string) => (s && s.trim() ? s.trim() : undefined);
 const clean = <T extends object>(o: T): T => Object.fromEntries(Object.entries(o).filter(([, v]) => v !== undefined)) as T;
 
-export const emptyKnowledge = (): LessonKnowledge => ({ grammar: [], vocab: [], clauses: [], prepositions: [] });
-export const isEmptyKnowledge = (k: LessonKnowledge) => !k.grammar.length && !k.vocab.length && !k.clauses.length && !k.prepositions.length;
+export const emptyKnowledge = (): LessonKnowledge => ({ grammar: [], vocab: [], clauses: [], articles: [] });
+export const isEmptyKnowledge = (k: LessonKnowledge) => !k.grammar.length && !k.vocab.length && !k.clauses.length && !k.articles.length;
 
 /** Văn bản → JSON; sai định dạng → 400 kèm số dòng. Rỗng → null (xoá kiến thức). */
 export function parseKnowledgeText(text: string): LessonKnowledge | null {
@@ -33,7 +33,7 @@ export function parseKnowledgeText(text: string): LessonKnowledge | null {
     if (raw.trim().startsWith('#')) {
       const name = raw.trim().replace(/^#+/, '').trim().toLowerCase();
       sec = SECTION[name] ?? null;
-      if (!sec) throw badRequest(`Dòng ${no}: mục "${name}" không hợp lệ — dùng # Ngữ pháp, # Từ vựng, # Mệnh đề, # Giới từ`);
+      if (!sec) throw badRequest(`Dòng ${no}: mục "${name}" không hợp lệ — dùng # Ngữ pháp, # Từ vựng, # Mệnh đề, # Mạo từ`);
       stack.length = 0;
       return;
     }
@@ -54,10 +54,10 @@ export function parseKnowledgeText(text: string): LessonKnowledge | null {
       const depth = Math.floor(indent / 2);
       const node: KnowledgeNode = clean({ label: f[0], meaningVi: opt(f[1]), example: opt(f[2]) });
       while (stack.length && stack[stack.length - 1].depth >= depth) stack.pop();
-      if (depth > 0 && !stack.length) throw badRequest(`Dòng ${no}: node con (thụt đầu dòng) phải nằm dưới một giới từ`);
-      if (depth > 3) throw badRequest(`Dòng ${no}: cây giới từ tối đa 4 tầng`);
+      if (depth > 0 && !stack.length) throw badRequest(`Dòng ${no}: node con (thụt đầu dòng) phải nằm dưới một mạo từ`);
+      if (depth > 3) throw badRequest(`Dòng ${no}: cây mạo từ tối đa 4 tầng`);
       if (stack.length) (stack[stack.length - 1].node.children ??= []).push(node);
-      else k.prepositions.push(node);
+      else k.articles.push(node);
       stack.push({ depth, node });
     }
   });
@@ -83,7 +83,7 @@ export function knowledgeToText(k: LessonKnowledge | undefined): string {
     if (s === 'grammar') k.grammar.forEach((g) => out.push(row(g.title, g.formula, g.note, g.example)));
     if (s === 'vocab') k.vocab.forEach((v) => out.push(row(v.word, v.ipa, v.pos, v.meaningVi, v.example)));
     if (s === 'clauses') k.clauses.forEach((c) => out.push(row(c.title, c.markers.join(', '), c.note, c.example)));
-    if (s === 'prepositions') k.prepositions.forEach((n) => tree(n, 0));
+    if (s === 'articles') k.articles.forEach((n) => tree(n, 0));
   });
   return out.join('\n');
 }
@@ -92,6 +92,6 @@ export function knowledgeToText(k: LessonKnowledge | undefined): string {
 export function toKnowledge(v: unknown): LessonKnowledge | undefined {
   if (!v || typeof v !== 'object') return undefined;
   const o = v as Partial<LessonKnowledge>;
-  const k: LessonKnowledge = { grammar: o.grammar ?? [], vocab: o.vocab ?? [], clauses: o.clauses ?? [], prepositions: o.prepositions ?? [] };
+  const k: LessonKnowledge = { grammar: o.grammar ?? [], vocab: o.vocab ?? [], clauses: o.clauses ?? [], articles: o.articles ?? [] };
   return isEmptyKnowledge(k) ? undefined : k;
 }

@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { BookText, Languages, ListTree, Network, Volume2 } from 'lucide-react';
+import { BookText, ChevronRight, Languages, ListTree, Quote, Volume2 } from 'lucide-react';
 import type { KnowledgeNode, LessonKnowledge as Knowledge } from '@/shared/types';
 import { Card, Tabs } from '@/shared/components/ui';
 import { cn } from '@/shared/utils';
@@ -9,8 +9,8 @@ type Key = keyof Knowledge;
 const TABS: { key: Key; label: string; icon: React.ReactNode }[] = [
   { key: 'grammar', label: 'Ngữ pháp', icon: <BookText /> },
   { key: 'vocab', label: 'Từ vựng', icon: <Languages /> },
-  { key: 'clauses', label: 'Mệnh đề', icon: <ListTree /> },
-  { key: 'prepositions', label: 'Giới từ', icon: <Network /> },
+  { key: 'clauses', label: 'Mệnh đề', icon: <Quote /> },
+  { key: 'articles', label: 'Mạo từ', icon: <ListTree /> },
 ];
 
 const speak = (text: string) => {
@@ -23,26 +23,34 @@ const speak = (text: string) => {
   }
 };
 
-/** Một node của cây giới từ: bấm node có con để mở / thu gọn, bấm node bất kỳ để xem nghĩa + ví dụ */
-const TreeNode: React.FC<{ node: KnowledgeNode; path: string; open: Set<string>; selected: string | null; onToggle: (p: string, n: KnowledgeNode) => void }> = ({ node, path, open, selected, onToggle }) => {
+/** Một nhánh của cây mạo từ: bấm dòng có nhánh con để mở / thu gọn; nghĩa và ví dụ hiện ngay trên dòng */
+const Branch: React.FC<{ node: KnowledgeNode; path: string; open: Set<string>; onToggle: (p: string) => void; root?: boolean }> = ({ node, path, open, onToggle, root }) => {
   const kids = node.children ?? [];
   const expanded = open.has(path);
+  const body = (
+    <>
+      {kids.length > 0 && <ChevronRight className={cn('kt-caret', expanded && 'kt-caret--open')} aria-hidden />}
+      <span className="min-w-0">
+        <span className={cn('kt-label', root && 'kt-label--root')}>{node.label}</span>
+        {node.meaningVi && <span className="kt-meaning"> — {node.meaningVi}</span>}
+        {node.example && <span className="kt-example">{node.example}</span>}
+      </span>
+      {kids.length > 0 && !expanded && <span className="kt-count">{kids.length}</span>}
+    </>
+  );
   return (
-    <li>
-      <button
-        type="button"
-        className={cn('kt-node', kids.length > 0 && 'kt-node--parent', path === selected && 'kt-node--selected')}
-        aria-expanded={kids.length ? expanded : undefined}
-        onClick={() => onToggle(path, node)}
-        title={node.meaningVi}
-      >
-        <span className="kt-node__label">{node.label}</span>
-        {kids.length > 0 && <span className="kt-node__count">{expanded ? '−' : kids.length}</span>}
-      </button>
+    <li className={cn(root && 'kt-root')}>
+      {kids.length ? (
+        <button type="button" className="kt-row kt-row--toggle" aria-expanded={expanded} onClick={() => onToggle(path)}>
+          {body}
+        </button>
+      ) : (
+        <div className="kt-row">{body}</div>
+      )}
       {kids.length > 0 && expanded && (
-        <ul>
+        <ul className="kt-branch">
           {kids.map((c, i) => (
-            <TreeNode key={i} node={c} path={`${path}.${i}`} open={open} selected={selected} onToggle={onToggle} />
+            <Branch key={i} node={c} path={`${path}.${i}`} open={open} onToggle={onToggle} />
           ))}
         </ul>
       )}
@@ -50,20 +58,16 @@ const TreeNode: React.FC<{ node: KnowledgeNode; path: string; open: Set<string>;
   );
 };
 
-const PrepositionTree: React.FC<{ roots: KnowledgeNode[] }> = ({ roots }) => {
+const ArticleTree: React.FC<{ roots: KnowledgeNode[] }> = ({ roots }) => {
   const [open, setOpen] = useState<Set<string>>(new Set());
-  const [sel, setSel] = useState<{ path: string; node: KnowledgeNode } | null>(null);
-  const toggle = (p: string, n: KnowledgeNode) => {
-    setSel({ path: p, node: n });
-    if (!n.children?.length) return;
+  const toggle = (p: string) =>
     setOpen((s) => {
       const next = new Set(s);
-      // thu gọn node cha → thu luôn các nhánh con bên dưới
+      // thu gọn nhánh cha → thu luôn các nhánh con bên dưới
       if (next.has(p)) [...next].forEach((k) => (k === p || k.startsWith(p + '.')) && next.delete(k));
       else next.add(p);
       return next;
     });
-  };
   const allPaths = useMemo(() => {
     const out: string[] = [];
     const walk = (n: KnowledgeNode, p: string) => n.children?.length && (out.push(p), n.children.forEach((c, i) => walk(c, `${p}.${i}`)));
@@ -71,39 +75,28 @@ const PrepositionTree: React.FC<{ roots: KnowledgeNode[] }> = ({ roots }) => {
     return out;
   }, [roots]);
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <p className="text-xs text-slate-500">Bấm vào giới từ để xem các từ đi kèm; bấm lại để thu gọn.</p>
-        <div className="flex gap-2">
-          <button type="button" className="text-xs font-bold text-indigo-600 hover:underline" onClick={() => setOpen(new Set(allPaths))}>
+        <p className="text-xs text-slate-500">Bấm vào a / an / the để xem các từ trong bài đi kèm; bấm lại để thu gọn.</p>
+        <div className="flex gap-3 text-xs font-semibold">
+          <button type="button" className="text-slate-600 hover:text-slate-900 hover:underline" onClick={() => setOpen(new Set(allPaths))}>
             Mở tất cả
           </button>
-          <button type="button" className="text-xs font-bold text-slate-500 hover:underline" onClick={() => setOpen(new Set())}>
+          <button type="button" className="text-slate-600 hover:text-slate-900 hover:underline" onClick={() => setOpen(new Set())}>
             Thu gọn
           </button>
         </div>
       </div>
-      <div className="kt-scroll">
+      <ul className="kt-tree">
         {roots.map((r, i) => (
-          <ul key={i} className="kt-tree">
-            <TreeNode node={r} path={String(i)} open={open} selected={sel?.path ?? null} onToggle={toggle} />
-          </ul>
+          <Branch key={i} node={r} path={String(i)} open={open} onToggle={toggle} root />
         ))}
-      </div>
-      {sel && (sel.node.meaningVi || sel.node.example) && (
-        <div className="rounded-xl border border-indigo-100 bg-indigo-50/60 px-4 py-3" aria-live="polite">
-          <p className="font-bold text-slate-900">
-            {sel.node.label}
-            {sel.node.meaningVi && <span className="font-medium text-slate-600"> — {sel.node.meaningVi}</span>}
-          </p>
-          {sel.node.example && <p className="mt-1 text-sm italic text-slate-600">"{sel.node.example}"</p>}
-        </div>
-      )}
+      </ul>
     </div>
   );
 };
 
-/** Kiến thức trong video: ngữ pháp, từ vựng, mệnh đề, cây giới từ — hiện ngay dưới player */
+/** Kiến thức trong video: ngữ pháp, từ vựng, mệnh đề, cây mạo từ — hiện ngay dưới player */
 export const LessonKnowledge: React.FC<{ knowledge: Knowledge; onWord?: (e: React.MouseEvent, word: string) => void }> = ({ knowledge, onWord }) => {
   const tabs = TABS.filter((t) => knowledge[t.key].length > 0);
   const [tab, setTab] = useState<Key>(tabs[0]?.key ?? 'grammar');
@@ -171,7 +164,7 @@ export const LessonKnowledge: React.FC<{ knowledge: Knowledge; onWord?: (e: Reac
             ))}
           </ul>
         )}
-        {tab === 'prepositions' && <PrepositionTree roots={knowledge.prepositions} />}
+        {tab === 'articles' && <ArticleTree roots={knowledge.articles} />}
       </div>
     </Card>
   );

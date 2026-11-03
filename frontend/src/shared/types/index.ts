@@ -64,8 +64,8 @@ export interface LessonKnowledge {
   grammar: { title: string; formula?: string; note?: string; example?: string }[];
   vocab: { word: string; ipa?: string; pos?: string; meaningVi: string; example?: string }[];
   clauses: { title: string; markers: string[]; note?: string; example?: string }[];
-  /** Cây giới từ: node cha → các cụm đi kèm (bấm để mở / thu gọn) */
-  prepositions: KnowledgeNode[];
+  /** Cây mạo từ: a / an / the / không mạo từ → các từ trong bài đi kèm (bấm để mở / thu gọn) */
+  articles: KnowledgeNode[];
 }
 
 export interface Lesson {

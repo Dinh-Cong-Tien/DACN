@@ -1,5 +1,5 @@
 /**
- * Nạp "Kiến thức trong bài" cho video bài giảng (lessons.knowledge) theo chủ đề trong tên bài.
+ * Nạp "Kiến thức trong bài" cho video bài giảng (lessons.knowledge) theo chủ đề trong tên bài, kèm cây mạo từ.
  * Chạy: npx tsx prisma/seed/lesson-knowledge.ts [--force]
  *  - mặc định chỉ điền bài chưa có kiến thức (không ghi đè nội dung admin đã sửa); --force ghi đè tất cả
  *  - khớp theo tên bài; không khớp gói nào thì thử theo tên chương
@@ -8,10 +8,10 @@ import { Prisma } from '@prisma/client';
 import { prisma } from './lib';
 import { parseKnowledgeText, type KnowledgeNode, type LessonKnowledge } from '../../src/modules/catalog/lesson-knowledge';
 import { GRAMMAR_PACKS } from './data/lesson-knowledge/grammar';
-import { PREPOSITION_PACKS } from './data/lesson-knowledge/prepositions';
+import { articleTree } from './data/lesson-knowledge/articles';
 import { TOPIC_PACKS } from './data/lesson-knowledge/topics';
 
-const PACKS = [...GRAMMAR_PACKS, ...PREPOSITION_PACKS, ...TOPIC_PACKS];
+const PACKS = [...GRAMMAR_PACKS, ...TOPIC_PACKS];
 
 /** Âm IPA → 3 từ ví dụ (từ | phiên âm | loại | nghĩa) cho chuỗi "42 Ngày Phát Âm" */
 const PHONEME: Record<string, string[]> = {
@@ -64,9 +64,9 @@ function merge(into: LessonKnowledge, k: LessonKnowledge) {
   add(into.grammar, k.grammar, (g) => g.title.toLowerCase());
   add(into.vocab, k.vocab, (v) => v.word.toLowerCase());
   add(into.clauses, k.clauses, (c) => c.title.toLowerCase());
-  k.prepositions.forEach((n: KnowledgeNode) => {
-    const same = into.prepositions.find((x) => x.label === n.label);
-    if (!same) into.prepositions.push(n);
+  k.articles.forEach((n: KnowledgeNode) => {
+    const same = into.articles.find((x) => x.label === n.label);
+    if (!same) into.articles.push(n);
     else add((same.children ??= []), n.children ?? [], (c) => c.label);
   });
 }
@@ -80,7 +80,7 @@ async function main() {
   let filled = 0;
   const missed: string[] = [];
   for (const l of lessons) {
-    const k: LessonKnowledge = { grammar: [], vocab: [], clauses: [], prepositions: [] };
+    const k: LessonKnowledge = { grammar: [], vocab: [], clauses: [], articles: [] };
     const title = l.title.normalize('NFC').toLowerCase();
     const sound = l.title.match(/\/[^/]+\//)?.[0];
     if (sound && PHONEME[sound]) {
@@ -90,10 +90,12 @@ async function main() {
       if (!hits.length) hits = PACKS.filter((p) => p.match.test(l.section.title.normalize('NFC').toLowerCase()));
       hits.forEach((p) => merge(k, parseKnowledgeText(p.text)!));
     }
-    if (!k.grammar.length && !k.vocab.length && !k.clauses.length && !k.prepositions.length) {
+    if (!k.grammar.length && !k.vocab.length && !k.clauses.length) {
       missed.push(`${l.section.title} › ${l.title}`);
       continue;
     }
+    // cây mạo từ: a / an / the / không mạo từ đi với những danh từ nào của chính bài này
+    k.articles = articleTree(k);
     await prisma.lesson.update({ where: { id: l.id }, data: { knowledge: k as unknown as Prisma.InputJsonValue } });
     filled++;
   }

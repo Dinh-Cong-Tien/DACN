@@ -23,9 +23,9 @@ const KNOWLEDGE_HINT = [
   'deadline | /ˈdedlaɪn/ | n | hạn chót | We must meet the deadline.',
   '# Mệnh đề',
   'Mệnh đề quan hệ | who, which, that, whose | Bổ nghĩa cho danh từ đứng trước | The man who called you is my boss.',
-  '# Giới từ',
-  'in | trong',
-  '  interested in | quan tâm đến | She is interested in music.',
+  '# Mạo từ',
+  'a | trước danh từ đếm được số ít bắt đầu bằng âm phụ âm',
+  '  a deadline | một hạn chót | We have a deadline on Friday.',
 ].join('\n');
 
 /** Thêm / sửa bài học trong một chương (POST/PATCH /admin/lessons). `lesson` = null → thêm mới vào `sectionId`. */
@@ -125,7 +125,7 @@ export const LessonDialog: React.FC<{ open: boolean; sectionId: string | null; l
               placeholder={KNOWLEDGE_HINT}
               value={f.knowledgeText}
               onChange={(e) => set('knowledgeText', e.target.value)}
-              hint="Hiện dưới video cho học viên. Mục: # Ngữ pháp, # Từ vựng, # Mệnh đề, # Giới từ. Các trường cách nhau dấu |. Giới từ: thụt 2 dấu cách để tạo node con."
+              hint="Hiện dưới video cho học viên. Mục: # Ngữ pháp, # Từ vựng, # Mệnh đề, # Mạo từ. Các trường cách nhau dấu |. Mạo từ: thụt 2 dấu cách để thêm từ đi kèm (node con)."
             />
           </div>
         )}
