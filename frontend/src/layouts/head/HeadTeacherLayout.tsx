@@ -1,5 +1,5 @@
 import React from 'react';
-import { LayoutDashboard, Library, Database, Users, School, CheckSquare, BarChart3, MessageSquareWarning, GraduationCap, CalendarDays, Scale, Video, FileText, BookOpen } from 'lucide-react';
+import { LayoutDashboard, Library, Database, Users, School, CheckSquare, BarChart3, MessageSquareWarning, GraduationCap, CalendarDays, Scale, Video, FileText, BookOpen, ClipboardList, Trophy, FolderOpen } from 'lucide-react';
 import { AppShell, NavGroup } from '@/shared/components/layout/AppShell';
 import { StaffNav, type StaffMenu } from '@/shared/components/layout/StaffNav';
 import { useHeadDashboard, useHeadStudents, useHeadSubjects } from '@/shared/api/head';
@@ -22,7 +22,10 @@ const buildMenus = ({ pending, openComplaints, toReview, riskStudents, subjects,
   {
     label: 'Giảng dạy',
     children: [
-      { to: '/head/schedule', label: 'Lịch dạy bộ môn', icon: CalendarDays, desc: 'Lịch tuần mọi lớp, trùng phòng, dự giờ' },
+      { to: '/head/schedule', label: 'Lịch dạy & điểm danh', icon: CalendarDays, desc: 'Lịch tuần mọi lớp, chuyên cần, trùng phòng, dự giờ', group: 'Trong lớp' },
+      { to: '/head/assignments', label: 'Bài tập các lớp', icon: ClipboardList, desc: 'Bài giáo viên đã giao, tỉ lệ nộp, bài chờ chấm' },
+      { to: '/head/class-content', label: 'Tài liệu & bảng tin lớp', icon: FolderOpen, desc: 'Tài liệu giáo viên tải lên, bài đăng bảng tin' },
+      { to: '/head/results', label: 'Kết quả thi của học viên', icon: Trophy, desc: 'Điểm thi thử, luyện Part, bài kiểm tra', group: 'Kết quả & chất lượng' },
       { to: '/head/grading-review', label: 'Kiểm định chấm bài', icon: Scale, desc: 'Chấm lại bài Viết, Nói giáo viên đã chấm', badge: toReview },
       { to: '/head/complaints', label: 'Khiếu nại & phúc khảo', icon: MessageSquareWarning, desc: 'Học viên khiếu nại đáp án, xin chấm lại', badge: openComplaints },
     ],
@@ -55,7 +58,10 @@ const buildGroups = ({ pending, openComplaints, toReview }: Counts): NavGroup[] 
   {
     title: 'Giảng dạy',
     items: [
-      { to: '/head/schedule', label: 'Lịch dạy bộ môn', icon: CalendarDays },
+      { to: '/head/schedule', label: 'Lịch dạy & điểm danh', icon: CalendarDays },
+      { to: '/head/assignments', label: 'Bài tập các lớp', icon: ClipboardList },
+      { to: '/head/class-content', label: 'Tài liệu & bảng tin lớp', icon: FolderOpen },
+      { to: '/head/results', label: 'Kết quả thi của học viên', icon: Trophy },
       { to: '/head/grading-review', label: 'Kiểm định chấm bài', icon: Scale, badge: toReview },
       { to: '/head/complaints', label: 'Khiếu nại & phúc khảo', icon: MessageSquareWarning, badge: openComplaints },
       { to: '/head/reports', label: 'Báo cáo tổng kết', icon: BarChart3 },

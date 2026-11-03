@@ -16,6 +16,10 @@ import { HeadLibraryPage } from '@/roles/head/pages/HeadLibraryPage';
 import { HeadApprovalsPage } from '@/roles/head/pages/HeadApprovalsPage';
 import { HeadReportsPage } from '@/roles/head/pages/HeadReportsPage';
 import { HeadComplaintsPage } from '@/roles/head/pages/HeadComplaintsPage';
+import { HeadAssignmentsPage } from '@/roles/head/pages/HeadAssignmentsPage';
+import { HeadResultsPage } from '@/roles/head/pages/HeadResultsPage';
+import { HeadClassContentPage } from '@/roles/head/pages/HeadClassContentPage';
+import { HeadStudentDetailPage } from '@/roles/head/pages/HeadStudentDetailPage';
 import { NotificationsPage } from '@/roles/common/NotificationsPage';
 import { AccountSettingsPage } from '@/roles/common/AccountSettingsPage';
 
@@ -39,6 +43,10 @@ export const headRoutes: RouteObject[] = [
               { path: 'classes', element: <HeadClassesPage /> },
               { path: 'classes/:id', element: <HeadClassDetailPage /> },
               { path: 'students', element: <HeadStudentsPage /> },
+              { path: 'students/:id', element: <HeadStudentDetailPage /> },
+              { path: 'assignments', element: <HeadAssignmentsPage /> },
+              { path: 'results', element: <HeadResultsPage /> },
+              { path: 'class-content', element: <HeadClassContentPage /> },
               { path: 'schedule', element: <HeadSchedulePage /> },
               { path: 'grading-review', element: <HeadGradingReviewPage /> },
               { path: 'grading-review/:reviewId', element: <HeadGradingReviewPage /> },

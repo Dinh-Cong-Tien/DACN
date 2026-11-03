@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from 'react';
-import { Copy, Lock, Unlock, UserCog, School, Users, GraduationCap, AlertTriangle } from 'lucide-react';
+import { Copy, Lock, Unlock, UserCog, School, Users, GraduationCap, AlertTriangle, Eye } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
 import { useDocumentTitle } from '@/shared/hooks';
 import { toast } from '@/shared/stores/uiStore';
 import { adminApi, useAdminClasses, useAdminInvalidate, useAdminUsers } from '@/shared/api/admin';
@@ -17,6 +18,7 @@ const EMPTY: Row[] = [];
 /** Toàn bộ lớp trên hệ thống: mã mời học viên dùng để vào lớp, giáo viên phụ trách, trạng thái */
 export const AdminClassesPage: React.FC = () => {
   useDocumentTitle('Lớp học toàn hệ thống');
+  const navigate = useNavigate();
   const classesQ = useAdminClasses();
   const usersQ = useAdminUsers();
   const refresh = useAdminInvalidate();
@@ -49,7 +51,9 @@ export const AdminClassesPage: React.FC = () => {
         <div className="flex min-w-[220px] items-center gap-3">
           <Img src={r.coverUrl ?? PHOTOS.classroom} alt="" wrapperClass="h-10 w-14 shrink-0 rounded-lg" fallbackClass="bg-indigo-200" />
           <div className="min-w-0">
-            <p className="font-semibold text-slate-900">{r.name}</p>
+            <Link to={`/admin/classes/${r.id}`} className="font-semibold text-slate-900 hover:text-indigo-700">
+              {r.name}
+            </Link>
             <p className="text-[12px] text-slate-500">
               {r.schedule} · {r.room}
             </p>
@@ -119,6 +123,7 @@ export const AdminClassesPage: React.FC = () => {
           { key: 'room', label: 'Phòng / hình thức', placeholder: 'Phòng 302 hoặc Online · Google Meet' },
         ]}
         rowActions={(r) => [
+          { label: 'Xem chi tiết lớp', icon: <Eye />, onClick: () => navigate(`/admin/classes/${r.id}`) },
           { label: 'Sao chép mã mời', icon: <Copy />, onClick: () => { void navigator.clipboard?.writeText(r.code).catch(() => undefined); toast.success('Đã sao chép mã mời', r.code); } },
           { label: 'Đổi giáo viên', icon: <UserCog />, onClick: () => { setReassign(r); setTeacher(''); } },
           { label: 'Đổi mã mời', icon: <Copy />, onClick: () => void run(() => adminApi.regenerateCode(r.id), 'Đã tạo mã mời mới', r.name) },

@@ -1,4 +1,5 @@
 import React from 'react';
+import { staffPath } from '@/shared/utils';
 import { TeacherLibraryPage } from '@/roles/teacher/pages/TeacherLibraryPage';
 
 const COPY = {
@@ -8,4 +9,4 @@ const COPY = {
 };
 
 /** Kho học liệu ở chế độ thẩm định: cùng nội dung giáo viên và học viên đang dùng, chỉ xem, không giao bài */
-export const HeadLibraryPage: React.FC = () => <TeacherLibraryPage base="/head/library" canAssign={false} copy={COPY} eyebrow="Kho học liệu" />;
+export const HeadLibraryPage: React.FC = () => <TeacherLibraryPage base={staffPath('/library')} canAssign={false} copy={COPY} eyebrow="Kho học liệu" />;

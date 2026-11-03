@@ -7,7 +7,7 @@ import { toast } from '@/shared/stores/uiStore';
 import { useHeadReports, useHeadSubjects, useHeadTeachers } from '@/shared/api/head';
 import { BarChart, HBarChart, LineChart } from '@/shared/components/charts/Charts';
 import type { ClassReport } from '@/shared/types';
-import { cn } from '@/shared/utils';
+import { cn, staffPath } from '@/shared/utils';
 import { Avatar } from '@/shared/components/ui';
 import { Figures, Meter, Panel, TBtn, TPageHead, inputCls, tbl } from '@/roles/teacher/components/TeacherKit';
 
@@ -143,7 +143,7 @@ export const HeadReportsPage: React.FC = () => {
                     <div className="flex items-center gap-3">
                       <Avatar name={r.teacher} src={teacherByName(r.teacher)?.avatarUrl} size="sm" />
                       <div className="min-w-0">
-                        <Link to={`/head/classes/${r.classId}`} className="block whitespace-nowrap font-semibold text-slate-900 hover:text-indigo-700">
+                        <Link to={staffPath(`/classes/${r.classId}`)} className="block whitespace-nowrap font-semibold text-slate-900 hover:text-indigo-700">
                           {r.className}
                         </Link>
                         <p className="whitespace-nowrap text-xs text-slate-500">{r.teacher}</p>

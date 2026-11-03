@@ -131,3 +131,9 @@ export function parseExamSetup(search: string, allParts: string[], fullMinutes: 
   const t = q.get('time');
   return { mode: 'PRACTICE', parts, minutes: t === 'none' ? null : Math.max(1, Number(t) || fullMinutes) };
 }
+
+/**
+ * Đường dẫn khu quản lý học vụ dùng chung giữa Trưởng bộ môn (/head) và Quản trị (/admin):
+ * các trang giám sát học vụ được admin dùng lại, link nội bộ phải ở lại đúng khu vực đang đứng.
+ */
+export const staffPath = (p: string) => (typeof window !== 'undefined' && window.location.pathname.startsWith('/admin') ? '/admin' : '/head') + p;

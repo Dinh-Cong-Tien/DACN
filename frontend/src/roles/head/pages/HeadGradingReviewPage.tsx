@@ -6,7 +6,7 @@ import { toast } from '@/shared/stores/uiStore';
 import { headApi, useHeadInvalidate, useHeadReviews, useHeadTeachers, type HeadGradingReview } from '@/shared/api/head';
 import { errorMessage } from '@/shared/api/client';
 import type { GradingReview } from '@/shared/types';
-import { cn, formatDateTime } from '@/shared/utils';
+import { cn, formatDateTime, staffPath } from '@/shared/utils';
 import { Avatar } from '@/shared/components/ui';
 import { Figures, Panel, Status, TBtn, TPageHead, TTabs, inputCls, type StatusTone } from '@/roles/teacher/components/TeacherKit';
 import { criteriaAvg } from './HeadTeacherDetailPage';
@@ -56,7 +56,7 @@ export const HeadGradingReviewPage: React.FC = () => {
       const r = await headApi.decideReview(selected.id, agree ? { decision: 'AGREED', note: note.trim() || undefined } : { decision: 'ADJUSTED', scores, note: note.trim() });
       toast.success(agree ? 'Đã xác nhận điểm' : 'Đã điều chỉnh điểm', agree ? `${selected.studentName} · ${fmt(round(teacherAvg))}/10` : `${selected.studentName} · ${fmt(round(teacherAvg))} → ${fmt(r.headTotal ?? round(headAvg ?? 0))} · ${selected.teacher} nhận được thông báo`);
       await refresh();
-      navigate(next ? `/head/grading-review/${next.id}` : '/head/grading-review');
+      navigate(next ? staffPath(`/grading-review/${next.id}`) : staffPath('/grading-review'));
     } catch (e) {
       toast.error('Không lưu được kết quả kiểm định', errorMessage(e));
     } finally {
@@ -84,7 +84,7 @@ export const HeadGradingReviewPage: React.FC = () => {
           <div className="px-4 pt-2">
             <TTabs
               value={tab}
-              onChange={(k) => (setTab(k as GradingReview['status']), navigate('/head/grading-review'))}
+              onChange={(k) => (setTab(k as GradingReview['status']), navigate(staffPath('/grading-review')))}
               items={[
                 { key: 'PENDING', label: 'Chờ', count: reviews.filter((r) => r.status === 'PENDING').length },
                 { key: 'AGREED', label: 'Đồng ý', count: reviews.filter((r) => r.status === 'AGREED').length },
@@ -98,7 +98,7 @@ export const HeadGradingReviewPage: React.FC = () => {
             <ul className="max-h-[65vh] divide-y divide-slate-100 overflow-y-auto">
               {list.map((r) => (
                 <li key={r.id}>
-                  <button type="button" onClick={() => navigate(`/head/grading-review/${r.id}`)} className={cn('flex w-full items-start gap-3 px-4 py-3 text-left transition-colors', selected?.id === r.id ? 'bg-indigo-500/[0.06]' : 'hover:bg-slate-50')}>
+                  <button type="button" onClick={() => navigate(staffPath(`/grading-review/${r.id}`))} className={cn('flex w-full items-start gap-3 px-4 py-3 text-left transition-colors', selected?.id === r.id ? 'bg-indigo-500/[0.06]' : 'hover:bg-slate-50')}>
                     <Avatar name={r.studentName} src={r.avatarUrl} size="sm" />
                     <span className="min-w-0 flex-1">
                       <span className="flex items-baseline justify-between gap-2">
@@ -125,7 +125,7 @@ export const HeadGradingReviewPage: React.FC = () => {
                 <>
                   {selected.studentName} · {selected.className} · giáo viên{' '}
                   {teacherByName(selected.teacher) ? (
-                    <Link to={`/head/teachers/${teacherByName(selected.teacher)!.id}`} className="text-indigo-700 hover:underline">
+                    <Link to={staffPath(`/teachers/${teacherByName(selected.teacher)!.id}`)} className="text-indigo-700 hover:underline">
                       {selected.teacher}
                     </Link>
                   ) : (

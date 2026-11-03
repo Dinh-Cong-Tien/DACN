@@ -9,7 +9,7 @@ import { errorMessage } from '@/shared/api/client';
 import { ASSIGNMENT_TYPE_LABEL, partLabel } from '@/shared/constants/staff';
 import { Img, PHOTOS } from '@/shared/components/media/Img';
 import { HBarChart, LineChart } from '@/shared/components/charts/Charts';
-import { cn, formatDate, timeAgo } from '@/shared/utils';
+import { cn, formatDate, timeAgo, staffPath } from '@/shared/utils';
 import { Avatar, Input, Modal, Textarea } from '@/shared/components/ui';
 import { Figures, Meter, Panel, Status, TBtn, TTabs, tbl, type StatusTone } from '@/roles/teacher/components/TeacherKit';
 import { classIssue } from './HeadClassesPage';
@@ -209,7 +209,7 @@ export const HeadClassDetailPage: React.FC = () => {
   if (!q.data) {
     return (
       <div className="space-y-6">
-        <Link to="/head/classes" className="text-[13px] text-slate-500 hover:text-slate-900">
+        <Link to={staffPath('/classes')} className="text-[13px] text-slate-500 hover:text-slate-900">
           ← Lớp học bộ môn
         </Link>
         <Panel>
@@ -246,7 +246,7 @@ export const HeadClassDetailPage: React.FC = () => {
   return (
     <div className="space-y-6">
       <nav aria-label="Breadcrumb" className="flex items-center gap-1 text-[13px] text-slate-500">
-        <Link to="/head/classes" className="hover:text-slate-900 hover:underline underline-offset-2">
+        <Link to={staffPath('/classes')} className="hover:text-slate-900 hover:underline underline-offset-2">
           Lớp học bộ môn
         </Link>
         <ChevronRight className="h-3.5 w-3.5 text-slate-400" />
@@ -278,7 +278,7 @@ export const HeadClassDetailPage: React.FC = () => {
             {issue && <p className="mt-3 inline-flex rounded-lg bg-rose-500/25 px-2.5 py-1 text-sm text-rose-50">{issue}</p>}
           </div>
           <div className="flex shrink-0 flex-col gap-3 sm:items-end">
-            <Link to={teacher ? `/head/teachers/${teacher.id}` : '/head/teachers'} className="flex items-center gap-2.5 rounded-xl border border-white/20 bg-white/10 px-3 py-2 backdrop-blur hover:bg-white/15">
+            <Link to={teacher ? staffPath(`/teachers/${teacher.id}`) : staffPath('/teachers')} className="flex items-center gap-2.5 rounded-xl border border-white/20 bg-white/10 px-3 py-2 backdrop-blur hover:bg-white/15">
               <Avatar name={cls.teacherName} src={teacher?.avatarUrl} size="sm" />
               <span>
                 <span className="block text-[11px] text-slate-300">Giáo viên phụ trách</span>

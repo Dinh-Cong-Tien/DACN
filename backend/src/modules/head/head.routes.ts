@@ -23,9 +23,11 @@ import {
   toClassRoom,
   toComplaint,
 } from './shared';
+import { oversightRouter } from './head.oversight';
 
 export const headRouter = Router();
 headRouter.use(auth, allow('HEAD_TEACHER'), refreshLiveAfterWrite);
+headRouter.use(oversightRouter);
 
 const scopeOf = (req: Request) => deptScope(me(req));
 const uuid = z.string().uuid();
@@ -77,7 +79,18 @@ const subjectBody = z.object({
   code: z.string().trim().min(2).max(20),
   examType: z.enum(['TOEIC', 'VSTEP']),
   description: z.string().max(2000).nullish(),
+  /** Chỉ ADMIN được chỉ định trưởng bộ môn; trưởng bộ môn tạo môn thì tự phụ trách */
+  headId: z.string().uuid().nullish(),
 });
+
+/** headId phải là tài khoản trưởng bộ môn đang hoạt động */
+async function resolveHead(req: Request, headId: string | null | undefined) {
+  if (me(req).role !== 'ADMIN') return undefined;
+  if (headId === undefined || headId === null) return headId;
+  const u = await prisma.user.findFirst({ where: { id: headId, deletedAt: null, role: 'HEAD_TEACHER' }, select: { id: true } });
+  if (!u) throw badRequest('Người phụ trách phải là tài khoản trưởng bộ môn', 'INVALID_HEAD');
+  return u.id;
+}
 
 async function toSubjects(where: Prisma.DepartmentWhereInput) {
   const deps = await prisma.department.findMany({
@@ -99,6 +112,7 @@ async function toSubjects(where: Prisma.DepartmentWhereInput) {
     classesCount: d.classDepartments.length,
     questionsCount: qCount.find((q) => q.examType === d.examType)?._count ?? 0,
     lead: d.head?.fullName ?? '',
+    headId: d.headId ?? undefined,
     description: d.description ?? undefined,
   }));
 }
@@ -113,8 +127,9 @@ headRouter.get(
 headRouter.post(
   '/subjects',
   handler(async (req) => {
-    const body = parse(subjectBody, req.body);
-    const d = await prisma.department.create({ data: { ...body, headId: me(req).id } });
+    const { headId, ...body } = parse(subjectBody, req.body);
+    const head = await resolveHead(req, headId);
+    const d = await prisma.department.create({ data: { ...body, headId: me(req).role === 'ADMIN' ? (head ?? null) : me(req).id } });
     await audit(req, 'DEPARTMENT_CREATE', 'department', d.id, { after: body });
     return (await toSubjects({ id: d.id }))[0];
   })
@@ -126,8 +141,10 @@ headRouter.patch(
     if (!(await prisma.department.findFirst({ where: { id, deletedAt: null }, select: { id: true } }))) throw notFound('Bộ môn');
     const scope = await scopeOf(req);
     if (scope && !scope.includes(id)) throw forbidden('Bộ môn này không thuộc phạm vi bạn phụ trách');
-    const body = parse(subjectBody.partial(), req.body);
-    await prisma.department.update({ where: { id }, data: body });
+    const { headId, ...body } = parse(subjectBody.partial(), req.body);
+    const head = await resolveHead(req, headId);
+    await prisma.department.update({ where: { id }, data: { ...body, ...(head !== undefined ? { headId: head } : {}) } });
+    if (head !== undefined) await audit(req, 'DEPARTMENT_HEAD_CHANGE', 'department', id, { after: { headId: head } });
     return (await toSubjects({ id }))[0];
   })
 );

@@ -8,7 +8,7 @@ import { headApi, useHeadReviews, useHeadTeacher } from '@/shared/api/head';
 import { errorMessage } from '@/shared/api/client';
 import { addDaysLocal, distinctStudents, mondayOf, pooledAttendance, weekdayCode, ymdLocal } from '@/shared/constants/staff';
 import { Avatar, Modal, Textarea } from '@/shared/components/ui';
-import { cn, formatDate } from '@/shared/utils';
+import { cn, formatDate, staffPath } from '@/shared/utils';
 import { CLASS_BAR, DAY_NAME, Figures, Meter, Panel, PanelLink, Status, TBtn, classTone, tbl } from '@/roles/teacher/components/TeacherKit';
 import { ObservationActions, ObserveDialog, Stars } from './HeadClassDetailPage';
 
@@ -35,7 +35,7 @@ export const HeadTeacherDetailPage: React.FC = () => {
   if (!q.data) {
     return (
       <div className="space-y-6">
-        <Link to="/head/teachers" className="text-[13px] text-slate-500 hover:text-slate-900">
+        <Link to={staffPath('/teachers')} className="text-[13px] text-slate-500 hover:text-slate-900">
           ← Giáo viên bộ môn
         </Link>
         <Panel>
@@ -73,7 +73,7 @@ export const HeadTeacherDetailPage: React.FC = () => {
   return (
     <div className="space-y-6">
       <nav aria-label="Breadcrumb" className="flex items-center gap-1 text-[13px] text-slate-500">
-        <Link to="/head/teachers" className="hover:text-slate-900 hover:underline underline-offset-2">
+        <Link to={staffPath('/teachers')} className="hover:text-slate-900 hover:underline underline-offset-2">
           Giáo viên bộ môn
         </Link>
         <ChevronRight className="h-3.5 w-3.5 text-slate-400" />
@@ -140,7 +140,7 @@ export const HeadTeacherDetailPage: React.FC = () => {
                     {classes.map((c) => (
                       <tr key={c.id} className={tbl.tr}>
                         <td className={cn(tbl.td, 'min-w-[200px]')}>
-                          <Link to={`/head/classes/${c.id}`} className="font-medium text-slate-900 hover:text-indigo-700">
+                          <Link to={staffPath(`/classes/${c.id}`)} className="font-medium text-slate-900 hover:text-indigo-700">
                             {c.name}
                           </Link>
                           <p className="text-[12px] text-slate-500">
@@ -169,7 +169,7 @@ export const HeadTeacherDetailPage: React.FC = () => {
             )}
           </Panel>
 
-          <Panel title="Kiểm định chấm bài" sub="Bài Viết/Nói giáo viên đã chấm, trưởng bộ môn chấm lại để so sánh" icon={PenTool} tone="amber" action={<PanelLink to="/head/grading-review">Bàn kiểm định</PanelLink>} flush>
+          <Panel title="Kiểm định chấm bài" sub="Bài Viết/Nói giáo viên đã chấm, trưởng bộ môn chấm lại để so sánh" icon={PenTool} tone="amber" action={<PanelLink to={staffPath('/grading-review')}>Bàn kiểm định</PanelLink>} flush>
             {reviews.length === 0 ? (
               <p className="px-5 py-8 text-center text-sm text-slate-500">Chưa có bài nào được chọn kiểm định.</p>
             ) : (
@@ -188,7 +188,7 @@ export const HeadTeacherDetailPage: React.FC = () => {
                         </p>
                       </div>
                       {r.status === 'PENDING' ? (
-                        <TBtn size="sm" to={`/head/grading-review/${r.id}`}>
+                        <TBtn size="sm" to={staffPath(`/grading-review/${r.id}`)}>
                           Kiểm định
                         </TBtn>
                       ) : (

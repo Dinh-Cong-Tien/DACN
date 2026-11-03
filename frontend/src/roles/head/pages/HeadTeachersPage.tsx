@@ -1,4 +1,5 @@
 import React, { useMemo } from 'react';
+import { staffPath } from '@/shared/utils';
 import { Link, useNavigate } from 'react-router-dom';
 import { Users, Lock, Unlock, UserRound, UserCheck, Clock, Star } from 'lucide-react';
 import { useDocumentTitle } from '@/shared/hooks';
@@ -22,7 +23,7 @@ const makeColumns = (obs: ClassObservation[]): Column<TeacherSummary>[] => [
     key: 'name',
     header: 'Giáo viên',
     render: (r) => (
-      <Link to={`/head/teachers/${r.id}`} className="group flex items-center gap-3">
+      <Link to={staffPath(`/teachers/${r.id}`)} className="group flex items-center gap-3">
         <Avatar name={r.name} src={r.avatarUrl} size="md" status={r.status === 'ACTIVE' ? 'online' : 'offline'} />
         <div>
           <p className="font-semibold text-slate-900 group-hover:text-indigo-700">{r.name}</p>
@@ -93,7 +94,7 @@ export const HeadTeachersPage: React.FC = () => {
         ]}
         fields={[]}
         rowActions={(row) => [
-          { label: 'Xem hồ sơ chuyên môn', icon: <UserRound />, onClick: () => navigate(`/head/teachers/${row.id}`) },
+          { label: 'Xem hồ sơ chuyên môn', icon: <UserRound />, onClick: () => navigate(staffPath(`/teachers/${row.id}`)) },
           ...(row.status === 'PENDING' ? [{ label: 'Duyệt hồ sơ giáo viên', icon: <UserCheck />, onClick: () => change(row, 'ACTIVE', 'Đã duyệt hồ sơ', `${row.name} có thể nhận lớp`) }] : []),
           row.status === 'LOCKED'
             ? { label: 'Mở khoá tài khoản', icon: <Unlock />, onClick: () => change(row, 'ACTIVE', 'Đã mở khoá', row.name) }

@@ -6,7 +6,7 @@ import { useDocumentTitle } from '@/shared/hooks';
 import { useAuthStore } from '@/shared/stores/authStore';
 import { useHeadApprovals, useHeadClasses, useHeadComplaints, useHeadDashboard, useHeadObservations, useHeadReports, useHeadReviews, useHeadSubjects, useHeadTeachers } from '@/shared/api/head';
 import type { ApprovalRequest, ClassReport } from '@/shared/types';
-import { cn, formatNumber, timeAgo } from '@/shared/utils';
+import { cn, formatNumber, timeAgo, staffPath } from '@/shared/utils';
 import { Avatar } from '@/shared/components/ui';
 import { BarChart } from '@/shared/components/charts/Charts';
 import { Img, PHOTOS } from '@/shared/components/media/Img';
@@ -45,12 +45,12 @@ export const HeadDashboardPage: React.FC = () => {
   const lowAttendance = classReports.filter((r) => r.attendance > 0 && r.attendance < 80);
 
   const todos: { icon: React.ElementType; tone: Tone; text: string; to: string; cta: string }[] = [
-    ...(pending.length ? [{ icon: CheckSquare, tone: 'indigo' as Tone, text: `Duyệt ${pending.length} học liệu giáo viên gửi lên`, to: '/head/approvals', cta: 'Duyệt' }] : []),
-    ...(reviews.length ? [{ icon: PenTool, tone: 'violet' as Tone, text: `Kiểm định ${reviews.length} bài Viết / Nói giáo viên đã chấm`, to: '/head/grading-review', cta: 'Chấm lại' }] : []),
-    ...(newComplaints.length ? [{ icon: MessageSquareWarning, tone: 'rose' as Tone, text: `Tiếp nhận ${newComplaints.length} khiếu nại mới từ học viên`, to: '/head/complaints', cta: 'Xử lý' }] : []),
-    ...(conflictCount ? [{ icon: AlertTriangle, tone: 'amber' as Tone, text: `${conflictCount} buổi trùng phòng trong tuần này`, to: '/head/schedule', cta: 'Lịch dạy' }] : []),
-    ...(planned.length ? [{ icon: Eye, tone: 'sky' as Tone, text: `Dự giờ ${planned[0].teacher} · ${WEEKDAY[new Date(planned[0].date).getDay()]} ${dm(planned[0].date)} lúc ${planned[0].start}`, to: '/head/schedule', cta: 'Xem' }] : []),
-    ...orphan.map((c) => ({ icon: UserRoundX, tone: 'emerald' as Tone, text: `Phân công lại giáo viên cho lớp ${c.name}`, to: `/head/classes/${c.id}`, cta: 'Phân công' })),
+    ...(pending.length ? [{ icon: CheckSquare, tone: 'indigo' as Tone, text: `Duyệt ${pending.length} học liệu giáo viên gửi lên`, to: staffPath('/approvals'), cta: 'Duyệt' }] : []),
+    ...(reviews.length ? [{ icon: PenTool, tone: 'violet' as Tone, text: `Kiểm định ${reviews.length} bài Viết / Nói giáo viên đã chấm`, to: staffPath('/grading-review'), cta: 'Chấm lại' }] : []),
+    ...(newComplaints.length ? [{ icon: MessageSquareWarning, tone: 'rose' as Tone, text: `Tiếp nhận ${newComplaints.length} khiếu nại mới từ học viên`, to: staffPath('/complaints'), cta: 'Xử lý' }] : []),
+    ...(conflictCount ? [{ icon: AlertTriangle, tone: 'amber' as Tone, text: `${conflictCount} buổi trùng phòng trong tuần này`, to: staffPath('/schedule'), cta: 'Lịch dạy' }] : []),
+    ...(planned.length ? [{ icon: Eye, tone: 'sky' as Tone, text: `Dự giờ ${planned[0].teacher} · ${WEEKDAY[new Date(planned[0].date).getDay()]} ${dm(planned[0].date)} lúc ${planned[0].start}`, to: staffPath('/schedule'), cta: 'Xem' }] : []),
+    ...orphan.map((c) => ({ icon: UserRoundX, tone: 'emerald' as Tone, text: `Phân công lại giáo viên cho lớp ${c.name}`, to: staffPath(`/classes/${c.id}`), cta: 'Phân công' })),
   ];
 
   return (
@@ -68,10 +68,10 @@ export const HeadDashboardPage: React.FC = () => {
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <TBtn to="/head/schedule" icon={<CalendarCheck />}>
+          <TBtn to={staffPath('/schedule')} icon={<CalendarCheck />}>
             Lịch dạy bộ môn
           </TBtn>
-          <TBtn to="/head/reports" variant="primary" icon={<BarChart3 />}>
+          <TBtn to={staffPath('/reports')} variant="primary" icon={<BarChart3 />}>
             Báo cáo
           </TBtn>
         </div>
@@ -108,10 +108,10 @@ export const HeadDashboardPage: React.FC = () => {
               </ul>
             </div>
             <div className="flex flex-wrap gap-2">
-              <Link to="/head/approvals" className="inline-flex h-10 items-center gap-1.5 rounded-xl bg-white px-4 text-sm font-semibold text-slate-900 hover:bg-indigo-50">
+              <Link to={staffPath('/approvals')} className="inline-flex h-10 items-center gap-1.5 rounded-xl bg-white px-4 text-sm font-semibold text-slate-900 hover:bg-indigo-50">
                 <CheckSquare className="h-4 w-4" /> Mở bàn phê duyệt
               </Link>
-              <Link to="/head/grading-review" className="inline-flex h-10 items-center gap-1.5 rounded-xl border border-white/25 px-4 text-sm font-semibold text-white hover:bg-white/10">
+              <Link to={staffPath('/grading-review')} className="inline-flex h-10 items-center gap-1.5 rounded-xl border border-white/25 px-4 text-sm font-semibold text-white hover:bg-white/10">
                 <PenTool className="h-4 w-4" /> Kiểm định chấm ({reviews.length})
               </Link>
             </div>
@@ -145,7 +145,7 @@ export const HeadDashboardPage: React.FC = () => {
       />
 
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)]">
-        <Panel title="Điểm trung bình các lớp TOEIC" sub="Trung bình bài thi thử (đề full) của học viên trong lớp · thang 990" icon={BarChart3} tone="sky" action={<PanelLink to="/head/reports">Báo cáo</PanelLink>}>
+        <Panel title="Điểm trung bình các lớp TOEIC" sub="Trung bình bài thi thử (đề full) của học viên trong lớp · thang 990" icon={BarChart3} tone="sky" action={<PanelLink to={staffPath('/reports')}>Báo cáo</PanelLink>}>
           {toeicReports.length ? (
             <BarChart ariaLabel="Điểm trung bình các lớp TOEIC" data={toeicReports.map((r) => ({ label: r.className.replace('TOEIC ', '').replace('Ngữ pháp nền tảng ', 'NP ').replace(' Intensive', '').replace('Foundation Sáng', 'Found.'), value: r.avgScore }))} height={220} unit=" điểm" />
           ) : (
@@ -167,7 +167,7 @@ export const HeadDashboardPage: React.FC = () => {
           </div>
         </Panel>
 
-        <Panel title="Ngân hàng câu hỏi" sub={`${formatNumber(totalQuestions)} câu đã xuất bản`} icon={Database} tone="amber" action={<PanelLink to="/head/question-bank">Mở</PanelLink>}>
+        <Panel title="Ngân hàng câu hỏi" sub={`${formatNumber(totalQuestions)} câu đã xuất bản`} icon={Database} tone="amber" action={<PanelLink to={staffPath('/question-bank')}>Mở</PanelLink>}>
           <ul className="space-y-4">
             {subjectList.map((s) => (
               <li key={s.id}>
@@ -186,13 +186,13 @@ export const HeadDashboardPage: React.FC = () => {
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
-        <Panel title="Giáo viên bộ môn" sub={`${activeTeachers.length}/${teacherList.length} đang giảng dạy`} icon={Users} tone="emerald" action={<PanelLink to="/head/teachers">Tất cả</PanelLink>} flush>
+        <Panel title="Giáo viên bộ môn" sub={`${activeTeachers.length}/${teacherList.length} đang giảng dạy`} icon={Users} tone="emerald" action={<PanelLink to={staffPath('/teachers')}>Tất cả</PanelLink>} flush>
           <ul className="divide-y divide-slate-100">
             {teacherList.map((t) => (
               <li key={t.id} className="flex items-center gap-3 px-5 py-3">
                 <Avatar name={t.name} src={t.avatarUrl} size="sm" />
                 <div className="min-w-0 flex-1">
-                  <Link to={`/head/teachers/${t.id}`} className="block truncate text-sm font-semibold text-slate-900 hover:text-indigo-700">
+                  <Link to={staffPath(`/teachers/${t.id}`)} className="block truncate text-sm font-semibold text-slate-900 hover:text-indigo-700">
                     {t.name}
                   </Link>
                   <p className="truncate text-xs text-slate-500">
@@ -238,7 +238,7 @@ export const HeadDashboardPage: React.FC = () => {
         </Panel>
       </div>
 
-      <Panel title="Xếp loại lớp" sub="Theo điểm thi thử và chuyên cần" icon={School} tone="violet" action={<PanelLink to="/head/classes">Danh sách lớp</PanelLink>} flush>
+      <Panel title="Xếp loại lớp" sub="Theo điểm thi thử và chuyên cần" icon={School} tone="violet" action={<PanelLink to={staffPath('/classes')}>Danh sách lớp</PanelLink>} flush>
         <div className="overflow-x-auto">
           <table className={tbl.table}>
             <thead className={tbl.thead}>
@@ -257,7 +257,7 @@ export const HeadDashboardPage: React.FC = () => {
                     <div className="flex items-center gap-3">
                       <span className={cn('flex h-9 w-9 shrink-0 items-center justify-center rounded-xl font-display text-sm font-extrabold', r.grade ? GRADE_CLS[r.grade] : 'bg-slate-100 text-slate-400')} title={r.grade ? undefined : 'Chưa có điểm thi và điểm danh'}>{r.grade ?? '—'}</span>
                       <div className="min-w-0">
-                        <Link to={`/head/classes/${r.classId}`} className="block truncate font-semibold text-slate-900 hover:text-indigo-700">
+                        <Link to={staffPath(`/classes/${r.classId}`)} className="block truncate font-semibold text-slate-900 hover:text-indigo-700">
                           {r.className}
                         </Link>
                         <p className="text-xs text-slate-500">{r.students} học viên</p>

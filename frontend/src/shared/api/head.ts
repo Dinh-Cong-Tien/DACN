@@ -4,7 +4,7 @@
  */
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { ApprovalRequest, ClassObservation, ClassReport, ClassRoom, Complaint, DeptStudent, ExamType, GradingReview, Subject, TeacherSummary } from '@/shared/types';
-import { api } from './client';
+import { api, http } from './client';
 
 // ---------- DTO ----------
 export type HeadClass = ClassRoom & {
@@ -19,7 +19,7 @@ export type HeadClass = ClassRoom & {
   departmentName?: string;
 };
 export type HeadTeacher = TeacherSummary & { role?: string; departmentId?: string | null; bio?: string; phone?: string; joinedAt?: string };
-export type HeadSubject = Subject & { description?: string };
+export type HeadSubject = Subject & { description?: string; headId?: string };
 export interface SessionRow {
   id: string;
   classId: string;
@@ -133,14 +133,91 @@ export interface QuestionPage {
   pageSize: number;
   byPart: { part: string; count: number }[];
 }
+export interface OversightAssignment {
+  id: string;
+  classId: string;
+  className: string;
+  title: string;
+  type: string;
+  dueDate: string;
+  openAt?: string;
+  submitted: number;
+  total: number;
+  graded: number;
+  status: 'OPEN' | 'CLOSED' | 'DRAFT';
+  overdue: boolean;
+  avgScore?: number;
+  maxScore?: number;
+  examType: ExamType;
+  teacherId?: string;
+  teacherName: string;
+  createdAt: string;
+  note?: string;
+}
+export interface OversightSubmission {
+  id: string;
+  studentId: string;
+  studentName: string;
+  avatarUrl?: string;
+  submittedAt: string;
+  score?: number;
+  maxScore: number;
+  state: 'TODO' | 'SUBMITTED' | 'LATE' | 'GRADED' | 'MISSING';
+  feedback?: string;
+  className?: string;
+  assignmentTitle?: string;
+  dueDate?: string;
+  type?: string;
+}
+export type OversightAssignmentDetail = OversightAssignment & { submissions: OversightSubmission[] };
+export interface ResultRow {
+  id: string;
+  studentId: string;
+  studentName: string;
+  email: string;
+  avatarUrl?: string;
+  className: string;
+  testTitle: string;
+  examType?: ExamType;
+  mode: string;
+  score?: number;
+  listening?: number;
+  reading?: number;
+  writing?: number;
+  speaking?: number;
+  cefr?: string;
+  correct?: number;
+  total: number;
+  durationSec: number;
+  status: string;
+  submittedAt?: string;
+}
+export interface ResultPage {
+  items: ResultRow[];
+  total: number;
+  page: number;
+  pageSize: number;
+  summary: { attempts: number; fullTests: number; students: number; avgToeic: number | null; avgVstep: number | null };
+}
+export type ResultQuery = { page?: number; pageSize?: number; q?: string; classId?: string; examType?: ExamType; mode?: 'FULL' | 'PRACTICE' | 'OTHER' };
+export interface OversightMaterial { id: string; classId: string; className: string; teacherName: string; title: string; description?: string; type: string; category?: string; url: string; size?: string; downloads: number; createdAt: string }
+export interface OversightAnnouncement { id: string; classId: string; className: string; teacherName: string; title: string; body: string; pinned: boolean; readCount: number; classSize: number; createdAt: string }
+export interface StudentDossier {
+  student: { id: string; name: string; email: string; phone?: string; avatarUrl?: string; status: string; plan: 'FREE' | 'VIP'; joinedAt: string; lastActiveAt: string; streak: number; xp: number; target?: { examType: ExamType; score: string; examDate?: string } };
+  classes: { id: string; name: string; examType: ExamType; teacherName: string; memberStatus: string; joinedAt?: string; attendanceRate: number | null; sessionsMarked: number; absent: number; assignmentsDone: number; assignmentsTotal: number }[];
+  attempts: { id: string; testTitle: string; examType?: ExamType; mode: string; score?: number; listening?: number; reading?: number; cefr?: string; correct?: number; total: number; durationSec: number; submittedAt?: string }[];
+  submissions: OversightSubmission[];
+  notes: { id: string; kind: string; text: string; date: string; teacherName: string; className?: string }[];
+}
+
 export type QuestionQuery = { page?: number; pageSize?: number; q?: string; examType?: ExamType; part?: string; skill?: string; status?: string; type?: string };
 
 // ---------- gọi API ----------
 export const headApi = {
   dashboard: () => api.get<HeadDashboard>('/head/dashboard'),
   subjects: () => api.get<HeadSubject[]>('/head/subjects'),
-  createSubject: (b: { name: string; code: string; examType: ExamType; description?: string }) => api.post<HeadSubject>('/head/subjects', b),
-  updateSubject: (id: string, b: Partial<{ name: string; code: string; examType: ExamType; description?: string }>) => api.patch<HeadSubject>(`/head/subjects/${id}`, b),
+  createSubject: (b: { name: string; code: string; examType: ExamType; description?: string; headId?: string | null }) => api.post<HeadSubject>('/head/subjects', b),
+  updateSubject: (id: string, b: Partial<{ name: string; code: string; examType: ExamType; description?: string; headId?: string | null }>) => api.patch<HeadSubject>(`/head/subjects/${id}`, b),
   deleteSubject: (id: string) => api.delete(`/head/subjects/${id}`),
   teachers: () => api.get<HeadTeacher[]>('/head/teachers'),
   teacher: (id: string) => api.get<HeadTeacherDetail>(`/head/teachers/${id}`),
@@ -171,6 +248,14 @@ export const headApi = {
   complaints: () => api.get<HeadComplaint[]>('/head/complaints'),
   setComplaintStatus: (id: string, status: 'NEW' | 'IN_REVIEW' | 'RESOLVED') => api.patch<HeadComplaint>(`/head/complaints/${id}`, { status }),
   replyComplaint: (id: string, b: { text: string; resolve?: boolean; accepted?: boolean }) => api.post<HeadComplaint>(`/head/complaints/${id}/reply`, b),
+  assignments: (q: { classId?: string; status?: string; q?: string } = {}) => api.get<OversightAssignment[]>('/head/assignments', q),
+  assignment: (id: string) => api.get<OversightAssignmentDetail>(`/head/assignments/${id}`),
+  results: (q: ResultQuery) => api.get<ResultPage>('/head/results', q),
+  materials: (classId?: string) => api.get<OversightMaterial[]>('/head/materials', { classId }),
+  announcements: (classId?: string) => api.get<OversightAnnouncement[]>('/head/announcements', { classId }),
+  removeMaterial: (id: string, reason: string) => http.delete(`/head/materials/${id}`, { data: { reason } }),
+  removeAnnouncement: (id: string, reason: string) => http.delete(`/head/announcements/${id}`, { data: { reason } }),
+  student: (id: string) => api.get<StudentDossier>(`/head/students/${id}`),
   reports: (months = 6, departmentId?: string) => api.get<HeadReports>('/head/reports', { months, departmentId }),
 };
 
@@ -192,6 +277,12 @@ export const headKeys = {
   observations: [...K, 'observations'] as const,
   complaints: [...K, 'complaints'] as const,
   reports: (months: number, dep?: string) => [...K, 'reports', months, dep ?? 'all'] as const,
+  assignments: (q: object) => [...K, 'assignments', q] as const,
+  assignment: (id: string) => [...K, 'assignment', id] as const,
+  results: (q: ResultQuery) => [...K, 'results', q] as const,
+  materials: [...K, 'materials'] as const,
+  announcements: [...K, 'announcements'] as const,
+  student: (id: string) => [...K, 'student', id] as const,
 };
 
 export const useHeadDashboard = () => useQuery({ queryKey: headKeys.dashboard, queryFn: headApi.dashboard, staleTime: 30_000 });
@@ -208,6 +299,13 @@ export const useHeadReviews = () => useQuery({ queryKey: headKeys.reviews, query
 export const useHeadObservations = () => useQuery({ queryKey: headKeys.observations, queryFn: headApi.observations });
 export const useHeadComplaints = () => useQuery({ queryKey: headKeys.complaints, queryFn: headApi.complaints });
 export const useHeadReports = (months = 6, dep?: string) => useQuery({ queryKey: headKeys.reports(months, dep), queryFn: () => headApi.reports(months, dep) });
+
+export const useHeadAssignments = (q: { classId?: string; status?: string; q?: string }) => useQuery({ queryKey: headKeys.assignments(q), queryFn: () => headApi.assignments(q), placeholderData: (p) => p });
+export const useHeadAssignment = (id?: string) => useQuery({ queryKey: headKeys.assignment(id ?? ''), queryFn: () => headApi.assignment(id!), enabled: !!id });
+export const useHeadResults = (q: ResultQuery) => useQuery({ queryKey: headKeys.results(q), queryFn: () => headApi.results(q), placeholderData: (p) => p });
+export const useHeadMaterials = () => useQuery({ queryKey: headKeys.materials, queryFn: () => headApi.materials() });
+export const useHeadAnnouncements = () => useQuery({ queryKey: headKeys.announcements, queryFn: () => headApi.announcements() });
+export const useHeadStudent = (id?: string) => useQuery({ queryKey: headKeys.student(id ?? ''), queryFn: () => headApi.student(id!), enabled: !!id });
 
 /** Mutation dùng chung: chạy xong làm mới toàn bộ dữ liệu khu vực Trưởng bộ môn */
 export function useHeadMutation<A, R>(fn: (a: A) => Promise<R>) {

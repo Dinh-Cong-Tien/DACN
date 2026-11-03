@@ -20,6 +20,22 @@ import { AdminSupportPage } from '@/roles/admin/pages/AdminSupportPage';
 import { AdminBillingPage } from '@/roles/admin/pages/AdminBillingPage';
 import { AdminBroadcastsPage } from '@/roles/admin/pages/AdminBroadcastsPage';
 
+/** Khu Đào tạo của admin dùng lại các trang học vụ của Trưởng bộ môn (API /head, phạm vi = toàn hệ thống) */
+import { HeadSubjectsPage } from '@/roles/head/pages/HeadSubjectsPage';
+import { HeadTeachersPage } from '@/roles/head/pages/HeadTeachersPage';
+import { HeadTeacherDetailPage } from '@/roles/head/pages/HeadTeacherDetailPage';
+import { HeadClassDetailPage } from '@/roles/head/pages/HeadClassDetailPage';
+import { HeadStudentsPage } from '@/roles/head/pages/HeadStudentsPage';
+import { HeadStudentDetailPage } from '@/roles/head/pages/HeadStudentDetailPage';
+import { HeadSchedulePage } from '@/roles/head/pages/HeadSchedulePage';
+import { HeadAssignmentsPage } from '@/roles/head/pages/HeadAssignmentsPage';
+import { HeadResultsPage } from '@/roles/head/pages/HeadResultsPage';
+import { HeadClassContentPage } from '@/roles/head/pages/HeadClassContentPage';
+import { HeadApprovalsPage } from '@/roles/head/pages/HeadApprovalsPage';
+import { HeadGradingReviewPage } from '@/roles/head/pages/HeadGradingReviewPage';
+import { HeadComplaintsPage } from '@/roles/head/pages/HeadComplaintsPage';
+import { HeadReportsPage } from '@/roles/head/pages/HeadReportsPage';
+
 export const adminRoutes: RouteObject[] = [
   {
     element: <AuthGuard />,
@@ -47,6 +63,21 @@ export const adminRoutes: RouteObject[] = [
               { path: 'learning', element: <AdminLearningPage /> },
               { path: 'learning/:kind', element: <AdminLearningPage /> },
               { path: 'classes', element: <AdminClassesPage /> },
+              { path: 'classes/:id', element: <HeadClassDetailPage /> },
+              { path: 'departments', element: <HeadSubjectsPage /> },
+              { path: 'teachers', element: <HeadTeachersPage /> },
+              { path: 'teachers/:id', element: <HeadTeacherDetailPage /> },
+              { path: 'students', element: <HeadStudentsPage /> },
+              { path: 'students/:id', element: <HeadStudentDetailPage /> },
+              { path: 'schedule', element: <HeadSchedulePage /> },
+              { path: 'assignments', element: <HeadAssignmentsPage /> },
+              { path: 'results', element: <HeadResultsPage /> },
+              { path: 'class-content', element: <HeadClassContentPage /> },
+              { path: 'approvals', element: <HeadApprovalsPage /> },
+              { path: 'grading-review', element: <HeadGradingReviewPage /> },
+              { path: 'grading-review/:reviewId', element: <HeadGradingReviewPage /> },
+              { path: 'complaints', element: <HeadComplaintsPage /> },
+              { path: 'reports', element: <HeadReportsPage /> },
               { path: 'support', element: <AdminSupportPage /> },
               { path: 'billing', element: <AdminBillingPage /> },
               { path: 'broadcasts', element: <AdminBroadcastsPage /> },

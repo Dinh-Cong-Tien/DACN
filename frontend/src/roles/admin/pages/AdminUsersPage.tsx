@@ -1,6 +1,6 @@
-import { useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import React, { useMemo } from 'react';
-import { Users, Lock, Unlock, KeyRound, UserCheck, UserPlus, Crown } from 'lucide-react';
+import { Users, Lock, Unlock, KeyRound, UserCheck, UserPlus, Crown, GraduationCap, BookUser } from 'lucide-react';
 import { adminApi, useAdminInvalidate, useAdminUsers } from '@/shared/api/admin';
 import { errorMessage } from '@/shared/api/client';
 import type { AppRole, AppUser } from '@/shared/types';
@@ -92,6 +92,7 @@ const tempPassword = () => `Orbi${Math.random().toString(36).slice(2, 8)}!`;
 
 export const AdminUsersPage: React.FC = () => {
   const [params] = useSearchParams();
+  const navigate = useNavigate();
   useDocumentTitle('Quản lý người dùng');
   const { data, isLoading } = useAdminUsers();
   const refresh = useAdminInvalidate();
@@ -195,6 +196,8 @@ export const AdminUsersPage: React.FC = () => {
           </>
         )}
         rowActions={(u) => [
+          ...(u.role === 'STUDENT' ? [{ label: 'Hồ sơ học tập', icon: <GraduationCap />, onClick: () => navigate(`/admin/students/${u.id}`) }] : []),
+          ...(u.role === 'TEACHER' || u.role === 'HEAD_TEACHER' ? [{ label: 'Hồ sơ giảng dạy', icon: <BookUser />, onClick: () => navigate(`/admin/teachers/${u.id}`) }] : []),
           ...(u.status === 'PENDING'
             ? [{ label: 'Kích hoạt tài khoản', icon: <UserCheck />, onClick: () => run(() => adminApi.updateUser(u.id, { status: 'ACTIVE' }), 'Đã kích hoạt', `${u.fullName} có thể đăng nhập ngay.`) }]
             : []),

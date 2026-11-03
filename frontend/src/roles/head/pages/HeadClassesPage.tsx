@@ -9,7 +9,7 @@ import { errorMessage } from '@/shared/api/client';
 import { addDaysLocal, distinctStudents, pooledAttendance, ymdLocal } from '@/shared/constants/staff';
 import { Avatar, Input, Modal, Select } from '@/shared/components/ui';
 import { Img, PHOTOS } from '@/shared/components/media/Img';
-import { cn } from '@/shared/utils';
+import { cn, staffPath } from '@/shared/utils';
 import { Figures, Meter, Panel, TBtn, TPageHead, inputCls } from '@/roles/teacher/components/TeacherKit';
 
 const COVERS = [PHOTOS.classroom, PHOTOS.discussion, PHOTOS.lecture, PHOTOS.team, PHOTOS.students2];
@@ -146,7 +146,7 @@ export const HeadClassesPage: React.FC = () => {
             const next = upcoming.find((s) => s.classId === c.id && s.status === 'UPCOMING');
             return (
               <article key={c.id} className="group flex flex-col overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-[0_1px_2px_rgba(16,24,40,0.04),0_8px_24px_-16px_rgba(16,24,40,0.15)] transition-shadow hover:shadow-[0_20px_40px_-24px_rgba(16,24,40,0.4)]">
-                <Link to={`/head/classes/${c.id}`} className="relative block">
+                <Link to={staffPath(`/classes/${c.id}`)} className="relative block">
                   <Img src={c.coverUrl ?? PHOTOS.classroom} alt={c.name} ratio="video" fallbackClass="bg-slate-200" className="transition-transform duration-500 group-hover:scale-[1.04]" />
                   <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-slate-950/10 to-transparent" />
                   <span className="absolute left-3 top-3 rounded-md bg-white/90 px-2 py-0.5 text-[11px] font-semibold text-slate-800 backdrop-blur">{c.examType}</span>
@@ -163,7 +163,7 @@ export const HeadClassesPage: React.FC = () => {
                     <div className="min-w-0 flex-1">
                       <p className="text-[12px] text-slate-500">Giáo viên phụ trách</p>
                       {t ? (
-                        <Link to={`/head/teachers/${t.id}`} className="block truncate text-sm font-semibold text-slate-900 hover:text-indigo-700">
+                        <Link to={staffPath(`/teachers/${t.id}`)} className="block truncate text-sm font-semibold text-slate-900 hover:text-indigo-700">
                           {c.teacherName}
                         </Link>
                       ) : (
@@ -209,7 +209,7 @@ export const HeadClassesPage: React.FC = () => {
                         </option>
                       ))}
                     </select>
-                    <TBtn size="sm" variant="primary" to={`/head/classes/${c.id}`} icon={<TrendingUp />}>
+                    <TBtn size="sm" variant="primary" to={staffPath(`/classes/${c.id}`)} icon={<TrendingUp />}>
                       Theo dõi lớp
                     </TBtn>
                   </div>

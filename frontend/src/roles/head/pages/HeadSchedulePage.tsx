@@ -4,7 +4,7 @@ import { AlertTriangle, ChevronLeft, ChevronRight, Eye } from 'lucide-react';
 import { useDocumentTitle } from '@/shared/hooks';
 import { useHeadClasses, useHeadObservations, useHeadSchedule, useHeadTeachers, type HeadClass, type SessionRow } from '@/shared/api/head';
 import { Avatar } from '@/shared/components/ui';
-import { cn, formatDate } from '@/shared/utils';
+import { cn, formatDate, staffPath } from '@/shared/utils';
 import { CLASS_BAR, Panel, Status, TBtn, TPageHead, classTone, inputCls } from '@/roles/teacher/components/TeacherKit';
 import { ObserveDialog } from './HeadClassDetailPage';
 
@@ -149,7 +149,7 @@ export const HeadSchedulePage: React.FC = () => {
                       return (
                         <Link
                           key={s.id}
-                          to={`/head/classes/${c.id}`}
+                          to={staffPath(`/classes/${c.id}`)}
                           className={cn('block rounded-lg border-l-4 px-2.5 py-2 transition-shadow hover:shadow-md', CLASS_BAR[toneOf(c.id)], clash && 'ring-2 ring-rose-400', s.status === 'CANCELLED' && 'opacity-50')}
                         >
                           <p className="flex items-center justify-between gap-1 text-[11px] font-semibold tabular-nums text-slate-600">
@@ -184,7 +184,7 @@ export const HeadSchedulePage: React.FC = () => {
                         <p className="text-[12px] text-slate-500">
                           {formatDate(o.date)} · {o.start}
                         </p>
-                        <Link to={`/head/classes/${c.id}`} className="block text-sm font-medium text-slate-900 hover:text-indigo-700">
+                        <Link to={staffPath(`/classes/${c.id}`)} className="block text-sm font-medium text-slate-900 hover:text-indigo-700">
                           {c.name}
                         </Link>
                         <p className="text-[12px] text-slate-500">
@@ -203,7 +203,7 @@ export const HeadSchedulePage: React.FC = () => {
                 const n = weekAll.filter((s) => s.status !== 'CANCELLED' && clsOf(s.classId).teacherName === t.name).length;
                 return (
                   <li key={t.id} className="flex items-center justify-between gap-2 text-sm">
-                    <Link to={`/head/teachers/${t.id}`} className="truncate text-slate-700 hover:text-indigo-700">
+                    <Link to={staffPath(`/teachers/${t.id}`)} className="truncate text-slate-700 hover:text-indigo-700">
                       {t.name}
                     </Link>
                     {t.status === 'LOCKED' ? <Status tone="red">Đã khoá · {n} buổi</Status> : <span className="tabular-nums text-slate-600">{n} buổi</span>}

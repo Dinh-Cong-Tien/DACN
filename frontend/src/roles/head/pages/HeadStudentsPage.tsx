@@ -7,7 +7,7 @@ import type { ClassStudent, DeptStudent } from '@/shared/types';
 import { headApi, useHeadClasses, useHeadStudents, type HeadClass } from '@/shared/api/head';
 import { errorMessage } from '@/shared/api/client';
 import { Avatar } from '@/shared/components/ui';
-import { cn, timeAgo } from '@/shared/utils';
+import { cn, timeAgo, staffPath } from '@/shared/utils';
 import { pooledAttendance } from '@/shared/constants/staff';
 import { Figures, Meter, Panel, Status, TBtn, TPageHead, TTabs, inputCls, tbl } from '@/roles/teacher/components/TeacherKit';
 import { STUDENT_STATUS } from './HeadClassDetailPage';
@@ -118,13 +118,15 @@ export const HeadStudentsPage: React.FC = () => {
                       <span className="flex items-center gap-2.5">
                         <Avatar name={s.name} src={s.avatarUrl} size="sm" />
                         <span className="min-w-0">
-                          <span className="block whitespace-nowrap font-medium text-slate-900">{s.name}</span>
+                          <Link to={staffPath(`/students/${s.id}`)} className="block whitespace-nowrap font-medium text-slate-900 hover:text-indigo-700">
+                            {s.name}
+                          </Link>
                           <span className="block text-[12px] text-slate-500">{s.email}</span>
                         </span>
                       </span>
                     </td>
                     <td className={cn(tbl.td, 'whitespace-nowrap')}>
-                      <Link to={`/head/classes/${c.id}`} className="text-slate-800 hover:text-indigo-700">
+                      <Link to={staffPath(`/classes/${c.id}`)} className="text-slate-800 hover:text-indigo-700">
                         {c.name}
                       </Link>
                       <p className="text-[12px] text-slate-500">{c.teacherName}</p>
