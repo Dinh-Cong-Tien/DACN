@@ -2,12 +2,15 @@ import React from 'react';
 import { Link, NavLink, useLocation } from 'react-router-dom';
 import { ChevronDown, type LucideIcon } from 'lucide-react';
 import { cn } from '@/shared/utils';
+import { STAFF_IMG } from './staffIcons';
 
 export interface StaffMenuLink {
   to: string;
   label: string;
   desc: string;
   icon: LucideIcon;
+  /** Icon 3D màu; mặc định tra theo nhãn trong STAFF_IMG */
+  img?: string;
   /** Nhãn nhóm trong dropdown, hiện ở mục đầu tiên của nhóm */
   group?: string;
   badge?: string;
@@ -20,6 +23,7 @@ export interface StaffMenuLink {
 export interface StaffMenu {
   label: string;
   to?: string;
+  img?: string;
   badge?: string;
   children?: StaffMenuLink[];
 }
@@ -38,7 +42,10 @@ const topCls = (active: boolean) => cn('inline-flex shrink-0 items-center gap-1 
 
 const Count: React.FC<{ n: string }> = ({ n }) => <span className="flex h-[18px] min-w-[18px] items-center justify-center rounded px-1 text-[10px] font-semibold text-white bg-rose-500">{n}</span>;
 
-const DROPDOWN_W = 320;
+const DROPDOWN_W = 340;
+
+/** Icon 3D cạnh nhãn menu cấp 1 — như header trang chủ: chỉ hiện khi màn hình đủ rộng */
+const TopImg: React.FC<{ src?: string }> = ({ src }) => (src ? <img src={src} alt="" className="hidden h-5 w-5 shrink-0 min-[1440px]:block" /> : null);
 
 /** Menu header khu vực quản lý: mục đơn hoặc dropdown có mô tả, nhóm, đếm số */
 export const StaffNav: React.FC<{ menus: StaffMenu[]; label: string }> = ({ menus, label }) => {
@@ -56,6 +63,7 @@ export const StaffNav: React.FC<{ menus: StaffMenu[]; label: string }> = ({ menu
         if (!m.children)
           return (
             <NavLink key={m.label} to={m.to!} className={({ isActive }) => topCls(isActive)}>
+              <TopImg src={m.img ?? STAFF_IMG[m.label]} />
               {m.label}
               {m.badge && <Count n={m.badge} />}
             </NavLink>
@@ -64,6 +72,7 @@ export const StaffNav: React.FC<{ menus: StaffMenu[]; label: string }> = ({ menu
         return (
           <div key={m.label} className="group/menu relative" onMouseEnter={measure(m.label)} onFocus={measure(m.label)}>
             <button type="button" className={topCls(Boolean(active))} aria-haspopup="true">
+              <TopImg src={m.img ?? STAFF_IMG[m.label]} />
               {m.label}
               <ChevronDown className="h-3.5 w-3.5 text-slate-400 transition-transform group-hover/menu:rotate-180" />
             </button>
@@ -72,12 +81,17 @@ export const StaffNav: React.FC<{ menus: StaffMenu[]; label: string }> = ({ menu
                 {m.children.map((c, i) => {
                   const here = isHere(c, pathname, search);
                   const Icon = c.icon;
+                  const img = c.img ?? STAFF_IMG[c.label];
                   const head = c.group && c.group !== m.children![i - 1]?.group;
                   return (
                     <React.Fragment key={c.to + c.label}>
                       {head && <p className={cn('px-2.5 pb-1 pt-2 text-[12px] font-medium text-slate-400', i > 0 && 'mt-1 border-t border-slate-100')}>{c.group}</p>}
-                      <Link to={c.to} className={cn('flex items-start gap-3 rounded-md px-2.5 py-2 transition-colors', here ? 'bg-slate-100' : 'hover:bg-slate-50')}>
-                        <Icon className={cn('mt-0.5 h-4 w-4 shrink-0', here ? 'text-indigo-700' : 'text-slate-400')} />
+                      <Link to={c.to} className={cn('group/item flex items-center gap-3 rounded-md px-2.5 py-2 transition-colors', here ? 'bg-slate-100' : 'hover:bg-slate-50')}>
+                        {img ? (
+                          <img src={img} alt="" className="h-9 w-9 shrink-0 transition-transform duration-200 group-hover/item:scale-110" />
+                        ) : (
+                          <Icon className={cn('h-4 w-4 shrink-0', here ? 'text-indigo-700' : 'text-slate-400')} />
+                        )}
                         <span className="min-w-0 flex-1">
                           <span className={cn('flex items-center gap-2 text-sm font-medium', here ? 'text-indigo-700' : 'text-slate-900')}>
                             <span className="truncate">{c.label}</span>
