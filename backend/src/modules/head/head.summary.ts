@@ -9,7 +9,7 @@ import type { Prisma } from '@prisma/client';
 import { prisma } from '../../lib/prisma';
 import { handler, me, parse } from '../../core/http';
 import { marksOf } from '../../core/metrics';
-import { classWhere, deptScope, lastMonths } from './shared';
+import { classWhere, deptScope, deptStudents, lastMonths } from './shared';
 
 export const summaryRouter = Router();
 
@@ -51,8 +51,10 @@ summaryRouter.get(
     const studentIds = [...new Set(active.map((m) => m.studentId))];
 
     // ---------- Học viên ----------
+    // mức rủi ro tính từ dữ liệu thật (cùng cách tính với trang Học viên), không dùng cột risk_level lưu sẵn
+    const computed = await deptStudents(classes);
     const worst = new Map<string, keyof typeof RISK_ORDER>();
-    for (const m of active) {
+    for (const m of computed.map((s) => ({ studentId: s.id, riskLevel: s.status as string }))) {
       const r = (m.riskLevel in RISK_ORDER ? m.riskLevel : 'GOOD') as keyof typeof RISK_ORDER;
       if (!worst.has(m.studentId) || RISK_ORDER[r] > RISK_ORDER[worst.get(m.studentId)!]) worst.set(m.studentId, r);
     }
@@ -127,7 +129,9 @@ summaryRouter.get(
       teachers: [...teacherMap.values()].map((t) => ({ name: t.name, classes: t.classes, students: t.students.size })).sort((a, b) => b.students - a.students),
       teaching: {
         classes: classes.length,
-        sessionsDone: bucket(past.filter((s) => s.status !== 'CANCELLED'), (s) => s.sessionDate),
+        // chỉ buổi giáo viên đã đánh dấu đã dạy; buổi đã qua nhưng chưa cập nhật tính riêng
+        sessionsDone: bucket(past.filter((s) => s.status === 'DONE'), (s) => s.sessionDate),
+        sessionsUnreported: past.filter((s) => s.status === 'SCHEDULED').length,
         sessionsCancelled: past.filter((s) => s.status === 'CANCELLED').length,
         sessionsUpcoming: sessions.filter((s) => s.sessionDate >= today && s.status !== 'CANCELLED').length,
         marks: (['PRESENT', 'LATE', 'EXCUSED', 'ABSENT'] as const).map((k) => ({ key: k, value: marks[k] ?? 0 })),

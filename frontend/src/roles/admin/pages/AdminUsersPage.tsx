@@ -49,7 +49,9 @@ const columns: Column<AppUser>[] = [
     key: 'plan',
     header: 'Gói',
     render: (u) =>
-      u.plan === 'VIP' ? (
+      u.role !== 'STUDENT' ? (
+        <span className="text-xs text-slate-400">—</span>
+      ) : u.plan === 'VIP' ? (
         <span className="inline-flex items-center gap-1 rounded-lg bg-gradient-to-r from-amber-400 to-orange-500 px-2 py-0.5 text-[11px] font-bold text-white">
           <Crown className="h-3 w-3" /> VIP
         </span>
@@ -154,7 +156,7 @@ export const AdminUsersPage: React.FC = () => {
 
       <Figures
         items={[
-          { label: 'Tổng tài khoản', value: total, note: `${users.filter((u) => u.plan === 'VIP').length} tài khoản VIP`, icon: Users, tone: 'indigo' },
+          { label: 'Tổng tài khoản', value: total, note: `${data?.stats.vipStudents ?? 0} học viên VIP`, icon: Users, tone: 'indigo' },
           { label: 'Đang hoạt động', value: byStatus.ACTIVE ?? 0, note: `${data?.stats.activeLast7d ?? 0} đăng nhập 7 ngày qua`, icon: UserCheck, tone: 'emerald' },
           { label: 'Chờ kích hoạt', value: byStatus.PENDING ?? 0, note: 'chưa xác thực email', icon: UserPlus, tone: 'amber' },
           { label: 'Đã khoá', value: byStatus.LOCKED ?? 0, note: 'vi phạm hoặc theo yêu cầu', icon: Lock, tone: 'rose' },

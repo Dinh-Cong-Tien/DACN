@@ -157,7 +157,7 @@ export async function toClassStudents(classIds: string[], _examType?: 'TOEIC' | 
         completion: rateOf(v.completion) ?? 0,
         attendanceRate: rateOf(v.attendance),
         streak: user.streakCurrent,
-        lastActive: (user.lastActiveAt ?? user.createdAt).toISOString(),
+        lastActive: user.lastActiveAt?.toISOString() ?? null,
         status: v.risk,
         classIds: v.classIds,
       };

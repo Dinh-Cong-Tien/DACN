@@ -11,7 +11,7 @@ export type AdminUser = AppUser & { phone?: string; bio?: string; organization?:
 export interface UsersPage {
   items: AdminUser[];
   total: number;
-  stats: { byRole: Partial<Record<string, number>>; byStatus: Partial<Record<string, number>>; activeLast7d: number };
+  stats: { byRole: Partial<Record<string, number>>; byStatus: Partial<Record<string, number>>; activeLast7d: number; vipStudents: number };
 }
 export interface AdminDashboard {
   users: number;
@@ -84,7 +84,7 @@ export interface AdminCourseRow {
   lessonsCount: number;
   durationHours: number;
   studentsCount: number;
-  rating: number;
+  rating?: number;
   isFree: boolean;
   isSequential: boolean;
   teacherName: string;

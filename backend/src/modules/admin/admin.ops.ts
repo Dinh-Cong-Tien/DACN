@@ -460,10 +460,11 @@ opsRouter.get(
     const [activity, prevActivity, attempts, prevAttempts, signups, attemptsByExam, roles, devicesRaw] = await Promise.all([
       prisma.dailyActivity.groupBy({ by: ['activityDate'], where: { activityDate: { gte: from } }, _count: { userId: true }, _sum: { minutes: true, questionsAnswered: true } }),
       prisma.dailyActivity.groupBy({ by: ['activityDate'], where: { activityDate: { gte: prevFrom, lt: from } }, _count: { userId: true }, _sum: { minutes: true } }),
-      prisma.examAttempt.count({ where: { createdAt: { gte: from } } }),
-      prisma.examAttempt.count({ where: { createdAt: { gte: prevFrom, lt: from } } }),
+      // chỉ tính lượt đã nộp bài
+      prisma.examAttempt.count({ where: { status: 'COMPLETED', createdAt: { gte: from } } }),
+      prisma.examAttempt.count({ where: { status: 'COMPLETED', createdAt: { gte: prevFrom, lt: from } } }),
       prisma.user.findMany({ where: { deletedAt: null, createdAt: { gte: ms[0].start } }, select: { createdAt: true } }),
-      prisma.examAttempt.findMany({ where: { createdAt: { gte: from }, test: { isNot: null } }, select: { test: { select: { examType: true } } } }),
+      prisma.examAttempt.findMany({ where: { status: 'COMPLETED', createdAt: { gte: from }, test: { isNot: null } }, select: { test: { select: { examType: true } } } }),
       prisma.user.groupBy({ by: ['role'], where: { deletedAt: null }, _count: true }),
       // Thiết bị = user-agent lưu ở mỗi lần đăng nhập (refresh token), không suy đoán
       prisma.userToken.findMany({ where: { type: 'REFRESH', createdAt: { gte: from }, userAgent: { not: null } }, select: { userAgent: true } }),

@@ -100,13 +100,13 @@ export async function deptStudents(classes: Pick<Class, 'id' | 'examType'>[]) {
       initials: initials(m.student.fullName),
       avatarUrl: m.student.avatarUrl ?? undefined,
       email: m.student.email,
-      avgScore: p?.avgScore ?? 0,
+      avgScore: p?.avgScore ?? null, // null = chưa có bài được chấm
       completion: rateOf(p?.completion) ?? 0,
       streak: m.student.streakCurrent,
-      lastActive: (m.student.lastActiveAt ?? m.student.createdAt).toISOString(),
+      lastActive: m.student.lastActiveAt?.toISOString() ?? null,
       status: p?.risk ?? 'GOOD',
       classId: m.classId,
-      attendance: rateOf(p?.attendance) ?? 0,
+      attendance: rateOf(p?.attendance) ?? null, // null = chưa có buổi nào được điểm danh
     };
   });
 }

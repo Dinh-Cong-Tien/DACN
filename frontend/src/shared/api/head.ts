@@ -214,7 +214,7 @@ export type ResultQuery = { page?: number; pageSize?: number; q?: string; classI
 export interface OversightMaterial { id: string; classId: string; className: string; teacherName: string; title: string; description?: string; type: string; category?: string; url: string; size?: string; downloads: number; createdAt: string }
 export interface OversightAnnouncement { id: string; classId: string; className: string; teacherName: string; title: string; body: string; pinned: boolean; readCount: number; classSize: number; createdAt: string }
 export interface StudentDossier {
-  student: { id: string; name: string; email: string; phone?: string; avatarUrl?: string; status: string; plan: 'FREE' | 'VIP'; joinedAt: string; lastActiveAt: string; streak: number; xp: number; target?: { examType: ExamType; score: string; examDate?: string } };
+  student: { id: string; name: string; email: string; phone?: string; avatarUrl?: string; status: string; plan: 'FREE' | 'VIP'; joinedAt: string; lastActiveAt: string | null; streak: number; xp: number; target?: { examType: ExamType; score: string; examDate?: string } };
   classes: { id: string; name: string; examType: ExamType; teacherName: string; memberStatus: string; joinedAt?: string; attendanceRate: number | null; sessionsMarked: number; absent: number; assignmentsDone: number; assignmentsTotal: number }[];
   attempts: { id: string; testTitle: string; examType?: ExamType; mode: string; score?: number; listening?: number; reading?: number; cefr?: string; correct?: number; total: number; durationSec: number; submittedAt?: string }[];
   submissions: OversightSubmission[];
@@ -231,7 +231,7 @@ export interface HeadSummary {
   months: string[];
   students: { total: number; byExam: KV[]; byRisk: KV[]; joined: number[]; left: number };
   teachers: { name: string; classes: number; students: number }[];
-  teaching: { classes: number; sessionsDone: number[]; sessionsCancelled: number; sessionsUpcoming: number; marks: KV[]; observed: number };
+  teaching: { classes: number; sessionsDone: number[]; sessionsCancelled: number; sessionsUpcoming: number; sessionsUnreported: number; marks: KV[]; observed: number };
   assignments: { created: number[]; byType: KV[]; submissions: KV[] };
   results: { attempts: number[]; fullTests: number; toeicBands: KV[]; avgToeicByMonth: (number | null)[] };
   content: { byPart: KV[]; questionsByStatus: KV[]; testsByStatus: KV[] };

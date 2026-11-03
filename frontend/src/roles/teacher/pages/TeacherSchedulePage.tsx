@@ -6,7 +6,7 @@ import { toast } from '@/shared/stores/uiStore';
 import { errorMessage } from '@/shared/api/client';
 import { teacherApi, useSessions, useTeacherClasses, useTeacherMutation } from '@/shared/api/teacher';
 import type { ClassSession } from '@/shared/types';
-import { cn } from '@/shared/utils';
+import { cn, sessionState } from '@/shared/utils';
 import { CLASS_BAR, Panel, Status, TBtn, TPageHead, classTone, inputCls } from '../components/TeacherKit';
 import { TError } from '../components/TeacherState';
 
@@ -157,7 +157,7 @@ export const TeacherSchedulePage: React.FC = () => {
                 </div>
               )}
               <div className="pt-1">
-                <Status tone={selected.status === 'DONE' ? 'green' : selected.status === 'CANCELLED' ? 'gray' : 'blue'}>{selected.status === 'DONE' ? (selected.attendance ? `Đã dạy · có mặt ${presentRate(selected)}%` : 'Đã dạy · chưa điểm danh') : selected.status === 'CANCELLED' ? 'Buổi nghỉ' : 'Sắp dạy'}</Status>
+                <Status tone={sessionState(selected).tone}>{selected.status === 'DONE' ? (selected.attendance ? `Đã dạy · có mặt ${presentRate(selected)}%` : 'Đã dạy · chưa điểm danh') : sessionState(selected).label}</Status>
               </div>
             </dl>
 

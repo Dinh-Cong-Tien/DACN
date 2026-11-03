@@ -187,6 +187,7 @@ export const StudentDrillsPage: React.FC = () => {
           <Card hard tone="sky" className="flex flex-col items-center animate-slide-in-right">
             <p className="font-display font-bold text-slate-900 text-sm self-start">Bản đồ năng lực</p>
             <RadarChart data={RADAR_SKILLS} size={230} tone="violet" />
+            {RADAR_SKILLS.some((s) => s.hasData === false) && <p className="text-[11px] text-slate-500 text-center">Chưa có dữ liệu: {RADAR_SKILLS.filter((s) => s.hasData === false).map((s) => s.label).join(', ')}</p>}
           </Card>
           <Card hard className="animate-slide-in-right" style={{ animationDelay: '100ms' }}>
             <CardHeader title="3 Part yếu nhất" icon={<TrendingDown />} />

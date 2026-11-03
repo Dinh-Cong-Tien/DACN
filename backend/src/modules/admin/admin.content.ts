@@ -7,6 +7,7 @@ import { badRequest, conflict, handler, me, notFound, parse } from '../../core/h
 import { audit } from './audit';
 import { gradientOf } from '../head/shared';
 import { knowledgeToText, parseKnowledgeText, toKnowledge } from '../catalog/lesson-knowledge';
+import { completedAttempts, courseStats, ratingOf } from '../catalog/counts';
 import { listQuestions, toQuestionRow } from '../head/head.routes';
 
 export const contentRouter = Router();
@@ -42,6 +43,7 @@ contentRouter.get(
       include: { courseSectionCourses: { orderBy: { orderIndex: 'asc' }, include: { lessonSections: { where: { deletedAt: null }, orderBy: { orderIndex: 'asc' }, select: { id: true, title: true, type: true, durationMin: true, status: true, orderIndex: true, videoUrl: true, isFreePreview: true } } } } },
       orderBy: [{ category: 'asc' }, { createdAt: 'asc' }],
     });
+    const stats = await courseStats(courses.map((c) => c.id));
     const cats = [...new Set(courses.map((c) => c.category))];
     return cats.map((cat) => {
       const list = courses.filter((c) => c.category === cat);
@@ -57,7 +59,7 @@ contentRouter.get(
           type: 'COURSE' as const,
           slug: c.slug,
           status: c.status,
-          meta: `${c.lessonsCount} bài · ${fmtK(c.studentsCount)} HV`,
+          meta: `${stats.get(c.id)?.lessons ?? 0} bài · ${fmtK(stats.get(c.id)?.students ?? 0)} HV`,
           children: c.courseSectionCourses.map((s) => ({
             id: s.id,
             title: s.title,
@@ -72,7 +74,8 @@ contentRouter.get(
   })
 );
 
-const courseRow = (c: Prisma.CourseGetPayload<{ include: { author: { select: { fullName: true } } } }>) => ({
+/** `s` = số đếm thật (counts.courseStats) */
+const courseRow = (c: Prisma.CourseGetPayload<{ include: { author: { select: { fullName: true } } } }>, s?: { lessons: number; minutes: number; students: number }) => ({
   id: c.id,
   slug: c.slug,
   title: c.title,
@@ -82,10 +85,10 @@ const courseRow = (c: Prisma.CourseGetPayload<{ include: { author: { select: { f
   description: c.description,
   gradient: c.themeGradient ?? gradientOf(c.slug),
   coverUrl: c.coverUrl ?? undefined,
-  lessonsCount: c.lessonsCount,
-  durationHours: Math.round((c.durationMin / 60) * 10) / 10,
-  studentsCount: c.studentsCount,
-  rating: Number(c.ratingAvg),
+  lessonsCount: s?.lessons ?? 0,
+  durationHours: Math.round(((s?.minutes ?? 0) / 60) * 10) / 10,
+  studentsCount: s?.students ?? 0,
+  rating: ratingOf(c.ratingAvg),
   isFree: c.isFree,
   isSequential: c.isSequential,
   teacherName: c.author?.fullName ?? '',
@@ -97,7 +100,8 @@ contentRouter.get(
   '/courses',
   handler(async () => {
     const rows = await prisma.course.findMany({ where: { deletedAt: null }, include: { author: { select: { fullName: true } } }, orderBy: { createdAt: 'asc' } });
-    return rows.map(courseRow);
+    const stats = await courseStats(rows.map((c) => c.id));
+    return rows.map((c) => courseRow(c, stats.get(c.id)));
   })
 );
 
@@ -130,16 +134,16 @@ contentRouter.patch(
   '/courses/:id',
   handler(async (req) => {
     const b = parse(courseBody.partial(), req.body);
-    const cur = await prisma.course.findFirst({ where: { id: idOf(req), deletedAt: null }, select: { lessonsCount: true } });
+    const cur = await prisma.course.findFirst({ where: { id: idOf(req), deletedAt: null }, select: { id: true } });
     if (!cur) throw notFound('Khoá học');
-    if ((b.status === 'PENDING_REVIEW' || b.status === 'PUBLISHED') && cur.lessonsCount === 0) throw badRequest('Khoá học chưa có bài học nào, hãy thêm bài trước khi gửi duyệt');
+    if ((b.status === 'PENDING_REVIEW' || b.status === 'PUBLISHED') && !(await courseStats([cur.id])).get(cur.id)?.lessons) throw badRequest('Khoá học chưa có bài học nào, hãy thêm bài trước khi gửi duyệt');
     const c = await prisma.course.update({
       where: { id: idOf(req) },
       data: { ...b, slug: b.slug ? slugify(b.slug) : undefined, publishedAt: b.status === 'PUBLISHED' ? new Date() : undefined },
       include: { author: { select: { fullName: true } } },
     });
     await audit(req, 'COURSE_UPDATE', 'course', c.id, { after: { title: c.title, fields: Object.keys(b) } });
-    return courseRow(c);
+    return courseRow(c, (await courseStats([c.id])).get(c.id));
   })
 );
 contentRouter.delete(
@@ -326,7 +330,8 @@ async function bumpTagCounts(tagIds: string[]) {
 // ============================ ĐỀ THI ============================
 const PART_LABEL: Record<string, string> = { TOEIC_P1: 'Part 1', TOEIC_P2: 'Part 2', TOEIC_P3: 'Part 3', TOEIC_P4: 'Part 4', TOEIC_P5: 'Part 5', TOEIC_P6: 'Part 6', TOEIC_P7: 'Part 7' };
 type Section = { part: string; title?: string };
-export const testRow = (t: Prisma.MockTestGetPayload<object>) => {
+/** `attempts` = lượt nộp bài thật (counts.completedAttempts) */
+export const testRow = (t: Prisma.MockTestGetPayload<object>, attempts = 0) => {
   const sections = (t.sections ?? []) as Section[];
   return {
     id: t.id,
@@ -339,7 +344,7 @@ export const testRow = (t: Prisma.MockTestGetPayload<object>) => {
     totalQuestions: t.totalQuestions,
     parts: sections.map((s) => s.title ?? PART_LABEL[s.part] ?? s.part),
     partIds: sections.map((s) => s.part),
-    attempts: t.attemptsCount,
+    attempts,
     isFree: t.isFree,
     year: t.year ?? new Date(t.createdAt).getFullYear(),
     tags: t.tags,
@@ -350,7 +355,11 @@ export const testRow = (t: Prisma.MockTestGetPayload<object>) => {
 };
 contentRouter.get(
   '/tests',
-  handler(async () => (await prisma.mockTest.findMany({ where: { deletedAt: null }, orderBy: [{ examType: 'asc' }, { createdAt: 'desc' }] })).map(testRow))
+  handler(async () => {
+    const tests = await prisma.mockTest.findMany({ where: { deletedAt: null }, orderBy: [{ examType: 'asc' }, { createdAt: 'desc' }] });
+    const attempts = await completedAttempts(tests.map((t) => t.id));
+    return tests.map((t) => testRow(t, attempts.get(t.id) ?? 0));
+  })
 );
 export const testBody = z.object({
   title: z.string().trim().min(2).max(200),
@@ -371,7 +380,7 @@ contentRouter.get(
   handler(async (req) => {
     const t = await prisma.mockTest.findFirst({ where: { id: idOf(req), deletedAt: null }, include: { mockTestQuestionTests: { orderBy: { questionNo: 'asc' }, include: { question: { include: { passage: { select: { id: true, title: true } } } } } } } });
     if (!t) throw notFound('Đề thi');
-    return { ...testRow(t), sections: t.sections, questions: t.mockTestQuestionTests.map((m) => ({ ...toQuestionRow(m.question), questionNo: m.questionNo, points: Number(m.points) })) };
+    return { ...testRow(t, (await completedAttempts([t.id])).get(t.id) ?? 0), sections: t.sections, questions: t.mockTestQuestionTests.map((m) => ({ ...toQuestionRow(m.question), questionNo: m.questionNo, points: Number(m.points) })) };
   })
 );
 contentRouter.post(
@@ -392,7 +401,7 @@ contentRouter.patch(
     if ((b.status === 'PENDING_REVIEW' || b.status === 'PUBLISHED') && cur.totalQuestions === 0) throw badRequest('Đề chưa có câu hỏi nào, hãy gán câu hỏi trước khi gửi duyệt');
     const t = await prisma.mockTest.update({ where: { id: idOf(req) }, data: { ...b, slug: b.slug ? slugify(b.slug) : undefined } });
     await audit(req, 'TEST_UPDATE', 'mock_test', t.id, { after: { title: t.title, fields: Object.keys(b) } });
-    return testRow(t);
+    return testRow(t, (await completedAttempts([t.id])).get(t.id) ?? 0);
   })
 );
 contentRouter.delete(

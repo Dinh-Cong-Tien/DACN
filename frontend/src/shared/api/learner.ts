@@ -140,7 +140,8 @@ export interface ProgressDto {
   scoreHistory: number[];
   vstepScoreHistory: number[];
   skillScores: { skill: string; score: number; max: number }[];
-  radar: { label: string; value: number }[];
+  /** hasData = false: kỹ năng chưa có câu nào (giá trị 0 chỉ để vẽ trục) */
+  radar: { label: string; value: number; hasData?: boolean }[];
   totals: {
     minutes: number;
     questions: number;

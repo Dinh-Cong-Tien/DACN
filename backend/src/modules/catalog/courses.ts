@@ -8,6 +8,7 @@ import { num } from '../../core/dto';
 import { recordActivity } from './activity';
 import { gradientAt } from './mappers';
 import { toKnowledge } from './lesson-knowledge';
+import { ratingOf } from './counts';
 
 export const coursesRouter = Router();
 
@@ -16,6 +17,7 @@ const PUBLISHED = { status: 'PUBLISHED' as const, deletedAt: null };
 
 const courseInclude = {
   author: { select: { fullName: true } },
+  _count: { select: { courseEnrollmentCourses: true } },
   courseSectionCourses: {
     orderBy: { orderIndex: 'asc' },
     include: { lessonSections: { where: PUBLISHED, orderBy: { orderIndex: 'asc' } } },
@@ -92,10 +94,11 @@ function toCourse(c: CourseRow, i: number, states: Map<string, { completed: bool
     description: c.description,
     gradient: c.themeGradient ?? gradientAt(i),
     coverUrl: c.coverUrl ?? undefined,
-    lessonsCount: lessons.length || c.lessonsCount,
-    durationHours: Math.round(((lessons.reduce((a, l) => a + l.durationMin, 0) || c.durationMin) / 60) * 10) / 10,
-    studentsCount: c.studentsCount,
-    rating: num(c.ratingAvg) ?? 0,
+    // đếm thật: bài đang phát hành + học viên ghi danh (không dùng cột đếm lưu sẵn)
+    lessonsCount: lessons.length,
+    durationHours: Math.round((lessons.reduce((a, l) => a + l.durationMin, 0) / 60) * 10) / 10,
+    studentsCount: c._count.courseEnrollmentCourses,
+    rating: ratingOf(c.ratingAvg),
     isFree: c.isFree,
     progress: enrolledPct ?? (lessons.length ? Math.round((done / lessons.length) * 100) : 0),
     teacherName: c.author?.fullName ?? 'OrbiLingo',

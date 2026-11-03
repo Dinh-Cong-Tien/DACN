@@ -119,7 +119,7 @@ export function toQuestion(q: QuestionWithPassage, tagSlugs: Map<string, string>
 }
 
 // ---------- Đề ----------
-export const toTestSummary = (t: MockTest, partIds: string[]) => ({
+export const toTestSummary = (t: MockTest, partIds: string[], attempts = 0) => ({
   id: t.id,
   slug: t.slug,
   title: t.title,
@@ -129,7 +129,7 @@ export const toTestSummary = (t: MockTest, partIds: string[]) => ({
   totalQuestions: t.totalQuestions,
   parts: partLabels(t.examType, partIds),
   partIds,
-  attempts: t.attemptsCount,
+  attempts, // lượt nộp bài thật (counts.completedAttempts)
   isFree: t.isFree,
   year: t.year ?? t.createdAt.getFullYear(),
   tags: t.tags,

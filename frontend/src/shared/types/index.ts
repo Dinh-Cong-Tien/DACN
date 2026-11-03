@@ -28,7 +28,8 @@ export interface AppUser {
   streak: number;
   effortPoints: number;
   joinedAt: string;
-  lastActiveAt: string;
+  /** null = chưa từng hoạt động */
+  lastActiveAt: string | null;
   /** Hồ sơ mở rộng trả về từ /auth/me */
   phone?: string;
   bio?: string;
@@ -108,7 +109,8 @@ export interface Course {
   lessonsCount: number;
   durationHours: number;
   studentsCount: number;
-  rating: number;
+  /** Điểm đánh giá trung bình — không có khi chưa có lượt đánh giá thật */
+  rating?: number;
   isFree: boolean;
   progress?: number;
   teacherName: string;
@@ -336,7 +338,7 @@ export interface ClassStudent {
   avgScore: number;
   completion: number;
   streak: number;
-  lastActive: string;
+  lastActive: string | null;
   status: 'GOOD' | 'WARNING' | 'RISK';
 }
 
@@ -548,9 +550,12 @@ export interface ClassObservation {
 }
 
 /** Học viên trong phạm vi bộ môn (gắn với lớp đang học) */
-export interface DeptStudent extends ClassStudent {
+export interface DeptStudent extends Omit<ClassStudent, 'avgScore'> {
   classId: string;
-  attendance: number;
+  /** null = chưa có bài được chấm */
+  avgScore: number | null;
+  /** null = chưa có buổi nào được điểm danh */
+  attendance: number | null;
 }
 
 // ---------- ADMIN ----------

@@ -9,7 +9,7 @@ import { errorMessage } from '@/shared/api/client';
 import { ASSIGNMENT_TYPE_LABEL, partLabel } from '@/shared/constants/staff';
 import { Img, PHOTOS } from '@/shared/components/media/Img';
 import { HBarChart, LineChart } from '@/shared/components/charts/Charts';
-import { cn, formatDate, timeAgo, staffPath } from '@/shared/utils';
+import { cn, formatDate, sessionState, timeAgo, staffPath } from '@/shared/utils';
 import { Avatar, Input, Modal, Textarea } from '@/shared/components/ui';
 import { Figures, Meter, Panel, Status, TBtn, TTabs, tbl, type StatusTone } from '@/roles/teacher/components/TeacherKit';
 import { classIssue } from './HeadClassesPage';
@@ -357,14 +357,14 @@ export const HeadClassDetailPage: React.FC = () => {
                         </span>
                       </span>
                     </td>
-                    <td className={cn(tbl.td, 'text-right tabular-nums')}>{r.avgScore}</td>
+                    <td className={cn(tbl.td, 'text-right tabular-nums')}>{r.avgScore ?? '—'}</td>
                     <td className={tbl.td}>
                       <span className="flex items-center gap-2">
                         <Meter value={r.completion} tone={r.completion < 65 ? 'red' : r.completion < 80 ? 'amber' : 'indigo'} className="flex-1" />
                         <span className="w-10 text-right text-[13px] tabular-nums text-slate-600">{r.completion}%</span>
                       </span>
                     </td>
-                    <td className={cn(tbl.td, 'text-right tabular-nums', r.attendance < 75 && 'text-rose-600')}>{r.attendance}%</td>
+                    <td className={cn(tbl.td, 'text-right tabular-nums', r.attendance !== null && r.attendance < 75 && 'text-rose-600')}>{r.attendance === null ? '—' : `${r.attendance}%`}</td>
                     <td className={cn(tbl.td, 'whitespace-nowrap text-slate-600')}>{timeAgo(r.lastActive)}</td>
                     <td className={tbl.td}>
                       <Status tone={STUDENT_STATUS[r.status].tone}>{STUDENT_STATUS[r.status].label}</Status>
@@ -415,7 +415,7 @@ export const HeadClassDetailPage: React.FC = () => {
                         )}
                       </td>
                       <td className={tbl.td}>
-                        <Status tone={s.status === 'DONE' ? 'green' : s.status === 'CANCELLED' ? 'gray' : 'blue'}>{s.status === 'DONE' ? 'Đã dạy' : s.status === 'CANCELLED' ? 'Nghỉ' : 'Sắp dạy'}</Status>
+                        <Status tone={sessionState(s).tone}>{sessionState(s).label}</Status>
                       </td>
                     </tr>
                   );

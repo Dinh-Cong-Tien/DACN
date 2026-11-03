@@ -65,8 +65,8 @@ export const AdminAnalyticsPage: React.FC = () => {
         items={[
           { label: 'Người dùng hoạt động', value: formatNumber(f?.activeUsers.value ?? 0), icon: Users, tone: 'indigo', note: <Delta v={f?.activeUsers.change} /> },
           { label: 'Phút học', value: formatNumber(f?.studyMinutes.value ?? 0), icon: Activity, tone: 'sky', note: <Delta v={f?.studyMinutes.change} /> },
-          { label: 'Lượt làm bài', value: formatNumber(f?.attempts.value ?? 0), icon: FileText, tone: 'violet', note: <Delta v={f?.attempts.change} /> },
-          { label: 'Thời gian TB / phiên', value: `${f?.avgSessionMin.value ?? 0}m`, icon: Clock, tone: 'emerald', note: 'phút học / lượt hoạt động' },
+          { label: 'Lượt nộp bài', value: formatNumber(f?.attempts.value ?? 0), icon: FileText, tone: 'violet', note: <Delta v={f?.attempts.change} /> },
+          { label: 'Phút học TB / ngày', value: `${f?.avgSessionMin.value ?? 0}m`, icon: Clock, tone: 'emerald', note: 'mỗi học viên, trong ngày có học' },
         ]}
       />
 

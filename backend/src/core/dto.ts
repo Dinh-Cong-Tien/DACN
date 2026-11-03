@@ -40,7 +40,7 @@ export async function toAppUser(u: User) {
     streak: u.streakCurrent,
     effortPoints: u.xpTotal,
     joinedAt: u.createdAt.toISOString(),
-    lastActiveAt: (u.lastActiveAt ?? u.updatedAt).toISOString(),
+    lastActiveAt: u.lastActiveAt?.toISOString() ?? null, // null = chưa từng hoạt động (không lấy ngày cập nhật thay thế)
     phone: u.phone ?? undefined,
     bio: u.bio ?? undefined,
     organization: u.organization ?? undefined,

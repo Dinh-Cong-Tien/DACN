@@ -132,7 +132,7 @@ export interface SelfStudy {
   week: { minutes: number; questions: number; lessons: number; cards: number; activeDays: number };
   streak: number;
   xp: number;
-  lastActiveAt: string;
+  lastActiveAt: string | null;
   vocab: { learned: number; due: number };
   openMistakes: number;
   courses: { slug: string; title: string; progress: number; completed: boolean }[];

@@ -116,8 +116,8 @@ cmsRouter.get(
   '/faqs',
   handler(async (req) => {
     const { category } = parse(z.object({ category: z.string().optional() }), req.query);
-    const rows = await prisma.faq.findMany({ where: { showInFaq: true, category }, orderBy: [{ orderIndex: 'asc' }, { createdAt: 'asc' }] });
-    return rows.map((f) => ({ id: f.id, question: f.question, answer: f.answer, category: f.category }));
+    const [rows, v] = await Promise.all([prisma.faq.findMany({ where: { showInFaq: true, category }, orderBy: [{ orderIndex: 'asc' }, { createdAt: 'asc' }] }), liveVars()]);
+    return rows.map((f) => ({ id: f.id, question: f.question, answer: fill([f.answer], v).join('\n'), category: f.category }));
   })
 );
 
@@ -274,12 +274,36 @@ const normalize = (s: string) =>
     .replace(/Đ/g, 'D')
     .toLowerCase();
 
-const toReply = (f: Faq) => ({ id: f.id, keywords: f.keywords, texts: f.chatTexts?.length ? f.chatTexts : [f.answer], links: (f.links as { label: string; to: string }[] | null) ?? undefined });
+/**
+ * Biến trong câu trả lời FAQ / chat — thay bằng số liệu thật từ CSDL lúc trả lời:
+ *   {{toeicTests}} {{vstepTests}}: số đề thi thử đang mở; {{plans}}: mỗi gói 1 dòng (giá, thời hạn, quyền lợi)
+ */
+async function liveVars(): Promise<Record<string, string[]>> {
+  const [tests, plans] = await Promise.all([
+    prisma.mockTest.groupBy({ by: ['examType'], where: { ...PUBLISHED, kind: { in: ['FULL', 'MINI'] } }, _count: { _all: true } }),
+    prisma.subscriptionPlan.findMany({ where: { isActive: true }, orderBy: { price: 'asc' } }),
+  ]);
+  const n = (e: string) => String(tests.find((x) => x.examType === e)?._count._all ?? 0);
+  const plansText = plans.map((p) => {
+    const price = Number(p.price) ? `${Number(p.price).toLocaleString('vi-VN')}đ${p.durationDays ? `/${p.durationDays} ngày` : ''}` : 'miễn phí';
+    const feats = ((p.featuresDisplay as { text: string; included: boolean }[] | null) ?? []).filter((f) => f.included).map((f) => f.text);
+    return `${p.name} (${price}): ${feats.join(', ')}.`;
+  });
+  return { toeicTests: [n('TOEIC')], vstepTests: [n('VSTEP')], plans: plansText };
+}
+/** Thay biến; một dòng chỉ chứa {{plans}} được tách thành nhiều dòng */
+const fill = (texts: string[], v: Record<string, string[]>) =>
+  texts.flatMap((s) => (/^\s*\{\{(\w+)\}\}\s*$/.test(s) && v[s.trim().slice(2, -2)]?.length > 1 ? v[s.trim().slice(2, -2)] : [s.replace(/\{\{(\w+)\}\}/g, (m, k: string) => v[k]?.join(' ') ?? m)]));
+
+const toReply = (f: Faq, v: Record<string, string[]>) => ({ id: f.id, keywords: f.keywords, texts: fill(f.chatTexts?.length ? f.chatTexts : [f.answer], v), links: (f.links as { label: string; to: string }[] | null) ?? undefined });
 
 // GET /cms/support/replies → SupportReply[] (câu trả lời mẫu của chat)
 cmsRouter.get(
   '/support/replies',
-  handler(async () => (await prisma.faq.findMany({ where: { showInChat: true }, orderBy: { orderIndex: 'asc' } })).map(toReply))
+  handler(async () => {
+    const [faqs, v] = await Promise.all([prisma.faq.findMany({ where: { showInChat: true }, orderBy: { orderIndex: 'asc' } }), liveVars()]);
+    return faqs.map((f) => toReply(f, v));
+  })
 );
 
 const FALLBACK = ['Trợ lý tự động chưa có câu trả lời sẵn cho câu hỏi này.', 'Câu hỏi đã được lưu và chuyển tới đội hỗ trợ. Phản hồi của nhân viên sẽ hiện trong cuộc trò chuyện này (và gửi tới email bạn để lại, nếu có).'];
@@ -320,7 +344,7 @@ cmsRouter.post(
     const text = normalize(body.text);
     const faqs = await prisma.faq.findMany({ where: { showInChat: true }, orderBy: { orderIndex: 'asc' } });
     const hit = faqs.find((f) => f.keywords.some((k) => text.includes(normalize(k))));
-    const reply = hit ? toReply(hit) : { id: 'fallback', keywords: [], texts: FALLBACK, links: undefined };
+    const reply = hit ? toReply(hit, await liveVars()) : { id: 'fallback', keywords: [], texts: FALLBACK, links: undefined };
     await prisma.ticketMessage.createMany({ data: reply.texts.map((t) => ({ ticketId: ticket.id, senderType: 'BOT', text: t, links: (reply.links ?? undefined) as Prisma.InputJsonValue | undefined })) });
     if (!hit && ticket.status === 'RESOLVED') await prisma.ticket.update({ where: { id: ticket.id }, data: { status: 'OPEN' } });
     return { ticketId: ticket.id, reply, matched: !!hit };

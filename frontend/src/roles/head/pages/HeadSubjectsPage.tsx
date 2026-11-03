@@ -74,7 +74,7 @@ export const HeadSubjectsPage: React.FC = () => {
           { label: 'Môn học', value: subjectList.length, note: `${subjectList.filter((s) => s.examType === 'TOEIC').length} TOEIC · ${subjectList.filter((s) => s.examType === 'VSTEP').length} VSTEP`, icon: BookMarked, tone: 'amber' },
           { label: 'Lớp đang mở', value: subjectList.reduce((a, s) => a + s.classesCount, 0), note: 'tất cả môn', icon: School, tone: 'indigo' },
           { label: 'Lượt phân công GV', value: subjectList.reduce((a, s) => a + s.teachersCount, 0), note: 'giáo viên × môn', icon: Users, tone: 'emerald' },
-          { label: 'Câu hỏi', value: formatNumber(subjectList.reduce((a, s) => a + s.questionsCount, 0)), note: 'đã xuất bản theo kỳ thi', icon: Database, tone: 'violet' },
+          { label: 'Câu hỏi', value: formatNumber([...new Map(subjectList.map((s) => [s.examType, s.questionsCount])).values()].reduce((a, n) => a + n, 0)), note: 'đã xuất bản theo kỳ thi', icon: Database, tone: 'violet' },
         ]}
       />
       <CrudEditor<HeadSubject>

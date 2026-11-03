@@ -23,7 +23,8 @@ export function formatDateTime(iso: string): string {
   return formatDate(iso, { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 }
 
-export function timeAgo(iso: string): string {
+export function timeAgo(iso: string | null | undefined): string {
+  if (!iso) return 'Chưa hoạt động';
   const diff = Date.now() - new Date(iso).getTime();
   const m = Math.floor(diff / 60000);
   if (m < 1) return 'Vừa xong';
@@ -142,3 +143,16 @@ export function parseExamSetup(search: string, allParts: string[], fullMinutes: 
  * các trang giám sát học vụ được admin dùng lại, link nội bộ phải ở lại đúng khu vực đang đứng.
  */
 export const staffPath = (p: string) => (typeof window !== 'undefined' && window.location.pathname.startsWith('/admin') ? '/admin' : '/head') + p;
+
+/** Ngày hôm nay theo giờ máy, dạng YYYY-MM-DD */
+export const localIsoDate = (d = new Date()) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+
+/**
+ * Trạng thái hiển thị của buổi học: buổi chưa đánh dấu đã dạy nhưng ngày đã qua → "Chưa cập nhật"
+ * (không ghi "Sắp dạy" cho buổi trong quá khứ).
+ */
+export function sessionState(s: { date: string; status: 'DONE' | 'UPCOMING' | 'CANCELLED' }): { label: string; tone: 'green' | 'gray' | 'blue' | 'amber' } {
+  if (s.status === 'DONE') return { label: 'Đã dạy', tone: 'green' };
+  if (s.status === 'CANCELLED') return { label: 'Nghỉ', tone: 'gray' };
+  return s.date < localIsoDate() ? { label: 'Chưa cập nhật', tone: 'amber' } : { label: 'Sắp dạy', tone: 'blue' };
+}

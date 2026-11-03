@@ -44,7 +44,7 @@ export const HeadReportSummary: React.FC<{ months: number; departmentId?: string
         className="lg:grid-cols-5"
         items={[
           { label: 'Học viên đang học', value: d.students.total, note: `${sum(d.students.joined)} vào lớp · ${period}`, icon: GraduationCap, tone: 'indigo' },
-          { label: 'Buổi đã dạy', value: sum(d.teaching.sessionsDone), note: `${d.teaching.sessionsUpcoming} buổi sắp tới`, icon: CalendarCheck, tone: 'emerald' },
+          { label: 'Buổi đã dạy', value: sum(d.teaching.sessionsDone), note: `${d.teaching.sessionsUpcoming} buổi sắp tới${d.teaching.sessionsUnreported ? ` · ${d.teaching.sessionsUnreported} buổi đã qua chưa cập nhật` : ''}`, icon: CalendarCheck, tone: 'emerald' },
           { label: 'Bài tập đã giao', value: sum(d.assignments.created), note: period, icon: ClipboardList, tone: 'amber' },
           { label: 'Lượt làm bài', value: sum(d.results.attempts), note: `${d.results.fullTests} bài thi thử`, icon: FileCheck2, tone: 'sky' },
           { label: 'Câu hỏi đã duyệt', value: formatNumber(published), note: `${d.content.testsByStatus.find((s) => s.key === 'PUBLISHED')?.value ?? 0} đề thi`, icon: BookOpenCheck, tone: 'violet' },

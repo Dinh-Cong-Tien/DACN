@@ -5,6 +5,7 @@ import { prisma } from '../../lib/prisma';
 import { optionalAuth } from '../../core/auth';
 import { handler, notFound, parse } from '../../core/http';
 import { isUuid } from './courses';
+import { completedAttempts } from './counts';
 import { PART_TITLE, partId, partsOf, sortPartIds, toPassage, toQuestion, toTestSummary, type QuestionWithPassage } from './mappers';
 import { TOEIC_PARTS_INFO, VSTEP_PARTS_INFO } from './parts-info';
 
@@ -49,8 +50,8 @@ testsRouter.get(
       ...(q.q ? { title: { contains: q.q, mode: 'insensitive' } } : {}),
     };
     const tests = await prisma.mockTest.findMany({ where, orderBy: [{ year: 'desc' }, { createdAt: 'asc' }] });
-    const parts = await partIdsByTest(tests.map((t) => t.id));
-    return tests.map((t) => toTestSummary(t, parts.get(t.id) ?? []));
+    const [parts, attempts] = await Promise.all([partIdsByTest(tests.map((t) => t.id)), completedAttempts(tests.map((t) => t.id))]);
+    return tests.map((t) => toTestSummary(t, parts.get(t.id) ?? [], attempts.get(t.id) ?? 0));
   })
 );
 
@@ -83,7 +84,8 @@ testsRouter.get(
     const byPart = new Map<string, number>();
     for (const c of counts) byPart.set(partId(c.part), (byPart.get(partId(c.part)) ?? 0) + c._count);
     const ids = sortPartIds([...byPart.keys()]);
-    return { ...toTestSummary(t, ids), sections: ids.map((id) => ({ id, name: PART_TITLE[id] ?? id, questions: byPart.get(id) ?? 0 })) };
+    const attempts = await completedAttempts([t.id]);
+    return { ...toTestSummary(t, ids, attempts.get(t.id) ?? 0), sections: ids.map((id) => ({ id, name: PART_TITLE[id] ?? id, questions: byPart.get(id) ?? 0 })) };
   })
 );
 

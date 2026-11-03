@@ -10,7 +10,7 @@ import type { ClassStudent } from '@/shared/types';
 import { Img, PHOTOS } from '@/shared/components/media/Img';
 import { BarChart } from '@/shared/components/charts/Charts';
 import { presentRate } from './TeacherSchedulePage';
-import { cn, formatDate, formatDateTime, timeAgo } from '@/shared/utils';
+import { cn, formatDate, formatDateTime, sessionState, timeAgo } from '@/shared/utils';
 import { Avatar, ConfirmDialog, Input, Modal, Select, Textarea } from '@/shared/components/ui';
 import { Figures, IconTile, Meter, Panel, Status, TBtn, TTabs, inputCls, tbl, type StatusTone } from '../components/TeacherKit';
 import { TEmpty, TError, TLoading } from '../components/TeacherState';
@@ -389,7 +389,7 @@ export const TeacherClassDetailPage: React.FC = () => {
                       {s.note && <p className="text-[12px] text-slate-500">{s.note}</p>}
                     </td>
                     <td className={tbl.td}>
-                      <Status tone={s.status === 'DONE' ? 'green' : s.status === 'CANCELLED' ? 'gray' : 'blue'}>{s.status === 'DONE' ? (s.attendance ? `Đã dạy · có mặt ${presentRate(s)}%` : 'Đã dạy') : s.status === 'CANCELLED' ? 'Nghỉ' : 'Sắp dạy'}</Status>
+                      <Status tone={sessionState(s).tone}>{s.status === 'DONE' && s.attendance ? `Đã dạy · có mặt ${presentRate(s)}%` : sessionState(s).label}</Status>
                     </td>
                     <td className={cn(tbl.td, 'whitespace-nowrap text-right')}>
                       {s.status !== 'CANCELLED' && (

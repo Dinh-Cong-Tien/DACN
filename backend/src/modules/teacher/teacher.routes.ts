@@ -41,6 +41,7 @@ import {
 import { contentRouter } from './teacher.content';
 import { insightsRouter } from './teacher.insights';
 import { MODE_LABEL, mistakeSummaryOf, selfStudyOf } from './insights.service';
+import { completedAttempts } from '../catalog/counts';
 
 export const teacherRouter = Router();
 
@@ -1426,7 +1427,7 @@ teacherRouter.get(
       orderBy: [{ examType: 'asc' }, { year: 'desc' }, { title: 'asc' }],
     });
     const counts = tests.length ? await prisma.mockTestQuestion.groupBy({ by: ['testId', 'part'], where: { testId: { in: tests.map((t) => t.id) } }, _count: { _all: true } }) : [];
-    const used = await usedCounts();
+    const [used, attempts] = await Promise.all([usedCounts(), completedAttempts(tests.map((t) => t.id))]);
     /** Gộp Part theo nhóm frontend (TOEIC: PART_n; VSTEP: theo kỹ năng) */
     const partsOf = (testId: string) => {
       const acc = new Map<string, number>();
@@ -1446,7 +1447,7 @@ teacherRouter.get(
       coverUrl: t.coverUrl ?? undefined,
       tags: t.tags,
       level: t.level ?? undefined,
-      attemptsCount: t.attemptsCount,
+      attemptsCount: attempts.get(t.id) ?? 0,
       usedCount: used.get(t.id) ?? 0,
       parts: partsOf(t.id),
     }));
@@ -1474,8 +1475,9 @@ teacherRouter.get(
       examType: c.examType ?? undefined,
       level: c.level ?? undefined,
       coverUrl: c.coverUrl ?? undefined,
-      lessonsCount: c.lessonsCount,
-      durationMin: c.durationMin,
+      // đếm thật từ các bài chưa xoá trong khoá
+      lessonsCount: c.courseSectionCourses.reduce((a, s) => a + s.lessonSections.length, 0),
+      durationMin: c.courseSectionCourses.reduce((a, s) => a + s.lessonSections.reduce((b, l) => b + l.durationMin, 0), 0),
       teacherName: c.author?.fullName,
       studentsCount: enrolled.find((e) => e.courseId === c.id)?._count._all ?? 0,
       usedCount: used.get(c.id) ?? 0,

@@ -91,6 +91,7 @@ export const StudentProgressPage: React.FC = () => {
         <Card hard tone="cream" className="animate-fade-up flex flex-col items-center" style={{ animationDelay: '80ms' }}>
           <CardHeader title="Bản đồ kỹ năng" subtitle="Điểm mạnh / yếu tổng quát" className="self-stretch" />
           <RadarChart data={RADAR_SKILLS} size={240} />
+          {RADAR_SKILLS.some((s) => s.hasData === false) && <p className="text-[11px] text-slate-500 text-center">Chưa có dữ liệu: {RADAR_SKILLS.filter((s) => s.hasData === false).map((s) => s.label).join(', ')}</p>}
         </Card>
       </div>
 

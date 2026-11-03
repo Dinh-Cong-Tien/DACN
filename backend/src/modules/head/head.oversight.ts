@@ -296,7 +296,7 @@ oversightRouter.get(
         status: user.status,
         plan: await planOf(user.id),
         joinedAt: user.createdAt.toISOString(),
-        lastActiveAt: (user.lastActiveAt ?? user.updatedAt).toISOString(),
+        lastActiveAt: user.lastActiveAt?.toISOString() ?? null,
         streak: user.streakCurrent,
         xp: user.xpTotal,
         target: goal ? { examType: goal.examType, score: goal.targetScore ? String(goal.targetScore) : (goal.targetLevel ?? ''), examDate: ymd(goal.targetDate) } : undefined,

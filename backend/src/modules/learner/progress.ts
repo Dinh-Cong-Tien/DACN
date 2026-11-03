@@ -239,13 +239,14 @@ progressRouter.get(
     const partOrder = ['PART_1', 'PART_2', 'PART_3', 'PART_4', 'PART_5', 'PART_6', 'PART_7', 'VSTEP_LISTENING', 'VSTEP_READING'];
     const skillScores = partOrder.filter((p) => byPart.has(p)).map((p) => ({ skill: p.startsWith('PART_') ? `Part ${p.slice(5)}` : p.replace('VSTEP_', 'VSTEP ').toLowerCase().replace(/^vstep (\w)/, (_, c) => `VSTEP ${c.toUpperCase()}`), score: pct(byPart.get(p)!), max: 100 }));
     const avgSec = speed[0]?.avg_ms ? Number(speed[0].avg_ms) / 1000 : null;
+    // hasData = false: kỹ năng chưa có câu nào → giá trị 0 chỉ để vẽ trục, giao diện ghi rõ "chưa có dữ liệu"
     const radar = [
-      { label: 'Listening', value: pct(bySkill.Listening) },
-      { label: 'Reading', value: pct(bySkill.Reading) },
-      { label: 'Grammar', value: pct(bySkill.Grammar) },
-      { label: 'Vocabulary', value: pct(bySkill.Vocabulary) },
+      { label: 'Nghe', value: pct(bySkill.Listening), hasData: bySkill.Listening.t > 0 },
+      { label: 'Đọc', value: pct(bySkill.Reading), hasData: bySkill.Reading.t > 0 },
+      { label: 'Ngữ pháp', value: pct(bySkill.Grammar), hasData: bySkill.Grammar.t > 0 },
+      { label: 'Từ vựng', value: pct(bySkill.Vocabulary), hasData: bySkill.Vocabulary.t > 0 },
       // Tốc độ: 30 giây/câu = 100, mỗi giây chậm hơn trừ 2 điểm
-      { label: 'Speed', value: avgSec === null ? 0 : Math.max(0, Math.min(100, Math.round(100 - (avgSec - 30) * 2))) },
+      { label: 'Tốc độ', value: avgSec === null ? 0 : Math.max(0, Math.min(100, Math.round(100 - (avgSec - 30) * 2))), hasData: avgSec !== null },
     ];
 
     const toeicHistory = fullAttempts.filter((a) => a.test?.examType === 'TOEIC').map((a) => Number(a.scoreTotal ?? 0));

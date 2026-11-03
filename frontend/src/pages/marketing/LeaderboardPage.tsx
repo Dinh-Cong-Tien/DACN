@@ -17,6 +17,8 @@ const RULES = [
   ['Hoàn thành một bài học', '10 điểm'],
   ['Ôn một thẻ (nhớ được / chưa nhớ)', '2 / 1 điểm'],
   ['Bài chép chính tả', '1 điểm mỗi 10% chính xác'],
+  ['Mỗi phút học được ghi nhận', '1 điểm'],
+  ['Báo lỗi câu hỏi được trưởng bộ môn xác nhận', '20 điểm'],
 ];
 
 export const LeaderboardPage: React.FC = () => {
@@ -127,11 +129,11 @@ export const LeaderboardPage: React.FC = () => {
                   ))}
                 </tbody>
               </table>
-              <p className="mt-3 text-[13px] text-slate-500">Làm lại đề cũ không được tính thêm điểm. Bài nộp dưới 30% thời gian bị loại.</p>
+              <p className="mt-3 text-[13px] text-slate-500">Điểm được cộng ngay khi hoàn thành từng hoạt động trên.</p>
             </div>
             <div className="rounded-xl border border-slate-200 p-5">
               <p className="font-medium text-slate-900">Muốn có tên trên bảng?</p>
-              <p className="mt-1 text-sm text-slate-600">Học khoảng 20 phút mỗi ngày trong một tuần thường đủ vào top 50.</p>
+              <p className="mt-1 text-sm text-slate-600">Học và làm bài đều đặn mỗi ngày để tích điểm theo bảng bên cạnh.</p>
               <ActionLink to={gate('/app/leaderboard', '/auth/register')} className="mt-4 w-full">
                 Bắt đầu học
               </ActionLink>

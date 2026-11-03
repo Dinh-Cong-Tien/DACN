@@ -23,13 +23,18 @@ export const CourseTile: React.FC<{ course: Course }> = ({ course: c }) => (
       <h3 className="mt-1.5 font-semibold text-white light:text-slate-900 leading-snug line-clamp-2 group-hover:underline underline-offset-2 decoration-white/40 light:decoration-slate-400">{c.title}</h3>
       <p className="mt-1 text-sm text-slate-400 light:text-slate-500">{c.teacherName}</p>
       <p className="mt-2 flex items-center gap-1.5 text-sm">
-        <b className="text-amber-300">{c.rating.toFixed(1)}</b>
-        <span className="flex text-amber-300" aria-hidden>
-          {[0, 1, 2, 3, 4].map((k) => (
-            <Star key={k} className={cn('w-3.5 h-3.5', k < Math.round(c.rating) ? 'fill-current' : 'opacity-30')} />
-          ))}
-        </span>
-        <span className="text-slate-500">({c.studentsCount.toLocaleString('vi-VN')} học viên)</span>
+        {/* chỉ hiện sao khi có lượt đánh giá thật */}
+        {c.rating !== undefined && (
+          <>
+            <b className="text-amber-300">{c.rating.toFixed(1)}</b>
+            <span className="flex text-amber-300" aria-hidden>
+              {[0, 1, 2, 3, 4].map((k) => (
+                <Star key={k} className={cn('w-3.5 h-3.5', k < Math.round(c.rating ?? 0) ? 'fill-current' : 'opacity-30')} />
+              ))}
+            </span>
+          </>
+        )}
+        <span className="text-slate-500">{c.studentsCount.toLocaleString('vi-VN')} học viên</span>
       </p>
       <div className="mt-auto pt-3 flex items-center justify-between text-sm">
         <span className="text-slate-400 light:text-slate-500">{c.lessonsCount} bài học</span>

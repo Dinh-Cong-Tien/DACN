@@ -40,7 +40,9 @@ export const StudentDashboardPage: React.FC = () => {
   const SCORE_HISTORY = progress?.scoreHistory ?? [];
   const DAILY_ACTIVITY = progress?.dailyActivity ?? [];
   const HEATMAP_DATA = progress?.heatmap ?? {};
-  const lastFull = fullHistory?.items.find((a) => a.examType === 'TOEIC');
+  // điểm đề full gần nhất theo kỳ thi mục tiêu của học viên (VSTEP thang 10, TOEIC thang 990)
+  const goalExam = user?.target?.examType ?? 'TOEIC';
+  const lastFull = fullHistory?.items.find((a) => a.examType === goalExam && a.score != null);
   const activeDays = Object.values(HEATMAP_DATA).filter((m) => m > 0).length;
   const goalMinutes = progress?.totals.dailyGoalMinutes ?? 20;
   const daysLeft = user?.target?.examDate ? Math.max(0, Math.ceil((new Date(user.target.examDate).getTime() - now) / 86400000)) : null;
@@ -89,7 +91,7 @@ export const StudentDashboardPage: React.FC = () => {
         <div className="rounded-3xl bg-white border border-slate-900/10 p-2 grid grid-cols-3 divide-x divide-slate-900/10">
           {[
             { label: 'Chuỗi ngày học', value: user?.streak ?? 0, suffix: 'ngày', icon: <Flame className="w-4 h-4 text-violet-500 fill-violet-500" />, sub: `Dài nhất ${progress?.totals.longestStreak ?? 0} ngày` },
-            { label: 'Điểm gần nhất', value: lastFull?.score ?? 0, suffix: '/990', icon: <Trophy className="w-4 h-4 text-amber-500" />, sub: lastFull?.testTitle ?? 'Chưa làm đề full' },
+            { label: 'Điểm gần nhất', value: lastFull?.score ?? null, suffix: goalExam === 'VSTEP' ? '/10' : '/990', icon: <Trophy className="w-4 h-4 text-amber-500" />, sub: lastFull?.testTitle ?? 'Chưa làm đề full' },
             { label: 'Cần ôn hôm nay', value: dueMistakes.length + dueVocab.length, suffix: 'mục', icon: <RotateCcw className="w-4 h-4 text-indigo-600" />, sub: 'theo lịch SM-2' },
           ].map((s) => (
             <div key={s.label} className="px-4 py-4">
@@ -98,8 +100,8 @@ export const StudentDashboardPage: React.FC = () => {
                 {s.label}
               </div>
               <p className="font-display text-3xl font-extrabold text-slate-900 mt-2 leading-none">
-                <CountUp value={s.value} />
-                <span className="font-sans text-xs font-semibold text-slate-400 ml-1">{s.suffix}</span>
+                {s.value === null ? '—' : <CountUp value={s.value} />}
+                {s.value !== null && <span className="font-sans text-xs font-semibold text-slate-400 ml-1">{s.suffix}</span>}
               </p>
               <p className="text-[11px] text-slate-500 mt-1.5 truncate">{s.sub}</p>
             </div>

@@ -40,7 +40,8 @@ export const HeadDashboardPage: React.FC = () => {
   const orphan = dash?.classesNeedTeacher ?? [];
   const activeTeachers = teacherList.filter((t) => t.status === 'ACTIVE');
   const totalStudents = dash?.studentsCount ?? distinctStudents(DEPT_CLASSES);
-  const totalQuestions = subjectList.reduce((a, s) => a + s.questionsCount, 0);
+  // ngân hàng câu hỏi dùng chung theo kỳ thi: nhiều bộ môn cùng kỳ thi chỉ tính 1 lần
+  const totalQuestions = [...new Map(subjectList.map((s) => [s.examType, s.questionsCount])).values()].reduce((a, n) => a + n, 0);
   const toeicReports = classReports.filter((r) => r.examType === 'TOEIC' && r.avgScore > 0);
   const lowAttendance = classReports.filter((r) => r.attendance > 0 && r.attendance < 80);
 

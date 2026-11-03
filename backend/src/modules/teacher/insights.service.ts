@@ -31,7 +31,7 @@ export async function selfStudyOf(user: StudentRow) {
     week: { minutes: sum('minutes'), questions: sum('questionsAnswered'), lessons: sum('lessonsCompleted'), cards: sum('cardsReviewed'), activeDays: activity.filter((d) => d.minutes > 0 || d.questionsAnswered > 0).length },
     streak: user.streakCurrent,
     xp: user.xpTotal,
-    lastActiveAt: (user.lastActiveAt ?? user.createdAt).toISOString(),
+    lastActiveAt: user.lastActiveAt?.toISOString() ?? null,
     vocab: { learned: cardsLearned, due: cardsDue },
     openMistakes,
     courses: enrollments.map((e) => ({ slug: e.course.slug, title: e.course.title, progress: Math.round(Number(e.progressPct)), completed: !!e.completedAt })),

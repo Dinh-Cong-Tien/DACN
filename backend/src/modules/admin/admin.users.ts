@@ -48,6 +48,8 @@ usersRouter.get(
         byRole: Object.fromEntries(byRole.map((r) => [r.role, r._count])),
         byStatus: Object.fromEntries(byStatus.map((r) => [r.status, r._count])),
         activeLast7d: await prisma.user.count({ where: { deletedAt: null, lastActiveAt: { gte: new Date(Date.now() - 7 * 86400_000) } } }),
+        // học viên đang có gói VIP trả phí còn hạn (nhân sự xem được nội dung VIP theo vai trò, không tính là gói)
+        vipStudents: await prisma.user.count({ where: { deletedAt: null, role: 'STUDENT', ...vipFilter } }),
       },
     };
   })

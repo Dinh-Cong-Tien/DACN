@@ -30,7 +30,7 @@ export const StudentSettingsPage: React.FC = () => {
   const [examType, setExamType] = useState<ExamType>(user?.target?.examType ?? 'TOEIC');
   const [score, setScore] = useState(user?.target?.score ?? '750');
   const [examDate, setExamDate] = useState(user?.target?.examDate?.slice(0, 10) ?? '');
-  const [minutes, setMinutes] = useState(settings.dailyGoalMinutes ?? 45);
+  const [minutes, setMinutes] = useState(settings.dailyGoalMinutes ?? 20); // cùng mặc định với backend (progress.ts)
   const [notif, setNotif] = useState({ review: true, assignment: true, streak: true, marketing: false, ...(settings.notifyTypes ?? {}) });
   // Đồng bộ form mục tiêu với mục tiêu đang hiệu lực trên máy chủ
   React.useEffect(() => {
