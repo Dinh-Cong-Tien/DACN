@@ -1,4 +1,4 @@
-import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { BookText, ChevronRight, Languages, ListTree, Quote, Volume2 } from 'lucide-react';
 import type { KnowledgeNode, LessonKnowledge as Knowledge } from '@/shared/types';
 import { Card, Tabs } from '@/shared/components/ui';
@@ -32,7 +32,7 @@ type Path = { d: string; active: boolean };
  */
 const ARTICLES = ['a', 'an', 'the'];
 const ArticleTree: React.FC<{ roots: KnowledgeNode[] }> = ({ roots: all }) => {
-  const roots = all.filter((r) => ARTICLES.includes(r.label));
+  const roots = useMemo(() => all.filter((r) => ARTICLES.includes(r.label)), [all]);
   const [openIdx, setOpenIdx] = useState<number | null>(null);
   const [sel, setSel] = useState<KnowledgeNode | null>(null);
   const [paths, setPaths] = useState<Path[]>([]);
