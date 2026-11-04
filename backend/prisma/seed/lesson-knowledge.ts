@@ -9,6 +9,7 @@ import { prisma } from './lib';
 import { emptyKnowledge, isEmptyKnowledge, parseKnowledgeText, type KnowledgeNode, type LessonKnowledge } from '../../src/modules/catalog/lesson-knowledge';
 import { GRAMMAR_PACKS } from './data/lesson-knowledge/grammar';
 import { articleTree } from './data/lesson-knowledge/articles';
+import { detectGrammar } from './data/lesson-knowledge/detect-grammar';
 import { TOPIC_PACKS } from './data/lesson-knowledge/topics';
 
 const PACKS = [...GRAMMAR_PACKS, ...TOPIC_PACKS];
@@ -59,6 +60,52 @@ const PHONEME: Record<string, string[]> = {
   '/ɪə/': ['here | /hɪər/ | adv | ở đây', 'near | /nɪər/ | prep | gần', 'idea | /aɪˈdɪə/ | n | ý tưởng'],
 };
 
+/** Câu luyện đọc cho từng âm (dùng các từ ví dụ của âm đó) — ngữ pháp của bài lấy từ chính câu này */
+const PRACTICE: Record<string, string> = {
+  '/p/': "Please stop here – I can't find my pen.",
+  '/b/': 'She has found a good job at the bookshop.',
+  '/t/': 'We will meet at the same time tomorrow.',
+  '/d/': 'I need a new ladder for the garden.',
+  '/k/': 'The cat is sleeping on my school bag.',
+  '/g/': 'If you go now, you will get a bigger bag.',
+  '/f/': 'He laughed when the food arrived.',
+  '/v/': 'I have lived here for seven years, and I love it very much.',
+  '/θ/': 'I think her birthday is next month.',
+  '/ð/': 'My mother bought this for me.',
+  '/s/': 'The bus is faster than walking in this city.',
+  '/z/': 'The zoo was busier than usual.',
+  '/ʃ/': 'The ship has left the station.',
+  '/ʒ/': 'I usually watch television in the evening.',
+  '/tʃ/': 'The teacher asked us to bring our own chairs.',
+  '/dʒ/': 'The manager is going to offer him a job.',
+  '/m/': 'My name is Minh, and I love summer.',
+  '/n/': 'We had dinner at night and then called him on the phone.',
+  '/ŋ/': 'She is singing an English song this morning.',
+  '/h/': 'Hello! Is there a hospital behind your house?',
+  '/l/': 'Could you call me later?',
+  '/r/': 'Sorry, the red train was cancelled.',
+  '/w/': 'Could you bring me some water this week?',
+  '/j/': 'Yes, you should listen to more music.',
+  '/ɪ/': 'If it is busy, we will sit outside.',
+  '/e/': 'Many of my friends went to bed early.',
+  '/æ/': 'My cat is happier than your cat.',
+  '/ʌ/': 'Come and have a cup of coffee with us.',
+  '/ɒ/': "It's too hot, so let's stop and watch the sea.",
+  '/ʊ/': 'Put the good book on the table.',
+  '/ə/': 'The teacher was talking about bananas.',
+  '/iː/': 'Can you see the sheep? People are watching them.',
+  '/ɑː/': 'My father will start the car.',
+  '/ɔː/': "Don't talk near the door.",
+  '/uː/': 'Our school serves good food every day.',
+  '/ɜː/': 'I have worked hard to learn English.',
+  '/eɪ/': 'What is your name? Today is a great day.',
+  '/aɪ/': 'I want to buy a new phone this time.',
+  '/ɔɪ/': 'The boy enjoys playing football.',
+  '/aʊ/': 'Our house is bigger than it was before.',
+  '/əʊ/': 'Do you know where my phone is? I have to go.',
+  '/ɪə/': 'Is there a bank near here?',
+};
+
 function merge(into: LessonKnowledge, k: LessonKnowledge) {
   const add = <T>(arr: T[], items: T[], key: (x: T) => string) => items.forEach((x) => !arr.some((y) => key(y) === key(x)) && arr.push(x));
   (['grammar', 'pronunciation', 'phrases', 'tips'] as const).forEach((s) => add(into[s], k[s], (g) => g.title.toLowerCase()));
@@ -87,7 +134,8 @@ async function main() {
       // bài luyện 1 âm: mục Phát âm cho chính âm đó (3 từ ví dụ: đầu / giữa / cuối từ) + từ vựng
       const words = PHONEME[sound].map((w) => w.split('|').map((x) => x.trim()));
       const pron = `Âm ${sound} | ${words.map(([w, ipa]) => `${w} ${ipa}`).join(', ')} | Nghe và lặp lại âm ở đầu, giữa và cuối từ | ${words.map(([w]) => w).join(' – ')}`;
-      merge(k, parseKnowledgeText(`# Phát âm\n${pron}\n# Từ vựng\n${PHONEME[sound].join('\n')}`)!);
+      const drill = PRACTICE[sound] ? `\nCâu luyện âm ${sound} | | Đọc to cả câu, chú ý âm ${sound} | ${PRACTICE[sound]}` : '';
+      merge(k, parseKnowledgeText(`# Phát âm\n${pron}${drill}\n# Từ vựng\n${PHONEME[sound].join('\n')}`)!);
     } else {
       let hits = PACKS.filter((p) => p.match.test(title));
       if (!hits.length) hits = PACKS.filter((p) => p.match.test(l.section.title.normalize('NFC').toLowerCase()));
@@ -97,6 +145,8 @@ async function main() {
       missed.push(`${l.section.title} › ${l.title}`);
       continue;
     }
+    // ngữ pháp dùng trong chính các câu của bài (bài giao tiếp / phát âm / từ vựng chưa đủ mục ngữ pháp)
+    if (k.grammar.length < 3) k.grammar.push(...detectGrammar(k, 4 - k.grammar.length));
     // cây mạo từ: a / an / the đi với những danh từ nào của chính bài này
     k.articles = articleTree(k);
     await prisma.lesson.update({ where: { id: l.id }, data: { knowledge: k as unknown as Prisma.InputJsonValue } });

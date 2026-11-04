@@ -124,21 +124,30 @@ Bước 1: xem 4 đáp án | Cùng gốc khác đuôi → câu từ loại; khá
   // ---------- Phát âm (mục # Phát âm, không phải ngữ pháp) ----------
   {
     match: /đuôi s|s\/es|-s\/-es/,
-    text: `# Phát âm
+    text: `# Ngữ pháp
+Danh từ số nhiều | N + s / es | Đuôi -s/-es đọc /s/, /z/ hoặc /ɪz/ tuỳ âm cuối | two books, three buses
+Hiện tại đơn ngôi 3 số ít | He / She / It + V-s / es | Bỏ âm cuối -s là sai ngữ pháp | She watches the news every night.
+# Phát âm
 /s/ | sau âm vô thanh /p/, /t/, /k/, /f/, /θ/ | | stops, books, laughs
 /ɪz/ | sau /s/, /z/, /ʃ/, /ʒ/, /tʃ/, /dʒ/ | Thêm một âm tiết | buses, watches, changes
 /z/ | các trường hợp còn lại (nguyên âm, âm hữu thanh) | | plays, bags, calls`,
   },
   {
     match: /đuôi ed|bài tập ed|-ed/,
-    text: `# Phát âm
+    text: `# Ngữ pháp
+Quá khứ đơn (động từ có quy tắc) | S + V-ed | Đuôi -ed đọc /t/, /d/ hoặc /ɪd/ | We wanted to stay longer.
+Bị động và hoàn thành | be / have + V3 (-ed) | V3 của động từ có quy tắc cũng thêm -ed | The order was delivered yesterday.
+# Phát âm
 /ɪd/ | sau /t/, /d/ | Thêm một âm tiết | wanted, needed
 /t/ | sau âm vô thanh /p/, /k/, /f/, /s/, /ʃ/, /tʃ/ | | stopped, looked, watched
 /d/ | các trường hợp còn lại | | played, called, cleaned`,
   },
   {
     match: /trọng âm/,
-    text: `# Phát âm
+    text: `# Ngữ pháp
+Cùng từ, khác từ loại | ˈN / ˈadj nhấn âm 1 – Vˈ nhấn âm 2 | Trọng âm giúp phân biệt danh từ và động từ | a ˈrecord – to reˈcord, a ˈpresent – to preˈsent
+Từ loại theo hậu tố | -tion, -ity → N; -ic, -al → adj | Hậu tố cho biết từ loại và vị trí trọng âm | information (N), economic (adj)
+# Phát âm
 Danh từ, tính từ 2 âm tiết | thường nhấn âm 1 | | ˈoffice, ˈhappy
 Động từ 2 âm tiết | thường nhấn âm 2 | | reˈceive, deˈcide
 Đuôi -tion, -sion, -ic, -ity | nhấn âm ngay trước đuôi | | inforˈmation, ecoˈnomic, abiˈlity
@@ -146,14 +155,22 @@ Trọng âm câu | Nhấn từ nội dung (N, V, adj, adv), đọc lướt từ 
   },
   {
     match: /nối âm|nuốt âm|âm yếu|vì sao nghe không ra|shadowing/,
-    text: `# Phát âm
+    text: `# Ngữ pháp
+Động từ khuyết thiếu can | S + can + V nguyên mẫu | can đọc yếu /kən/ khi đứng trước động từ | I can help you.
+Động từ + to V | want / need / have + to + V | to đọc yếu /tə/ | I need to finish the report.
+Cụm danh từ với of | a cup / a lot / a piece + of + N | of đọc yếu /əv/ | a cup of tea
+# Phát âm
 Nối phụ âm – nguyên âm | Âm cuối của từ trước nối sang nguyên âm đầu từ sau | | turn‿off → /tɜːr nɒf/
 Âm yếu | to /tə/, of /əv/, can /kən/, and /ən/ | Từ chức năng đọc nhẹ, nhanh | a cup of tea → /ə kʌp əv tiː/
 Nuốt âm | /t/, /d/ giữa hai phụ âm thường bị lược | | next week → /neks wiːk/`,
   },
   {
     match: /nguyên âm|phụ âm|bảng phiên âm|phát âm bắt đầu|các cặp âm|ngữ điệu|âm cuối/,
-    text: `# Phát âm
+    text: `# Ngữ pháp
+Đuôi -s, -ed mang nghĩa ngữ pháp | N-s (số nhiều), V-s (ngôi 3), V-ed (quá khứ) | Nuốt âm cuối làm sai ngữ pháp | She works here. / He worked here.
+Câu hỏi Yes/No | Trợ động từ / be + S + …? | Lên giọng ở cuối câu | Are you ready?
+Câu hỏi Wh- | Wh- + trợ động từ / be + S + V? | Xuống giọng ở cuối câu | Where are you?
+# Phát âm
 Nguyên âm ngắn – dài | /ɪ/–/iː/, /ʊ/–/uː/, /æ/–/e/ | Độ dài làm đổi nghĩa | ship /ʃɪp/ – sheep /ʃiːp/
 Phụ âm vô thanh – hữu thanh | /p/–/b/, /t/–/d/, /k/–/ɡ/, /s/–/z/ | Hữu thanh rung dây thanh | pen – Ben
 Âm cuối | Phát âm rõ âm cuối /t/, /s/, /k/ | Người Việt hay bỏ âm cuối | like /laɪk/, nice /naɪs/
