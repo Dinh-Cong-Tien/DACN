@@ -6,7 +6,7 @@ import { badRequest } from '../../core/http';
  *   # Ngữ pháp   → tiêu đề | công thức | ghi chú | ví dụ
  *   # Từ vựng    → từ | phiên âm | từ loại | nghĩa | ví dụ
  *   # Mệnh đề    → tên mệnh đề | từ dẫn (cách nhau dấu phẩy) | ghi chú | ví dụ
- *   # Mạo từ     → nhãn | nghĩa | ví dụ   (cây: a / an / the / không mạo từ → các từ đi kèm; thụt 2 dấu cách = node con)
+ *   # Mạo từ     → nhãn | nghĩa | ví dụ   (cây: a / an / the → các từ đi kèm; thụt 2 dấu cách = node con)
  */
 export interface KnowledgeNode { label: string; meaningVi?: string; example?: string; children?: KnowledgeNode[] }
 export interface GrammarPoint { title: string; formula?: string; note?: string; example?: string }

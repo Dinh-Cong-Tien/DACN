@@ -1,5 +1,5 @@
 /**
- * Cây mạo từ cho từng video: a / an / the / không mạo từ → các danh từ của chính bài đó đi với mạo từ nào.
+ * Cây mạo từ cho từng video: a / an / the → các danh từ của chính bài đó đi với mạo từ nào.
  * a hay an chọn theo ÂM ĐẦU trong phiên âm (IPA), không theo chữ cái (a university, an hour).
  */
 import type { KnowledgeNode, LessonKnowledge } from '../../../../src/modules/catalog/lesson-knowledge';
@@ -61,21 +61,18 @@ const FALLBACK_RAW = {
   a: [leaf('a book', 'một quyển sách', 'I bought a book yesterday.'), leaf('a meeting', 'một cuộc họp', 'We have a meeting at 9.'), leaf('a report', 'một bản báo cáo', 'She wrote a report.')],
   an: [leaf('an apple', 'một quả táo'), leaf('an email', 'một email', 'I sent an email to the client.'), leaf('an office', 'một văn phòng', 'They rented an office downtown.')],
   the: [leaf('the book', 'quyển sách (đã nhắc tới)', 'The book I bought is very useful.'), leaf('the manager', 'người quản lý (ai cũng biết là ai)', 'The manager will call you.')],
-  zero: [leaf('information', 'thông tin — không đếm được', 'We need more information.'), leaf('books', 'sách nói chung — số nhiều', 'Books are expensive here.')],
 };
 
 const FALLBACK = {
   a: FALLBACK_RAW.a.map(general),
   an: FALLBACK_RAW.an.map(general),
   the: FALLBACK_RAW.the.map(general),
-  zero: FALLBACK_RAW.zero.map(general),
 };
 
 const NOTE = {
   a: leaf('Tính theo âm, không theo chữ', 'chữ nguyên âm nhưng đọc là phụ âm → vẫn dùng a', 'a university /ˌjuː-/, a European, a one-way ticket'),
   an: leaf('Tính theo âm, không theo chữ', 'h câm hoặc chữ viết tắt đọc bằng nguyên âm → dùng an', 'an hour, an honest person, an MBA'),
   the: leaf('Luôn dùng the', 'vật duy nhất, so sánh nhất, số thứ tự', 'the sun, the best option, the first time'),
-  zero: leaf('Cụm cố định không có mạo từ', 'phương tiện, bữa ăn, nơi chốn quen thuộc', 'by bus, have lunch, at home, go to work'),
 };
 
 /** Lưu ý của từng mạo từ hiện trong khung chi tiết khi bấm vào mạo từ đó */
@@ -86,7 +83,6 @@ export function articleTree(k: LessonKnowledge): KnowledgeNode[] {
   const countable = nouns.filter((n) => !UNCOUNTABLE.has(n.word) && !PLURAL.has(n.word) && !THE_ONLY.has(n.word) && !NO_ARTICLE.has(n.word));
   const aList = countable.filter((n) => !VOWEL_SOUND.test(n.ipa)).slice(0, 6);
   const anList = countable.filter((n) => VOWEL_SOUND.test(n.ipa)).slice(0, 6);
-  const zeroList = nouns.filter((n) => UNCOUNTABLE.has(n.word) || PLURAL.has(n.word) || NO_ARTICLE.has(n.word)).slice(0, 6);
   const theList = nouns.filter((n) => !NO_ARTICLE.has(n.word)).slice(0, 6);
 
   const used = phrasesOf(k);
@@ -101,11 +97,5 @@ export function articleTree(k: LessonKnowledge): KnowledgeNode[] {
     { label: 'a', meaningVi: 'trước danh từ đếm được số ít bắt đầu bằng âm phụ âm (nhắc lần đầu)', example: note(NOTE.a), children: pick(aList, 'a', FALLBACK.a) },
     { label: 'an', meaningVi: 'trước danh từ đếm được số ít bắt đầu bằng âm nguyên âm', example: note(NOTE.an), children: pick(anList, 'an', FALLBACK.an) },
     { label: 'the', meaningVi: 'khi người nghe đã biết là người / vật nào', example: note(NOTE.the), children: pick(theList, 'the', FALLBACK.the) },
-    {
-      label: 'Không dùng mạo từ',
-      meaningVi: 'danh từ không đếm được hoặc số nhiều nói chung',
-      example: note(NOTE.zero),
-      children: zeroList.length ? zeroList.map((n) => leaf(n.word, `${n.meaningVi} — không dùng a/an`, n.example)) : FALLBACK.zero,
-    },
   ];
 }

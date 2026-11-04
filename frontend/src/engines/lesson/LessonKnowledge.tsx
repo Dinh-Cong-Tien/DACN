@@ -26,16 +26,17 @@ const speak = (text: string) => {
 type Path = { d: string; active: boolean };
 
 /**
- * Sơ đồ mạo từ dạng mind map ngang: Mạo từ → a / an / the / không mạo từ → các từ trong bài.
+ * Sơ đồ mạo từ dạng mind map ngang: a / an / the → các từ trong bài.
  * Bấm một mạo từ để sinh các node từ ở cột bên phải (căn theo nhánh cha), bấm lại để thu gọn.
  * Đường nối là đường cong SVG đo theo vị trí thật của node.
  */
-const ArticleTree: React.FC<{ roots: KnowledgeNode[] }> = ({ roots }) => {
+const ARTICLES = ['a', 'an', 'the'];
+const ArticleTree: React.FC<{ roots: KnowledgeNode[] }> = ({ roots: all }) => {
+  const roots = all.filter((r) => ARTICLES.includes(r.label));
   const [openIdx, setOpenIdx] = useState<number | null>(null);
   const [sel, setSel] = useState<KnowledgeNode | null>(null);
   const [paths, setPaths] = useState<Path[]>([]);
   const wrap = useRef<HTMLDivElement>(null);
-  const rootRef = useRef<HTMLDivElement>(null);
   const leavesRef = useRef<HTMLDivElement>(null);
   const l1 = useRef<(HTMLButtonElement | null)[]>([]);
   const l2 = useRef<(HTMLButtonElement | null)[]>([]);
@@ -64,9 +65,6 @@ const ArticleTree: React.FC<{ roots: KnowledgeNode[] }> = ({ roots }) => {
         return `M${a.r},${a.y}C${mx},${a.y} ${mx},${b.y} ${b.l},${b.y}`;
       };
       const out: Path[] = [];
-      const root = rootRef.current;
-      if (root && root.offsetWidth > 0)
-        l1.current.forEach((el, i) => el && out.push({ d: curve(box(root), box(el)), active: i === openIdx }));
       if (parent) l2.current.slice(0, kids.length).forEach((el) => el && out.push({ d: curve(box(parent), box(el)), active: true }));
       setPaths(out);
     };
@@ -91,9 +89,6 @@ const ArticleTree: React.FC<{ roots: KnowledgeNode[] }> = ({ roots }) => {
               <path key={i} d={p.d} className={p.active ? 'is-active' : undefined} />
             ))}
           </svg>
-          <div ref={rootRef} className="kt-node kt-node--root">
-            Mạo từ
-          </div>
           <div className="kt-col">
             {roots.map((r, i) => (
               <button
@@ -120,7 +115,7 @@ const ArticleTree: React.FC<{ roots: KnowledgeNode[] }> = ({ roots }) => {
               ))}
             </div>
           ) : (
-            <p className="kt-empty">Chọn a, an, the hoặc "Không dùng mạo từ" để xem các từ trong bài đi kèm</p>
+            <p className="kt-empty">Chọn a, an hoặc the để xem các từ trong bài đi kèm</p>
           )}
         </div>
       </div>
