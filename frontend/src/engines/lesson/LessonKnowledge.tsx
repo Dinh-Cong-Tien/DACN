@@ -1,5 +1,5 @@
 import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { BookText, Languages, ListTree, Quote, Volume2 } from 'lucide-react';
+import { BookText, ChevronRight, Languages, ListTree, Quote, Volume2 } from 'lucide-react';
 import type { KnowledgeNode, LessonKnowledge as Knowledge } from '@/shared/types';
 import { Card, Tabs } from '@/shared/components/ui';
 import { cn } from '@/shared/utils';
@@ -23,17 +23,20 @@ const speak = (text: string) => {
   }
 };
 
+type Path = { d: string; active: boolean };
+
 /**
- * Sơ đồ mạo từ 3 tầng: "Mạo từ" → a / an / the / không mạo từ → các từ trong bài đi kèm.
- * Bấm một mạo từ để sinh ra các node từ bên dưới, bấm lại để thu gọn (mỗi lần mở 1 nhánh).
- * Đường nối vẽ bằng SVG theo vị trí thật của node (đo lại khi mở nhánh / đổi kích thước).
+ * Sơ đồ mạo từ dạng mind map ngang: Mạo từ → a / an / the / không mạo từ → các từ trong bài.
+ * Bấm một mạo từ để sinh các node từ ở cột bên phải (căn theo nhánh cha), bấm lại để thu gọn.
+ * Đường nối là đường cong SVG đo theo vị trí thật của node.
  */
 const ArticleTree: React.FC<{ roots: KnowledgeNode[] }> = ({ roots }) => {
   const [openIdx, setOpenIdx] = useState<number | null>(null);
   const [sel, setSel] = useState<KnowledgeNode | null>(null);
-  const [paths, setPaths] = useState<string[]>([]);
+  const [paths, setPaths] = useState<Path[]>([]);
   const wrap = useRef<HTMLDivElement>(null);
   const rootRef = useRef<HTMLDivElement>(null);
+  const leavesRef = useRef<HTMLDivElement>(null);
   const l1 = useRef<(HTMLButtonElement | null)[]>([]);
   const l2 = useRef<(HTMLButtonElement | null)[]>([]);
   const kids = openIdx !== null ? (roots[openIdx]?.children ?? []) : [];
@@ -41,28 +44,31 @@ const ArticleTree: React.FC<{ roots: KnowledgeNode[] }> = ({ roots }) => {
   useLayoutEffect(() => {
     const draw = () => {
       const w = wrap.current;
-      if (!w || !rootRef.current) return;
-      const o = w.getBoundingClientRect();
-      const pt = (el: Element) => {
-        const r = el.getBoundingClientRect();
-        return { x: r.left - o.left + r.width / 2, top: r.top - o.top, bottom: r.bottom - o.top };
-      };
-      // đường nhánh kiểu sơ đồ tổ chức: dọc xuống → thanh ngang chung → dọc xuống từng node con
-      const bus = (from: { x: number; bottom: number }, to: { x: number; top: number }[]) => {
-        if (!to.length) return [];
-        const y = from.bottom + (to[0].top - from.bottom) / 2;
-        const xs = to.map((c) => c.x);
-        return [`M${from.x},${from.bottom}V${y}`, `M${Math.min(from.x, ...xs)},${y}H${Math.max(from.x, ...xs)}`, ...to.map((c) => `M${c.x},${y}V${c.top}`)];
-      };
-      const level1 = l1.current.filter(Boolean).map((el) => pt(el!));
-      const out = bus(pt(rootRef.current), level1);
+      if (!w) return;
       const parent = openIdx !== null ? l1.current[openIdx] : null;
-      if (parent) out.push(...bus(pt(parent), l2.current.filter(Boolean).map((el) => pt(el!))));
+      // cột từ: căn giữa theo nhánh đang mở (không vượt lên trên mép sơ đồ)
+      const lv = leavesRef.current;
+      if (lv && parent) {
+        lv.style.marginTop = '0px';
+        const p = parent.getBoundingClientRect();
+        const l = lv.getBoundingClientRect();
+        lv.style.marginTop = `${Math.max(0, p.top + p.height / 2 - l.height / 2 - l.top)}px`;
+      }
+      const o = w.getBoundingClientRect();
+      const box = (el: Element) => {
+        const r = el.getBoundingClientRect();
+        return { l: r.left - o.left, r: r.right - o.left, y: r.top - o.top + r.height / 2 };
+      };
+      const curve = (a: ReturnType<typeof box>, b: ReturnType<typeof box>) => {
+        const mx = (a.r + b.l) / 2;
+        return `M${a.r},${a.y}C${mx},${a.y} ${mx},${b.y} ${b.l},${b.y}`;
+      };
+      const out: Path[] = [];
+      const root = rootRef.current;
+      if (root && root.offsetWidth > 0)
+        l1.current.forEach((el, i) => el && out.push({ d: curve(box(root), box(el)), active: i === openIdx }));
+      if (parent) l2.current.slice(0, kids.length).forEach((el) => el && out.push({ d: curve(box(parent), box(el)), active: true }));
       setPaths(out);
-      // màn hình hẹp: cuộn sơ đồ sao cho nhánh đang mở (hoặc gốc) nằm giữa khung
-      const sc = w.parentElement;
-      const focus = (parent ?? rootRef.current) as HTMLElement;
-      if (sc && sc.scrollWidth > sc.clientWidth) sc.scrollLeft = focus.offsetLeft + focus.offsetWidth / 2 - sc.clientWidth / 2;
     };
     draw();
     const ro = new ResizeObserver(draw);
@@ -71,26 +77,24 @@ const ArticleTree: React.FC<{ roots: KnowledgeNode[] }> = ({ roots }) => {
   }, [openIdx, roots, kids.length]);
 
   const toggle = (i: number) => {
-    setSel(roots[i]);
-    setOpenIdx((x) => (x === i ? null : i));
+    const closing = openIdx === i;
+    setOpenIdx(closing ? null : i);
+    setSel(closing ? null : roots[i]);
   };
 
   return (
-    <div className="space-y-3">
-      <p className="text-xs text-slate-500">Bấm vào a / an / the để sinh ra các từ trong bài đi kèm; bấm lại để thu gọn. Bấm một từ để xem câu ví dụ.</p>
+    <div className="space-y-4">
       <div className="kt-scroll">
-        <div ref={wrap} className="kt-graph">
+        <div ref={wrap} className="kt-map">
           <svg className="kt-lines" aria-hidden>
-            {paths.map((d, i) => (
-              <path key={i} d={d} />
+            {paths.map((p, i) => (
+              <path key={i} d={p.d} className={p.active ? 'is-active' : undefined} />
             ))}
           </svg>
-          <div className="kt-level">
-            <div ref={rootRef} className="kt-node kt-node--root">
-              Mạo từ
-            </div>
+          <div ref={rootRef} className="kt-node kt-node--root">
+            Mạo từ
           </div>
-          <div className="kt-level">
+          <div className="kt-col">
             {roots.map((r, i) => (
               <button
                 key={i}
@@ -101,28 +105,32 @@ const ArticleTree: React.FC<{ roots: KnowledgeNode[] }> = ({ roots }) => {
                 onClick={() => toggle(i)}
               >
                 <span className="kt-node__label">{r.label}</span>
-                <span className="kt-node__hint">{openIdx === i ? 'Thu gọn' : `${r.children?.length ?? 0} từ`}</span>
+                <span className="kt-node__count">{r.children?.length ?? 0}</span>
+                <ChevronRight className="kt-node__chev" aria-hidden />
               </button>
             ))}
           </div>
-          {kids.length > 0 && (
-            <div className="kt-level kt-level--leaves">
+          {kids.length > 0 ? (
+            <div ref={leavesRef} className="kt-col kt-col--leaves">
               {kids.map((c, i) => (
-                <button key={`${openIdx}-${i}`} ref={(el) => (l2.current[i] = el)} type="button" className={cn('kt-node', sel === c && 'kt-node--selected')} onClick={() => setSel(c)}>
+                <button key={`${openIdx}-${i}`} ref={(el) => (l2.current[i] = el)} type="button" className={cn('kt-node kt-node--leaf', sel === c && 'kt-node--selected')} onClick={() => setSel(c)}>
                   <span className="kt-node__label">{c.label}</span>
+                  {c.meaningVi && <span className="kt-node__sub">{c.meaningVi}</span>}
                 </button>
               ))}
             </div>
+          ) : (
+            <p className="kt-empty">Chọn a, an, the hoặc "Không dùng mạo từ" để xem các từ trong bài đi kèm</p>
           )}
         </div>
       </div>
       {sel && (
-        <div className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3" aria-live="polite">
+        <div className="kt-detail" aria-live="polite">
           <p className="text-sm">
-            <span className="font-semibold text-slate-900">{sel.label}</span>
-            {sel.meaningVi && <span className="text-slate-600"> — {sel.meaningVi}</span>}
+            <span className="font-bold text-slate-900">{sel.label}</span>
+            {sel.meaningVi && <span className="text-slate-600"> · {sel.meaningVi}</span>}
           </p>
-          {sel.example && <p className="mt-1 text-sm italic text-slate-500">{sel.example}</p>}
+          {sel.example && <p className="kt-detail__ex">{sel.example}</p>}
         </div>
       )}
     </div>
