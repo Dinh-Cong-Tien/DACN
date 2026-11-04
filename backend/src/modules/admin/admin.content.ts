@@ -8,6 +8,7 @@ import { audit } from './audit';
 import { gradientOf } from '../head/shared';
 import { knowledgeToText, parseKnowledgeText, toKnowledge } from '../catalog/lesson-knowledge';
 import { parseSubtitles, subtitlesToText, toCues } from '../catalog/lesson-transcript';
+import { buildExercises, poolOf } from '../catalog/lesson-exercises';
 import { completedAttempts, courseStats, ratingOf } from '../catalog/counts';
 import { byTitleNatural, levelLabel } from '../catalog/mappers';
 import { listQuestions, toQuestionRow } from '../head/head.routes';
@@ -211,6 +212,15 @@ const lessonData = <T extends { knowledgeText?: string | null; transcriptText?: 
   ...(knowledgeText === undefined ? {} : { knowledge: (parseKnowledgeText(knowledgeText ?? '') as Prisma.InputJsonValue | null) ?? Prisma.DbNull }),
   ...(transcriptText === undefined ? {} : { transcript: (parseSubtitles(transcriptText ?? '') as Prisma.InputJsonValue | null) ?? Prisma.DbNull }),
 });
+/** Admin sửa kiến thức bài video → sinh lại bài tập sau bài học từ kiến thức mới */
+async function refreshExercises(lessonId: string) {
+  const l = await prisma.lesson.findUnique({ where: { id: lessonId }, select: { type: true, knowledge: true } });
+  if (!l || l.type !== 'VIDEO') return;
+  const k = toKnowledge(l.knowledge);
+  const others = await prisma.lesson.findMany({ where: { type: 'VIDEO', deletedAt: null, NOT: { knowledge: { equals: Prisma.DbNull } } }, select: { knowledge: true } });
+  const qs = k ? buildExercises(lessonId, k, poolOf(others.map((o) => toKnowledge(o.knowledge)).filter((x): x is NonNullable<typeof x> => !!x))) : [];
+  await prisma.lesson.update({ where: { id: lessonId }, data: { exercises: qs.length ? (qs as unknown as Prisma.InputJsonValue) : Prisma.DbNull } });
+}
 async function refreshCourseCache(courseId: string) {
   const agg = await prisma.lesson.aggregate({ where: { deletedAt: null, section: { courseId } }, _count: true, _sum: { durationMin: true } });
   await prisma.course.update({ where: { id: courseId }, data: { lessonsCount: agg._count, durationMin: agg._sum.durationMin ?? 0 } });
@@ -224,6 +234,7 @@ contentRouter.post(
     if ((b.type === 'QUIZ' || b.type === 'CHECKPOINT') && b.passScorePct == null) b.passScorePct = 70;
     const last = await prisma.lesson.aggregate({ where: { sectionId: b.sectionId }, _max: { orderIndex: true } });
     const l = await prisma.lesson.create({ data: { ...lessonData(b), orderIndex: b.orderIndex ?? (last._max.orderIndex ?? -1) + 1 }, include: { section: { select: { courseId: true } } } });
+    if (b.knowledgeText !== undefined) await refreshExercises(l.id);
     await refreshCourseCache(l.section.courseId);
     return l;
   })
@@ -233,6 +244,7 @@ contentRouter.patch(
   handler(async (req) => {
     const b = parse(lessonBody.omit({ sectionId: true }).partial(), req.body);
     const l = await prisma.lesson.update({ where: { id: idOf(req) }, data: lessonData(b), include: { section: { select: { courseId: true } } } });
+    if (b.knowledgeText !== undefined) await refreshExercises(l.id);
     await refreshCourseCache(l.section.courseId);
     return l;
   })

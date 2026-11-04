@@ -14,10 +14,18 @@ interface PracticeEngineProps {
   exitTo?: string;
   /** Chế độ dictation: hiển thị ô nhập thay vì chọn đáp án */
   mode?: 'QUIZ';
+  /** Nút ở màn hình tổng kết (thay nhóm nút mặc định) — vd bài tập sau bài học: Học bài tiếp / Xem lại video */
+  finishActions?: (s: { correct: number; total: number; pct: number; restart: () => void }) => React.ReactNode;
+  /** Dòng nhận xét dưới điểm (thay câu mặc định) */
+  finishNote?: (s: { correct: number; total: number; pct: number }) => React.ReactNode;
+  /** Cho báo lỗi câu hỏi (chỉ câu trong ngân hàng đề) */
+  allowFlagReport?: boolean;
+  /** Nút "Làm lại câu này" sau khi xem đáp án (tắt với bài có chấm đạt / không đạt) */
+  allowRetry?: boolean;
 }
 
 /** Engine luyện tập: phản hồi tức thì, giải thích, ghi nhận lỗi sai, màn hình tổng kết */
-export const PracticeEngine: React.FC<PracticeEngineProps> = ({ title = 'Luyện tập', questions, onMistakeRecorded, onFinishPractice, exitTo = '/app/practice' }) => {
+export const PracticeEngine: React.FC<PracticeEngineProps> = ({ title = 'Luyện tập', questions, onMistakeRecorded, onFinishPractice, exitTo = '/app/practice', finishActions, finishNote, allowFlagReport = true, allowRetry = true }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [selectedKey, setSelectedKey] = useState<string | undefined>();
   const [isAnswered, setIsAnswered] = useState(false);
@@ -50,6 +58,8 @@ export const PracticeEngine: React.FC<PracticeEngineProps> = ({ title = 'Luyện
     if (isAnswered || !currentQ) return;
     setSelectedKey(key);
     setIsAnswered(true);
+    // chỉ tính lần trả lời đầu tiên của mỗi câu (làm lại câu không cộng điểm thêm)
+    if (correctIds.includes(currentQ.id) || mistakes.includes(currentQ.id)) return;
     const ok = key === getCorrectKey(currentQ);
     if (ok) {
       setCorrectIds((c) => [...c, currentQ.id]);
@@ -105,7 +115,13 @@ export const PracticeEngine: React.FC<PracticeEngineProps> = ({ title = 'Luyện
           <div>
             <h3 className="text-2xl font-black text-slate-900">{pct >= 80 ? 'Xuất sắc!' : pct >= 50 ? 'Khá tốt, tiếp tục nhé!' : 'Cần ôn lại kỹ hơn'}</h3>
             <p className="text-sm text-slate-500 mt-1">
-              Bạn trả lời đúng <b className="text-slate-800">{correctIds.length}</b>/{total} câu · {mistakes.length} câu đã lưu vào Sổ tay lỗi sai.
+              {finishNote ? (
+                finishNote({ correct: correctIds.length, total, pct })
+              ) : (
+                <>
+                  Bạn trả lời đúng <b className="text-slate-800">{correctIds.length}</b>/{total} câu{onMistakeRecorded ? ` · ${mistakes.length} câu đã lưu vào Sổ tay lỗi sai` : ''}.
+                </>
+              )}
             </p>
           </div>
           <div className="grid grid-cols-3 gap-3">
@@ -125,6 +141,9 @@ export const PracticeEngine: React.FC<PracticeEngineProps> = ({ title = 'Luyện
               <p className="text-[10px] font-bold uppercase text-amber-600/70">Combo tối đa</p>
             </div>
           </div>
+          {finishActions ? (
+            <div className="flex flex-col sm:flex-row gap-2 justify-center pt-2">{finishActions({ correct: correctIds.length, total, pct, restart })}</div>
+          ) : (
           <div className="flex flex-col sm:flex-row gap-2 justify-center pt-2">
             <Button variant="outline" leftIcon={<RotateCcw className="w-4 h-4" />} onClick={restart}>
               Làm lại
@@ -138,6 +157,7 @@ export const PracticeEngine: React.FC<PracticeEngineProps> = ({ title = 'Luyện
               Về trang luyện tập
             </Button>
           </div>
+          )}
         </Card>
       </div>
     );
@@ -170,23 +190,27 @@ export const PracticeEngine: React.FC<PracticeEngineProps> = ({ title = 'Luyện
 
       {currentQ && (
         <div key={currentQ.id} className="animate-slide-in-right">
-          <QuestionRenderer question={currentQ} index={currentIndex} selectedAnswer={selectedKey} onSelectAnswer={handleSelect} showExplanation={isAnswered} isReadOnly={isAnswered} hidePassage={!!groupedPassage} />
+          <QuestionRenderer question={currentQ} index={currentIndex} selectedAnswer={selectedKey} onSelectAnswer={handleSelect} showExplanation={isAnswered} isReadOnly={isAnswered} hidePassage={!!groupedPassage} allowFlagReport={allowFlagReport} />
         </div>
       )}
 
       {isAnswered && (
         <div className="flex items-center justify-between bg-white p-3 md:p-4 rounded-2xl border-2 border-slate-900 shadow-hard animate-fade-up sticky bottom-4">
-          <Button
-            variant="ghost"
-            size="sm"
-            leftIcon={<RotateCcw className="w-4 h-4" />}
-            onClick={() => {
-              setIsAnswered(false);
-              setSelectedKey(undefined);
-            }}
-          >
-            Làm lại câu này
-          </Button>
+          {allowRetry ? (
+            <Button
+              variant="ghost"
+              size="sm"
+              leftIcon={<RotateCcw className="w-4 h-4" />}
+              onClick={() => {
+                setIsAnswered(false);
+                setSelectedKey(undefined);
+              }}
+            >
+              Làm lại câu này
+            </Button>
+          ) : (
+            <span className={cn('text-sm font-bold', selectedKey === getCorrectKey(currentQ) ? 'text-emerald-700' : 'text-rose-700')}>{selectedKey === getCorrectKey(currentQ) ? 'Chính xác!' : 'Chưa đúng — xem giải thích bên trên'}</span>
+          )}
           <Button size="md" variant={currentIndex + 1 < total ? 'primary' : 'success'} onClick={handleNext} rightIcon={<ArrowRight className="w-4 h-4" />} className={cn('animate-pop')}>
             {currentIndex + 1 < total ? 'Câu tiếp theo' : 'Xem kết quả'}
           </Button>

@@ -1,12 +1,14 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { BookOpen, CheckCircle2, ChevronRight, History, Lock, RotateCcw, Volume2, X, BookmarkPlus, FileText, HelpCircle, Video } from 'lucide-react';
+import { BookOpen, CheckCircle2, ChevronRight, ClipboardCheck, History, Lock, RotateCcw, Volume2, X, BookmarkPlus, FileText, HelpCircle, Video } from 'lucide-react';
 import type { Course, DictionaryEntry, Lesson } from '@/shared/types';
 import { LessonKnowledge } from './LessonKnowledge';
 import { LessonTranscript } from './LessonTranscript';
+import { LessonExercises } from './LessonExercises';
 import { catalogApi } from '@/shared/api/catalog';
 import { api, errorMessage, tokenStore } from '@/shared/api/client';
 import { cn, formatClock } from '@/shared/utils';
 import { embedSrc, useWatchPosition, videoSource } from './useWatchPosition';
+import './lesson-engine.css';
 import { Badge, Button, Card, ProgressBar } from '@/shared/components/ui';
 import { toast } from '@/shared/stores/uiStore';
 
@@ -14,7 +16,8 @@ interface LessonEngineProps {
   course: Course;
   lesson: Lesson;
   onSelectLesson: (lessonId: string) => void;
-  onComplete?: (lessonId: string) => void;
+  /** Hoàn thành bài (kèm điểm bài tập nếu có); trả về Promise → chỉ báo hoàn thành khi server ghi nhận */
+  onComplete?: (lessonId: string, scorePct?: number) => Promise<unknown> | void;
 }
 
 const LESSON_ICON = { VIDEO: Video, READING: FileText, QUIZ: HelpCircle } as const;
@@ -95,6 +98,10 @@ export const LessonEngine: React.FC<LessonEngineProps> = ({ course, lesson, onSe
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [popover, setPopover] = useState<{ entry: WordEntry; x: number; y: number } | null>(null);
   const [done, setDone] = useState(lesson.isCompleted);
+  const exercises = lesson.exercises ?? [];
+  const passPct = lesson.passScorePct ?? 70;
+  // bài video có bài tập: 2 bước Video bài giảng → Bài tập (?buoc=bai-tap mở thẳng bài tập)
+  const [step, setStep] = useState<'video' | 'exercise'>(() => (new URLSearchParams(window.location.search).get('buoc') === 'bai-tap' ? 'exercise' : 'video'));
 
   useEffect(() => {
     setDone(lesson.isCompleted);
@@ -109,27 +116,79 @@ export const LessonEngine: React.FC<LessonEngineProps> = ({ course, lesson, onSe
     void lookupWord(clean).then((entry) => setPopover({ entry, x, y }));
   };
 
-  const markDone = () => {
+  const complete = (scorePct?: number) => {
     if (done) return;
-    setDone(true);
-    onComplete?.(lesson.id);
-    toast.success('Hoàn thành bài học!', 'Bài tiếp theo đã được mở khoá.');
+    void Promise.resolve(onComplete?.(lesson.id, scorePct))
+      .then(() => {
+        setDone(true);
+        toast.success('Hoàn thành bài học!', next ? 'Bài tiếp theo đã được mở khoá.' : 'Bạn đã học hết khoá học này.');
+      })
+      .catch(() => undefined);
   };
+  // hết video: bài có bài tập → chuyển sang bài tập; không có → hoàn thành luôn
+  const onVideoEnded = () => {
+    if (!exercises.length) return complete();
+    if (!done) {
+      setStep('exercise');
+      toast.info('Đến phần bài tập', `Làm ${exercises.length} câu để hoàn thành bài học.`);
+    }
+  };
+  const markDone = () => (exercises.length ? setStep('exercise') : complete());
   const source = useMemo(() => (lesson.type === 'VIDEO' && lesson.videoUrl ? videoSource(lesson.videoUrl) : null), [lesson.type, lesson.videoUrl]);
   // vị trí đã xem lần trước — chốt 1 lần khi có link video để iframe không bị nạp lại
   const resumeAt = useMemo(() => (source ? Math.floor(lesson.lastPositionSec ?? 0) : 0), [source]); // eslint-disable-line react-hooks/exhaustive-deps
-  const watch = useWatchPosition({ lessonId: lesson.id, source, resumeAt, iframeRef, videoRef, onEnded: markDone });
-
   const allLessons = course.sections.flatMap((s) => s.lessons);
   const idx = allLessons.findIndex((l) => l.id === lesson.id);
   const next = allLessons[idx + 1];
+  const watch = useWatchPosition({ lessonId: lesson.id, source, resumeAt, iframeRef, videoRef, onEnded: onVideoEnded });
+  const goNext = next ? () => onSelectLesson(next.id) : undefined;
+  const isQuiz = lesson.type === 'QUIZ' && exercises.length > 0;
+  const showExercise = isQuiz || (step === 'exercise' && exercises.length > 0);
+
+  // sang phần bài tập → tạm dừng video (player chỉ bị ẩn, không bị gỡ)
+  useEffect(() => {
+    if (!showExercise || !source) return;
+    videoRef.current?.pause();
+    const w = iframeRef.current?.contentWindow;
+    if (source.kind === 'vimeo') w?.postMessage(JSON.stringify({ method: 'pause' }), '*');
+    if (source.kind === 'youtube') w?.postMessage(JSON.stringify({ event: 'command', func: 'pauseVideo', args: [] }), '*');
+  }, [showExercise, source]);
   const completedCount = allLessons.filter((l) => l.isCompleted || l.id === (done ? lesson.id : '')).length;
 
   return (
     <div className="grid grid-cols-1 xl:grid-cols-[1fr_340px] gap-6">
       <div className="space-y-5 min-w-0">
+        {/* Bước học: Video bài giảng → Bài tập */}
+        {lesson.type === 'VIDEO' && exercises.length > 0 && (
+          <div className="lesson-steps" role="tablist" aria-label="Các bước của bài học">
+            <button type="button" role="tab" aria-selected={step === 'video'} className={cn('lesson-step', step === 'video' && 'is-current')} onClick={() => setStep('video')}>
+              <span className="lesson-step__no">1</span>
+              <Video className="h-4 w-4" /> Video bài giảng
+            </button>
+            <ChevronRight className="h-4 w-4 shrink-0 text-slate-300" aria-hidden />
+            <button type="button" role="tab" aria-selected={step === 'exercise'} className={cn('lesson-step', step === 'exercise' && 'is-current', done && 'is-done')} onClick={() => setStep('exercise')}>
+              <span className="lesson-step__no">{done ? <CheckCircle2 className="h-3.5 w-3.5" /> : 2}</span>
+              <ClipboardCheck className="h-4 w-4" /> Bài tập · {exercises.length} câu
+            </button>
+          </div>
+        )}
+
+        {showExercise && (
+          <LessonExercises
+            key={lesson.id}
+            title={isQuiz ? lesson.title : `Bài tập: ${lesson.title}`}
+            kind={isQuiz ? 'quiz' : 'exercise'}
+            exercises={exercises}
+            passPct={passPct}
+            done={done}
+            onPassed={(pct) => complete(pct)}
+            onNext={goNext}
+            onBackToVideo={isQuiz ? undefined : () => setStep('video')}
+          />
+        )}
+
         {/* Player */}
-        <Card padding="none" className="overflow-hidden animate-scale-in">
+        <Card padding="none" className={cn('overflow-hidden animate-scale-in', showExercise && 'hidden')}>
           {source && source.kind !== 'file' ? (
             <div className="relative bg-black aspect-video">
               <iframe ref={iframeRef} src={embedSrc(source, resumeAt)} title={lesson.title} className="w-full h-full" allow="autoplay; fullscreen; picture-in-picture" allowFullScreen />
@@ -187,8 +246,8 @@ export const LessonEngine: React.FC<LessonEngineProps> = ({ course, lesson, onSe
             </div>
             <div className="flex items-center gap-2">
               {!done && (
-                <Button variant="success" size="sm" leftIcon={<CheckCircle2 className="w-4 h-4" />} onClick={markDone}>
-                  Đánh dấu hoàn thành
+                <Button variant="success" size="sm" leftIcon={exercises.length ? <ClipboardCheck className="w-4 h-4" /> : <CheckCircle2 className="w-4 h-4" />} onClick={markDone}>
+                  {exercises.length ? `Làm bài tập (${exercises.length} câu)` : 'Đánh dấu hoàn thành'}
                 </Button>
               )}
               {next && (
@@ -201,10 +260,10 @@ export const LessonEngine: React.FC<LessonEngineProps> = ({ course, lesson, onSe
         </Card>
 
         {/* Script chạy theo thời gian video — chỉ khi bài có lời thoại thật (phụ đề admin tải lên) */}
-        {source && lesson.transcript?.length ? <LessonTranscript lines={lesson.transcript} now={watch.now} onSeek={(sec) => watch.seek(sec, true)} onWord={onWordClick} /> : null}
+        {!showExercise && source && lesson.transcript?.length ? <LessonTranscript lines={lesson.transcript} now={watch.now} onSeek={(sec) => watch.seek(sec, true)} onWord={onWordClick} /> : null}
 
         {/* Kiến thức trong bài */}
-        {lesson.knowledge && <LessonKnowledge knowledge={lesson.knowledge} onWord={onWordClick} />}
+        {!showExercise && lesson.knowledge && <LessonKnowledge knowledge={lesson.knowledge} onWord={onWordClick} />}
       </div>
 
       {/* Course outline */}
@@ -242,7 +301,8 @@ export const LessonEngine: React.FC<LessonEngineProps> = ({ course, lesson, onSe
                         <span className="flex-1 min-w-0">
                           <span className={cn('block text-sm truncate', isActive ? 'font-bold text-indigo-900' : 'font-medium text-slate-700')}>{l.title}</span>
                           <span className="block text-[11px] text-slate-400">
-                            Bài {allLessons.indexOf(l) + 1} · {l.durationMin} phút
+                            Bài {allLessons.indexOf(l) + 1} · {l.type === 'QUIZ' && l.exerciseCount ? `${l.exerciseCount} câu` : `${l.durationMin} phút`}
+                            {l.type === 'VIDEO' && l.exerciseCount ? ` · ${l.exerciseCount} câu bài tập` : ''}
                             {!isDone && (isActive ? watch.position : l.lastPositionSec ?? 0) >= 5 && <span className="text-amber-700 font-semibold"> · đã học tới {formatClock(isActive ? watch.position : l.lastPositionSec ?? 0)}</span>}
                           </span>
                         </span>

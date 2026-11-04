@@ -9,7 +9,7 @@ import { LessonEngine } from '@/engines';
 import { toast } from '@/shared/stores/uiStore';
 import { errorMessage } from '@/shared/api/client';
 
-const TYPE_LABEL = { VIDEO: { label: 'Video bài giảng', Icon: Video }, READING: { label: 'Bài đọc', Icon: FileText }, QUIZ: { label: 'Quiz củng cố', Icon: HelpCircle } } as const;
+const TYPE_LABEL = { VIDEO: { label: 'Video bài giảng', Icon: Video }, READING: { label: 'Bài đọc', Icon: FileText }, QUIZ: { label: 'Kiểm tra chặng', Icon: HelpCircle } } as const;
 
 export const StudentLessonPage: React.FC = () => {
   const { id = '', lessonId } = useParams<{ id: string; lessonId: string }>();
@@ -66,14 +66,14 @@ export const StudentLessonPage: React.FC = () => {
         course={course}
         lesson={lesson}
         onSelectLesson={(lid) => navigate(`/app/courses/${course.slug ?? course.id}/lessons/${lid}`)}
-        onComplete={(lid) =>
-          progress.mutate(
-            { lessonId: lid, action: 'complete' },
-            {
-              onSuccess: () => ['progress', 'path'].forEach((k) => qc.invalidateQueries({ queryKey: ['learner', k] })),
-              onError: (e) => toast.error('Chưa lưu được tiến độ', errorMessage(e)),
-            }
-          )
+        onComplete={(lid, scorePct) =>
+          progress
+            .mutateAsync({ lessonId: lid, action: 'complete', scorePct })
+            .then(() => ['progress', 'path'].forEach((k) => qc.invalidateQueries({ queryKey: ['learner', k] })))
+            .catch((e) => {
+              toast.error('Chưa lưu được tiến độ', errorMessage(e));
+              throw e;
+            })
         }
       />
     </div>

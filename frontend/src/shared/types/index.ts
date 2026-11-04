@@ -82,6 +82,18 @@ export interface LessonKnowledge {
   articles: KnowledgeNode[];
 }
 
+/** Câu bài tập sau bài học / bài kiểm tra chặng — khớp backend catalog/lesson-exercises.ts */
+export interface LessonExercise {
+  id: string;
+  type: 'vocab-meaning' | 'vocab-context' | 'grammar-formula' | 'grammar-name' | 'article' | 'phoneme';
+  prompt: string;
+  /** Câu / cụm cần xét ("_____" = chỗ trống) */
+  text?: string;
+  options: string[];
+  answer: number;
+  explain: string;
+}
+
 export interface Lesson {
   id: string;
   title: string;
@@ -90,6 +102,12 @@ export interface Lesson {
   videoUrl?: string;
   transcript?: TranscriptLine[];
   knowledge?: LessonKnowledge;
+  /** Bài tập sau bài học (video) hoặc đề của bài kiểm tra chặng */
+  exercises?: LessonExercise[];
+  /** Số câu bài tập (có ở danh sách bài, không cần tải chi tiết) */
+  exerciseCount?: number;
+  /** Điểm tối thiểu (%) để hoàn thành bài có bài tập / bài kiểm tra */
+  passScorePct?: number;
   /** Vị trí video đã xem tới (giây) — để học tiếp đúng chỗ */
   lastPositionSec?: number;
   content?: string;

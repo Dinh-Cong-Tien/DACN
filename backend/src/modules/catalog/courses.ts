@@ -9,6 +9,7 @@ import { recordActivity } from './activity';
 import { gradientAt } from './mappers';
 import { toKnowledge } from './lesson-knowledge';
 import { toCues } from './lesson-transcript';
+import { toExercises } from './lesson-exercises';
 import { ratingOf } from './counts';
 
 export const coursesRouter = Router();
@@ -46,10 +47,12 @@ function toLesson(l: DbLesson, state: { completed: boolean; locked: boolean; pos
     isLocked: state.locked,
     isFree: l.isFreePreview,
     skill: l.skill ?? undefined,
+    // số câu bài tập sau bài học (mục lục hiện "· N câu bài tập")
+    exerciseCount: toExercises(l.exercises).length || undefined,
     // vị trí video đã xem tới (bài đang học dở) — hiện "đã học tới mm:ss" trong mục lục
     ...(l.type === 'VIDEO' && !state.completed && state.positionSec ? { lastPositionSec: state.positionSec } : {}),
     ...(full && !state.locked
-      ? { videoUrl: l.videoUrl ?? undefined, audioUrl: l.audioUrl ?? undefined, content: l.contentMd ?? undefined, knowledge: toKnowledge(l.knowledge), transcript: toTranscript(l.transcript), quizTestId: l.quizTestId ?? undefined, passScorePct: l.passScorePct ?? undefined }
+      ? { videoUrl: l.videoUrl ?? undefined, audioUrl: l.audioUrl ?? undefined, content: l.contentMd ?? undefined, knowledge: toKnowledge(l.knowledge), transcript: toTranscript(l.transcript), exercises: toExercises(l.exercises), quizTestId: l.quizTestId ?? undefined, passScorePct: l.passScorePct ?? undefined }
       : {}),
   };
 }
@@ -205,8 +208,11 @@ coursesRouter.post(
     const flat = c.courseSectionCourses.flatMap((s) => s.lessonSections);
     const states = lessonStates(c, await progressMap(userId, flat.map((l) => l.id)), true);
     if (states.get(lesson.id)?.locked) throw forbidden('Hãy hoàn thành bài trước để mở bài này');
-    if (body.action === 'complete' && (lesson.type === 'QUIZ' || lesson.type === 'CHECKPOINT') && lesson.passScorePct !== null && (body.scorePct ?? 0) < lesson.passScorePct)
-      throw forbidden(`Cần đạt tối thiểu ${lesson.passScorePct}% để hoàn thành bài kiểm tra`);
+    // bài có bài tập / bài kiểm tra: phải đạt điểm tối thiểu mới hoàn thành (mặc định 70%)
+    const hasExercises = toExercises(lesson.exercises).length > 0;
+    const pass = lesson.passScorePct ?? (hasExercises ? 70 : null);
+    if (body.action === 'complete' && (hasExercises || lesson.type === 'QUIZ' || lesson.type === 'CHECKPOINT') && pass !== null && (body.scorePct ?? 0) < pass)
+      throw forbidden(`Cần đạt tối thiểu ${pass}% ${lesson.type === 'VIDEO' ? 'bài tập' : 'bài kiểm tra'} để hoàn thành bài học`);
 
     return prisma.$transaction(async (tx) => {
       const prev = await tx.lessonProgress.findUnique({ where: { userId_lessonId: { userId, lessonId: lesson.id } } });
