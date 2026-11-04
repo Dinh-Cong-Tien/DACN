@@ -8,11 +8,13 @@ import { Img } from '@/shared/components/media/Img';
 import { useAttempts, useTests } from '@/shared/api/learner';
 import type { AttemptSummary } from '@/shared/types';
 import { cn, formatDate, formatDuration, formatNumber } from '@/shared/utils';
+import { VipBadge, useIsVip } from '@/shared/components/vip/VipBadge';
 
 type Filter = 'ALL' | 'FULL' | 'MINI' | 'FREE';
 
 export const StudentMockTestsPage: React.FC = () => {
   useDocumentTitle('Thi thử');
+  const isVip = useIsVip();
   const navigate = useNavigate();
   const [tab, setTab] = useParamState('exam', ['TOEIC', 'VSTEP'], 'TOEIC');
   const [filter, setFilter] = useState<Filter>('ALL');
@@ -97,11 +99,7 @@ export const StudentMockTestsPage: React.FC = () => {
                     </Badge>
                   ))}
                 </div>
-                {!t.isFree && (
-                  <span className="absolute top-3 right-3 w-8 h-8 rounded-xl bg-amber-300 border-2 border-slate-900 text-slate-900 flex items-center justify-center shadow-hard-sm">
-                    <Lock className="w-3.5 h-3.5" />
-                  </span>
-                )}
+                {!t.isFree && <VipBadge locked={!isVip} className="absolute top-3 right-3 shadow-sm" />}
                 <span className="absolute bottom-3 right-3 sticker tilt-2 !text-[10px]">{t.year}</span>
               </div>
               <div className="p-4 flex flex-col flex-1">
@@ -118,8 +116,8 @@ export const StudentMockTestsPage: React.FC = () => {
                     <Users className="w-3.5 h-3.5" /> {formatNumber(t.attempts)}
                   </span>
                 </div>
-                <Button size="sm" variant={t.isFree ? 'primary' : 'outline'} fullWidth className="mt-3" rightIcon={<ArrowRight className="w-4 h-4" />}>
-                  {t.isFree ? 'Xem chi tiết' : 'Đề VIP'}
+                <Button size="sm" variant={t.isFree || isVip ? 'primary' : 'outline'} fullWidth className="mt-3" leftIcon={!t.isFree && !isVip ? <Lock className="w-3.5 h-3.5" /> : undefined} rightIcon={<ArrowRight className="w-4 h-4" />}>
+                  {t.isFree || isVip ? 'Xem chi tiết' : 'Xem đề VIP'}
                 </Button>
               </div>
             </Card>

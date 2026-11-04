@@ -9,6 +9,7 @@ import { Img, PHOTOS } from '@/shared/components/media/Img';
 import { MISTAKE_CAUSE_LABEL } from '@/shared/constants/student';
 import { useAchievements, useAttempts, useLeaderboard, usePath, useProgress, useReviewDue, useTests } from '@/shared/api/learner';
 import { cn, formatNumber } from '@/shared/utils';
+import { VipBadge } from '@/shared/components/vip/VipBadge';
 
 const greeting = () => {
   const h = new Date().getHours();
@@ -201,11 +202,7 @@ export const StudentDashboardPage: React.FC = () => {
                   <Badge tone="slate" solid size="xs">
                     {t.examType}
                   </Badge>
-                  {!t.isFree && (
-                    <Badge tone="amber" solid size="xs">
-                      VIP
-                    </Badge>
-                  )}
+                  {!t.isFree && <VipBadge locked={user?.plan !== 'VIP'} />}
                 </div>
               </div>
               <div className="p-5">

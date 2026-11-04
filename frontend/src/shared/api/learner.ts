@@ -194,7 +194,14 @@ export interface BookmarkDto {
 export interface BillingDto {
   plan: 'FREE' | 'VIP';
   subscription?: { id: string; planCode: string; planName: string; startsAt?: string; endsAt?: string; status: string } | null;
-  transactions: { id: string; orderCode: string; planId: string; planName: string; amount: number; discount: number; method: string; status: string; createdAt: string; paidAt?: string }[];
+  transactions: { id: string; orderCode: string; planId: string; planName: string; amount: number; discount: number; method: string; status: string; createdAt: string; paidAt?: string; transferNote?: string }[];
+  /** Tài khoản nhận chuyển khoản; null = admin chưa cấu hình */
+  payTo?: PayTo | null;
+}
+export interface PayTo {
+  bankName: string;
+  accountNo: string;
+  accountName: string;
 }
 export interface DictationResult {
   attemptId: string;
@@ -418,11 +425,18 @@ export function useRemoveBookmark() {
 }
 
 // ---------- Gói ----------
-export const useBilling = () => useQuery({ queryKey: K.billing, queryFn: () => api.get<BillingDto>('/learner/billing'), enabled: useAuthed() });
+export const useBilling = (opts: { poll?: boolean; enabled?: boolean } = {}) => {
+  const authed = useAuthed();
+  return useQuery({ queryKey: K.billing, queryFn: () => api.get<BillingDto>('/learner/billing'), enabled: authed && (opts.enabled ?? true), refetchInterval: opts.poll ? 15_000 : false });
+};
+export function useCancelOrder() {
+  const qc = useQueryClient();
+  return useMutation({ mutationFn: (orderCode: string) => api.post(`/learner/billing/orders/${orderCode}/cancel`), onSuccess: () => qc.invalidateQueries({ queryKey: K.billing }) });
+}
 export function useCreateOrder() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (v: { planCode: string; method: 'MOMO' | 'VNPAY' | 'CARD' | 'BANK'; couponCode?: string }) => api.post<{ orderCode: string; amount: number; status: string }>('/learner/billing/orders', v),
+    mutationFn: (v: { planCode: string; method: 'MOMO' | 'VNPAY' | 'CARD' | 'BANK'; couponCode?: string }) => api.post<{ orderCode: string; amount: number; discount: number; status: string; transferNote: string; payTo: PayTo | null }>('/learner/billing/orders', v),
     onSuccess: () => qc.invalidateQueries({ queryKey: K.billing }),
   });
 }

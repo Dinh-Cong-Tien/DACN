@@ -1,6 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Link, NavLink, useLocation } from 'react-router-dom';
-import { Award, ChevronDown, LayoutDashboard, LogOut, Settings, User, Users } from 'lucide-react';
+import { Award, ChevronDown, LayoutDashboard, LogOut, Crown, Settings, User, Users } from 'lucide-react';
+import { VipBadge } from '@/shared/components/vip/VipBadge';
+import { openUpgrade } from '@/shared/stores/uiStore';
 import { Avatar, Badge } from '@/shared/components/ui';
 import { useT } from '@/shared/i18n';
 import { cn, ROLE_HOME, ROLE_LABEL } from '@/shared/utils';
@@ -75,12 +77,19 @@ export const UserMenu: React.FC<{ user: AppUser; onLogout: () => void; onDark?: 
             {isStudent ? (
               <div className="mt-3.5 flex items-center justify-between rounded-xl bg-slate-900/[0.03] px-3 py-2.5 ring-1 ring-inset ring-slate-200">
                 <span className="text-[13px] text-slate-600">
-                  {t('Gói hiện tại')}: <span className="font-semibold text-slate-900">{user.plan === 'FREE' ? 'Free' : user.plan}</span>
+                  {t('Gói hiện tại')}: {user.plan === 'VIP' ? <VipBadge className="ml-1 align-middle" /> : <span className="font-semibold text-slate-900">Free</span>}
                 </span>
-                {user.plan === 'FREE' && (
-                  <Link to="/pricing" className="text-[13px] font-bold text-violet-600 hover:underline underline-offset-2">
-                    {t('Nâng cấp')}
-                  </Link>
+                {user.plan !== 'VIP' && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setOpen(false);
+                      openUpgrade();
+                    }}
+                    className="inline-flex items-center gap-1 text-[13px] font-bold text-amber-700 hover:underline underline-offset-2"
+                  >
+                    <Crown className="h-3.5 w-3.5" /> {t('Nâng cấp VIP')}
+                  </button>
                 )}
               </div>
             ) : (

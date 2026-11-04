@@ -1,17 +1,13 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Check, Minus, ChevronDown } from 'lucide-react';
 import { limitText, useFaqs, usePlans, type PlanDto } from '@/shared/api/cms';
-import { useCreateOrder } from '@/shared/api/learner';
-import { errorMessage } from '@/shared/api/client';
 import { useAuthStore } from '@/shared/stores/authStore';
-import { toast } from '@/shared/stores/uiStore';
+import { openUpgrade } from '@/shared/stores/uiStore';
+import { perMonth, vnd } from '@/shared/components/vip/UpgradeDialog';
 import { useDocumentTitle } from '@/shared/hooks';
-import { cn, formatNumber, ROLE_HOME } from '@/shared/utils';
+import { cn, ROLE_HOME } from '@/shared/utils';
 import { Accent, PageHeader, Section, SectionHead, ActionLink, ActionButton } from './shared/PageKit';
 
-const vnd = (n: number) => `${formatNumber(n)}đ`;
-/** Số ngày của một chu kỳ, đọc từ chuỗi "/ 30 ngày" */
-const daysOf = (period: string) => Number(period.match(/\d+/)?.[0] ?? 30);
 
 /** Bảng so sánh: dựng từ entitlements của từng gói trong CSDL */
 const COMPARE_ROWS: { group: string; name: string; value: (p: PlanDto) => boolean | string }[] = [
@@ -30,17 +26,8 @@ const Cell: React.FC<{ v: boolean | string }> = ({ v }) =>
 export const PricingPage: React.FC = () => {
   useDocumentTitle('Bảng giá');
   const user = useAuthStore((s) => s.user);
-  const createOrder = useCreateOrder();
-  const [ordering, setOrdering] = useState<string | null>(null);
-  const buy = (p: PlanDto) => {
-    if (!p.code) return;
-    setOrdering(p.id);
-    createOrder
-      .mutateAsync({ planCode: p.code, method: 'BANK' })
-      .then((o) => toast.success(`Đã tạo đơn ${o.orderCode}`, `Chuyển khoản ${vnd(o.amount)} với nội dung ${o.orderCode}. Gói được kích hoạt khi quản trị viên xác nhận giao dịch.`))
-      .catch((e) => toast.error('Chưa tạo được đơn', errorMessage(e)))
-      .finally(() => setOrdering(null));
-  };
+  // chọn gói → hộp thoại thanh toán (tạo đơn, thông tin chuyển khoản, tự cập nhật khi gói được kích hoạt)
+  const buy = (p: PlanDto) => p.code && openUpgrade({ planCode: p.code, subject: `gói ${p.name}`, reason: p.description || undefined });
   const { data: PRICING_PLANS = [] } = usePlans();
   const { data: FAQS = [] } = useFaqs();
   const faqs = FAQS.filter((f) => f.category === 'Thanh toán');
@@ -57,9 +44,7 @@ export const PricingPage: React.FC = () => {
       <Section innerClassName="pt-8 md:pt-10">
         <div className="grid gap-5 md:grid-cols-3">
           {PRICING_PLANS.map((p) => {
-            const days = daysOf(p.period);
             const price = p.price;
-            const perMonth = Math.round((p.price * 30) / days / 1000) * 1000;
             return (
               <div key={p.id} className={cn('flex flex-col rounded-xl bg-white p-6', p.highlight ? 'border-2 border-indigo-600' : 'border border-slate-200')}>
                 <div className="flex items-center justify-between">
@@ -71,10 +56,10 @@ export const PricingPage: React.FC = () => {
                   <span className="text-[2rem] font-semibold tracking-tight tabular-nums text-slate-900">{p.price === 0 ? '0đ' : vnd(price)}</span>
                   <span className="ml-1 text-sm text-slate-500">{p.price === 0 ? 'không thời hạn' : p.period}</span>
                 </p>
-                <p className="mt-1 h-5 text-[13px] text-slate-500">{p.price > 0 && `Khoảng ${vnd(perMonth)} mỗi tháng`}</p>
+                <p className="mt-1 h-5 text-[13px] text-slate-500">{p.price > 0 && `Khoảng ${vnd(perMonth(p))} mỗi tháng`}</p>
                 {p.price > 0 && user?.role === 'STUDENT' ? (
-                  <ActionButton type="button" onClick={() => buy(p)} disabled={ordering === p.id} variant={p.highlight ? 'primary' : 'secondary'} className="mt-5 w-full">
-                    {ordering === p.id ? 'Đang tạo đơn…' : `Chọn ${p.name}`}
+                  <ActionButton type="button" onClick={() => (user.plan === 'VIP' ? openUpgrade() : buy(p))} variant={p.highlight ? 'primary' : 'secondary'} className="mt-5 w-full">
+                    {user.plan === 'VIP' ? 'Xem gói đang dùng' : `Chọn ${p.name}`}
                   </ActionButton>
                 ) : (
                   <ActionLink to={!user ? '/auth/register' : user.role === 'STUDENT' ? '/app/settings' : ROLE_HOME[user.role]} variant={p.highlight ? 'primary' : 'secondary'} className="mt-5 w-full">

@@ -3,6 +3,7 @@ import { Outlet, useLocation } from 'react-router-dom';
 import { cn } from '@/shared/utils';
 import { useAuthStore } from '@/shared/stores/authStore';
 import { CommandPalette } from '@/shared/components/ui';
+import { UpgradeDialog } from '@/shared/components/vip/UpgradeDialog';
 import { PageTransition } from '@/shared/components/motion';
 import { ScrollProgress, BackToTop, RouteProgress } from '@/shared/components/layout/ScrollExtras';
 import { ChatWidget } from '@/shared/components/support';
@@ -42,6 +43,7 @@ export const GuestLayout: React.FC<GuestLayoutProps> = ({ contained }) => {
       <BackToTop className={isStudent ? 'bottom-[10.25rem] lg:bottom-[5.75rem]' : undefined} />
       <ChatWidget raised={isStudent ? 'lg' : undefined} preferChat={isStudent} />
       <CommandPalette />
+      <UpgradeDialog />
 
       <main className={cn('flex-1', contained && 'w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-10 pb-24 lg:pb-12')}>
         <PageTransition>

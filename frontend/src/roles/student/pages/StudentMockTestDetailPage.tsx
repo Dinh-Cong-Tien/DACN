@@ -10,12 +10,17 @@ import { useAttempts, usePartsInfo, useTest } from '@/shared/api/learner';
 import { cn, examSetupQuery, formatDate, formatDuration, formatNumber } from '@/shared/utils';
 import type { ExamSetup, MockTestSummary, TestPartInfo } from '@/shared/types';
 import { ActionButton } from '@/pages/marketing/shared/PageKit';
+import { VipBadge, VipNotice } from '@/shared/components/vip/VipBadge';
+import { openUpgrade } from '@/shared/stores/uiStore';
 
 /** Phần không làm trong phòng thi (VSTEP Viết / Nói có trang luyện riêng) */
 const OUTSIDE_EXAM: Record<string, { label: string; to: string }> = {
   VSTEP_WRITING: { label: 'Làm ở trang Luyện Viết', to: '/app/writing' },
   VSTEP_SPEAKING: { label: 'Làm ở trang Luyện Nói', to: '/app/speaking' },
 };
+
+/** Quyền lợi chính của gói VIP (khớp bảng so sánh ở trang Bảng giá) */
+const VIP_PERKS = ['Mở các đề VIP', 'Không giới hạn đề thi thử', 'Flashcard và tra từ không giới hạn'];
 
 const TIME_CHOICES = [5, 10, 15, 20, 30, 45, 60, 75, 90, 120];
 
@@ -76,7 +81,8 @@ const TestDetail: React.FC<{ test: MockTestSummary }> = ({ test }) => {
 
   const toggle = (pid: string) => setPicked((s) => (s.includes(pid) ? s.filter((x) => x !== pid) : [...s, pid]));
   const setup: ExamSetup = full ? { mode: 'FULL', parts: test.partIds, minutes: test.durationMinutes } : { mode: 'PRACTICE', parts: chosen.map((p) => p.id), minutes };
-  const start = () => navigate(`/app/exam/${test.slug ?? test.id}${examSetupQuery(setup)}`);
+  const vipRequest = { exam: test.examType, subject: `đề “${test.title}”`, reason: 'Đề này thuộc kho đề VIP. Nâng cấp để làm full test hoặc luyện từng Part của đề.' };
+  const start = () => (locked ? openUpgrade(vipRequest) : navigate(`/app/exam/${test.slug ?? test.id}${examSetupQuery(setup)}`));
 
   return (
     <div className="space-y-6">
@@ -88,7 +94,7 @@ const TestDetail: React.FC<{ test: MockTestSummary }> = ({ test }) => {
         <div className="flex flex-col justify-center">
           <p className="text-[13px] font-medium text-slate-500">
             {test.examType} · {test.level} · Năm {test.year}
-            {!test.isFree && <span className="ml-2 font-semibold text-amber-700">Gói VIP</span>}
+            {!test.isFree && <VipBadge locked={locked} className="ml-2 align-middle" />}
           </p>
           <h1 className="mt-1 font-display text-2xl font-extrabold tracking-tight text-slate-900 md:text-[2rem]">{test.title}</h1>
           <dl className="mt-4 flex flex-wrap gap-x-8 gap-y-3">
@@ -107,15 +113,7 @@ const TestDetail: React.FC<{ test: MockTestSummary }> = ({ test }) => {
         </div>
       </div>
 
-      {locked && (
-        <p className="rounded-xl border border-amber-300/60 bg-amber-500/10 px-4 py-3 text-sm text-slate-700">
-          Đề này thuộc gói VIP.{' '}
-          <Link to="/pricing" className="font-semibold text-indigo-700 underline underline-offset-2">
-            Nâng cấp
-          </Link>{' '}
-          để làm toàn bộ kho đề.
-        </p>
-      )}
+      {locked && <VipNotice title="Đề thi thuộc gói VIP" request={vipRequest} perks={VIP_PERKS} />}
 
       <div className="grid items-start gap-6 xl:grid-cols-[1fr_340px]">
         <section className="rounded-2xl border border-slate-200 bg-white p-5 md:p-6">
@@ -192,9 +190,9 @@ const TestDetail: React.FC<{ test: MockTestSummary }> = ({ test }) => {
           </ul>
 
           <div className="mt-6 flex justify-end border-t border-slate-200 pt-5">
-            <ActionButton size="lg" disabled={!chosen.length} onClick={start} className="w-full sm:w-auto">
+            <ActionButton size="lg" disabled={!locked && !chosen.length} onClick={start} className="w-full sm:w-auto">
               {locked ? <Lock className="h-4 w-4" /> : <Play className="h-4 w-4 fill-current" />}
-              {!chosen.length ? 'Chọn ít nhất một Part' : `${full ? 'Làm full test' : 'Bắt đầu luyện'} · ${questionCount} câu · ${minutes ? `${minutes} phút` : 'không giới hạn'}`}
+              {locked ? 'Nâng cấp VIP để làm đề này' : !chosen.length ? 'Chọn ít nhất một Part' : `${full ? 'Làm full test' : 'Bắt đầu luyện'} · ${questionCount} câu · ${minutes ? `${minutes} phút` : 'không giới hạn'}`}
             </ActionButton>
           </div>
 

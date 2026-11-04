@@ -1,10 +1,10 @@
 import React, { useEffect } from 'react';
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
-import { ChevronDown, LogOut, Menu, Search, Settings, User, X, Flame, Sparkles } from 'lucide-react';
+import { ChevronDown, LogOut, Menu, Search, Settings, User, X, Flame, Crown } from 'lucide-react';
 import { cn, ROLE_LABEL } from '@/shared/utils';
 import { useScrolled } from '@/shared/hooks';
 import { useAuthStore } from '@/shared/stores/authStore';
-import { useUiStore, toast } from '@/shared/stores/uiStore';
+import { useUiStore, toast, openUpgrade } from '@/shared/stores/uiStore';
 import { Avatar, Badge, Dropdown, Logo } from '@/shared/components/ui';
 import { ThemeToggle } from './ThemeToggle';
 import { LanguageSwitcher } from './LanguageSwitcher';
@@ -143,7 +143,7 @@ export const StaffHeader: React.FC<Omit<AppShellProps, 'theme'>> = ({ groups, br
                 items={[
                   ...(profileTo ? [{ label: t('Hồ sơ cá nhân'), icon: <User />, onClick: () => navigate(profileTo) }] : []),
                   ...(settingsTo ? [{ label: t('Cài đặt'), icon: <Settings />, onClick: () => navigate(settingsTo) }] : []),
-                  ...(user.plan === 'FREE' && user.role === 'STUDENT' ? [{ label: t('Nâng cấp VIP'), icon: <Sparkles />, onClick: () => navigate('/pricing') }] : []),
+                  ...(user.plan === 'FREE' && user.role === 'STUDENT' ? [{ label: t('Nâng cấp VIP'), icon: <Crown />, onClick: () => openUpgrade() }] : []),
                   { divider: true, label: '' },
                   { label: t('Đăng xuất'), icon: <LogOut />, danger: true, onClick: handleLogout },
                 ]}

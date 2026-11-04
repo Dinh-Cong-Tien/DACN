@@ -3,6 +3,7 @@ import { Outlet } from 'react-router-dom';
 import { cn } from '@/shared/utils';
 import { useAuthStore } from '@/shared/stores/authStore';
 import { CommandPalette, StaffUiContext } from '@/shared/components/ui';
+import { UpgradeDialog } from '@/shared/components/vip/UpgradeDialog';
 import { PageTransition } from '@/shared/components/motion';
 import { PageBackdrop } from './PageBackdrop';
 import { StaffHeader } from './StaffHeader';
@@ -71,6 +72,7 @@ export const AppShell: React.FC<AppShellProps> = (props) => {
         <BackToTop className="bottom-20 md:bottom-5" />
       )}
       <CommandPalette />
+      <UpgradeDialog />
     </div>
   );
 };

@@ -266,7 +266,11 @@ export async function seedBase(): Promise<SeedCtx> {
       updatedById: adminId,
     },
     { key: 'score.equivalences', groupName: 'Quy đổi điểm', label: 'Bảng tương đương CEFR – VSTEP – TOEIC – IELTS – TOEFL', valueType: 'JSON', value: MOCKS.SCORE_TABLE, updatedById: adminId },
-    { key: 'exam.autosave_seconds', groupName: 'Học tập', label: 'Chu kỳ tự lưu bài thi (giây)', valueType: 'NUMBER', value: 15, updatedById: adminId }
+    { key: 'exam.autosave_seconds', groupName: 'Học tập', label: 'Chu kỳ tự lưu bài thi (giây)', valueType: 'NUMBER', value: 15, updatedById: adminId },
+    // tài khoản nhận chuyển khoản khi học viên mua gói VIP — admin điền ở Cấu hình tham số
+    { key: 'payment.bank_name', groupName: 'Thanh toán', label: 'Ngân hàng nhận chuyển khoản', description: 'Hiện cho học viên ở bước thanh toán gói VIP, vd "Vietcombank".', valueType: 'TEXT', value: '', updatedById: adminId },
+    { key: 'payment.account_no', groupName: 'Thanh toán', label: 'Số tài khoản nhận', valueType: 'TEXT', value: '', updatedById: adminId },
+    { key: 'payment.account_name', groupName: 'Thanh toán', label: 'Tên chủ tài khoản', description: 'Viết hoa không dấu như trên thẻ ngân hàng.', valueType: 'TEXT', value: '', updatedById: adminId }
   );
   await insertMany(prisma.systemSetting, settings);
 

@@ -2,6 +2,8 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Lock } from 'lucide-react';
 import { useGate } from '@/shared/hooks';
+import { useIsVip } from '@/shared/components/vip/VipBadge';
+import { openUpgrade } from '@/shared/stores/uiStore';
 import { formatNumber } from '@/shared/utils';
 import type { MockTestSummary } from '@/shared/types';
 
@@ -11,6 +13,7 @@ import type { MockTestSummary } from '@/shared/types';
  */
 export const TestList: React.FC<{ tests: MockTestSummary[] }> = ({ tests }) => {
   const gate = useGate();
+  const isVip = useIsVip();
   return (
     <div className="overflow-hidden rounded-xl border border-slate-200 bg-white">
       <table className="w-full text-sm">
@@ -44,14 +47,18 @@ export const TestList: React.FC<{ tests: MockTestSummary[] }> = ({ tests }) => {
               <td className="hidden md:table-cell px-4 py-4 text-right tabular-nums text-slate-700">{t.durationMinutes} phút</td>
               <td className="hidden md:table-cell px-4 py-4 text-right tabular-nums text-slate-500">{formatNumber(t.attempts)}</td>
               <td className="px-5 py-4 text-right">
-                {t.isFree ? (
+                {t.isFree || isVip ? (
                   <Link to={gate(`/app/mock-tests/${t.slug}`)} className="inline-flex h-9 items-center rounded-lg border border-slate-300 px-3.5 text-[13px] font-semibold text-slate-900 hover:border-indigo-600 hover:text-indigo-700">
                     Làm bài
                   </Link>
                 ) : (
-                  <Link to="/pricing" className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-amber-300 bg-amber-50 px-3.5 text-[13px] font-semibold text-amber-800 hover:bg-amber-100">
-                    <Lock className="w-3.5 h-3.5" /> Gói VIP
-                  </Link>
+                  <button
+                    type="button"
+                    onClick={() => openUpgrade({ exam: t.examType, subject: `đề “${t.title}”`, reason: 'Đề này thuộc kho đề VIP. Nâng cấp để làm full test hoặc luyện từng Part của đề.' })}
+                    className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-amber-300 bg-amber-50 px-3.5 text-[13px] font-semibold text-amber-800 hover:bg-amber-100"
+                  >
+                    <Lock className="w-3.5 h-3.5" /> Mở khoá VIP
+                  </button>
                 )}
               </td>
             </tr>

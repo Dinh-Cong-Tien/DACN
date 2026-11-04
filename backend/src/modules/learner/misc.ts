@@ -149,17 +149,27 @@ miscRouter.delete(
 );
 
 // ---------------- Gói & thanh toán (cơ bản) ----------------
+/** Tài khoản nhận chuyển khoản (system_settings payment.*); chưa cấu hình → null */
+async function payTo() {
+  const rows = await prisma.systemSetting.findMany({ where: { key: { in: ['payment.bank_name', 'payment.account_no', 'payment.account_name'] } } });
+  const v = (k: string) => String(rows.find((r) => r.key === k)?.value ?? '').trim();
+  const accountNo = v('payment.account_no');
+  return accountNo ? { bankName: v('payment.bank_name'), accountNo, accountName: v('payment.account_name') } : null;
+}
+const transferNote = (orderCode: string, email: string) => `${orderCode} ${email}`;
+
 miscRouter.get(
   '/billing',
   handler(async (req) => {
-    const userId = me(req).id;
-    const [sub, txns] = await Promise.all([
+    const { id: userId, email } = me(req);
+    const [sub, txns, bank] = await Promise.all([
       prisma.userSubscription.findFirst({
         where: { userId, status: 'ACTIVE', OR: [{ endsAt: null }, { endsAt: { gt: new Date() } }] },
         include: { plan: true },
         orderBy: { endsAt: 'desc' },
       }),
       prisma.paymentTransaction.findMany({ where: { userId }, include: { plan: { select: { code: true, name: true } } }, orderBy: { createdAt: 'desc' }, take: 50 }),
+      payTo(),
     ]);
     return {
       plan: sub && Number(sub.plan.price) > 0 ? 'VIP' : 'FREE',
@@ -175,7 +185,9 @@ miscRouter.get(
         status: t.status,
         createdAt: t.createdAt.toISOString(),
         paidAt: iso(t.paidAt),
+        ...(t.status === 'PENDING' ? { transferNote: transferNote(t.orderCode, email) } : {}),
       })),
+      payTo: bank,
     };
   })
 );
@@ -191,7 +203,7 @@ miscRouter.post(
     if (!plan) throw notFound('Gói dịch vụ');
     if (Number(plan.price) <= 0) throw badRequest('Gói miễn phí không cần thanh toán');
     const pending = await prisma.paymentTransaction.findFirst({ where: { userId, planId: plan.id, status: 'PENDING' } });
-    if (pending) return { orderCode: pending.orderCode, amount: Number(pending.amount), status: pending.status, reused: true };
+    if (pending) return { orderCode: pending.orderCode, amount: Number(pending.amount), discount: Number(pending.discountAmount), status: pending.status, transferNote: transferNote(pending.orderCode, me(req).email), payTo: await payTo(), reused: true };
 
     let discount = 0n;
     let couponId: string | undefined;
@@ -216,7 +228,8 @@ miscRouter.post(
       amount: Number(t.amount),
       discount: Number(t.discountAmount),
       status: t.status,
-      transferNote: `${t.orderCode} ${me(req).email}`,
+      transferNote: transferNote(t.orderCode, me(req).email),
+      payTo: await payTo(),
       message: 'Đơn đã được ghi nhận. Gói sẽ được kích hoạt sau khi quản trị viên xác nhận thanh toán.',
     };
   })
