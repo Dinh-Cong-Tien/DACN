@@ -7,6 +7,7 @@ import { badRequest, conflict, handler, me, notFound, parse } from '../../core/h
 import { audit } from './audit';
 import { gradientOf } from '../head/shared';
 import { knowledgeToText, parseKnowledgeText, toKnowledge } from '../catalog/lesson-knowledge';
+import { parseSubtitles, subtitlesToText, toCues } from '../catalog/lesson-transcript';
 import { completedAttempts, courseStats, ratingOf } from '../catalog/counts';
 import { byTitleNatural, levelLabel } from '../catalog/mappers';
 import { listQuestions, toQuestionRow } from '../head/head.routes';
@@ -201,10 +202,15 @@ const lessonBody = z.object({
   status: CONTENT_STATUS.optional(),
   /** Kiến thức đi kèm video (định dạng văn bản, xem lesson-knowledge.ts); chuỗi rỗng = xoá */
   knowledgeText: z.string().max(30000).nullish(),
+  /** Lời thoại có mốc thời gian (nội dung file .srt / .vtt); chuỗi rỗng = xoá */
+  transcriptText: z.string().max(500000).nullish(),
 });
-/** knowledgeText → cột knowledge; không gửi → giữ nguyên */
-const lessonData = <T extends { knowledgeText?: string | null }>({ knowledgeText, ...rest }: T) =>
-  knowledgeText === undefined ? rest : { ...rest, knowledge: parseKnowledgeText(knowledgeText ?? '') ?? Prisma.DbNull };
+/** knowledgeText → cột knowledge, transcriptText → cột transcript; không gửi → giữ nguyên */
+const lessonData = <T extends { knowledgeText?: string | null; transcriptText?: string | null }>({ knowledgeText, transcriptText, ...rest }: T) => ({
+  ...rest,
+  ...(knowledgeText === undefined ? {} : { knowledge: (parseKnowledgeText(knowledgeText ?? '') as Prisma.InputJsonValue | null) ?? Prisma.DbNull }),
+  ...(transcriptText === undefined ? {} : { transcript: (parseSubtitles(transcriptText ?? '') as Prisma.InputJsonValue | null) ?? Prisma.DbNull }),
+});
 async function refreshCourseCache(courseId: string) {
   const agg = await prisma.lesson.aggregate({ where: { deletedAt: null, section: { courseId } }, _count: true, _sum: { durationMin: true } });
   await prisma.course.update({ where: { id: courseId }, data: { lessonsCount: agg._count, durationMin: agg._sum.durationMin ?? 0 } });
@@ -234,9 +240,9 @@ contentRouter.patch(
 contentRouter.get(
   '/lessons/:id/knowledge',
   handler(async (req) => {
-    const l = await prisma.lesson.findFirst({ where: { id: idOf(req), deletedAt: null }, select: { knowledge: true } });
+    const l = await prisma.lesson.findFirst({ where: { id: idOf(req), deletedAt: null }, select: { knowledge: true, transcript: true } });
     if (!l) throw notFound('Bài học');
-    return { knowledgeText: knowledgeToText(toKnowledge(l.knowledge)) };
+    return { knowledgeText: knowledgeToText(toKnowledge(l.knowledge)), transcriptText: subtitlesToText(toCues(l.transcript)) };
   })
 );
 contentRouter.delete(

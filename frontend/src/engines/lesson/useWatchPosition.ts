@@ -45,6 +45,8 @@ export function useWatchPosition(opts: {
   endedRef.current = onEnded;
   const authed = !!tokenStore.get()?.accessToken;
   const [restarted, setRestarted] = useState(false);
+  // mốc thời gian nhận gần nhất từ player — script nội suy giữa 2 sự kiện để chạy mượt theo video
+  const clock = useRef({ sec: resumeAt, at: 0, playing: false });
 
   // vị trí đã lưu đến sau (chi tiết bài tải xong) → đồng bộ để mục lục hiện đúng "đã học tới"
   useEffect(() => {
@@ -72,6 +74,7 @@ export function useWatchPosition(opts: {
 
   const tick = useCallback(
     (sec: number) => {
+      clock.current = { sec, at: performance.now(), playing: clock.current.playing };
       const d = sec - pos.current;
       if (d > 0 && d < 3) spent.current += d; // chỉ cộng khi đang phát liên tục, không tính lúc tua
       pos.current = sec;
@@ -80,13 +83,20 @@ export function useWatchPosition(opts: {
     },
     [save]
   );
-  const paused = useCallback(() => save(), [save]);
+  const playing = useCallback((on: boolean) => {
+    clock.current = { ...clock.current, playing: on, at: performance.now() };
+  }, []);
+  const paused = useCallback(() => {
+    playing(false);
+    save();
+  }, [playing, save]);
   const ended = useCallback(() => {
+    playing(false);
     pos.current = 0;
     save();
     setPosition(0);
     endedRef.current();
-  }, [save]);
+  }, [playing, save]);
 
   // Vimeo / YouTube: nhận sự kiện thời gian qua postMessage
   useEffect(() => {
@@ -94,7 +104,7 @@ export function useWatchPosition(opts: {
     const frame = iframeRef.current;
     const post = (msg: unknown) => frame?.contentWindow?.postMessage(JSON.stringify(msg), '*');
     const subscribe = () => {
-      if (source.kind === 'vimeo') ['timeupdate', 'pause', 'ended'].forEach((value) => post({ method: 'addEventListener', value }));
+      if (source.kind === 'vimeo') ['timeupdate', 'play', 'pause', 'ended'].forEach((value) => post({ method: 'addEventListener', value }));
       else post({ event: 'listening', id: lessonId, channel: 'widget' });
     };
     const onMsg = (e: MessageEvent) => {
@@ -108,10 +118,12 @@ export function useWatchPosition(opts: {
       if (source.kind === 'vimeo') {
         if (m.event === 'ready') subscribe();
         else if (m.event === 'timeupdate') tick(Number(m.data?.seconds) || 0);
+        else if (m.event === 'play') playing(true);
         else if (m.event === 'pause') paused();
         else if (m.event === 'ended') ended();
       } else if (m.event === 'infoDelivery' && m.info) {
         if (typeof m.info.currentTime === 'number') tick(m.info.currentTime);
+        if (m.info.playerState === 1) playing(true);
         if (m.info.playerState === 2) paused();
         if (m.info.playerState === 0) ended();
       }
@@ -122,7 +134,7 @@ export function useWatchPosition(opts: {
       window.removeEventListener('message', onMsg);
       frame?.removeEventListener('load', subscribe);
     };
-  }, [source, iframeRef, lessonId, tick, paused, ended]);
+  }, [source, iframeRef, lessonId, tick, playing, paused, ended]);
 
   // Rời trang / ẩn tab / chuyển bài → lưu ngay
   useEffect(() => {
@@ -137,17 +149,41 @@ export function useWatchPosition(opts: {
     };
   }, [save]);
 
-  /** Tua tới giây `sec` (nút "Xem lại từ đầu") */
-  const seek = (sec: number) => {
+  /** Tua tới giây `sec` (nút "Xem lại từ đầu", bấm câu trong script); `play` = phát luôn */
+  const seek = (sec: number, play = false) => {
     if (sec === 0) setRestarted(true);
     pos.current = sec;
+    clock.current = { sec, at: performance.now(), playing: play || clock.current.playing };
     setPosition(sec);
-    if (source?.kind === 'file' && videoRef.current) videoRef.current.currentTime = sec;
+    const v = videoRef.current;
+    if (source?.kind === 'file' && v) {
+      v.currentTime = sec;
+      if (play) v.play().catch(() => undefined);
+    }
     const w = iframeRef.current?.contentWindow;
-    if (source?.kind === 'vimeo') w?.postMessage(JSON.stringify({ method: 'setCurrentTime', value: sec }), '*');
-    if (source?.kind === 'youtube') w?.postMessage(JSON.stringify({ event: 'command', func: 'seekTo', args: [sec, true] }), '*');
+    const post = (msg: unknown) => w?.postMessage(JSON.stringify(msg), '*');
+    if (source?.kind === 'vimeo') {
+      post({ method: 'setCurrentTime', value: sec });
+      if (play) post({ method: 'play' });
+    }
+    if (source?.kind === 'youtube') {
+      post({ event: 'command', func: 'seekTo', args: [sec, true] });
+      if (play) post({ event: 'command', func: 'playVideo', args: [] });
+    }
     save();
   };
+
+  /**
+   * Thời điểm video đang phát (giây), đọc trong requestAnimationFrame.
+   * File video: đọc thẳng currentTime. Vimeo / YouTube: mốc gần nhất + thời gian trôi kể từ đó
+   * (tối đa 1 giây, phòng mất sự kiện pause) → script đổi câu đúng lúc, không trễ theo nhịp sự kiện.
+   */
+  const now = useCallback(() => {
+    const v = videoRef.current;
+    if (source?.kind === 'file' && v) return v.currentTime;
+    const c = clock.current;
+    return c.playing && c.at ? c.sec + Math.min(1, (performance.now() - c.at) / 1000) : c.sec;
+  }, [source, videoRef]);
 
   /** Props cho thẻ <video> (file trực tiếp) */
   const videoProps = {
@@ -156,9 +192,10 @@ export function useWatchPosition(opts: {
       if (resumeAt > 0 && resumeAt < v.duration - 3) v.currentTime = resumeAt;
     },
     onTimeUpdate: (e: React.SyntheticEvent<HTMLVideoElement>) => tick(e.currentTarget.currentTime),
+    onPlay: () => playing(true),
     onPause: paused,
     onEnded: ended,
   };
 
-  return { position, seek, videoProps, restarted };
+  return { position, seek, now, videoProps, restarted };
 }

@@ -5,6 +5,7 @@ import { errorMessage } from '@/shared/api/client';
 import { Input, Modal, Select, Switch, Textarea } from '@/shared/components/ui';
 import { TBtn } from '@/roles/teacher/components/TeacherKit';
 import { toast } from '@/shared/stores/uiStore';
+import { Upload } from 'lucide-react';
 
 const TYPES = [
   { value: 'VIDEO', label: 'Video bài giảng' },
@@ -13,8 +14,8 @@ const TYPES = [
   { value: 'CHECKPOINT', label: 'Kiểm tra giữa khoá' },
 ];
 
-type Form = { title: string; type: string; videoUrl: string; durationMin: string; summary: string; contentMd: string; isFreePreview: boolean; knowledgeText: string };
-const EMPTY: Form = { title: '', type: 'VIDEO', videoUrl: '', durationMin: '10', summary: '', contentMd: '', isFreePreview: false, knowledgeText: '' };
+type Form = { title: string; type: string; videoUrl: string; durationMin: string; summary: string; contentMd: string; isFreePreview: boolean; knowledgeText: string; transcriptText: string };
+const EMPTY: Form = { title: '', type: 'VIDEO', videoUrl: '', durationMin: '10', summary: '', contentMd: '', isFreePreview: false, knowledgeText: '', transcriptText: '' };
 
 const KNOWLEDGE_HINT = [
   '# Ngữ pháp',
@@ -34,6 +35,8 @@ const KNOWLEDGE_HINT = [
   '  a deadline | một hạn chót | We have a deadline on Friday.',
 ].join('\n');
 
+const SUBTITLE_HINT = ['1', '00:00:01,000 --> 00:00:04,200', 'Welcome back to the lesson.', 'Chào mừng các bạn quay lại bài học.', '', '2', '00:00:04,500 --> 00:00:07,000', "Today we'll look at the passive voice."].join('\n');
+
 /** Thêm / sửa bài học trong một chương (POST/PATCH /admin/lessons). `lesson` = null → thêm mới vào `sectionId`. */
 export const LessonDialog: React.FC<{ open: boolean; sectionId: string | null; lesson: TreeLesson | null; onClose: () => void }> = ({ open, sectionId, lesson, onClose }) => {
   const refresh = useAdminInvalidate();
@@ -51,11 +54,21 @@ export const LessonDialog: React.FC<{ open: boolean; sectionId: string | null; l
       adminApi
         .lessonKnowledge(lesson.id)
         .then((r) => {
-          setF((x) => ({ ...x, knowledgeText: r.knowledgeText }));
+          setF((x) => ({ ...x, knowledgeText: r.knowledgeText, transcriptText: r.transcriptText ?? '' }));
           setKnowledgeLoaded(true);
         })
         .catch(() => undefined);
   }, [open, lesson]);
+
+  /** Đọc file phụ đề vào ô Script (server kiểm tra định dạng khi lưu) */
+  const loadSubtitle = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+    if (file.size > 500_000) return toast.error('File phụ đề quá lớn', 'Tối đa 500 KB');
+    set('transcriptText', await file.text());
+    toast.success('Đã nạp phụ đề', `${file.name} — bấm Lưu để áp dụng`);
+  };
 
   const save = async () => {
     if (f.title.trim().length < 1) return toast.error('Vui lòng nhập tên bài học');
@@ -71,7 +84,7 @@ export const LessonDialog: React.FC<{ open: boolean; sectionId: string | null; l
       ...(f.summary.trim() ? { summary: f.summary.trim().slice(0, 300) } : {}),
       ...(f.contentMd.trim() ? { contentMd: f.contentMd.trim() } : {}),
       // chỉ gửi khi đã tải xong kiến thức cũ — tránh ghi đè rỗng
-      ...(f.type === 'VIDEO' && knowledgeLoaded ? { knowledgeText: f.knowledgeText } : {}),
+      ...(f.type === 'VIDEO' && knowledgeLoaded ? { knowledgeText: f.knowledgeText, transcriptText: f.transcriptText } : {}),
     };
     setSaving(true);
     try {
@@ -132,6 +145,26 @@ export const LessonDialog: React.FC<{ open: boolean; sectionId: string | null; l
               value={f.knowledgeText}
               onChange={(e) => set('knowledgeText', e.target.value)}
               hint="Hiện dưới video cho học viên. Mục: # Ngữ pháp, # Phát âm, # Mẫu câu, # Kỹ năng, # Từ vựng, # Mệnh đề, # Mạo từ (chỉ ghi ngữ pháp thật vào # Ngữ pháp). Các trường cách nhau dấu |. Mạo từ: thụt 2 dấu cách để thêm từ đi kèm (node con)."
+            />
+          </div>
+        )}
+        {f.type === 'VIDEO' && (
+          <div className="md:col-span-2 space-y-2">
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-sm font-semibold text-slate-700">Script (phụ đề có mốc thời gian)</span>
+              <label className={`inline-flex items-center gap-1.5 rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-bold text-slate-700 hover:border-slate-400 ${knowledgeLoaded ? 'cursor-pointer' : 'pointer-events-none opacity-50'}`}>
+                <Upload className="h-3.5 w-3.5" /> Tải file .srt / .vtt
+                <input type="file" accept=".srt,.vtt,text/vtt" className="sr-only" onChange={(e) => void loadSubtitle(e)} />
+              </label>
+            </div>
+            <Textarea
+              rows={8}
+              className="font-mono text-xs"
+              disabled={!knowledgeLoaded}
+              placeholder={SUBTITLE_HINT}
+              value={f.transcriptText}
+              onChange={(e) => set('transcriptText', e.target.value)}
+              hint="Học viên thấy script chạy theo đúng thời điểm video. Mỗi đoạn: mốc thời gian rồi câu tiếng Anh; thêm 1 dòng tiếng Việt bên dưới để có song ngữ. Để trống = không hiện script."
             />
           </div>
         )}

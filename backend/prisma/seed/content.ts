@@ -28,7 +28,7 @@ export async function seedCourses(ctx: SeedCtx) {
           summary: cut(l.summary, 300),
           contentMd: l.content ?? null,
           videoUrl: l.videoUrl ?? null,
-          transcript: l.transcript ? l.transcript.map((t: any) => ({ startMs: t.start * 1000, endMs: t.end * 1000, en: t.text, vi: t.textVi ?? null })) : undefined,
+          // transcript mẫu không khớp video nguồn → không nạp; lời thoại thật do admin tải phụ đề .srt/.vtt
           passScorePct: l.type === 'QUIZ' ? 70 : null,
           durationMin: l.durationMin ?? 10,
           isFreePreview: !!l.isFree,

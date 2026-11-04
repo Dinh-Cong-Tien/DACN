@@ -8,6 +8,7 @@ import { num } from '../../core/dto';
 import { recordActivity } from './activity';
 import { gradientAt } from './mappers';
 import { toKnowledge } from './lesson-knowledge';
+import { toCues } from './lesson-transcript';
 import { ratingOf } from './counts';
 
 export const coursesRouter = Router();
@@ -25,16 +26,11 @@ const courseInclude = {
 } satisfies Prisma.CourseInclude;
 type CourseRow = Prisma.CourseGetPayload<{ include: typeof courseInclude }>;
 
-type TranscriptRaw = { start?: number; end?: number; text?: string; textVi?: string; startMs?: number; endMs?: number; en?: string; vi?: string };
-const toTranscript = (t: Prisma.JsonValue | null) =>
-  Array.isArray(t)
-    ? (t as TranscriptRaw[]).map((l) => ({
-        start: l.start ?? (l.startMs ?? 0) / 1000,
-        end: l.end ?? (l.endMs ?? 0) / 1000,
-        text: l.text ?? l.en ?? '',
-        textVi: l.textVi ?? l.vi,
-      }))
-    : undefined;
+/** Lời thoại có mốc thời gian (giây) cho script chạy theo video */
+const toTranscript = (t: Prisma.JsonValue | null) => {
+  const cues = toCues(t);
+  return cues.length ? cues.map((c) => ({ start: c.startMs / 1000, end: c.endMs / 1000, text: c.en, textVi: c.vi })) : undefined;
+};
 
 const lessonType = (t: DbLesson['type']) => (t === 'CHECKPOINT' ? 'QUIZ' : t);
 
@@ -53,7 +49,7 @@ function toLesson(l: DbLesson, state: { completed: boolean; locked: boolean; pos
     // vị trí video đã xem tới (bài đang học dở) — hiện "đã học tới mm:ss" trong mục lục
     ...(l.type === 'VIDEO' && !state.completed && state.positionSec ? { lastPositionSec: state.positionSec } : {}),
     ...(full && !state.locked
-      ? { videoUrl: l.videoUrl ?? undefined, audioUrl: l.audioUrl ?? undefined, content: l.contentMd ?? undefined, knowledge: toKnowledge(l.knowledge), quizTestId: l.quizTestId ?? undefined, passScorePct: l.passScorePct ?? undefined }
+      ? { videoUrl: l.videoUrl ?? undefined, audioUrl: l.audioUrl ?? undefined, content: l.contentMd ?? undefined, knowledge: toKnowledge(l.knowledge), transcript: toTranscript(l.transcript), quizTestId: l.quizTestId ?? undefined, passScorePct: l.passScorePct ?? undefined }
       : {}),
   };
 }

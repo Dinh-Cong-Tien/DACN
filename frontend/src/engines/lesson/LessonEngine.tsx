@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { BookOpen, CheckCircle2, ChevronRight, History, Lock, RotateCcw, Volume2, X, BookmarkPlus, FileText, HelpCircle, Video } from 'lucide-react';
 import type { Course, DictionaryEntry, Lesson } from '@/shared/types';
 import { LessonKnowledge } from './LessonKnowledge';
+import { LessonTranscript } from './LessonTranscript';
 import { catalogApi } from '@/shared/api/catalog';
 import { api, errorMessage, tokenStore } from '@/shared/api/client';
 import { cn, formatClock } from '@/shared/utils';
@@ -88,7 +89,7 @@ const DictionaryPopover: React.FC<{ entry: WordEntry; x: number; y: number; onCl
   );
 };
 
-/** Engine bài học: video (không hiện script) + kiến thức trong bài (ngữ pháp, từ vựng, mệnh đề, cây giới từ) + từ điển popover + mục lục khoá học */
+/** Engine bài học: video + script chạy theo video (ẩn/hiện được) + kiến thức trong bài (ngữ pháp, từ vựng, mệnh đề, cây giới từ) + từ điển popover + mục lục khoá học */
 export const LessonEngine: React.FC<LessonEngineProps> = ({ course, lesson, onSelectLesson, onComplete }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const iframeRef = useRef<HTMLIFrameElement>(null);
@@ -199,7 +200,10 @@ export const LessonEngine: React.FC<LessonEngineProps> = ({ course, lesson, onSe
           </div>
         </Card>
 
-        {/* Kiến thức trong bài (thay cho script) */}
+        {/* Script chạy theo thời gian video — chỉ khi bài có lời thoại thật (phụ đề admin tải lên) */}
+        {source && lesson.transcript?.length ? <LessonTranscript lines={lesson.transcript} now={watch.now} onSeek={(sec) => watch.seek(sec, true)} onWord={onWordClick} /> : null}
+
+        {/* Kiến thức trong bài */}
         {lesson.knowledge && <LessonKnowledge knowledge={lesson.knowledge} onWord={onWordClick} />}
       </div>
 
