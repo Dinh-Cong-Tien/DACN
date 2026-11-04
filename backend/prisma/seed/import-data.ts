@@ -122,7 +122,8 @@ export async function importToeicTests(ctx: SeedCtx) {
 
     const counts: Record<number, number> = {};
     for (const q of qs) counts[q.part] = (counts[q.part] ?? 0) + 1;
-    const set = String(info.set_name ?? 'TOEIC').trim();
+    // tên bộ đề nguồn "Crack TOEIC …" dễ bị hiểu là nội dung bẻ khoá → đổi tên hiển thị
+    const set = String(info.set_name ?? 'TOEIC').trim().replace(/^Crack\s+TOEIC/i, 'TOEIC Nâng cao');
     tests.push({
       id: testId,
       slug: slugify(`${set} ${info.name}`),
