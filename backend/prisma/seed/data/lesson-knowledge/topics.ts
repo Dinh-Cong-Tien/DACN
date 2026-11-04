@@ -38,9 +38,10 @@ itinerary | /aɪˈtɪnəreri/ | n | lịch trình chuyến đi | I'll email you 
   {
     match: /part 6|đoạn văn/,
     text: `# Ngữ pháp
+Từ nối | however, therefore, in addition, as a result | Dựa vào quan hệ ý: trái ngược, kết quả, bổ sung | In addition, we offer free delivery.
+# Kỹ năng
 Chọn thì theo ngữ cảnh | Đọc câu trước và sau chỗ trống | Part 6 kiểm tra mạch văn, không chỉ một câu |
-Chọn câu điền vào đoạn | Câu phải nối ý với câu trước/sau | Chú ý đại từ (this, these, it) trỏ về ý nào |
-Từ nối | however, therefore, in addition, as a result | Dựa vào quan hệ ý: trái ngược, kết quả, bổ sung | In addition, we offer free delivery.`,
+Chọn câu điền vào đoạn | Câu phải nối ý với câu trước/sau | Chú ý đại từ (this, these, it) trỏ về ý nào |`,
   },
 
   // ---------- Giới từ (trình bày dạng ngữ pháp) ----------
@@ -58,38 +59,39 @@ Giới từ + V-ing | interested in, good at, responsible for + V-ing | Sau gi�
   {
     match: /đi lại|hỏi đường|chỉ đường|nơi chốn|phương hướng/,
     text: `# Ngữ pháp
-Hỏi đường | Excuse me, how do I get to …? / Where is the nearest …? | | How do I get to the station?
-Chỉ đường | Go straight; Turn left / right; Take the second street on the left | Dùng câu mệnh lệnh | Turn right at the traffic lights.
 Vị trí | next to, opposite, between … and …, in front of, behind | | The bank is opposite the post office.
 # Từ vựng
 intersection | /ˌɪntərˈsekʃən/ | n | ngã tư | Turn left at the intersection.
 block | /blɒk/ | n | dãy nhà | It's two blocks away.
 landmark | /ˈlændmɑːrk/ | n | địa danh dễ nhận biết | The tower is a famous landmark.
-ticket | /ˈtɪkɪt/ | n | vé | I bought a return ticket.`,
+ticket | /ˈtɪkɪt/ | n | vé | I bought a return ticket.
+# Mẫu câu
+Hỏi đường | Excuse me, how do I get to …? / Where is the nearest …? | | How do I get to the station?
+Chỉ đường | Go straight; Turn left / right; Take the second street on the left | Dùng câu mệnh lệnh | Turn right at the traffic lights.`,
   },
   {
     match: /lịch, hạn chót|cuộc hẹn|đặt lịch hẹn/,
-    text: `# Ngữ pháp
-Đặt lịch | Are you available on …? / How about …? | | Are you available on Thursday afternoon?
-Hoãn / huỷ | I'm afraid I have to reschedule / cancel … | | I'm afraid I have to cancel our appointment.
-# Từ vựng
+    text: `# Từ vựng
 appointment | /əˈpɔɪntmənt/ | n | cuộc hẹn | I have an appointment with the dentist.
 schedule | /ˈʃedjuːl/ | n, v | lịch trình; lên lịch | The schedule has changed.
 deadline | /ˈdedlaɪn/ | n | hạn chót | We must meet the deadline.
 reschedule | /ˌriːˈʃedjuːl/ | v | dời lịch | Can we reschedule the meeting?
-calendar | /ˈkælɪndər/ | n | lịch | I'll check my calendar.`,
+calendar | /ˈkælɪndər/ | n | lịch | I'll check my calendar.
+# Mẫu câu
+Đặt lịch | Are you available on …? / How about …? | | Are you available on Thursday afternoon?
+Hoãn / huỷ | I'm afraid I have to reschedule / cancel … | | I'm afraid I have to cancel our appointment.`,
   },
   {
     match: /collocation|những từ hay đi cùng/,
-    text: `# Ngữ pháp
+    text: `# Từ vựng
+heavy traffic | | n | giao thông đông đúc | We were late because of heavy traffic.
+strong coffee | | n | cà phê đậm | I need a strong coffee.
+fast food | | n | đồ ăn nhanh | Fast food is cheap but unhealthy.
+# Mẫu câu
 make + N | make a decision, make a mistake, make progress, make an effort | make: tạo ra kết quả | She made a decision quickly.
 do + N | do homework, do business, do research, do your best | do: thực hiện công việc | We do business with Japan.
 take + N | take a break, take notes, take part in, take responsibility | | Let's take a break.
-have + N | have a meeting, have lunch, have a look | | Can I have a look?
-# Từ vựng
-heavy traffic | | n | giao thông đông đúc | We were late because of heavy traffic.
-strong coffee | | n | cà phê đậm | I need a strong coffee.
-fast food | | n | đồ ăn nhanh | Fast food is cheap but unhealthy.`,
+have + N | have a meeting, have lunch, have a look | | Can I have a look?`,
   },
   {
     match: /cụm động từ|phrasal/,
@@ -107,7 +109,6 @@ turn down | | phrasal v | từ chối | She turned down the job offer.`,
   {
     match: /part 5 luyện tập|câu 1\d\d/,
     text: `# Ngữ pháp
-Bước 1: xem 4 đáp án | Cùng gốc khác đuôi → câu từ loại; khác thì → câu chia động từ; khác nghĩa → câu từ vựng | |
 Câu từ loại | Xác định vị trí trống: trước N → adj; sau be → adj; giữa be và V3 → adv; sau mạo từ → N | | The company offers a (competitive) salary.
 Câu chia động từ | Tìm dấu hiệu thời gian và chủ ngữ số ít/số nhiều; có tân ngữ → chủ động | | The report will be submitted next week.
 Giới từ hay liên từ | Sau chỗ trống là N/V-ing → giới từ (despite, because of); là S + V → liên từ (although, because) | | Despite the rain, the event continued.
@@ -116,26 +117,28 @@ Giới từ hay liên từ | Sau chỗ trống là N/V-ing → giới từ (desp
 competitive | /kəmˈpetətɪv/ | adj | cạnh tranh | We offer competitive prices.
 submit | /səbˈmɪt/ | v | nộp | Please submit the form by Friday.
 proposal | /prəˈpəʊzəl/ | n | đề xuất | The proposal was approved.
-invoice | /ˈɪnvɔɪs/ | n | hoá đơn | The invoice is attached.`,
+invoice | /ˈɪnvɔɪs/ | n | hoá đơn | The invoice is attached.
+# Kỹ năng
+Bước 1: xem 4 đáp án | Cùng gốc khác đuôi → câu từ loại; khác thì → câu chia động từ; khác nghĩa → câu từ vựng | |`,
   },
-  // ---------- Phát âm ----------
+  // ---------- Phát âm (mục # Phát âm, không phải ngữ pháp) ----------
   {
     match: /đuôi s|s\/es|-s\/-es/,
-    text: `# Ngữ pháp
+    text: `# Phát âm
 /s/ | sau âm vô thanh /p/, /t/, /k/, /f/, /θ/ | | stops, books, laughs
 /ɪz/ | sau /s/, /z/, /ʃ/, /ʒ/, /tʃ/, /dʒ/ | Thêm một âm tiết | buses, watches, changes
 /z/ | các trường hợp còn lại (nguyên âm, âm hữu thanh) | | plays, bags, calls`,
   },
   {
     match: /đuôi ed|bài tập ed|-ed/,
-    text: `# Ngữ pháp
+    text: `# Phát âm
 /ɪd/ | sau /t/, /d/ | Thêm một âm tiết | wanted, needed
 /t/ | sau âm vô thanh /p/, /k/, /f/, /s/, /ʃ/, /tʃ/ | | stopped, looked, watched
 /d/ | các trường hợp còn lại | | played, called, cleaned`,
   },
   {
     match: /trọng âm/,
-    text: `# Ngữ pháp
+    text: `# Phát âm
 Danh từ, tính từ 2 âm tiết | thường nhấn âm 1 | | ˈoffice, ˈhappy
 Động từ 2 âm tiết | thường nhấn âm 2 | | reˈceive, deˈcide
 Đuôi -tion, -sion, -ic, -ity | nhấn âm ngay trước đuôi | | inforˈmation, ecoˈnomic, abiˈlity
@@ -143,14 +146,14 @@ Trọng âm câu | Nhấn từ nội dung (N, V, adj, adv), đọc lướt từ 
   },
   {
     match: /nối âm|nuốt âm|âm yếu|vì sao nghe không ra|shadowing/,
-    text: `# Ngữ pháp
+    text: `# Phát âm
 Nối phụ âm – nguyên âm | Âm cuối của từ trước nối sang nguyên âm đầu từ sau | | turn‿off → /tɜːr nɒf/
 Âm yếu | to /tə/, of /əv/, can /kən/, and /ən/ | Từ chức năng đọc nhẹ, nhanh | a cup of tea → /ə kʌp əv tiː/
 Nuốt âm | /t/, /d/ giữa hai phụ âm thường bị lược | | next week → /neks wiːk/`,
   },
   {
     match: /nguyên âm|phụ âm|bảng phiên âm|phát âm bắt đầu|các cặp âm|ngữ điệu|âm cuối/,
-    text: `# Ngữ pháp
+    text: `# Phát âm
 Nguyên âm ngắn – dài | /ɪ/–/iː/, /ʊ/–/uː/, /æ/–/e/ | Độ dài làm đổi nghĩa | ship /ʃɪp/ – sheep /ʃiːp/
 Phụ âm vô thanh – hữu thanh | /p/–/b/, /t/–/d/, /k/–/ɡ/, /s/–/z/ | Hữu thanh rung dây thanh | pen – Ben
 Âm cuối | Phát âm rõ âm cuối /t/, /s/, /k/ | Người Việt hay bỏ âm cuối | like /laɪk/, nice /naɪs/
@@ -227,24 +230,24 @@ do the laundry | | phrase | giặt giũ | I do the laundry on Sundays.`,
   },
   {
     match: /ăn uống|mua sắm|gọi món|hỏi giá|đổi trả|cửa hàng và nhà hàng/,
-    text: `# Ngữ pháp
-Gọi món lịch sự | I'd like + N / to V; Could I have …? | | Could I have the bill, please?
-Hỏi giá | How much is/are …? | | How much are these shoes?
-# Từ vựng
+    text: `# Từ vựng
 menu | /ˈmenjuː/ | n | thực đơn | Can I see the menu?
 receipt | /rɪˈsiːt/ | n | hoá đơn (biên lai) | Keep the receipt for returns.
 refund | /ˈriːfʌnd/ | n, v | hoàn tiền | I'd like a refund, please.
 exchange | /ɪksˈtʃeɪndʒ/ | v | đổi (hàng) | Can I exchange this for a bigger size?
-discount | /ˈdɪskaʊnt/ | n | giảm giá | Is there a student discount?`,
+discount | /ˈdɪskaʊnt/ | n | giảm giá | Is there a student discount?
+# Mẫu câu
+Gọi món lịch sự | I'd like + N / to V; Could I have …? | | Could I have the bill, please?
+Hỏi giá | How much is/are …? | | How much are these shoes?`,
   },
   {
     match: /chào hỏi|giới thiệu bản thân|giới thiệu bản thân và công việc/,
-    text: `# Ngữ pháp
-Giới thiệu | I'm …; I work as a/an …; I'm in charge of … | Hiện tại đơn cho thông tin cố định | I work as an accountant.
-Hỏi thăm | How's it going? / Nice to meet you. | |
-# Từ vựng
+    text: `# Từ vựng
 colleague | /ˈkɒliːɡ/ | n | đồng nghiệp | This is my colleague, Lan.
-department | /dɪˈpɑːrtmənt/ | n | phòng ban | I work in the sales department.`,
+department | /dɪˈpɑːrtmənt/ | n | phòng ban | I work in the sales department.
+# Mẫu câu
+Giới thiệu | I'm …; I work as a/an …; I'm in charge of … | Hiện tại đơn cho thông tin cố định | I work as an accountant.
+Hỏi thăm | How's it going? / Nice to meet you. | |`,
   },
   {
     match: /hỏi lại|chưa nghe rõ|giữ cuộc trò chuyện|sở thích|thời gian rảnh/,
@@ -283,7 +286,7 @@ forecast | /ˈfɔːrkɑːst/ | n | dự báo | The forecast says it will rain.`,
   },
   {
     match: /đồng ý|không đồng ý|đưa lời khuyên|gợi ý|bài luận nêu ý kiến/,
-    text: `# Ngữ pháp
+    text: `# Mẫu câu
 Đồng ý | I completely agree. / That's a good point. | |
 Không đồng ý lịch sự | I see your point, but … / I'm not sure about that. | Dùng but để nêu ý khác |
 Lời khuyên | You should / You'd better / If I were you, I would … | | If I were you, I would take the job.`,
@@ -291,13 +294,14 @@ Lời khuyên | You should / You'd better / If I were you, I would … | | If I 
   {
     match: /kể chuyện|trải nghiệm|kể chuyến đi|đoạn văn kể/,
     text: `# Ngữ pháp
-Kể theo trình tự | First, … Then, … After that, … Finally, … | Dùng quá khứ đơn cho chuỗi sự kiện | First, we booked a hotel. Then, we flew to Da Lat.
 Bối cảnh | Quá khứ tiếp diễn tả bối cảnh, quá khứ đơn tả sự kiện | | It was raining when we arrived.
+# Mẫu câu
+Kể theo trình tự | First, … Then, … After that, … Finally, … | Dùng quá khứ đơn cho chuỗi sự kiện | First, we booked a hotel. Then, we flew to Da Lat.
 Cảm xúc | I felt + adj; It was + adj + experience | | It was an unforgettable experience.`,
   },
   {
     match: /2 phút|nói về một chủ đề/,
-    text: `# Ngữ pháp
+    text: `# Mẫu câu
 Mở đầu | I'd like to talk about … | |
 Triển khai | The first reason is … / For example, … | |
 Kết thúc | To sum up, … / That's why … | |`,
@@ -337,36 +341,36 @@ festival | /ˈfestɪvəl/ | n | lễ hội | The festival takes place in spring.
   },
   {
     match: /đồng nghiệp|nhờ giúp đỡ|giao việc|yêu cầu lịch sự/,
-    text: `# Ngữ pháp
-Nhờ lịch sự | Could you …? / Would you mind + V-ing? | Would you mind luôn đi với V-ing | Would you mind checking this report?
-Giao việc | Can you take care of …? / I need you to … | |
-# Từ vựng
+    text: `# Từ vựng
 task | /tɑːsk/ | n | nhiệm vụ | I'll assign the task to Minh.
-deadline | /ˈdedlaɪn/ | n | hạn chót | The deadline is next Friday.`,
+deadline | /ˈdedlaɪn/ | n | hạn chót | The deadline is next Friday.
+# Mẫu câu
+Nhờ lịch sự | Could you …? / Would you mind + V-ing? | Would you mind luôn đi với V-ing | Would you mind checking this report?
+Giao việc | Can you take care of …? / I need you to … | |`,
   },
   {
     match: /email|thư từ|biên bản/,
-    text: `# Ngữ pháp
-Mở đầu email trang trọng | Dear Mr./Ms. + họ, | Không rõ tên: Dear Sir or Madam, |
-Nêu mục đích | I am writing to + V | | I am writing to inquire about the course.
-Kết thư | I look forward to + V-ing; Best regards / Sincerely | | I look forward to hearing from you.
-Nhắc việc | Just a quick reminder that …; Could you update me on …? | |
-# Từ vựng
+    text: `# Từ vựng
 attachment | /əˈtætʃmənt/ | n | tệp đính kèm | Please see the attachment.
 inquire | /ɪnˈkwaɪər/ | v | hỏi thông tin | I'm writing to inquire about prices.
 follow up | | phrasal v | theo dõi tiếp | I'm following up on my last email.
-minutes | /ˈmɪnɪts/ | n | biên bản cuộc họp | Who will take the minutes?`,
+minutes | /ˈmɪnɪts/ | n | biên bản cuộc họp | Who will take the minutes?
+# Mẫu câu
+Mở đầu email trang trọng | Dear Mr./Ms. + họ, | Không rõ tên: Dear Sir or Madam, |
+Nêu mục đích | I am writing to + V | | I am writing to inquire about the course.
+Kết thư | I look forward to + V-ing; Best regards / Sincerely | | I look forward to hearing from you.
+Nhắc việc | Just a quick reminder that …; Could you update me on …? | |`,
   },
   {
     match: /cuộc họp|thuyết trình/,
-    text: `# Ngữ pháp
-Mở đầu thuyết trình | Today I'm going to talk about … | |
-Chuyển ý | Let's move on to … / Turning to … | |
-Kết thúc | To sum up, … / Thank you for your attention. | |
-# Từ vựng
+    text: `# Từ vựng
 agenda | /əˈdʒendə/ | n | chương trình họp | The first item on the agenda is the budget.
 postpone | /pəʊstˈpəʊn/ | v | hoãn lại | The meeting was postponed.
-figure | /ˈfɪɡər/ | n | số liệu | The figures show strong growth.`,
+figure | /ˈfɪɡər/ | n | số liệu | The figures show strong growth.
+# Mẫu câu
+Mở đầu thuyết trình | Today I'm going to talk about … | |
+Chuyển ý | Let's move on to … / Turning to … | |
+Kết thúc | To sum up, … / Thank you for your attention. | |`,
   },
   {
     match: /báo giá|đơn hàng|hoá đơn|quảng cáo|chính sách đổi trả/,
@@ -389,28 +393,28 @@ employ | /ɪmˈplɔɪ/ | v | thuê, tuyển dụng | We employ over 500 people.`
   // ---------- Viết ----------
   {
     match: /câu chủ đề|câu triển khai|đoạn văn miêu tả|đoạn văn ngắn|dàn ý|mở bài|kết bài|tự sửa bài|dịch từng chữ|viết tiếng anh/,
-    text: `# Ngữ pháp
-Câu chủ đề | Nêu ý chính của đoạn | Đặt ở đầu đoạn | Working from home has many benefits.
-Câu triển khai | Giải thích + ví dụ cho ý chính | For example, …; This means … |
-Câu kết đoạn | Nhắc lại ý chính bằng cách khác | In short, … |
-Lỗi dịch từng chữ | Không viết "I very like" | Viết đúng: I like … very much / I really like … |
-# Từ vựng
+    text: `# Từ vựng
 firstly / in addition / moreover | | linker | thêm ý |
 however / on the other hand | | linker | đối lập |
 therefore / as a result | | linker | kết quả |
-in conclusion / to sum up | | linker | kết luận |`,
+in conclusion / to sum up | | linker | kết luận |
+# Kỹ năng
+Câu chủ đề | Nêu ý chính của đoạn | Đặt ở đầu đoạn | Working from home has many benefits.
+Câu triển khai | Giải thích + ví dụ cho ý chính | For example, …; This means … |
+Câu kết đoạn | Nhắc lại ý chính bằng cách khác | In short, … |
+Lỗi dịch từng chữ | Không viết "I very like" | Viết đúng: I like … very much / I really like … |`,
   },
 
   // ---------- Nghe ----------
   {
     match: /nghe ý chính|ghi chú khi nghe|podcast|bài giảng ngắn|tin tức|phim|thông báo nơi công cộng|giọng anh/,
-    text: `# Ngữ pháp
-Nghe ý chính trước | Đọc câu hỏi, đoán chủ đề trước khi nghe | |
-Ghi chú nhanh | Viết từ khoá, số liệu, ký hiệu (↑ tăng, ↓ giảm, → dẫn đến) | |
-Từ báo hiệu ý quan trọng | The main point is … / Most importantly … / However … | Sau however thường là thông tin chính |
-# Từ vựng
+    text: `# Từ vựng
 announcement | /əˈnaʊnsmənt/ | n | thông báo | Please listen to the following announcement.
 delay | /dɪˈleɪ/ | n, v | sự chậm trễ | The flight is delayed by one hour.
-platform | /ˈplætfɔːrm/ | n | sân ga | The train departs from platform 3.`,
+platform | /ˈplætfɔːrm/ | n | sân ga | The train departs from platform 3.
+# Kỹ năng
+Nghe ý chính trước | Đọc câu hỏi, đoán chủ đề trước khi nghe | |
+Ghi chú nhanh | Viết từ khoá, số liệu, ký hiệu (↑ tăng, ↓ giảm, → dẫn đến) | |
+Từ báo hiệu ý quan trọng | The main point is … / Most importantly … / However … | Sau however thường là thông tin chính |`,
   },
 ];

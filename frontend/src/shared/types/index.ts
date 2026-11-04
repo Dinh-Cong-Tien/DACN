@@ -61,11 +61,24 @@ export interface KnowledgeNode {
   example?: string;
   children?: KnowledgeNode[];
 }
+export interface KnowledgePoint {
+  title: string;
+  formula?: string;
+  note?: string;
+  example?: string;
+}
 export interface LessonKnowledge {
-  grammar: { title: string; formula?: string; note?: string; example?: string }[];
+  /** Chỉ ngữ pháp thật (thì, cấu trúc câu, từ loại…) */
+  grammar: KnowledgePoint[];
+  /** Phát âm: âm, đuôi -s/-ed, trọng âm, nối âm, ngữ điệu */
+  pronunciation: KnowledgePoint[];
+  /** Mẫu câu / cụm từ giao tiếp theo tình huống */
+  phrases: KnowledgePoint[];
+  /** Kỹ năng / mẹo làm bài */
+  tips: KnowledgePoint[];
   vocab: { word: string; ipa?: string; pos?: string; meaningVi: string; example?: string }[];
   clauses: { title: string; markers: string[]; note?: string; example?: string }[];
-  /** Cây mạo từ: a / an / the / không mạo từ → các từ trong bài đi kèm (bấm để mở / thu gọn) */
+  /** Cây mạo từ: a / an / the → các từ trong bài đi kèm (bấm để mở / thu gọn) */
   articles: KnowledgeNode[];
 }
 

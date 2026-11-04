@@ -3,7 +3,10 @@ import { badRequest } from '../../core/http';
 /**
  * Kiến thức đi kèm video bài giảng (lessons.knowledge, JSONB).
  * Admin nhập dạng văn bản (knowledgeText) — mỗi mục 1 dòng, các trường cách nhau " | ":
- *   # Ngữ pháp   → tiêu đề | công thức | ghi chú | ví dụ
+ *   # Ngữ pháp   → tiêu đề | công thức | ghi chú | ví dụ      (chỉ ngữ pháp thật: thì, cấu trúc câu, từ loại…)
+ *   # Phát âm    → tiêu đề | quy tắc | ghi chú | ví dụ        (âm, đuôi -s/-ed, trọng âm, nối âm, ngữ điệu)
+ *   # Mẫu câu    → tình huống | mẫu câu / cụm từ | ghi chú | ví dụ
+ *   # Kỹ năng    → tiêu đề | cách làm | ghi chú | ví dụ        (mẹo làm bài, kỹ năng nghe / viết)
  *   # Từ vựng    → từ | phiên âm | từ loại | nghĩa | ví dụ
  *   # Mệnh đề    → tên mệnh đề | từ dẫn (cách nhau dấu phẩy) | ghi chú | ví dụ
  *   # Mạo từ     → nhãn | nghĩa | ví dụ   (cây: a / an / the → các từ đi kèm; thụt 2 dấu cách = node con)
@@ -12,15 +15,28 @@ export interface KnowledgeNode { label: string; meaningVi?: string; example?: st
 export interface GrammarPoint { title: string; formula?: string; note?: string; example?: string }
 export interface VocabItem { word: string; ipa?: string; pos?: string; meaningVi: string; example?: string }
 export interface ClausePoint { title: string; markers: string[]; note?: string; example?: string }
-export interface LessonKnowledge { grammar: GrammarPoint[]; vocab: VocabItem[]; clauses: ClausePoint[]; articles: KnowledgeNode[] }
+export interface LessonKnowledge {
+  grammar: GrammarPoint[];
+  pronunciation: GrammarPoint[];
+  phrases: GrammarPoint[];
+  tips: GrammarPoint[];
+  vocab: VocabItem[];
+  clauses: ClausePoint[];
+  articles: KnowledgeNode[];
+}
+/** Các mục cùng dạng: tiêu đề / công thức / ghi chú / ví dụ */
+const POINT_KEYS = ['grammar', 'pronunciation', 'phrases', 'tips'] as const;
+type PointKey = (typeof POINT_KEYS)[number];
+const isPoint = (k: keyof LessonKnowledge): k is PointKey => (POINT_KEYS as readonly string[]).includes(k);
 
-const SECTION: Record<string, keyof LessonKnowledge> = { 'ngữ pháp': 'grammar', 'từ vựng': 'vocab', 'mệnh đề': 'clauses', 'mạo từ': 'articles' };
-const HEAD: Record<keyof LessonKnowledge, string> = { grammar: 'Ngữ pháp', vocab: 'Từ vựng', clauses: 'Mệnh đề', articles: 'Mạo từ' };
+const HEAD: Record<keyof LessonKnowledge, string> = { grammar: 'Ngữ pháp', pronunciation: 'Phát âm', phrases: 'Mẫu câu', tips: 'Kỹ năng', vocab: 'Từ vựng', clauses: 'Mệnh đề', articles: 'Mạo từ' };
+const SECTION = Object.fromEntries(Object.entries(HEAD).map(([k, v]) => [v.toLowerCase(), k])) as Record<string, keyof LessonKnowledge>;
+const SECTION_LIST = Object.values(HEAD).map((h) => `# ${h}`).join(', ');
 const opt = (s?: string) => (s && s.trim() ? s.trim() : undefined);
 const clean = <T extends object>(o: T): T => Object.fromEntries(Object.entries(o).filter(([, v]) => v !== undefined)) as T;
 
-export const emptyKnowledge = (): LessonKnowledge => ({ grammar: [], vocab: [], clauses: [], articles: [] });
-export const isEmptyKnowledge = (k: LessonKnowledge) => !k.grammar.length && !k.vocab.length && !k.clauses.length && !k.articles.length;
+export const emptyKnowledge = (): LessonKnowledge => ({ grammar: [], pronunciation: [], phrases: [], tips: [], vocab: [], clauses: [], articles: [] });
+export const isEmptyKnowledge = (k: LessonKnowledge) => (Object.keys(HEAD) as (keyof LessonKnowledge)[]).every((s) => !k[s].length);
 
 /** Văn bản → JSON; sai định dạng → 400 kèm số dòng. Rỗng → null (xoá kiến thức). */
 export function parseKnowledgeText(text: string): LessonKnowledge | null {
@@ -33,7 +49,7 @@ export function parseKnowledgeText(text: string): LessonKnowledge | null {
     if (raw.trim().startsWith('#')) {
       const name = raw.trim().replace(/^#+/, '').trim().toLowerCase();
       sec = SECTION[name] ?? null;
-      if (!sec) throw badRequest(`Dòng ${no}: mục "${name}" không hợp lệ — dùng # Ngữ pháp, # Từ vựng, # Mệnh đề, # Mạo từ`);
+      if (!sec) throw badRequest(`Dòng ${no}: mục "${name}" không hợp lệ — dùng ${SECTION_LIST}`);
       stack.length = 0;
       return;
     }
@@ -41,7 +57,7 @@ export function parseKnowledgeText(text: string): LessonKnowledge | null {
     const f = raw.trim().split('|').map((x) => x.trim());
     if (!f[0]) throw badRequest(`Dòng ${no}: thiếu nội dung đầu dòng`);
     if (f[0].length > 200 || f.some((x) => x.length > 500)) throw badRequest(`Dòng ${no}: nội dung quá dài`);
-    if (sec === 'grammar') k.grammar.push(clean({ title: f[0], formula: opt(f[1]), note: opt(f[2]), example: opt(f[3]) }));
+    if (isPoint(sec)) k[sec].push(clean({ title: f[0], formula: opt(f[1]), note: opt(f[2]), example: opt(f[3]) }));
     else if (sec === 'vocab') {
       if (!opt(f[3])) throw badRequest(`Dòng ${no}: từ vựng cần đủ "từ | phiên âm | từ loại | nghĩa"`);
       k.vocab.push(clean({ word: f[0], ipa: opt(f[1]), pos: opt(f[2]), meaningVi: f[3], example: opt(f[4]) }));
@@ -80,7 +96,7 @@ export function knowledgeToText(k: LessonKnowledge | undefined): string {
     if (!k[s].length) return;
     if (out.length) out.push('');
     out.push(`# ${HEAD[s]}`);
-    if (s === 'grammar') k.grammar.forEach((g) => out.push(row(g.title, g.formula, g.note, g.example)));
+    if (isPoint(s)) k[s].forEach((g) => out.push(row(g.title, g.formula, g.note, g.example)));
     if (s === 'vocab') k.vocab.forEach((v) => out.push(row(v.word, v.ipa, v.pos, v.meaningVi, v.example)));
     if (s === 'clauses') k.clauses.forEach((c) => out.push(row(c.title, c.markers.join(', '), c.note, c.example)));
     if (s === 'articles') k.articles.forEach((n) => tree(n, 0));
@@ -92,6 +108,7 @@ export function knowledgeToText(k: LessonKnowledge | undefined): string {
 export function toKnowledge(v: unknown): LessonKnowledge | undefined {
   if (!v || typeof v !== 'object') return undefined;
   const o = v as Partial<LessonKnowledge>;
-  const k: LessonKnowledge = { grammar: o.grammar ?? [], vocab: o.vocab ?? [], clauses: o.clauses ?? [], articles: o.articles ?? [] };
+  const k = emptyKnowledge();
+  (Object.keys(HEAD) as (keyof LessonKnowledge)[]).forEach((s) => Array.isArray(o[s]) && ((k as unknown as Record<string, unknown[]>)[s] = o[s] as unknown[]));
   return isEmptyKnowledge(k) ? undefined : k;
 }

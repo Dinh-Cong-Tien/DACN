@@ -6,7 +6,7 @@
  */
 import { Prisma } from '@prisma/client';
 import { prisma } from './lib';
-import { parseKnowledgeText, type KnowledgeNode, type LessonKnowledge } from '../../src/modules/catalog/lesson-knowledge';
+import { emptyKnowledge, isEmptyKnowledge, parseKnowledgeText, type KnowledgeNode, type LessonKnowledge } from '../../src/modules/catalog/lesson-knowledge';
 import { GRAMMAR_PACKS } from './data/lesson-knowledge/grammar';
 import { articleTree } from './data/lesson-knowledge/articles';
 import { TOPIC_PACKS } from './data/lesson-knowledge/topics';
@@ -61,7 +61,7 @@ const PHONEME: Record<string, string[]> = {
 
 function merge(into: LessonKnowledge, k: LessonKnowledge) {
   const add = <T>(arr: T[], items: T[], key: (x: T) => string) => items.forEach((x) => !arr.some((y) => key(y) === key(x)) && arr.push(x));
-  add(into.grammar, k.grammar, (g) => g.title.toLowerCase());
+  (['grammar', 'pronunciation', 'phrases', 'tips'] as const).forEach((s) => add(into[s], k[s], (g) => g.title.toLowerCase()));
   add(into.vocab, k.vocab, (v) => v.word.toLowerCase());
   add(into.clauses, k.clauses, (c) => c.title.toLowerCase());
   k.articles.forEach((n: KnowledgeNode) => {
@@ -80,21 +80,24 @@ async function main() {
   let filled = 0;
   const missed: string[] = [];
   for (const l of lessons) {
-    const k: LessonKnowledge = { grammar: [], vocab: [], clauses: [], articles: [] };
+    const k = emptyKnowledge();
     const title = l.title.normalize('NFC').toLowerCase();
     const sound = l.title.match(/\/[^/]+\//)?.[0];
     if (sound && PHONEME[sound]) {
-      merge(k, parseKnowledgeText(`# Từ vựng\n${PHONEME[sound].join('\n')}`)!);
+      // bài luyện 1 âm: mục Phát âm cho chính âm đó (3 từ ví dụ: đầu / giữa / cuối từ) + từ vựng
+      const words = PHONEME[sound].map((w) => w.split('|').map((x) => x.trim()));
+      const pron = `Âm ${sound} | ${words.map(([w, ipa]) => `${w} ${ipa}`).join(', ')} | Nghe và lặp lại âm ở đầu, giữa và cuối từ | ${words.map(([w]) => w).join(' – ')}`;
+      merge(k, parseKnowledgeText(`# Phát âm\n${pron}\n# Từ vựng\n${PHONEME[sound].join('\n')}`)!);
     } else {
       let hits = PACKS.filter((p) => p.match.test(title));
       if (!hits.length) hits = PACKS.filter((p) => p.match.test(l.section.title.normalize('NFC').toLowerCase()));
       hits.forEach((p) => merge(k, parseKnowledgeText(p.text)!));
     }
-    if (!k.grammar.length && !k.vocab.length && !k.clauses.length) {
+    if (isEmptyKnowledge(k)) {
       missed.push(`${l.section.title} › ${l.title}`);
       continue;
     }
-    // cây mạo từ: a / an / the / không mạo từ đi với những danh từ nào của chính bài này
+    // cây mạo từ: a / an / the đi với những danh từ nào của chính bài này
     k.articles = articleTree(k);
     await prisma.lesson.update({ where: { id: l.id }, data: { knowledge: k as unknown as Prisma.InputJsonValue } });
     filled++;

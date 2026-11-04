@@ -19,6 +19,12 @@ const EMPTY: Form = { title: '', type: 'VIDEO', videoUrl: '', durationMin: '10',
 const KNOWLEDGE_HINT = [
   '# Ngữ pháp',
   'Câu bị động | S + be + V3/ed (+ by O) | Nhấn mạnh đối tượng chịu tác động | The report was written by Anna.',
+  '# Phát âm',
+  'Đuôi -ed /ɪd/ | sau /t/, /d/ | Thêm một âm tiết | wanted, needed',
+  '# Mẫu câu',
+  'Nhờ lịch sự | Could you …? / Would you mind + V-ing? | | Could you send me the file?',
+  '# Kỹ năng',
+  'Nghe ý chính trước | Đọc câu hỏi, đoán chủ đề trước khi nghe | | ',
   '# Từ vựng',
   'deadline | /ˈdedlaɪn/ | n | hạn chót | We must meet the deadline.',
   '# Mệnh đề',
@@ -125,7 +131,7 @@ export const LessonDialog: React.FC<{ open: boolean; sectionId: string | null; l
               placeholder={KNOWLEDGE_HINT}
               value={f.knowledgeText}
               onChange={(e) => set('knowledgeText', e.target.value)}
-              hint="Hiện dưới video cho học viên. Mục: # Ngữ pháp, # Từ vựng, # Mệnh đề, # Mạo từ. Các trường cách nhau dấu |. Mạo từ: thụt 2 dấu cách để thêm từ đi kèm (node con)."
+              hint="Hiện dưới video cho học viên. Mục: # Ngữ pháp, # Phát âm, # Mẫu câu, # Kỹ năng, # Từ vựng, # Mệnh đề, # Mạo từ (chỉ ghi ngữ pháp thật vào # Ngữ pháp). Các trường cách nhau dấu |. Mạo từ: thụt 2 dấu cách để thêm từ đi kèm (node con)."
             />
           </div>
         )}

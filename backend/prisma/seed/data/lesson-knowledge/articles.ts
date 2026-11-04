@@ -33,7 +33,7 @@ type Phrase = { art: 'a' | 'an' | 'the'; phrase: string; sentence: string };
 function phrasesOf(k: LessonKnowledge): Phrase[] {
   const lessonAdj = new Set(k.vocab.filter((v) => v.pos && /adj/.test(v.pos)).map((v) => v.word.toLowerCase()));
   const isAdj = (w: string) => ADJ.test(w) || COMMON_ADJ.has(w) || lessonAdj.has(w) || w === 'most' || w === 'more';
-  const sentences = [...k.grammar.map((g) => g.example), ...k.vocab.map((v) => v.example), ...k.clauses.map((c) => c.example)].filter((s): s is string => !!s && !/[+…]/.test(s));
+  const sentences = [...k.grammar.map((g) => g.example), ...k.phrases.map((g) => g.example), ...k.vocab.map((v) => v.example), ...k.clauses.map((c) => c.example)].filter((s): s is string => !!s && !/[+…]/.test(s));
   const out: Phrase[] = [];
   for (const s of sentences)
     for (const m of s.matchAll(/\b(a|an|the)\s+([a-z][a-z-]*)(?:\s+([a-z][a-z-]*))?(?:\s+([a-z][a-z-]*))?(?:\s+([a-z][a-z-]*))?(?:\s+([a-z][a-z-]*))?/gi)) {
