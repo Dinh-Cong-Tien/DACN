@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { Archive, Ban, CalendarDays, CalendarPlus, ChevronRight, ClipboardCheck, Copy, ClipboardList, ExternalLink, Link2, MapPin, Megaphone, Pencil, Pin, PinOff, RefreshCw, RotateCcw, Trash2, TrendingUp, UserMinus, UserPlus, Upload, FileText, Users, Video, Music, File } from 'lucide-react';
+import { Archive, Ban, CalendarDays, CalendarPlus, ChevronRight, ClipboardCheck, Copy, ClipboardList, ExternalLink, Link2, MapPin, Megaphone, Pencil, Pin, PinOff, RefreshCw, RotateCcw, Trash2, TrendingUp, UserMinus, UserPlus, Upload, FileText, Users, Video, Music, File, Sheet, BarChart3 } from 'lucide-react';
 import { useDocumentTitle } from '@/shared/hooks';
 import { toast } from '@/shared/stores/uiStore';
 import { errorMessage } from '@/shared/api/client';
@@ -286,6 +286,12 @@ export const TeacherClassDetailPage: React.FC = () => {
               <button type="button" onClick={() => setInviteOpen(true)} className="inline-flex h-10 items-center gap-1.5 rounded-xl border border-white/25 px-4 text-sm font-semibold hover:bg-white/10">
                 <UserPlus className="h-4 w-4" /> Mời học viên
               </button>
+              <Link to={`/teacher/gradebook?class=${cls.id}`} className="inline-flex h-10 items-center gap-1.5 rounded-xl border border-white/25 px-4 text-sm font-semibold hover:bg-white/10">
+                <Sheet className="h-4 w-4" /> Bảng điểm
+              </Link>
+              <Link to={`/teacher/analytics?class=${cls.id}`} className="inline-flex h-10 items-center gap-1.5 rounded-xl border border-white/25 px-4 text-sm font-semibold hover:bg-white/10">
+                <BarChart3 className="h-4 w-4" /> Thống kê
+              </Link>
               <button type="button" onClick={() => navigate('/teacher/assignments', { state: { assign: firstTest ? { kind: 'EXAM', testId: firstTest.slug, setup: { mode: 'FULL', parts: [], minutes: null } } : undefined, classId: cls.id } })} className="inline-flex h-10 items-center gap-1.5 rounded-xl bg-white px-4 text-sm font-semibold text-slate-900 hover:bg-indigo-50">
                 <ClipboardList className="h-4 w-4" /> Giao bài tập
               </button>
@@ -310,7 +316,7 @@ export const TeacherClassDetailPage: React.FC = () => {
           { key: 'news', label: 'Bảng tin', count: news.length },
           { key: 'course', label: 'Tiến độ khoá học' },
           { key: 'students', label: 'Học viên', count: students.length },
-          { key: 'sessions', label: 'Buổi học', count: sessions.length },
+          { key: 'sessions', label: 'Buổi học & điểm danh', count: sessions.length },
           { key: 'assignments', label: 'Bài tập', count: assignments.length },
           { key: 'materials', label: 'Tài liệu', count: materials.length },
           { key: 'progress', label: 'Tiến độ bài tập' },

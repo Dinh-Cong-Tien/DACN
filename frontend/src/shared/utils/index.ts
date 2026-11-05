@@ -163,3 +163,9 @@ export function sessionState(s: { date: string; status: 'DONE' | 'UPCOMING' | 'C
   if (s.status === 'CANCELLED') return { label: 'Nghỉ', tone: 'gray' };
   return s.date < localIsoDate() ? { label: 'Chưa cập nhật', tone: 'amber' } : { label: 'Sắp dạy', tone: 'blue' };
 }
+
+/** Chặng của khoá trọn gói: part_title "Chặng 3 · Part 1–2 · Mô tả tranh…" → { no: 3, name: "Part 1–2 · Mô tả tranh…" } */
+export const stageOf = (part?: string | null) => {
+  const m = /^Chặng (\d+) · (.+)$/.exec(part ?? '');
+  return m ? { no: Number(m[1]), name: m[2] } : null;
+};

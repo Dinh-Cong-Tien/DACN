@@ -9,7 +9,7 @@ import { SkeletonGrid } from '@/shared/components/ui';
 import { useDocumentTitle, useGate, useParamState } from '@/shared/hooks';
 import { useAuthStore } from '@/shared/stores/authStore';
 import { TRACK_LABEL, type Course, type CourseSection, type CourseTrack } from '@/shared/types';
-import { cn } from '@/shared/utils';
+import { cn, stageOf } from '@/shared/utils';
 import { Accent, ActionLink, PageHeader, Section } from './shared/PageKit';
 
 /** Một mục Khoá học: ảnh, mô tả, các chặng theo thứ tự; học viên thấy tiến độ và bài đang học */
@@ -26,8 +26,10 @@ const TrackRow: React.FC<{ course: Course; isStudent: boolean }> = ({ course: c,
     else acc.push({ part: s.part, items: [{ s, i }] });
     return acc;
   }, []);
+  // khoá trọn gói (TOEIC, VSTEP): các chặng, mỗi chặng gồm nhiều chương
+  const stages = groups.every((g) => stageOf(g.part)) ? groups.map((g) => ({ ...stageOf(g.part)!, chapters: g.items.length, lessons: g.items.reduce((t, { s }) => t + s.lessons.length, 0) })) : null;
   // phần lớn nhóm chỉ có 1 chặng (vd khoá chia theo phần thi) → bỏ tiêu đề nhóm, hiện danh sách gọn kèm nhãn phần
-  const flat = groups.length >= 3 && groups.filter((g) => g.items.length === 1).length / groups.length > 0.5;
+  const flat = !stages && groups.length >= 3 && groups.filter((g) => g.items.length === 1).length / groups.length > 0.5;
 
   return (
     <article className="grid gap-6 rounded-2xl border border-slate-200 bg-white p-4 md:grid-cols-[minmax(0,380px)_1fr] md:gap-8 md:p-5">
@@ -45,10 +47,21 @@ const TrackRow: React.FC<{ course: Course; isStudent: boolean }> = ({ course: c,
         </h3>
         <p className="mt-2 max-w-2xl leading-relaxed text-slate-600">{c.description}</p>
         <p className="mt-3 text-[13px] tabular-nums text-slate-500">
-          {all.length} bài · {c.sections.length} chặng · {c.durationHours} giờ · {c.level}
+          {stages ? `${all.length} bài · ${stages.length} chặng · ${c.sections.length} chương · ${c.durationHours} giờ` : `${all.length} bài · ${c.sections.length} chặng · ${c.durationHours} giờ${c.level ? ` · ${c.level}` : ''}`}
         </p>
 
-        {flat ? (
+        {stages ? (
+          <ol className="mt-4 grid gap-x-6 gap-y-1.5 text-[14px] text-slate-700 sm:grid-cols-2">
+            {stages.map((st) => (
+              <li key={st.no} className="flex min-w-0 items-baseline gap-2">
+                <span className="w-16 shrink-0 text-slate-400">Chặng {st.no}</span>
+                <span className="min-w-0">
+                  {st.name} <span className="whitespace-nowrap text-[12px] text-slate-400">· {st.lessons} bài</span>
+                </span>
+              </li>
+            ))}
+          </ol>
+        ) : flat ? (
           <ol className="mt-4 grid gap-x-6 gap-y-1.5 text-[14px] text-slate-700 sm:grid-cols-2">
             {c.sections.map((s, i) => (
               <li key={s.id} className="flex min-w-0 items-baseline gap-2">
@@ -109,14 +122,13 @@ const TrackRow: React.FC<{ course: Course; isStudent: boolean }> = ({ course: c,
 
 /**
  * Khoá học chia 3 mục chính (?muc=toeic | vstep | thpt):
- * - TOEIC: Nền tảng → Listening (Part 1–4) → Reading (Part 5–7), đúng cấu trúc đề thi.
- * - VSTEP: Nền tảng → Nghe → Đọc → Viết → Nói, đúng 4 kỹ năng của đề thi.
+ * - TOEIC, VSTEP: mỗi kỳ thi một khoá trọn gói, các chặng theo đúng cấu trúc đề (nền tảng → từng phần thi).
  * - Tiếng Anh THPT: Lớp 10 / 11 / 12 theo SGK Global Success, mỗi Unit có từ vựng, ngữ pháp, bài tập và Review.
  * Trong mỗi mục, khoá xếp theo nhóm (trackGroup) và thứ tự học.
  */
 const TRACKS: { key: CourseTrack; param: string; icon: React.ElementType; title: string; lead: string }[] = [
-  { key: 'TOEIC', param: 'toeic', icon: Briefcase, title: 'TOEIC', lead: 'Học theo đúng cấu trúc đề: nền tảng trước, rồi Listening Part 1–4 và Reading Part 5–7.' },
-  { key: 'VSTEP', param: 'vstep', icon: GraduationCap, title: 'VSTEP', lead: 'Học theo 4 kỹ năng của đề thi: Nghe, Đọc, Viết, Nói — mỗi khoá chia đúng các phần thi.' },
+  { key: 'TOEIC', param: 'toeic', icon: Briefcase, title: 'TOEIC', lead: 'Một khoá trọn gói theo đúng cấu trúc đề: nền tảng, phát âm, rồi Listening Part 1–4 và Reading Part 5–7.' },
+  { key: 'VSTEP', param: 'vstep', icon: GraduationCap, title: 'VSTEP', lead: 'Một khoá trọn gói đủ 4 kỹ năng của đề thi: nền tảng, ngữ pháp, Nghe, Đọc, Viết, Nói.' },
   { key: 'THPT', param: 'thpt', icon: School, title: 'Tiếng Anh THPT', lead: 'Bám sát SGK Global Success lớp 10, 11, 12: từ vựng và ngữ pháp từng Unit, bài tập và Review sau các cụm Unit.' },
 ];
 const PARAMS = TRACKS.map((t) => t.param);

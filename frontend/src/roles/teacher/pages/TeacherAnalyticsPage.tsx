@@ -11,7 +11,7 @@ import { BarChart3, CalendarCheck, Target, TrendingUp } from 'lucide-react';
 import { Figures, Meter, Panel, Status, TBtn, TPageHead, inputCls, tbl } from '../components/TeacherKit';
 import { TEmpty, TError, TLoading } from '../components/TeacherState';
 import { appLocale } from '@/shared/i18n';
-import { classTrackLabel } from '@/shared/constants/staff';
+import { classTrackLabel, classTrack } from '@/shared/constants/staff';
 
 /** Thống kê một lớp: cùng chỉ số học viên thấy ở trang Tiến độ (điểm thi thử, % đúng từng Part, lỗi sai), giáo viên giao bài bù ngay từ chỗ yếu */
 export const TeacherAnalyticsPage: React.FC = () => {
@@ -62,7 +62,7 @@ export const TeacherAnalyticsPage: React.FC = () => {
   return (
     <div className="space-y-6">
       <TPageHead
-        eyebrow="Học viên"
+        crumbs={[{ label: ({ TOEIC: 'Khoá học TOEIC', VSTEP: 'Khoá học VSTEP', THPT: 'Tiếng Anh THPT' } as Record<string, string>)[classTrack(cls)] ?? 'Khoá học & Lớp', to: `/teacher/courses?muc=${classTrack(cls).toLowerCase()}` }, { label: cls.name, to: `/teacher/classes/${cls.id}` }, { label: 'Thống kê' }]}
         title="Thống kê lớp học"
         sub={`${cls.name} · ${classTrackLabel(cls)} · ${cls.studentsCount} học viên`}
         actions={

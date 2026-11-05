@@ -54,7 +54,8 @@ type Plan = { title: string; summary: string; pick: () => Promise<LessonExercise
 
 async function main() {
   const lessons = await prisma.lesson.findMany({
-    where: { deletedAt: null, section: { course: { slug: { in: ['toeic-part-1-2', 'toeic-part-5-6'] } } } },
+    // khoá nhỏ Part 1–2 / Part 5–6 (trước khi gộp) hoặc chặng tương ứng của khoá trọn gói luyen-thi-toeic
+    where: { deletedAt: null, section: { OR: [{ course: { slug: { in: ['toeic-part-1-2', 'toeic-part-5-6'] } } }, { course: { slug: 'luyen-thi-toeic' }, partTitle: { contains: 'Part 1–2' } }, { course: { slug: 'luyen-thi-toeic' }, partTitle: { contains: 'Part 5–6' } }] } },
     include: { section: true },
     orderBy: [{ section: { orderIndex: 'asc' } }, { orderIndex: 'asc' }],
   });
@@ -129,7 +130,7 @@ async function main() {
   }
 
   // bài lý thuyết "X" đứng trước bài luyện tương ứng "Luyện tập: X (…)"
-  for (const sec of await prisma.courseSection.findMany({ where: { course: { slug: 'toeic-part-1-2' } }, include: { lessonSections: { where: { deletedAt: null }, orderBy: { orderIndex: 'asc' } } } })) {
+  for (const sec of await prisma.courseSection.findMany({ where: { OR: [{ course: { slug: 'toeic-part-1-2' } }, { course: { slug: 'luyen-thi-toeic' }, partTitle: { contains: 'Part 1–2' } }] }, include: { lessonSections: { where: { deletedAt: null }, orderBy: { orderIndex: 'asc' } } } })) {
     const list = [...sec.lessonSections];
     for (const t of list.filter((l) => l.type !== 'QUIZ')) {
       const pi = list.findIndex((l) => l.type === 'QUIZ' && l.title.normalize('NFC').includes(`: ${t.title.normalize('NFC')} (`));

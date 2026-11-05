@@ -6,7 +6,7 @@ import { COURSE_PART_NOTE } from '@/shared/constants/public';
 import { SkeletonCard } from '@/shared/components/ui';
 import { useDocumentTitle, useGate } from '@/shared/hooks';
 import { useAuthStore } from '@/shared/stores/authStore';
-import { cn } from '@/shared/utils';
+import { cn, stageOf } from '@/shared/utils';
 import { TRACK_LABEL, type Course, type Lesson } from '@/shared/types';
 import { ActionLink, PageHeader, Section } from './shared/PageKit';
 
@@ -55,6 +55,8 @@ const PathView: React.FC<{ course: Course }> = ({ course }) => {
   const lessonUrl = (l: Lesson) => `/app/courses/${course.id}/lessons/${l.id}`;
   const numberOf = (l: Lesson) => all.indexOf(l) + 1;
   const parts = [...new Set(course.sections.map((s) => s.part).filter(Boolean))];
+  // khoá trọn gói: Chặng (phần lớn) → Chương → Bài
+  const staged = parts.length > 0 && course.sections.every((s) => stageOf(s.part));
 
   const primary = isStudent ? (
     <ActionLink to={lessonUrl(current)} size="lg" icon={<ArrowRight className="w-4 h-4" />}>
@@ -75,7 +77,7 @@ const PathView: React.FC<{ course: Course }> = ({ course }) => {
         lead={course.description}
         facts={[
           { value: String(all.length), label: 'Bài học' },
-          { value: String(course.sections.length), label: 'Chặng' },
+          ...(staged ? [{ value: String(parts.length), label: 'Chặng' }, { value: String(course.sections.length), label: 'Chương' }] : [{ value: String(course.sections.length), label: 'Chặng' }]),
           { value: `${Math.round(totalMin / 60)} giờ`, label: 'Tổng thời lượng' },
           { value: course.level, label: 'Trình độ' },
         ]}
@@ -135,15 +137,15 @@ const PathView: React.FC<{ course: Course }> = ({ course }) => {
                 <React.Fragment key={sec.id}>
                 {partStart && (
                   <div className="rounded-2xl bg-slate-900/[0.035] px-5 py-4 ring-1 ring-inset ring-slate-200">
-                    <p className="text-[12px] font-semibold uppercase tracking-[0.14em] text-amber-700 dark:text-amber-300">Phần {parts.indexOf(sec.part!) + 1}</p>
-                    <p className="mt-1 font-display text-2xl font-extrabold tracking-tight text-slate-900 md:text-[1.75rem]">{sec.part}</p>
+                    <p className="text-[12px] font-semibold uppercase tracking-[0.14em] text-amber-700 dark:text-amber-300">{staged ? `Chặng ${stageOf(sec.part)!.no}` : `Phần ${parts.indexOf(sec.part!) + 1}`}</p>
+                    <p className="mt-1 font-display text-2xl font-extrabold tracking-tight text-slate-900 md:text-[1.75rem]">{staged ? stageOf(sec.part)!.name : sec.part}</p>
                     {COURSE_PART_NOTE[sec.part!] && <p className="mt-1 text-[14px] text-slate-600">{COURSE_PART_NOTE[sec.part!]}</p>}
                   </div>
                 )}
                 <section aria-labelledby={sec.id}>
                   <div className="flex flex-col gap-1 border-b border-slate-200 pb-3 sm:flex-row sm:items-end sm:justify-between">
                     <div>
-                      <p className="text-[12px] font-semibold uppercase tracking-[0.14em] text-slate-500">Chặng {si + 1}</p>
+                      <p className="text-[12px] font-semibold uppercase tracking-[0.14em] text-slate-500">{staged ? `Chương ${si + 1}` : `Chặng ${si + 1}`}</p>
                       <h2 id={sec.id} className="mt-1 font-display text-xl font-bold text-slate-900 md:text-2xl">
                         {sec.title}
                       </h2>

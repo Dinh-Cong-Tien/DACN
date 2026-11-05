@@ -79,8 +79,9 @@ type ItemSeed = { phase: 1 | 2 | 3; title: string; itemType: PathItemType; refId
 async function generatePath(tx: Prisma.TransactionClient, userId: string, goalId: string, examType: ExamType) {
   const [course, vocab, tests] = await Promise.all([
     tx.course.findFirst({
-      where: { status: 'PUBLISHED', deletedAt: null, category: { in: ['FOUNDATION', 'GRAMMAR'] } },
-      orderBy: [{ category: 'asc' }, { createdAt: 'asc' }],
+      // khoá trọn gói đúng kỳ thi (TOEIC / VSTEP) — 3 bài đầu của chặng nền tảng
+      where: { status: 'PUBLISHED', deletedAt: null, track: examType },
+      orderBy: [{ trackOrder: 'asc' }, { createdAt: 'asc' }],
       include: { courseSectionCourses: { orderBy: { orderIndex: 'asc' }, include: { lessonSections: { where: { status: 'PUBLISHED', deletedAt: null }, orderBy: { orderIndex: 'asc' }, take: 3 } } } },
     }),
     tx.vocabTopic.findMany({ where: { deletedAt: null, OR: [{ examType }, { examType: null }] }, orderBy: { orderIndex: 'asc' }, take: 2 }),

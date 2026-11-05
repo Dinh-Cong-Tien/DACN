@@ -77,7 +77,7 @@ export const TeacherMaterialsPage: React.FC = () => {
   return (
     <div className="space-y-6">
       <TPageHead
-        crumbs={[{ label: 'Học liệu' }, { label: 'Tài liệu lớp' }]}
+        crumbs={[{ label: 'Khoá học & Lớp', to: '/teacher/courses' }, { label: 'Tài liệu các lớp' }]}
         title="Tài liệu lớp"
         sub="Tài liệu riêng của từng lớp: slide, bài mẫu, audio, video quay buổi học. Học viên mở ở mục Lớp của tôi."
         actions={

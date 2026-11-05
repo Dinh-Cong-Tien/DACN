@@ -64,7 +64,7 @@ export const StaffNav: React.FC<{ menus: StaffMenu[]; label: string }> = ({ menu
       {menus.map((m) => {
         if (!m.children)
           return (
-            <NavLink key={m.label} to={m.to!} className={({ isActive }) => topCls(isActive)}>
+            <NavLink key={m.label} to={m.to!} className={({ isActive }) => topCls(isActive || !!m.activeOn?.some((p) => pathname.startsWith(p)))}>
               <NavTopIcon icon={m.icon ?? STAFF_TOP_ICON[m.label]} />
               {t(m.label)}
               {m.badge && <Count n={m.badge} />}

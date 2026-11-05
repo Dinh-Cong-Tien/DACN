@@ -68,7 +68,7 @@ export const TeacherAttendancePage: React.FC = () => {
   if (!currentId || !session) {
     return (
       <div className="space-y-6">
-        <TPageHead crumbs={[{ label: 'Lịch dạy', to: '/teacher/schedule' }, { label: 'Điểm danh' }]} title="Điểm danh" />
+        <TPageHead crumbs={[{ label: 'Lịch dạy', to: '/teacher/schedule' }, ...(cls ? [{ label: cls.name, to: `/teacher/classes/${cls.id}` }] : []), { label: 'Điểm danh' }]} title="Điểm danh" />
         {detail.error ? (
           <TError error={detail.error} onRetry={() => detail.refetch()} />
         ) : (

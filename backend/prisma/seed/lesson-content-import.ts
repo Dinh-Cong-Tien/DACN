@@ -40,7 +40,9 @@ async function main() {
       const inc = { section: { include: { course: true } } } as const;
       const l =
         (await prisma.lesson.findUnique({ where: { id: it.id }, include: inc })) ??
-        (it.title && it.course ? await prisma.lesson.findFirst({ where: { deletedAt: null, title: it.title, section: { course: { title: it.course } } }, include: inc }) : null);
+        (it.title && it.course ? await prisma.lesson.findFirst({ where: { deletedAt: null, title: it.title, section: { course: { title: it.course } } }, include: inc }) : null) ??
+        // khoá nhỏ đã gộp vào khoá trọn gói (tên khoá cũ không còn) → tìm theo tên bài trong khoá đang mở
+        (it.title ? await prisma.lesson.findFirst({ where: { deletedAt: null, title: it.title, section: { course: { deletedAt: null } } }, include: inc }) : null);
       if (!l) {
         problems.push(`${f}: không thấy bài ${it.id}`);
         continue;

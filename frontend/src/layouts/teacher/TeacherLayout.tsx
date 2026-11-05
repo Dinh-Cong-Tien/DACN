@@ -1,5 +1,5 @@
 import React from 'react';
-import { LayoutDashboard, Users, ClipboardList, ClipboardCheck, CalendarDays, PenTool, FolderOpen, BarChart3, FileText, BookOpen, Sheet, UserRound, FilePen, Briefcase, GraduationCap, School, PenLine, Mic, BookMarked, Headphones, Database } from 'lucide-react';
+import { UserRoundX, LayoutDashboard, Users, ClipboardList, CalendarDays, PenTool, FileText, BookOpen, UserRound, FilePen, Briefcase, GraduationCap, School, PenLine, Mic, BookMarked, Headphones, Database } from 'lucide-react';
 import { AppShell, NavGroup } from '@/shared/components/layout/AppShell';
 import { TeacherNav, usePendingGradingCount } from './TeacherNav';
 
@@ -10,11 +10,10 @@ const groupsOf = (toGrade: number): NavGroup[] => [
     title: 'Giảng dạy',
     items: [
       { to: '/teacher/dashboard', label: 'Tổng quan', icon: LayoutDashboard },
-      { to: '/teacher/classes', label: 'Lớp học', icon: Users },
+      { to: '/teacher/courses', label: 'Khoá học & Lớp', icon: Users },
       { to: '/teacher/assignments', label: 'Bài tập', icon: ClipboardList },
       { to: '/teacher/grading', label: 'Chấm bài', icon: PenTool, badge: toGrade ? String(toGrade) : undefined },
       { to: '/teacher/schedule', label: 'Lịch dạy', icon: CalendarDays },
-      { to: '/teacher/attendance', label: 'Điểm danh', icon: ClipboardCheck },
     ],
   },
   {
@@ -42,8 +41,7 @@ const groupsOf = (toGrade: number): NavGroup[] => [
     title: 'Học viên',
     items: [
       { to: '/teacher/students', label: 'Hồ sơ học viên', icon: UserRound },
-      { to: '/teacher/gradebook', label: 'Bảng điểm', icon: Sheet },
-      { to: '/teacher/analytics', label: 'Thống kê lớp', icon: BarChart3 },
+      { to: '/teacher/students?filter=watch', label: 'Cần theo dõi', icon: UserRoundX },
     ],
   },
   {
@@ -51,7 +49,6 @@ const groupsOf = (toGrade: number): NavGroup[] => [
     items: [
       { to: '/teacher/authoring', label: 'Câu hỏi & đề tự soạn', icon: FilePen },
       { to: '/teacher/question-bank', label: 'Ngân hàng câu hỏi', icon: Database },
-      { to: '/teacher/materials', label: 'Tài liệu lớp', icon: FolderOpen },
     ],
   },
 ];

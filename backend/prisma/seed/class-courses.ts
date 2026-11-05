@@ -5,6 +5,7 @@
  */
 import { prisma } from './lib';
 import { enrollClassCourse } from '../../src/modules/catalog/class-track';
+import { MERGED_SLUG } from './merge-courses';
 
 /** Tên lớp (biểu thức) → slug khoá học */
 const BY_NAME: [RegExp, string][] = [
@@ -29,8 +30,9 @@ export async function linkClassCourses(): Promise<string[]> {
   const out: string[] = [];
   for (const cl of await prisma.class.findMany({ where: { deletedAt: null, courseId: null } })) {
     const track = cl.track ?? cl.examType;
-    const slug = BY_NAME.find(([re, s]) => re.test(cl.name) && (bySlug.get(s)?.track ?? track) === track)?.[1] ?? FALLBACK[track];
-    const course = bySlug.get(slug);
+    const name = BY_NAME.find(([re, s]) => re.test(cl.name) && (bySlug.get(MERGED_SLUG[s] ?? s)?.track ?? track) === track)?.[1] ?? FALLBACK[track];
+    // khoá nhỏ theo phần thi đã gộp thành khoá trọn gói
+    const course = bySlug.get(MERGED_SLUG[name] ?? name);
     if (!course) continue;
     await prisma.$transaction(async (tx) => {
       await tx.class.update({ where: { id: cl.id }, data: { courseId: course.id, track: course.track ?? track } });

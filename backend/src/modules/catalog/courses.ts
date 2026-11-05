@@ -117,14 +117,12 @@ function toCourse(c: CourseRow, i: number, states: Map<string, { completed: bool
 }
 
 /** Slug cũ (trước khi chia khoá theo TOEIC / VSTEP / THPT) → slug mới, để link đã chia sẻ vẫn mở được */
+/** Đường dẫn khoá cũ → khoá hiện tại (khoá nhỏ theo phần thi đã gộp thành khoá trọn gói TOEIC / VSTEP) */
+const TOEIC_ALL = 'luyen-thi-toeic';
+const VSTEP_ALL = 'luyen-thi-vstep';
 const OLD_SLUG: Record<string, string> = {
-  'ngu-phap': 'vstep-ngu-phap',
-  'luyen-nghe': 'vstep-listening',
-  'viet-tieng-anh': 'vstep-writing',
-  'giao-tiep-hang-ngay': 'vstep-speaking',
-  'tieng-anh-cong-so': 'toeic-part-3-4',
-  'luyen-thi-toeic-video': 'toeic-part-5-6',
-  'tu-vung-phat-am': 'vstep-reading',
+  ...Object.fromEntries(['nen-tang-toeic', 'toeic-phat-am', 'toeic-part-1-2', 'toeic-part-3-4', 'toeic-part-5-6', 'toeic-part-7', 'tieng-anh-cong-so', 'luyen-thi-toeic-video'].map((s) => [s, TOEIC_ALL])),
+  ...Object.fromEntries(['nen-tang-vstep', 'vstep-ngu-phap', 'vstep-listening', 'vstep-reading', 'vstep-writing', 'vstep-speaking', 'ngu-phap', 'luyen-nghe', 'viet-tieng-anh', 'giao-tiep-hang-ngay', 'tu-vung-phat-am'].map((s) => [s, VSTEP_ALL])),
 };
 
 async function findCourse(idOrSlug: string) {

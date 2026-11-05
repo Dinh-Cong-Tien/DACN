@@ -9,6 +9,7 @@ import { Avatar } from '@/shared/components/ui';
 import { Figures, Panel, TBtn, TPageHead, inputCls, tbl } from '../components/TeacherKit';
 import { TEmpty, TError, TLoading } from '../components/TeacherState';
 import { appLocale } from '@/shared/i18n';
+import { classTrack } from '@/shared/constants/staff';
 
 /** Ô điểm: số = đã chấm; còn lại hiện theo trạng thái bài nộp */
 const STATE_TEXT: Record<string, [string, string]> = {
@@ -81,7 +82,7 @@ export const TeacherGradebookPage: React.FC = () => {
   return (
     <div className="space-y-6">
       <TPageHead
-        eyebrow="Học viên"
+        crumbs={cls ? [{ label: ({ TOEIC: 'Khoá học TOEIC', VSTEP: 'Khoá học VSTEP', THPT: 'Tiếng Anh THPT' } as Record<string, string>)[classTrack(cls)] ?? 'Khoá học & Lớp', to: `/teacher/courses?muc=${classTrack(cls).toLowerCase()}` }, { label: cls.name, to: `/teacher/classes/${cls.id}` }, { label: 'Bảng điểm' }] : undefined}
         title="Bảng điểm"
         sub="Điểm quá trình của lớp: điểm các bài đã chấm và chuyên cần. Dùng để xét điều kiện thi cuối khoá và gửi báo cáo cho trung tâm."
         actions={

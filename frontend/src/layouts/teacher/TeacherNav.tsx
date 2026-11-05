@@ -1,37 +1,32 @@
 import React, { useMemo } from 'react';
-import {
-  BarChart3, BookMarked, BookOpen, Briefcase, CalendarDays, ClipboardCheck, ClipboardList, Database, FileEdit, FileText, FolderOpen, GraduationCap, Headphones, Mic, PenLine,
-  PenTool, PlayCircle, Plus, School, Sheet, UserRoundX, Users,
-} from 'lucide-react';
-import { useGradingQueue, useTeacherAssignments, useTeacherClasses, type TClassRoom } from '@/shared/api/teacher';
+import { BookMarked, BookOpen, Briefcase, CalendarDays, ClipboardList, Database, FileEdit, FileText, GraduationCap, Headphones, Mic, PenLine, PenTool, PlayCircle, Plus, School, UserRoundX, Users } from 'lucide-react';
+import { useGradingQueue, useTeacherAssignments } from '@/shared/api/teacher';
 import { StaffNav, type StaffMenu } from '@/shared/components/layout/StaffNav';
-import { CLASS_TRACKS, classTrack } from '@/shared/constants/staff';
-import type { CourseTrack } from '@/shared/types';
-
-/** Icon mục — trùng menu Khoá học của học viên */
-const TRACK_ICON: Record<CourseTrack, typeof Briefcase> = { TOEIC: Briefcase, VSTEP: GraduationCap, THPT: School };
 
 /**
- * Menu header giáo viên.
- *  - Khoá học & Lớp (lớp nằm trong khoá) → Thi thử & Luyện tập → Bài tập → Học viên → Soạn học liệu
- *  - "Khoá học" và "Thi thử & Luyện tập" bám đúng menu học viên (3 mục khoá TOEIC / VSTEP / THPT; đề thi thử, Viết, Nói,
- *    ngữ pháp, từ vựng, chép chính tả) để giáo viên tìm đúng thứ học viên đang học rồi giao cho lớp.
+ * Menu header giáo viên — menu chỉ giữ trang xem chung nhiều lớp; việc của một lớp làm trong trang lớp, không tách riêng:
+ *  - Khoá học & Lớp: 3 mục khoá như học viên → khoá → các lớp của khoá → trang lớp (bảng tin, tiến độ khoá, học viên,
+ *    buổi học & điểm danh, bài tập, tài liệu, bảng điểm, thống kê).
+ *  - Lịch dạy: lịch tuần của mọi lớp (điểm danh mở từ từng buổi).
+ *  - Thi thử & Luyện tập: bám đúng menu học viên (đề thi thử, Viết, Nói, ngữ pháp, từ vựng, chép chính tả) để giao cho lớp.
+ *  - Bài tập: giao bài, bài đã giao, bản nháp, chấm bài của mọi lớp.
+ *  - Học viên: hồ sơ học viên mọi lớp, học viên cần theo dõi.
+ *  - Soạn học liệu: câu hỏi, đề tự soạn gửi duyệt; ngân hàng câu hỏi.
  */
-export const buildTeacherMenus = (classes: TClassRoom[], toGrade: number, drafts: number): StaffMenu[] => [
+export const buildTeacherMenus = (toGrade: number, drafts: number): StaffMenu[] => [
   { to: '/teacher/dashboard', label: 'Tổng quan' },
   {
-    // lớp học nằm trong khoá học: một mục chung — khoá theo 3 mục như học viên, lớp đang dạy kèm tên khoá
     label: 'Khoá học & Lớp',
     icon: PlayCircle,
     to: '/teacher/courses',
-    activeOn: ['/teacher/classes'],
-    // chỉ 3 mục khoá như học viên; chọn mục → từng khoá hiện các lớp của khoá trước, rồi bài giảng
+    activeOn: ['/teacher/classes', '/teacher/gradebook', '/teacher/analytics', '/teacher/materials'],
     children: [
       { to: '/teacher/courses?muc=toeic', label: 'Khoá học TOEIC', icon: Briefcase, desc: 'Nền tảng, Listening Part 1–4, Reading Part 5–7' },
       { to: '/teacher/courses?muc=vstep', label: 'Khoá học VSTEP', icon: GraduationCap, desc: 'Nền tảng, Nghe, Đọc, Viết, Nói' },
       { to: '/teacher/courses?muc=thpt', label: 'Tiếng Anh THPT', icon: School, desc: 'Lớp 10, 11, 12 theo SGK Global Success' },
     ],
   },
+  { to: '/teacher/schedule', label: 'Lịch dạy', icon: CalendarDays, activeOn: ['/teacher/attendance'] },
   {
     label: 'Thi thử & Luyện tập',
     icon: FileText,
@@ -48,22 +43,21 @@ export const buildTeacherMenus = (classes: TClassRoom[], toGrade: number, drafts
   {
     label: 'Bài tập',
     to: '/teacher/assignments',
+    activeOn: ['/teacher/grading'],
     badge: toGrade ? String(toGrade) : undefined,
     children: [
       { to: '/teacher/assignments?new=1', label: 'Giao bài mới', icon: Plus, desc: 'Chọn lớp, nội dung, hạn nộp' },
       { to: '/teacher/assignments', label: 'Bài đã giao', icon: ClipboardList, desc: 'Hạn nộp, số bài đã nộp, điểm trung bình' },
       { to: '/teacher/assignments?status=DRAFT', label: 'Bản nháp', icon: FileEdit, desc: 'Bài đã soạn, chưa gửi học viên', badge: drafts ? String(drafts) : undefined },
-      { to: '/teacher/grading', label: 'Chấm bài', icon: PenTool, desc: 'Bài Viết, Nói học viên đã nộp', badge: toGrade ? String(toGrade) : undefined, also: ['/teacher/grading'] },
+      { to: '/teacher/grading', label: 'Chấm bài', icon: PenTool, desc: 'Bài Viết, Nói học viên mọi lớp đã nộp', badge: toGrade ? String(toGrade) : undefined, also: ['/teacher/grading'] },
     ],
   },
   {
     label: 'Học viên',
     to: '/teacher/students',
     children: [
-      { to: '/teacher/students', label: 'Hồ sơ học viên', icon: Users, desc: 'Điểm, chuyên cần, nhật ký trao đổi' },
+      { to: '/teacher/students', label: 'Hồ sơ học viên', icon: Users, desc: 'Học viên mọi lớp: điểm, chuyên cần, nhật ký trao đổi' },
       { to: '/teacher/students?filter=watch', label: 'Cần theo dõi', icon: UserRoundX, desc: 'Vắng nhiều, nộp bài thiếu, điểm giảm' },
-      { to: '/teacher/gradebook', label: 'Bảng điểm', icon: Sheet, desc: 'Điểm quá trình, xét điều kiện thi' },
-      { to: '/teacher/analytics', label: 'Thống kê lớp', icon: BarChart3, desc: '% đúng từng Part, phân bố điểm, lỗi sai' },
     ],
   },
   {
@@ -72,7 +66,6 @@ export const buildTeacherMenus = (classes: TClassRoom[], toGrade: number, drafts
     children: [
       { to: '/teacher/authoring', label: 'Câu hỏi & đề tự soạn', icon: FileEdit, desc: 'Soạn câu hỏi, đề kiểm tra · gửi duyệt' },
       { to: '/teacher/question-bank', label: 'Ngân hàng câu hỏi', icon: Database, desc: 'Tra cứu theo Part · nhập đề từ file Word' },
-      { to: '/teacher/materials', label: 'Tài liệu lớp', icon: FolderOpen, desc: 'Slide, audio, bài mẫu của riêng lớp' },
     ],
   },
 ];
@@ -81,10 +74,8 @@ export const buildTeacherMenus = (classes: TClassRoom[], toGrade: number, drafts
 export const usePendingGradingCount = () => useGradingQueue('pending').data?.length ?? 0;
 
 export const TeacherNav: React.FC = () => {
-  const classes = useTeacherClasses().data;
   const toGrade = usePendingGradingCount();
   const drafts = useTeacherAssignments({ status: 'DRAFT' }).data?.length ?? 0;
-  const menus = useMemo(() => buildTeacherMenus(classes ?? [], toGrade, drafts), [classes, toGrade, drafts]);
+  const menus = useMemo(() => buildTeacherMenus(toGrade, drafts), [toGrade, drafts]);
   return <StaffNav menus={menus} label="Menu giáo viên" />;
 };
-
