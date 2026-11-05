@@ -11,6 +11,8 @@ import type { QuestionPage, QuestionQuery, QuestionRow } from './head';
 
 export interface TClassRoom extends ClassRoom {
   teacherId: string;
+  /** % hoàn thành khoá học trung bình của học viên trong lớp */
+  courseProgressPct?: number;
   level?: string;
   description?: string;
   maxStudents?: number;

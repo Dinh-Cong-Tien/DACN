@@ -71,7 +71,7 @@ export const TeacherQuestionBankPage: React.FC = () => {
   return (
     <div className="space-y-6">
       <TPageHead
-        crumbs={[{ label: 'Học liệu', to: '/teacher/library/courses' }, { label: 'Ngân hàng câu hỏi' }]}
+        crumbs={[{ label: 'Soạn học liệu' }, { label: 'Ngân hàng câu hỏi' }]}
         title="Ngân hàng câu hỏi"
         sub="Tra cứu câu hỏi đã xuất bản theo Part để ghép đề và giao bài. Nhập đề từ file Word: hệ thống tự chia câu vào Part 1–7, lưu Nháp để bạn gửi trưởng bộ môn duyệt."
         actions={

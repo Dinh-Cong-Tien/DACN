@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { Link, Navigate, useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import { Navigate, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { ChevronDown, ChevronRight, ExternalLink } from 'lucide-react';
 import { useDocumentTitle } from '@/shared/hooks';
 import { useAuthStore } from '@/shared/stores/authStore';
-import { useTeacherClasses, useLibCourses, useLibGrammar, useLibSpeaking, useLibTests, useLibVocab, useLibWriting } from '@/shared/api/teacher';
+import { useLibCourses, useLibGrammar, useLibSpeaking, useLibTests, useLibVocab, useLibWriting } from '@/shared/api/teacher';
 import { partName, promptName } from '@/shared/constants/teacher';
 import type { AssignmentTarget, ExamType } from '@/shared/types';
 import { cn } from '@/shared/utils';
@@ -11,6 +11,7 @@ import { Panel, TBtn, TPageHead, tbl } from '../components/TeacherKit';
 import { TEmpty, TError, TLoading } from '../components/TeacherState';
 import { useDictationList } from '@/shared/api/learner';
 import { appLocale } from '@/shared/i18n';
+import { CourseLessonList } from '../components/CourseLessonList';
 
 type Kind = 'courses' | 'tests' | 'practice';
 
@@ -49,9 +50,6 @@ const GroupTabs: React.FC<{ groups: { label: string; tabs: { key: string; label:
 /** Mục chính · nhóm của khoá (TOEIC / VSTEP / Tiếng Anh THPT) */
 const TRACK_NAME: Record<string, string> = { TOEIC: 'TOEIC', VSTEP: 'VSTEP', THPT: 'Tiếng Anh THPT' };
 const trackOf = (c: { track?: string; trackGroup?: string }) => [c.track && TRACK_NAME[c.track], c.trackGroup].filter(Boolean).join(' · ') || 'Chưa xếp mục';
-const LESSON_TYPE: Record<string, string> = { VIDEO: 'Video', READING: 'Bài giảng', QUIZ: 'Luyện đề', CHECKPOINT: 'Kiểm tra chặng' };
-/** Bài tập sau bài: "8 câu · đạt 70%" */
-const exerciseNote = (l: { exercisesCount?: number; passScorePct?: number }) => (l.exercisesCount ? `${l.exercisesCount} câu · đạt ${l.passScorePct ?? 70}%` : '—');
 
 /** Trạng thái tải chung cho từng khối dữ liệu thư viện */
 const QueryGate: React.FC<{ q: { isLoading: boolean; error: unknown; refetch: () => unknown }; children: React.ReactNode }> = ({ q, children }) =>
@@ -87,6 +85,8 @@ export const TeacherLibraryPage: React.FC<LibraryPageProps> = ({ base = '/teache
   useDocumentTitle(copy?.title ?? 'Học liệu');
   const navigate = useNavigate();
   if (LEGACY[kind]) return <Navigate to={LEGACY[kind].replace('/teacher/library', base)} replace />;
+  // giáo viên: khoá học (kèm các lớp của khoá) ở trang Khoá học & Lớp
+  if (kind === 'courses' && base === '/teacher/library') return <Navigate to={`/teacher/courses${window.location.search}`} replace />;
   if (!copy) return <Navigate to={`${base}/courses`} replace />;
 
   const assign: Assign = canAssign ? (target) => navigate('/teacher/assignments', { state: { assign: target } }) : undefined;
@@ -325,9 +325,6 @@ const CoursesView: React.FC<{ assign: Assign }> = ({ assign }) => {
   const track = params.get('muc')?.toUpperCase();
   const courses = all.filter((c) => !track || c.track === track);
   const count = (t: string) => all.filter((c) => c.track === t).length;
-  // giáo viên: lớp của mình nằm trong từng khoá (lớp học thuộc khoá học)
-  const myClasses = useTeacherClasses().data ?? [];
-  const classesOf = (courseId: string) => myClasses.filter((x) => x.course?.id === courseId);
 
   return (
     <QueryGate q={coursesQ}>
@@ -348,7 +345,7 @@ const CoursesView: React.FC<{ assign: Assign }> = ({ assign }) => {
               <th className={tbl.th}>Trình độ</th>
               <th className={cn(tbl.th, 'text-right')}>Số bài</th>
               <th className={cn(tbl.th, 'text-right')}>Học viên</th>
-              <th className={tbl.th}>{assign ? 'Lớp của tôi' : 'Giáo viên phụ trách'}</th>
+              <th className={tbl.th}>Giáo viên phụ trách</th>
               <th className={tbl.th} />
             </tr>
           </thead>
@@ -369,14 +366,10 @@ const CoursesView: React.FC<{ assign: Assign }> = ({ assign }) => {
                     <td className={cn(tbl.td, 'whitespace-nowrap text-slate-600')}>{c.level ?? '—'}</td>
                     <td className={cn(tbl.td, 'text-right tabular-nums')}>{c.lessonsCount}</td>
                     <td className={cn(tbl.td, 'text-right tabular-nums')}>{c.studentsCount.toLocaleString(appLocale())}</td>
-                    {assign ? (
-                      <td className={cn(tbl.td, 'whitespace-nowrap text-slate-600')}>{classesOf(c.id).length ? `${classesOf(c.id).length} lớp · ${classesOf(c.id).reduce((t, x) => t + x.studentsCount, 0)} học viên` : '—'}</td>
-                    ) : (
-                      <td className={cn(tbl.td, 'whitespace-nowrap text-slate-600')}>
-                        {c.teacherName ?? '—'}
-                        {c.teacherName && c.teacherName === me && <span className="ml-1.5 text-[12px] text-indigo-700">(bạn)</span>}
-                      </td>
-                    )}
+                    <td className={cn(tbl.td, 'whitespace-nowrap text-slate-600')}>
+                      {c.teacherName ?? '—'}
+                      {c.teacherName && c.teacherName === me && <span className="ml-1.5 text-[12px] text-indigo-700">(bạn)</span>}
+                    </td>
                     <td className={cn(tbl.td, 'text-right')} onClick={(e) => e.stopPropagation()}>
                       <PreviewLink href={`/courses/${c.slug}`} />
                     </td>
@@ -384,27 +377,6 @@ const CoursesView: React.FC<{ assign: Assign }> = ({ assign }) => {
                   {open && (
                     <tr>
                       <td colSpan={7} className="border-b border-slate-200 bg-slate-50/60 px-4 pb-4 pt-1">
-                        {assign && (
-                          <div className="mb-3 rounded-md border border-slate-200 bg-white px-3 py-2.5">
-                            <div className="flex flex-wrap items-center justify-between gap-2">
-                              <p className="text-[13px] font-medium text-slate-900">Lớp của khoá ({classesOf(c.id).length})</p>
-                              <Link to={`/teacher/classes?new=1&course=${c.slug}`} className="text-[13px] font-medium text-indigo-700 hover:underline">
-                                + Mở lớp cho khoá này
-                              </Link>
-                            </div>
-                            {classesOf(c.id).length ? (
-                              <div className="mt-2 flex flex-wrap gap-2">
-                                {classesOf(c.id).map((x) => (
-                                  <Link key={x.id} to={`/teacher/classes/${x.id}`} className="rounded-md border border-slate-200 px-2.5 py-1 text-[13px] text-slate-700 hover:border-slate-400 hover:text-slate-900">
-                                    {x.name} <span className="text-slate-400">· {x.studentsCount} học viên</span>
-                                  </Link>
-                                ))}
-                              </div>
-                            ) : (
-                              <p className="mt-1 text-[13px] text-slate-500">Bạn chưa có lớp nào học khoá này.</p>
-                            )}
-                          </div>
-                        )}
                         <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
                           <p className="text-[13px] text-slate-500">{assign ? 'Tích chọn bài rồi giao cho lớp. Học viên học xong và đạt bài tập sau bài thì bài giao tự chấm điểm.' : `${lessons.length} bài theo đúng thứ tự học viên học. Mỗi bài có bài tập sau bài, học viên đạt điểm yêu cầu mới mở bài tiếp.`}</p>
                           {assign && (
@@ -413,30 +385,7 @@ const CoursesView: React.FC<{ assign: Assign }> = ({ assign }) => {
                             </TBtn>
                           )}
                         </div>
-                        <div className="overflow-hidden rounded-md border border-slate-200 bg-white">
-                          {c.sections.map((sec) => (
-                            <div key={sec.id}>
-                              <p className="border-b border-slate-100 bg-slate-50 px-3 py-1.5 text-[12px] font-medium text-slate-500">
-                                {sec.partTitle ? `${sec.partTitle} · ` : ''}
-                                {sec.title}
-                              </p>
-                              {sec.lessons.map((l) => {
-                                const n = lessons.indexOf(l) + 1;
-                                const on = picked.includes(l.id);
-                                return (
-                                  <label key={l.id} className="flex cursor-pointer items-center gap-3 border-b border-slate-100 px-3 py-1.5 text-sm last:border-0 hover:bg-slate-50">
-                                    {assign && <input type="checkbox" checked={on} onChange={() => setPicked((p) => (on ? p.filter((x) => x !== l.id) : [...p, l.id]))} className="h-4 w-4 rounded border-slate-300 accent-indigo-600" />}
-                                    <span className="w-12 shrink-0 tabular-nums text-[12px] text-slate-400">Bài {n}</span>
-                                    <span className="min-w-0 flex-1 truncate text-slate-800">{l.title}</span>
-                                    <span className="hidden w-20 text-[12px] text-slate-500 sm:block">{LESSON_TYPE[l.type] ?? l.type}</span>
-                                    <span className="hidden w-28 text-right text-[12px] tabular-nums text-slate-500 md:block" title="Bài tập sau bài — học viên phải đạt mức này mới qua bài">{exerciseNote(l)}</span>
-                                    <span className="w-14 text-right text-[12px] tabular-nums text-slate-500">{l.durationMin} phút</span>
-                                  </label>
-                                );
-                              })}
-                            </div>
-                          ))}
-                        </div>
+                        <CourseLessonList course={c} picked={picked} onToggle={assign ? (id) => setPicked((p) => (p.includes(id) ? p.filter((x) => x !== id) : [...p, id])) : undefined} />
                       </td>
                     </tr>
                   )}

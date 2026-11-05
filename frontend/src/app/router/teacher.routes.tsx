@@ -4,6 +4,7 @@ import { RoleGuard } from '../guards/RoleGuard';
 import { TeacherLayout } from '@/layouts/teacher/TeacherLayout';
 import { TeacherDashboardPage } from '@/roles/teacher/pages/TeacherDashboardPage';
 import { TeacherClassesPage } from '@/roles/teacher/pages/TeacherClassesPage';
+import { TeacherCoursesPage } from '@/roles/teacher/pages/TeacherCoursesPage';
 import { TeacherClassDetailPage } from '@/roles/teacher/pages/TeacherClassDetailPage';
 import { TeacherAssignmentsPage } from '@/roles/teacher/pages/TeacherAssignmentsPage';
 import { TeacherGradingPage } from '@/roles/teacher/pages/TeacherGradingPage';
@@ -46,7 +47,7 @@ export const teacherRoutes: RouteObject[] = [
               { path: 'attendance/:sessionId', element: <TeacherAttendancePage /> },
               { path: 'gradebook', element: <TeacherGradebookPage /> },
               { path: 'students', element: <TeacherStudentsPage /> },
-              { path: 'courses', element: <Navigate to="/teacher/library/courses" replace /> },
+              { path: 'courses', element: <TeacherCoursesPage /> },
               { path: 'materials', element: <TeacherMaterialsPage /> },
               { path: 'analytics', element: <TeacherAnalyticsPage /> },
               { path: 'notifications', element: <NotificationsPage /> },

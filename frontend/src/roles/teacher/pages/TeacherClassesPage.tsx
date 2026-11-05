@@ -7,12 +7,12 @@ import { errorMessage } from '@/shared/api/client';
 import { teacherApi, useArchivedClasses, useLibCourses, useSessions, useTeacherClasses, useTeacherMutation, type TClassRoom } from '@/shared/api/teacher';
 import { addDays, isoDate } from '@/shared/constants/teacher';
 import type { CourseTrack } from '@/shared/types';
-import { Input, Modal, Select } from '@/shared/components/ui';
 import { cn } from '@/shared/utils';
 import { Meter, Panel, TBtn, TPageHead, TTabs, inputCls } from '../components/TeacherKit';
 import { Img, PHOTOS } from '@/shared/components/media/Img';
 import { TError, TLoading } from '../components/TeacherState';
-import { CLASS_TRACKS, classTrack, classTrackLabel, courseOptions, distinctStudents } from '@/shared/constants/staff';
+import { CLASS_TRACKS, classTrack, classTrackLabel, distinctStudents } from '@/shared/constants/staff';
+import { OpenClassDialog } from '../components/OpenClassDialog';
 
 const EMPTY_FORM = { name: '', course: '', schedule: '', room: '' };
 
@@ -29,8 +29,6 @@ export const TeacherClassesPage: React.FC = () => {
   const [search, setSearch] = useState('');
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState(EMPTY_FORM);
-  const [error, setError] = useState('');
-  const createClass = useTeacherMutation(teacherApi.createClass);
   const [view, setView] = useState<'active' | 'archived'>('active');
   const archivedQ = useArchivedClasses(view === 'archived');
   const reopen = useTeacherMutation((id: string) => teacherApi.archiveClass(id, false));
@@ -69,25 +67,7 @@ export const TeacherClassesPage: React.FC = () => {
 
   const openCreate = (course = '') => {
     setForm({ ...EMPTY_FORM, course });
-    setError('');
     setOpen(true);
-  };
-
-  const create = () => {
-    if (form.name.trim().length < 2) return setError('Vui lòng nhập tên lớp');
-    if (!form.course) return setError('Chọn khoá học của lớp');
-    createClass.mutate(
-      { name: form.name.trim(), courseId: form.course, schedule: form.schedule.trim() || null, room: form.room.trim() || null },
-      {
-        onSuccess: (c) => {
-          setOpen(false);
-          setForm(EMPTY_FORM);
-          setError('');
-          toast.success('Đã mở lớp mới', `${c.course?.title ?? ''} · mã mời ${c.code}`);
-        },
-        onError: (e) => setError(errorMessage(e)),
-      }
-    );
   };
 
   if (isLoading) return <TLoading />;
@@ -152,7 +132,7 @@ export const TeacherClassesPage: React.FC = () => {
     <div className="space-y-6">
       <TPageHead
         eyebrow="Khoá học & Lớp"
-        title="Lớp học của tôi"
+        title="Tất cả lớp của tôi"
         sub="Mỗi lớp thuộc một khoá học: học viên vào lớp được ghi danh khoá đó, giáo viên theo dõi tiến độ khoá, giao bài, điểm danh trong lớp."
         actions={
           <TBtn variant="primary" icon={<Plus />} onClick={() => openCreate()}>
@@ -214,7 +194,7 @@ export const TeacherClassesPage: React.FC = () => {
               </div>
               {g.course ? (
                 <span className="flex items-center gap-3 text-[13px]">
-                  <Link to={`/teacher/library/courses?open=${g.course.id}`} className="font-medium text-slate-600 hover:text-slate-900 hover:underline">
+                  <Link to={`/teacher/courses?open=${g.course.id}`} className="font-medium text-slate-600 hover:text-slate-900 hover:underline">
                     Bài trong khoá
                   </Link>
                   {view === 'active' && (
@@ -232,38 +212,7 @@ export const TeacherClassesPage: React.FC = () => {
         ))
       )}
 
-      <Modal
-        open={open}
-        onClose={() => setOpen(false)}
-        title="Mở lớp học"
-        description="Lớp thuộc một khoá học; mã mời được tạo tự động sau khi lưu."
-        icon={<Users />}
-        footer={
-          <>
-            <TBtn variant="ghost" onClick={() => setOpen(false)}>
-              Huỷ
-            </TBtn>
-            <TBtn variant="primary" onClick={create} disabled={createClass.isPending}>
-              {createClass.isPending ? 'Đang mở…' : 'Mở lớp'}
-            </TBtn>
-          </>
-        }
-      >
-        <div className="space-y-4">
-          <Select
-            label="Khoá học"
-            required
-            placeholder="Chọn khoá học của lớp"
-            options={courseOptions(courses)}
-            value={form.course}
-            onChange={(e) => setForm((f) => ({ ...f, course: e.target.value }))}
-            hint="Học viên vào lớp được ghi danh khoá này; giáo viên theo dõi tiến độ khoá trong lớp"
-          />
-          <Input label="Tên lớp" required placeholder="VD: TOEIC 650+ K13" value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} error={error} />
-          <Input label="Lịch học" placeholder="VD: T2 – T4 – T6 · 19:00" value={form.schedule} onChange={(e) => setForm((f) => ({ ...f, schedule: e.target.value }))} />
-          <Input label="Phòng học" placeholder="VD: Phòng 302 hoặc Online" value={form.room} onChange={(e) => setForm((f) => ({ ...f, room: e.target.value }))} />
-        </div>
-      </Modal>
+      <OpenClassDialog open={open} course={form.course || undefined} onClose={() => setOpen(false)} />
     </div>
   );
 };

@@ -224,13 +224,13 @@ export const TeacherClassDetailPage: React.FC = () => {
   return (
     <div className="space-y-6">
       <nav aria-label="Breadcrumb" className="flex items-center gap-1 text-[13px] text-slate-500">
-        <Link to="/teacher/classes" className="hover:text-slate-900 hover:underline underline-offset-2">
-          Lớp học
+        <Link to={cls.course?.track ? `/teacher/courses?muc=${cls.course.track.toLowerCase()}` : '/teacher/classes'} className="hover:text-slate-900 hover:underline underline-offset-2">
+          {cls.course?.track ? { TOEIC: 'Khoá học TOEIC', VSTEP: 'Khoá học VSTEP', THPT: 'Tiếng Anh THPT' }[cls.course.track] : 'Lớp học'}
         </Link>
         <ChevronRight className="h-3.5 w-3.5 text-slate-400" />
         {cls.course && (
           <>
-            <Link to={`/teacher/library/courses?open=${cls.course.id}`} className="hover:text-slate-900 hover:underline underline-offset-2">
+            <Link to={`/teacher/courses?open=${cls.course.id}`} className="hover:text-slate-900 hover:underline underline-offset-2">
               {cls.course.title}
             </Link>
             <ChevronRight className="h-3.5 w-3.5 text-slate-400" />
@@ -600,11 +600,11 @@ export const TeacherClassDetailPage: React.FC = () => {
           course={cls.course}
           progress={cls.courseProgress}
           students={students}
-          courseHref={cls.course ? `/teacher/library/courses?open=${cls.course.id}` : undefined}
+          courseHref={cls.course ? `/teacher/courses?open=${cls.course.id}` : undefined}
           action={
             cls.course ? (
               <span className="flex items-center gap-3 text-[13px]">
-                <Link to={`/teacher/library/courses?open=${cls.course.id}`} className="font-medium text-slate-600 hover:underline">
+                <Link to={`/teacher/courses?open=${cls.course.id}`} className="font-medium text-slate-600 hover:underline">
                   Bài trong khoá
                 </Link>
                 <button type="button" onClick={() => navigate('/teacher/assignments', { state: { assign: { kind: 'LESSON', courseId: cls.course!.slug, lessonIds: [] }, classId: cls.id } })} className="font-medium text-indigo-700 hover:underline">

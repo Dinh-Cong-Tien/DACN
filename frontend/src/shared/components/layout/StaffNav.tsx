@@ -26,6 +26,8 @@ export interface StaffMenu {
   /** Icon cấp 1; mặc định tra theo nhãn trong STAFF_TOP_ICON */
   icon?: LucideIcon;
   badge?: string;
+  /** Trang khác cũng thuộc mục này (vd lớp học nằm trong Khoá học & Lớp) */
+  activeOn?: string[];
   children?: StaffMenuLink[];
 }
 
@@ -68,7 +70,7 @@ export const StaffNav: React.FC<{ menus: StaffMenu[]; label: string }> = ({ menu
               {m.badge && <Count n={m.badge} />}
             </NavLink>
           );
-        const active = (m.to && pathname.startsWith(m.to.split('?')[0])) || m.children.some((c) => isHere(c, pathname, search));
+        const active = (m.to && pathname.startsWith(m.to.split('?')[0])) || m.activeOn?.some((p) => pathname.startsWith(p)) || m.children.some((c) => isHere(c, pathname, search));
         return (
           <div key={m.label} className="group/menu relative" onMouseEnter={measure(m.label)} onFocus={measure(m.label)}>
             <button type="button" className={topCls(Boolean(active))} aria-haspopup="true">

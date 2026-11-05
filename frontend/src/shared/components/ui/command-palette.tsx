@@ -85,7 +85,7 @@ const TEACHER: Cmd[] = [
   { id: 'students', label: 'Hồ sơ học viên', group: 'Trang', to: '/teacher/students', icon: Users },
   { id: 'gradebook', label: 'Bảng điểm', group: 'Trang', to: '/teacher/gradebook', icon: Sheet, keywords: 'diem qua trinh xuat excel' },
   { id: 'analytics', label: 'Thống kê lớp học', group: 'Trang', to: '/teacher/analytics', icon: BarChart3 },
-  { id: 'lib-courses', label: 'Khoá học & bài giảng', group: 'Trang', to: '/teacher/library/courses', icon: PlayCircle },
+  { id: 'lib-courses', label: 'Khoá học & Lớp', group: 'Trang', to: '/teacher/courses', icon: PlayCircle },
   { id: 'lib-tests', label: 'Ngân hàng đề', group: 'Trang', to: '/teacher/library/tests', icon: FileText },
   { id: 'lib-practice', label: 'Ngữ pháp & Từ vựng', group: 'Trang', to: '/teacher/library/practice', icon: BookOpen },
   { id: 'materials', label: 'Tài liệu lớp', group: 'Trang', to: '/teacher/materials', icon: FolderOpen },
@@ -200,7 +200,7 @@ export const CommandPalette: React.FC = () => {
       const students: Cmd[] = classStudents.map((s) => ({ id: `st-${s.id}`, label: s.name, hint: `${s.email} · điểm ${s.avgScore}`, group: 'Học viên', to: `/teacher/students?id=${s.id}`, icon: Users }));
       const assignments: Cmd[] = assignmentList.map((a) => ({ id: `as-${a.id}`, label: a.title, hint: `${a.className} · đã nộp ${a.submitted}/${a.total}`, group: 'Bài tập', to: `/teacher/assignments${a.status === 'DRAFT' ? '?status=DRAFT' : ''}`, icon: ClipboardList }));
       const tests: Cmd[] = testList.map((t) => ({ id: `t-${t.id}`, label: t.title, hint: `${t.examType} · ${t.totalQuestions} câu · ${t.durationMinutes} phút`, group: 'Ngân hàng đề', to: `/teacher/library/tests?tab=${t.examType}`, icon: FileText }));
-      const courses: Cmd[] = courseList.map((c) => ({ id: `c-${c.id}`, label: c.title, hint: `${c.lessonsCount} bài giảng`, group: 'Khoá học', to: `/teacher/library/courses?open=${c.id}`, icon: PlayCircle }));
+      const courses: Cmd[] = courseList.map((c) => ({ id: `c-${c.id}`, label: c.title, hint: `${c.lessonsCount} bài giảng`, group: 'Khoá học', to: `/teacher/courses?open=${c.id}`, icon: PlayCircle }));
       return [...TEACHER, ...classes, ...students, ...assignments, ...tests, ...courses];
     }
     if (role === 'HEAD_TEACHER') {

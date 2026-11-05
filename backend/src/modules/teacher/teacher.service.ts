@@ -107,9 +107,19 @@ export const recomputeRisk = (classId: string) => syncRiskCache([classId]);
 export async function toClassRooms(classes: (Class & { teacher: Pick<User, 'fullName'>; course?: Parameters<typeof courseOfClass>[0]['course'] })[]) {
   if (!classes.length) return [];
   const metrics = await classMetrics(classes);
+  // tiến độ khoá học trung bình của học viên trong lớp (lớp nằm trong khoá)
+  const courseIds = [...new Set(classes.map((c) => c.courseId).filter((x): x is string => !!x))];
+  const allStudents = [...new Set([...metrics.values()].flatMap((m) => m.studentIds))];
+  const enrolls = courseIds.length && allStudents.length ? await prisma.courseEnrollment.findMany({ where: { courseId: { in: courseIds }, userId: { in: allStudents } }, select: { courseId: true, userId: true, progressPct: true } }) : [];
+  const courseProgressOf = (c: Class, ids: string[]) => {
+    if (!c.courseId || !ids.length) return undefined;
+    const rows = enrolls.filter((e) => e.courseId === c.courseId && ids.includes(e.userId));
+    return Math.round(rows.reduce((t, e) => t + Number(e.progressPct), 0) / ids.length);
+  };
   return classes.map((c) => {
     const m = metrics.get(c.id)!;
     return {
+      courseProgressPct: courseProgressOf(c, m.studentIds),
       id: c.id,
       name: c.name,
       code: c.code,

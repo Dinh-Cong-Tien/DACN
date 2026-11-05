@@ -23,17 +23,13 @@ export const buildTeacherMenus = (classes: TClassRoom[], toGrade: number, drafts
     // lớp học nằm trong khoá học: một mục chung — khoá theo 3 mục như học viên, lớp đang dạy kèm tên khoá
     label: 'Khoá học & Lớp',
     icon: PlayCircle,
-    to: '/teacher/classes',
+    to: '/teacher/courses',
+    activeOn: ['/teacher/classes'],
+    // chỉ 3 mục khoá như học viên; chọn mục → từng khoá hiện các lớp của khoá trước, rồi bài giảng
     children: [
-      { to: '/teacher/library/courses?muc=toeic', label: 'Khoá học TOEIC', icon: Briefcase, desc: 'Nền tảng, Listening Part 1–4, Reading Part 5–7', group: 'Khoá học' },
-      { to: '/teacher/library/courses?muc=vstep', label: 'Khoá học VSTEP', icon: GraduationCap, desc: 'Nền tảng, Nghe, Đọc, Viết, Nói', group: 'Khoá học' },
-      { to: '/teacher/library/courses?muc=thpt', label: 'Tiếng Anh THPT', icon: School, desc: 'Lớp 10, 11, 12 theo SGK Global Success', group: 'Khoá học' },
-      ...[...classes]
-        .sort((a, b) => CLASS_TRACKS.findIndex((t) => t.key === classTrack(a)) - CLASS_TRACKS.findIndex((t) => t.key === classTrack(b)) || (a.course?.title ?? '').localeCompare(b.course?.title ?? ''))
-        .map((c) => ({ to: `/teacher/classes/${c.id}`, label: c.name, icon: TRACK_ICON[classTrack(c)], desc: `${c.course?.title ?? 'Chưa gắn khoá học'} · ${c.studentsCount} học viên`, group: 'Lớp đang dạy' })),
-      { to: '/teacher/classes', label: 'Tất cả lớp', icon: Users, desc: 'Lớp nhóm theo khoá, mã mời, mở lớp mới', exact: true, group: 'Trong lớp' },
-      { to: '/teacher/schedule', label: 'Lịch dạy', icon: CalendarDays, desc: 'Buổi dạy trong tuần, phòng học, giáo án', group: 'Trong lớp' },
-      { to: '/teacher/attendance', label: 'Điểm danh', icon: ClipboardCheck, desc: 'Điểm danh buổi hôm nay, sổ điểm danh cả khoá', group: 'Trong lớp' },
+      { to: '/teacher/courses?muc=toeic', label: 'Khoá học TOEIC', icon: Briefcase, desc: 'Nền tảng, Listening Part 1–4, Reading Part 5–7' },
+      { to: '/teacher/courses?muc=vstep', label: 'Khoá học VSTEP', icon: GraduationCap, desc: 'Nền tảng, Nghe, Đọc, Viết, Nói' },
+      { to: '/teacher/courses?muc=thpt', label: 'Tiếng Anh THPT', icon: School, desc: 'Lớp 10, 11, 12 theo SGK Global Success' },
     ],
   },
   {

@@ -215,4 +215,17 @@ export const EXTRA_EN: Record<string, string> = {
   "Khoá học": "Course",
   "Chưa gắn khoá": "No course",
   "Đúng các khoá học viên đang học, chia 3 mục TOEIC, VSTEP, Tiếng Anh THPT. Mỗi khoá gồm bài giảng và các lớp học khoá đó: mở lớp cho khoá, tích chọn bài để giao cho lớp.": "The same courses your students take, in 3 tracks: TOEIC, VSTEP and High school English. Each course has its lessons and the classes taking it: open a class for a course, tick lessons to assign to a class.",
+  // ---------- khoá học → lớp của khoá (11/2026) ----------
+  "Lịch dạy tuần": "Weekly schedule",
+  "Buổi dạy của mọi lớp, phòng học, giáo án": "Sessions of all classes, rooms, lesson plans",
+  "Điểm danh buổi hôm nay, sổ điểm danh từng lớp": "Take today's attendance, each class's register",
+  "Tất cả lớp": "All classes",
+  "Tất cả lớp của tôi": "All my classes",
+  "{v0} khoá · {v1} lớp bạn đang dạy. Mỗi khoá gồm các lớp học khoá đó và bài giảng theo đúng thứ tự học viên học.": "{v0} courses · {v1} classes you teach. Each course lists the classes taking it, then its lessons in the order students study them.",
+  "Mục này chưa có khoá học nào được xuất bản": "No published courses in this track yet",
+  "Chưa có lớp nào học khoá này.": "No class is taking this course yet.",
+  "Mở lớp đầu tiên cho khoá": "Open the first class for this course",
+  "Tiến độ khoá": "Course progress",
+  "Bài giảng trong khoá ({v0})": "Lessons in this course ({v0})",
+  "Giao {v0} bài đã chọn": "Assign {v0} selected lessons",
 };
