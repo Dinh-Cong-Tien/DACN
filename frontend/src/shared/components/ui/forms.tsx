@@ -90,7 +90,8 @@ export interface SelectProps extends React.SelectHTMLAttributes<HTMLSelectElemen
   label?: string;
   hint?: string;
   error?: string;
-  options: { value: string; label: string }[];
+  /** `group` → các lựa chọn cùng nhóm hiện trong <optgroup> */
+  options: { value: string; label: string; group?: string }[];
   placeholder?: string;
   inputSize?: 'sm' | 'md';
 }
@@ -103,11 +104,23 @@ export const Select: React.FC<SelectProps> = ({ label, hint, error, options, pla
       <div className="relative">
         <select id={sid} className={cn(baseInput, inputSize === 'sm' ? 'h-9 text-xs' : 'h-11', 'pl-4 pr-10 appearance-none cursor-pointer', className)} {...rest}>
           {placeholder && <option value="">{placeholder}</option>}
-          {options.map((o) => (
-            <option key={o.value} value={o.value}>
-              {o.label}
-            </option>
-          ))}
+          {options.some((o) => o.group)
+            ? [...new Set(options.map((o) => o.group ?? ''))].map((g) => (
+                <optgroup key={g || '_'} label={g}>
+                  {options
+                    .filter((o) => (o.group ?? '') === g)
+                    .map((o) => (
+                      <option key={o.value} value={o.value}>
+                        {o.label}
+                      </option>
+                    ))}
+                </optgroup>
+              ))
+            : options.map((o) => (
+                <option key={o.value} value={o.value}>
+                  {o.label}
+                </option>
+              ))}
         </select>
         <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
       </div>

@@ -11,9 +11,10 @@ import { Img, PHOTOS } from '@/shared/components/media/Img';
 import { CrudEditor } from '@/engines';
 import { Figures, Status, TPageHead } from '@/roles/teacher/components/TeacherKit';
 import { distinctStudents } from '@/shared/constants/staff';
-import { CLASS_TRACK_OPTIONS, classTrack, classTrackLabel } from '@/shared/constants/staff';
+import { CLASS_TRACK_OPTIONS, classTrack, classTrackLabel, courseOptions } from '@/shared/constants/staff';
+import { useCourses } from '@/shared/api/catalog';
 
-type Row = HeadClass & { locked?: boolean; teacherId: string; trackKey: string };
+type Row = HeadClass & { locked?: boolean; teacherId: string; trackKey: string; courseKey: string };
 const EMPTY: Row[] = [];
 
 /** Toàn bộ lớp trên hệ thống: mã mời học viên dùng để vào lớp, giáo viên phụ trách, trạng thái */
@@ -22,8 +23,9 @@ export const AdminClassesPage: React.FC = () => {
   const navigate = useNavigate();
   const classesQ = useAdminClasses();
   const usersQ = useAdminUsers();
+  const courses = useCourses().data ?? [];
   const refresh = useAdminInvalidate();
-  const rows = useMemo<Row[]>(() => (classesQ.data ?? EMPTY).map((c) => ({ ...c, trackKey: classTrack(c), locked: !!c.isArchived })), [classesQ.data]);
+  const rows = useMemo<Row[]>(() => (classesQ.data ?? EMPTY).map((c) => ({ ...c, trackKey: classTrack(c), courseKey: c.course?.slug ?? '', locked: !!c.isArchived })), [classesQ.data]);
   const teacherList = useMemo(
     () => (usersQ.data?.items ?? []).filter((u) => u.role === 'TEACHER' || u.role === 'HEAD_TEACHER').map((u) => ({ id: u.id, name: u.fullName, status: u.status, subject: u.role === 'HEAD_TEACHER' ? 'Trưởng bộ môn' : 'Giáo viên' })),
     [usersQ.data]
@@ -63,7 +65,7 @@ export const AdminClassesPage: React.FC = () => {
       ),
     },
     { key: 'code', header: 'Mã mời', render: (r) => <span className="whitespace-nowrap rounded-md bg-slate-100 px-1.5 py-0.5 font-mono text-[12px] font-semibold text-slate-700">{r.code}</span> },
-    { key: 'trackKey', header: 'Mục', render: (r) => <span className="whitespace-nowrap text-[13px] text-slate-700">{classTrackLabel(r)}</span> },
+    { key: 'courseKey', header: 'Khoá học', render: (r) => <span className="text-[13px] text-slate-700">{r.course?.title ?? <span className="text-slate-400">Chưa gắn khoá</span>}<span className="block text-[12px] text-slate-500">{classTrackLabel(r)}</span></span> },
     {
       key: 'teacherName',
       header: 'Giáo viên',
@@ -93,14 +95,14 @@ export const AdminClassesPage: React.FC = () => {
         rows={rows}
         loading={classesQ.isLoading}
         onCreate={async (v) => {
-          const c = await headApi.createClass({ name: v.name, track: v.trackKey, teacherId: v.teacherId, room: v.room || undefined, scheduleText: v.schedule || undefined });
+          const c = await headApi.createClass({ name: v.name, courseId: v.courseKey, teacherId: v.teacherId, room: v.room || undefined, scheduleText: v.schedule || undefined });
           void refresh();
-          return { ...c, trackKey: classTrack(c), locked: false } as Row;
+          return { ...c, trackKey: classTrack(c), courseKey: c.course?.slug ?? '', locked: false } as Row;
         }}
         onUpdate={async (row, v) => {
-          const c = await adminApi.updateClass(row.id, { name: v.name, track: v.trackKey, teacherId: v.teacherId !== row.teacherId ? v.teacherId : undefined, room: v.room ?? null, scheduleText: v.schedule ?? null });
+          const c = await adminApi.updateClass(row.id, { name: v.name, courseId: v.courseKey || undefined, teacherId: v.teacherId !== row.teacherId ? v.teacherId : undefined, room: v.room ?? null, scheduleText: v.schedule ?? null });
           void refresh();
-          return { ...c, trackKey: classTrack(c), locked: !!c.isArchived } as Row;
+          return { ...c, trackKey: classTrack(c), courseKey: c.course?.slug ?? '', locked: !!c.isArchived } as Row;
         }}
         onDelete={async (row) => {
           await adminApi.deleteClass(row.id);
@@ -115,10 +117,10 @@ export const AdminClassesPage: React.FC = () => {
           { key: 'trackKey', label: 'Mục', options: CLASS_TRACK_OPTIONS },
           { key: 'teacherName', label: 'Giáo viên', options: [...new Set(rows.map((r) => r.teacherName))].map((n) => ({ value: n, label: n })) },
         ]}
-        defaultValues={{ trackKey: 'TOEIC', teacherId: teacherList.find((t) => t.status === 'ACTIVE')?.id, room: '' }}
+        defaultValues={{ courseKey: '', teacherId: teacherList.find((t) => t.status === 'ACTIVE')?.id, room: '' }}
         fields={[
           { key: 'name', label: 'Tên lớp', required: true, colSpan: 2 },
-          { key: 'trackKey', label: 'Mục lớp học', type: 'select', options: CLASS_TRACK_OPTIONS },
+          { key: 'courseKey', label: 'Khoá học', type: 'select', required: true, options: courseOptions(courses) },
           { key: 'teacherId', label: 'Giáo viên phụ trách', type: 'select', required: true, options: teacherList.filter((t) => t.status === 'ACTIVE').map((t) => ({ value: t.id, label: t.name })) },
           { key: 'schedule', label: 'Lịch học', placeholder: 'T2 – T4 · 19:00' },
           { key: 'room', label: 'Phòng / hình thức', placeholder: 'Phòng 302 hoặc Online · Google Meet' },

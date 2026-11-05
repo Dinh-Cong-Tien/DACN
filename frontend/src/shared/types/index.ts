@@ -359,6 +359,8 @@ export interface ClassRoom {
   examType: ExamType;
   /** Mục của lớp — trùng 3 mục khoá học: TOEIC / VSTEP / Tiếng Anh THPT (lớp THPT chấm thang 10 như VSTEP) */
   track?: CourseTrack;
+  /** Khoá học của lớp — lớp nằm trong khoá, học viên vào lớp được ghi danh khoá */
+  course?: ClassCourse;
   teacherName: string;
   studentsCount: number;
   assignmentsCount: number;
@@ -371,6 +373,31 @@ export interface ClassRoom {
   room?: string;
   gradient: string;
   coverUrl?: string;
+}
+
+/** Khoá học của lớp */
+export interface ClassCourse {
+  id: string;
+  slug: string;
+  title: string;
+  track?: CourseTrack;
+  trackGroup?: string;
+}
+
+/** Tiến độ khoá học của từng học viên trong lớp */
+export interface ClassCourseProgress {
+  lessonsTotal: number;
+  students: {
+    studentId: string;
+    enrolled: boolean;
+    lessonsDone: number;
+    progressPct: number;
+    /** Điểm bài tập sau bài trung bình (%) của các bài đã xong */
+    avgExercisePct: number | null;
+    /** Bài tiếp theo cần học (null = đã học hết khoá) */
+    currentLesson: string | null;
+    lastStudyAt: string | null;
+  }[];
 }
 
 export interface ClassStudent {

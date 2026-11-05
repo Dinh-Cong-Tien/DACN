@@ -8,7 +8,7 @@ import { prisma } from '../../lib/prisma';
 import { badRequest, conflict, forbidden, handler, me, notFound, parse } from '../../core/http';
 import { iso } from '../../core/dto';
 import { classGradient, classMetrics } from '../../core/metrics';
-import { trackOfClass } from '../catalog/class-track';
+import { classCourseSelect, courseOfClass, enrollClassCourse, trackOfClass } from '../catalog/class-track';
 
 export const classesRouter = Router();
 
@@ -20,7 +20,7 @@ async function myMembership(classId: string, userId: string) {
 }
 
 /** ClassRoom — số liệu theo định nghĩa chung core/metrics.ts (khớp với giáo viên, trưởng bộ môn, admin) */
-async function toClassRoom(c: Class & { teacher: { fullName: string } }) {
+async function toClassRoom(c: Class & { teacher: { fullName: string }; course?: Parameters<typeof courseOfClass>[0]['course'] }) {
   const m = (await classMetrics([c])).get(c.id)!;
   return {
     id: c.id,
@@ -28,6 +28,7 @@ async function toClassRoom(c: Class & { teacher: { fullName: string } }) {
     code: c.code,
     examType: c.examType,
     track: trackOfClass(c),
+    course: courseOfClass(c),
     teacherName: c.teacher.fullName,
     studentsCount: m.studentsCount,
     assignmentsCount: m.assignmentsCount,
@@ -119,7 +120,7 @@ classesRouter.get(
   handler(async (req) => {
     const rows = await prisma.classMember.findMany({
       where: { studentId: me(req).id, status: 'ACTIVE', class: { deletedAt: null } },
-      include: { class: { include: { teacher: { select: { fullName: true } } } } },
+      include: { class: { include: { teacher: { select: { fullName: true } }, course: classCourseSelect } } },
       orderBy: { joinedAt: 'desc' },
     });
     return Promise.all(rows.map((r) => toClassRoom(r.class)));
@@ -132,7 +133,7 @@ classesRouter.post(
   handler(async (req) => {
     const userId = me(req).id;
     const { code } = parse(z.object({ code: z.string().trim().min(3).max(16) }), req.body);
-    const c = await prisma.class.findFirst({ where: { code: { equals: code, mode: 'insensitive' }, deletedAt: null }, include: { teacher: { select: { fullName: true } } } });
+    const c = await prisma.class.findFirst({ where: { code: { equals: code, mode: 'insensitive' }, deletedAt: null }, include: { teacher: { select: { fullName: true } }, course: classCourseSelect } });
     if (!c || c.isArchived) throw notFound('Lớp với mã này');
     const existing = await prisma.classMember.findUnique({ where: { classId_studentId: { classId: c.id, studentId: userId } } });
     if (existing?.status === 'ACTIVE') throw conflict('Bạn đã ở trong lớp này', 'ALREADY_MEMBER');
@@ -146,6 +147,8 @@ classesRouter.post(
         create: { classId: c.id, studentId: userId },
         update: { status: 'ACTIVE', joinedAt: new Date() },
       });
+      // vào lớp = học theo khoá của lớp
+      await enrollClassCourse(tx, c.courseId, [userId]);
       // Bài đang mở của lớp → tạo sẵn submission TODO cho học viên mới
       const open = await tx.assignment.findMany({ where: { classId: c.id, deletedAt: null, status: 'OPEN' }, select: { id: true } });
       if (open.length) await tx.assignmentSubmission.createMany({ data: open.map((a) => ({ assignmentId: a.id, studentId: userId })), skipDuplicates: true });

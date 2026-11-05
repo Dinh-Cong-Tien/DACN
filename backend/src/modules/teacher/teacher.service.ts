@@ -7,7 +7,7 @@ import { prisma } from '../../lib/prisma';
 import { forbidden, notFound, type AuthUser } from '../../core/http';
 import { iso, num, ymd } from '../../core/dto';
 import { aggregateStudents, classGradient, classMetrics, marksOf, rateOf, riskLevel, round1, syncRiskCache } from '../../core/metrics';
-import { trackOfClass } from '../catalog/class-track';
+import { courseOfClass, trackOfClass } from '../catalog/class-track';
 
 // ---------------- Quyền sở hữu ----------------
 
@@ -104,7 +104,7 @@ export const recomputeRisk = (classId: string) => syncRiskCache([classId]);
 // ---------------- DTO ----------------
 
 /** ClassRoom (kèm số liệu thật) cho danh sách lớp. */
-export async function toClassRooms(classes: (Class & { teacher: Pick<User, 'fullName'> })[]) {
+export async function toClassRooms(classes: (Class & { teacher: Pick<User, 'fullName'>; course?: Parameters<typeof courseOfClass>[0]['course'] })[]) {
   if (!classes.length) return [];
   const metrics = await classMetrics(classes);
   return classes.map((c) => {
@@ -115,6 +115,7 @@ export async function toClassRooms(classes: (Class & { teacher: Pick<User, 'full
       code: c.code,
       examType: c.examType,
       track: trackOfClass(c),
+      course: courseOfClass(c),
       level: c.level ?? undefined,
       description: c.description ?? undefined,
       teacherId: c.teacherId,

@@ -25,7 +25,7 @@ import {
 } from './shared';
 import { oversightRouter } from './head.oversight';
 import { summaryRouter } from './head.summary';
-import { CLASS_TRACK, classTrackData } from '../catalog/class-track';
+import { CLASS_TRACK, classCourseData, classCourseProgress, classTrackData, enrollClassCourse } from '../catalog/class-track';
 
 export const headRouter = Router();
 headRouter.use(auth, allow('HEAD_TEACHER'), refreshLiveAfterWrite);
@@ -271,6 +271,8 @@ headRouter.get(
       class: toClassRoom(c, stats),
       analytics: await classAnalytics(c.id, c.examType),
       students,
+      // tiến độ khoá học của lớp (cùng số liệu giáo viên thấy)
+      courseProgress: c.courseId ? await classCourseProgress(c.courseId, students.map((s) => s.id)) : undefined,
       sessions: sessions.map(toSessionRow),
       observations: sessions.filter((s) => s.observation).map((s) => toObservation({ ...s, class: { id: c.id, teacher: { fullName: c.teacher.fullName } } })),
       assignments: assignments.map((a) => {
@@ -328,6 +330,8 @@ headRouter.post(
 const classBody = z.object({
   name: z.string().trim().min(2).max(160),
   code: z.string().trim().min(3).max(16).optional(),
+  /** Khoá học của lớp (id hoặc slug) */
+  courseId: z.string().trim().min(1).max(140).optional(),
   track: CLASS_TRACK.optional(),
   examType: z.enum(['TOEIC', 'VSTEP']).optional(),
   teacherId: uuid,
@@ -352,9 +356,9 @@ headRouter.post(
     const departmentId = body.departmentId ?? scope?.[0];
     if (scope && departmentId && !scope.includes(departmentId)) throw forbidden();
     await assertTeacherInScope(body.teacherId, scope);
-    const tr = classTrackData(body);
-    if (!tr.examType) throw badRequest('Chọn mục của lớp (TOEIC, VSTEP hoặc Tiếng Anh THPT)');
-    const c = await prisma.class.create({ data: { ...body, ...tr, examType: tr.examType, departmentId, code: body.code ?? genCode() }, include: classInclude });
+    if (!body.courseId) throw badRequest('Chọn khoá học của lớp', 'COURSE_REQUIRED');
+    const cc = await classCourseData(body.courseId);
+    const c = await prisma.class.create({ data: { ...body, ...cc, departmentId, code: body.code ?? genCode() }, include: classInclude });
     await audit(req, 'CLASS_CREATE', 'class', c.id, { after: { name: c.name, teacherId: c.teacherId } });
     await notify([c.teacherId], { type: 'CLASS', title: 'Bạn được phân công lớp mới', message: `${c.name} · mã lớp ${c.code}`, link: `/teacher/classes/${c.id}`, refType: 'CLASS', refId: c.id });
     return toClassRoom(c);
@@ -369,7 +373,13 @@ headRouter.patch(
     const body = parse(classBody.partial().extend({ isArchived: z.boolean().optional() }), req.body);
     const scope = await scopeOf(req);
     if (body.teacherId) await assertTeacherInScope(body.teacherId, scope);
-    const updated = await prisma.class.update({ where: { id: c.id }, data: { ...body, ...classTrackData(body) }, include: classInclude });
+    const cc = body.courseId ? await classCourseData(body.courseId) : null;
+    const { courseId: _cid, ...rest } = body;
+    const updated = await prisma.$transaction(async (tx) => {
+      const row = await tx.class.update({ where: { id: c.id }, data: { ...rest, ...classTrackData(rest), ...(cc ?? {}) }, include: classInclude });
+      if (cc && cc.courseId !== c.courseId) await enrollClassCourse(tx, cc.courseId, (await tx.classMember.findMany({ where: { classId: c.id, status: 'ACTIVE' }, select: { studentId: true } })).map((m) => m.studentId));
+      return row;
+    });
     if (body.teacherId && body.teacherId !== c.teacherId) {
       await audit(req, 'CLASS_REASSIGN', 'class', c.id, { severity: 'WARN', before: { teacherId: c.teacherId }, after: { teacherId: body.teacherId } });
       await notify([body.teacherId], { type: 'CLASS', title: 'Bạn được phân công phụ trách lớp', message: updated.name, link: `/teacher/classes/${c.id}`, refType: 'CLASS', refId: c.id });

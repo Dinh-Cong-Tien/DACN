@@ -15,8 +15,8 @@ import { Avatar, ConfirmDialog, Input, Modal, Select, Textarea } from '@/shared/
 import { Figures, IconTile, Meter, Panel, Status, TBtn, TTabs, inputCls, tbl, type StatusTone } from '../components/TeacherKit';
 import { TEmpty, TError, TLoading } from '../components/TeacherState';
 import { ClassLeaderboardPanel } from '../components/ClassLeaderboard';
-import { CLASS_TRACK_OPTIONS, classTrack, classTrackLabel } from '@/shared/constants/staff';
-import type { CourseTrack } from '@/shared/types';
+import { classTrack, classTrackLabel, courseOptions } from '@/shared/constants/staff';
+import { ClassCourseProgressPanel } from '../components/ClassCourseProgress';
 
 const STATUS: Record<ClassStudent['status'], { label: string; tone: StatusTone }> = {
   GOOD: { label: 'Ổn định', tone: 'green' },
@@ -157,7 +157,7 @@ export const TeacherClassDetailPage: React.FC = () => {
   const fail = (what: string) => (e: unknown) => toast.error(what, errorMessage(e));
 
   const openEdit = () => {
-    setClassForm({ name: cls.name, track: classTrack(cls), schedule: cls.schedule ?? '', room: cls.room ?? '', level: cls.level ?? '', description: cls.description ?? '', maxStudents: cls.maxStudents ?? null, startDate: cls.startDate ?? null, endDate: cls.endDate ?? null });
+    setClassForm({ name: cls.name, ...(cls.course ? { courseId: cls.course.slug } : { track: classTrack(cls) }), schedule: cls.schedule ?? '', room: cls.room ?? '', level: cls.level ?? '', description: cls.description ?? '', maxStudents: cls.maxStudents ?? null, startDate: cls.startDate ?? null, endDate: cls.endDate ?? null });
     setEditOpen(true);
   };
   const saveClass = () => {
@@ -165,7 +165,7 @@ export const TeacherClassDetailPage: React.FC = () => {
     if (classForm.name.trim().length < 2) return toast.error('Tên lớp cần ít nhất 2 ký tự');
     if (classForm.startDate && classForm.endDate && classForm.endDate < classForm.startDate) return toast.error('Ngày kết thúc phải sau ngày bắt đầu');
     updateClass.mutate(
-      { ...classForm, name: classForm.name.trim(), schedule: classForm.schedule?.trim() || null, room: classForm.room?.trim() || null, level: classForm.level?.trim() || null, description: classForm.description?.trim() || null, startDate: classForm.startDate || null, endDate: classForm.endDate || null },
+      { ...classForm, courseId: classForm.courseId || undefined, name: classForm.name.trim(), schedule: classForm.schedule?.trim() || null, room: classForm.room?.trim() || null, level: classForm.level?.trim() || null, description: classForm.description?.trim() || null, startDate: classForm.startDate || null, endDate: classForm.endDate || null },
       { onSuccess: () => (setEditOpen(false), toast.success('Đã lưu thông tin lớp', classForm.name)), onError: fail('Không lưu được thông tin lớp') }
     );
   };
@@ -228,6 +228,14 @@ export const TeacherClassDetailPage: React.FC = () => {
           Lớp học
         </Link>
         <ChevronRight className="h-3.5 w-3.5 text-slate-400" />
+        {cls.course && (
+          <>
+            <Link to={`/teacher/library/courses?open=${cls.course.id}`} className="hover:text-slate-900 hover:underline underline-offset-2">
+              {cls.course.title}
+            </Link>
+            <ChevronRight className="h-3.5 w-3.5 text-slate-400" />
+          </>
+        )}
         <span className="text-slate-700">{cls.name}</span>
       </nav>
 
@@ -239,7 +247,10 @@ export const TeacherClassDetailPage: React.FC = () => {
         <div className="absolute inset-0 bg-gradient-to-r from-indigo-950/95 via-indigo-950/70 to-fuchsia-900/20" />
         <div className="relative flex flex-col gap-6 p-6 md:flex-row md:items-end md:justify-between md:p-8">
           <div className="min-w-0">
-            <span className="rounded-md bg-white/15 px-2 py-0.5 text-[12px] font-semibold backdrop-blur">{classTrackLabel(cls)}</span>
+            <span className="rounded-md bg-white/15 px-2 py-0.5 text-[12px] font-semibold backdrop-blur">
+              {classTrackLabel(cls)}
+              {cls.course ? ` · ${cls.course.title}` : ''}
+            </span>
             {cls.isArchived && <span className="ml-2 rounded-md bg-amber-400/90 px-2 py-0.5 text-[12px] font-semibold text-amber-950">Đã lưu trữ</span>}
             <h1 className="mt-3 font-display text-[2rem] font-extrabold leading-tight md:text-[2.6rem]">{cls.name}</h1>
             <p className="mt-2 flex flex-wrap gap-x-5 gap-y-1 text-sm text-slate-200">
@@ -297,6 +308,7 @@ export const TeacherClassDetailPage: React.FC = () => {
         onChange={setTab}
         items={[
           { key: 'news', label: 'Bảng tin', count: news.length },
+          { key: 'course', label: 'Tiến độ khoá học' },
           { key: 'students', label: 'Học viên', count: students.length },
           { key: 'sessions', label: 'Buổi học', count: sessions.length },
           { key: 'assignments', label: 'Bài tập', count: assignments.length },
@@ -583,6 +595,27 @@ export const TeacherClassDetailPage: React.FC = () => {
 
       {tab === 'ranking' && <ClassLeaderboardPanel classId={cls.id} />}
 
+      {tab === 'course' && (
+        <ClassCourseProgressPanel
+          course={cls.course}
+          progress={cls.courseProgress}
+          students={students}
+          courseHref={cls.course ? `/teacher/library/courses?open=${cls.course.id}` : undefined}
+          action={
+            cls.course ? (
+              <span className="flex items-center gap-3 text-[13px]">
+                <Link to={`/teacher/library/courses?open=${cls.course.id}`} className="font-medium text-slate-600 hover:underline">
+                  Bài trong khoá
+                </Link>
+                <button type="button" onClick={() => navigate('/teacher/assignments', { state: { assign: { kind: 'LESSON', courseId: cls.course!.slug, lessonIds: [] }, classId: cls.id } })} className="font-medium text-indigo-700 hover:underline">
+                  Giao bài trong khoá
+                </button>
+              </span>
+            ) : undefined
+          }
+        />
+      )}
+
       {tab === 'progress' && (
         <Panel title="Tỷ lệ học viên đã nộp từng bài tập" sub="Theo thứ tự hạn nộp, tính trên sĩ số lớp">
           {(analytics.data?.completionByAssignment.length ?? 0) === 0 ? (
@@ -677,7 +710,16 @@ export const TeacherClassDetailPage: React.FC = () => {
             <div className="md:col-span-2">
               <Input label="Tên lớp" required value={classForm.name} onChange={(e) => setClassForm({ ...classForm, name: e.target.value })} />
             </div>
-            <Select label="Mục lớp học" options={CLASS_TRACK_OPTIONS} value={classForm.track ?? 'TOEIC'} onChange={(e) => setClassForm({ ...classForm, track: e.target.value as CourseTrack })} />
+            <div className="md:col-span-2">
+              <Select
+                label="Khoá học của lớp"
+                placeholder="Chưa gắn khoá học"
+                options={courseOptions(lib.courses)}
+                value={classForm.courseId ?? ''}
+                onChange={(e) => setClassForm({ ...classForm, courseId: e.target.value || undefined })}
+                hint="Đổi khoá: học viên đang trong lớp được ghi danh khoá mới, tiến độ khoá cũ vẫn giữ"
+              />
+            </div>
             <Input label="Lịch học" placeholder="T2 – T4 – T6 · 19:00" value={classForm.schedule ?? ''} onChange={(e) => setClassForm({ ...classForm, schedule: e.target.value })} />
             <Input label="Phòng" value={classForm.room ?? ''} onChange={(e) => setClassForm({ ...classForm, room: e.target.value })} />
             <Input label="Trình độ" placeholder="VD: 650+, B1–B2" value={classForm.level ?? ''} onChange={(e) => setClassForm({ ...classForm, level: e.target.value })} />

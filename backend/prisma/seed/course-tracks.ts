@@ -8,6 +8,7 @@
  */
 import { Prisma, type CourseCategory, type CourseTrack, type CefrLevel } from '@prisma/client';
 import { prisma } from './lib';
+import { linkClassCourses } from './class-courses';
 import { THPT, THPT_PRACTICE } from './data/thpt';
 import { EXAM_SETS, GRAMMAR_REVIEW, PART_GUIDES, type ExamSet } from './data/thpt-exam';
 import { authoredChoice, authoredGap, type LessonExercise } from '../../src/modules/catalog/lesson-exercises';
@@ -453,6 +454,8 @@ async function main() {
     const agg = await prisma.lesson.aggregate({ where: { deletedAt: null, section: { courseId: c.id } }, _count: true, _sum: { durationMin: true } });
     await prisma.course.update({ where: { id: c.id }, data: { lessonsCount: agg._count, durationMin: agg._sum.durationMin ?? 0 } });
   }
+  // 4) lớp học nằm trong khoá: gắn lớp chưa có khoá, ghi danh học viên của lớp
+  log.push(...(await linkClassCourses()));
   console.log(log.join('\n'));
 }
 

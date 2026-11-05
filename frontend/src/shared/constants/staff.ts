@@ -9,9 +9,14 @@ export const CLASS_TRACKS: { key: CourseTrack; label: string }[] = [
   { key: 'THPT', label: 'Tiếng Anh THPT' },
 ];
 export const CLASS_TRACK_OPTIONS = CLASS_TRACKS.map((t) => ({ value: t.key, label: t.label }));
-/** Mục của lớp (lớp cũ chưa có mục → theo kỳ thi) */
-export const classTrack = (c: { track?: CourseTrack; examType: ExamType }): CourseTrack => c.track ?? c.examType;
-export const classTrackLabel = (c: { track?: CourseTrack; examType: ExamType }) => CLASS_TRACKS.find((t) => t.key === classTrack(c))?.label ?? c.examType;
+type TrackOf = { track?: CourseTrack; examType: ExamType; course?: { track?: CourseTrack } };
+/** Mục của lớp: theo khoá học của lớp (lớp cũ chưa gắn khoá → cột mục / kỳ thi) */
+export const classTrack = (c: TrackOf): CourseTrack => c.course?.track ?? c.track ?? c.examType;
+export const classTrackLabel = (c: TrackOf) => CLASS_TRACKS.find((t) => t.key === classTrack(c))?.label ?? c.examType;
+
+/** Lựa chọn khoá học cho lớp, nhóm theo 3 mục (giá trị = slug khoá) */
+export const courseOptions = (courses: { slug: string; title: string; track?: string; status?: string }[]) =>
+  CLASS_TRACKS.flatMap((t) => courses.filter((c) => c.track === t.key && (!c.status || c.status === 'PUBLISHED')).map((c) => ({ value: c.slug, label: c.title, group: t.key === 'THPT' ? 'Tiếng Anh THPT' : `Khoá học ${t.label}` })));
 
 /** Mã Part trong DB (TOEIC_P5, VSTEP_R1…) → nhãn ngắn */
 export const partLabel = (part: string) => {

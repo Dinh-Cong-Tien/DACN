@@ -18,11 +18,12 @@ const groupsOf = (toGrade: number): NavGroup[] => [
     ],
   },
   {
-    title: 'Khoá học',
+    title: 'Khoá học & Lớp',
     items: [
       { to: '/teacher/library/courses?muc=toeic', label: 'Khoá học TOEIC', icon: Briefcase },
       { to: '/teacher/library/courses?muc=vstep', label: 'Khoá học VSTEP', icon: GraduationCap },
       { to: '/teacher/library/courses?muc=thpt', label: 'Tiếng Anh THPT', icon: School },
+      { to: '/teacher/classes', label: 'Tất cả lớp', icon: Users },
     ],
   },
   {

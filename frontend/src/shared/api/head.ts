@@ -3,7 +3,7 @@
  * DTO bám `shared/types` (ClassRoom, TeacherSummary, GradingReview…), kèm vài field phụ backend trả thêm.
  */
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import type { ApprovalRequest, ClassObservation, ClassReport, ClassRoom, Complaint, DeptStudent, ExamType, GradingReview, Subject, TeacherSummary } from '@/shared/types';
+import type { ApprovalRequest, ClassCourseProgress, ClassObservation, ClassReport, ClassRoom, Complaint, DeptStudent, ExamType, GradingReview, Subject, TeacherSummary } from '@/shared/types';
 import { api, http } from './client';
 import type { SelfStudy } from './teacher';
 
@@ -92,6 +92,8 @@ export interface HeadClassDetail {
   class: HeadClass;
   analytics: { trend: { labels: string[]; values: number[] }; accuracy: { part: string; rate: number; total: number }[] };
   students: DeptStudent[];
+  /** Tiến độ khoá học của từng học viên (lớp đã gắn khoá) */
+  courseProgress?: ClassCourseProgress;
   sessions: SessionRow[];
   observations: ClassObservation[];
   assignments: HeadClassAssignment[];

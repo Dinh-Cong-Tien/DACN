@@ -80,7 +80,11 @@ export const AssignDialog: React.FC<{ open: boolean; onClose: () => void; onSave
     if (t?.kind === 'LESSON') {
       setCourseId(lib.courses.find((x) => x.id === t.courseId || x.slug === t.courseId)?.id ?? '');
       setLessonIds(t.lessonIds);
-    } else setLessonIds([]);
+    } else {
+      // lớp nằm trong khoá: giao bài giảng mặc định lấy khoá của lớp
+      setCourseId(c?.course?.id ?? '');
+      setLessonIds([]);
+    }
     setSlug(t?.kind === 'GRAMMAR' ? t.slug : '');
     setTopicId(t?.kind === 'VOCAB' ? lib.vocab.find((v) => v.id === t.topicId || v.slug === t.topicId)?.id ?? '' : '');
     setTaskId(t?.kind === 'WRITING' ? t.taskId : '');
@@ -100,7 +104,7 @@ export const AssignDialog: React.FC<{ open: boolean; onClose: () => void; onSave
   const allParts = testParts.length > 0 && parts.length === testParts.length;
   const suggested = testParts.filter((p) => parts.includes(p.id)).reduce((a, p) => a + (PART_FORMAT[p.id]?.minutes ?? Math.ceil(p.questions / 2)), 0);
   const full = allParts && time === 'auto';
-  const course = lib.courses.find((c) => c.id === courseId) ?? lib.courses[0];
+  const course = lib.courses.find((c) => c.id === courseId) ?? lib.courses.find((c) => c.id === cls?.course?.id) ?? lib.courses[0];
   const lessons = useMemo(() => course?.sections.flatMap((s) => s.lessons) ?? [], [course]);
   const grammar = lib.grammar.find((g) => g.slug === slug) ?? lib.grammar[0];
   const vocab = lib.vocab.find((v) => v.id === topicId) ?? lib.vocab.find((v) => !v.examType || v.examType === exam) ?? lib.vocab[0];
@@ -203,7 +207,16 @@ export const AssignDialog: React.FC<{ open: boolean; onClose: () => void; onSave
         <div className="space-y-5">
           <label className="block">
             <Label>Lớp</Label>
-            <select value={cls?.id ?? ''} onChange={(e) => setClassId(e.target.value)} className={fieldCls}>
+            <select
+              value={cls?.id ?? ''}
+              onChange={(e) => {
+                setClassId(e.target.value);
+                // đổi lớp khi chưa chọn bài → khoá học theo lớp mới
+                const next = classes.find((x) => x.id === e.target.value);
+                if (!lessonIds.length && next?.course) setCourseId(next.course.id);
+              }}
+              className={fieldCls}
+            >
               {classes.map((c) => (
                 <option key={c.id} value={c.id}>
                   {c.name} · {classTrackLabel(c)} · {c.studentsCount} học viên

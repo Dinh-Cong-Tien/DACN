@@ -45,7 +45,7 @@ import { completedAttempts } from '../catalog/counts';
 import { gradeLessonAssignments } from '../catalog/lesson-assignments';
 import { toExercises } from '../catalog/lesson-exercises';
 import { byTitleNatural, levelLabel } from '../catalog/mappers';
-import { CLASS_TRACK, classTrackData } from '../catalog/class-track';
+import { CLASS_TRACK, classCourseData, classCourseProgress, classCourseSelect, classTrackData, enrollClassCourse } from '../catalog/class-track';
 
 export const teacherRouter = Router();
 
@@ -131,7 +131,7 @@ const uuid = z.string().uuid();
 const isUuid = (s: string) => uuid.safeParse(s).success;
 const ymdStr = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
 const hm = z.string().regex(/^\d{2}:\d{2}$/);
-const classInclude = { teacher: { select: { fullName: true } } } as const;
+const classInclude = { teacher: { select: { fullName: true } }, course: classCourseSelect } as const;
 
 /** PART_1 ↔ TOEIC_P1 (frontend dùng PART_n cho TOEIC, VSTEP_LISTENING… cho VSTEP). */
 const FE_PART: Record<string, string> = { TOEIC_P1: 'PART_1', TOEIC_P2: 'PART_2', TOEIC_P3: 'PART_3', TOEIC_P4: 'PART_4', TOEIC_P5: 'PART_5', TOEIC_P6: 'PART_6', TOEIC_P7: 'PART_7' };
@@ -254,6 +254,8 @@ teacherRouter.get(
     return {
       ...room,
       students,
+      // tiến độ khoá học của từng học viên trong lớp
+      courseProgress: c.courseId ? await classCourseProgress(c.courseId, students.map((s) => s.id)) : undefined,
       announcements: announcements.map(toAnnouncement),
       materials: materials.map(toMaterial),
       assignments: await toAssignments(assignments),
@@ -264,7 +266,9 @@ teacherRouter.get(
 
 const classBody = z.object({
   name: z.string().trim().min(2).max(160),
-  /** Mục lớp TOEIC / VSTEP / THPT (gửi track hoặc examType) */
+  /** Khoá học của lớp (id hoặc slug) — lớp nằm trong khoá, mục / kỳ thi lấy theo khoá */
+  courseId: z.string().trim().min(1).max(140).optional(),
+  /** Lớp chưa gắn khoá: mục TOEIC / VSTEP / THPT (gửi track hoặc examType) */
   track: CLASS_TRACK.optional(),
   examType: z.enum(['TOEIC', 'VSTEP']).optional(),
   level: z.string().max(20).nullish(),
@@ -285,7 +289,7 @@ async function uniqueClassCode() {
   throw badRequest('Không sinh được mã lớp, thử lại');
 }
 
-const classData = (b: Partial<z.infer<typeof classBody>>) => ({
+const classData = ({ courseId: _c, ...b }: Partial<z.infer<typeof classBody>>) => ({
   name: b.name,
   ...classTrackData(b),
   level: b.level,
@@ -303,11 +307,11 @@ teacherRouter.post(
   handler(async (req) => {
     const u = me(req);
     const body = parse(classBody, req.body);
-    const tr = classTrackData(body);
-    if (!tr.examType) throw badRequest('Chọn mục của lớp (TOEIC, VSTEP hoặc Tiếng Anh THPT)');
+    if (!body.courseId) throw badRequest('Chọn khoá học của lớp', 'COURSE_REQUIRED');
+    const cc = await classCourseData(body.courseId);
     const teacher = await prisma.user.findUniqueOrThrow({ where: { id: u.id } });
     const c = await prisma.class.create({
-      data: { ...classData(body), name: body.name, examType: tr.examType, code: await uniqueClassCode(), teacherId: u.id, departmentId: teacher.departmentId },
+      data: { ...classData(body), ...cc, name: body.name, examType: cc.examType, code: await uniqueClassCode(), teacherId: u.id, departmentId: teacher.departmentId },
       include: classInclude,
     });
     return (await toClassRooms([c]))[0];
@@ -319,7 +323,13 @@ teacherRouter.patch(
   handler(async (req) => {
     const c = await assertClass(me(req), P(req));
     const body = parse(classBody.partial(), req.body);
-    const updated = await prisma.class.update({ where: { id: c.id }, data: classData(body), include: classInclude });
+    const cc = body.courseId ? await classCourseData(body.courseId) : null;
+    const updated = await prisma.$transaction(async (tx) => {
+      const row = await tx.class.update({ where: { id: c.id }, data: { ...classData(body), ...(cc ?? {}) }, include: classInclude });
+      // đổi khoá → học viên đang trong lớp được ghi danh khoá mới
+      if (cc && cc.courseId !== c.courseId) await enrollClassCourse(tx, cc.courseId, (await tx.classMember.findMany({ where: { classId: c.id, status: 'ACTIVE' }, select: { studentId: true } })).map((m) => m.studentId));
+      return row;
+    });
     return (await toClassRooms([updated]))[0];
   })
 );
@@ -369,11 +379,11 @@ teacherRouter.post(
       const cur = await prisma.classMember.count({ where: { classId: c.id, status: 'ACTIVE' } });
       if (cur + users.length > c.maxStudents) throw badRequest(`Lớp tối đa ${c.maxStudents} học viên`);
     }
-    await prisma.$transaction(
-      users.map((s) =>
-        prisma.classMember.upsert({ where: { classId_studentId: { classId: c.id, studentId: s.id } }, create: { classId: c.id, studentId: s.id }, update: { status: 'ACTIVE', joinedAt: new Date() } })
-      )
-    );
+    await prisma.$transaction(async (tx) => {
+      for (const s of users) await tx.classMember.upsert({ where: { classId_studentId: { classId: c.id, studentId: s.id } }, create: { classId: c.id, studentId: s.id }, update: { status: 'ACTIVE', joinedAt: new Date() } });
+      // vào lớp = học theo khoá của lớp
+      await enrollClassCourse(tx, c.courseId, users.map((s) => s.id));
+    });
     // Bài đang mở: tạo sẵn bài nộp TODO cho học viên mới
     const open = await prisma.assignment.findMany({ where: { classId: c.id, deletedAt: null, status: 'OPEN' }, select: { id: true } });
     if (open.length) await prisma.assignmentSubmission.createMany({ data: open.flatMap((a) => users.map((s) => ({ assignmentId: a.id, studentId: s.id }))), skipDuplicates: true });

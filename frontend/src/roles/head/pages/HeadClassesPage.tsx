@@ -12,7 +12,8 @@ import { Img, PHOTOS } from '@/shared/components/media/Img';
 import { cn, staffPath } from '@/shared/utils';
 import { Figures, Meter, Panel, TBtn, TPageHead, inputCls } from '@/roles/teacher/components/TeacherKit';
 import type { CourseTrack } from '@/shared/types';
-import { CLASS_TRACKS, CLASS_TRACK_OPTIONS, classTrack, classTrackLabel } from '@/shared/constants/staff';
+import { CLASS_TRACKS, classTrack, classTrackLabel, courseOptions } from '@/shared/constants/staff';
+import { useCourses } from '@/shared/api/catalog';
 
 const COVERS = [PHOTOS.classroom, PHOTOS.discussion, PHOTOS.lecture, PHOTOS.team, PHOTOS.students2];
 const EMPTY: HeadClass[] = [];
@@ -43,7 +44,8 @@ export const HeadClassesPage: React.FC = () => {
   const [onlyIssue, setOnlyIssue] = useState(false);
   const [q, setQ] = useState('');
   const [open, setOpen] = useState(false);
-  const [form, setForm] = useState({ name: '', track: 'TOEIC' as CourseTrack, teacherId: '', schedule: '', room: '' });
+  const [form, setForm] = useState({ name: '', course: '', teacherId: '', schedule: '', room: '' });
+  const courses = useCourses().data ?? [];
   const [error, setError] = useState('');
 
   const list = classes.filter(
@@ -58,13 +60,14 @@ export const HeadClassesPage: React.FC = () => {
 
   const create = async () => {
     if (!form.name.trim()) return setError('Vui lòng nhập tên lớp');
+    if (!form.course) return setError('Chọn khoá học của lớp');
     const teacherId = form.teacherId || activeTeachers[0]?.id;
     if (!teacherId) return setError('Bộ môn chưa có giáo viên đang hoạt động');
     setSaving(true);
     try {
-      const c = await headApi.createClass({ name: form.name.trim(), track: form.track, teacherId, scheduleText: form.schedule || undefined, room: form.room || undefined, coverUrl: COVERS[classes.length % COVERS.length] });
+      const c = await headApi.createClass({ name: form.name.trim(), courseId: form.course, teacherId, scheduleText: form.schedule || undefined, room: form.room || undefined, coverUrl: COVERS[classes.length % COVERS.length] });
       setOpen(false);
-      setForm({ name: '', track: 'TOEIC', teacherId: '', schedule: '', room: '' });
+      setForm({ name: '', course: '', teacherId: '', schedule: '', room: '' });
       setError('');
       toast.success('Đã mở lớp mới', `${c.name} · mã ${c.code} · giáo viên ${c.teacherName} nhận được thông báo phân công.`);
       await refresh();
@@ -157,7 +160,8 @@ export const HeadClassesPage: React.FC = () => {
                   <span className="absolute left-3 top-3 rounded-md bg-white/90 px-2 py-0.5 text-[11px] font-semibold text-slate-800 backdrop-blur">{classTrackLabel(c)}</span>
                   <div className="absolute inset-x-4 bottom-3 text-white">
                     <h3 className="font-display text-xl font-extrabold leading-tight">{c.name}</h3>
-                    <p className="mt-0.5 text-[13px] text-slate-200">
+                    <p className="mt-0.5 truncate text-[13px] text-slate-200">{c.course?.title ?? 'Chưa gắn khoá học'}</p>
+                    <p className="text-[12px] text-slate-300">
                       {c.schedule} · {c.room}
                     </p>
                   </div>
@@ -245,7 +249,7 @@ export const HeadClassesPage: React.FC = () => {
         <div className="space-y-4">
           <Input label="Tên lớp" required placeholder="VD: TOEIC 650+ K13" value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} error={error} />
           <div className="grid gap-4 sm:grid-cols-2">
-            <Select label="Mục lớp học" options={CLASS_TRACK_OPTIONS} value={form.track} onChange={(e) => setForm((f) => ({ ...f, track: e.target.value as CourseTrack }))} />
+            <Select label="Khoá học" required placeholder="Chọn khoá học của lớp" options={courseOptions(courses)} value={form.course} onChange={(e) => setForm((f) => ({ ...f, course: e.target.value }))} />
             <Select label="Giáo viên phụ trách" options={activeTeachers.map((t) => ({ value: t.id, label: `${t.name} · ${t.classesCount} lớp` }))} value={form.teacherId || activeTeachers[0]?.id || ''} onChange={(e) => setForm((f) => ({ ...f, teacherId: e.target.value }))} />
           </div>
           <div className="grid gap-4 sm:grid-cols-2">

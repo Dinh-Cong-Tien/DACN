@@ -17,6 +17,7 @@ import { ClassLeaderboardPanel } from '@/roles/teacher/components/ClassLeaderboa
 import { Stars as SharedStars } from '@/shared/components/ui/named-icon';
 import { appLocale } from '@/shared/i18n';
 import { classTrackLabel } from '@/shared/constants/staff';
+import { ClassCourseProgressPanel } from '@/roles/teacher/components/ClassCourseProgress';
 
 export const STUDENT_STATUS: Record<ClassStudent['status'], { label: string; tone: StatusTone }> = {
   GOOD: { label: 'Ổn định', tone: 'green' },
@@ -218,7 +219,7 @@ export const HeadClassDetailPage: React.FC = () => {
     );
   }
 
-  const { class: cls, students, sessions, assignments, observations: obs, analytics } = q.data;
+  const { class: cls, students, sessions, assignments, observations: obs, analytics, courseProgress } = q.data;
   const teacher = teachers.find((t) => t.id === cls.teacherId);
   const issue = classIssue(cls, teachers.length ? (teacher?.status ?? null) : undefined);
   const done = sessions.filter((s) => s.status === 'DONE');
@@ -260,7 +261,8 @@ export const HeadClassDetailPage: React.FC = () => {
         <div className="relative flex flex-col gap-6 p-6 md:flex-row md:items-end md:justify-between md:p-8">
           <div className="min-w-0">
             <span className="rounded-md bg-white/15 px-2 py-0.5 text-[12px] font-semibold backdrop-blur">
-              {classTrackLabel(cls)} · {cls.code}
+              {classTrackLabel(cls)}
+              {cls.course ? ` · ${cls.course.title}` : ''} · {cls.code}
             </span>
             <h1 className="mt-3 font-display text-[2rem] font-extrabold leading-tight md:text-[2.6rem]">{cls.name}</h1>
             <p className="mt-2 flex flex-wrap gap-x-5 gap-y-1 text-sm text-slate-200">
@@ -310,6 +312,7 @@ export const HeadClassDetailPage: React.FC = () => {
         onChange={setTab}
         items={[
           { key: 'overview', label: 'Kết quả học tập' },
+          { key: 'course', label: 'Tiến độ khoá học' },
           { key: 'students', label: 'Học viên', count: students.length },
           { key: 'sessions', label: 'Buổi học & chuyên cần', count: sessions.length },
           { key: 'assignments', label: 'Bài tập', count: assignments.length },
@@ -474,6 +477,8 @@ export const HeadClassDetailPage: React.FC = () => {
       )}
 
       {tab === 'ranking' && <ClassLeaderboardPanel classId={cls.id} apiBase="/head" />}
+
+      {tab === 'course' && <ClassCourseProgressPanel course={cls.course} progress={courseProgress} students={students} courseHref={cls.course ? `/courses/${cls.course.slug}` : undefined} />}
 
       {tab === 'observe' && (
         <Panel

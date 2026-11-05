@@ -624,6 +624,7 @@ model Course {
   courseEnrollmentCourses CourseEnrollment[] @relation("CourseEnrollment_course")
   certificateCourses Certificate[] @relation("Certificate_course")
 
+  classes Class[] @relation("Class_course")
   @@index([category])
   @@index([track])
   @@index([status])
@@ -1241,6 +1242,9 @@ model Class {
   examType ExamType @map("exam_type")
   /// Mục của lớp (TOEIC / VSTEP / Tiếng Anh THPT) — trùng 3 mục khoá học; lớp THPT chấm thang 10 như VSTEP
   track CourseTrack?
+  /// Khoá học của lớp — lớp nằm trong khoá; học viên vào lớp được ghi danh khoá này
+  courseId String? @db.Uuid @map("course_id")
+  course Course? @relation("Class_course", fields: [courseId], references: [id], onDelete: SetNull)
   level String? @db.VarChar(20)
   description String?
   room String? @db.VarChar(80)
@@ -1261,6 +1265,7 @@ model Class {
   studentNoteClasss StudentNote[] @relation("StudentNote_class")
 
   @@index([departmentId])
+  @@index([courseId])
   @@index([track])
   @@index([teacherId])
   @@map("classes")

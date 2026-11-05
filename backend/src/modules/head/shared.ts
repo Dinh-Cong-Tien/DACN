@@ -7,7 +7,7 @@ import { prisma } from '../../lib/prisma';
 import { forbidden } from '../../core/http';
 import { iso, num, planOf, ymd } from '../../core/dto';
 import { classGradient, classMetrics, rateOf, round1, type ClassMetrics } from '../../core/metrics';
-import { trackOfClass } from '../catalog/class-track';
+import { classCourseSelect, courseOfClass, trackOfClass } from '../catalog/class-track';
 
 const GRADIENTS = [
   'from-indigo-500 via-violet-500 to-fuchsia-500',
@@ -50,8 +50,8 @@ export const classWhere = (scope: string[] | null): Prisma.ClassWhereInput => ({
 export type ClassStats = ClassMetrics;
 export const classStats = (classes: Pick<Class, 'id' | 'examType'>[]) => classMetrics(classes);
 
-type ClassWithTeacher = Class & { teacher: Pick<User, 'fullName'> };
-export const classInclude = { teacher: { select: { fullName: true } } } as const;
+type ClassWithTeacher = Class & { teacher: Pick<User, 'fullName'>; course?: Parameters<typeof courseOfClass>[0]['course'] };
+export const classInclude = { teacher: { select: { fullName: true } }, course: classCourseSelect } as const;
 
 /** ClassRoom */
 export function toClassRoom(c: ClassWithTeacher, s?: ClassStats) {
@@ -61,6 +61,7 @@ export function toClassRoom(c: ClassWithTeacher, s?: ClassStats) {
     code: c.code,
     examType: c.examType,
     track: trackOfClass(c),
+    course: courseOfClass(c),
     teacherName: c.teacher.fullName,
     teacherId: c.teacherId,
     departmentId: c.departmentId,

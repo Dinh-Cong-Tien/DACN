@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { Navigate, useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import { Link, Navigate, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { ChevronDown, ChevronRight, ExternalLink } from 'lucide-react';
 import { useDocumentTitle } from '@/shared/hooks';
 import { useAuthStore } from '@/shared/stores/authStore';
-import { useLibCourses, useLibGrammar, useLibSpeaking, useLibTests, useLibVocab, useLibWriting } from '@/shared/api/teacher';
+import { useTeacherClasses, useLibCourses, useLibGrammar, useLibSpeaking, useLibTests, useLibVocab, useLibWriting } from '@/shared/api/teacher';
 import { partName, promptName } from '@/shared/constants/teacher';
 import type { AssignmentTarget, ExamType } from '@/shared/types';
 import { cn } from '@/shared/utils';
@@ -15,7 +15,7 @@ import { appLocale } from '@/shared/i18n';
 type Kind = 'courses' | 'tests' | 'practice';
 
 const COPY: Record<Kind, { title: string; sub: string }> = {
-  courses: { title: 'Khoá học', sub: 'Đúng các khoá học viên đang học, chia 3 mục TOEIC, VSTEP, Tiếng Anh THPT. Tích chọn bài để giao cho lớp, xem bài như học viên thấy.' },
+  courses: { title: 'Khoá học', sub: 'Đúng các khoá học viên đang học, chia 3 mục TOEIC, VSTEP, Tiếng Anh THPT. Mỗi khoá gồm bài giảng và các lớp học khoá đó: mở lớp cho khoá, tích chọn bài để giao cho lớp.' },
   tests: { title: 'Đề thi thử, Viết & Nói', sub: 'Đề trắc nghiệm (thi thử TOEIC, VSTEP) chấm tự động và đề tự luận (Viết, Nói) nộp về bàn chấm của giáo viên.' },
   practice: { title: 'Ngữ pháp, Từ vựng & Chép chính tả', sub: 'Chủ điểm ngữ pháp kèm bài tập chấm tự động, bộ flashcard từ vựng và bài nghe chép chính tả.' },
 };
@@ -325,6 +325,9 @@ const CoursesView: React.FC<{ assign: Assign }> = ({ assign }) => {
   const track = params.get('muc')?.toUpperCase();
   const courses = all.filter((c) => !track || c.track === track);
   const count = (t: string) => all.filter((c) => c.track === t).length;
+  // giáo viên: lớp của mình nằm trong từng khoá (lớp học thuộc khoá học)
+  const myClasses = useTeacherClasses().data ?? [];
+  const classesOf = (courseId: string) => myClasses.filter((x) => x.course?.id === courseId);
 
   return (
     <QueryGate q={coursesQ}>
@@ -345,7 +348,7 @@ const CoursesView: React.FC<{ assign: Assign }> = ({ assign }) => {
               <th className={tbl.th}>Trình độ</th>
               <th className={cn(tbl.th, 'text-right')}>Số bài</th>
               <th className={cn(tbl.th, 'text-right')}>Học viên</th>
-              <th className={tbl.th}>Giáo viên phụ trách</th>
+              <th className={tbl.th}>{assign ? 'Lớp của tôi' : 'Giáo viên phụ trách'}</th>
               <th className={tbl.th} />
             </tr>
           </thead>
@@ -366,10 +369,14 @@ const CoursesView: React.FC<{ assign: Assign }> = ({ assign }) => {
                     <td className={cn(tbl.td, 'whitespace-nowrap text-slate-600')}>{c.level ?? '—'}</td>
                     <td className={cn(tbl.td, 'text-right tabular-nums')}>{c.lessonsCount}</td>
                     <td className={cn(tbl.td, 'text-right tabular-nums')}>{c.studentsCount.toLocaleString(appLocale())}</td>
-                    <td className={cn(tbl.td, 'whitespace-nowrap text-slate-600')}>
-                      {c.teacherName ?? '—'}
-                      {c.teacherName && c.teacherName === me && <span className="ml-1.5 text-[12px] text-indigo-700">(bạn)</span>}
-                    </td>
+                    {assign ? (
+                      <td className={cn(tbl.td, 'whitespace-nowrap text-slate-600')}>{classesOf(c.id).length ? `${classesOf(c.id).length} lớp · ${classesOf(c.id).reduce((t, x) => t + x.studentsCount, 0)} học viên` : '—'}</td>
+                    ) : (
+                      <td className={cn(tbl.td, 'whitespace-nowrap text-slate-600')}>
+                        {c.teacherName ?? '—'}
+                        {c.teacherName && c.teacherName === me && <span className="ml-1.5 text-[12px] text-indigo-700">(bạn)</span>}
+                      </td>
+                    )}
                     <td className={cn(tbl.td, 'text-right')} onClick={(e) => e.stopPropagation()}>
                       <PreviewLink href={`/courses/${c.slug}`} />
                     </td>
@@ -377,6 +384,27 @@ const CoursesView: React.FC<{ assign: Assign }> = ({ assign }) => {
                   {open && (
                     <tr>
                       <td colSpan={7} className="border-b border-slate-200 bg-slate-50/60 px-4 pb-4 pt-1">
+                        {assign && (
+                          <div className="mb-3 rounded-md border border-slate-200 bg-white px-3 py-2.5">
+                            <div className="flex flex-wrap items-center justify-between gap-2">
+                              <p className="text-[13px] font-medium text-slate-900">Lớp của khoá ({classesOf(c.id).length})</p>
+                              <Link to={`/teacher/classes?new=1&course=${c.slug}`} className="text-[13px] font-medium text-indigo-700 hover:underline">
+                                + Mở lớp cho khoá này
+                              </Link>
+                            </div>
+                            {classesOf(c.id).length ? (
+                              <div className="mt-2 flex flex-wrap gap-2">
+                                {classesOf(c.id).map((x) => (
+                                  <Link key={x.id} to={`/teacher/classes/${x.id}`} className="rounded-md border border-slate-200 px-2.5 py-1 text-[13px] text-slate-700 hover:border-slate-400 hover:text-slate-900">
+                                    {x.name} <span className="text-slate-400">· {x.studentsCount} học viên</span>
+                                  </Link>
+                                ))}
+                              </div>
+                            ) : (
+                              <p className="mt-1 text-[13px] text-slate-500">Bạn chưa có lớp nào học khoá này.</p>
+                            )}
+                          </div>
+                        )}
                         <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
                           <p className="text-[13px] text-slate-500">{assign ? 'Tích chọn bài rồi giao cho lớp. Học viên học xong và đạt bài tập sau bài thì bài giao tự chấm điểm.' : `${lessons.length} bài theo đúng thứ tự học viên học. Mỗi bài có bài tập sau bài, học viên đạt điểm yêu cầu mới mở bài tiếp.`}</p>
                           {assign && (
