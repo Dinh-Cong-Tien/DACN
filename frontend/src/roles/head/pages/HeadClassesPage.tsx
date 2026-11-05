@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import { Link, useSearchParams } from 'react-router-dom';
 import { AlertTriangle, Plus, School, Search, Users, TrendingUp, ClipboardCheck } from 'lucide-react';
 import { useDocumentTitle } from '@/shared/hooks';
 import { toast } from '@/shared/stores/uiStore';
@@ -46,6 +46,14 @@ export const HeadClassesPage: React.FC = () => {
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({ name: '', course: '', teacherId: '', schedule: '', room: '' });
   const courses = useCourses().data ?? [];
+  // mở từ Khoá học & Lớp: "Mở lớp" cho một khoá
+  const [params, setParams] = useSearchParams();
+  useEffect(() => {
+    if (params.get('new') !== '1') return;
+    setForm((f) => ({ ...f, course: params.get('course') ?? '' }));
+    setOpen(true);
+    setParams({}, { replace: true });
+  }, [params, setParams]);
   const [error, setError] = useState('');
 
   const list = classes.filter(

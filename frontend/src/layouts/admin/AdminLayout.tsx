@@ -13,9 +13,9 @@ type Badges = { degraded?: string; openTickets?: string; pendingPay?: string; pe
 
 /** Khoá học: 3 mục giống hệt menu học viên — mở cây khoá học đã chọn sẵn mục */
 const COURSE_LINKS = [
-  { to: '/admin/courses?muc=toeic', label: 'Khoá học TOEIC', icon: Briefcase, desc: 'Nền tảng, Listening Part 1–4, Reading Part 5–7' },
-  { to: '/admin/courses?muc=vstep', label: 'Khoá học VSTEP', icon: GraduationCap, desc: 'Nền tảng, Nghe, Đọc, Viết, Nói' },
-  { to: '/admin/courses?muc=thpt', label: 'Tiếng Anh THPT', icon: School, desc: 'Lớp 10, 11, 12 theo SGK Global Success' },
+  { to: '/admin/courses?muc=toeic', label: 'Khoá học TOEIC', icon: Briefcase, desc: 'Chặng, chương, bài giảng, bài tập của khoá TOEIC' },
+  { to: '/admin/courses?muc=vstep', label: 'Khoá học VSTEP', icon: GraduationCap, desc: 'Chặng, chương, bài giảng, bài tập của khoá VSTEP' },
+  { to: '/admin/courses?muc=thpt', label: 'Tiếng Anh THPT', icon: School, desc: 'Tiếng Anh 10, 11, 12 và Ôn thi tốt nghiệp' },
 ];
 /** Thi thử & Luyện tập: nội dung đúng các mục học viên đang luyện */
 const PRACTICE_LINKS = [
@@ -46,7 +46,7 @@ const buildMenus = ({ degraded, openTickets, pendingPay, pending, toReview, comp
     children: [
       { to: '/admin/departments', label: 'Bộ môn', icon: Building2, desc: 'Bộ môn TOEIC, VSTEP và trưởng bộ môn phụ trách', group: 'Tổ chức' },
       { to: '/admin/teachers', label: 'Giáo viên', icon: UserSquare2, desc: 'Hồ sơ giảng dạy, lớp phụ trách, dự giờ' },
-      { to: '/admin/classes', label: 'Lớp học', icon: School, desc: 'Mọi lớp, mã mời, phân công giáo viên' },
+      { to: '/admin/class-courses?muc=toeic', label: 'Khoá học & Lớp', icon: School, desc: 'Khoá → các lớp của khoá (T201…), giáo viên phụ trách', also: ['/admin/class-courses', '/admin/classes'] },
       { to: '/admin/students', label: 'Học viên', icon: GraduationCap, desc: 'Kết quả, chuyên cần, học viên nguy cơ bỏ học' },
       { to: '/admin/schedule', label: 'Lịch học & điểm danh', icon: CalendarDays, desc: 'Lịch tuần mọi lớp, trùng phòng', group: 'Trong lớp' },
       { to: '/admin/assignments', label: 'Bài tập các lớp', icon: ClipboardList, desc: 'Bài đã giao, tỉ lệ nộp, bài chờ chấm' },
@@ -65,7 +65,8 @@ const buildMenus = ({ degraded, openTickets, pendingPay, pending, toReview, comp
     ],
   },
   {
-    label: 'Khoá học',
+    // biên soạn nội dung khoá (chặng, chương, bài giảng, bài tập); lớp của khoá ở Đào tạo › Khoá học & Lớp
+    label: 'Soạn khoá học',
     icon: PlayCircle,
     to: '/admin/courses',
     children: COURSE_LINKS,
@@ -103,7 +104,7 @@ const buildGroups = ({ degraded, openTickets, pendingPay, pending, toReview, com
     items: [
       { to: '/admin/departments', label: 'Bộ môn', icon: Building2 },
       { to: '/admin/teachers', label: 'Giáo viên', icon: UserSquare2 },
-      { to: '/admin/classes', label: 'Lớp học', icon: School },
+      { to: '/admin/class-courses?muc=toeic', label: 'Khoá học & Lớp', icon: School },
       { to: '/admin/students', label: 'Học viên', icon: GraduationCap },
       { to: '/admin/schedule', label: 'Lịch học & điểm danh', icon: CalendarDays },
       { to: '/admin/assignments', label: 'Bài tập các lớp', icon: ClipboardList },
@@ -120,7 +121,7 @@ const buildGroups = ({ degraded, openTickets, pendingPay, pending, toReview, com
       { to: '/admin/reports', label: 'Báo cáo đào tạo', icon: PieChart },
     ],
   },
-  { title: 'Khoá học', items: COURSE_LINKS.map(({ to, label, icon }) => ({ to, label, icon })) },
+  { title: 'Soạn khoá học', items: COURSE_LINKS.map(({ to, label, icon }) => ({ to, label, icon })) },
   { title: 'Thi thử & Luyện tập', items: PRACTICE_LINKS.map(({ to, label, icon }) => ({ to, label, icon })) },
   {
     title: 'Vận hành',

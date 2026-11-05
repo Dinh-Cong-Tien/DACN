@@ -9,9 +9,9 @@ type Counts = { pending?: string; openComplaints?: string; toReview?: string; qu
 
 /** Khoá học và Thi thử & Luyện tập: cùng khung với menu học viên / giáo viên, mở kho học liệu đã lọc */
 const COURSE_LINKS = [
-  { to: '/head/library/courses?muc=toeic', label: 'Khoá học TOEIC', icon: Briefcase, desc: 'Nền tảng, Listening Part 1–4, Reading Part 5–7' },
-  { to: '/head/library/courses?muc=vstep', label: 'Khoá học VSTEP', icon: GraduationCap, desc: 'Nền tảng, Nghe, Đọc, Viết, Nói' },
-  { to: '/head/library/courses?muc=thpt', label: 'Tiếng Anh THPT', icon: School, desc: 'Lớp 10, 11, 12 theo SGK Global Success' },
+  { to: '/head/courses?muc=toeic', label: 'Khoá học TOEIC', icon: Briefcase, desc: 'Nền tảng, Listening Part 1–4, Reading Part 5–7' },
+  { to: '/head/courses?muc=vstep', label: 'Khoá học VSTEP', icon: GraduationCap, desc: 'Nền tảng, Nghe, Đọc, Viết, Nói' },
+  { to: '/head/courses?muc=thpt', label: 'Tiếng Anh THPT', icon: School, desc: 'Lớp 10, 11, 12 theo SGK Global Success' },
 ];
 const PRACTICE_LINKS = [
   { to: '/head/library/tests?tab=TOEIC', label: 'Đề thi thử TOEIC', icon: FileText, desc: 'Đề đang dùng, số lần các lớp đã giao', group: 'Đề thi thử' },
@@ -28,12 +28,13 @@ const PRACTICE_LINKS = [
  */
 const buildMenus = ({ pending, openComplaints, toReview, quality, riskStudents, subjects, teachers, classes }: Counts): StaffMenu[] => [
   { to: '/head/dashboard', label: 'Tổng quan' },
+  // khoá → các lớp của khoá (mọi giáo viên) → trang lớp: đúng luồng giáo viên / học viên
+  { label: 'Khoá học & Lớp', icon: PlayCircle, to: '/head/courses', activeOn: ['/head/classes'], children: COURSE_LINKS },
   {
     label: 'Bộ môn',
     children: [
       { to: '/head/subjects', label: 'Môn học', icon: Library, desc: `${subjects} môn, giáo viên và lớp của từng môn` },
       { to: '/head/teachers', label: 'Giáo viên', icon: Users, desc: `${teachers} giáo viên, hồ sơ chuyên môn, dự giờ` },
-      { to: '/head/classes', label: 'Lớp học', icon: School, desc: `${classes} lớp, phân công giáo viên, chuyên cần` },
       { to: '/head/students', label: 'Học viên', icon: GraduationCap, desc: `${riskStudents} học viên nguy cơ bỏ học cần nhắc` },
     ],
   },
@@ -46,7 +47,6 @@ const buildMenus = ({ pending, openComplaints, toReview, quality, riskStudents, 
       { to: '/head/class-content', label: 'Tài liệu & bảng tin lớp', icon: FolderOpen, desc: 'Tài liệu giáo viên tải lên, bài đăng bảng tin' },
     ],
   },
-  { label: 'Khoá học', icon: PlayCircle, to: '/head/library/courses', children: COURSE_LINKS },
   { label: 'Thi thử & Luyện tập', icon: FileText, children: PRACTICE_LINKS },
   {
     label: 'Thẩm định',
@@ -68,7 +68,7 @@ const buildGroups = ({ pending, openComplaints, toReview }: Counts): NavGroup[] 
     title: 'Bộ môn',
     items: [
       { to: '/head/dashboard', label: 'Tổng quan', icon: LayoutDashboard },
-      { to: '/head/classes', label: 'Lớp học', icon: School },
+      { to: '/head/courses', label: 'Khoá học & Lớp', icon: PlayCircle },
       { to: '/head/teachers', label: 'Giáo viên', icon: Users },
       { to: '/head/approvals', label: 'Phê duyệt', icon: CheckSquare, badge: pending },
       { to: '/head/students', label: 'Học viên', icon: GraduationCap },
@@ -84,7 +84,7 @@ const buildGroups = ({ pending, openComplaints, toReview }: Counts): NavGroup[] 
       { to: '/head/class-content', label: 'Tài liệu & bảng tin lớp', icon: FolderOpen },
     ],
   },
-  { title: 'Khoá học', items: COURSE_LINKS.map(({ to, label, icon }) => ({ to, label, icon })) },
+  { title: 'Khoá học & Lớp', items: [...COURSE_LINKS.map(({ to, label, icon }) => ({ to, label, icon })), { to: '/head/classes', label: 'Tất cả lớp', icon: School }] },
   { title: 'Thi thử & Luyện tập', items: PRACTICE_LINKS.map(({ to, label, icon }) => ({ to, label, icon })) },
   {
     title: 'Thẩm định',

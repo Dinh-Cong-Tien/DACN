@@ -22,6 +22,7 @@ import { HeadClassContentPage } from '@/roles/head/pages/HeadClassContentPage';
 import { HeadStudentDetailPage } from '@/roles/head/pages/HeadStudentDetailPage';
 import { NotificationsPage } from '@/roles/common/NotificationsPage';
 import { AccountSettingsPage } from '@/roles/common/AccountSettingsPage';
+import { HeadCoursesPage } from '@/roles/teacher/pages/TeacherCoursesPage';
 
 export const headRoutes: RouteObject[] = [
   {
@@ -40,6 +41,7 @@ export const headRoutes: RouteObject[] = [
               { path: 'question-bank', element: <HeadQuestionBankPage /> },
               { path: 'teachers', element: <HeadTeachersPage /> },
               { path: 'teachers/:id', element: <HeadTeacherDetailPage /> },
+              { path: 'courses', element: <HeadCoursesPage /> },
               { path: 'classes', element: <HeadClassesPage /> },
               { path: 'classes/:id', element: <HeadClassDetailPage /> },
               { path: 'students', element: <HeadStudentsPage /> },

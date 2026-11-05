@@ -35,6 +35,7 @@ import { HeadApprovalsPage } from '@/roles/head/pages/HeadApprovalsPage';
 import { HeadGradingReviewPage } from '@/roles/head/pages/HeadGradingReviewPage';
 import { HeadComplaintsPage } from '@/roles/head/pages/HeadComplaintsPage';
 import { HeadReportsPage } from '@/roles/head/pages/HeadReportsPage';
+import { HeadCoursesPage } from '@/roles/teacher/pages/TeacherCoursesPage';
 
 export const adminRoutes: RouteObject[] = [
   {
@@ -62,6 +63,7 @@ export const adminRoutes: RouteObject[] = [
               { path: 'notifications', element: <NotificationsPage /> },
               { path: 'learning', element: <AdminLearningPage /> },
               { path: 'learning/:kind', element: <AdminLearningPage /> },
+              { path: 'class-courses', element: <HeadCoursesPage /> },
               { path: 'classes', element: <AdminClassesPage /> },
               { path: 'classes/:id', element: <HeadClassDetailPage /> },
               { path: 'departments', element: <HeadSubjectsPage /> },

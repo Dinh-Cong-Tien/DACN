@@ -279,4 +279,12 @@ export const EXTRA_EN: Record<string, string> = {
   "Đã mở lớp {v0}": "Opened class {v0}",
   "{v0} · học viên nhập mã {v1} để vào lớp": "{v0} · students enter code {v1} to join",
   "Mã lớp trùng tên lớp nên không đổi được": "The class code is the class name, so it cannot be changed",
+  // ---------- khoá học & lớp cho trưởng bộ môn / admin (11/2026) ----------
+  "Soạn khoá học": "Course authoring",
+  "Chặng, chương, bài giảng, bài tập của khoá TOEIC": "Stages, chapters, lessons and exercises of the TOEIC course",
+  "Chặng, chương, bài giảng, bài tập của khoá VSTEP": "Stages, chapters, lessons and exercises of the VSTEP course",
+  "Tiếng Anh 10, 11, 12 và Ôn thi tốt nghiệp": "English 10, 11, 12 and graduation exam prep",
+  "Khoá → các lớp của khoá (T201…), giáo viên phụ trách": "Course → its classes (T201…), assigned teachers",
+  "{v0} khoá · {v1} lớp của bộ môn.": "{v0} courses · {v1} department classes.",
+  "{v0} khoá · {v1} lớp bạn đang dạy.": "{v0} courses · {v1} classes you teach.",
 };

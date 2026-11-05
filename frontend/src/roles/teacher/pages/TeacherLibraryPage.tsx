@@ -86,7 +86,7 @@ export const TeacherLibraryPage: React.FC<LibraryPageProps> = ({ base = '/teache
   const navigate = useNavigate();
   if (LEGACY[kind]) return <Navigate to={LEGACY[kind].replace('/teacher/library', base)} replace />;
   // giáo viên: khoá học (kèm các lớp của khoá) ở trang Khoá học & Lớp
-  if (kind === 'courses' && base === '/teacher/library') return <Navigate to={`/teacher/courses${window.location.search}`} replace />;
+  if (kind === 'courses' && base.endsWith('/library')) return <Navigate to={`${base.replace(/\/library$/, '/courses')}${window.location.search}`} replace />;
   if (!copy) return <Navigate to={`${base}/courses`} replace />;
 
   const assign: Assign = canAssign ? (target) => navigate('/teacher/assignments', { state: { assign: target } }) : undefined;
