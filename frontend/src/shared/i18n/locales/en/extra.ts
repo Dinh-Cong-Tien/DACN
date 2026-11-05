@@ -256,4 +256,18 @@ export const EXTRA_EN: Record<string, string> = {
   "Tài liệu các lớp": "Class materials",
   "Học viên mọi lớp: điểm, chuyên cần, nhật ký trao đổi": "Students in all classes: scores, attendance, notes",
   "Bài Viết, Nói học viên mọi lớp đã nộp": "Writing and Speaking submitted by students in all classes",
+  // ---------- lớp đặt tên theo thứ tự, bài giảng trong lớp (11/2026) ----------
+  "Lớp {v0}": "Class {v0}",
+  "TOEIC · Lớp {v0}": "TOEIC · Class {v0}",
+  "VSTEP · Lớp {v0}": "VSTEP · Class {v0}",
+  "Các lớp cùng học đủ {v0} bài của khoá, chỉ khác lịch học. Vào lớp để xem bài giảng, tiến độ từng học viên, giao bài, điểm danh.": "All classes cover the same {v0} lessons and differ only in schedule. Open a class to see its lessons, the progress of each student, assign work and take attendance.",
+  "Các lớp của một khoá học cùng nội dung, chỉ khác lịch học. Tên lớp (Lớp 1, Lớp 2…) và mã mời được tạo tự động.": "All classes of a course share the same content and differ only in schedule. The class name (Class 1, Class 2…) and invite code are created automatically.",
+  "Các lớp của một khoá cùng nội dung, chỉ khác lịch học. Tên lớp (Lớp 1, Lớp 2…) và mã mời được tạo tự động.": "All classes of a course share the same content and differ only in schedule. The class name (Class 1, Class 2…) and invite code are created automatically.",
+  "Nhập lịch học của lớp": "Enter the class schedule",
+  "{v0} bài theo đúng thứ tự học viên học · cột cuối: học viên của lớp đã học xong bài, điểm bài tập trung bình": "{v0} lessons in study order · last column: students in this class who finished the lesson, average exercise score",
+  "{v0}/{v1} xong": "{v0}/{v1} done",
+  "{v0}/{v1} xong · {v2}%": "{v0}/{v1} done · {v2}%",
+  "Xem khoá": "View course",
+  "Đã mở {v0}": "Opened {v0}",
+  "Để trống khi mở lớp: tự đặt theo thứ tự (TOEIC · Lớp 1, Lớp 2…)": "Leave empty when opening: named in order (TOEIC · Class 1, Class 2…)",
 };
