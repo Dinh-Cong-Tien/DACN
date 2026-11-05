@@ -37,7 +37,7 @@ opsRouter.patch(
     const cc = body.courseId ? await classCourseData(body.courseId) : null;
     const { courseId: _cid, ...rest } = body;
     const c = await prisma.$transaction(async (tx) => {
-      const row = await tx.class.update({ where: { id: cur.id }, data: { ...rest, ...classTrackData(rest), ...(cc ?? {}) }, include: classInclude });
+      const row = await tx.class.update({ where: { id: cur.id }, data: { ...rest, ...classTrackData(rest), ...(cc ?? {}), ...(cur.courseId ? { name: cur.code } : {}) }, include: classInclude }); // lớp thuộc khoá: tên = mã lớp
       if (cc && cc.courseId !== cur.courseId) await enrollClassCourse(tx, cc.courseId, (await tx.classMember.findMany({ where: { classId: cur.id, status: 'ACTIVE' }, select: { studentId: true } })).map((m) => m.studentId));
       return row;
     });
@@ -53,6 +53,10 @@ opsRouter.patch(
 opsRouter.post(
   '/classes/:id/regenerate-code',
   handler(async (req) => {
+    const cur = await prisma.class.findFirst({ where: { id: idOf(req), deletedAt: null }, select: { courseId: true } });
+    if (!cur) throw notFound('Lớp học');
+    // lớp thuộc khoá: mã lớp cố định, trùng tên lớp (T201…) — không đổi
+    if (cur.courseId) throw badRequest('Mã lớp trùng tên lớp nên không đổi được', 'CLASS_CODE_FIXED');
     const code = Math.random().toString(36).slice(2, 8).toUpperCase();
     const c = await prisma.class.update({ where: { id: idOf(req) }, data: { code } });
     await audit(req, 'CLASS_CODE_RESET', 'class', c.id, { after: { target: c.name } });

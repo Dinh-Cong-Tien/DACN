@@ -95,12 +95,12 @@ export const AdminClassesPage: React.FC = () => {
         rows={rows}
         loading={classesQ.isLoading}
         onCreate={async (v) => {
-          const c = await headApi.createClass({ name: v.name?.trim() || undefined, courseId: v.courseKey, teacherId: v.teacherId, room: v.room || undefined, scheduleText: v.schedule || undefined });
+          const c = await headApi.createClass({ courseId: v.courseKey, teacherId: v.teacherId, room: v.room || undefined, scheduleText: v.schedule || undefined });
           void refresh();
           return { ...c, trackKey: classTrack(c), courseKey: c.course?.slug ?? '', locked: false } as Row;
         }}
         onUpdate={async (row, v) => {
-          const c = await adminApi.updateClass(row.id, { name: v.name, courseId: v.courseKey || undefined, teacherId: v.teacherId !== row.teacherId ? v.teacherId : undefined, room: v.room ?? null, scheduleText: v.schedule ?? null });
+          const c = await adminApi.updateClass(row.id, { courseId: v.courseKey || undefined, teacherId: v.teacherId !== row.teacherId ? v.teacherId : undefined, room: v.room ?? null, scheduleText: v.schedule ?? null });
           void refresh();
           return { ...c, trackKey: classTrack(c), courseKey: c.course?.slug ?? '', locked: !!c.isArchived } as Row;
         }}
@@ -119,8 +119,7 @@ export const AdminClassesPage: React.FC = () => {
         ]}
         defaultValues={{ courseKey: '', teacherId: teacherList.find((t) => t.status === 'ACTIVE')?.id, room: '' }}
         fields={[
-          { key: 'name', label: 'Tên lớp', colSpan: 2, placeholder: 'Để trống khi mở lớp: tự đặt theo thứ tự (TOEIC · Lớp 1, Lớp 2…)' },
-          { key: 'courseKey', label: 'Khoá học', type: 'select', required: true, options: courseOptions(courses) },
+                    { key: 'courseKey', label: 'Khoá học', type: 'select', required: true, options: courseOptions(courses) },
           { key: 'teacherId', label: 'Giáo viên phụ trách', type: 'select', required: true, options: teacherList.filter((t) => t.status === 'ACTIVE').map((t) => ({ value: t.id, label: t.name })) },
           { key: 'schedule', label: 'Lịch học', placeholder: 'T2 – T4 · 19:00' },
           { key: 'room', label: 'Phòng / hình thức', placeholder: 'Phòng 302 hoặc Online · Google Meet' },
@@ -129,7 +128,6 @@ export const AdminClassesPage: React.FC = () => {
           { label: 'Xem chi tiết lớp', icon: <Eye />, onClick: () => navigate(`/admin/classes/${r.id}`) },
           { label: 'Sao chép mã mời', icon: <Copy />, onClick: () => { void navigator.clipboard?.writeText(r.code).catch(() => undefined); toast.success('Đã sao chép mã mời', r.code); } },
           { label: 'Đổi giáo viên', icon: <UserCog />, onClick: () => { setReassign(r); setTeacher(''); } },
-          { label: 'Đổi mã mời', icon: <Copy />, onClick: () => void run(() => adminApi.regenerateCode(r.id), 'Đã tạo mã mời mới', r.name) },
           r.locked
             ? { label: 'Mở khoá lớp', icon: <Unlock />, onClick: () => void run(() => adminApi.updateClass(r.id, { isArchived: false }), 'Đã mở khoá lớp', r.name) }
             : { label: 'Khoá lớp', icon: <Lock />, onClick: () => void run(() => adminApi.updateClass(r.id, { isArchived: true }), 'Đã khoá lớp', `${r.name}: học viên không vào lớp bằng mã mời được nữa`, true) },

@@ -270,4 +270,13 @@ export const EXTRA_EN: Record<string, string> = {
   "Xem khoá": "View course",
   "Đã mở {v0}": "Opened {v0}",
   "Để trống khi mở lớp: tự đặt theo thứ tự (TOEIC · Lớp 1, Lớp 2…)": "Leave empty when opening: named in order (TOEIC · Class 1, Class 2…)",
+  // ---------- mã lớp = tên lớp (11/2026) ----------
+  "Mã lớp": "Class code",
+  "Đã chép mã lớp {v0}": "Copied class code {v0}",
+  "Học viên nhập mã này để vào lớp.": "Students enter this code to join the class.",
+  "Chép mã lớp (học viên nhập mã này để vào lớp)": "Copy class code (students enter it to join)",
+  "Các lớp của một khoá cùng nội dung, chỉ khác lịch học. Mã lớp (T201, T202…) tạo tự động theo thứ tự — vừa là tên lớp, vừa là mã học viên nhập để vào lớp.": "All classes of a course share the same content and differ only in schedule. The class code (T201, T202…) is created in order — it is both the class name and the code students enter to join.",
+  "Đã mở lớp {v0}": "Opened class {v0}",
+  "{v0} · học viên nhập mã {v1} để vào lớp": "{v0} · students enter code {v1} to join",
+  "Mã lớp trùng tên lớp nên không đổi được": "The class code is the class name, so it cannot be changed",
 };

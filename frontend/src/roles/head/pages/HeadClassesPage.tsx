@@ -247,7 +247,7 @@ export const HeadClassesPage: React.FC = () => {
         }
       >
         <div className="space-y-4">
-          <p className="text-[13px] text-slate-500">Các lớp của một khoá cùng nội dung, chỉ khác lịch học. Tên lớp (Lớp 1, Lớp 2…) và mã mời được tạo tự động.</p>
+          <p className="text-[13px] text-slate-500">Các lớp của một khoá cùng nội dung, chỉ khác lịch học. Mã lớp (T201, T202…) tạo tự động theo thứ tự — vừa là tên lớp, vừa là mã học viên nhập để vào lớp.</p>
           <div className="grid gap-4 sm:grid-cols-2">
             <Select label="Khoá học" required placeholder="Chọn khoá học của lớp" options={courseOptions(courses)} value={form.course} onChange={(e) => setForm((f) => ({ ...f, course: e.target.value }))} />
             <Select label="Giáo viên phụ trách" options={activeTeachers.map((t) => ({ value: t.id, label: `${t.name} · ${t.classesCount} lớp` }))} value={form.teacherId || activeTeachers[0]?.id || ''} onChange={(e) => setForm((f) => ({ ...f, teacherId: e.target.value }))} />

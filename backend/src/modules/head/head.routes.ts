@@ -25,7 +25,7 @@ import {
 } from './shared';
 import { oversightRouter } from './head.oversight';
 import { summaryRouter } from './head.summary';
-import { CLASS_TRACK, classCourseData, classCourseProgress, classTrackData, enrollClassCourse, nextClassName } from '../catalog/class-track';
+import { CLASS_TRACK, classCourseData, classCourseProgress, classTrackData, enrollClassCourse, nextClassCode } from '../catalog/class-track';
 
 export const headRouter = Router();
 headRouter.use(auth, allow('HEAD_TEACHER'), refreshLiveAfterWrite);
@@ -346,7 +346,6 @@ const classBody = z.object({
   endDate: z.coerce.date().nullish(),
   maxStudents: z.number().int().min(1).max(500).nullish(),
 });
-const genCode = () => Math.random().toString(36).slice(2, 8).toUpperCase();
 
 /** Mở lớp mới trong bộ môn */
 headRouter.post(
@@ -359,7 +358,9 @@ headRouter.post(
     await assertTeacherInScope(body.teacherId, scope);
     if (!body.courseId) throw badRequest('Chọn khoá học của lớp', 'COURSE_REQUIRED');
     const cc = await classCourseData(body.courseId);
-    const c = await prisma.class.create({ data: { ...body, ...cc, name: body.name || (await nextClassName(prisma, cc.courseId)), departmentId, code: body.code ?? genCode() }, include: classInclude });
+    // mã lớp = tên lớp (T201, T202…), cũng là mã mời
+    const code = await nextClassCode(prisma, cc.courseId);
+    const c = await prisma.class.create({ data: { ...body, ...cc, name: code, departmentId, code }, include: classInclude });
     await audit(req, 'CLASS_CREATE', 'class', c.id, { after: { name: c.name, teacherId: c.teacherId } });
     await notify([c.teacherId], { type: 'CLASS', title: 'Bạn được phân công lớp mới', message: `${c.name} · mã lớp ${c.code}`, link: `/teacher/classes/${c.id}`, refType: 'CLASS', refId: c.id });
     return toClassRoom(c);
@@ -377,7 +378,7 @@ headRouter.patch(
     const cc = body.courseId ? await classCourseData(body.courseId) : null;
     const { courseId: _cid, ...rest } = body;
     const updated = await prisma.$transaction(async (tx) => {
-      const row = await tx.class.update({ where: { id: c.id }, data: { ...rest, ...classTrackData(rest), ...(cc ?? {}) }, include: classInclude });
+      const row = await tx.class.update({ where: { id: c.id }, data: { ...rest, ...classTrackData(rest), ...(cc ?? {}), ...(c.courseId ? { name: c.code } : {}) }, include: classInclude }); // lớp thuộc khoá: tên = mã lớp
       if (cc && cc.courseId !== c.courseId) await enrollClassCourse(tx, cc.courseId, (await tx.classMember.findMany({ where: { classId: c.id, status: 'ACTIVE' }, select: { studentId: true } })).map((m) => m.studentId));
       return row;
     });

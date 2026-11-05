@@ -30,7 +30,7 @@ export const OpenClassDialog: React.FC<{ open: boolean; course?: string; onClose
       {
         onSuccess: (c) => {
           onClose();
-          toast.success(`Đã mở ${c.name}`, `${c.schedule} · mã mời ${c.code}`);
+          toast.success(`Đã mở lớp ${c.code}`, `${c.schedule} · học viên nhập mã ${c.code} để vào lớp`);
         },
         onError: (e) => setError(errorMessage(e)),
       }
@@ -42,7 +42,7 @@ export const OpenClassDialog: React.FC<{ open: boolean; course?: string; onClose
       open={open}
       onClose={onClose}
       title="Mở lớp học"
-      description="Các lớp của một khoá học cùng nội dung, chỉ khác lịch học. Tên lớp (Lớp 1, Lớp 2…) và mã mời được tạo tự động."
+      description="Các lớp của một khoá cùng nội dung, chỉ khác lịch học. Mã lớp (T201, T202…) tạo tự động theo thứ tự — vừa là tên lớp, vừa là mã học viên nhập để vào lớp."
       icon={<Users />}
       footer={
         <>

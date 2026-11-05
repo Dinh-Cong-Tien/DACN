@@ -49,7 +49,7 @@ export const TeacherCoursesPage: React.FC = () => {
   const assign = (target: AssignmentTarget, classId?: string) => navigate('/teacher/assignments', { state: { assign: target, classId } });
   const copy = (code: string) => {
     navigator.clipboard?.writeText(code).catch(() => undefined);
-    toast.success('Đã sao chép mã mời', `Gửi mã ${code} cho học viên để tham gia lớp.`);
+    toast.success(`Đã chép mã lớp ${code}`, 'Học viên nhập mã này để vào lớp.');
   };
   const nextOf = (x: TClassRoom) => upcoming.filter((s) => s.classId === x.id && s.status === 'UPCOMING').sort((a, b) => `${a.date}${a.start}`.localeCompare(`${b.date}${b.start}`))[0];
 
@@ -128,12 +128,11 @@ export const TeacherCoursesPage: React.FC = () => {
                   <table className={tbl.table}>
                     <thead className={tbl.thead}>
                       <tr>
-                        <th className={tbl.th}>Lớp</th>
+                        <th className={tbl.th}>Mã lớp</th>
                         <th className={tbl.th}>Lịch học</th>
                         <th className={cn(tbl.th, 'text-right')}>Học viên</th>
                         <th className={tbl.th}>Tiến độ khoá</th>
                         <th className={tbl.th}>Buổi tới</th>
-                        <th className={tbl.th}>Mã mời</th>
                         <th className={tbl.th} />
                       </tr>
                     </thead>
@@ -143,9 +142,14 @@ export const TeacherCoursesPage: React.FC = () => {
                         return (
                           <tr key={x.id} className={tbl.tr}>
                             <td className={cn(tbl.td, 'whitespace-nowrap')}>
-                              <Link to={`/teacher/classes/${x.id}`} className="font-medium text-slate-900 hover:text-indigo-700">
-                                {x.name.split(' · ').pop()}
-                              </Link>
+                              <span className="inline-flex items-center gap-1.5">
+                                <Link to={`/teacher/classes/${x.id}`} className="font-semibold tabular-nums text-slate-900 hover:text-indigo-700">
+                                  {x.name}
+                                </Link>
+                                <button type="button" onClick={() => copy(x.code)} title="Chép mã lớp (học viên nhập mã này để vào lớp)" className="text-slate-400 hover:text-indigo-700">
+                                  <Copy className="h-3.5 w-3.5" />
+                                </button>
+                              </span>
                             </td>
                             <td className={cn(tbl.td, 'whitespace-nowrap text-slate-600')}>
                               {x.schedule || 'Chưa có lịch'}
@@ -159,11 +163,6 @@ export const TeacherCoursesPage: React.FC = () => {
                               </span>
                             </td>
                             <td className={cn(tbl.td, 'whitespace-nowrap text-slate-600')}>{next ? `${next.date.slice(8, 10)}/${next.date.slice(5, 7)} · ${next.start}` : '—'}</td>
-                            <td className={tbl.td}>
-                              <button type="button" onClick={() => copy(x.code)} title="Sao chép mã mời" className="inline-flex items-center gap-1 font-mono text-[13px] text-slate-600 hover:text-indigo-700">
-                                {x.code} <Copy className="h-3 w-3 text-slate-400" />
-                              </button>
-                            </td>
                             <td className={cn(tbl.td, 'whitespace-nowrap text-right')}>
                               <TBtn size="sm" variant="ghost" onClick={() => assign({ kind: 'LESSON', courseId: c.slug, lessonIds: [] }, x.id)}>
                                 Giao bài

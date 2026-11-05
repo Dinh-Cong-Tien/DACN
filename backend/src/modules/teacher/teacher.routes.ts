@@ -45,7 +45,7 @@ import { completedAttempts } from '../catalog/counts';
 import { gradeLessonAssignments } from '../catalog/lesson-assignments';
 import { toExercises } from '../catalog/lesson-exercises';
 import { byTitleNatural, levelLabel } from '../catalog/mappers';
-import { CLASS_TRACK, classCourseData, classCourseProgress, classCourseSelect, classTrackData, enrollClassCourse, nextClassName } from '../catalog/class-track';
+import { CLASS_TRACK, classCourseData, classCourseProgress, classCourseSelect, classTrackData, enrollClassCourse, nextClassCode } from '../catalog/class-track';
 
 export const teacherRouter = Router();
 
@@ -310,9 +310,11 @@ teacherRouter.post(
     const body = parse(classBody, req.body);
     if (!body.courseId) throw badRequest('Chọn khoá học của lớp', 'COURSE_REQUIRED');
     const cc = await classCourseData(body.courseId);
+    const code = await nextClassCode(prisma, cc.courseId);
     const teacher = await prisma.user.findUniqueOrThrow({ where: { id: u.id } });
     const c = await prisma.class.create({
-      data: { ...classData(body), ...cc, name: body.name || (await nextClassName(prisma, cc.courseId)), examType: cc.examType, code: await uniqueClassCode(), teacherId: u.id, departmentId: teacher.departmentId },
+      // mã lớp = tên lớp (T201, T202…), cũng là mã mời
+      data: { ...classData(body), ...cc, name: code, examType: cc.examType, code, teacherId: u.id, departmentId: teacher.departmentId },
       include: classInclude,
     });
     return (await toClassRooms([c]))[0];
@@ -326,7 +328,7 @@ teacherRouter.patch(
     const body = parse(classBody.partial(), req.body);
     const cc = body.courseId ? await classCourseData(body.courseId) : null;
     const updated = await prisma.$transaction(async (tx) => {
-      const row = await tx.class.update({ where: { id: c.id }, data: { ...classData(body), ...(cc ?? {}) }, include: classInclude });
+      const row = await tx.class.update({ where: { id: c.id }, data: { ...classData(body), ...(cc ?? {}), ...(c.courseId ? { name: c.code } : {}) }, include: classInclude }); // lớp thuộc khoá: tên = mã lớp, không đổi riêng
       // đổi khoá → học viên đang trong lớp được ghi danh khoá mới
       if (cc && cc.courseId !== c.courseId) await enrollClassCourse(tx, cc.courseId, (await tx.classMember.findMany({ where: { classId: c.id, status: 'ACTIVE' }, select: { studentId: true } })).map((m) => m.studentId));
       return row;
@@ -351,6 +353,8 @@ teacherRouter.post(
   '/classes/:id/regenerate-code',
   handler(async (req) => {
     const c = await assertClass(me(req), P(req));
+    // lớp thuộc khoá: mã lớp cố định, trùng tên lớp (T201…) — không đổi
+    if (c.courseId) throw badRequest('Mã lớp trùng tên lớp nên không đổi được', 'CLASS_CODE_FIXED');
     const updated = await prisma.class.update({ where: { id: c.id }, data: { code: await uniqueClassCode() } });
     return { id: c.id, code: updated.code };
   })

@@ -47,13 +47,20 @@ export const courseShortName = (c: { title: string; track?: CourseTrack | null }
         .replace(/^Ôn thi tốt nghiệp THPT.*$/i, 'Ôn thi tốt nghiệp')
         .trim();
 
-/** Lớp của một khoá đặt tên theo thứ tự: "TOEIC · Lớp 1", "TOEIC · Lớp 2"… (các lớp cùng nội dung, khác lịch học) */
-export async function nextClassName(tx: Prisma.TransactionClient | typeof prisma, courseId: string) {
-  const c = await tx.course.findUniqueOrThrow({ where: { id: courseId }, select: { title: true, track: true } });
-  const short = courseShortName(c);
-  const names = (await tx.class.findMany({ where: { courseId }, select: { name: true } })).map((x) => x.name);
-  const used = names.map((n) => Number(/Lớp (\d+)$/.exec(n)?.[1] ?? 0));
-  return `${short} · Lớp ${Math.max(0, ...used) + 1}`;
+/** Chữ đầu mã lớp theo khoá: TOEIC T, VSTEP V, Tiếng Anh 10 / 11 / 12 A / B / C, Ôn thi tốt nghiệp G */
+const CLASS_PREFIX: Record<string, string> = { 'luyen-thi-toeic': 'T', 'luyen-thi-vstep': 'V', 'tieng-anh-lop-10': 'A', 'tieng-anh-lop-11': 'B', 'tieng-anh-lop-12': 'C', 'on-thi-tot-nghiep-thpt': 'G' };
+export const classPrefix = (c: { slug: string; track?: CourseTrack | null }) => CLASS_PREFIX[c.slug] ?? (c.track === 'VSTEP' ? 'V' : c.track === 'THPT' ? 'H' : 'T');
+
+/**
+ * Lớp của một khoá (cùng nội dung, khác lịch học) đặt mã theo thứ tự: T201, T202… — mã lớp đồng thời là tên lớp
+ * và mã mời học viên nhập để vào lớp. Đánh số chung mọi lớp có cùng chữ đầu nên không trùng.
+ */
+export async function nextClassCode(tx: Prisma.TransactionClient | typeof prisma, courseId: string) {
+  const c = await tx.course.findUniqueOrThrow({ where: { id: courseId }, select: { slug: true, track: true } });
+  const prefix = classPrefix(c);
+  const codes = (await tx.class.findMany({ where: { code: { startsWith: prefix } }, select: { code: true } })).map((x) => x.code);
+  const used = codes.map((x) => (x.startsWith(prefix) && /^\d{3}$/.test(x.slice(prefix.length)) ? Number(x.slice(prefix.length)) : 0));
+  return `${prefix}${Math.max(200, ...used) + 1}`;
 }
 
 /** Học viên vào lớp (mã mời / giáo viên thêm) → ghi danh khoá học của lớp; đã ghi danh thì giữ nguyên tiến độ */

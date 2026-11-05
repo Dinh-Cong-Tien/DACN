@@ -4,7 +4,7 @@
  * Gọi ở cuối course-tracks.ts; chạy riêng: npx tsx prisma/seed/class-courses.ts
  */
 import { prisma } from './lib';
-import { courseShortName, enrollClassCourse } from '../../src/modules/catalog/class-track';
+import { classPrefix, enrollClassCourse } from '../../src/modules/catalog/class-track';
 import { MERGED_SLUG } from './merge-courses';
 
 /** Tên lớp (biểu thức) → slug khoá học */
@@ -41,15 +41,17 @@ export async function linkClassCourses(): Promise<string[]> {
     });
     out.push(`Lớp ${cl.name} → ${course.title}`);
   }
-  // lớp của khoá đặt tên theo thứ tự (cùng nội dung, khác lịch học): "TOEIC · Lớp 1", "TOEIC · Lớp 2"…
+  // lớp của khoá (cùng nội dung, khác lịch học) đặt mã theo thứ tự: T201, T202… — mã lớp đồng thời là tên lớp, mã mời
   for (const course of courses) {
     const list = await prisma.class.findMany({ where: { courseId: course.id }, orderBy: { createdAt: 'asc' } });
-    const short = courseShortName(course);
-    for (const [i, cl] of list.entries()) {
-      const name = `${short} · Lớp ${i + 1}`;
-      if (cl.name === name) continue;
-      await prisma.class.update({ where: { id: cl.id }, data: { name } });
-      out.push(`Đổi tên lớp: ${cl.name} → ${name}`);
+    const prefix = classPrefix(course);
+    const want = list.map((cl, i) => ({ cl, code: `${prefix}${201 + i}` })).filter(({ cl, code }) => cl.code !== code || cl.name !== code);
+    if (!want.length) continue;
+    // 2 bước tránh trùng mã (mã là duy nhất)
+    for (const { cl } of want) await prisma.class.update({ where: { id: cl.id }, data: { code: `TMP-${cl.id.slice(0, 8)}` } });
+    for (const { cl, code } of want) {
+      await prisma.class.update({ where: { id: cl.id }, data: { code, name: code } });
+      out.push(`Lớp ${cl.name} (${cl.code}) → ${code}`);
     }
   }
   return out;

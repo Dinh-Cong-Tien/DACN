@@ -165,7 +165,7 @@ export const TeacherClassDetailPage: React.FC = () => {
   };
   const saveClass = () => {
     if (!classForm) return;
-    if ((classForm.name ?? '').trim().length < 2) return toast.error('Tên lớp cần ít nhất 2 ký tự');
+    if (!cls.course && (classForm.name ?? '').trim().length < 2) return toast.error('Tên lớp cần ít nhất 2 ký tự');
     if (classForm.startDate && classForm.endDate && classForm.endDate < classForm.startDate) return toast.error('Ngày kết thúc phải sau ngày bắt đầu');
     updateClass.mutate(
       { ...classForm, courseId: classForm.courseId || undefined, name: (classForm.name ?? '').trim(), schedule: classForm.schedule?.trim() || null, room: classForm.room?.trim() || null, level: classForm.level?.trim() || null, description: classForm.description?.trim() || null, startDate: classForm.startDate || null, endDate: classForm.endDate || null },
@@ -280,9 +280,11 @@ export const TeacherClassDetailPage: React.FC = () => {
               <Copy className="h-4 w-4 text-slate-300" />
             </button>
             <div className="flex flex-wrap gap-2 sm:justify-end">
-              <button type="button" onClick={askRegen} disabled={regenCode.isPending} title="Đổi mã mời" className="inline-flex h-10 items-center gap-1.5 rounded-xl border border-white/25 px-3 text-sm font-semibold hover:bg-white/10 disabled:opacity-60">
-                <RefreshCw className="h-4 w-4" /> Đổi mã
-              </button>
+              {!cls.course && (
+                <button type="button" onClick={askRegen} disabled={regenCode.isPending} title="Đổi mã mời" className="inline-flex h-10 items-center gap-1.5 rounded-xl border border-white/25 px-3 text-sm font-semibold hover:bg-white/10 disabled:opacity-60">
+                  <RefreshCw className="h-4 w-4" /> Đổi mã
+                </button>
+              )}
               <button type="button" onClick={openEdit} className="inline-flex h-10 items-center gap-1.5 rounded-xl border border-white/25 px-3 text-sm font-semibold hover:bg-white/10">
                 <Pencil className="h-4 w-4" /> Sửa lớp
               </button>
@@ -734,9 +736,11 @@ export const TeacherClassDetailPage: React.FC = () => {
       >
         {classForm && (
           <div className="grid gap-4 md:grid-cols-2">
-            <div className="md:col-span-2">
-              <Input label="Tên lớp" required value={classForm.name} onChange={(e) => setClassForm({ ...classForm, name: e.target.value })} />
-            </div>
+            {!cls.course && (
+              <div className="md:col-span-2">
+                <Input label="Tên lớp" required value={classForm.name} onChange={(e) => setClassForm({ ...classForm, name: e.target.value })} />
+              </div>
+            )}
             <div className="md:col-span-2">
               <Select
                 label="Khoá học của lớp"
