@@ -2,6 +2,7 @@ import type { LocaleDef } from '..';
 import { UI_EN } from './en/ui';
 import { EXTRA_EN } from './en/extra';
 import { THPT_EXAM_EN } from './en/thpt-exam';
+import { LESSONS_EN } from './en/lessons';
 
 /**
  * English — khoá là câu tiếng Việt gốc. Câu có phần động dùng {tên}.
@@ -16,6 +17,7 @@ const en: LocaleDef = {
     ...UI_EN,
     ...EXTRA_EN,
     ...THPT_EXAM_EN,
+    ...LESSONS_EN,
     // ---------- Website: menu chính ----------
     'Trang chủ': 'Home',
     'Học tập': 'Learning',

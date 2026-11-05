@@ -4,6 +4,7 @@ import type { Course, DictionaryEntry, Lesson } from '@/shared/types';
 import { LessonKnowledge } from './LessonKnowledge';
 import { LessonTranscript } from './LessonTranscript';
 import { LessonExercises } from './LessonExercises';
+import { LessonArticle } from './LessonArticle';
 import { catalogApi } from '@/shared/api/catalog';
 import { api, errorMessage, tokenStore } from '@/shared/api/client';
 import { cn, formatClock } from '@/shared/utils';
@@ -143,6 +144,8 @@ export const LessonEngine: React.FC<LessonEngineProps> = ({ course, lesson, onSe
   const next = allLessons[idx + 1];
   const watch = useWatchPosition({ lessonId: lesson.id, source, resumeAt, iframeRef, videoRef, onEnded: onVideoEnded });
   const goNext = next ? () => onSelectLesson(next.id) : undefined;
+  // bài cần học tiếp (chưa hoàn thành, không khoá) — dùng khi đang mở bài bị khoá
+  const firstOpen = allLessons.find((l) => !l.isCompleted && !l.isLocked);
   const isQuiz = lesson.type === 'QUIZ' && exercises.length > 0;
   const showExercise = isQuiz || (step === 'exercise' && exercises.length > 0);
 
@@ -160,7 +163,7 @@ export const LessonEngine: React.FC<LessonEngineProps> = ({ course, lesson, onSe
     <div className="grid grid-cols-1 xl:grid-cols-[1fr_340px] gap-6">
       <div className="space-y-5 min-w-0">
         {/* Bước học: Video bài giảng / Bài đọc → Bài tập */}
-        {lesson.type !== 'QUIZ' && exercises.length > 0 && (
+        {!lesson.isLocked && lesson.type !== 'QUIZ' && exercises.length > 0 && (
           <div className="lesson-steps" role="tablist" aria-label="Các bước của bài học">
             <button type="button" role="tab" aria-selected={step === 'video'} className={cn('lesson-step', step === 'video' && 'is-current')} onClick={() => setStep('video')}>
               <span className="lesson-step__no">1</span>
@@ -188,8 +191,28 @@ export const LessonEngine: React.FC<LessonEngineProps> = ({ course, lesson, onSe
           />
         )}
 
+        {/* Bài đang khoá (học tuần tự): báo rõ và dẫn tới bài cần học trước */}
+        {lesson.isLocked && (
+          <Card className="animate-fade-up">
+            <div className="flex flex-col items-start gap-4 sm:flex-row sm:items-center">
+              <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-slate-100 text-slate-500">
+                <Lock className="h-6 w-6" />
+              </span>
+              <div className="min-w-0 flex-1">
+                <p className="font-bold text-slate-900">Bài học này đang khoá</p>
+                <p className="mt-0.5 text-sm text-slate-600">Khoá học đi theo lộ trình: hoàn thành bài trước (đạt bài tập) để mở bài này.</p>
+              </div>
+              {firstOpen && (
+                <Button size="sm" rightIcon={<ChevronRight className="h-4 w-4" />} onClick={() => onSelectLesson(firstOpen.id)}>
+                  Học bài {allLessons.indexOf(firstOpen) + 1}: {firstOpen.title}
+                </Button>
+              )}
+            </div>
+          </Card>
+        )}
+
         {/* Player */}
-        <Card padding="none" className={cn('overflow-hidden animate-scale-in', showExercise && 'hidden')}>
+        <Card padding="none" className={cn('overflow-hidden animate-scale-in', (showExercise || lesson.isLocked) && 'hidden')}>
           {source && source.kind !== 'file' ? (
             <div className="relative bg-black aspect-video">
               <iframe ref={iframeRef} src={embedSrc(source, resumeAt)} title={lesson.title} className="w-full h-full" allow="autoplay; fullscreen; picture-in-picture" allowFullScreen />
@@ -201,13 +224,9 @@ export const LessonEngine: React.FC<LessonEngineProps> = ({ course, lesson, onSe
           ) : lesson.type === 'READING' ? (
             <div className="p-6 md:p-8 space-y-4">
               <div className="flex items-center gap-2 text-indigo-600 font-bold text-sm">
-                <BookOpen className="w-4 h-4" /> Bài đọc lý thuyết
+                <BookOpen className="w-4 h-4" /> Bài học
               </div>
-              {(lesson.content ?? '').split(/\n{2,}/).map((para, k) => (
-                <p key={k} className="text-slate-700 leading-relaxed whitespace-pre-line">
-                  {para}
-                </p>
-              ))}
+              <LessonArticle markdown={lesson.content ?? ''} />
             </div>
           ) : (
             <div className="p-8 text-center space-y-3">

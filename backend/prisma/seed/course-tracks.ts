@@ -206,6 +206,23 @@ async function findCourse(slug: string, from?: string) {
   return (await prisma.course.findFirst({ where: { slug, deletedAt: null } })) ?? (from ? await prisma.course.findFirst({ where: { slug: from, deletedAt: null } }) : null);
 }
 
+type LessonData = Omit<Prisma.LessonUncheckedCreateInput, 'sectionId' | 'title' | 'orderIndex'>;
+/**
+ * Tạo / cập nhật bài theo (chương, tên bài). Chạy lại không làm mất nội dung đã soạn sau đó:
+ * giữ bài giảng viết dài hơn bản giới thiệu ngắn, giữ câu bài tập soạn riêng cho bài (id "sgk-les-…").
+ */
+async function upsertLesson(sectionId: string, title: string, order: number, d: LessonData) {
+  const found = await prisma.lesson.findFirst({ where: { sectionId, title, deletedAt: null } });
+  if (!found) return prisma.lesson.create({ data: { sectionId, title, orderIndex: order, ...d } });
+  const keepContent = (found.contentMd?.length ?? 0) > (typeof d.contentMd === 'string' ? d.contentMd.length : 0) + 200;
+  const written = ((found.exercises as { id?: string }[] | null) ?? []).filter((e) => e.id?.startsWith('sgk-les'));
+  const exercises = d.exercises !== undefined && written.length ? ([...((d.exercises as unknown[]) ?? []), ...written] as Prisma.InputJsonValue) : d.exercises;
+  return prisma.lesson.update({
+    where: { id: found.id },
+    data: { ...d, ...(keepContent ? { contentMd: found.contentMd, summary: found.summary } : {}), ...(exercises !== undefined ? { exercises } : {}), orderIndex: order },
+  });
+}
+
 async function main() {
   const admin = await prisma.user.findFirst({ where: { role: 'ADMIN' }, orderBy: { createdAt: 'asc' } });
   const log: string[] = [];
@@ -274,11 +291,7 @@ async function main() {
       const data = { partTitle: part, orderIndex: ++secOrder };
       return found ? prisma.courseSection.update({ where: { id: found.id }, data }) : prisma.courseSection.create({ data: { courseId: course.id, title, ...data } });
     };
-    const lesson = async (sectionId: string, title: string, order: number, data: Omit<Prisma.LessonUncheckedCreateInput, 'sectionId' | 'title' | 'orderIndex'>) => {
-      const found = await prisma.lesson.findFirst({ where: { sectionId, title, deletedAt: null } });
-      if (found) return prisma.lesson.update({ where: { id: found.id }, data: { ...data, orderIndex: order } });
-      return prisma.lesson.create({ data: { sectionId, title, orderIndex: order, ...data } });
-    };
+    const lesson = upsertLesson;
 
     for (const u of g.units) {
       const term = u.no <= 5 ? 'Học kỳ 1' : 'Học kỳ 2';
@@ -346,11 +359,7 @@ async function main() {
       const d = { partTitle: part, orderIndex: ++secOrder };
       return found ? prisma.courseSection.update({ where: { id: found.id }, data: d }) : prisma.courseSection.create({ data: { courseId: course.id, title, ...d } });
     };
-    const lesson = async (sectionId: string, title: string, order: number, d: Omit<Prisma.LessonUncheckedCreateInput, 'sectionId' | 'title' | 'orderIndex'>) => {
-      const found = await prisma.lesson.findFirst({ where: { sectionId, title, deletedAt: null } });
-      if (found) return prisma.lesson.update({ where: { id: found.id }, data: { ...d, orderIndex: order } });
-      return prisma.lesson.create({ data: { sectionId, title, orderIndex: order, ...d } });
-    };
+    const lesson = upsertLesson;
     const empty = { grammar: [], pronunciation: [], phrases: [], tips: [], vocab: [], clauses: [], articles: [] };
     const json = (v: unknown) => v as Prisma.InputJsonValue;
 

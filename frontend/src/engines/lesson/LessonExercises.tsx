@@ -17,6 +17,10 @@ const TYPE_LABEL: Record<LessonExercise['type'], string> = {
   arrange: 'Sắp xếp',
   'text-cloze': 'Điền đoạn văn',
   reading: 'Đọc hiểu',
+  'toeic-p1': 'Part 1',
+  'toeic-p2': 'Part 2',
+  'toeic-p5': 'Part 5',
+  'toeic-p6': 'Part 6',
   article: 'Mạo từ',
   phoneme: 'Phát âm',
 };
@@ -37,9 +41,19 @@ const toQuestion = (e: LessonExercise, t: (s: string) => string): IQuestion => (
   difficulty: 0,
   tags: [],
   // câu cùng đoạn văn có cùng id đoạn → Practice engine hiện đoạn văn một lần cho cả nhóm
-  passage: e.passage ? { id: `p-${e.passage.title ?? ''}-${e.passage.content.length}`, examType: 'TOEIC', partOrSkill: TYPE_LABEL[e.type], title: e.passage.title, content: `${e.prompt}
+  passage: e.passage
+    ? {
+        id: e.passage.id ?? `p-${e.passage.title ?? ''}-${e.passage.content.length}`,
+        examType: 'TOEIC',
+        partOrSkill: TYPE_LABEL[e.type],
+        title: e.passage.title,
+        content: e.passage.content ? `${e.prompt}
 
-${e.passage.content}` } : null,
+${e.passage.content}` : e.prompt,
+        imageUrl: e.passage.imageUrl,
+        audioUrl: e.passage.audioUrl,
+      }
+    : null,
 });
 
 /**

@@ -85,15 +85,15 @@ export interface LessonKnowledge {
 /** Câu bài tập sau bài học / bài kiểm tra chặng — khớp backend catalog/lesson-exercises.ts */
 export interface LessonExercise {
   id: string;
-  type: 'vocab-meaning' | 'vocab-context' | 'grammar-formula' | 'grammar-name' | 'grammar-gap' | 'article' | 'phoneme' | 'notice-cloze' | 'arrange' | 'text-cloze' | 'reading';
+  type: 'vocab-meaning' | 'vocab-context' | 'grammar-formula' | 'grammar-name' | 'grammar-gap' | 'article' | 'phoneme' | 'notice-cloze' | 'arrange' | 'text-cloze' | 'reading' | 'toeic-p1' | 'toeic-p2' | 'toeic-p5' | 'toeic-p6';
   prompt: string;
   /** Câu / cụm cần xét ("_____" = chỗ trống) */
   text?: string;
   options: string[];
   answer: number;
   explain: string;
-  /** Đoạn văn dùng chung (bài đọc, quảng cáo, các câu cần sắp xếp) */
-  passage?: { title?: string; content: string };
+  /** Đoạn văn dùng chung (bài đọc, quảng cáo, các câu cần sắp xếp; câu nghe: ảnh + audio) */
+  passage?: { id?: string; title?: string; content: string; imageUrl?: string; audioUrl?: string };
 }
 
 export interface Lesson {

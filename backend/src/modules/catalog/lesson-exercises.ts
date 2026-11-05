@@ -5,9 +5,19 @@ import type { GrammarPoint, KnowledgeNode, LessonKnowledge, VocabItem } from './
  * nghĩa từ, điền từ vào câu ví dụ của bài, công thức ngữ pháp, a / an, âm trong bài phát âm.
  * Chỉ ra câu khi đáp án duy nhất đúng (phương án nhiễu được lọc trùng nghĩa / trùng âm).
  */
+export interface ExercisePassage {
+  /** mã đoạn (câu khác nhau cùng mã thì dùng chung đoạn) — mặc định suy từ tiêu đề + nội dung */
+  id?: string;
+  title?: string;
+  content: string;
+  imageUrl?: string;
+  audioUrl?: string;
+}
 export type ExerciseType = 'vocab-meaning' | 'vocab-context' | 'grammar-formula' | 'grammar-name' | 'grammar-gap' | 'article' | 'phoneme'
   // dạng câu đề thi tốt nghiệp THPT
-  | 'notice-cloze' | 'arrange' | 'text-cloze' | 'reading';
+  | 'notice-cloze' | 'arrange' | 'text-cloze' | 'reading'
+  // câu thật trong ngân hàng đề TOEIC
+  | 'toeic-p1' | 'toeic-p2' | 'toeic-p5' | 'toeic-p6';
 export interface LessonExercise {
   id: string;
   type: ExerciseType;
@@ -20,8 +30,8 @@ export interface LessonExercise {
   answer: number;
   /** Giải thích hiện sau khi trả lời */
   explain: string;
-  /** Đoạn văn dùng chung (bài đọc, quảng cáo, các câu cần sắp xếp) — câu cùng đoạn hiện đoạn văn một lần */
-  passage?: { title?: string; content: string };
+  /** Đoạn văn dùng chung (bài đọc, quảng cáo, các câu cần sắp xếp; câu nghe: ảnh + audio) — câu cùng đoạn hiện đoạn văn một lần */
+  passage?: ExercisePassage;
 }
 
 /** Kho phương án nhiễu lấy từ các bài khác (để bài ít từ vẫn đủ 4 lựa chọn) */
@@ -204,7 +214,7 @@ export function authoredGap(id: string, line: string, explain: string): LessonEx
   return c && text.includes('___') ? { id, type: 'grammar-gap', prompt: 'Chọn đáp án đúng điền vào chỗ trống', text: text.replace('___', BLANK), ...c, explain } : null;
 }
 /** Câu trắc nghiệm soạn tay bất kỳ: options[0] là đáp án đúng, thứ tự hiển thị xáo cố định theo id */
-export function authoredChoice(id: string, e: { type: ExerciseType; prompt: string; text?: string; options: string[]; explain: string; passage?: { title?: string; content: string } }): LessonExercise {
+export function authoredChoice(id: string, e: { type: ExerciseType; prompt: string; text?: string; options: string[]; explain: string; passage?: ExercisePassage }): LessonExercise {
   const r = rng(id);
   const opts = shuffle(e.options, r);
   return { id, type: e.type, prompt: e.prompt, ...(e.text ? { text: e.text } : {}), options: opts, answer: opts.indexOf(e.options[0]), explain: e.explain, ...(e.passage ? { passage: e.passage } : {}) };

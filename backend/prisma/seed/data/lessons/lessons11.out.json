@@ -1,0 +1,2135 @@
+[
+ {
+  "id": "bce98d06-62ce-4969-b228-44255e6161f3",
+  "summary": "Phân biệt động từ chỉ trạng thái và động từ hành động, khi nào được chia tiếp diễn, qua chủ đề Cities of the Future",
+  "contentMd": "## Mục tiêu bài học\n- Nhận biết nhóm động từ chỉ trạng thái (stative verbs) như know, believe, like, own, seem.\n- Hiểu vì sao các động từ này thường không chia ở thì tiếp diễn.\n- Biết một số động từ (think, have, see) đổi nghĩa và có thể dùng tiếp diễn khi mang nghĩa hành động.\n\n## Động từ chỉ trạng thái là gì?\nĐộng từ hành động (action verbs) như run, build, write diễn tả việc đang diễn ra và có thể bắt đầu hoặc dừng lại. Động từ **chỉ trạng thái** (stative verbs) diễn tả suy nghĩ, cảm xúc, sự sở hữu, giác quan hoặc tình trạng ổn định. Vì là \"trạng thái\" nên ta không nói chúng đang diễn ra từng lúc, và thường **không chia ở thì tiếp diễn**.\n\n| Nhóm | Động từ thường gặp |\n|---|---|\n| Suy nghĩ | know, believe, understand, remember, forget, doubt |\n| Cảm xúc | like, love, hate, prefer, want, need |\n| Sở hữu | own, have (có), belong to, possess |\n| Giác quan, tình trạng | seem, look (trông có vẻ), sound, smell, taste, cost |\n\n> I **believe** smart cities will be safer.\n> Tôi tin các thành phố thông minh sẽ an toàn hơn.\n\n> This new bus **belongs to** the city council.\n> Chiếc xe buýt mới này thuộc về hội đồng thành phố.\n\nCông thức: `S + know / believe / like / own / seem + …` (chia hiện tại đơn hoặc quá khứ đơn, không thêm -ing).\n\n## Khi nào dùng được dạng tiếp diễn?\nMột số động từ có **hai nghĩa**: nghĩa trạng thái và nghĩa hành động. Chỉ khi mang nghĩa hành động, ta mới chia tiếp diễn: `S + am / is / are + V-ing`.\n\n| Động từ | Nghĩa trạng thái (đơn) | Nghĩa hành động (tiếp diễn) |\n|---|---|---|\n| think | I think it is a good idea. (cho rằng) | We are thinking about moving. (đang cân nhắc) |\n| have | She has a smart watch. (sở hữu) | They are having lunch. (đang ăn) |\n| see | I see what you mean. (hiểu) | He is seeing his dentist. (đang gặp) |\n| taste | The soup tastes salty. (có vị) | She is tasting the soup. (đang nếm) |\n\n> We **are thinking** about moving to a new city.\n> Chúng tôi đang cân nhắc chuyển đến một thành phố mới.\n\n> Right now, my family **is having** dinner together.\n> Lúc này gia đình tôi đang ăn tối cùng nhau.\n\nMẹo: hỏi \"đây là việc ai đó đang làm hay chỉ là suy nghĩ, tình trạng?\". Nếu là việc đang làm, tiếp diễn được; nếu là trạng thái, dùng thì đơn.\n\n## Lỗi thường gặp\n- *I am knowing the answer.* → **I know** the answer.\n- *She is liking this song.* → **She likes** this song.\n- *The city is having a new metro line.* (ý \"sở hữu\") → **The city has** a new metro line.\n\n## Áp dụng vào bài thi\nTrong đề tốt nghiệp THPT, dạng đọc điền hoặc chọn từ thường cho dấu hiệu *now, at the moment* kèm động từ chỉ trạng thái để bẫy bạn chọn tiếp diễn. Hãy xác định nghĩa của động từ trước khi nhìn dấu hiệu thời gian.\n\n> At the moment, I _____ that robots will do many jobs in future cities.\n> (A) am believing (B) believe (C) believing (D) have believed\n\n*believe* là động từ chỉ trạng thái nên dùng hiện tại đơn, đáp án **(B)**. Dù có *at the moment*, ta vẫn không chia tiếp diễn.\n\n## Tóm tắt\n- Động từ chỉ trạng thái (know, believe, like, own, seem...) thường không chia tiếp diễn.\n- Think, have, see, taste... có hai nghĩa; nghĩa hành động mới dùng được `am / is / are + V-ing`.\n- Dấu hiệu *now* không đủ để chọn tiếp diễn, hãy kiểm tra loại động từ.\n- Khi nói về quan điểm, sở hữu, cảm xúc: ưu tiên hiện tại đơn.",
+  "knowledge": {},
+  "exercises": [
+   {
+    "prompt": "Chọn dạng đúng của động từ",
+    "q": "I _____ that public transport will be free in the cities of the future.",
+    "options": [
+     "believe",
+     "am believing",
+     "believing",
+     "have believing"
+    ],
+    "explain": "believe là động từ chỉ suy nghĩ (trạng thái) nên dùng hiện tại đơn, không dùng tiếp diễn."
+   },
+   {
+    "prompt": "Chọn dạng đúng của động từ",
+    "q": "Look! My brother _____ a picture of the new skyscraper.",
+    "options": [
+     "is taking",
+     "takes",
+     "has taken",
+     "take"
+    ],
+    "explain": "Look! là dấu hiệu hành động đang diễn ra; take là động từ hành động nên chia tiếp diễn."
+   },
+   {
+    "prompt": "Chọn câu đúng",
+    "q": "Which sentence is correct?",
+    "options": [
+     "She owns a small electric car.",
+     "She is owning a small electric car.",
+     "She owning a small electric car.",
+     "She is own a small electric car."
+    ],
+    "explain": "own (sở hữu) là động từ chỉ trạng thái nên chia hiện tại đơn: owns."
+   },
+   {
+    "prompt": "Chọn dạng đúng của động từ",
+    "q": "We _____ about living in a smart city after graduation.",
+    "options": [
+     "are thinking",
+     "think",
+     "thinks",
+     "thought"
+    ],
+    "explain": "Nghĩa cân nhắc (hành động) nên dùng được tiếp diễn; câu thể hiện quá trình suy nghĩ đang diễn ra."
+   },
+   {
+    "prompt": "Chọn dạng đúng của động từ",
+    "q": "The students _____ lunch in the school canteen at the moment.",
+    "options": [
+     "are having",
+     "have",
+     "has",
+     "having"
+    ],
+    "explain": "have nghĩa ăn là hành động; có at the moment nên dùng tiếp diễn. have (sở hữu) mới là trạng thái."
+   },
+   {
+    "prompt": "Chọn câu đúng",
+    "q": "Which sentence uses a stative verb correctly?",
+    "options": [
+     "This park seems very clean.",
+     "This park is seeming very clean.",
+     "This park seeming very clean.",
+     "This park is seem very clean."
+    ],
+    "explain": "seem là động từ chỉ trạng thái nên dùng hiện tại đơn: seems."
+   }
+  ],
+  "en": {
+   "Phân biệt động từ chỉ trạng thái và động từ hành động, khi nào được chia tiếp diễn, qua chủ đề Cities of the Future": "Telling stative verbs from action verbs and when they can be continuous, through the topic Cities of the Future",
+   "Chọn dạng đúng của động từ": "Choose the correct verb form",
+   "Chọn câu đúng": "Choose the correct sentence"
+  },
+  "course": "Tiếng Anh 11 (Global Success)",
+  "title": "Ngữ pháp: Động từ chỉ trạng thái"
+ },
+ {
+  "id": "ea379720-5e5c-45c7-a620-42f69002c6d1",
+  "summary": "Học 6 từ trọng tâm Unit 4 ASEAN and Viet Nam: ASEAN, region, cooperation, cultural exchange, represent, leadership",
+  "contentMd": "## Mục tiêu bài học\n- Hiểu nghĩa, phiên âm và cách dùng 6 từ trọng tâm của Unit 4.\n- Nắm họ từ (word family) và các cụm từ đi cùng (collocation).\n- Dùng từ đúng ngữ cảnh khi làm bài đọc về ASEAN và quan hệ quốc tế.\n\n## Bảng từ vựng chính\n| Từ | Phiên âm | Loại từ | Nghĩa | Ví dụ |\n|---|---|---|---|---|\n| ASEAN | /ˈæsiæn/ | n | Hiệp hội các quốc gia Đông Nam Á | Viet Nam joined **ASEAN** in 1995. |\n| region | /ˈriːdʒən/ | n | khu vực | Southeast Asia is a fast-growing **region**. |\n| cooperation | /kəʊˌɒpəˈreɪʃn/ | n | sự hợp tác | **Cooperation** helps member countries grow. |\n| cultural exchange | /ˌkʌltʃərəl ɪksˈtʃeɪndʒ/ | n | giao lưu văn hoá | Our school runs a **cultural exchange** programme. |\n| represent | /ˌreprɪˈzent/ | v | đại diện | Each team **represents** a member country. |\n| leadership | /ˈliːdəʃɪp/ | n | khả năng lãnh đạo | Good **leadership** needs listening skills. |\n\n## Giải thích từng từ\n### ASEAN và region\n**ASEAN** là viết tắt của *Association of Southeast Asian Nations*, đọc liền thành /ˈæsiæn/ (không đọc từng chữ cái). Hiệp hội có 10 quốc gia thành viên, trong đó có Viet Nam. **Region** nghĩa là một vùng rộng lớn; tính từ là *regional*. Collocation: *the Asia-Pacific region*, *regional cooperation*.\n\n> ASEAN brings the countries of the **region** closer together.\n> ASEAN đưa các quốc gia trong khu vực lại gần nhau hơn.\n\n### cooperation và cultural exchange\n**Cooperation** là danh từ không đếm được, họ từ: *cooperate* (v), *cooperative* (adj). Cụm hay gặp: *cooperation with*, *economic cooperation*, *in cooperation with*. **Cultural exchange** là việc các nước hoặc trường học chia sẻ văn hoá, ngôn ngữ, ẩm thực.\n\n> Students joined a **cultural exchange** and learnt about Thai dances.\n> Học sinh tham gia giao lưu văn hoá và học múa Thái Lan.\n\n### represent và leadership\n**Represent** (v) có họ từ *representative* (n, adj: người đại diện, mang tính đại diện) và *representation* (n). Cấu trúc: *represent + N* (đại diện cho ai). **Leadership** là danh từ không đếm được, gắn với *leader* (n) và *lead* (v); cụm: *leadership skills*, *show leadership*.\n\n> She was chosen to **represent** our school at the ASEAN Youth Forum.\n> Bạn ấy được chọn đại diện trường dự Diễn đàn Thanh niên ASEAN.\n\n## Mẹo nhớ và lỗi dùng từ\n- Trọng âm: **re**gion nhấn âm đầu, còn co-op-e-**ra**-tion nhấn âm thứ ba (-ra-); represent nhấn âm cuối (-sent).\n- Sai: *a cooperation* → đúng: **cooperation** (không đếm được, không dùng a).\n- Sai: *represent to* → đúng: **represent** + tân ngữ, không có giới từ.\n- Sai: *Leadership skill* khi nói chung → thường dùng số nhiều: **leadership skills**.\n\n## Áp dụng vào bài thi\nĐề tốt nghiệp THPT thường có bài đọc điền từ vào đoạn giới thiệu một tổ chức hoặc một chương trình. Hãy nhìn loại từ cần điền (danh từ, động từ, tính từ) rồi chọn họ từ phù hợp. Ngoài ra, câu hỏi đọc hiểu hay hỏi nghĩa của từ trong ngữ cảnh, nên đọc cả câu trước và sau chỗ trống.\n\n> ASEAN promotes regional _____ in education and trade.\n> (A) cooperate (B) cooperative (C) cooperation (D) cooperatively\n\nSau tính từ *regional* cần một danh từ và đây là danh từ không đếm được, đáp án **(C) cooperation**.\n\n## Tóm tắt\n- ASEAN: hiệp hội Đông Nam Á; region: khu vực; cooperation: sự hợp tác.\n- Cultural exchange là giao lưu văn hoá; represent là đại diện, đi thẳng với tân ngữ.\n- Leadership là danh từ không đếm được, thường đi với skills.\n- Học theo họ từ để tự tin khi điền từ trong bài đọc.",
+  "knowledge": {},
+  "exercises": [
+   {
+    "prompt": "Chọn nghĩa đúng",
+    "q": "What does the word \"region\" mean?",
+    "options": [
+     "khu vực",
+     "quốc gia",
+     "thành phố",
+     "hợp tác"
+    ],
+    "explain": "region là một vùng rộng lớn, khu vực."
+   },
+   {
+    "prompt": "Chọn dạng đúng của từ",
+    "q": "ASEAN countries work together to strengthen regional _____.",
+    "options": [
+     "cooperation",
+     "cooperate",
+     "cooperative",
+     "cooperatively"
+    ],
+    "explain": "Sau tính từ regional cần danh từ: cooperation."
+   },
+   {
+    "prompt": "Chọn từ phù hợp",
+    "q": "She was chosen to _____ Viet Nam at the youth forum.",
+    "options": [
+     "represent",
+     "lead",
+     "exchange",
+     "region"
+    ],
+    "explain": "represent + tân ngữ nghĩa là đại diện; các từ còn lại không phù hợp về nghĩa và loại từ."
+   },
+   {
+    "prompt": "Chọn từ phù hợp",
+    "q": "Our school organised a cultural _____ with students from Malaysia.",
+    "options": [
+     "exchange",
+     "leadership",
+     "cooperation",
+     "region"
+    ],
+    "explain": "cultural exchange là cụm cố định nghĩa giao lưu văn hoá."
+   },
+   {
+    "prompt": "Chọn câu đúng",
+    "q": "Which sentence is correct?",
+    "options": [
+     "Good leadership skills help a team succeed.",
+     "A leadership help a team succeed.",
+     "Good leadership skill are help a team succeed.",
+     "Good leaderships help a team succeed."
+    ],
+    "explain": "leadership là danh từ không đếm được, dùng với skills để nói chung; không thêm -s hoặc a."
+   },
+   {
+    "prompt": "Chọn nghĩa đúng",
+    "q": "ASEAN stands for ...",
+    "options": [
+     "Hiệp hội các quốc gia Đông Nam Á",
+     "Liên minh châu Âu",
+     "Diễn đàn thanh niên thế giới",
+     "Tổ chức Thương mại Thế giới"
+    ],
+    "explain": "ASEAN là Association of Southeast Asian Nations."
+   }
+  ],
+  "en": {
+   "Học 6 từ trọng tâm Unit 4 ASEAN and Viet Nam: ASEAN, region, cooperation, cultural exchange, represent, leadership": "Six key words of Unit 4 ASEAN and Viet Nam: ASEAN, region, cooperation, cultural exchange, represent, leadership",
+   "Chọn nghĩa đúng": "Choose the correct meaning",
+   "Chọn dạng đúng của từ": "Choose the correct form of the word",
+   "Chọn từ phù hợp": "Choose the suitable word",
+   "Chọn câu đúng": "Choose the correct sentence"
+  },
+  "course": "Tiếng Anh 11 (Global Success)",
+  "title": "Từ vựng: ASEAN and Viet Nam"
+ },
+ {
+  "id": "7f89e3c6-183b-4c53-a39c-d8c0b7af605a",
+  "summary": "Dùng danh động từ (V-ing) làm chủ ngữ, tân ngữ sau enjoy, avoid, consider, suggest và sau giới từ, qua chủ đề ASEAN",
+  "contentMd": "## Mục tiêu bài học\n- Dùng V-ing làm chủ ngữ và chia động từ số ít đúng.\n- Nhớ nhóm động từ và giới từ theo sau bằng V-ing.\n- Phân biệt các động từ đi với V-ing và với to V.\n\n## Danh động từ (gerund) làm chủ ngữ\nDanh động từ là dạng **V-ing** hoạt động như một danh từ. Khi đứng đầu câu làm chủ ngữ, nó nói về một hoạt động và động từ chính luôn chia **số ít**, kể cả khi V-ing có tân ngữ số nhiều.\n\n`V-ing (+ O) + V (số ít) + …`\n\n> **Joining** youth programmes helps students develop skills.\n> Tham gia các chương trình thanh niên giúp học sinh phát triển kỹ năng.\n\n> **Learning** the languages of ASEAN countries is not easy.\n> Học ngôn ngữ của các nước ASEAN không dễ.\n\nPhủ định: *Not + V-ing*, ví dụ **Not speaking** English at the summit would be a problem.\n\n## Danh động từ làm tân ngữ\nDanh động từ làm tân ngữ sau một số động từ, và sau **mọi giới từ**.\n\n| Nhóm | Ví dụ |\n|---|---|\n| Động từ + V-ing | enjoy, avoid, consider, suggest, finish, practise, mind, keep, imagine |\n| Cụm động từ + V-ing | look forward to, give up, put off, be interested in |\n| Giới từ + V-ing | interested in, good at, afraid of, thanks for, before / after |\n\n> They **suggested holding** a cultural festival.\n> Họ đề nghị tổ chức một lễ hội văn hoá.\n\n> My sister is good at **communicating** with foreigners.\n> Chị tôi giỏi giao tiếp với người nước ngoài.\n\n> We look forward to **visiting** Singapore next year.\n> Chúng tôi mong được thăm Singapore vào năm sau.\n\nLưu ý: ở cụm *look forward to*, chữ **to** là giới từ nên sau đó dùng V-ing, không dùng V nguyên mẫu.\n\n### So sánh với to V\n| Đi với V-ing | Đi với to V |\n|---|---|\n| enjoy, avoid, finish, consider, suggest | want, decide, hope, plan, agree, promise |\n\nMẹo nhớ: các động từ nói về \"hoạt động đã có sẵn hoặc đang nghĩ đến\" (enjoy, avoid, consider) thường dùng V-ing; động từ nói về \"mong muốn, dự định\" (want, decide) dùng to V.\n\n## Lỗi thường gặp\n- *Join youth programmes help students.* → **Joining** youth programmes **helps** students.\n- *They suggested to hold a festival.* → They suggested **holding** a festival.\n- *I am interested in to study abroad.* → I am interested in **studying** abroad.\n- *Learning languages are fun.* → Learning languages **is** fun.\n\n## Áp dụng vào bài thi\nDạng điền từ vào đoạn văn và chọn dạng đúng của động từ trong đề tốt nghiệp rất hay kiểm tra V-ing sau giới từ hoặc sau enjoy, avoid, consider. Hãy nhìn từ đứng ngay trước chỗ trống.\n\n> Our class is considering _____ a video about ASEAN culture.\n> (A) make (B) to make (C) making (D) made\n\n*consider* đi với V-ing, đáp án **(C) making**.\n\n## Tóm tắt\n- V-ing làm chủ ngữ thì động từ chia số ít.\n- Enjoy, avoid, consider, suggest, finish... + V-ing.\n- Sau giới từ luôn dùng V-ing, kể cả to trong look forward to.\n- Want, decide, hope, plan... dùng to V, đừng nhầm.",
+  "knowledge": {},
+  "exercises": [
+   {
+    "prompt": "Chọn dạng đúng của động từ",
+    "q": "_____ new friends from other ASEAN countries is a great experience.",
+    "options": [
+     "Making",
+     "Make",
+     "To making",
+     "Made"
+    ],
+    "explain": "Chủ ngữ là danh động từ nên dùng V-ing: Making."
+   },
+   {
+    "prompt": "Chọn dạng đúng của động từ",
+    "q": "Our teacher suggested _____ a trip to Laos.",
+    "options": [
+     "taking",
+     "to take",
+     "take",
+     "took"
+    ],
+    "explain": "suggest + V-ing."
+   },
+   {
+    "prompt": "Chọn dạng đúng của động từ",
+    "q": "Joining the cultural club _____ students improve their communication skills.",
+    "options": [
+     "helps",
+     "help",
+     "helping",
+     "to help"
+    ],
+    "explain": "Danh động từ làm chủ ngữ được coi là số ít nên động từ thêm -s: helps."
+   },
+   {
+    "prompt": "Chọn câu đúng",
+    "q": "Which sentence is correct?",
+    "options": [
+     "We look forward to meeting the exchange students.",
+     "We look forward to meet the exchange students.",
+     "We look forward meeting the exchange students.",
+     "We look forward to be meeting the exchange students."
+    ],
+    "explain": "Trong look forward to, to là giới từ nên theo sau là V-ing: meeting."
+   },
+   {
+    "prompt": "Chọn dạng đúng của động từ",
+    "q": "She avoided _____ about the problem during the meeting.",
+    "options": [
+     "talking",
+     "to talk",
+     "talk",
+     "talked"
+    ],
+    "explain": "avoid + V-ing."
+   },
+   {
+    "prompt": "Chọn dạng đúng của động từ",
+    "q": "He is interested in _____ for a scholarship to study in Singapore.",
+    "options": [
+     "applying",
+     "apply",
+     "to apply",
+     "applied"
+    ],
+    "explain": "Sau giới từ in dùng V-ing: applying."
+   }
+  ],
+  "en": {
+   "Dùng danh động từ (V-ing) làm chủ ngữ, tân ngữ sau enjoy, avoid, consider, suggest và sau giới từ, qua chủ đề ASEAN": "Using gerunds (V-ing) as subjects and objects after enjoy, avoid, consider, suggest and prepositions, with an ASEAN topic",
+   "Chọn dạng đúng của động từ": "Choose the correct verb form",
+   "Chọn câu đúng": "Choose the correct sentence"
+  },
+  "course": "Tiếng Anh 11 (Global Success)",
+  "title": "Ngữ pháp: Danh động từ (V-ing) làm chủ ngữ và tân ngữ"
+ },
+ {
+  "id": "04778941-165e-4df3-8116-d3c1380dbb96",
+  "summary": "Học 6 từ trọng tâm Unit 5 Global Warming: global warming, greenhouse gas, emission, fossil fuel, climate change, melt",
+  "contentMd": "## Mục tiêu bài học\n- Hiểu nghĩa, phiên âm và cách dùng 6 từ của Unit 5.\n- Biết các cụm từ đi cùng (collocation) khi nói về môi trường.\n- Dùng từ chính xác trong bài đọc điền từ và đọc hiểu.\n\n## Bảng từ vựng chính\n| Từ | Phiên âm | Loại từ | Nghĩa | Ví dụ |\n|---|---|---|---|---|\n| global warming | /ˌɡləʊbl ˈwɔːmɪŋ/ | n | sự nóng lên toàn cầu | **Global warming** is raising sea levels. |\n| greenhouse gas | /ˈɡriːnhaʊs ɡæs/ | n | khí nhà kính | Carbon dioxide is a **greenhouse gas**. |\n| emission | /iˈmɪʃn/ | n | sự thải ra, khí thải | We must cut carbon **emissions**. |\n| fossil fuel | /ˌfɒsl ˈfjuːəl/ | n | nhiên liệu hoá thạch | Coal and oil are **fossil fuels**. |\n| climate change | /ˈklaɪmət tʃeɪndʒ/ | n | biến đổi khí hậu | **Climate change** causes extreme weather. |\n| melt | /melt/ | v | tan chảy | Glaciers **melt** faster each year. |\n\n## Giải thích từng từ\n### global warming, climate change và greenhouse gas\n**Global warming** chỉ việc nhiệt độ Trái Đất tăng dần, còn **climate change** rộng hơn: gồm cả bão, hạn hán, mưa lớn thất thường. Cả hai là danh từ không đếm được. **Greenhouse gas** (khí nhà kính) như CO₂ và methane giữ nhiệt trong khí quyển, gây ra hiệu ứng nhà kính (*the greenhouse effect*).\n\n> Greenhouse gases trap heat and cause **global warming**.\n> Khí nhà kính giữ nhiệt và gây ra sự nóng lên toàn cầu.\n\n### emission và fossil fuel\n**Emission** thường dùng số nhiều: *carbon emissions*, *exhaust emissions*. Động từ gốc là *emit* (thải ra). Collocation: *reduce / cut / limit emissions*. **Fossil fuel** gồm than, dầu mỏ, khí tự nhiên; ngược lại là *renewable energy* (năng lượng tái tạo) như solar, wind.\n\n> Burning **fossil fuels** produces a lot of carbon **emissions**.\n> Đốt nhiên liệu hoá thạch tạo ra nhiều khí thải carbon.\n\n### melt\n**Melt** là động từ, chia melts / melted / melted. Chủ ngữ thường là băng, tuyết, kem, chì. Nghĩa gần: *thaw*. Có cụm *melting ice caps* (các chỏm băng đang tan) và *melt away*.\n\n> Polar ice is **melting**, so sea levels are rising.\n> Băng ở hai cực đang tan nên mực nước biển dâng cao.\n\n## Mẹo nhớ và lỗi dùng từ\n- Nhớ họ từ: *emit* (v) → *emission* (n); *warm* (adj) → *warming* (n).\n- Sai: *a global warming* → đúng: **global warming** (không dùng a).\n- Sai: *Fossil fuel are limited.* → **Fossil fuels are** limited (nói về nhiều loại nhiên liệu thì dùng số nhiều).\n- Sai: *The ice is melted* khi nói về quá trình đang diễn ra → **The ice is melting**.\n- Phát âm: *greenhouse* nhấn âm đầu /ˈɡriːn/, *emission* nhấn âm thứ hai /iˈmɪʃn/.\n\n## Áp dụng vào bài thi\nBài đọc về môi trường trong đề tốt nghiệp thường dùng các từ này trong đoạn văn ngắn rồi hỏi về nguyên nhân và biện pháp. Hãy gạch chân từ khoá *cause*, *result in*, *reduce* để tìm ý đúng và đừng bị bẫy bởi từ gần nghĩa.\n\n> Scientists urge governments to reduce carbon _____ from cars and factories.\n> (A) emissions (B) melts (C) warmings (D) fuel\n\nCụm *carbon emissions* là collocation cố định, đáp án **(A)**.\n\n## Tóm tắt\n- Global warming và climate change là danh từ không đếm được; greenhouse gas giữ nhiệt trong khí quyển.\n- Emission (n) đi với reduce / cut; fossil fuel gồm than, dầu, khí tự nhiên.\n- Melt (v) dùng cho băng, tuyết.\n- Học theo cụm từ để dễ chọn đáp án trong bài điền từ.",
+  "knowledge": {},
+  "exercises": [
+   {
+    "prompt": "Chọn nghĩa đúng",
+    "q": "What is a \"fossil fuel\"?",
+    "options": [
+     "nhiên liệu hoá thạch",
+     "năng lượng mặt trời",
+     "khí nhà kính",
+     "nhiên liệu sinh học"
+    ],
+    "explain": "fossil fuel là nhiên liệu hoá thạch như than, dầu mỏ."
+   },
+   {
+    "prompt": "Chọn từ phù hợp",
+    "q": "Factories must reduce their carbon _____ to protect the climate.",
+    "options": [
+     "emissions",
+     "melts",
+     "warmings",
+     "fuels"
+    ],
+    "explain": "carbon emissions là cụm từ cố định, nghĩa là khí thải carbon."
+   },
+   {
+    "prompt": "Chọn dạng đúng của động từ",
+    "q": "Because of global warming, the ice at the North Pole is _____ quickly.",
+    "options": [
+     "melting",
+     "melted",
+     "melts",
+     "to melt"
+    ],
+    "explain": "Quá trình đang diễn ra nên dùng is melting."
+   },
+   {
+    "prompt": "Chọn nghĩa đúng",
+    "q": "Which of the following is a greenhouse gas?",
+    "options": [
+     "Carbon dioxide",
+     "Oxygen",
+     "Nitrogen",
+     "Helium"
+    ],
+    "explain": "Carbon dioxide (CO2) là khí nhà kính điển hình; oxygen, nitrogen không giữ nhiệt đáng kể."
+   },
+   {
+    "prompt": "Chọn câu đúng",
+    "q": "Which sentence is correct?",
+    "options": [
+     "Climate change is a serious threat to the world.",
+     "A climate change are a serious threat to the world.",
+     "Climate changes is a serious threat to the world.",
+     "The climate change were a serious threat to the world."
+    ],
+    "explain": "climate change là danh từ không đếm được, đi với is, không dùng a."
+   },
+   {
+    "prompt": "Chọn từ phù hợp",
+    "q": "Solar and wind power are better choices than coal because coal is a _____.",
+    "options": [
+     "fossil fuel",
+     "greenhouse",
+     "global warming",
+     "climate"
+    ],
+    "explain": "coal (than đá) là fossil fuel; các lựa chọn còn lại sai nghĩa hoặc không đủ cụm."
+   }
+  ],
+  "en": {
+   "Học 6 từ trọng tâm Unit 5 Global Warming: global warming, greenhouse gas, emission, fossil fuel, climate change, melt": "Six key words of Unit 5 Global Warming: global warming, greenhouse gas, emission, fossil fuel, climate change, melt",
+   "Chọn nghĩa đúng": "Choose the correct meaning",
+   "Chọn từ phù hợp": "Choose the suitable word",
+   "Chọn dạng đúng của động từ": "Choose the correct verb form",
+   "Chọn câu đúng": "Choose the correct sentence"
+  },
+  "course": "Tiếng Anh 11 (Global Success)",
+  "title": "Từ vựng: Global Warming"
+ },
+ {
+  "id": "33d377b1-0c67-4e23-a0cc-a6f79d43d1de",
+  "summary": "Rút gọn mệnh đề bằng phân từ hiện tại (V-ing) và phân từ quá khứ (V3/ed), qua chủ đề Global Warming",
+  "contentMd": "## Mục tiêu bài học\n- Hiểu mệnh đề phân từ là gì và vì sao dùng để rút gọn câu.\n- Phân biệt V-ing (chủ động) và V3/ed (bị động) đứng đầu câu.\n- Tránh lỗi sai chủ ngữ (dangling participle).\n\n## Mệnh đề phân từ hiện tại (V-ing)\nKhi hai hành động có **cùng chủ ngữ** và mang nghĩa **chủ động**, ta rút gọn mệnh đề phụ thành cụm V-ing đứng đầu câu, ngăn cách bằng dấu phẩy.\n\n`V-ing …, S + V`\n\n> **Burning** fossil fuels, factories release greenhouse gases.\n> Đốt nhiên liệu hoá thạch, các nhà máy thải ra khí nhà kính.\n\nCâu đầy đủ: *Because / When factories burn fossil fuels, they release greenhouse gases.* Mệnh đề phân từ có thể mang nghĩa nguyên nhân, thời gian hoặc hai hành động liên tiếp.\n\n> **Living** near the coast, many families are worried about rising sea levels.\n> Sống gần bờ biển, nhiều gia đình lo lắng về mực nước biển dâng.\n\n## Mệnh đề phân từ quá khứ (V3/ed)\nKhi chủ ngữ **bị tác động** (nghĩa bị động), dùng V3/ed. Câu gốc thường có *Because it was / When it was + V3*.\n\n`V3/ed …, S + V`\n\n> **Destroyed** by the storm, the forest took years to recover.\n> Bị cơn bão tàn phá, khu rừng mất nhiều năm để phục hồi.\n\n> **Warned** about the danger, the villagers left early.\n> Được cảnh báo về mối nguy, dân làng đã rời đi sớm.\n\n### Bảng so sánh\n| | Phân từ hiện tại | Phân từ quá khứ |\n|---|---|---|\n| Dạng | V-ing | V3/ed |\n| Nghĩa | chủ động | bị động |\n| Chủ ngữ chính | tự làm hành động | bị tác động |\n| Ví dụ | Seeing the smoke, he called for help. | Seen from space, the Earth looks blue. |\n\nCách kiểm tra: đặt chủ ngữ chính vào vị trí chủ ngữ của cụm. Nếu \"chủ ngữ tự làm\" thì V-ing; nếu \"bị làm\" thì V3/ed.\n\n## Lỗi thường gặp\n- Sai chủ ngữ: *Walking along the beach, the plastic bottles made me sad.* → **Walking along the beach, I saw** plastic bottles that made me sad. (người đi bộ phải là chủ ngữ chính).\n- *Destroying by the storm, the forest ...* → **Destroyed** by the storm, the forest ...\n- *Burned fossil fuels, factories release gases.* → **Burning** fossil fuels, ... (nhà máy chủ động đốt).\n- Quên dấu phẩy sau cụm phân từ.\n\n## Áp dụng vào bài thi\nDạng điền cụm hoặc mệnh đề vào đoạn văn thường có chỗ trống đầu câu như \"_____ by pollution, the river is dying\". Hãy tìm chủ ngữ của mệnh đề chính rồi xem nghĩa chủ động hay bị động.\n\n> _____ the use of coal, the country has cut its emissions.\n> (A) Reduced (B) Reducing (C) To be reduced (D) Having been reduced\n\nChủ ngữ *the country* tự giảm việc dùng than (chủ động), đáp án **(B) Reducing**. Nếu câu là *_____ by new laws, emissions fell* thì chọn Reduced vì emissions bị giảm.\n\n## Tóm tắt\n- Cụm phân từ rút gọn mệnh đề phụ khi hai mệnh đề cùng chủ ngữ.\n- V-ing: nghĩa chủ động; V3/ed: nghĩa bị động.\n- Chủ ngữ của mệnh đề chính phải chính là chủ thể của cụm phân từ.\n- Luôn có dấu phẩy giữa cụm phân từ và mệnh đề chính.",
+  "knowledge": {},
+  "exercises": [
+   {
+    "prompt": "Chọn dạng đúng của động từ",
+    "q": "_____ the news about melting glaciers, the students started a recycling project.",
+    "options": [
+     "Hearing",
+     "Heard",
+     "To hear",
+     "Having been hear"
+    ],
+    "explain": "Chủ ngữ the students tự nghe (chủ động) nên dùng V-ing: Hearing."
+   },
+   {
+    "prompt": "Chọn dạng đúng của động từ",
+    "q": "_____ by heavy floods, the village needed help from the government.",
+    "options": [
+     "Damaged",
+     "Damaging",
+     "Damage",
+     "To damage"
+    ],
+    "explain": "Ngôi làng bị tàn phá (bị động) nên dùng V3/ed: Damaged."
+   },
+   {
+    "prompt": "Chọn câu đúng",
+    "q": "Which sentence is correct?",
+    "options": [
+     "Seeing the dark clouds, we cancelled the picnic.",
+     "Seeing the dark clouds, the picnic was cancelled.",
+     "Seen the dark clouds, we cancelled the picnic.",
+     "See the dark clouds, we cancelled the picnic."
+    ],
+    "explain": "Chủ ngữ của cụm Seeing phải là người nhìn (we); câu B bị sai chủ ngữ."
+   },
+   {
+    "prompt": "Chọn dạng đúng của động từ",
+    "q": "_____ in the 19th century, the factory still pollutes the river.",
+    "options": [
+     "Built",
+     "Building",
+     "To build",
+     "Having build"
+    ],
+    "explain": "Nhà máy được xây (bị động) nên dùng Built."
+   },
+   {
+    "prompt": "Chọn dạng đúng của động từ",
+    "q": "_____ on the beach, I noticed a lot of plastic waste.",
+    "options": [
+     "Walking",
+     "Walked",
+     "Walk",
+     "To be walked"
+    ],
+    "explain": "Chủ ngữ I tự đi bộ nên dùng V-ing: Walking."
+   },
+   {
+    "prompt": "Chọn câu đúng",
+    "q": "Which sentence uses a past participle clause correctly?",
+    "options": [
+     "Covered with snow, the mountain looked beautiful.",
+     "Covering with snow, the mountain looked beautiful.",
+     "Cover with snow, the mountain looked beautiful.",
+     "Covered with snow, the mountain looking beautiful."
+    ],
+    "explain": "Ngọn núi bị phủ tuyết (bị động) nên dùng Covered, theo sau là mệnh đề chính đầy đủ."
+   }
+  ],
+  "en": {
+   "Rút gọn mệnh đề bằng phân từ hiện tại (V-ing) và phân từ quá khứ (V3/ed), qua chủ đề Global Warming": "Reducing clauses with present and past participles, through the topic Global Warming",
+   "Chọn dạng đúng của động từ": "Choose the correct verb form",
+   "Chọn câu đúng": "Choose the correct sentence"
+  },
+  "course": "Tiếng Anh 11 (Global Success)",
+  "title": "Ngữ pháp: Phân từ hiện tại và phân từ quá khứ"
+ },
+ {
+  "id": "3c8ee4de-2982-4343-9a06-1ee4f0742b95",
+  "summary": "Học 6 từ trọng tâm Unit 6 Preserving Our Heritage: heritage, preserve, historic, landscape, restore, intangible",
+  "contentMd": "## Mục tiêu bài học\n- Nắm nghĩa, phiên âm, loại từ của 6 từ Unit 6.\n- Phân biệt các từ dễ nhầm như historic và historical.\n- Dùng từ trong bài đọc về di sản và du lịch.\n\n## Bảng từ vựng chính\n| Từ | Phiên âm | Loại từ | Nghĩa | Ví dụ |\n|---|---|---|---|---|\n| heritage | /ˈherɪtɪdʒ/ | n | di sản | Hue is a World **Heritage** site. |\n| preserve | /prɪˈzɜːv/ | v | bảo tồn, gìn giữ | We must **preserve** our traditions. |\n| historic | /hɪˈstɒrɪk/ | adj | có tính lịch sử | They visited a **historic** temple. |\n| landscape | /ˈlændskeɪp/ | n | phong cảnh | Ha Long Bay has a stunning **landscape**. |\n| restore | /rɪˈstɔː/ | v | trùng tu, khôi phục | Workers **restored** the old gate. |\n| intangible | /ɪnˈtændʒəbl/ | adj | phi vật thể | Water puppetry is **intangible** heritage. |\n\n## Giải thích từng từ\n### heritage và intangible\n**Heritage** là những gì tổ tiên để lại, gồm vật thể (*tangible*) như đền chùa, và phi vật thể (**intangible**) như ca trù, nhã nhạc cung đình Huế, lễ hội. Cụm: *cultural heritage*, *World Heritage Site*, *natural heritage*. Tính từ *intangible* nghĩa là không thể sờ thấy, trái nghĩa với *tangible*.\n\n> Many folk songs are part of Viet Nam's **intangible** cultural **heritage**.\n> Nhiều làn điệu dân ca là một phần di sản văn hoá phi vật thể của Việt Nam.\n\n### preserve và restore\n**Preserve** là giữ nguyên hiện trạng không để mất; danh từ *preservation*. **Restore** là đưa về tình trạng ban đầu sau khi bị hư hại; danh từ *restoration*. Hai từ dễ lẫn: preserve = giữ gìn, restore = sửa chữa, phục hồi.\n\n> The government spent millions to **restore** the ancient citadel.\n> Chính phủ chi hàng triệu để trùng tu thành cổ.\n\n> Local people work together to **preserve** the old streets.\n> Người dân địa phương cùng gìn giữ các con phố cổ.\n\n### historic và landscape\n**Historic** nghĩa là quan trọng trong lịch sử (*a historic victory*), còn **historical** nghĩa là thuộc về lịch sử (*historical records*, *a historical novel*). **Landscape** là cảnh quan tự nhiên, thường đi với *beautiful*, *rural*, *mountain*; không nhầm với *scenery* (không đếm được).\n\n> Tourists come to see the **historic** town and its beautiful **landscape**.\n> Du khách đến thăm thị trấn cổ và phong cảnh đẹp của nơi đây.\n\n## Mẹo nhớ và lỗi dùng từ\n- Nhớ cặp trọng âm: **he**ritage nhấn âm 1; pre-**serve** và re-**store** nhấn âm 2.\n- Sai: *historical town* (ý \"thị trấn nổi tiếng lịch sử\") → thường dùng **historic town**.\n- Sai: *preserve the temple to its original state* → **restore** the temple to its original state.\n- *Heritage* là danh từ không đếm được: không nói *a heritage* khi nói chung.\n\n## Áp dụng vào bài thi\nĐề thi hay có bài đọc về một di sản hoặc quảng cáo tour tham quan. Từ vựng chủ đề này thường xuất hiện trong câu hỏi từ đồng nghĩa hoặc điền từ vào quảng cáo.\n\n> The old pagoda was badly damaged, so it has been _____ to its original look.\n> (A) preserved (B) restored (C) intangible (D) historic\n\n*to its original look* gợi ý đưa về tình trạng cũ, đáp án **(B) restored**.\n\n## Tóm tắt\n- Heritage (di sản) gồm tangible và intangible.\n- Preserve: giữ gìn; restore: trùng tu, khôi phục.\n- Historic: có ý nghĩa lịch sử; historical: thuộc về lịch sử.\n- Landscape là phong cảnh, thường đi với tính từ chỉ vẻ đẹp.",
+  "knowledge": {},
+  "exercises": [
+   {
+    "prompt": "Chọn nghĩa đúng",
+    "q": "What does \"intangible\" mean?",
+    "options": [
+     "phi vật thể",
+     "vật thể",
+     "cổ xưa",
+     "hiện đại"
+    ],
+    "explain": "intangible là không thể sờ thấy được, phi vật thể."
+   },
+   {
+    "prompt": "Chọn từ phù hợp",
+    "q": "The temple was damaged by the war, but workers have _____ it to its original beauty.",
+    "options": [
+     "restored",
+     "preserved",
+     "intangible",
+     "heritage"
+    ],
+    "explain": "restore ... to its original beauty nghĩa là trùng tu đưa về như ban đầu."
+   },
+   {
+    "prompt": "Chọn từ phù hợp",
+    "q": "We should _____ our traditions for future generations.",
+    "options": [
+     "preserve",
+     "restore",
+     "intangible",
+     "landscape"
+    ],
+    "explain": "preserve nghĩa giữ gìn; cần một động từ nguyên mẫu sau should."
+   },
+   {
+    "prompt": "Chọn từ phù hợp",
+    "q": "Hoi An is a _____ town visited by millions of tourists.",
+    "options": [
+     "historic",
+     "intangible",
+     "restore",
+     "preserve"
+    ],
+    "explain": "Cần một tính từ bổ nghĩa town; historic là tính từ đúng nghĩa."
+   },
+   {
+    "prompt": "Chọn câu đúng",
+    "q": "Which sentence is correct?",
+    "options": [
+     "Cultural heritage is important to every nation.",
+     "A cultural heritage are important to every nation.",
+     "Cultural heritages is important to every nation.",
+     "The cultural heritage were important to every nation."
+    ],
+    "explain": "heritage là danh từ không đếm được, chia động từ số ít: is."
+   },
+   {
+    "prompt": "Chọn nghĩa đúng",
+    "q": "Which word means \"phong cảnh\"?",
+    "options": [
+     "landscape",
+     "heritage",
+     "tuition",
+     "emission"
+    ],
+    "explain": "landscape là phong cảnh, cảnh quan."
+   }
+  ],
+  "en": {
+   "Học 6 từ trọng tâm Unit 6 Preserving Our Heritage: heritage, preserve, historic, landscape, restore, intangible": "Six key words of Unit 6 Preserving Our Heritage: heritage, preserve, historic, landscape, restore, intangible",
+   "Chọn nghĩa đúng": "Choose the correct meaning",
+   "Chọn từ phù hợp": "Choose the suitable word",
+   "Chọn câu đúng": "Choose the correct sentence"
+  },
+  "course": "Tiếng Anh 11 (Global Success)",
+  "title": "Từ vựng: Preserving Our Heritage"
+ },
+ {
+  "id": "6a0c2465-9122-4658-9fc0-89f95b087819",
+  "summary": "Dùng to-infinitive thay mệnh đề quan hệ sau the first, the last, the only, so sánh nhất và để chỉ mục đích",
+  "contentMd": "## Mục tiêu bài học\n- Dùng to V sau số thứ tự, the only, so sánh nhất để rút gọn mệnh đề quan hệ.\n- Dùng to V chỉ mục đích.\n- Biết rút gọn dạng chủ động và bị động (to be V3).\n\n## To V thay cho mệnh đề quan hệ\nSau **the first / the second / the last / the only / so sánh nhất** + danh từ, ta có thể dùng **to V** thay cho mệnh đề quan hệ có who hoặc which.\n\n`the first / the last / the only / the best + N + to V`\n\n> Ha Long Bay was the first site in Viet Nam **to be recognised** by UNESCO.\n> Vịnh Hạ Long là di sản đầu tiên của Việt Nam được UNESCO công nhận.\n\nCâu gốc: *...the first site that was recognised by UNESCO.* Khi nghĩa **bị động** ta dùng `to be + V3/ed`; khi chủ động dùng `to V`.\n\n> She was the only student **to visit** the museum twice.\n> Cô ấy là học sinh duy nhất đến thăm bảo tàng hai lần.\n\n> He is the best guide **to show** tourists around the old quarter.\n> Anh ấy là hướng dẫn viên giỏi nhất để dẫn du khách quanh khu phố cổ.\n\nLưu ý: có thể thêm *for + người* khi chủ thể khác: *the best place for tourists to visit*.\n\n## To V chỉ mục đích\nTo V trả lời câu hỏi \"để làm gì?\". Có thể thay bằng *in order to* hoặc *so as to* (phủ định: *in order not to*, *so as not to*).\n\n`S + V + (in order) to V`\n\n> We raised money **to restore** the old pagoda.\n> Chúng tôi quyên tiền để trùng tu ngôi chùa cổ.\n\n> The city closed the street **in order to protect** the ancient walls.\n> Thành phố đóng con phố để bảo vệ bức tường cổ.\n\n### So sánh các cách dùng\n| Cách dùng | Công thức | Ví dụ |\n|---|---|---|\n| Rút gọn quan hệ | N + to V | the first person to arrive |\n| Mục đích | to V / in order to V | study hard to pass the exam |\n| Phủ định mục đích | so as not to V | speak softly so as not to wake him |\n\n## Lỗi thường gặp\n- *the first site recognised UNESCO* → the first site **to be recognised** by UNESCO.\n- *We went there for visiting the museum.* → We went there **to visit** the museum.\n- *to not damage* khi nói mục đích trang trọng → **not to damage** / **so as not to damage**.\n- Dùng *for* + V-ing để chỉ mục đích của người: *I called for asking* → I called **to ask**.\n\n## Áp dụng vào bài thi\nDạng điền cụm hoặc chọn câu đúng trong đề tốt nghiệp thường cho cấu trúc *the first / only + N + ...*. Nhìn từ *the first, the last, the only* để nhận ra ngay to V. Với chỗ trống chỉ mục đích, kiểm tra xem câu có đủ chủ ngữ và động từ chính chưa.\n\n> Nguyen Du was the first Vietnamese poet _____ by UNESCO as a World Cultural Figure.\n> (A) honouring (B) honoured (C) to be honoured (D) who honoured\n\nNghĩa bị động và có *the first*, đáp án **(C) to be honoured**.\n\n## Tóm tắt\n- The first / last / only / so sánh nhất + N + to V thay mệnh đề quan hệ.\n- Bị động dùng to be + V3/ed.\n- To V (in order to, so as to) chỉ mục đích; phủ định thêm not trước to.\n- Không dùng for + V-ing để chỉ mục đích của hành động.",
+  "knowledge": {},
+  "exercises": [
+   {
+    "prompt": "Chọn dạng đúng của động từ",
+    "q": "Mai was the first student in our class _____ the heritage competition.",
+    "options": [
+     "to win",
+     "winning",
+     "won",
+     "wins"
+    ],
+    "explain": "Sau the first + N, dùng to V thay cho mệnh đề quan hệ chủ động: to win."
+   },
+   {
+    "prompt": "Chọn dạng đúng của động từ",
+    "q": "Ha Long Bay was the first site in Viet Nam _____ by UNESCO.",
+    "options": [
+     "to be recognised",
+     "to recognise",
+     "recognising",
+     "recognises"
+    ],
+    "explain": "Di sản được công nhận (bị động) nên dùng to be + V3: to be recognised."
+   },
+   {
+    "prompt": "Chọn dạng đúng của động từ",
+    "q": "We held a charity show _____ money for restoring the temple.",
+    "options": [
+     "to raise",
+     "raising",
+     "for raise",
+     "raised"
+    ],
+    "explain": "Mục đích dùng to V: to raise."
+   },
+   {
+    "prompt": "Chọn câu đúng",
+    "q": "Which sentence is correct?",
+    "options": [
+     "She is the only person to know the secret.",
+     "She is the only person knowing to the secret.",
+     "She is the only person to knowing the secret.",
+     "She is the only person know the secret."
+    ],
+    "explain": "the only + N + to V thay mệnh đề quan hệ."
+   },
+   {
+    "prompt": "Chọn dạng đúng của động từ",
+    "q": "He spoke quietly so as _____ the other visitors.",
+    "options": [
+     "not to disturb",
+     "not disturb",
+     "to not disturbing",
+     "no to disturb"
+    ],
+    "explain": "Phủ định mục đích: so as not to + V."
+   },
+   {
+    "prompt": "Chọn dạng đúng của động từ",
+    "q": "The Temple of Literature is one of the best places _____ in Ha Noi.",
+    "options": [
+     "to visit",
+     "visiting",
+     "visits",
+     "visited to"
+    ],
+    "explain": "Sau so sánh nhất + N dùng to V; nghĩa là nơi tốt nhất để đến thăm."
+   }
+  ],
+  "en": {
+   "Dùng to-infinitive thay mệnh đề quan hệ sau the first, the last, the only, so sánh nhất và để chỉ mục đích": "Using to-infinitive clauses after the first, the last, the only and superlatives, and to express purpose",
+   "Chọn dạng đúng của động từ": "Choose the correct verb form",
+   "Chọn câu đúng": "Choose the correct sentence"
+  },
+  "course": "Tiếng Anh 11 (Global Success)",
+  "title": "Ngữ pháp: Mệnh đề to-infinitive"
+ },
+ {
+  "id": "224474dd-9e3b-41fe-b370-2d90449b6dd5",
+  "summary": "Học 6 từ trọng tâm Unit 7 Education Options for School-Leavers: school-leaver, vocational school, apprenticeship, qualification, academic, tuition fee",
+  "contentMd": "## Mục tiêu bài học\n- Nắm nghĩa, phiên âm, loại từ của 6 từ Unit 7.\n- Phân biệt các lựa chọn học tập sau phổ thông.\n- Dùng từ vựng đúng trong bài đọc về hướng nghiệp.\n\n## Bảng từ vựng chính\n| Từ | Phiên âm | Loại từ | Nghĩa | Ví dụ |\n|---|---|---|---|---|\n| school-leaver | /ˈskuːl liːvə/ | n | người vừa tốt nghiệp phổ thông | Every **school-leaver** must choose a path. |\n| vocational school | /vəʊˈkeɪʃənl skuːl/ | n | trường dạy nghề | He studies cooking at a **vocational school**. |\n| apprenticeship | /əˈprentɪʃɪp/ | n | học việc | She began an **apprenticeship** as an electrician. |\n| qualification | /ˌkwɒlɪfɪˈkeɪʃn/ | n | bằng cấp | A good **qualification** helps you find a job. |\n| academic | /ˌækəˈdemɪk/ | adj | học thuật | Some students prefer **academic** study. |\n| tuition fee | /tjuˈɪʃn fiː/ | n | học phí | University **tuition fees** are rising. |\n\n## Giải thích từng từ\n### school-leaver và các lựa chọn sau phổ thông\n**School-leaver** chỉ người vừa rời trường phổ thông. Sau đó họ có thể học đại học (*university / college*), học nghề tại **vocational school** (học một nghề cụ thể như sửa xe, nấu ăn), hoặc làm **apprenticeship** (vừa học vừa làm có hướng dẫn của thợ lành nghề), hoặc đi làm ngay hay học nghề.\n\n> A **school-leaver** can join an **apprenticeship** and earn money while learning.\n> Một học sinh mới tốt nghiệp có thể học việc và vừa học vừa kiếm tiền.\n\n### qualification và academic\n**Qualification** là chứng chỉ, bằng cấp, kết quả sau khoá học hoặc kỳ thi (*a degree*, *a certificate*). Collocation: *get / gain / hold a qualification*. **Academic** là tính từ chỉ học thuật, nghiên cứu, thiên về lý thuyết; trái với *practical* hay *vocational*. Cụm: *academic subjects*, *academic year*, *academic performance*.\n\n> She holds a **qualification** in tourism from a well-known college.\n> Cô ấy có bằng về du lịch của một trường cao đẳng nổi tiếng.\n\n### tuition fee\n**Tuition fee** là học phí (thường dùng số nhiều: *tuition fees*). Không nhầm với *school fee* hoặc *fee* chung chung. Collocation: *pay / afford tuition fees*, *a scholarship covers tuition fees*.\n\n> Many students apply for scholarships because they can't afford high **tuition fees**.\n> Nhiều học sinh xin học bổng vì không đủ tiền đóng học phí cao.\n\n## Mẹo nhớ và lỗi dùng từ\n- Trọng âm: appren-**tice**-ship nhấn âm 2; qualifi-**ca**-tion nhấn âm 4; a-ca-**de**-mic nhấn âm 3.\n- Sai: *The tuition fee are high.* → **The tuition fees are** high (hoặc *The tuition fee is high*, số ít và động từ số ít phải khớp nhau).\n- Sai: *academical* → đúng: **academic**.\n- *Qualification* (n) khác *qualified* (adj, đủ điều kiện): *a qualified teacher*.\n\n## Áp dụng vào bài thi\nBài đọc về hướng nghiệp thường hỏi lợi ích của từng lựa chọn. Hãy gạch từ khoá *apprenticeship, practical, academic* để so sánh các phương án. Đề điền quảng cáo trường nghề hay dùng *qualification* và *tuition fee*.\n\n> After finishing an _____ at a garage, he became a skilled mechanic.\n> (A) apprenticeship (B) academic (C) tuition (D) leaver\n\nTừ cần là danh từ có mạo từ *an*, nghĩa là quá trình học việc, đáp án **(A)**.\n\n## Tóm tắt\n- School-leaver: người vừa tốt nghiệp phổ thông.\n- Vocational school dạy nghề; apprenticeship là vừa học vừa làm.\n- Qualification là bằng cấp; academic là tính từ chỉ học thuật.\n- Tuition fee thường dùng số nhiều: tuition fees.",
+  "knowledge": {},
+  "exercises": [
+   {
+    "prompt": "Chọn nghĩa đúng",
+    "q": "What is an \"apprenticeship\"?",
+    "options": [
+     "Thời gian học việc vừa học vừa làm",
+     "Một kỳ thi đại học",
+     "Một loại học bổng",
+     "Một khoá học trực tuyến"
+    ],
+    "explain": "apprenticeship là quá trình học nghề trực tiếp tại nơi làm việc."
+   },
+   {
+    "prompt": "Chọn từ phù hợp",
+    "q": "Many families find it hard to pay university _____.",
+    "options": [
+     "tuition fees",
+     "qualifications",
+     "school-leavers",
+     "apprenticeships"
+    ],
+    "explain": "pay tuition fees là collocation: đóng học phí."
+   },
+   {
+    "prompt": "Chọn từ phù hợp",
+    "q": "She wants a practical job, so she plans to study at a _____ school.",
+    "options": [
+     "vocational",
+     "academic",
+     "tuition",
+     "qualified"
+    ],
+    "explain": "vocational school là trường dạy nghề, hợp với công việc thực tế."
+   },
+   {
+    "prompt": "Chọn dạng đúng của từ",
+    "q": "A university degree is a valuable _____ for many jobs.",
+    "options": [
+     "qualification",
+     "qualify",
+     "qualified",
+     "qualifying"
+    ],
+    "explain": "Sau tính từ valuable cần danh từ: qualification."
+   },
+   {
+    "prompt": "Chọn từ phù hợp",
+    "q": "He prefers _____ subjects such as maths and physics to practical ones.",
+    "options": [
+     "academic",
+     "vocational",
+     "tuition",
+     "apprentice"
+    ],
+    "explain": "Đối lập với practical là academic (thiên về học thuật)."
+   },
+   {
+    "prompt": "Chọn nghĩa đúng",
+    "q": "Which word means \"người vừa tốt nghiệp phổ thông\"?",
+    "options": [
+     "school-leaver",
+     "apprentice",
+     "applicant",
+     "employer"
+    ],
+    "explain": "school-leaver chỉ người vừa rời trường phổ thông."
+   }
+  ],
+  "en": {
+   "Học 6 từ trọng tâm Unit 7 Education Options for School-Leavers: school-leaver, vocational school, apprenticeship, qualification, academic, tuition fee": "Six key words of Unit 7 Education Options for School-Leavers: school-leaver, vocational school, apprenticeship, qualification, academic, tuition fee",
+   "Chọn nghĩa đúng": "Choose the correct meaning",
+   "Chọn từ phù hợp": "Choose the suitable word",
+   "Chọn dạng đúng của từ": "Choose the correct form of the word"
+  },
+  "course": "Tiếng Anh 11 (Global Success)",
+  "title": "Từ vựng: Education Options for School-Leavers"
+ },
+ {
+  "id": "a04e839f-e0af-4d74-a957-25a96cc0649e",
+  "summary": "Dùng danh động từ hoàn thành (having + V3/ed) và mệnh đề phân từ hoàn thành để nói hành động xảy ra trước",
+  "contentMd": "## Mục tiêu bài học\n- Dùng having + V3/ed như danh động từ và như mệnh đề phân từ.\n- Hiểu hành động nào xảy ra trước, hành động nào xảy ra sau.\n- Biết khi nào có thể thay bằng dạng rút gọn đơn giản.\n\n## Danh động từ hoàn thành\nDanh động từ hoàn thành có dạng `having + V3/ed` (bị động: `having been + V3/ed`). Nó nhấn mạnh hành động đã xảy ra **trước** hành động của động từ chính, và thường đứng sau giới từ hoặc sau các động từ như admit, deny, regret, remember.\n\n> He was proud of **having passed** the entrance exam.\n> Cậu ấy tự hào vì đã vượt qua kỳ thi đầu vào.\n\n> She regrets **not having applied** for the scholarship.\n> Cô ấy tiếc vì đã không nộp đơn xin học bổng.\n\n> They thanked their teacher for **having given** them useful advice.\n> Họ cảm ơn thầy vì đã cho họ lời khuyên hữu ích.\n\nPhủ định: `not having + V3/ed`.\n\n## Mệnh đề phân từ hoàn thành\nKhi hai hành động **cùng chủ ngữ** và hành động thứ nhất hoàn tất trước hành động thứ hai, ta rút gọn mệnh đề đầu bằng `Having + V3/ed …, S + V`.\n\n> **Having finished** school, she applied for an apprenticeship.\n> Học xong phổ thông, cô ấy nộp đơn học việc.\n\nCâu đầy đủ: *After she had finished school, she applied for an apprenticeship.* Mệnh đề phân từ này mang nghĩa thời gian hoặc nguyên nhân.\n\n> **Having not found** a suitable course, he decided to work first.\n> Vì chưa tìm được khoá học phù hợp, anh ấy quyết định đi làm trước.\n\nBị động: `Having been + V3/ed`, ví dụ *Having been rejected by two colleges, she tried a vocational school.*\n\n### So sánh\n| Dạng | Công thức | Ý nghĩa |\n|---|---|---|\n| Phân từ hiện tại | V-ing …, S + V | hai hành động gần như cùng lúc |\n| Phân từ hoàn thành | Having + V3/ed …, S + V | hành động 1 xong trước hành động 2 |\n| Phân từ quá khứ | V3/ed …, S + V | nghĩa bị động |\n\n## Lỗi thường gặp\n- *Finishing school, she had applied ...* (thứ tự không hợp lý) → **Having finished** school, she applied ...\n- *Having finish school ...* → Having **finished** school ...\n- Khác chủ ngữ: *Having left school, the apprenticeship was easy.* → Having left school, **he found** the apprenticeship easy.\n- *proud of to pass* → proud of **having passed** / proud of **passing**.\n\n## Áp dụng vào bài thi\nDạng điền cụm vào chỗ trống đầu câu có thể cho nhiều phân từ. Hãy nhìn mối quan hệ thời gian và chủ ngữ của mệnh đề chính.\n\n> _____ from high school, Linh decided to study at a vocational college.\n> (A) Graduate (B) Having graduated (C) Graduated (D) To graduate\n\nHành động graduate hoàn tất trước khi quyết định, chủ ngữ Linh chủ động, đáp án **(B) Having graduated**.\n\n## Tóm tắt\n- having + V3/ed: hành động xảy ra trước hành động chính.\n- Bị động: having been + V3/ed; phủ định: not having + V3/ed.\n- Mệnh đề phân từ hoàn thành cần cùng chủ ngữ với mệnh đề chính.\n- Dùng sau giới từ hoặc đầu câu, đầu câu có dấu phẩy.",
+  "knowledge": {},
+  "exercises": [
+   {
+    "prompt": "Chọn dạng đúng của động từ",
+    "q": "_____ his exams, Nam started looking for an apprenticeship.",
+    "options": [
+     "Having finished",
+     "Finish",
+     "Finished",
+     "To finish"
+    ],
+    "explain": "Nam hoàn tất kỳ thi trước rồi mới tìm việc học: Having finished."
+   },
+   {
+    "prompt": "Chọn dạng đúng của động từ",
+    "q": "She is proud of _____ the first person in her family to go to university.",
+    "options": [
+     "having been",
+     "have been",
+     "been",
+     "to have being"
+    ],
+    "explain": "Sau giới từ of dùng danh động từ hoàn thành: having been."
+   },
+   {
+    "prompt": "Chọn câu đúng",
+    "q": "Which sentence is correct?",
+    "options": [
+     "Having studied hard, she passed the exam.",
+     "Having studied hard, the exam was passed by her.",
+     "Have studied hard, she passed the exam.",
+     "Having study hard, she passed the exam."
+    ],
+    "explain": "Chủ ngữ của cụm phân từ và mệnh đề chính phải là cùng một người; having + V3."
+   },
+   {
+    "prompt": "Chọn dạng đúng của động từ",
+    "q": "He regrets _____ a vocational course earlier.",
+    "options": [
+     "not having taken",
+     "not take",
+     "having not take",
+     "no having taken"
+    ],
+    "explain": "Phủ định danh động từ hoàn thành: not having + V3."
+   },
+   {
+    "prompt": "Chọn dạng đúng của động từ",
+    "q": "_____ rejected by two universities, she chose a vocational school.",
+    "options": [
+     "Having been",
+     "Having",
+     "Been",
+     "To have been"
+    ],
+    "explain": "Nghĩa bị động và hoàn thành: Having been rejected."
+   },
+   {
+    "prompt": "Chọn dạng đúng của động từ",
+    "q": "_____ all the forms, the applicants waited for the interview.",
+    "options": [
+     "Having completed",
+     "Complete",
+     "Having complete",
+     "To complete"
+    ],
+    "explain": "Hành động điền xong trước khi chờ: Having completed."
+   }
+  ],
+  "en": {
+   "Dùng danh động từ hoàn thành (having + V3/ed) và mệnh đề phân từ hoàn thành để nói hành động xảy ra trước": "Using perfect gerunds (having + V3/ed) and perfect participle clauses to show an earlier action",
+   "Chọn dạng đúng của động từ": "Choose the correct verb form",
+   "Chọn câu đúng": "Choose the correct sentence"
+  },
+  "course": "Tiếng Anh 11 (Global Success)",
+  "title": "Ngữ pháp: Danh động từ hoàn thành và mệnh đề phân từ hoàn thành"
+ },
+ {
+  "id": "786903f1-9a9d-4082-9535-0c46be0139ab",
+  "summary": "Học 6 từ trọng tâm Unit 8 Becoming Independent: independent, self-reliant, time management, decision-making, confident, routine",
+  "contentMd": "## Mục tiêu bài học\n- Nắm nghĩa, phiên âm, loại từ của 6 từ Unit 8.\n- Biết họ từ và các cụm từ đi cùng khi nói về sự tự lập.\n- Dùng từ đúng trong bài đọc và bài viết về kỹ năng sống.\n\n## Bảng từ vựng chính\n| Từ | Phiên âm | Loại từ | Nghĩa | Ví dụ |\n|---|---|---|---|---|\n| independent | /ˌɪndɪˈpendənt/ | adj | tự lập | She became **independent** at 18. |\n| self-reliant | /ˌself rɪˈlaɪənt/ | adj | tự lực | A **self-reliant** teenager solves problems alone. |\n| time management | /ˈtaɪm mænɪdʒmənt/ | n | quản lý thời gian | Good **time management** reduces stress. |\n| decision-making | /dɪˈsɪʒn meɪkɪŋ/ | n | việc ra quyết định | **Decision-making** is a key life skill. |\n| confident | /ˈkɒnfɪdənt/ | adj | tự tin | He feels **confident** about the interview. |\n| routine | /ruːˈtiːn/ | n | thói quen hằng ngày | My morning **routine** starts at six. |\n\n## Giải thích từng từ\n### independent và self-reliant\n**Independent** nghĩa là không phụ thuộc vào người khác; danh từ *independence*, trái nghĩa *dependent*. Cấu trúc: *be independent of / from sb* (không phụ thuộc vào ai). **Self-reliant** nhấn mạnh việc tin vào sức mình, tự lo liệu; danh từ *self-reliance*. Hai từ gần nghĩa nhưng independent thông dụng hơn.\n\n> Living away from home made him more **independent** and **self-reliant**.\n> Sống xa nhà khiến cậu ấy tự lập và tự lực hơn.\n\n### time management và decision-making\n**Time management** là danh từ không đếm được, gồm lập kế hoạch, ưu tiên việc quan trọng. Cụm: *good / poor time management*, *manage your time*. **Decision-making** là quá trình đưa ra lựa chọn; cụm: *make a decision* (không nói *do a decision*), *decision-making skills*.\n\n> Students with strong **time management** can balance study and hobbies.\n> Học sinh có quản lý thời gian tốt có thể cân bằng việc học và sở thích.\n\n### confident và routine\n**Confident** (adj) có họ từ *confidence* (n), *confidently* (adv); cấu trúc: *confident about / in sth*, *be confident that...*. **Routine** là các việc làm đều đặn mỗi ngày: *daily routine*, *follow a routine*, *a healthy routine*.\n\n> Following a daily **routine** helps me feel more **confident** at school.\n> Theo thói quen hằng ngày giúp tôi tự tin hơn ở trường.\n\n## Mẹo nhớ và lỗi dùng từ\n- Trọng âm: in-de-**pen**-dent nhấn âm 3; con-fi-dent nhấn âm đầu **con**; rou-**tine** nhấn âm cuối.\n- Sai: *a time management* → đúng: **time management** (không đếm được).\n- Sai: *do a decision* → đúng: **make a decision**.\n- Sai: *confident of the future* hay gặp, nhưng thông dụng hơn: **confident about the future**.\n- Phân biệt *confident* (tự tin) và *confidence* (sự tự tin): *She is confident / She has confidence*.\n\n## Áp dụng vào bài thi\nBài đọc điền từ hoặc đọc hiểu về kỹ năng sống thường hỏi lợi ích của tự lập. Chú ý từ nối và từ khoá như *skills*, *responsibility*. Với câu chọn từ, xác định loại từ trước (adj / n).\n\n> Teenagers who manage their money are usually more _____.\n> (A) independence (B) independent (C) independently (D) depend\n\nSau *more* cần tính từ, đáp án **(B) independent**.\n\n## Tóm tắt\n- Independent / self-reliant: tự lập, tự lực; danh từ independence / self-reliance.\n- Time management không đếm được; make a decision.\n- Confident (adj) khác confidence (n).\n- Routine là thói quen hằng ngày: daily routine.",
+  "knowledge": {},
+  "exercises": [
+   {
+    "prompt": "Chọn dạng đúng của từ",
+    "q": "Living alone teaches teenagers to be more _____.",
+    "options": [
+     "independent",
+     "independence",
+     "independently",
+     "depend"
+    ],
+    "explain": "Sau be more cần tính từ: independent."
+   },
+   {
+    "prompt": "Chọn từ phù hợp",
+    "q": "You should _____ a decision after thinking carefully.",
+    "options": [
+     "make",
+     "do",
+     "take place",
+     "have to"
+    ],
+    "explain": "Collocation đúng là make a decision."
+   },
+   {
+    "prompt": "Chọn từ phù hợp",
+    "q": "Good _____ helps you finish homework before the deadline.",
+    "options": [
+     "time management",
+     "decision",
+     "routines",
+     "confidence"
+    ],
+    "explain": "time management là quản lý thời gian, hợp nghĩa nhất."
+   },
+   {
+    "prompt": "Chọn nghĩa đúng",
+    "q": "What does \"self-reliant\" mean?",
+    "options": [
+     "tự lực, không dựa vào người khác",
+     "hay xấu hổ",
+     "hay phụ thuộc",
+     "giỏi giao tiếp"
+    ],
+    "explain": "self-reliant là tin vào sức mình và tự lo liệu."
+   },
+   {
+    "prompt": "Chọn dạng đúng của từ",
+    "q": "She spoke _____ in front of the whole class.",
+    "options": [
+     "confidently",
+     "confident",
+     "confidence",
+     "confide"
+    ],
+    "explain": "Cần trạng từ bổ nghĩa động từ spoke: confidently."
+   },
+   {
+    "prompt": "Chọn câu đúng",
+    "q": "Which sentence is correct?",
+    "options": [
+     "I follow a strict daily routine.",
+     "I follow a strict daily routines.",
+     "I make a strict daily routine follow.",
+     "I do a strict daily routine follow."
+    ],
+    "explain": "routine là danh từ đếm được số ít sau a: a strict daily routine."
+   }
+  ],
+  "en": {
+   "Học 6 từ trọng tâm Unit 8 Becoming Independent: independent, self-reliant, time management, decision-making, confident, routine": "Six key words of Unit 8 Becoming Independent: independent, self-reliant, time management, decision-making, confident, routine",
+   "Chọn dạng đúng của từ": "Choose the correct form of the word",
+   "Chọn từ phù hợp": "Choose the suitable word",
+   "Chọn nghĩa đúng": "Choose the correct meaning",
+   "Chọn câu đúng": "Choose the correct sentence"
+  },
+  "course": "Tiếng Anh 11 (Global Success)",
+  "title": "Từ vựng: Becoming Independent"
+ },
+ {
+  "id": "54ed2796-36f7-4733-ad90-bf987135253b",
+  "summary": "Dùng câu chẻ It is / was ... that / who để nhấn mạnh chủ ngữ, tân ngữ hoặc trạng ngữ",
+  "contentMd": "## Mục tiêu bài học\n- Hiểu câu chẻ (cleft sentence) dùng để nhấn mạnh thông tin.\n- Biến câu thường thành câu chẻ nhấn mạnh chủ ngữ, tân ngữ, trạng ngữ.\n- Phân biệt who và that, is và was.\n\n## Câu chẻ là gì?\nCâu chẻ nhấn mạnh một thành phần của câu bằng cách đặt nó giữa **It is / was** và **that / who**. Phần còn lại của câu đi sau that / who. Ta dùng câu chẻ khi muốn nói \"chính là ... chứ không phải ...\".\n\nCâu gốc: *My mother taught me to cook at home when I was ten.*\n\n## Nhấn mạnh chủ ngữ\n`It is / was + chủ ngữ + who / that + V`\n\nNgười dùng **who** hoặc **that**, vật chỉ dùng **that**.\n\n> It was **my mother** who taught me to cook.\n> Chính mẹ tôi là người dạy tôi nấu ăn.\n\n> It is **self-discipline** that makes teenagers independent.\n> Chính tính kỷ luật tự giác khiến thanh thiếu niên tự lập.\n\n## Nhấn mạnh tân ngữ và trạng ngữ\n`It is / was + tân ngữ / trạng ngữ + that + S + V`\n\n> It was **at the age of 16** that I learnt to manage money.\n> Chính ở tuổi 16 tôi đã học cách quản lý tiền.\n\n> It is **time management** that students need most.\n> Chính quản lý thời gian là điều học sinh cần nhất.\n\n> It was **in the kitchen** that she made her first big decision.\n> Chính trong căn bếp, cô ấy đã đưa ra quyết định lớn đầu tiên.\n\n### Bảng tóm tắt\n| Nhấn mạnh | Cấu trúc | Ví dụ |\n|---|---|---|\n| Chủ ngữ (người) | It is / was + S + who / that + V | It was Tom who called. |\n| Chủ ngữ (vật) | It is / was + S + that + V | It is practice that matters. |\n| Tân ngữ | It is / was + O + that + S + V | It was a book that I bought. |\n| Trạng ngữ | It is / was + adv + that + S + V | It was last year that we met. |\n\n### Cách chọn is hay was\nDùng **was** khi mệnh đề sau that ở quá khứ, dùng **is** khi ở hiện tại. Phần động từ sau that / who giữ nguyên thì của câu gốc.\n\n## Lỗi thường gặp\n- *It was my mother which taught me.* → It was my mother **who / that** taught me.\n- *It was me who taught...* nên viết: It was **I** who ... (trang trọng), nhưng trong bài thi chỉ cần đúng who / that.\n- Thêm trùng lặp: *It was at the age of 16 that at that age I learnt ...* → bỏ phần lặp.\n- Sai thì: *It was the money that is important.* → It **is** the money that is important (hoặc was ... was).\n\n## Áp dụng vào bài thi\nTrong đề tốt nghiệp, câu chẻ thường xuất hiện ở dạng chọn câu đúng hoặc điền cụm. Tìm cụm đứng ngay sau *It is / was* và xem nó là người, vật hay thời gian, nơi chốn để chọn who hoặc that.\n\n> It was Lan _____ won the school science contest last year.\n> (A) which (B) who (C) whose (D) whom\n\nLan là người, làm chủ ngữ, đáp án **(B) who** (hoặc that).\n\n## Tóm tắt\n- Câu chẻ: It is / was + thành phần cần nhấn mạnh + that / who + phần còn lại.\n- Who chỉ dùng thay người làm chủ ngữ; that dùng cho hầu hết thành phần.\n- Chọn is / was theo thì của mệnh đề sau.\n- Câu chẻ giúp nhấn mạnh \"chính là\" trong câu nói và bài viết.",
+  "knowledge": {},
+  "exercises": [
+   {
+    "prompt": "Chọn từ phù hợp",
+    "q": "It was my father _____ taught me how to ride a bike.",
+    "options": [
+     "who",
+     "which",
+     "whom",
+     "whose"
+    ],
+    "explain": "Nhấn mạnh người làm chủ ngữ nên dùng who (hoặc that)."
+   },
+   {
+    "prompt": "Chọn từ phù hợp",
+    "q": "It is hard work _____ helps teenagers become independent.",
+    "options": [
+     "that",
+     "who",
+     "whom",
+     "when"
+    ],
+    "explain": "Nhấn mạnh danh từ chỉ vật làm chủ ngữ: that."
+   },
+   {
+    "prompt": "Chọn câu đúng",
+    "q": "Which sentence is correct?",
+    "options": [
+     "It was at the age of 16 that I learnt to cook.",
+     "It was at the age of 16 which I learnt to cook.",
+     "It is at the age of 16 who I learnt to cook.",
+     "It was at the age of 16 what I learnt to cook."
+    ],
+    "explain": "Nhấn mạnh trạng ngữ thời gian dùng that; mệnh đề sau ở quá khứ nên dùng was."
+   },
+   {
+    "prompt": "Chọn từ phù hợp",
+    "q": "It was last summer _____ she moved away from home.",
+    "options": [
+     "that",
+     "who",
+     "what",
+     "whose"
+    ],
+    "explain": "Nhấn mạnh cụm thời gian: that."
+   },
+   {
+    "prompt": "Chọn dạng đúng của động từ",
+    "q": "It _____ time management that students need to improve most.",
+    "options": [
+     "is",
+     "are",
+     "do",
+     "have"
+    ],
+    "explain": "Câu chẻ ở hiện tại với danh từ số ít: It is ... that."
+   },
+   {
+    "prompt": "Chọn câu đúng",
+    "q": "Which sentence emphasises the object \"a laptop\"?",
+    "options": [
+     "It was a laptop that she bought last week.",
+     "It was a laptop who she bought last week.",
+     "It was she a laptop that bought last week.",
+     "It was last week a laptop that she bought."
+    ],
+    "explain": "It was + tân ngữ + that + S + V: It was a laptop that she bought last week."
+   }
+  ],
+  "en": {
+   "Dùng câu chẻ It is / was ... that / who để nhấn mạnh chủ ngữ, tân ngữ hoặc trạng ngữ": "Using cleft sentences It is / was ... that / who to emphasise the subject, object or adverbial",
+   "Chọn từ phù hợp": "Choose the suitable word",
+   "Chọn câu đúng": "Choose the correct sentence",
+   "Chọn dạng đúng của động từ": "Choose the correct verb form"
+  },
+  "course": "Tiếng Anh 11 (Global Success)",
+  "title": "Ngữ pháp: Câu chẻ với It is / was … that / who"
+ },
+ {
+  "id": "be1aab86-251f-4091-88ee-039ffa72d288",
+  "summary": "Học 6 từ trọng tâm Unit 9 Social Issues: social issue, peer pressure, bullying, victim, awareness, addiction",
+  "contentMd": "## Mục tiêu bài học\n- Nắm nghĩa, phiên âm, loại từ của 6 từ Unit 9.\n- Biết các cụm từ đi cùng khi nói về vấn đề xã hội.\n- Dùng từ đúng trong bài đọc và bài viết nêu ý kiến.\n\n## Bảng từ vựng chính\n| Từ | Phiên âm | Loại từ | Nghĩa | Ví dụ |\n|---|---|---|---|---|\n| social issue | /ˌsəʊʃl ˈɪʃuː/ | n | vấn đề xã hội | Poverty is a serious **social issue**. |\n| peer pressure | /ˈpɪə preʃə/ | n | áp lực bạn bè | **Peer pressure** can lead to bad habits. |\n| bullying | /ˈbʊliɪŋ/ | n | sự bắt nạt | Schools must stop **bullying**. |\n| victim | /ˈvɪktɪm/ | n | nạn nhân | The **victim** needs support. |\n| awareness | /əˈweənəs/ | n | nhận thức | We should raise **awareness** of online safety. |\n| addiction | /əˈdɪkʃn/ | n | sự nghiện | Game **addiction** harms study. |\n\n## Giải thích từng từ\n### social issue và peer pressure\n**Social issue** là vấn đề ảnh hưởng đến nhiều người trong xã hội như nghèo đói, thất nghiệp, bạo lực học đường. Cụm: *tackle / address / deal with a social issue*. **Peer pressure** là áp lực từ bạn bè cùng tuổi buộc mình làm theo; *peer* nghĩa là bạn đồng trang lứa. Cụm: *under peer pressure*, *resist peer pressure*.\n\n> Teenagers sometimes try risky things because of **peer pressure**.\n> Thanh thiếu niên đôi khi thử những điều nguy hiểm vì áp lực bạn bè.\n\n### bullying và victim\n**Bullying** là danh từ không đếm được, động từ *bully* (bắt nạt), người bắt nạt là *a bully*. Các loại: *cyberbullying* (bắt nạt qua mạng), *verbal bullying*. **Victim** là người chịu thiệt hại, cụm *be a victim of sth*, *victims of bullying*.\n\n> Many **victims** of **bullying** feel too afraid to ask for help.\n> Nhiều nạn nhân của nạn bắt nạt quá sợ nên không dám nhờ giúp đỡ.\n\n### awareness và addiction\n**Awareness** là sự nhận biết, hiểu về một vấn đề; họ từ *aware* (adj), *be aware of*. Cụm: *raise awareness of / about*, *awareness campaign*. **Addiction** là sự nghiện (*addiction to games / smartphones*), tính từ *addictive*, người nghiện: *an addict*.\n\n> The club runs a campaign to raise **awareness** of internet **addiction**.\n> Câu lạc bộ tổ chức chiến dịch nâng cao nhận thức về nghiện internet.\n\n## Mẹo nhớ và lỗi dùng từ\n- Họ từ: *aware → awareness*, *addict → addiction → addictive*.\n- Trọng âm: **vic**tim nhấn âm đầu; a-**ware**-ness nhấn âm hai; a-**ddic**-tion nhấn âm hai.\n- Sai: *addicted with games* → **addicted to** games.\n- Sai: *a bullying* → **bullying** (không đếm được).\n- Sai: *victim by bullying* → **victim of** bullying.\n\n## Áp dụng vào bài thi\nBài đọc điền từ về xã hội học đường thường hỏi giới từ đi với các từ này (*victim of*, *addiction to*, *aware of*) và nghĩa của từ trong ngữ cảnh. Chú ý ý chính của đoạn văn: nguyên nhân, hậu quả, giải pháp.\n\n> Social media can create _____ among young people to look perfect.\n> (A) peer pressure (B) bullying victim (C) addiction (D) awareness\n\nNghĩa \"áp lực phải trông hoàn hảo\" phù hợp nhất với **(A) peer pressure**.\n\n## Tóm tắt\n- Social issue: vấn đề xã hội; peer pressure: áp lực bạn bè.\n- Bullying không đếm được; victim of bullying.\n- Raise awareness of...; addiction to...\n- Nhớ giới từ đi kèm để làm bài điền từ nhanh.",
+  "knowledge": {},
+  "exercises": [
+   {
+    "prompt": "Chọn nghĩa đúng",
+    "q": "What does \"peer pressure\" mean?",
+    "options": [
+     "Áp lực từ bạn bè đồng trang lứa",
+     "Áp lực học tập",
+     "Áp lực công việc",
+     "Áp lực từ thầy cô"
+    ],
+    "explain": "peer là bạn cùng tuổi nên peer pressure là áp lực bạn bè."
+   },
+   {
+    "prompt": "Chọn từ phù hợp",
+    "q": "Many students are victims _____ cyberbullying.",
+    "options": [
+     "of",
+     "to",
+     "with",
+     "by"
+    ],
+    "explain": "Collocation: a victim of sth."
+   },
+   {
+    "prompt": "Chọn từ phù hợp",
+    "q": "The campaign aims to raise _____ of the dangers of smoking.",
+    "options": [
+     "awareness",
+     "bullying",
+     "victim",
+     "addicted"
+    ],
+    "explain": "raise awareness of sth: nâng cao nhận thức."
+   },
+   {
+    "prompt": "Chọn từ phù hợp",
+    "q": "He is addicted _____ video games.",
+    "options": [
+     "to",
+     "of",
+     "at",
+     "for"
+    ],
+    "explain": "addicted to + N / V-ing."
+   },
+   {
+    "prompt": "Chọn câu đúng",
+    "q": "Which sentence is correct?",
+    "options": [
+     "Bullying is a serious problem in many schools.",
+     "A bullying are a serious problem in many schools.",
+     "Bullyings is a serious problem in many schools.",
+     "Bullying are a serious problem in many schools."
+    ],
+    "explain": "bullying là danh từ không đếm được, đi với is, không dùng a."
+   },
+   {
+    "prompt": "Chọn dạng đúng của từ",
+    "q": "Playing games for too long can be very _____.",
+    "options": [
+     "addictive",
+     "addiction",
+     "addict",
+     "addictively"
+    ],
+    "explain": "Sau be very cần tính từ: addictive."
+   }
+  ],
+  "en": {
+   "Học 6 từ trọng tâm Unit 9 Social Issues: social issue, peer pressure, bullying, victim, awareness, addiction": "Six key words of Unit 9 Social Issues: social issue, peer pressure, bullying, victim, awareness, addiction",
+   "Chọn nghĩa đúng": "Choose the correct meaning",
+   "Chọn từ phù hợp": "Choose the suitable word",
+   "Chọn câu đúng": "Choose the correct sentence",
+   "Chọn dạng đúng của từ": "Choose the correct form of the word"
+  },
+  "course": "Tiếng Anh 11 (Global Success)",
+  "title": "Từ vựng: Social Issues"
+ },
+ {
+  "id": "85d2a51e-ed83-4936-bbcb-4b1a7d10de9c",
+  "summary": "Dùng từ và cụm từ nối chỉ tương phản, kết quả và bổ sung ý để liên kết câu và đoạn văn",
+  "contentMd": "## Mục tiêu bài học\n- Phân biệt từ nối chỉ tương phản, kết quả, bổ sung ý.\n- Dùng đúng dấu câu và vị trí của từ nối.\n- Chọn từ nối phù hợp trong bài điền đoạn văn.\n\n## Ba nhóm từ nối chính\nTừ nối giúp các ý trong đoạn văn liên kết mạch lạc. Quan trọng nhất là hiểu **quan hệ nghĩa** giữa hai ý rồi chọn từ nối.\n\n### Chỉ tương phản\n`although / even though + S + V, S + V` hoặc `S + V. However, + S + V`\n\n> **Although** bullying is harmful, many victims stay silent.\n> Mặc dù bắt nạt gây hại, nhiều nạn nhân vẫn im lặng.\n\n> He studied hard. **However**, he failed the test.\n> Cậu ấy học chăm. Tuy nhiên, cậu ấy vẫn trượt bài kiểm tra.\n\n*Although / even though* là liên từ phụ thuộc nên đi cùng một mệnh đề đầy đủ; không dùng thêm *but* trong cùng câu. *However* là trạng từ nối, đứng đầu câu, sau dấu chấm hoặc chấm phẩy, có dấu phẩy phía sau.\n\n### Chỉ kết quả\n`S + V. Therefore / As a result, + S + V`\n\n> He spent all night online. **As a result**, he was tired at school.\n> Cậu ấy thức cả đêm lướt mạng. Kết quả là, cậu ấy mệt ở trường.\n\n> The school launched an anti-bullying campaign. **Therefore**, fewer cases were reported.\n> Trường phát động chiến dịch chống bắt nạt. Vì vậy, có ít vụ được báo cáo hơn.\n\n### Bổ sung ý\n`S + V. Moreover / In addition / Furthermore, + S + V`\n\n> Peer pressure causes stress. **Moreover**, it can lead to bad habits.\n> Áp lực bạn bè gây căng thẳng. Hơn nữa, nó có thể dẫn đến thói quen xấu.\n\n## Bảng so sánh\n| Quan hệ | Từ nối đầu câu | Liên từ trong câu |\n|---|---|---|\n| Tương phản | However, ... | although, even though, but |\n| Kết quả | Therefore, As a result, | so |\n| Bổ sung | Moreover, In addition, | and |\n\n## Lỗi thường gặp\n- *Although bullying is harmful, but many victims stay silent.* → bỏ **but**.\n- *He was tired, however he went to school.* → He was tired. **However,** he went to school. (hoặc dùng ; however,).\n- *Because / Therefore* nhầm: *Because he was late, therefore he missed the bus.* → bỏ therefore, hoặc viết hai câu.\n- Quên dấu phẩy sau *however*, *therefore*, *as a result*.\n\n## Áp dụng vào bài thi\nDạng điền từ nối vào đoạn văn rất thường gặp. Đọc câu trước và câu sau, hỏi \"hai ý cùng chiều, trái chiều hay nguyên nhân - kết quả?\". Sau đó loại phương án sai dấu câu hoặc vị trí.\n\n> Many teenagers use social media every day. _____, some of them feel lonely.\n> (A) Therefore (B) Moreover (C) However (D) Because\n\nHai ý trái chiều, đáp án **(C) However**.\n\n## Tóm tắt\n- Tương phản: although / even though (cùng câu), however (đầu câu).\n- Kết quả: therefore, as a result; bổ sung: moreover, in addition.\n- Không dùng although và but trong cùng một câu.\n- Dấu phẩy luôn đi sau however, therefore, as a result, moreover.",
+  "knowledge": {},
+  "exercises": [
+   {
+    "prompt": "Chọn từ nối phù hợp",
+    "q": "_____ cyberbullying is dangerous, many teenagers do not report it.",
+    "options": [
+     "Although",
+     "However",
+     "Therefore",
+     "Moreover"
+    ],
+    "explain": "Hai ý trái chiều trong cùng một câu, cần liên từ phụ thuộc: Although."
+   },
+   {
+    "prompt": "Chọn từ nối phù hợp",
+    "q": "She stayed up late playing games. _____, she could not focus in class.",
+    "options": [
+     "As a result",
+     "Although",
+     "Even though",
+     "Besides of"
+    ],
+    "explain": "Ý sau là kết quả của ý trước: As a result."
+   },
+   {
+    "prompt": "Chọn từ nối phù hợp",
+    "q": "Bullying harms students' health. _____, it affects their grades.",
+    "options": [
+     "Moreover",
+     "However",
+     "Although",
+     "So that"
+    ],
+    "explain": "Hai ý cùng chiều nên dùng từ bổ sung: Moreover."
+   },
+   {
+    "prompt": "Chọn câu đúng",
+    "q": "Which sentence is correct?",
+    "options": [
+     "Although he was afraid, he told his teacher.",
+     "Although he was afraid, but he told his teacher.",
+     "He was afraid, although but he told his teacher.",
+     "Although of his fear, he told his teacher."
+    ],
+    "explain": "Although đi với mệnh đề đầy đủ và không dùng but trong cùng câu."
+   },
+   {
+    "prompt": "Chọn từ nối phù hợp",
+    "q": "Peer pressure is common. _____, students can learn to say no.",
+    "options": [
+     "However",
+     "Besides",
+     "Therefore",
+     "Because"
+    ],
+    "explain": "Ý sau mang tính đối lập (cách giải quyết) nên dùng However."
+   },
+   {
+    "prompt": "Chọn từ nối phù hợp",
+    "q": "The school organised talks about online safety. _____, fewer students were cyberbullied.",
+    "options": [
+     "Therefore",
+     "However",
+     "Although",
+     "Moreover"
+    ],
+    "explain": "Có quan hệ nguyên nhân - kết quả nên dùng Therefore."
+   }
+  ],
+  "en": {
+   "Dùng từ và cụm từ nối chỉ tương phản, kết quả và bổ sung ý để liên kết câu và đoạn văn": "Using linking words for contrast, result and addition to connect sentences and paragraphs",
+   "Chọn từ nối phù hợp": "Choose the suitable linking word",
+   "Chọn câu đúng": "Choose the correct sentence"
+  },
+  "course": "Tiếng Anh 11 (Global Success)",
+  "title": "Ngữ pháp: Từ và cụm từ nối"
+ },
+ {
+  "id": "b9e17896-61b1-42aa-b59a-8b61ccd0be76",
+  "summary": "Học 6 từ trọng tâm Unit 10 The Ecosystem: ecosystem, species, food chain, wetland, national park, balance",
+  "contentMd": "## Mục tiêu bài học\n- Nắm nghĩa, phiên âm, loại từ của 6 từ Unit 10.\n- Biết cụm từ đi cùng khi nói về môi trường sống và sinh vật.\n- Dùng từ đúng trong bài đọc về thiên nhiên.\n\n## Bảng từ vựng chính\n| Từ | Phiên âm | Loại từ | Nghĩa | Ví dụ |\n|---|---|---|---|---|\n| ecosystem | /ˈiːkəʊsɪstəm/ | n | hệ sinh thái | A coral reef is a fragile **ecosystem**. |\n| species | /ˈspiːʃiːz/ | n | loài | Many **species** are in danger. |\n| food chain | /ˈfuːd tʃeɪn/ | n | chuỗi thức ăn | Plants are the start of the **food chain**. |\n| wetland | /ˈwetlənd/ | n | vùng đất ngập nước | **Wetlands** protect cities from floods. |\n| national park | /ˌnæʃnəl ˈpɑːk/ | n | vườn quốc gia | Cuc Phuong is a famous **national park**. |\n| balance | /ˈbæləns/ | n | sự cân bằng | Nature keeps a delicate **balance**. |\n\n## Giải thích từng từ\n### ecosystem và species\n**Ecosystem** là cộng đồng sinh vật cùng môi trường sống của chúng (rừng, biển, hồ). Cụm: *marine ecosystem*, *protect the ecosystem*, *damage an ecosystem*. **Species** có dạng số ít và số nhiều giống nhau: *one species, two species*. Cụm: *endangered species* (loài có nguy cơ tuyệt chủng), *a rare species*.\n\n> Pollution threatens the **ecosystem** and many **species**.\n> Ô nhiễm đe doạ hệ sinh thái và nhiều loài.\n\n### food chain và wetland\n**Food chain** thể hiện sinh vật này ăn sinh vật kia: cỏ → châu chấu → ếch → rắn. Nếu một mắt xích mất đi, cả chuỗi bị ảnh hưởng. **Wetland** là vùng đất thường xuyên ngập nước như đầm lầy, rừng ngập mặn; là nơi cư trú của chim di cư và giúp lọc nước.\n\n> Many migratory birds stay in the **wetland** in winter.\n> Nhiều loài chim di cư trú ở vùng đất ngập nước vào mùa đông.\n\n### national park và balance\n**National park** là khu vực thiên nhiên được nhà nước bảo vệ. Cụm: *visit / protect a national park*, *wildlife in the national park*. **Balance** ở đây là sự cân bằng giữa các loài và môi trường; collocation: *keep / maintain / disturb the balance*, *the balance of nature*.\n\n> Hunting too many animals can **disturb the balance** of the ecosystem.\n> Săn bắt quá nhiều động vật có thể phá vỡ cân bằng của hệ sinh thái.\n\n## Mẹo nhớ và lỗi dùng từ\n- Nhớ *species* không thêm -s: *three species*, không viết *specieses*.\n- Trọng âm: **e**cosystem nhấn âm đầu; **bal**ance nhấn âm đầu; **wet**land nhấn âm đầu.\n- Sai: *a rare specie* → **a rare species**.\n- Sai: *keep a balance of the nature* → **keep the balance of nature** (nature không dùng the khi nói chung).\n- Sai: *food chains is* khi nói chung nên thống nhất số: *the food chain is* / *food chains are*.\n\n## Áp dụng vào bài thi\nBài đọc về thiên nhiên thường có câu hỏi từ khoá *cause, effect, protect*. Với bài điền từ, nhớ các collocation: *endangered species*, *food chain*, *keep the balance*. Hãy đọc kỹ câu để tìm từ cùng trường nghĩa.\n\n> Cutting down forests destroys the _____ where many animals live.\n> (A) balance (B) ecosystem (C) species (D) national\n\nNghĩa \"nơi nhiều động vật sinh sống\" ứng với **(B) ecosystem** (hệ sinh thái).\n\n## Tóm tắt\n- Ecosystem: hệ sinh thái; species giữ nguyên dạng ở số nhiều.\n- Food chain: chuỗi thức ăn; wetland: vùng đất ngập nước.\n- National park: vườn quốc gia; keep the balance: giữ sự cân bằng.\n- Chú ý collocation để điền từ chính xác.",
+  "knowledge": {},
+  "exercises": [
+   {
+    "prompt": "Chọn nghĩa đúng",
+    "q": "What is a \"food chain\"?",
+    "options": [
+     "Chuỗi thức ăn",
+     "Bữa ăn nhanh",
+     "Chuỗi nhà hàng",
+     "Chợ thực phẩm"
+    ],
+    "explain": "food chain là chuỗi thể hiện ai ăn ai trong tự nhiên."
+   },
+   {
+    "prompt": "Chọn từ phù hợp",
+    "q": "Tigers are an endangered _____.",
+    "options": [
+     "species",
+     "specie",
+     "speciess",
+     "specieses"
+    ],
+    "explain": "species giữ nguyên dạng ở số ít và số nhiều."
+   },
+   {
+    "prompt": "Chọn từ phù hợp",
+    "q": "If one group of animals disappears, the _____ of nature will be broken.",
+    "options": [
+     "balance",
+     "wetland",
+     "food",
+     "park"
+    ],
+    "explain": "the balance of nature là sự cân bằng của tự nhiên."
+   },
+   {
+    "prompt": "Chọn từ phù hợp",
+    "q": "Rice fields and mangrove forests are examples of _____.",
+    "options": [
+     "wetlands",
+     "species",
+     "national parks",
+     "chains"
+    ],
+    "explain": "Đồng ruộng ngập nước, rừng ngập mặn thuộc vùng đất ngập nước."
+   },
+   {
+    "prompt": "Chọn câu đúng",
+    "q": "Which sentence is correct?",
+    "options": [
+     "This species is in danger.",
+     "This specie is in danger.",
+     "These species is in danger.",
+     "This speciess is in danger."
+    ],
+    "explain": "This species là số ít nên dùng is."
+   },
+   {
+    "prompt": "Chọn từ phù hợp",
+    "q": "Cat Tien _____ is home to many rare animals and plants.",
+    "options": [
+     "National Park",
+     "Wetland Chain",
+     "Food Species",
+     "Ecosystem Balance"
+    ],
+    "explain": "Cat Tien National Park là tên riêng đúng cho vườn quốc gia."
+   }
+  ],
+  "en": {
+   "Học 6 từ trọng tâm Unit 10 The Ecosystem: ecosystem, species, food chain, wetland, national park, balance": "Six key words of Unit 10 The Ecosystem: ecosystem, species, food chain, wetland, national park, balance",
+   "Chọn nghĩa đúng": "Choose the correct meaning",
+   "Chọn từ phù hợp": "Choose the suitable word",
+   "Chọn câu đúng": "Choose the correct sentence"
+  },
+  "course": "Tiếng Anh 11 (Global Success)",
+  "title": "Từ vựng: The Ecosystem"
+ },
+ {
+  "id": "80ea5b49-c779-4c49-b746-8c43389f1421",
+  "summary": "Danh từ ghép dạng N + N, adj + N và V-ing + N: cách tạo, cách viết và dùng số ít, số nhiều",
+  "contentMd": "## Mục tiêu bài học\n- Nhận biết danh từ ghép (compound nouns) và cách tạo.\n- Biết danh từ đứng trước giữ dạng số ít.\n- Phân biệt trọng âm và cách viết: một từ, hai từ hay có gạch nối.\n\n## Danh từ ghép là gì?\nDanh từ ghép gồm hai hay nhiều từ ghép lại để gọi tên **một** sự vật. Thường **danh từ chính ở cuối** và từ đứng trước bổ nghĩa cho nó.\n\n### N + N\n`N (bổ nghĩa) + N (chính)`: từ đứng trước thường ở dạng **số ít** dù nghĩa là nhiều.\n\n> **Rainforest animals** are losing their homes.\n> Các loài động vật rừng nhiệt đới đang mất nơi ở.\n\n> The students joined a **science club** and a **bus trip**.\n> Học sinh tham gia một câu lạc bộ khoa học và một chuyến đi xe buýt.\n\nVí dụ: *a tooth brush* (viết đúng: toothbrush), *a car park*, *a bus stop*, *a school bag*, *a river bank*. Số nhiều thêm -s vào từ cuối: *two bus stops*, *three car parks*.\n\n### adj + N và V-ing + N\n`adj + N`: *a greenhouse*, *a blackboard*, *a hotdog*, *a high school*.\n`V-ing + N` (gerund chỉ mục đích): *a swimming pool* (hồ để bơi), *a waiting room*, *a washing machine*, *a living room*.\n\n> We visited a **greenhouse** and a **swimming pool** at the eco-park.\n> Chúng tôi tham quan nhà kính và hồ bơi ở công viên sinh thái.\n\n## Bảng so sánh các dạng\n| Dạng | Ví dụ | Nghĩa |\n|---|---|---|\n| N + N | rainforest, bus stop, bookshop | nhiều loại |\n| adj + N | greenhouse, blackboard | tính chất của vật |\n| V-ing + N | swimming pool, dining room | dùng để làm gì |\n| N + V-ing | housekeeping, fishing | người / vật + hành động |\n\n## Cách viết và trọng âm\n- Viết liền: *toothpaste, classroom, rainforest*.\n- Viết rời hai từ: *swimming pool, bus stop, city centre*.\n- Có gạch nối: *self-study, well-being*.\n- Trọng âm thường rơi vào **từ thứ nhất** của danh từ ghép: **green**house, **rain**forest, **bus** stop.\nKhi không chắc chắn, tra từ điển. Một số danh từ ghép phải học thuộc.\n\n## Lỗi thường gặp\n- *a trees house* → **a tree house** (từ đầu giữ số ít).\n- *two bus-stops* hoặc *two buses stop* → **two bus stops**.\n- *a pool of swimming* → **a swimming pool**.\n- *three-years-old child* → **a three-year-old child** (tính từ ghép, năm giữ số ít).\n\n## Áp dụng vào bài thi\nTrong đề tốt nghiệp, danh từ ghép xuất hiện ở bài điền từ, nhất là về môi trường, thiên nhiên, trường học. Chú ý phương án có từ đầu ở dạng số nhiều: thường sai.\n\n> Many _____ are working to protect the Amazon forest.\n> (A) environment groups (B) environments group (C) environmental group's (D) environment group\n\nDanh từ ghép *environment group* hoặc *environmental groups*; ở câu này, chủ ngữ số nhiều nên **(A) environment groups** đúng (từ đầu số ít, từ cuối số nhiều).\n\n## Tóm tắt\n- Danh từ ghép gọi tên một sự vật; danh từ chính đứng cuối.\n- N + N: danh từ đầu giữ số ít; số nhiều thêm -s ở từ cuối.\n- adj + N và V-ing + N cũng tạo danh từ ghép: greenhouse, swimming pool.\n- Trọng âm thường rơi vào từ thứ nhất.",
+  "knowledge": {},
+  "exercises": [
+   {
+    "prompt": "Chọn dạng đúng của từ",
+    "q": "There are two _____ near our school.",
+    "options": [
+     "bus stops",
+     "buses stops",
+     "bus stop",
+     "buses stop"
+    ],
+    "explain": "Danh từ ghép: từ đầu giữ số ít, từ cuối thêm -s."
+   },
+   {
+    "prompt": "Chọn từ phù hợp",
+    "q": "We keep tropical plants in a _____.",
+    "options": [
+     "greenhouse",
+     "green house plants",
+     "houses green",
+     "greening"
+    ],
+    "explain": "greenhouse (nhà kính) là danh từ ghép adj + N."
+   },
+   {
+    "prompt": "Chọn câu đúng",
+    "q": "Which sentence is correct?",
+    "options": [
+     "Rainforest animals need our protection.",
+     "Rainforests animals needs our protection.",
+     "Animals rainforest need our protection.",
+     "Rainforest's animals needs our protection."
+    ],
+    "explain": "N + N: rainforest giữ số ít và đứng trước danh từ chính animals."
+   },
+   {
+    "prompt": "Chọn từ phù hợp",
+    "q": "After school, we often go to the _____ to swim.",
+    "options": [
+     "swimming pool",
+     "pool swimming",
+     "swim pool",
+     "swims pool"
+    ],
+    "explain": "V-ing + N: swimming pool."
+   },
+   {
+    "prompt": "Chọn câu đúng",
+    "q": "Which expression is correct?",
+    "options": [
+     "a three-year-old child",
+     "a three-years-old child",
+     "a three year olds child",
+     "a three-years old child"
+    ],
+    "explain": "Trong tính từ ghép, danh từ chỉ số lượng giữ số ít."
+   },
+   {
+    "prompt": "Chọn từ phù hợp",
+    "q": "Our school has a new _____ where students study science.",
+    "options": [
+     "science lab",
+     "lab of science",
+     "sciences lab",
+     "lab sciences"
+    ],
+    "explain": "N + N: science lab, với science giữ số ít."
+   }
+  ],
+  "en": {
+   "Danh từ ghép dạng N + N, adj + N và V-ing + N: cách tạo, cách viết và dùng số ít, số nhiều": "Compound nouns N + N, adj + N and V-ing + N: formation, spelling, singular and plural use",
+   "Chọn dạng đúng của từ": "Choose the correct form of the word",
+   "Chọn từ phù hợp": "Choose the suitable word",
+   "Chọn câu đúng": "Choose the correct sentence"
+  },
+  "course": "Tiếng Anh 11 (Global Success)",
+  "title": "Ngữ pháp: Danh từ ghép"
+ },
+ {
+  "id": "f0b87324-ce91-4358-929d-6b3928c079e5",
+  "summary": "Học 6 từ trọng tâm Unit 1 Life Stories We Admire: admire, achievement, inspire, devote, hardship, legacy",
+  "contentMd": "## Mục tiêu bài học\n- Nắm nghĩa, phiên âm, loại từ của 6 từ Unit 1.\n- Biết họ từ và giới từ đi kèm.\n- Dùng từ để kể về một người em ngưỡng mộ.\n\n## Bảng từ vựng chính\n| Từ | Phiên âm | Loại từ | Nghĩa | Ví dụ |\n|---|---|---|---|---|\n| admire | /ədˈmaɪə/ | v | ngưỡng mộ | I **admire** her courage. |\n| achievement | /əˈtʃiːvmənt/ | n | thành tựu | Winning the prize was a great **achievement**. |\n| inspire | /ɪnˈspaɪə/ | v | truyền cảm hứng | Her story **inspires** young people. |\n| devote | /dɪˈvəʊt/ | v | cống hiến | He **devoted** his life to science. |\n| hardship | /ˈhɑːdʃɪp/ | n | sự gian khổ | They overcame many **hardships**. |\n| legacy | /ˈleɡəsi/ | n | di sản (để lại) | Her **legacy** lives on in her books. |\n\n## Giải thích từng từ\n### admire và inspire\n**Admire** + người / việc: *admire sb for sth* (ngưỡng mộ ai vì điều gì). Họ từ: *admiration* (n), *admirable* (adj). **Inspire** nghĩa là truyền cảm hứng: *inspire sb to V* (khơi dậy ai làm gì), *inspiration* (n), *inspiring* (adj, gây cảm hứng), *inspired* (adj, được truyền cảm hứng).\n\n> We **admire** Marie Curie for her love of science.\n> Chúng ta ngưỡng mộ Marie Curie vì tình yêu khoa học của bà.\n\n> His speech **inspired** many students to follow their dreams.\n> Bài phát biểu của ông truyền cảm hứng cho nhiều học sinh theo đuổi ước mơ.\n\n### achievement và devote\n**Achievement** là kết quả đạt được nhờ cố gắng; động từ *achieve*. Cụm: *a great achievement*, *academic achievements*. **Devote** thường đi với *devote + O + to + N / V-ing*; tính từ *devoted*, danh từ *devotion*.\n\n> She **devoted** her whole life **to** helping poor children.\n> Bà cống hiến cả cuộc đời cho việc giúp đỡ trẻ em nghèo.\n\n### hardship và legacy\n**Hardship** (n, đếm được hoặc không) là khó khăn, gian khổ về vật chất hoặc tinh thần; cụm *overcome / face hardship*. **Legacy** là điều một người để lại cho đời sau: tác phẩm, giá trị, phát minh; cụm *leave a legacy*, *a lasting legacy*.\n\n> Despite many **hardships**, he left a lasting **legacy** in music.\n> Dù trải qua nhiều gian khổ, ông để lại di sản âm nhạc lâu dài.\n\n## Mẹo nhớ và lỗi dùng từ\n- Trọng âm: ad-**mire**, in-**spire**, de-**vote** nhấn âm hai; a-**chieve**-ment nhấn âm hai; **le**gacy nhấn âm đầu.\n- Sai: *devote for* → **devote to**.\n- Sai: *admire to her* → **admire her** (không có giới từ).\n- Sai: *a inspiring story* → **an inspiring story** (an trước nguyên âm).\n- *Inspired* (được truyền cảm hứng) khác *inspiring* (truyền cảm hứng): *I felt inspired by an inspiring teacher*.\n\n## Áp dụng vào bài thi\nBài đọc về danh nhân thường có câu hỏi từ đồng nghĩa trong ngữ cảnh. Nhớ: *admire* ≈ respect, *devote* ≈ dedicate, *hardship* ≈ difficulty, *legacy* ≈ something left behind. Đọc kỹ câu quanh từ để xác định nghĩa.\n\n> She devoted all her energy _____ teaching disabled children.\n> (A) for (B) on (C) to (D) at\n\n*devote ... to* cố định, đáp án **(C) to**.\n\n## Tóm tắt\n- Admire + O; inspire sb to V; devote sth to N / V-ing.\n- Achievement (n) từ achieve (v); hardship là khó khăn; legacy là di sản để lại.\n- Phân biệt inspired và inspiring.\n- Học cả họ từ để làm bài điền từ nhanh.",
+  "knowledge": {},
+  "exercises": [
+   {
+    "prompt": "Chọn từ phù hợp",
+    "q": "He devoted his life _____ protecting wildlife.",
+    "options": [
+     "to",
+     "for",
+     "at",
+     "on"
+    ],
+    "explain": "devote ... to + N / V-ing."
+   },
+   {
+    "prompt": "Chọn dạng đúng của từ",
+    "q": "Her _____ speech encouraged many young people.",
+    "options": [
+     "inspiring",
+     "inspired",
+     "inspire",
+     "inspiration"
+    ],
+    "explain": "Tính từ chỉ nguyên nhân gây cảm hứng: inspiring speech."
+   },
+   {
+    "prompt": "Chọn nghĩa đúng",
+    "q": "What does \"hardship\" mean?",
+    "options": [
+     "sự gian khổ",
+     "sự giàu có",
+     "sự nổi tiếng",
+     "sự thành công"
+    ],
+    "explain": "hardship là gian khổ, khó khăn."
+   },
+   {
+    "prompt": "Chọn từ phù hợp",
+    "q": "Winning a Nobel Prize is a great scientific _____.",
+    "options": [
+     "achievement",
+     "legacy",
+     "hardship",
+     "admire"
+    ],
+    "explain": "Giải Nobel là một thành tựu (achievement)."
+   },
+   {
+    "prompt": "Chọn câu đúng",
+    "q": "Which sentence is correct?",
+    "options": [
+     "I admire her for her courage.",
+     "I admire to her for her courage.",
+     "I admire her of her courage.",
+     "I admire for her courage."
+    ],
+    "explain": "admire + tân ngữ trực tiếp, sau đó for + lý do."
+   },
+   {
+    "prompt": "Chọn từ phù hợp",
+    "q": "The famous poet left a rich cultural _____ for future generations.",
+    "options": [
+     "legacy",
+     "hardship",
+     "achievement",
+     "admiration"
+    ],
+    "explain": "leave a legacy: để lại di sản."
+   }
+  ],
+  "en": {
+   "Học 6 từ trọng tâm Unit 1 Life Stories We Admire: admire, achievement, inspire, devote, hardship, legacy": "Six key words of Unit 1 Life Stories We Admire: admire, achievement, inspire, devote, hardship, legacy",
+   "Chọn từ phù hợp": "Choose the suitable word",
+   "Chọn dạng đúng của từ": "Choose the correct form of the word",
+   "Chọn nghĩa đúng": "Choose the correct meaning",
+   "Chọn câu đúng": "Choose the correct sentence"
+  },
+  "course": "Tiếng Anh 12 (Global Success)",
+  "title": "Từ vựng: Life Stories We Admire"
+ },
+ {
+  "id": "13b34874-f730-4961-b500-fa5706af5537",
+  "summary": "Phân biệt và dùng quá khứ đơn với quá khứ tiếp diễn, kể cả khi hai thì đi cùng nhau với when và while",
+  "contentMd": "## Mục tiêu bài học\n- Nắm công thức và cách dùng quá khứ đơn và quá khứ tiếp diễn.\n- Dùng when / while đúng để kể câu chuyện.\n- Tránh lỗi dùng sai thì khi viết đoạn văn kể chuyện.\n\n## Quá khứ đơn\n`S + V2/ed` (phủ định: `S + did not + V`, nghi vấn: `Did + S + V?`)\n\nDùng cho **hành động đã xảy ra và kết thúc** trong quá khứ, hoặc một chuỗi sự kiện nối tiếp.\n\n> She **won** the Nobel Prize in 1903.\n> Bà đã giành giải Nobel năm 1903.\n\n> He **left** his village, **moved** to the city and **started** a new life.\n> Ông rời làng, chuyển đến thành phố và bắt đầu cuộc sống mới.\n\nDấu hiệu: *yesterday, last year, in 1990, ago, when she was young*.\n\n## Quá khứ tiếp diễn\n`S + was / were + V-ing` (phủ định: `was / were not + V-ing`, nghi vấn: `Was / Were + S + V-ing?`)\n\nDùng cho hành động **đang diễn ra tại một thời điểm hoặc trong một khoảng thời gian** ở quá khứ, tạo bối cảnh cho sự kiện khác.\n\n> He **was working** in a lab when he made the discovery.\n> Ông đang làm việc trong phòng thí nghiệm thì phát hiện ra điều đó.\n\n> At 8 p.m. last night, I **was reading** about Nguyen Hue.\n> Lúc 8 giờ tối qua tôi đang đọc về Nguyễn Huệ.\n\n## Dùng chung trong một câu\n- **when + quá khứ đơn** (hành động ngắn, xen vào) kết hợp với **quá khứ tiếp diễn** (hành động dài, đang diễn ra).\n- **while + quá khứ tiếp diễn** (hai hành động song song).\n\n> **While** she **was studying** in Paris, she **met** her future husband.\n> Trong lúc học ở Paris, bà gặp người chồng tương lai.\n\n> They **were walking** home **when** it **started** to rain.\n> Họ đang đi bộ về nhà thì trời bắt đầu mưa.\n\n| | Quá khứ đơn | Quá khứ tiếp diễn |\n|---|---|---|\n| Hành động | xong, ngắn, nối tiếp | đang diễn ra, dài |\n| Dấu hiệu | yesterday, ago, last | at that time, while, all day |\n| Vai trò trong truyện | sự kiện chính | bối cảnh |\n\n## Lỗi thường gặp\n- *When I was seeing him, he was kind.* → *see* chỉ trạng thái: When I **saw** him...\n- *While she studied, the phone rang.* (hành động dài) → While she **was studying**, the phone rang.\n- Dùng quá khứ tiếp diễn cho chuỗi sự kiện kể lại: *He was opening the door and was walking in.* → He **opened** the door and **walked** in.\n- Thiếu **was / were**: *They walking home when...* → They **were walking** home when...\n\n## Áp dụng vào bài thi\nĐề tốt nghiệp hay cho đoạn văn tiểu sử với chỗ trống chia thì. Tìm **hai hành động**: cái nào dài, đang diễn ra thì tiếp diễn; cái nào xen vào thì đơn.\n\n> My grandfather _____ in a factory when the war broke out.\n> (A) works (B) was working (C) has worked (D) is working\n\n*when the war broke out* (quá khứ đơn) là hành động xen vào, hành động dài là tiếp diễn, đáp án **(B) was working**.\n\n## Tóm tắt\n- Quá khứ đơn: sự kiện đã xong, chuỗi sự kiện; quá khứ tiếp diễn: bối cảnh đang diễn ra.\n- When + quá khứ đơn; while + quá khứ tiếp diễn.\n- Động từ chỉ trạng thái (know, see, like) không chia tiếp diễn.\n- Hai hành động song song cùng dùng quá khứ tiếp diễn.",
+  "knowledge": {},
+  "exercises": [
+   {
+    "prompt": "Chọn dạng đúng của động từ",
+    "q": "While the scientist _____ in her lab, she discovered a new element.",
+    "options": [
+     "was working",
+     "worked",
+     "has worked",
+     "works"
+    ],
+    "explain": "While + quá khứ tiếp diễn cho hành động dài đang diễn ra."
+   },
+   {
+    "prompt": "Chọn dạng đúng của động từ",
+    "q": "The famous writer _____ his first novel in 1945.",
+    "options": [
+     "published",
+     "was publishing",
+     "has published",
+     "publishes"
+    ],
+    "explain": "Sự kiện xảy ra và kết thúc ở thời điểm xác định trong quá khứ: quá khứ đơn."
+   },
+   {
+    "prompt": "Chọn dạng đúng của động từ",
+    "q": "We _____ a documentary about Ho Chi Minh when the power went out.",
+    "options": [
+     "were watching",
+     "watched",
+     "watch",
+     "have watched"
+    ],
+    "explain": "Hành động dài đang diễn ra thì bị cắt ngang: quá khứ tiếp diễn."
+   },
+   {
+    "prompt": "Chọn câu đúng",
+    "q": "Which sentence is correct?",
+    "options": [
+     "He was reading when his friend called.",
+     "He read when his friend was calling.",
+     "He was read when his friend called.",
+     "He reading when his friend called."
+    ],
+    "explain": "was reading (hành động dài) + when + called (hành động xen vào)."
+   },
+   {
+    "prompt": "Chọn dạng đúng của động từ",
+    "q": "At 9 p.m. yesterday, my brother _____ about a famous inventor.",
+    "options": [
+     "was reading",
+     "read",
+     "reads",
+     "has read"
+    ],
+    "explain": "At 9 p.m. yesterday là một thời điểm cụ thể trong quá khứ nên dùng quá khứ tiếp diễn."
+   },
+   {
+    "prompt": "Chọn dạng đúng của động từ",
+    "q": "She finished school, _____ to university and became a doctor.",
+    "options": [
+     "went",
+     "was going",
+     "goes",
+     "has gone"
+    ],
+    "explain": "Chuỗi sự kiện nối tiếp trong quá khứ: quá khứ đơn."
+   }
+  ],
+  "en": {
+   "Phân biệt và dùng quá khứ đơn với quá khứ tiếp diễn, kể cả khi hai thì đi cùng nhau với when và while": "Using the past simple and past continuous, including together with when and while",
+   "Chọn dạng đúng của động từ": "Choose the correct verb form",
+   "Chọn câu đúng": "Choose the correct sentence"
+  },
+  "course": "Tiếng Anh 12 (Global Success)",
+  "title": "Ngữ pháp: Quá khứ đơn và quá khứ tiếp diễn"
+ },
+ {
+  "id": "1f1c27a2-2d04-4f01-9009-6f5b528322a1",
+  "summary": "Học 6 từ trọng tâm Unit 2 A Multicultural World: multicultural, diversity, custom, identity, globalisation, cuisine",
+  "contentMd": "## Mục tiêu bài học\n- Nắm nghĩa, phiên âm, loại từ của 6 từ Unit 2.\n- Biết họ từ và cụm từ đi cùng.\n- Dùng từ khi nói và viết về văn hoá các nước.\n\n## Bảng từ vựng chính\n| Từ | Phiên âm | Loại từ | Nghĩa | Ví dụ |\n|---|---|---|---|---|\n| multicultural | /ˌmʌltiˈkʌltʃərəl/ | adj | đa văn hoá | Sydney is a **multicultural** city. |\n| diversity | /daɪˈvɜːsəti/ | n | sự đa dạng | We celebrate cultural **diversity**. |\n| custom | /ˈkʌstəm/ | n | phong tục | Bowing is a Japanese **custom**. |\n| identity | /aɪˈdentəti/ | n | bản sắc | Language shapes our **identity**. |\n| globalisation | /ˌɡləʊbəlaɪˈzeɪʃn/ | n | toàn cầu hoá | **Globalisation** connects economies. |\n| cuisine | /kwɪˈziːn/ | n | ẩm thực | Vietnamese **cuisine** is famous worldwide. |\n\n## Giải thích từng từ\n### multicultural và diversity\n**Multicultural** (*multi-* = nhiều + *cultural*) mô tả nơi có nhiều nền văn hoá sống cùng nhau: *a multicultural society / classroom*. **Diversity** là sự đa dạng, họ từ: *diverse* (adj), *diversify* (v). Cụm: *cultural diversity*, *a diversity of cultures*, *celebrate diversity*.\n\n> Our school is **multicultural**, and we respect each other's **diversity**.\n> Trường chúng tôi đa văn hoá và chúng tôi tôn trọng sự đa dạng của nhau.\n\n### custom và identity\n**Custom** (đếm được) là phong tục, thói quen truyền thống; không nhầm với *customs* (hải quan). Cụm: *local customs*, *follow a custom*. **Identity** là những đặc điểm làm nên con người hoặc cộng đồng; họ từ: *identify* (v). Cụm: *national identity*, *cultural identity*.\n\n> Learning about local **customs** helps travellers avoid mistakes.\n> Tìm hiểu phong tục địa phương giúp du khách tránh sai sót.\n\n### globalisation và cuisine\n**Globalisation** (cũng viết *globalization*) là quá trình các nước kết nối với nhau về kinh tế, văn hoá; động từ *globalise*. **Cuisine** là phong cách nấu ăn của một nước hay vùng; không đếm được khi nói chung: *Italian cuisine*, *street cuisine*.\n\n> **Globalisation** helps people enjoy **cuisine** from all over the world.\n> Toàn cầu hoá giúp mọi người thưởng thức ẩm thực từ khắp thế giới.\n\n## Mẹo nhớ và lỗi dùng từ\n- Trọng âm: mul-ti-**cul**-tu-ral nhấn âm 3; di-**ver**-si-ty nhấn âm 2; i-**den**-ti-ty nhấn âm 2; cui-**sine** nhấn âm cuối.\n- Sai: *cultural diversities* khi nói chung → **cultural diversity**.\n- Sai: *a cuisine of Italy* → **Italian cuisine**.\n- Sai: *a cultural identify* → **a cultural identity** (identify là động từ, identity là danh từ).\n- Chính tả: *globalisation* (Anh) / *globalization* (Mỹ) đều đúng.\n\n## Áp dụng vào bài thi\nBài đọc về đa văn hoá thường hỏi quan điểm của tác giả về lợi ích và thách thức. Chú ý từ chỉ thái độ như *celebrate*, *preserve*, *threaten*. Bài điền từ hay kiểm tra họ từ (diverse - diversity).\n\n> Viet Nam has a rich cultural _____ with 54 ethnic groups.\n> (A) diverse (B) diversity (C) diversify (D) diversely\n\nSau tính từ *cultural* cần danh từ, đáp án **(B) diversity**.\n\n## Tóm tắt\n- Multicultural: đa văn hoá; diversity: sự đa dạng (diverse, diversify).\n- Custom là phong tục; customs (hải quan).\n- Identity là bản sắc; cuisine là ẩm thực.\n- Globalisation: toàn cầu hoá, vừa có lợi vừa có thách thức.",
+  "knowledge": {},
+  "exercises": [
+   {
+    "prompt": "Chọn nghĩa đúng",
+    "q": "What does \"cuisine\" mean?",
+    "options": [
+     "ẩm thực",
+     "nhà bếp",
+     "thực đơn",
+     "nguyên liệu"
+    ],
+    "explain": "cuisine là phong cách nấu ăn, ẩm thực."
+   },
+   {
+    "prompt": "Chọn dạng đúng của từ",
+    "q": "The festival celebrates cultural _____.",
+    "options": [
+     "diversity",
+     "diverse",
+     "diversify",
+     "diversely"
+    ],
+    "explain": "Sau tính từ cultural cần danh từ: diversity."
+   },
+   {
+    "prompt": "Chọn từ phù hợp",
+    "q": "Shaking hands is a common _____ in many countries.",
+    "options": [
+     "custom",
+     "identity",
+     "cuisine",
+     "globalisation"
+    ],
+    "explain": "custom là phong tục."
+   },
+   {
+    "prompt": "Chọn từ phù hợp",
+    "q": "Travellers should respect local _____.",
+    "options": [
+     "customs",
+     "cuisines",
+     "identify",
+     "diverse"
+    ],
+    "explain": "respect local customs: tôn trọng phong tục địa phương."
+   },
+   {
+    "prompt": "Chọn từ phù hợp",
+    "q": "London is a very _____ city, with people from all over the world.",
+    "options": [
+     "multicultural",
+     "multiculture",
+     "culturally",
+     "culture"
+    ],
+    "explain": "Cần tính từ bổ nghĩa city: multicultural."
+   },
+   {
+    "prompt": "Chọn nghĩa đúng",
+    "q": "What is \"globalisation\"?",
+    "options": [
+     "Toàn cầu hoá",
+     "Địa phương hoá",
+     "Hiện đại hoá",
+     "Công nghiệp hoá"
+    ],
+    "explain": "globalisation là sự kết nối toàn cầu giữa các nước."
+   }
+  ],
+  "en": {
+   "Học 6 từ trọng tâm Unit 2 A Multicultural World: multicultural, diversity, custom, identity, globalisation, cuisine": "Six key words of Unit 2 A Multicultural World: multicultural, diversity, custom, identity, globalisation, cuisine",
+   "Chọn nghĩa đúng": "Choose the correct meaning",
+   "Chọn dạng đúng của từ": "Choose the correct form of the word",
+   "Chọn từ phù hợp": "Choose the suitable word"
+  },
+  "course": "Tiếng Anh 12 (Global Success)",
+  "title": "Từ vựng: A Multicultural World"
+ },
+ {
+  "id": "362617f8-e53c-4c22-9d5a-dc0b2a658d22",
+  "summary": "Ôn tập và mở rộng mạo từ a / an, the và không dùng mạo từ, kèm các trường hợp thường gặp trong đề thi",
+  "contentMd": "## Mục tiêu bài học\n- Phân biệt a / an, the và mạo từ zero (Ø).\n- Nhớ các trường hợp dùng the với địa danh và trường hợp không dùng mạo từ.\n- Chọn mạo từ đúng trong bài điền từ.\n\n## Mạo từ a / an\nDùng trước **danh từ đếm được số ít**, khi nói đến một người hoặc vật chưa xác định, hoặc nhắc đến lần đầu. **a** đứng trước **âm** phụ âm, **an** đứng trước **âm** nguyên âm (xét cách đọc, không xét chữ cái).\n\n> She is **an** exchange student from Japan.\n> Cô ấy là một du học sinh trao đổi đến từ Nhật Bản.\n\n> He bought **a** university guidebook and **an** umbrella.\n> Cậu ấy mua một cuốn sách hướng dẫn trường đại học và một cái ô.\n\nChú ý: *a university* (/juː/ là phụ âm), *an hour* (h câm), *an honest man*.\n\n## Mạo từ the\nDùng khi người nghe biết rõ đang nói đến cái gì: đã nhắc trước đó, duy nhất, hoặc xác định bằng cụm khác.\n\n- Đã nhắc: *I saw a film. The film was great.*\n- Duy nhất: *the sun, the moon, the Earth*.\n- Địa danh: *the Mekong River, the Pacific, the Alps, the Philippines, the United States*.\n- Dạng so sánh nhất, số thứ tự: *the best, the first*.\n\n> The students visited **the** Mekong Delta last summer.\n> Học sinh đã đến thăm đồng bằng sông Cửu Long mùa hè năm ngoái.\n\n## Không dùng mạo từ (Ø)\nKhông dùng mạo từ trước:\n- Danh từ số nhiều hoặc không đếm được **nói chung**: *Ø Culture shapes the way people think.*\n- Tên bữa ăn, môn học, ngôn ngữ, thể thao: *have Ø lunch*, *study Ø English*, *play Ø football*.\n- Tên nước số ít, thành phố, người: *Viet Nam, Ha Noi, Tom*.\n\n| Loại | Mạo từ | Ví dụ |\n|---|---|---|\n| Một người / vật chưa xác định | a / an | a teacher |\n| Xác định, duy nhất | the | the Earth |\n| Nói chung, bữa ăn, môn học | Ø | Ø music, Ø breakfast |\n| Núi riêng lẻ, hồ | Ø | Mount Fansipan |\n| Dãy núi, sông, biển | the | the Himalayas, the Red River |\n\n## Lỗi thường gặp\n- *She is a engineer.* → She is **an** engineer.\n- *The culture is important for people.* (nói chung) → **Culture** is important for people.\n- *I have the breakfast at 6.* → I have **breakfast** at 6.\n- *He lives in the Viet Nam.* → He lives in **Viet Nam**.\n\n## Áp dụng vào bài thi\nĐề tốt nghiệp và bài đọc điền khuyết thường kiểm tra mạo từ. Hỏi ba câu: danh từ đếm được hay không? số ít hay nhiều? đã xác định chưa?\n\n> My cousin studies at _____ university in the Netherlands.\n> (A) a (B) an (C) the (D) Ø\n\n*university* bắt đầu bằng âm /j/ (phụ âm), chưa xác định nên dùng **(A) a**.\n\n## Tóm tắt\n- a / an: danh từ đếm được số ít chưa xác định; chọn theo âm đọc.\n- the: đã xác định, duy nhất, địa danh (sông, biển, dãy núi, nước số nhiều).\n- Ø: nói chung với danh từ số nhiều / không đếm được; bữa ăn, môn học, ngôn ngữ.\n- Luôn kiểm tra âm đầu của từ sau mạo từ.",
+  "knowledge": {},
+  "exercises": [
+   {
+    "prompt": "Chọn mạo từ đúng",
+    "q": "She is _____ honest student who respects every culture.",
+    "options": [
+     "an",
+     "a",
+     "the",
+     "Ø"
+    ],
+    "explain": "honest có h câm, bắt đầu bằng âm nguyên âm nên dùng an."
+   },
+   {
+    "prompt": "Chọn mạo từ đúng",
+    "q": "We visited _____ Red River Delta on our school trip.",
+    "options": [
+     "the",
+     "a",
+     "an",
+     "Ø"
+    ],
+    "explain": "Địa danh có river (xác định) cần the: the Red River Delta."
+   },
+   {
+    "prompt": "Chọn mạo từ đúng",
+    "q": "_____ music brings people from different cultures together.",
+    "options": [
+     "Ø",
+     "A",
+     "The",
+     "An"
+    ],
+    "explain": "Nói chung về danh từ không đếm được thì không dùng mạo từ."
+   },
+   {
+    "prompt": "Chọn mạo từ đúng",
+    "q": "He is learning _____ French at school.",
+    "options": [
+     "Ø",
+     "a",
+     "the",
+     "an"
+    ],
+    "explain": "Không dùng mạo từ trước tên ngôn ngữ."
+   },
+   {
+    "prompt": "Chọn câu đúng",
+    "q": "Which sentence is correct?",
+    "options": [
+     "She wants to become an engineer.",
+     "She wants to become a engineer.",
+     "She wants to become the engineer.",
+     "She wants to become engineer."
+    ],
+    "explain": "engineer bắt đầu bằng nguyên âm nên dùng an."
+   },
+   {
+    "prompt": "Chọn mạo từ đúng",
+    "q": "We had _____ great time at the cultural festival; _____ food was delicious.",
+    "options": [
+     "a / the",
+     "the / a",
+     "an / the",
+     "a / a"
+    ],
+    "explain": "Lần đầu nhắc dùng a great time; the food là thức ăn tại lễ hội đã xác định."
+   }
+  ],
+  "en": {
+   "Ôn tập và mở rộng mạo từ a / an, the và không dùng mạo từ, kèm các trường hợp thường gặp trong đề thi": "Reviewing and extending articles a / an, the and the zero article, with common exam cases",
+   "Chọn mạo từ đúng": "Choose the correct article",
+   "Chọn câu đúng": "Choose the correct sentence"
+  },
+  "course": "Tiếng Anh 12 (Global Success)",
+  "title": "Ngữ pháp: Mạo từ — ôn tập và mở rộng"
+ },
+ {
+  "id": "01fc9a22-2264-482f-864e-f00b408fbd17",
+  "summary": "Học 6 từ trọng tâm Unit 3 Green Living: green living, recycle, reusable, compost, single-use, energy-saving",
+  "contentMd": "## Mục tiêu bài học\n- Nắm nghĩa, phiên âm, loại từ của 6 từ Unit 3.\n- Biết cụm từ đi cùng và tiền tố re-, -able.\n- Dùng từ khi nói và viết về lối sống xanh.\n\n## Bảng từ vựng chính\n| Từ | Phiên âm | Loại từ | Nghĩa | Ví dụ |\n|---|---|---|---|---|\n| green living | /ˌɡriːn ˈlɪvɪŋ/ | n | lối sống xanh | **Green living** starts with small habits. |\n| recycle | /ˌriːˈsaɪkl/ | v | tái chế | We **recycle** paper and glass. |\n| reusable | /ˌriːˈjuːzəbl/ | adj | có thể tái sử dụng | I use a **reusable** water bottle. |\n| compost | /ˈkɒmpɒst/ | n | phân hữu cơ | Food waste makes good **compost**. |\n| single-use | /ˌsɪŋɡl ˈjuːs/ | adj | dùng một lần | Avoid **single-use** plastic bags. |\n| energy-saving | /ˈenədʒi seɪvɪŋ/ | adj | tiết kiệm năng lượng | **Energy-saving** bulbs last longer. |\n\n## Giải thích từng từ\n### recycle và reusable\n**Recycle** là xử lý vật liệu cũ để làm ra vật mới: *recycle plastic*, *recycling bin*, *recycling* (n). Tiền tố **re-** nghĩa \"làm lại\". **Reusable** = *reuse* + *-able* (có thể tái sử dụng): *reusable bags*. Phân biệt: *reuse* dùng lại nguyên dạng, *recycle* biến đổi thành vật mới.\n\n> Please **recycle** plastic bottles and use **reusable** bags.\n> Hãy tái chế chai nhựa và dùng túi tái sử dụng.\n\n### compost và single-use\n**Compost** là phân bón làm từ lá, vỏ rau củ, thức ăn thừa; cũng có động từ *to compost*. **Single-use** (hoặc *disposable*) chỉ đồ chỉ dùng một lần rồi bỏ: *single-use plastic, single-use cups*.\n\n> We make **compost** from vegetable scraps in our school garden.\n> Chúng tôi làm phân hữu cơ từ rau thừa trong vườn trường.\n\n### green living và energy-saving\n**Green living** là lối sống thân thiện với môi trường: tiết kiệm điện, nước, giảm rác. **Energy-saving** là tính từ ghép (N + V-ing), đứng trước danh từ: *energy-saving lamps / appliances*. Dạng khác: *eco-friendly*, *environmentally friendly*.\n\n> **Energy-saving** appliances are an important part of **green living**.\n> Thiết bị tiết kiệm năng lượng là phần quan trọng của lối sống xanh.\n\n## Mẹo nhớ và lỗi dùng từ\n- Trọng âm: re-**cy**-cle nhấn âm 2; re-**use**-able nhấn âm 2; **com**post nhấn âm đầu.\n- Sai: *We recycled again* khi muốn nói lặp lại → *re-* đã có nghĩa \"lại\", chỉ cần nói **We recycle**.\n- Sai: *a energy-saving lamp* → **an** energy-saving lamp.\n- Sai: *single use plastics bag* → **single-use plastic bags** (có gạch nối, plastic ở dạng bổ nghĩa).\n- *Recyclable* (có thể tái chế) khác *recycled* (đã được tái chế).\n\n## Áp dụng vào bài thi\nBài đọc về bảo vệ môi trường có chủ đề lối sống xanh và các việc làm cụ thể. Gặp câu hỏi đồng nghĩa: *reusable* ≈ can be used again; *single-use* ≈ disposable. Bài điền từ chú ý tính từ ghép có gạch nối.\n\n> Many shops now sell _____ bags so people don't throw them away after one use.\n> (A) reusable (B) single-use (C) wasteful (D) compost\n\nNghĩa \"không vứt sau một lần\" là **(A) reusable**.\n\n## Tóm tắt\n- Recycle (v): tái chế; reusable (adj): dùng lại được.\n- Compost: phân hữu cơ; single-use: dùng một lần.\n- Energy-saving là tính từ ghép; an energy-saving lamp.\n- Green living: lối sống xanh, bắt đầu từ thói quen nhỏ.",
+  "knowledge": {},
+  "exercises": [
+   {
+    "prompt": "Chọn nghĩa đúng",
+    "q": "What does \"single-use\" mean?",
+    "options": [
+     "dùng một lần",
+     "dùng nhiều lần",
+     "dùng riêng",
+     "dùng chung"
+    ],
+    "explain": "single-use là chỉ dùng một lần rồi bỏ."
+   },
+   {
+    "prompt": "Chọn từ phù hợp",
+    "q": "We should use _____ bags instead of plastic ones.",
+    "options": [
+     "reusable",
+     "single-use",
+     "wasting",
+     "composted"
+    ],
+    "explain": "reusable bags thân thiện với môi trường, trái nghĩa với single-use."
+   },
+   {
+    "prompt": "Chọn từ phù hợp",
+    "q": "Vegetable waste can be turned into _____ for the garden.",
+    "options": [
+     "compost",
+     "energy",
+     "recycle",
+     "emission"
+    ],
+    "explain": "compost là phân hữu cơ làm từ rác thực vật."
+   },
+   {
+    "prompt": "Chọn câu đúng",
+    "q": "Which sentence is correct?",
+    "options": [
+     "We use an energy-saving lamp in the classroom.",
+     "We use a energy-saving lamp in the classroom.",
+     "We use an energy saves lamp in the classroom.",
+     "We use the energy-save lamps in the classroom."
+    ],
+    "explain": "energy-saving bắt đầu bằng nguyên âm nên dùng an."
+   },
+   {
+    "prompt": "Chọn dạng đúng của từ",
+    "q": "Please put used bottles in the _____ bin.",
+    "options": [
+     "recycling",
+     "recycle",
+     "recycled",
+     "recyclable of"
+    ],
+    "explain": "recycling bin là danh từ ghép V-ing + N: thùng tái chế."
+   },
+   {
+    "prompt": "Chọn từ phù hợp",
+    "q": "Green living means making choices that are good for the _____.",
+    "options": [
+     "environment",
+     "exchange",
+     "apprentice",
+     "tuition"
+    ],
+    "explain": "green living là lối sống tốt cho môi trường."
+   }
+  ],
+  "en": {
+   "Học 6 từ trọng tâm Unit 3 Green Living: green living, recycle, reusable, compost, single-use, energy-saving": "Six key words of Unit 3 Green Living: green living, recycle, reusable, compost, single-use, energy-saving",
+   "Chọn nghĩa đúng": "Choose the correct meaning",
+   "Chọn từ phù hợp": "Choose the suitable word",
+   "Chọn câu đúng": "Choose the correct sentence",
+   "Chọn dạng đúng của từ": "Choose the correct form of the word"
+  },
+  "course": "Tiếng Anh 12 (Global Success)",
+  "title": "Từ vựng: Green Living"
+ },
+ {
+  "id": "4746dea4-f962-47d5-9398-f7bfa7840063",
+  "summary": "Động từ đi với giới từ cố định (depend on, focus on, believe in, apply for) và đại từ quan hệ which thay cho cả mệnh đề",
+  "contentMd": "## Mục tiêu bài học\n- Nhớ các động từ đi với giới từ cố định và dùng N hoặc V-ing sau đó.\n- Dùng which thay cho cả mệnh đề phía trước.\n- Phân biệt which thay danh từ và which thay cả ý.\n\n## Động từ + giới từ\nNhiều động từ đi với một giới từ nhất định. Sau giới từ ta dùng **danh từ** hoặc **V-ing**.\n\n`V + giới từ + N / V-ing`\n\n| Động từ + giới từ | Nghĩa | Ví dụ |\n|---|---|---|\n| depend on | phụ thuộc vào | Our future **depends on** protecting the environment. |\n| focus on | tập trung vào | Schools **focus on** teaching green habits. |\n| believe in | tin vào | I **believe in** recycling. |\n| apply for | nộp đơn xin | She **applied for** an eco-volunteer job. |\n| care about | quan tâm | We **care about** saving water. |\n| suffer from | chịu đựng | Cities **suffer from** air pollution. |\n\n> Our future **depends on** protecting the environment.\n> Tương lai của chúng ta phụ thuộc vào việc bảo vệ môi trường.\n\n> He **apologised for** wasting so much water.\n> Anh ấy xin lỗi vì lãng phí nhiều nước.\n\nMẹo: học theo **cụm** (collocation), không học riêng động từ. Ghi chú thêm các cặp dễ lẫn: *listen to, wait for, look at, belong to*.\n\n## Which thay cho cả mệnh đề\nNgoài việc thay cho danh từ, **which** có thể thay cho **toàn bộ ý của mệnh đề trước**. Trường hợp này luôn có **dấu phẩy** trước which và động từ sau which chia số ít.\n\n`mệnh đề, which + V …`\n\n> We stopped using plastic bags, **which** reduced our waste.\n> Chúng tôi ngừng dùng túi nhựa, điều đó làm giảm rác thải.\n\n> She walks to school every day, **which** keeps her healthy.\n> Cô ấy đi bộ đến trường mỗi ngày, điều đó giúp cô khoẻ mạnh.\n\n| Which thay | Ví dụ |\n|---|---|\n| Danh từ | The bag **which** I bought is reusable. |\n| Cả mệnh đề | I bought a reusable bag, **which** is great. |\n\nKhông dùng *that* thay cho which trong trường hợp này.\n\n## Lỗi thường gặp\n- *depend of* → **depend on**.\n- *focus in learning* → **focus on** learning.\n- *believe to recycling* → **believe in** recycling.\n- *We recycle, that saves money.* → We recycle, **which** saves money.\n- Thiếu dấu phẩy trước which chỉ cả ý.\n\n## Áp dụng vào bài thi\nĐề tốt nghiệp có dạng điền từ với giới từ và các cụm. Với which, nhìn xem chỗ trống có theo sau một mệnh đề đầy đủ không và có dấu phẩy không.\n\n> Many people now use public transport, _____ helps reduce traffic jams.\n> (A) that (B) what (C) which (D) who\n\nThay cả ý phía trước, có dấu phẩy, đáp án **(C) which**.\n\n## Tóm tắt\n- Học động từ cùng giới từ: depend on, focus on, believe in, apply for.\n- Sau giới từ dùng N hoặc V-ing.\n- Which thay cả mệnh đề: có dấu phẩy, động từ số ít.\n- Không dùng that, what trong trường hợp này.",
+  "knowledge": {},
+  "exercises": [
+   {
+    "prompt": "Chọn từ phù hợp",
+    "q": "The success of green projects depends _____ everyone's effort.",
+    "options": [
+     "on",
+     "of",
+     "in",
+     "at"
+    ],
+    "explain": "depend on: phụ thuộc vào."
+   },
+   {
+    "prompt": "Chọn từ phù hợp",
+    "q": "She applied _____ a place on the eco-club committee.",
+    "options": [
+     "for",
+     "to",
+     "on",
+     "at"
+    ],
+    "explain": "apply for: nộp đơn xin."
+   },
+   {
+    "prompt": "Chọn từ phù hợp",
+    "q": "We decided to ride bikes to school, _____ cut our carbon emissions.",
+    "options": [
+     "which",
+     "that",
+     "what",
+     "who"
+    ],
+    "explain": "which thay cho cả ý trước, có dấu phẩy."
+   },
+   {
+    "prompt": "Chọn dạng đúng của động từ",
+    "q": "Our class focuses on _____ plastic waste.",
+    "options": [
+     "reducing",
+     "reduce",
+     "to reduce",
+     "reduced"
+    ],
+    "explain": "Sau giới từ on dùng V-ing."
+   },
+   {
+    "prompt": "Chọn câu đúng",
+    "q": "Which sentence is correct?",
+    "options": [
+     "I believe in using renewable energy.",
+     "I believe on using renewable energy.",
+     "I believe to use renewable energy.",
+     "I believe at using renewable energy."
+    ],
+    "explain": "believe in + N / V-ing."
+   },
+   {
+    "prompt": "Chọn câu đúng",
+    "q": "Which sentence is correct?",
+    "options": [
+     "He recycles every day, which saves a lot of space.",
+     "He recycles every day which, saves a lot of space.",
+     "He recycles every day that saves a lot of space.",
+     "He recycles every day, what saves a lot of space."
+    ],
+    "explain": "which thay cho cả mệnh đề cần dấu phẩy trước nó."
+   }
+  ],
+  "en": {
+   "Động từ đi với giới từ cố định (depend on, focus on, believe in, apply for) và đại từ quan hệ which thay cho cả mệnh đề": "Verbs with fixed prepositions (depend on, focus on, believe in, apply for) and the relative pronoun which referring to a whole clause",
+   "Chọn từ phù hợp": "Choose the suitable word",
+   "Chọn dạng đúng của động từ": "Choose the correct verb form",
+   "Chọn câu đúng": "Choose the correct sentence"
+  },
+  "course": "Tiếng Anh 12 (Global Success)",
+  "title": "Ngữ pháp: Động từ đi với giới từ; đại từ quan hệ which"
+ },
+ {
+  "id": "7b44f014-cd19-478a-a5e5-dae3f79dadab",
+  "summary": "Học 6 từ trọng tâm Unit 4 Urbanisation: urbanisation, migrate, overcrowded, skyscraper, slum, traffic congestion",
+  "contentMd": "## Mục tiêu bài học\n- Nắm nghĩa, phiên âm, loại từ của 6 từ Unit 4.\n- Biết họ từ và cụm từ đi cùng khi nói về đô thị.\n- Dùng từ khi viết về lợi ích và vấn đề của đô thị hoá.\n\n## Bảng từ vựng chính\n| Từ | Phiên âm | Loại từ | Nghĩa | Ví dụ |\n|---|---|---|---|---|\n| urbanisation | /ˌɜːbənaɪˈzeɪʃn/ | n | đô thị hoá | **Urbanisation** is changing Viet Nam. |\n| migrate | /maɪˈɡreɪt/ | v | di cư | Many people **migrate** to big cities. |\n| overcrowded | /ˌəʊvəˈkraʊdɪd/ | adj | quá đông đúc | The buses are **overcrowded** at rush hour. |\n| skyscraper | /ˈskaɪskreɪpə/ | n | nhà chọc trời | Landmark 81 is a famous **skyscraper**. |\n| slum | /slʌm/ | n | khu ổ chuột | Families in a **slum** lack clean water. |\n| traffic congestion | /ˈtræfɪk kənˌdʒestʃən/ | n | tắc nghẽn giao thông | **Traffic congestion** wastes time. |\n\n## Giải thích từng từ\n### urbanisation và migrate\n**Urbanisation** là quá trình ngày càng nhiều người sống ở thành phố; họ từ: *urban* (adj, thuộc đô thị), *urbanise* (v); trái nghĩa *rural*. **Migrate** là di chuyển nơi sống, thường từ nông thôn lên thành phố (*rural-urban migration*). Danh từ: *migration*, người di cư: *migrant*. Cấu trúc: *migrate from ... to ...*.\n\n> Many young people **migrate** from the countryside to cities to find jobs.\n> Nhiều người trẻ di cư từ nông thôn lên thành phố tìm việc.\n\n### overcrowded và traffic congestion\n**Overcrowded** (adj) = *over* (quá) + *crowded* (đông): *overcrowded schools / buses / cities*; danh từ *overcrowding*. **Traffic congestion** (không đếm được) là ùn tắc giao thông; cụm: *cause / reduce / ease traffic congestion*. Từ gần nghĩa: *traffic jam* (đếm được).\n\n> **Traffic congestion** is a daily problem in **overcrowded** cities.\n> Ùn tắc giao thông là vấn đề hằng ngày ở các thành phố quá đông.\n\n### skyscraper và slum\n**Skyscraper** (sky + scraper) là toà nhà rất cao. **Slum** là khu nhà ở nghèo nàn, thiếu vệ sinh, thiếu tiện nghi; thường dùng số nhiều *slums* hoặc cụm *slum areas*. Nhiều thành phố đang cải tạo khu ổ chuột thành khu nhà ở an toàn.\n\n> Next to modern **skyscrapers**, there are still some **slums**.\n> Bên cạnh các toà nhà chọc trời hiện đại vẫn còn vài khu ổ chuột.\n\n## Mẹo nhớ và lỗi dùng từ\n- Họ từ: *urban → urbanise → urbanisation*; *migrate → migration → migrant*.\n- Trọng âm: ur-ban-i-**sa**-tion nhấn âm 4; mi-**grate** nhấn âm 2; **sky**scraper nhấn âm đầu.\n- Sai: *a traffic congestion* → **traffic congestion** (không đếm được).\n- Sai: *migrate in the city* → **migrate to** the city.\n- Sai: *overcrowd city* → **an overcrowded city**.\n\n## Áp dụng vào bài thi\nBài đọc hoặc bài điền về đô thị hoá thường trình bày nguyên nhân (migration, jobs) và hậu quả (congestion, pollution, overcrowding). Hãy tìm từ khoá nối ý như *as a result, because of* để xác định quan hệ nguyên nhân - hậu quả.\n\n> The population has grown fast, so many cities are now _____.\n> (A) overcrowd (B) overcrowded (C) overcrowding (D) overcrowds\n\nSau *are now* cần tính từ, đáp án **(B) overcrowded**.\n\n## Tóm tắt\n- Urbanisation: đô thị hoá; urban ≠ rural.\n- Migrate from ... to ...; migration, migrant.\n- Overcrowded, traffic congestion là hệ quả; skyscraper, slum cho thấy hai mặt của thành phố.\n- Học theo họ từ để chọn đúng dạng từ.",
+  "knowledge": {},
+  "exercises": [
+   {
+    "prompt": "Chọn nghĩa đúng",
+    "q": "What does \"overcrowded\" mean?",
+    "options": [
+     "quá đông đúc",
+     "trống trải",
+     "rất sạch",
+     "yên tĩnh"
+    ],
+    "explain": "overcrowded là quá đông người."
+   },
+   {
+    "prompt": "Chọn từ phù hợp",
+    "q": "Many farmers _____ to cities to look for better jobs.",
+    "options": [
+     "migrate",
+     "urbanise",
+     "skyscraper",
+     "congest"
+    ],
+    "explain": "migrate to: di cư đến; chủ ngữ là người nên chọn động từ migrate."
+   },
+   {
+    "prompt": "Chọn dạng đúng của từ",
+    "q": "_____ is the process in which more people live in cities.",
+    "options": [
+     "Urbanisation",
+     "Urban",
+     "Urbanise",
+     "Urbanised"
+    ],
+    "explain": "Cần danh từ làm chủ ngữ: Urbanisation."
+   },
+   {
+    "prompt": "Chọn câu đúng",
+    "q": "Which sentence is correct?",
+    "options": [
+     "Traffic congestion is serious in big cities.",
+     "A traffic congestion are serious in big cities.",
+     "Traffic congestions is serious in big cities.",
+     "The traffic congestion were serious in big cities."
+    ],
+    "explain": "traffic congestion là danh từ không đếm được, đi với is."
+   },
+   {
+    "prompt": "Chọn từ phù hợp",
+    "q": "Tall modern buildings in the city centre are called _____.",
+    "options": [
+     "skyscrapers",
+     "slums",
+     "migrants",
+     "routines"
+    ],
+    "explain": "skyscraper là nhà chọc trời."
+   },
+   {
+    "prompt": "Chọn nghĩa đúng",
+    "q": "Which word means \"khu ổ chuột\"?",
+    "options": [
+     "slum",
+     "suburb",
+     "skyscraper",
+     "village"
+    ],
+    "explain": "slum là khu nhà nghèo nàn, thiếu vệ sinh."
+   }
+  ],
+  "en": {
+   "Học 6 từ trọng tâm Unit 4 Urbanisation: urbanisation, migrate, overcrowded, skyscraper, slum, traffic congestion": "Six key words of Unit 4 Urbanisation: urbanisation, migrate, overcrowded, skyscraper, slum, traffic congestion",
+   "Chọn nghĩa đúng": "Choose the correct meaning",
+   "Chọn từ phù hợp": "Choose the suitable word",
+   "Chọn dạng đúng của từ": "Choose the correct form of the word",
+   "Chọn câu đúng": "Choose the correct sentence"
+  },
+  "course": "Tiếng Anh 12 (Global Success)",
+  "title": "Từ vựng: Urbanisation"
+ },
+ {
+  "id": "fca132d3-15cb-4f1f-a0b4-48a2b395e3d2",
+  "summary": "Dùng thì hiện tại hoàn thành và so sánh kép (the + so sánh hơn, the + so sánh hơn; ngày càng) khi nói về đô thị hoá",
+  "contentMd": "## Mục tiêu bài học\n- Dùng hiện tại hoàn thành với since, for, over the past years.\n- Dùng so sánh kép: càng ... càng ... và ngày càng ...\n- Nhận ra dạng so sánh trong đề điền từ.\n\n## Thì hiện tại hoàn thành\n`S + have / has + V3/ed` (phủ định: `have / has not + V3`, nghi vấn: `Have / Has + S + V3?`)\n\nDùng khi hành động **bắt đầu trong quá khứ và còn liên quan đến hiện tại**, hoặc nói về thay đổi từ quá khứ đến nay.\n\n> The city **has grown** rapidly over the past ten years.\n> Thành phố đã phát triển nhanh trong mười năm qua.\n\n> Many villagers **have moved** to the capital since 2010.\n> Nhiều dân làng đã chuyển lên thủ đô từ năm 2010.\n\nDấu hiệu: *since + mốc thời gian*, *for + khoảng thời gian*, *over the past / last + N*, *so far*, *recently*, *already, yet, ever, never*.\n\n| | since | for |\n|---|---|---|\n| Đi với | mốc thời gian (since 2015) | khoảng thời gian (for 5 years) |\n\n## So sánh kép\n### Càng ... càng ...\n`The + so sánh hơn + S + V, the + so sánh hơn + S + V`\n\n> **The bigger** the city grows, **the more crowded** it becomes.\n> Thành phố càng lớn thì càng đông đúc.\n\n> **The more** people migrate to cities, **the higher** house prices are.\n> Càng nhiều người di cư lên thành phố thì giá nhà càng cao.\n\n### Ngày càng ...\n`adj-er and adj-er` (tính từ ngắn) hoặc `more and more + adj` (tính từ dài)\n\n> Cities are getting **bigger and bigger**.\n> Các thành phố ngày càng lớn hơn.\n\n> Traffic is becoming **more and more** serious.\n> Giao thông ngày càng nghiêm trọng.\n\n## So sánh hai dạng\n| Dạng | Công thức | Ví dụ |\n|---|---|---|\n| Càng ... càng | The + so sánh hơn, the + so sánh hơn | The earlier you leave, the less traffic you meet. |\n| Ngày càng | adj-er and adj-er / more and more adj | The air is getting dirtier and dirtier. |\n\n## Lỗi thường gặp\n- *The city has grown in 2015.* → The city **grew** in 2015 (mốc xác định → quá khứ đơn) hoặc **has grown since** 2015.\n- *The more bigger the city is...* → **The bigger** the city is...\n- *more and more big* → **bigger and bigger**.\n- *The more crowded the city, the more expensive is it.* → ... the more expensive it is.\n\n## Áp dụng vào bài thi\nĐề tốt nghiệp có thể cho chỗ trống chia thì hoặc điền dạng so sánh trong đoạn văn về xã hội. Nhìn từ khoá since / for / over the past để chọn hiện tại hoàn thành; thấy *the ... , the ...* thì dùng so sánh hơn ở cả hai vế.\n\n> The more people live in the city, _____ the traffic becomes.\n> (A) worse (B) the worse (C) the worst (D) worst\n\nVế sau cũng cần *the + so sánh hơn*, đáp án **(B) the worse**.\n\n## Tóm tắt\n- Hiện tại hoàn thành: have / has + V3; since + mốc, for + khoảng thời gian.\n- Càng ... càng: the + so sánh hơn, the + so sánh hơn.\n- Ngày càng: adj-er and adj-er / more and more + adj.\n- Không dùng hiện tại hoàn thành với mốc quá khứ xác định như yesterday, in 2015.",
+  "knowledge": {},
+  "exercises": [
+   {
+    "prompt": "Chọn dạng đúng của động từ",
+    "q": "The population of Ho Chi Minh City _____ rapidly since 2000.",
+    "options": [
+     "has increased",
+     "increased",
+     "increases",
+     "is increasing"
+    ],
+    "explain": "since + mốc thời gian dùng hiện tại hoàn thành."
+   },
+   {
+    "prompt": "Chọn dạng đúng của từ",
+    "q": "The _____ the city grows, the more traffic it has.",
+    "options": [
+     "bigger",
+     "big",
+     "biggest",
+     "more big"
+    ],
+    "explain": "Cấu trúc the + so sánh hơn: the bigger."
+   },
+   {
+    "prompt": "Chọn câu đúng",
+    "q": "Which sentence is correct?",
+    "options": [
+     "Our city is becoming more and more crowded.",
+     "Our city is becoming crowded and crowded.",
+     "Our city is becoming more crowded and crowded.",
+     "Our city is becoming most crowded."
+    ],
+    "explain": "Tính từ dài dùng more and more + adj."
+   },
+   {
+    "prompt": "Chọn từ phù hợp",
+    "q": "They have lived in this apartment _____ five years.",
+    "options": [
+     "for",
+     "since",
+     "ago",
+     "from"
+    ],
+    "explain": "for + khoảng thời gian."
+   },
+   {
+    "prompt": "Chọn dạng đúng của từ",
+    "q": "The more people move to the city, the _____ the housing becomes.",
+    "options": [
+     "more expensive",
+     "expensive",
+     "most expensive",
+     "expensively"
+    ],
+    "explain": "Vế sau: the + more expensive."
+   },
+   {
+    "prompt": "Chọn câu đúng",
+    "q": "Which sentence is correct?",
+    "options": [
+     "The city has changed a lot over the past decade.",
+     "The city changed a lot over the past decade.",
+     "The city is changing a lot over the past decade yesterday.",
+     "The city has change a lot over the past decade."
+    ],
+    "explain": "over the past decade là dấu hiệu của hiện tại hoàn thành: has changed."
+   }
+  ],
+  "en": {
+   "Dùng thì hiện tại hoàn thành và so sánh kép (the + so sánh hơn, the + so sánh hơn; ngày càng) khi nói về đô thị hoá": "Using the present perfect and double comparatives (the + comparative, the + comparative; more and more) on the topic of urbanisation",
+   "Chọn dạng đúng của động từ": "Choose the correct verb form",
+   "Chọn dạng đúng của từ": "Choose the correct form of the word",
+   "Chọn câu đúng": "Choose the correct sentence",
+   "Chọn từ phù hợp": "Choose the suitable word"
+  },
+  "course": "Tiếng Anh 12 (Global Success)",
+  "title": "Ngữ pháp: Hiện tại hoàn thành và so sánh kép"
+ },
+ {
+  "id": "86fc6e2f-7a43-4e9b-acda-741dcbe0b172",
+  "summary": "Học 6 từ trọng tâm Unit 5 The World of Work: employer, applicant, interview, part-time, experience, promotion",
+  "contentMd": "## Mục tiêu bài học\n- Nắm nghĩa, phiên âm, loại từ của 6 từ Unit 5.\n- Biết họ từ -er / -ee / -ant và các cụm từ đi cùng.\n- Dùng từ khi nói và viết về xin việc.\n\n## Bảng từ vựng chính\n| Từ | Phiên âm | Loại từ | Nghĩa | Ví dụ |\n|---|---|---|---|---|\n| employer | /ɪmˈplɔɪə/ | n | người sử dụng lao động | The **employer** offered her a contract. |\n| applicant | /ˈæplɪkənt/ | n | người nộp đơn | Each **applicant** sends a CV. |\n| interview | /ˈɪntəvjuː/ | n | buổi phỏng vấn | I have a job **interview** tomorrow. |\n| part-time | /ˌpɑːt ˈtaɪm/ | adj | bán thời gian | He has a **part-time** job at a café. |\n| experience | /ɪkˈspɪəriəns/ | n | kinh nghiệm | She has two years' **experience**. |\n| promotion | /prəˈməʊʃn/ | n | sự thăng chức | He deserves a **promotion**. |\n\n## Giải thích từng từ\n### employer, employee và applicant\nHọ từ *employ*: **employer** (người thuê) - **employee** (người được thuê) - *employment* (việc làm) - *unemployed* (thất nghiệp). **Applicant** là người nộp đơn, từ động từ *apply* (apply for a job); danh từ *application* là đơn. Hậu tố -er / -or thường chỉ người làm hành động, -ee chỉ người nhận.\n\n> Every **applicant** must send an **application** and a CV to the **employer**.\n> Mỗi ứng viên phải gửi đơn và CV cho nhà tuyển dụng.\n\n### interview và part-time\n**Interview** (n, v) là buổi phỏng vấn; cụm: *attend / have / pass an interview*, *a job interview*. **Part-time** là bán thời gian, trái nghĩa *full-time*. Cụm: *a part-time job*, *work part-time* (khi làm trạng từ, không có a).\n\n> She works **part-time** while she is studying at university.\n> Cô ấy làm bán thời gian trong khi học đại học.\n\n### experience và promotion\n**Experience** (không đếm được) là kinh nghiệm làm việc: *work experience*, *have experience in / of*. Khi nói trải nghiệm cụ thể, dùng đếm được: *an amazing experience*. **Promotion** là việc được thăng chức, từ động từ *promote*; cụm *get / receive a promotion*.\n\n> With ten years of **experience**, he finally received a **promotion**.\n> Với mười năm kinh nghiệm, cuối cùng anh được thăng chức.\n\n## Mẹo nhớ và lỗi dùng từ\n- Trọng âm: em-**ploy**-er nhấn âm 2; **ap**-pli-cant nhấn âm đầu; **in**-ter-view nhấn âm đầu; pro-**mo**-tion nhấn âm 2.\n- Sai: *a lot of experiences* khi nói kinh nghiệm làm việc → **a lot of experience**.\n- Sai: *interview for the job at tomorrow* → **have an interview tomorrow**.\n- Sai: *part time job* trong văn viết nên có gạch nối: **part-time job**.\n- Sai: *employ at a company* → **be employed by / work for** a company.\n\n## Áp dụng vào bài thi\nBài đọc điền từ thường là mẫu quảng cáo tuyển dụng hoặc email xin việc. Chú ý các từ khoá *experience*, *application*, *interview*. Nhớ: tuyển dụng yêu cầu *a minimum of two years' experience* (không dùng số nhiều của experience).\n\n> All _____ should send their CVs before 30 June.\n> (A) applicants (B) applications (C) employers (D) promotions\n\nNgười nộp đơn đi gửi CV, đáp án **(A) applicants**.\n\n## Tóm tắt\n- Employer - employee - employment; applicant (từ apply).\n- Interview, part-time, work experience là từ khoá của bài tuyển dụng.\n- Experience (làm việc) không đếm được.\n- Get a promotion: được thăng chức.",
+  "knowledge": {},
+  "exercises": [
+   {
+    "prompt": "Chọn nghĩa đúng",
+    "q": "What is an \"applicant\"?",
+    "options": [
+     "người nộp đơn xin việc",
+     "người sử dụng lao động",
+     "người phỏng vấn",
+     "đồng nghiệp"
+    ],
+    "explain": "applicant là người nộp đơn."
+   },
+   {
+    "prompt": "Chọn từ phù hợp",
+    "q": "She works _____ at a bookshop three afternoons a week.",
+    "options": [
+     "part-time",
+     "full-time job",
+     "a part-time",
+     "promotion"
+    ],
+    "explain": "work part-time: dùng như trạng từ, không có a."
+   },
+   {
+    "prompt": "Chọn từ phù hợp",
+    "q": "The _____ asked the candidate about her work experience.",
+    "options": [
+     "employer",
+     "applicant",
+     "employee",
+     "promotion"
+    ],
+    "explain": "Người hỏi là nhà tuyển dụng: employer."
+   },
+   {
+    "prompt": "Chọn câu đúng",
+    "q": "Which sentence is correct?",
+    "options": [
+     "He has a lot of experience in teaching.",
+     "He has a lot of experiences in teaching.",
+     "He has an experience of teaching a lot.",
+     "He have lot experience in teaching."
+    ],
+    "explain": "Kinh nghiệm làm việc là danh từ không đếm được."
+   },
+   {
+    "prompt": "Chọn dạng đúng của từ",
+    "q": "After years of hard work, she got a _____ to manager.",
+    "options": [
+     "promotion",
+     "promote",
+     "promoted",
+     "promoting"
+    ],
+    "explain": "got a + danh từ: promotion."
+   },
+   {
+    "prompt": "Chọn từ phù hợp",
+    "q": "I am nervous because I have a job _____ tomorrow.",
+    "options": [
+     "interview",
+     "applicant",
+     "routine",
+     "experience"
+    ],
+    "explain": "job interview là buổi phỏng vấn xin việc."
+   }
+  ],
+  "en": {
+   "Học 6 từ trọng tâm Unit 5 The World of Work: employer, applicant, interview, part-time, experience, promotion": "Six key words of Unit 5 The World of Work: employer, applicant, interview, part-time, experience, promotion",
+   "Chọn nghĩa đúng": "Choose the correct meaning",
+   "Chọn từ phù hợp": "Choose the suitable word",
+   "Chọn câu đúng": "Choose the correct sentence",
+   "Chọn dạng đúng của từ": "Choose the correct form of the word"
+  },
+  "course": "Tiếng Anh 12 (Global Success)",
+  "title": "Từ vựng: The World of Work"
+ },
+ {
+  "id": "eeccd275-46e0-4920-ba5e-14fa092f7a67",
+  "summary": "Phân biệt và viết câu đơn, câu ghép và câu phức với and, but, so, because, when, although",
+  "contentMd": "## Mục tiêu bài học\n- Nhận biết câu đơn, câu ghép, câu phức.\n- Dùng liên từ đẳng lập (and, but, so) và liên từ phụ thuộc (because, when, although).\n- Viết câu đa dạng hơn trong bài viết.\n\n## Mệnh đề là gì?\n**Mệnh đề** (clause) là nhóm từ có chủ ngữ và động từ. Mệnh đề độc lập diễn đạt trọn vẹn ý, mệnh đề phụ thuộc phải đi cùng mệnh đề chính.\n\n## Câu đơn\n`S + V (+ O)`: chỉ có **một** mệnh đề độc lập (chủ ngữ hoặc động từ có thể có hai thành phần).\n\n> She **works as a nurse**.\n> Cô ấy làm y tá.\n\n> My brother and I study and work part-time.\n> Anh tôi và tôi vừa học vừa làm bán thời gian.\n\n## Câu ghép\n`Mệnh đề 1 + , and / but / so + mệnh đề 2`: hai mệnh đề độc lập nối bằng **liên từ đẳng lập** (FANBOYS: for, and, nor, but, or, yet, so). Trước liên từ có dấu phẩy.\n\n> He applied for the job**, and** he got an interview.\n> Anh ấy nộp đơn xin việc và được mời phỏng vấn.\n\n> The pay is low**, but** the work is interesting.\n> Lương thấp nhưng công việc thú vị.\n\n> She had no experience**, so** she took a training course.\n> Cô ấy chưa có kinh nghiệm nên đã học một khoá đào tạo.\n\n## Câu phức\n`Mệnh đề chính + because / when / although + mệnh đề phụ` (có thể đổi vị trí; khi mệnh đề phụ đứng trước, thêm dấu phẩy).\n\n> **Although** she had little experience, she got the job.\n> Mặc dù ít kinh nghiệm, cô ấy vẫn được nhận.\n\n> I was nervous **because** I had an interview.\n> Tôi hồi hộp vì có buổi phỏng vấn.\n\n> **When** the manager arrived, the meeting began.\n> Khi quản lý đến, cuộc họp bắt đầu.\n\n### Bảng so sánh\n| Loại câu | Cấu trúc | Liên từ |\n|---|---|---|\n| Câu đơn | 1 mệnh đề độc lập | không có |\n| Câu ghép | 2 mệnh đề độc lập | and, but, so, or |\n| Câu phức | 1 mệnh đề chính + mệnh đề phụ | because, when, although, if |\n\n## Lỗi thường gặp\n- *Although she was tired, but she worked.* → bỏ **but**.\n- *She was tired, she went to work.* (nối bằng dấu phẩy) → She was tired, **but** she went to work.\n- *Because I was ill. I stayed home.* (mệnh đề phụ đứng riêng) → **Because I was ill, I stayed home.**\n- *He is hard-working so he got a promotion.* → thiếu dấu phẩy trước so: He is hard-working**, so** he...\n\n## Áp dụng vào bài thi\nDạng sắp xếp câu, điền mệnh đề vào đoạn văn trong đề tốt nghiệp đòi hỏi hiểu quan hệ ý. Hỏi \"hai ý cùng chiều, đối lập hay nguyên nhân?\", sau đó chọn liên từ và kiểm tra cấu trúc.\n\n> _____ the company is small, it offers good training.\n> (A) But (B) Although (C) So (D) Because of\n\nHai mệnh đề trái chiều, có chủ ngữ và động từ, đáp án **(B) Although**.\n\n## Tóm tắt\n- Câu đơn: một mệnh đề độc lập; câu ghép: hai mệnh đề độc lập + , and / but / so.\n- Câu phức: mệnh đề chính + mệnh đề phụ (because, when, although).\n- Không dùng although và but cùng một câu.\n- Mệnh đề phụ đứng đầu câu thì có dấu phẩy.",
+  "knowledge": {},
+  "exercises": [
+   {
+    "prompt": "Chọn câu đúng",
+    "q": "Which sentence is a compound sentence?",
+    "options": [
+     "He studied hard, so he passed the exam.",
+     "Because he studied hard, he passed the exam.",
+     "He studied hard.",
+     "Studying hard, he passed the exam."
+    ],
+    "explain": "Câu ghép gồm hai mệnh đề độc lập nối bằng liên từ đẳng lập như so."
+   },
+   {
+    "prompt": "Chọn từ nối phù hợp",
+    "q": "_____ she had little experience, she impressed the interviewers.",
+    "options": [
+     "Although",
+     "But",
+     "So",
+     "Because of"
+    ],
+    "explain": "Ý trái chiều, cần liên từ phụ thuộc đứng trước mệnh đề đầy đủ: Although."
+   },
+   {
+    "prompt": "Chọn từ nối phù hợp",
+    "q": "He missed the bus, _____ he arrived late for work.",
+    "options": [
+     "so",
+     "although",
+     "because",
+     "when"
+    ],
+    "explain": "Ý sau là kết quả của ý trước: so."
+   },
+   {
+    "prompt": "Chọn câu đúng",
+    "q": "Which sentence is a complex sentence?",
+    "options": [
+     "When the manager arrived, the meeting began.",
+     "The manager arrived, and the meeting began.",
+     "The manager arrived.",
+     "The manager arrived, but the meeting did not begin."
+    ],
+    "explain": "Câu phức có mệnh đề phụ bắt đầu bằng when."
+   },
+   {
+    "prompt": "Chọn câu đúng",
+    "q": "Which sentence is correct?",
+    "options": [
+     "I like this job because it is interesting.",
+     "I like this job because of it is interesting.",
+     "I like this job, because but it is interesting.",
+     "I like this job although it is interesting because."
+    ],
+    "explain": "because + mệnh đề đầy đủ (S + V)."
+   },
+   {
+    "prompt": "Chọn câu đúng",
+    "q": "Which sentence is a simple sentence?",
+    "options": [
+     "She works as a nurse.",
+     "She works as a nurse, and she loves it.",
+     "She works as a nurse because she likes helping people.",
+     "Although she works hard, she is happy."
+    ],
+    "explain": "Câu đơn chỉ có một mệnh đề độc lập."
+   }
+  ],
+  "en": {
+   "Phân biệt và viết câu đơn, câu ghép và câu phức với and, but, so, because, when, although": "Telling apart and writing simple, compound and complex sentences with and, but, so, because, when, although",
+   "Chọn câu đúng": "Choose the correct sentence",
+   "Chọn từ nối phù hợp": "Choose the suitable linking word"
+  },
+  "course": "Tiếng Anh 12 (Global Success)",
+  "title": "Ngữ pháp: Câu đơn, câu ghép và câu phức"
+ },
+ {
+  "id": "ef691320-ed9a-48e2-880b-e1b84c39806a",
+  "summary": "Học 6 từ trọng tâm Unit 6 Artificial Intelligence: artificial intelligence, robot, automate, algorithm, data, replace",
+  "contentMd": "## Mục tiêu bài học\n- Nắm nghĩa, phiên âm, loại từ của 6 từ Unit 6.\n- Biết họ từ và cụm từ đi cùng khi nói về công nghệ.\n- Dùng từ khi viết về lợi ích và rủi ro của AI.\n\n## Bảng từ vựng chính\n| Từ | Phiên âm | Loại từ | Nghĩa | Ví dụ |\n|---|---|---|---|---|\n| artificial intelligence | /ˌɑːtɪfɪʃl ɪnˈtelɪdʒəns/ | n | trí tuệ nhân tạo | **Artificial intelligence** can translate speech. |\n| robot | /ˈrəʊbɒt/ | n | người máy | A **robot** cleans the floor. |\n| automate | /ˈɔːtəmeɪt/ | v | tự động hoá | Factories **automate** many tasks. |\n| algorithm | /ˈælɡərɪðəm/ | n | thuật toán | An **algorithm** recommends videos. |\n| data | /ˈdeɪtə/ | n | dữ liệu | AI learns from large amounts of **data**. |\n| replace | /rɪˈpleɪs/ | v | thay thế | Machines may **replace** some workers. |\n\n## Giải thích từng từ\n### artificial intelligence và robot\n**Artificial intelligence** (viết tắt **AI**) là khả năng của máy tính làm những việc cần trí thông minh như hiểu ngôn ngữ, nhận diện hình ảnh. *Artificial* (adj) nghĩa nhân tạo, *intelligence* là trí thông minh (tính từ *intelligent*). **Robot** là máy được lập trình để làm việc; không phải robot nào cũng có AI.\n\n> **AI** helps doctors read X-rays faster than before.\n> AI giúp bác sĩ đọc phim X-quang nhanh hơn trước.\n\n### automate và algorithm\n**Automate** (v) là để máy tự làm; danh từ *automation*, tính từ *automatic*. **Algorithm** là tập hợp các bước để máy giải một bài toán, ví dụ cách ứng dụng gợi ý bài hát. Cụm: *use an algorithm*, *a search algorithm*.\n\n> Many companies **automate** simple tasks to save time.\n> Nhiều công ty tự động hoá các việc đơn giản để tiết kiệm thời gian.\n\n### data và replace\n**Data** là các thông tin, số liệu. Trong tiếng Anh hiện đại, *data* thường dùng như danh từ không đếm được (*The data is useful*). Cụm: *big data*, *collect / analyse data*. **Replace** là thay thế: *replace A with B* hoặc *replace A*; danh từ *replacement*.\n\n> Robots will not **replace** teachers, but they can help them.\n> Robot sẽ không thay thế giáo viên nhưng có thể hỗ trợ họ.\n\n## Mẹo nhớ và lỗi dùng từ\n- Trọng âm: ar-ti-**fi**-cial nhấn âm 3; in-**tel**-li-gence nhấn âm 2; **ro**-bot nhấn âm đầu; re-**place** nhấn âm 2; **al**-go-rithm nhấn âm đầu.\n- Sai: *a data* hay *datas* → **data** hoặc **a piece of data**.\n- Sai: *replace to* → **replace A with B**.\n- Sai: *automatic a task* → **automate a task**.\n- Nhớ *artificial* (nhân tạo) khác *official* (chính thức).\n\n## Áp dụng vào bài thi\nBài đọc về công nghệ thường có câu hỏi dạng đúng / sai (True / False) về lợi ích và rủi ro của AI. Gạch chân từ khoá như *replace, automate, risk, benefit* để xác nhận thông tin đúng với bài. Bài điền từ chú ý dạng từ.\n\n> Many jobs may be _____ by robots in the future.\n> (A) replace (B) replaced (C) replacing (D) replacement\n\nSau *be* cần phân từ quá khứ vì có *by*, đáp án **(B) replaced**.\n\n## Tóm tắt\n- AI là trí tuệ nhân tạo; robot không nhất thiết có AI.\n- Automate: tự động hoá; algorithm: thuật toán.\n- Data thường dùng như danh từ không đếm được.\n- Replace A with B; bị động: be replaced by.",
+  "knowledge": {},
+  "exercises": [
+   {
+    "prompt": "Chọn nghĩa đúng",
+    "q": "What is an \"algorithm\"?",
+    "options": [
+     "Tập hợp các bước để máy tính giải quyết vấn đề",
+     "Một loại robot",
+     "Một ngôn ngữ nói",
+     "Một thiết bị điện"
+    ],
+    "explain": "algorithm là tập hợp các bước hướng dẫn để máy giải bài toán."
+   },
+   {
+    "prompt": "Chọn dạng đúng của động từ",
+    "q": "Many routine jobs may soon be _____ by machines.",
+    "options": [
+     "replaced",
+     "replace",
+     "replacing",
+     "replacement"
+    ],
+    "explain": "Bị động: be + V3/ed; có by + tác nhân."
+   },
+   {
+    "prompt": "Chọn từ phù hợp",
+    "q": "Companies use big _____ to understand what customers want.",
+    "options": [
+     "data",
+     "algorithm",
+     "robot",
+     "routine"
+    ],
+    "explain": "big data là cụm cố định chỉ dữ liệu lớn."
+   },
+   {
+    "prompt": "Chọn câu đúng",
+    "q": "Which sentence is correct?",
+    "options": [
+     "The data is stored on the computer.",
+     "The datas is stored on the computer.",
+     "A data are stored on the computer.",
+     "The data were store on the computer."
+    ],
+    "explain": "data thường dùng như danh từ không đếm được: The data is stored."
+   },
+   {
+    "prompt": "Chọn từ phù hợp",
+    "q": "Factories _____ their production lines to work faster.",
+    "options": [
+     "automate",
+     "artificial",
+     "intelligent",
+     "data"
+    ],
+    "explain": "Cần động từ chia số nhiều: automate."
+   },
+   {
+    "prompt": "Chọn nghĩa đúng",
+    "q": "What does the abbreviation \"AI\" stand for?",
+    "options": [
+     "artificial intelligence",
+     "automatic internet",
+     "advanced industry",
+     "all information"
+    ],
+    "explain": "AI là artificial intelligence, trí tuệ nhân tạo."
+   }
+  ],
+  "en": {
+   "Học 6 từ trọng tâm Unit 6 Artificial Intelligence: artificial intelligence, robot, automate, algorithm, data, replace": "Six key words of Unit 6 Artificial Intelligence: artificial intelligence, robot, automate, algorithm, data, replace",
+   "Chọn nghĩa đúng": "Choose the correct meaning",
+   "Chọn dạng đúng của động từ": "Choose the correct verb form",
+   "Chọn từ phù hợp": "Choose the suitable word",
+   "Chọn câu đúng": "Choose the correct sentence"
+  },
+  "course": "Tiếng Anh 12 (Global Success)",
+  "title": "Từ vựng: Artificial Intelligence"
+ }
+]

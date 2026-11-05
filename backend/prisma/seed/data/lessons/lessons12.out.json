@@ -1,0 +1,1959 @@
+[
+ {
+  "id": "3440260f-09a2-4e16-8cab-60f941bb2b17",
+  "summary": "Thể sai khiến chủ động và bị động với have, get trong chủ đề Artificial Intelligence (Unit 6, lớp 12)",
+  "contentMd": "## Mục tiêu bài học\n- Hiểu thể sai khiến (causative) dùng để nói \"nhờ / thuê / bảo người khác làm việc gì cho mình\".\n- Viết đúng hai dạng: sai khiến chủ động (`have + người + V`, `get + người + to V`) và sai khiến bị động (`have / get + vật + V3/ed`).\n- Nhận ra dạng đúng trong câu điền từ của đề tốt nghiệp THPT.\n\n## Thể sai khiến là gì?\nTrong cuộc sống, nhiều việc ta không tự làm mà nhờ người khác: sửa máy tính, cắt tóc, cập nhật phần mềm. Tiếng Anh dùng **have** hoặc **get** để diễn đạt ý \"chủ ngữ không trực tiếp làm, mà sắp xếp cho người khác làm\". Nghĩa của hai động từ gần giống nhau, nhưng **get** thân mật hơn và có khi hàm ý phải thuyết phục.\n\n## Sai khiến chủ động\nDùng khi **nêu rõ người thực hiện** hành động.\n\n| Cấu trúc | Công thức | Ví dụ |\n|---|---|---|\n| have | S + have + O (người) + **V nguyên mẫu** | I had the technician **check** my laptop. |\n| get | S + get + O (người) + **to V** | I got the technician **to check** my laptop. |\n\n> The teacher **had** the students **test** the new AI chatbot.\n> Giáo viên cho học sinh thử chatbot AI mới.\n\n> She **got** her brother **to install** a smart speaker.\n> Cô ấy nhờ anh trai lắp loa thông minh.\n\nĐiểm cần nhớ: sau **have** là động từ **không to**, sau **get** là động từ **có to**. Đây là chỗ đề thi hay đặt bẫy.\n\n## Sai khiến bị động\nDùng khi **người làm không quan trọng** hoặc không cần nhắc tới; ta chú ý vào kết quả đối với đồ vật.\n\nCông thức: **S + have / get + O (vật) + V3/ed**\n\n> We **had** our robot vacuum **repaired** yesterday.\n> Hôm qua chúng tôi đã đem sửa chiếc robot hút bụi.\n\n> He **got** his phone **updated** at the shop.\n> Cậu ấy nhờ cửa hàng cập nhật điện thoại.\n\nNếu muốn nói rõ người làm, thêm **by + người**: *I had my homework checked **by an AI app**.*\n\n### Cách chọn dạng chủ động hay bị động\n- Có **người** ngay sau have/get và động từ chỉ hành động của người đó: dùng dạng chủ động.\n- Có **vật** ngay sau have/get (my car, our website, her hair): dùng **V3/ed**, vì vật không tự thực hiện hành động.\n\nChia thì bằng cách chia **have / get**: *has his hair cut*, *is having the system upgraded*, *will have the data analysed*.\n\n## Lỗi thường gặp\n- Quên to sau get: *I got him fix my phone.* → I got him **to fix** my phone.\n- Thêm to sau have: *She had him to fix it.* → She had him **fix** it.\n- Dùng V nguyên mẫu với vật: *We had our website update.* → We had our website **updated**.\n- Nhầm với nghĩa \"tự làm\": *I had my car repaired* nghĩa là **nhờ** người sửa, không phải tự mình sửa.\n\n## Áp dụng vào bài thi\nTrong đề tốt nghiệp THPT từ 2025, thể sai khiến thường xuất hiện ở câu điền từ trong quảng cáo hoặc tờ rơi. Cách làm nhanh: nhìn **tân ngữ sau have/get** là người hay vật, rồi chọn dạng động từ.\n\n> Our company can have your old computers _____ and recycled for free.\n> (A) collect (B) to collect (C) collected (D) collecting\n\nTân ngữ là *your old computers* (vật), nên cần V3/ed: đáp án **(C) collected**.\n\n## Tóm tắt\n- Thể sai khiến nói về việc nhờ / thuê người khác làm cho mình.\n- Chủ động: `have + người + V`; `get + người + to V`.\n- Bị động: `have / get + vật + V3/ed`.\n- Tân ngữ là người thì chủ động, là vật thì bị động.",
+  "knowledge": {},
+  "exercises": [
+   {
+    "prompt": "Chọn dạng đúng của động từ",
+    "q": "Mr. Nam had his assistant _____ the AI report before the meeting.",
+    "options": [
+     "print",
+     "to print",
+     "printed",
+     "printing"
+    ],
+    "explain": "Have + người + V nguyên mẫu, nên chọn print."
+   },
+   {
+    "prompt": "Chọn dạng đúng của động từ",
+    "q": "Linh got her cousin _____ a language-learning app on her phone.",
+    "options": [
+     "to install",
+     "install",
+     "installed",
+     "installing"
+    ],
+    "explain": "Get + người + to V, nên chọn to install."
+   },
+   {
+    "prompt": "Chọn dạng đúng của động từ",
+    "q": "We had our smart TV _____ last week because the screen was broken.",
+    "options": [
+     "repaired",
+     "repair",
+     "to repair",
+     "repairing"
+    ],
+    "explain": "Tân ngữ là vật (our smart TV) nên dùng V3/ed: have + vật + V3/ed."
+   },
+   {
+    "prompt": "Chọn câu đúng",
+    "q": "Which sentence is correct?",
+    "options": [
+     "I got my computer fixed by a technician.",
+     "I got my computer fix by a technician.",
+     "I got my computer to fixed by a technician.",
+     "I got my computer fixing by a technician."
+    ],
+    "explain": "Get + vật + V3/ed; các dạng fix, to fixed, fixing đều sai cấu trúc."
+   },
+   {
+    "prompt": "Chọn câu đúng",
+    "q": "Which sentence is correct?",
+    "options": [
+     "She had the engineer explain how the robot works.",
+     "She had the engineer to explain how the robot works.",
+     "She had the engineer explained how the robot works.",
+     "She had the engineer explaining how the robot works."
+    ],
+    "explain": "Have + người + V nguyên mẫu (không to), nên chỉ câu đầu đúng."
+   },
+   {
+    "prompt": "Chọn đáp án đúng",
+    "q": "Our school will have the new AI software _____ next month.",
+    "options": [
+     "installed",
+     "install",
+     "to install",
+     "installing"
+    ],
+    "explain": "Tân ngữ the new AI software là vật nên dùng V3/ed; thì tương lai chia ở have."
+   }
+  ],
+  "en": {
+   "Thể sai khiến chủ động và bị động với have, get trong chủ đề Artificial Intelligence (Unit 6, lớp 12)": "Active and passive causatives with have and get on the theme of Artificial Intelligence (Unit 6, Grade 12)",
+   "Chọn dạng đúng của động từ": "Choose the correct verb form",
+   "Chọn câu đúng": "Choose the correct sentence",
+   "Chọn đáp án đúng": "Choose the correct answer"
+  },
+  "course": "Tiếng Anh 12 (Global Success)",
+  "title": "Ngữ pháp: Thể sai khiến chủ động và bị động"
+ },
+ {
+  "id": "414b2061-9c07-4b60-b454-dc75fb4a06c1",
+  "summary": "Từ vựng chủ đề The World of Mass Media: mass media, social media, broadcast, journalist, fake news, reliable (Unit 7, lớp 12)",
+  "contentMd": "## Mục tiêu bài học\n- Nắm nghĩa, phiên âm và cách dùng 6 từ khóa của Unit 7: mass media, social media, broadcast, journalist, fake news, reliable.\n- Biết họ từ (word family) và các collocation hay gặp.\n- Dùng đúng từ trong câu điền từ và bài đọc về truyền thông.\n\n## Bảng từ vựng trọng tâm\n| Từ | Phiên âm | Loại | Nghĩa | Ví dụ |\n|---|---|---|---|---|\n| mass media | /ˌmæs ˈmiːdiə/ | n | truyền thông đại chúng | Mass media **shapes** public opinion. |\n| social media | /ˌsəʊʃl ˈmiːdiə/ | n | mạng xã hội | Teenagers spend hours on **social media**. |\n| broadcast | /ˈbrɔːdkɑːst/ | v | phát sóng | The match was **broadcast** live. |\n| journalist | /ˈdʒɜːnəlɪst/ | n | nhà báo | The **journalist** interviewed the minister. |\n| fake news | /ˌfeɪk ˈnjuːz/ | n | tin giả | Don't share **fake news**. |\n| reliable | /rɪˈlaɪəbl/ | adj | đáng tin cậy | Use **reliable** sources of information. |\n\n## Giải thích từng nhóm từ\n### Mass media và social media\n**Mass media** gồm báo chí, truyền hình, đài phát thanh và các kênh tiếp cận số đông người. **Social media** là các nền tảng như Facebook, TikTok, nơi người dùng tự đăng và chia sẻ nội dung. Khi nói chung, ta dùng cả hai như danh từ không có mạo từ: *on social media*, *through mass media*.\n\n> Many students get **news** from **social media** instead of newspapers.\n> Nhiều học sinh lấy tin từ mạng xã hội thay vì báo giấy.\n\n### Broadcast\n**Broadcast** là động từ bất quy tắc: *broadcast – broadcast – broadcast*. Nó còn là danh từ: *a live broadcast* (buổi phát sóng trực tiếp). Họ từ: broadcaster (đài / người phát sóng).\n\n> The final **was broadcast** on VTV3.\n> Trận chung kết được phát sóng trên VTV3.\n\n### Journalist\nHọ từ: **journalist** (nhà báo) – **journalism** (nghề báo) – **journal** (tạp chí chuyên ngành). Collocation: *a news journalist, investigative journalism*.\n\n### Fake news và reliable\n**Fake news** là thông tin sai được tung ra như tin thật. Collocation: *spread / share / detect fake news*. **Reliable** (đáng tin) đối lập với **unreliable**; danh từ là **reliability**, trạng từ là **reliably**. Cụm hay gặp: *a reliable source*, *reliable information*.\n\n> Check whether the website is **reliable** before you share the story.\n> Hãy kiểm tra trang web có đáng tin không trước khi chia sẻ bài viết.\n\n## Mẹo nhớ\n- Đặt từ vào một câu về chính bạn: \"I follow a **reliable** journalist on social media.\"\n- Nhớ cặp: *spread* fake news / *check* sources / *broadcast* news.\n- Học theo cụm, không học từ rời: *a reliable source*, *live broadcast*.\n\n## Lỗi thường gặp\n- Nhầm loại từ: *a reliability source* → a **reliable** source.\n- Chia sai quá khứ: *The news was broadcasted.* → thường dùng **was broadcast**.\n- Dịch từng chữ \"tin giả\" thành *false news*: cách nói chuẩn là **fake news**.\n- Dùng *a fake news / fake newses*: fake news là danh từ không đếm được → **some fake news**, **a piece of fake news**.\n\n## Áp dụng vào bài thi\nTrong câu điền từ (câu 1–12) và đọc hiểu về truyền thông, đề thường cho cùng một gốc từ ở nhiều loại. Hãy xác định vị trí trống cần danh từ hay tính từ trước.\n\n> It is important to get information from _____ sources.\n> (A) reliable (B) reliably (C) reliability (D) rely\n\nTrống đứng trước danh từ *sources*, cần tính từ: đáp án **(A) reliable**.\n\n## Tóm tắt\n- Mass media: truyền thông đại chúng; social media: mạng xã hội.\n- Broadcast là động từ bất quy tắc: broadcast – broadcast – broadcast.\n- Journalist / journalism; reliable / unreliable / reliability.\n- Fake news không đếm được; hay đi với spread, share, detect.",
+  "knowledge": {},
+  "exercises": [
+   {
+    "prompt": "Chọn từ phù hợp",
+    "q": "A good _____ always checks facts before publishing a story.",
+    "options": [
+     "journalist",
+     "journalism",
+     "journal",
+     "journalistic"
+    ],
+    "explain": "Sau a good cần danh từ chỉ người; journalist = nhà báo."
+   },
+   {
+    "prompt": "Chọn từ loại đúng",
+    "q": "You should only trust _____ information from official websites.",
+    "options": [
+     "reliable",
+     "reliably",
+     "reliability",
+     "rely"
+    ],
+    "explain": "Trước danh từ information cần tính từ: reliable."
+   },
+   {
+    "prompt": "Chọn từ phù hợp",
+    "q": "The concert will be _____ live on television tonight.",
+    "options": [
+     "broadcast",
+     "broadcasting",
+     "broadcaster",
+     "broadcasts"
+    ],
+    "explain": "Bị động be + V3: be broadcast (V3 của broadcast vẫn là broadcast)."
+   },
+   {
+    "prompt": "Chọn nghĩa đúng",
+    "q": "Which of the following is the best definition of 'fake news'?",
+    "options": [
+     "false information presented as real news",
+     "news that is very short",
+     "news about famous people",
+     "news broadcast at night"
+    ],
+    "explain": "Fake news là thông tin sai được đưa ra như tin thật."
+   },
+   {
+    "prompt": "Chọn từ trái nghĩa",
+    "q": "The opposite of 'reliable' is _____.",
+    "options": [
+     "unreliable",
+     "reliability",
+     "relying",
+     "reliant"
+    ],
+    "explain": "Thêm tiền tố un- tạo tính từ trái nghĩa: unreliable."
+   },
+   {
+    "prompt": "Chọn từ phù hợp",
+    "q": "Many teenagers spend more than three hours a day on _____ media.",
+    "options": [
+     "social",
+     "society",
+     "socialise",
+     "socially"
+    ],
+    "explain": "Social media (tính từ + danh từ) = mạng xã hội."
+   }
+  ],
+  "en": {
+   "Từ vựng chủ đề The World of Mass Media: mass media, social media, broadcast, journalist, fake news, reliable (Unit 7, lớp 12)": "Vocabulary for The World of Mass Media: mass media, social media, broadcast, journalist, fake news, reliable (Unit 7, Grade 12)",
+   "Chọn từ phù hợp": "Choose the right word",
+   "Chọn từ loại đúng": "Choose the correct word form",
+   "Chọn nghĩa đúng": "Choose the correct meaning",
+   "Chọn từ trái nghĩa": "Choose the antonym"
+  },
+  "course": "Tiếng Anh 12 (Global Success)",
+  "title": "Từ vựng: The World of Mass Media"
+ },
+ {
+  "id": "bd1cdb3f-8129-4639-8ed8-8b04e8eeb0a6",
+  "summary": "Mệnh đề trạng ngữ chỉ cách thức (as, as if, as though) và chỉ kết quả (so … that, such … that) trong Unit 7",
+  "contentMd": "## Mục tiêu bài học\n- Dùng **as, as if, as though** để nói cách một việc được làm hoặc điều \"như thể\" xảy ra.\n- Dùng **so … that** và **such … that** để nêu kết quả của mức độ.\n- Chọn đúng cấu trúc trong câu điền từ và chọn câu đúng ở đề tốt nghiệp THPT.\n\n## Mệnh đề chỉ cách thức\nCông thức: **S + V + as / as if / as though + S + V**\n\n- **as** = theo cách mà: nói cách thức có thật.\n- **as if / as though** = như thể là: so sánh với tình huống tưởng tượng hoặc cảm nhận của người nói.\n\n> Please do it **as** I showed you.\n> Hãy làm đúng như tôi đã chỉ.\n\n> He talks **as if** he knew everything about the news.\n> Anh ấy nói như thể biết hết mọi chuyện về tin tức.\n\n### Thì của động từ sau as if / as though\n| Tình huống | Dùng | Ví dụ |\n|---|---|---|\n| Không có thật ở hiện tại | quá khứ đơn (be → **were**) | She acts as if she **were** a famous reporter. |\n| Không có thật ở quá khứ | quá khứ hoàn thành | He looked as though he **had seen** a ghost. |\n| Có khả năng là thật | hiện tại | It looks as if it **is** going to rain. |\n\n## Mệnh đề chỉ kết quả\nNói mức độ lớn tới mức dẫn đến một kết quả.\n\n| Cấu trúc | Công thức | Ví dụ |\n|---|---|---|\n| so … that | S + V + **so + adj / adv + that** + S + V | The video was **so popular that** it got a million views. |\n| such … that | S + V + **such + (a / an) + adj + N + that** + S + V | It was **such a popular video that** it got a million views. |\n\n> The news spread **so quickly that** everyone knew within an hour.\n> Tin lan nhanh đến mức chỉ trong một giờ ai cũng biết.\n\n> It was **such an interesting programme that** we watched it twice.\n> Đó là chương trình thú vị đến mức chúng tôi xem hai lần.\n\n### Cách chọn so hay such\n- Sau chỗ trống là **tính từ / trạng từ đứng một mình**: dùng **so**.\n- Sau chỗ trống có **danh từ** (có thể kèm tính từ): dùng **such**.\n- Với danh từ số nhiều hoặc không đếm được, bỏ a/an: *such interesting programmes*, *such good news*.\n- Có **much / many / few / little** + danh từ: dùng **so**: *so many viewers that…*\n\n## Lỗi thường gặp\n- Dùng so với danh từ: *so a popular video that…* → **such a popular video that…**\n- Dùng such với tính từ đứng một mình: *such popular that…* → **so popular that…**\n- Dùng such trước many: *such many viewers that…* → **so many viewers that…**\n- Dùng was sau as if khi không có thật: *as if he was a king* (văn nói) → trang trọng: **as if he were a king**.\n\n## Áp dụng vào bài thi\nỞ đề tốt nghiệp THPT từ 2025, hai cấu trúc này hay xuất hiện ở câu điền từ trong đoạn quảng cáo, hoặc chọn mệnh đề ở câu 18–22. Hãy nhìn từ **ngay sau chỗ trống**.\n\n> The documentary was _____ moving that many viewers cried.\n> (A) so (B) such (C) very (D) too\n\nSau chỗ trống là tính từ *moving*, kết hợp that: đáp án **(A) so**.\n\n## Tóm tắt\n- as = theo cách; as if / as though = như thể (thường lùi thì khi không có thật).\n- so + adj / adv + that; such + (a / an) + adj + N + that.\n- Có danh từ dùng such, không có danh từ dùng so.\n- Nhớ so many / so much / so few / so little + danh từ.",
+  "knowledge": {},
+  "exercises": [
+   {
+    "prompt": "Chọn đáp án đúng",
+    "q": "The news about the match spread _____ quickly that nobody missed it.",
+    "options": [
+     "so",
+     "such",
+     "very",
+     "too"
+    ],
+    "explain": "Sau chỗ trống là trạng từ quickly, dùng so … that."
+   },
+   {
+    "prompt": "Chọn đáp án đúng",
+    "q": "It was _____ interesting article that I read it twice.",
+    "options": [
+     "such an",
+     "so an",
+     "so",
+     "such"
+    ],
+    "explain": "Sau chỗ trống có danh từ article, dùng such + a / an + adj + N + that."
+   },
+   {
+    "prompt": "Chọn đáp án đúng",
+    "q": "She behaves as if she _____ the manager of the TV station, but she is only an intern.",
+    "options": [
+     "were",
+     "is",
+     "has been",
+     "will be"
+    ],
+    "explain": "As if nói điều không có thật ở hiện tại: dùng quá khứ, be → were."
+   },
+   {
+    "prompt": "Chọn câu đúng",
+    "q": "Which sentence is correct?",
+    "options": [
+     "The film was so boring that I fell asleep.",
+     "The film was such boring that I fell asleep.",
+     "The film was so a boring film that I fell asleep.",
+     "The film was such boring film that I fell asleep."
+    ],
+    "explain": "Tính từ đứng một mình dùng so … that; các câu còn lại sai cấu trúc."
+   },
+   {
+    "prompt": "Chọn đáp án đúng",
+    "q": "There were _____ many fake stories online that people stopped trusting the site.",
+    "options": [
+     "so",
+     "such",
+     "very",
+     "too"
+    ],
+    "explain": "So many + danh từ số nhiều + that; such không dùng trực tiếp với many."
+   },
+   {
+    "prompt": "Chọn đáp án đúng",
+    "q": "Do the exercise _____ your teacher explained it.",
+    "options": [
+     "as",
+     "so",
+     "such",
+     "than"
+    ],
+    "explain": "As = theo cách mà: do it as your teacher explained."
+   }
+  ],
+  "en": {
+   "Mệnh đề trạng ngữ chỉ cách thức (as, as if, as though) và chỉ kết quả (so … that, such … that) trong Unit 7": "Adverbial clauses of manner (as, as if, as though) and result (so ... that, such ... that) in Unit 7",
+   "Chọn đáp án đúng": "Choose the correct answer",
+   "Chọn câu đúng": "Choose the correct sentence"
+  },
+  "course": "Tiếng Anh 12 (Global Success)",
+  "title": "Ngữ pháp: Mệnh đề trạng ngữ chỉ cách thức và kết quả"
+ },
+ {
+  "id": "ca6caa01-0112-42f6-8d92-de6b3d990959",
+  "summary": "Từ vựng chủ đề Wildlife Conservation: wildlife, poaching, extinct, species, sanctuary, illegal (Unit 8, lớp 12)",
+  "contentMd": "## Mục tiêu bài học\n- Nắm nghĩa, phiên âm, loại từ của 6 từ khóa Unit 8: wildlife, poaching, extinct, species, sanctuary, illegal.\n- Biết họ từ và collocation để dùng chính xác trong câu.\n- Làm tốt câu điền từ và đọc hiểu về bảo tồn động vật hoang dã.\n\n## Bảng từ vựng trọng tâm\n| Từ | Phiên âm | Loại | Nghĩa | Ví dụ |\n|---|---|---|---|---|\n| wildlife | /ˈwaɪldlaɪf/ | n | động vật hoang dã | We must protect **wildlife**. |\n| poaching | /ˈpəʊtʃɪŋ/ | n | săn bắt trái phép | **Poaching** threatens elephants. |\n| extinct | /ɪkˈstɪŋkt/ | adj | tuyệt chủng | Dinosaurs are **extinct**. |\n| species | /ˈspiːʃiːz/ | n | loài | Many **species** are in danger. |\n| sanctuary | /ˈsæŋktʃuəri/ | n | khu bảo tồn | The bears live in a **sanctuary**. |\n| illegal | /ɪˈliːɡl/ | adj | bất hợp pháp | The **illegal** trade must stop. |\n\n## Giải thích từng từ\n### Wildlife\n**Wildlife** là danh từ **không đếm được**, chỉ chung động vật và thực vật hoang dã. Không nói *a wildlife* hay *wildlifes*. Collocation: *protect wildlife*, *wildlife reserve* (khu bảo tồn), *wildlife protection*.\n\n> Cuc Phuong National Park is home to rare **wildlife**.\n> Vườn quốc gia Cúc Phương là nơi sinh sống của nhiều loài hoang dã quý hiếm.\n\n### Poaching\nĐộng từ **poach** (săn trộm) → danh từ **poaching**, người săn trộm là **poacher**. Cụm hay gặp: *illegal poaching*, *stop poaching*, *fight against poaching*.\n\n### Extinct\nHọ từ: **extinct** (adj) → **extinction** (n, sự tuyệt chủng); cần phân biệt với **endangered** (có nguy cơ tuyệt chủng). Collocation: *become extinct*, *be in danger of extinction*, *an extinct species*.\n\n> Dodos **became extinct** in the 17th century.\n> Chim dodo đã tuyệt chủng từ thế kỷ 17.\n\n### Species\n**Species** có dạng số ít và số nhiều **giống nhau**: *one species, many species*. Collocation: *endangered species*, *rare species*, *protect a species*.\n\n### Sanctuary\n**Sanctuary** = nơi trú ẩn an toàn; trong chủ đề này là *wildlife sanctuary / animal sanctuary* (khu bảo tồn). Số nhiều: **sanctuaries**.\n\n### Illegal\n**Illegal** ≠ **legal**. Tiền tố **il-** (trước l) = không. Trạng từ **illegally**. Cụm: *illegal trade, illegal hunting, illegally logged*.\n\n## Mẹo nhớ\n- Nhóm theo câu chuyện: **poaching** (hành động) → **species** bị đe dọa → **extinct** (kết quả) → **sanctuary** (giải pháp).\n- Liên kết gốc: extinct – extinction, poach – poacher – poaching, legal – illegal.\n\n## Lỗi thường gặp\n- Chia số nhiều sai: *speciess / a specie* → **one species / two species**.\n- Dùng wildlife như danh từ đếm được: *many wildlifes* → **a lot of wildlife**.\n- Nhầm extinct và endangered: **endangered** = sắp tuyệt chủng; **extinct** = đã không còn.\n- Viết sai chính tả: *sanctury* → **sanctuary**.\n\n## Áp dụng vào bài thi\nTrong câu điền từ, đề thường kiểm tra loại từ. Xác định chỗ trống cần danh từ hay tính từ.\n\n> The government has banned the _____ trade in wild animals.\n> (A) illegal (B) illegally (C) legal (D) legality\n\nTrước danh từ *trade* cần tính từ; ngữ cảnh \"banned\" cho thấy nghĩa phải là bất hợp pháp: đáp án **(A) illegal**.\n\n## Tóm tắt\n- wildlife (không đếm được), species (số ít = số nhiều).\n- poach → poacher → poaching; extinct → extinction.\n- illegal ≠ legal; sanctuary = khu bảo tồn.\n- Học theo cụm: endangered species, wildlife sanctuary, illegal poaching.",
+  "knowledge": {},
+  "exercises": [
+   {
+    "prompt": "Chọn từ phù hợp",
+    "q": "Rangers work hard to stop _____ in the national park.",
+    "options": [
+     "poaching",
+     "species",
+     "wildlife",
+     "sanctuary"
+    ],
+    "explain": "Sau stop cần danh từ chỉ hành động xấu: poaching = săn trộm."
+   },
+   {
+    "prompt": "Chọn dạng đúng của động từ",
+    "q": "There are more than 1,000 _____ of birds in this forest.",
+    "options": [
+     "species",
+     "specie",
+     "speciess",
+     "specials"
+    ],
+    "explain": "Species giữ nguyên dạng ở số nhiều."
+   },
+   {
+    "prompt": "Chọn từ loại đúng",
+    "q": "Hunting tigers is _____ in Viet Nam.",
+    "options": [
+     "illegal",
+     "illegally",
+     "illegality",
+     "legal"
+    ],
+    "explain": "Sau be cần tính từ; illegal = bất hợp pháp, hợp nghĩa."
+   },
+   {
+    "prompt": "Chọn từ trái nghĩa",
+    "q": "The opposite of 'illegal' is _____.",
+    "options": [
+     "legal",
+     "unlegal",
+     "nonlegal",
+     "illegally"
+    ],
+    "explain": "Trái nghĩa của illegal là legal."
+   },
+   {
+    "prompt": "Chọn nghĩa đúng",
+    "q": "Which sentence uses 'extinct' correctly?",
+    "options": [
+     "The dodo is extinct, so we can no longer see it alive.",
+     "The tiger is extinct, but many still live in forests.",
+     "Many wildlife are extinct every day.",
+     "This extinct is a big problem."
+    ],
+    "explain": "Extinct là tính từ nghĩa đã tuyệt chủng; các câu khác sai nghĩa hoặc loại từ."
+   },
+   {
+    "prompt": "Chọn từ phù hợp",
+    "q": "The injured elephants are taken care of in a _____.",
+    "options": [
+     "sanctuary",
+     "poacher",
+     "species",
+     "extinction"
+    ],
+    "explain": "Sanctuary = khu bảo tồn, nơi trú ẩn an toàn cho động vật."
+   }
+  ],
+  "en": {
+   "Từ vựng chủ đề Wildlife Conservation: wildlife, poaching, extinct, species, sanctuary, illegal (Unit 8, lớp 12)": "Vocabulary for Wildlife Conservation: wildlife, poaching, extinct, species, sanctuary, illegal (Unit 8, Grade 12)",
+   "Chọn từ phù hợp": "Choose the right word",
+   "Chọn dạng đúng của động từ": "Choose the correct verb form",
+   "Chọn từ loại đúng": "Choose the correct word form",
+   "Chọn từ trái nghĩa": "Choose the antonym",
+   "Chọn nghĩa đúng": "Choose the correct meaning"
+  },
+  "course": "Tiếng Anh 12 (Global Success)",
+  "title": "Từ vựng: Wildlife Conservation"
+ },
+ {
+  "id": "0d36ed61-ef4c-47f6-9e59-6b76a935e44e",
+  "summary": "Mệnh đề trạng ngữ chỉ điều kiện (if, unless, as long as, provided that) và chỉ so sánh (as … as, than) trong Unit 8",
+  "contentMd": "## Mục tiêu bài học\n- Dùng đúng **if, unless, as long as, provided that** để nêu điều kiện.\n- Viết mệnh đề so sánh với **as … as** và **than**.\n- Chọn đúng liên từ trong câu điền từ và câu hỏi chọn câu gần nghĩa ở đề thi.\n\n## Mệnh đề chỉ điều kiện\nMệnh đề điều kiện cho biết việc ở mệnh đề chính xảy ra **với điều kiện gì**. Cấu trúc thường gặp (điều kiện loại 1):\n\n**If + S + V (hiện tại đơn), S + will + V**\n\n> **If** we protect their habitat, many species **will survive**.\n> Nếu chúng ta bảo vệ môi trường sống của chúng, nhiều loài sẽ sống sót.\n\nCó thể đảo vị trí hai mệnh đề; khi mệnh đề điều kiện đứng sau thì **bỏ dấu phẩy**: *Many species will survive if we protect their habitat.*\n\n### Các liên từ điều kiện\n| Liên từ | Nghĩa | Ví dụ |\n|---|---|---|\n| if | nếu | If you visit the sanctuary, you will see rare birds. |\n| unless | trừ khi = if … not | **Unless** we stop poaching, tigers will disappear. |\n| as long as | miễn là | You can enter the park **as long as** you follow the rules. |\n| provided that | với điều kiện là | Visitors may feed the animals **provided that** they use food from the rangers. |\n\n**Lưu ý quan trọng với unless:** *unless* đã mang nghĩa phủ định, nên **không dùng thêm not** trong mệnh đề đó.\n\n> *Unless we stop poaching* = *If we **don't** stop poaching*\n\n## Mệnh đề chỉ so sánh\nDùng để so sánh hai sự việc bằng một mệnh đề đầy đủ (có chủ ngữ và động từ).\n\n- **Bằng nhau:** S + V + **as + adj / adv + as** + S + V. Phủ định: **not as / so … as**.\n- **Hơn / kém:** S + V + adj-er / more + adj **+ than** + S + V.\n\n> The sanctuary is **as large as** we expected.\n> Khu bảo tồn rộng đúng như chúng tôi mong đợi.\n\n> There are **fewer** rhinos **than** there were ten years ago.\n> Hiện có ít tê giác hơn so với mười năm trước.\n\nSau **than / as** thường có trợ động từ thay cho động từ chính: *She works harder than I **do**.* Trong văn viết trang trọng, hai vế phải cùng thì với thời điểm so sánh (*than there were* vì nói về quá khứ).\n\n## Lỗi thường gặp\n- Dùng unless với not: *Unless you don't hurry, you will be late.* → **Unless you hurry** (hoặc **If you don't hurry**).\n- Dùng will trong mệnh đề if: *If it will rain, …* → **If it rains**, …\n- Nhầm then với than: *taller then me* → taller **than** me.\n- Thiếu as thứ hai: *as big the zoo* → as big **as** the zoo.\n\n## Áp dụng vào bài thi\nĐề tốt nghiệp THPT thường cho câu điền liên từ hoặc chọn câu **gần nghĩa** nhất. Hãy đổi unless ↔ if … not và chú ý nghĩa của cả hai vế.\n\n> _____ we protect forests, many animals will lose their homes.\n> (A) Unless (B) If (C) Although (D) Because\n\nNghĩa cần là \"Nếu không bảo vệ rừng thì…\" nhưng vế sau là kết quả xấu và vế đầu không có not, nên dùng **(A) Unless** (= If we don't protect forests).\n\n## Tóm tắt\n- Loại 1: If + hiện tại đơn, will + V.\n- unless = if … not; không dùng thêm not sau unless.\n- as long as / provided that = miễn là, với điều kiện là.\n- So sánh: as + adj + as; adj-er / more + than; sau than / as là một mệnh đề.",
+  "knowledge": {},
+  "exercises": [
+   {
+    "prompt": "Chọn liên từ phù hợp",
+    "q": "_____ we stop illegal hunting, the tiger will become extinct.",
+    "options": [
+     "Unless",
+     "If",
+     "As long as",
+     "Provided that"
+    ],
+    "explain": "Vế sau là kết quả xấu nếu không ngăn chặn: Unless = If we don't stop; các từ kia tạo nghĩa ngược."
+   },
+   {
+    "prompt": "Chọn đáp án đúng",
+    "q": "If the weather _____ good tomorrow, we will visit the wildlife park.",
+    "options": [
+     "is",
+     "will be",
+     "would be",
+     "was"
+    ],
+    "explain": "Điều kiện loại 1: mệnh đề if dùng hiện tại đơn."
+   },
+   {
+    "prompt": "Chọn câu có nghĩa gần nhất",
+    "q": "Unless you buy a ticket, you cannot enter the sanctuary.",
+    "options": [
+     "If you don't buy a ticket, you cannot enter the sanctuary.",
+     "If you buy a ticket, you cannot enter the sanctuary.",
+     "Although you buy a ticket, you cannot enter the sanctuary.",
+     "Because you buy a ticket, you cannot enter the sanctuary."
+    ],
+    "explain": "Unless = if … not."
+   },
+   {
+    "prompt": "Chọn đáp án đúng",
+    "q": "The zoo is not _____ big as the national park.",
+    "options": [
+     "as",
+     "than",
+     "so that",
+     "such"
+    ],
+    "explain": "Phủ định của as … as là not as / so … as."
+   },
+   {
+    "prompt": "Chọn đáp án đúng",
+    "q": "There are more tourists in the park this year _____ there were last year.",
+    "options": [
+     "than",
+     "as",
+     "that",
+     "then"
+    ],
+    "explain": "So sánh hơn dùng than."
+   },
+   {
+    "prompt": "Chọn liên từ phù hợp",
+    "q": "You can take photos in the park _____ you don't use a flash.",
+    "options": [
+     "as long as",
+     "unless",
+     "although",
+     "so that"
+    ],
+    "explain": "As long as = miễn là; unless sẽ làm câu sai nghĩa vì có don't."
+   }
+  ],
+  "en": {
+   "Mệnh đề trạng ngữ chỉ điều kiện (if, unless, as long as, provided that) và chỉ so sánh (as … as, than) trong Unit 8": "Adverbial clauses of condition (if, unless, as long as, provided that) and comparison (as ... as, than) in Unit 8",
+   "Chọn liên từ phù hợp": "Choose the suitable conjunction",
+   "Chọn đáp án đúng": "Choose the correct answer",
+   "Chọn câu có nghĩa gần nhất": "Choose the sentence closest in meaning"
+  },
+  "course": "Tiếng Anh 12 (Global Success)",
+  "title": "Ngữ pháp: Mệnh đề trạng ngữ chỉ điều kiện và so sánh"
+ },
+ {
+  "id": "151b82f7-00dd-4c5c-b275-efc38880a8d1",
+  "summary": "Từ vựng chủ đề Career Paths: career path, aptitude, internship, ambition, skill set, apply (Unit 9, lớp 12)",
+  "contentMd": "## Mục tiêu bài học\n- Nắm nghĩa, phiên âm và loại từ của 6 từ khóa Unit 9: career path, aptitude, internship, ambition, skill set, apply.\n- Biết collocation, giới từ đi kèm và họ từ.\n- Dùng đúng từ trong câu điền từ và bài đọc về nghề nghiệp.\n\n## Bảng từ vựng trọng tâm\n| Từ | Phiên âm | Loại | Nghĩa | Ví dụ |\n|---|---|---|---|---|\n| career path | /kəˈrɪə pɑːθ/ | n | con đường sự nghiệp | Think carefully about your **career path**. |\n| aptitude | /ˈæptɪtjuːd/ | n | năng khiếu | She has an **aptitude** for languages. |\n| internship | /ˈɪntɜːnʃɪp/ | n | kỳ thực tập | He did an **internship** at a bank. |\n| ambition | /æmˈbɪʃn/ | n | hoài bão | My **ambition** is to become a doctor. |\n| skill set | /ˈskɪl set/ | n | bộ kỹ năng | Employers want a wide **skill set**. |\n| apply | /əˈplaɪ/ | v | nộp đơn | I will **apply** for a summer job. |\n\n## Giải thích từng từ\n### Career path\n**Career path** là chuỗi công việc và vị trí bạn trải qua trong sự nghiệp. Collocation: *choose / follow / plan a career path*. Từ gần nghĩa: *career* (nghề nghiệp), *profession* (nghề chuyên môn), *occupation* (nghề).\n\n> Choosing a **career path** is one of the biggest decisions for Grade 12 students.\n> Chọn con đường sự nghiệp là một trong những quyết định lớn nhất của học sinh lớp 12.\n\n### Aptitude\n**Aptitude** = khả năng bẩm sinh hoặc dễ học một lĩnh vực. Đi với giới từ **for**: *an aptitude for maths / music*. Còn có cụm *aptitude test* (bài kiểm tra năng khiếu).\n\n### Internship\nHọ từ: **intern** (thực tập sinh, người) – **internship** (kỳ thực tập). Collocation: *do / complete an internship*, *a summer internship*, *an unpaid internship*.\n\n### Ambition\n**Ambition** = hoài bão, tham vọng. Tính từ **ambitious** (có hoài bão). Cụm: *achieve / fulfil an ambition*, *an ambition to be…*, *a burning ambition*.\n\n> She is an **ambitious** student with a clear plan.\n> Cô ấy là một học sinh có hoài bão với kế hoạch rõ ràng.\n\n### Skill set\n**Skill set** là tập hợp các kỹ năng của một người. Collocation: *a wide / broad skill set*, *develop your skill set*. Số nhiều: skill sets.\n\n### Apply\n**Apply** có hai nghĩa chính: (1) **apply for** a job / a course = nộp đơn xin; (2) **apply to** + nơi nhận đơn, hoặc **apply sth to** = áp dụng. Họ từ: **applicant** (người nộp đơn), **application** (đơn / ứng dụng).\n\n> She **applied for** a scholarship at a university in Hue.\n> Cô ấy nộp đơn xin học bổng tại một trường đại học ở Huế.\n\n## Mẹo nhớ\n- Ghép thành một \"câu chuyện\": có **aptitude** → đặt **ambition** → làm **internship** → phát triển **skill set** → **apply** for a job → theo đuổi **career path**.\n- Học giới từ cùng từ: apply **for**, aptitude **for**.\n\n## Lỗi thường gặp\n- Sai giới từ: *apply to a job* → apply **for** a job.\n- Nhầm loại từ: *an ambition student* → an **ambitious** student.\n- Nhầm intern và internship: **intern** là người, **internship** là kỳ thực tập.\n- Dùng sai số: *a skills set* → a **skill set** hoặc *a set of skills*.\n\n## Áp dụng vào bài thi\nỞ câu điền từ, hãy chú ý **giới từ** và **loại từ**.\n\n> She has decided to _____ for a place at the Foreign Trade University.\n> (A) apply (B) applicant (C) application (D) applying\n\nSau to cần động từ nguyên mẫu: đáp án **(A) apply**.\n\n## Tóm tắt\n- career path: con đường sự nghiệp; skill set: bộ kỹ năng.\n- aptitude for; apply for; ambition → ambitious.\n- intern (người) ≠ internship (kỳ thực tập).\n- Học từ theo cụm: do an internship, follow a career path.",
+  "knowledge": {},
+  "exercises": [
+   {
+    "prompt": "Chọn từ phù hợp",
+    "q": "Minh has an _____ for science and wants to study biology.",
+    "options": [
+     "aptitude",
+     "ambition",
+     "internship",
+     "application"
+    ],
+    "explain": "Aptitude for + môn học = năng khiếu về."
+   },
+   {
+    "prompt": "Chọn từ loại đúng",
+    "q": "She is a very _____ student who wants to become a pilot.",
+    "options": [
+     "ambitious",
+     "ambition",
+     "ambitiously",
+     "ambitions"
+    ],
+    "explain": "Trước danh từ student cần tính từ: ambitious."
+   },
+   {
+    "prompt": "Chọn đáp án đúng",
+    "q": "Last summer, Hoa did a three-month _____ at a travel agency.",
+    "options": [
+     "internship",
+     "intern",
+     "ambition",
+     "aptitude"
+    ],
+    "explain": "Do a ... internship = thực tập; intern là người."
+   },
+   {
+    "prompt": "Chọn đáp án đúng",
+    "q": "Many students _____ for jobs through online platforms.",
+    "options": [
+     "apply",
+     "aim",
+     "ask",
+     "attend"
+    ],
+    "explain": "Apply for a job = nộp đơn xin việc."
+   },
+   {
+    "prompt": "Chọn nghĩa đúng",
+    "q": "Which of the following is closest in meaning to 'skill set'?",
+    "options": [
+     "a range of abilities",
+     "a type of exam",
+     "a work schedule",
+     "a school subject"
+    ],
+    "explain": "Skill set = tập hợp các kỹ năng của một người."
+   },
+   {
+    "prompt": "Chọn câu đúng",
+    "q": "Which sentence is correct?",
+    "options": [
+     "He applied for a job at a bank.",
+     "He applied to a job at a bank.",
+     "He applied a job at a bank.",
+     "He applied at a job at a bank."
+    ],
+    "explain": "Apply for + công việc / chương trình."
+   }
+  ],
+  "en": {
+   "Từ vựng chủ đề Career Paths: career path, aptitude, internship, ambition, skill set, apply (Unit 9, lớp 12)": "Vocabulary for Career Paths: career path, aptitude, internship, ambition, skill set, apply (Unit 9, Grade 12)",
+   "Chọn từ phù hợp": "Choose the right word",
+   "Chọn từ loại đúng": "Choose the correct word form",
+   "Chọn đáp án đúng": "Choose the correct answer",
+   "Chọn nghĩa đúng": "Choose the correct meaning",
+   "Chọn câu đúng": "Choose the correct sentence"
+  },
+  "course": "Tiếng Anh 12 (Global Success)",
+  "title": "Từ vựng: Career Paths"
+ },
+ {
+  "id": "d85229b0-9a05-4201-8192-019171666308",
+  "summary": "Cụm động từ có ba từ (look forward to, come up with, keep up with, get on with, drop out of) trong Unit 9",
+  "contentMd": "## Mục tiêu bài học\n- Hiểu cụm động từ ba từ gồm **động từ + trạng từ + giới từ**.\n- Nhớ nghĩa và dùng đúng 5 cụm trọng tâm: look forward to, come up with, keep up with, get on with, drop out of.\n- Nhớ quy tắc **look forward to + V-ing** và dùng đúng trong câu điền từ.\n\n## Cụm động từ ba từ là gì?\nCụm động từ (phrasal verb) có nghĩa khác với động từ gốc. Loại ba từ có dạng **V + adverb + preposition**, ví dụ *look forward to*. Điểm quan trọng: tân ngữ **luôn đứng sau từ cuối cùng** (giới từ), không tách cụm ra.\n\n> She **came up with** a plan for her future career.\n> Cô ấy nghĩ ra một kế hoạch cho sự nghiệp tương lai.\n\nSai: *She came a plan up with.* Đúng: *She came up with a plan.*\n\n## Năm cụm trọng tâm\n| Cụm | Nghĩa | Ví dụ |\n|---|---|---|\n| look forward to | mong chờ | I **look forward to** meeting my new colleagues. |\n| come up with | nghĩ ra, đề xuất | We **came up with** a great idea for the project. |\n| keep up with | theo kịp | Workers must **keep up with** new technology. |\n| get on with | hòa thuận với; tiếp tục làm | He **gets on with** his coworkers very well. |\n| drop out of | bỏ học, rút khỏi | She **dropped out of** university to start a business. |\n\n### Look forward to + V-ing\nTrong *look forward to*, **to là giới từ**, không phải to của động từ nguyên mẫu. Vì vậy sau nó là **danh từ hoặc V-ing**.\n\n> I look forward to **starting** my internship.\n> Tôi mong chờ được bắt đầu kỳ thực tập.\n\n> We look forward to **your reply**.\n> Chúng tôi mong nhận được phản hồi của bạn.\n\nMẹo: thử thay to bằng một danh từ, nếu hợp lý (*look forward to the trip*) thì to là giới từ.\n\n### Một số cụm ba từ khác nên biết\n- **put up with**: chịu đựng — *I can't put up with the noise.*\n- **run out of**: cạn kiệt — *We ran out of time.*\n- **look down on**: coi thường; **look up to**: kính trọng.\n- **cut down on**: cắt giảm — *Try to cut down on sugar.*\n- **catch up with**: bắt kịp.\n\n## Lỗi thường gặp\n- Dùng nguyên mẫu sau look forward to: *I look forward to meet you.* → I look forward to **meeting** you.\n- Bỏ giới từ cuối: *She came up a plan.* → She came up **with** a plan.\n- Tách cụm: *keep up it with* → keep up **with** it.\n- Nhầm get on **with** (hòa thuận) và get on (lên xe): chú ý có with.\n\n## Áp dụng vào bài thi\nĐề tốt nghiệp THPT hay cho câu điền từ trong quảng cáo hoặc thư với cụm cố định, đặc biệt dạng **V-ing sau look forward to** ở cuối thư.\n\n> We look forward to _____ you at our career fair next Sunday.\n> (A) see (B) seeing (C) saw (D) seen\n\nTo ở đây là giới từ nên cần V-ing: đáp án **(B) seeing**.\n\n## Tóm tắt\n- Cụm ba từ: V + adverb + preposition; tân ngữ đứng sau giới từ cuối.\n- look forward to, come up with, keep up with, get on with, drop out of.\n- Look forward to + N / V-ing (to là giới từ).\n- Học nguyên cụm cùng nghĩa, không dịch từng từ.",
+  "knowledge": {},
+  "exercises": [
+   {
+    "prompt": "Chọn đáp án đúng",
+    "q": "I look forward to _____ my first job after graduation.",
+    "options": [
+     "starting",
+     "start",
+     "started",
+     "to start"
+    ],
+    "explain": "To trong look forward to là giới từ, theo sau là V-ing."
+   },
+   {
+    "prompt": "Chọn cụm từ phù hợp",
+    "q": "The team _____ a creative plan to attract more customers.",
+    "options": [
+     "came up with",
+     "got on with",
+     "dropped out of",
+     "kept up with"
+    ],
+    "explain": "Come up with = nghĩ ra, đề xuất một kế hoạch."
+   },
+   {
+    "prompt": "Chọn cụm từ phù hợp",
+    "q": "If you want a good job, you must _____ new technology.",
+    "options": [
+     "keep up with",
+     "drop out of",
+     "put up with",
+     "look down on"
+    ],
+    "explain": "Keep up with = theo kịp, hợp nghĩa với new technology."
+   },
+   {
+    "prompt": "Chọn cụm từ phù hợp",
+    "q": "He decided to _____ college and open his own coffee shop.",
+    "options": [
+     "drop out of",
+     "come up with",
+     "get on with",
+     "look forward to"
+    ],
+    "explain": "Drop out of = bỏ học, hợp ngữ cảnh mở cửa hàng riêng."
+   },
+   {
+    "prompt": "Chọn câu đúng",
+    "q": "Which sentence is correct?",
+    "options": [
+     "She came up with a good idea.",
+     "She came a good idea up with.",
+     "She came with up a good idea.",
+     "She came up a good idea with."
+    ],
+    "explain": "Tân ngữ phải đứng sau giới từ cuối: came up with + O."
+   },
+   {
+    "prompt": "Chọn nghĩa đúng",
+    "q": "What does 'get on with' mean in: 'She gets on well with her teammates'?",
+    "options": [
+     "has a good relationship with",
+     "wins against",
+     "argues with",
+     "travels with"
+    ],
+    "explain": "Get on (well) with = hòa thuận với ai."
+   }
+  ],
+  "en": {
+   "Cụm động từ có ba từ (look forward to, come up with, keep up with, get on with, drop out of) trong Unit 9": "Three-word phrasal verbs (look forward to, come up with, keep up with, get on with, drop out of) in Unit 9",
+   "Chọn đáp án đúng": "Choose the correct answer",
+   "Chọn cụm từ phù hợp": "Choose the suitable phrase",
+   "Chọn câu đúng": "Choose the correct sentence",
+   "Chọn nghĩa đúng": "Choose the correct meaning"
+  },
+  "course": "Tiếng Anh 12 (Global Success)",
+  "title": "Ngữ pháp: Cụm động từ có ba từ"
+ },
+ {
+  "id": "24bb041f-9edc-4a54-99e0-fef3e4ac03e4",
+  "summary": "Từ vựng chủ đề Lifelong Learning: lifelong learning, self-directed, motivation, update, knowledge, enrol (Unit 10, lớp 12)",
+  "contentMd": "## Mục tiêu bài học\n- Nắm nghĩa, phiên âm, loại từ của 6 từ khóa Unit 10: lifelong learning, self-directed, motivation, update, knowledge, enrol.\n- Biết họ từ và collocation giúp dùng từ chính xác.\n- Làm tốt câu điền từ và đọc hiểu về việc học suốt đời.\n\n## Bảng từ vựng trọng tâm\n| Từ | Phiên âm | Loại | Nghĩa | Ví dụ |\n|---|---|---|---|---|\n| lifelong learning | /ˌlaɪflɒŋ ˈlɜːnɪŋ/ | n | học tập suốt đời | **Lifelong learning** keeps your mind active. |\n| self-directed | /ˌself daɪˈrektɪd/ | adj | tự định hướng | **Self-directed** learners set their own goals. |\n| motivation | /ˌməʊtɪˈveɪʃn/ | n | động lực | **Motivation** helps you keep learning. |\n| update | /ʌpˈdeɪt/ | v | cập nhật | Workers must **update** their skills. |\n| knowledge | /ˈnɒlɪdʒ/ | n | kiến thức | **Knowledge** is power. |\n| enrol | /ɪnˈrəʊl/ | v | đăng ký học | She **enrolled** in an online course. |\n\n## Giải thích từng từ\n### Lifelong learning\n**Lifelong learning** là việc học liên tục trong suốt cuộc đời, không chỉ ở trường. Cách học gồm khóa online, sách, video, thực hành. Tính từ **lifelong** nghĩa là suốt đời: *a lifelong friend*.\n\n> **Lifelong learning** helps people adapt to a changing world.\n> Học tập suốt đời giúp con người thích nghi với thế giới thay đổi.\n\n### Self-directed\n**Self-directed** (tự định hướng) mô tả người tự lập mục tiêu, kế hoạch và đánh giá việc học. Cụm: *a self-directed learner*, *self-directed learning*. Từ cùng nhóm: *self-study* (tự học), *self-discipline* (tự kỷ luật).\n\n### Motivation\nĐộng từ **motivate** → tính từ **motivated** (có động lực) / **motivating** (tạo động lực) → danh từ **motivation**. Collocation: *lose / find / keep motivation*, *be motivated to learn*.\n\n> I feel **motivated** when I see my progress.\n> Tôi thấy có động lực khi nhìn thấy sự tiến bộ của mình.\n\n### Update\n**Update** là động từ (cập nhật, bổ sung cái mới), đồng thời là danh từ (*a software update*). Trọng âm: động từ **up-DATE**, danh từ cũng có thể là **UP-date** hoặc up-DATE. Cụm: *update your skills / knowledge / CV*.\n\n### Knowledge\n**Knowledge** là danh từ **không đếm được**: *a lot of knowledge*, *a piece of knowledge*, không nói *knowledges*. Đi với giới từ **of / about**: *knowledge of history*. Động từ liên quan: **know**. Tính từ: **knowledgeable** (hiểu biết rộng).\n\n### Enrol\n**Enrol** (Anh–Anh; Anh–Mỹ viết *enroll*) = đăng ký tham gia khóa học. Cấu trúc: **enrol in / on + khóa học**, **enrol at + trường**. Danh từ **enrolment**.\n\n> He **enrolled in** an evening English course.\n> Anh ấy đăng ký một khóa tiếng Anh buổi tối.\n\n## Mẹo nhớ\n- Chuỗi hành động: **enrol** in a course → giữ **motivation** → thành người **self-directed** → tăng **knowledge** → **update** skills → thực hiện **lifelong learning**.\n- Ghi nhớ gốc: motivate – motivation – motivated; know – knowledge – knowledgeable.\n\n## Lỗi thường gặp\n- Dùng số nhiều: *many knowledges* → a lot of **knowledge**.\n- Sai giới từ: *enrol to a course* → enrol **in** a course.\n- Nhầm motivated và motivating: *I am motivating* → I am **motivated**.\n- Thêm s sai: *updates my skills* khi chủ ngữ số nhiều → We **update** our skills.\n\n## Áp dụng vào bài thi\nTrong câu điền từ ở tờ rơi hoặc quảng cáo khóa học, hãy xác định loại từ cần dùng.\n\n> Our centre offers courses that will help you _____ your knowledge and skills.\n> (A) update (B) updating (C) updated (D) to updating\n\nSau help + O cần động từ nguyên mẫu: đáp án **(A) update**.\n\n## Tóm tắt\n- lifelong learning = học suốt đời; self-directed = tự định hướng.\n- knowledge không đếm được; enrol in + khóa học.\n- motivate → motivated → motivation.\n- update dùng được cả động từ và danh từ.",
+  "knowledge": {},
+  "exercises": [
+   {
+    "prompt": "Chọn từ phù hợp",
+    "q": "Reading books every week is a good way to increase your _____.",
+    "options": [
+     "knowledge",
+     "knowledges",
+     "knowledgeable",
+     "know"
+    ],
+    "explain": "Knowledge là danh từ không đếm được, không thêm s."
+   },
+   {
+    "prompt": "Chọn đáp án đúng",
+    "q": "Hoa decided to _____ in a free coding course online.",
+    "options": [
+     "enrol",
+     "enter",
+     "apply",
+     "register on"
+    ],
+    "explain": "Enrol in a course = đăng ký khóa học."
+   },
+   {
+    "prompt": "Chọn từ loại đúng",
+    "q": "Students with strong _____ usually learn faster.",
+    "options": [
+     "motivation",
+     "motivate",
+     "motivating",
+     "motivated"
+    ],
+    "explain": "Sau strong cần danh từ: motivation."
+   },
+   {
+    "prompt": "Chọn nghĩa đúng",
+    "q": "A 'self-directed learner' is someone who _____.",
+    "options": [
+     "sets goals and studies independently",
+     "only learns from a teacher",
+     "avoids learning",
+     "studies only for exams"
+    ],
+    "explain": "Self-directed = tự đặt mục tiêu và tự học."
+   },
+   {
+    "prompt": "Chọn từ phù hợp",
+    "q": "Doctors need to _____ their knowledge regularly.",
+    "options": [
+     "update",
+     "unfold",
+     "uphold",
+     "upset"
+    ],
+    "explain": "Update = cập nhật, hợp nghĩa với knowledge."
+   },
+   {
+    "prompt": "Chọn từ phù hợp",
+    "q": "My grandmother believes in _____ learning because she still attends classes at 70.",
+    "options": [
+     "lifelong",
+     "lifeless",
+     "lifesaving",
+     "lifestyle"
+    ],
+    "explain": "Lifelong learning = học tập suốt đời."
+   }
+  ],
+  "en": {
+   "Từ vựng chủ đề Lifelong Learning: lifelong learning, self-directed, motivation, update, knowledge, enrol (Unit 10, lớp 12)": "Vocabulary for Lifelong Learning: lifelong learning, self-directed, motivation, update, knowledge, enrol (Unit 10, Grade 12)",
+   "Chọn từ phù hợp": "Choose the right word",
+   "Chọn đáp án đúng": "Choose the correct answer",
+   "Chọn từ loại đúng": "Choose the correct word form",
+   "Chọn nghĩa đúng": "Choose the correct meaning"
+  },
+  "course": "Tiếng Anh 12 (Global Success)",
+  "title": "Từ vựng: Lifelong Learning"
+ },
+ {
+  "id": "0ad122ea-2077-48c2-b96d-4871949892a0",
+  "summary": "Tường thuật mệnh lệnh, yêu cầu, lời đề nghị và lời khuyên bằng told, asked, advised, offered, encouraged + to V (Unit 10)",
+  "contentMd": "## Mục tiêu bài học\n- Chuyển câu mệnh đề, yêu cầu, lời khuyên, lời đề nghị sang câu tường thuật với **to V / not to V**.\n- Chọn đúng động từ tường thuật: told, asked, advised, offered, encouraged...\n- Làm đúng câu chọn câu tường thuật hoặc câu gần nghĩa ở đề tốt nghiệp THPT.\n\n## Tường thuật mệnh lệnh và yêu cầu\nKhi tường thuật mệnh lệnh hoặc yêu cầu, ta **không lùi thì** mà dùng cấu trúc:\n\n**S + told / asked + O + (not) to V**\n\n| Câu trực tiếp | Câu tường thuật |\n|---|---|\n| \"Read more books,\" the teacher said to us. | The teacher **told us to read** more books. |\n| \"Please open the window,\" she said to me. | She **asked me to open** the window. |\n| \"Don't be late,\" my mother said. | My mother **told me not to be** late. |\n\n- **told** dùng cho mệnh lệnh (nghĩa mạnh hơn).\n- **asked** dùng cho lời yêu cầu lịch sự, thường có *please* hoặc *Could you...*\n- Phủ định: đặt **not** trước to V: *told me **not to** use my phone*.\n\n## Tường thuật lời khuyên và lời đề nghị\nDùng động từ tường thuật phù hợp với **ý nghĩa** câu gốc. Nhiều động từ cùng cấu trúc: **S + V + (O) + to V**.\n\n| Động từ | Ý nghĩa | Câu gốc → tường thuật |\n|---|---|---|\n| advise | khuyên | \"You should take an online course.\" → She **advised me to take** an online course. |\n| encourage | khuyến khích | \"Keep learning!\" → He **encouraged us to keep** learning. |\n| remind | nhắc | \"Don't forget your homework.\" → She **reminded me to do** my homework. |\n| warn | cảnh báo | \"Don't touch it.\" → He **warned us not to touch** it. |\n| offer | đề nghị giúp | \"I'll help you with your CV.\" → She **offered to help** me with my CV. |\n\n> My father **advised me to take** an online course.\n> Bố khuyên tôi tham gia một khóa học online.\n\n> The librarian **offered to find** some books for me.\n> Cô thủ thư đề nghị tìm giúp tôi vài cuốn sách.\n\nLưu ý: **offer** và **promise** đi thẳng với to V, **không có tân ngữ** (*offered to help*), còn advise, encourage, remind, warn, tell, ask đều có **O + to V**.\n\n### Các thay đổi cần nhớ\n- Đại từ và tính từ sở hữu đổi theo ngữ cảnh: *\"Do your homework,\" → told me to do **my** homework.*\n- Trạng từ thời gian / nơi chốn đổi khi cần: *now → then, here → there, tomorrow → the next day*.\n\n## Lỗi thường gặp\n- Dùng that-clause: *She told me that to read more.* → She told me **to read** more.\n- Quên tân ngữ sau told: *She told to open the door.* → She told **me** to open the door.\n- Đặt not sai chỗ: *told me to not be late* (văn nói) / *didn't tell me to be late* (sai nghĩa) → told me **not to be** late.\n- Dùng say với to V: *She said me to go.* → She **told** me to go.\n\n## Áp dụng vào bài thi\nĐề tốt nghiệp THPT từ 2025 không còn câu biến đổi câu riêng lẻ, nhưng cấu trúc này xuất hiện trong **điền từ** ở thư, quảng cáo, và trong **đoạn hội thoại / bài đọc** có câu tường thuật. Hãy nhìn động từ tường thuật để xác định cấu trúc đi sau.\n\n> My teacher advised me _____ more time on my self-study.\n> (A) spend (B) to spend (C) spending (D) spent\n\nAdvise + O + to V: đáp án **(B) to spend**.\n\n## Tóm tắt\n- Mệnh lệnh, yêu cầu: S + told / asked + O + (not) to V.\n- Lời khuyên: advised / encouraged / reminded / warned + O + to V.\n- Lời đề nghị: offered + to V (không có tân ngữ).\n- Không lùi thì với cấu trúc to V, nhưng phải đổi đại từ và trạng từ cho hợp.",
+  "knowledge": {},
+  "exercises": [
+   {
+    "prompt": "Chọn câu tường thuật đúng",
+    "q": "'Please close the door,' the teacher said to us.",
+    "options": [
+     "The teacher asked us to close the door.",
+     "The teacher asked us closing the door.",
+     "The teacher asked that we to close the door.",
+     "The teacher asked to us close the door."
+    ],
+    "explain": "Yêu cầu lịch sự: asked + O + to V."
+   },
+   {
+    "prompt": "Chọn câu tường thuật đúng",
+    "q": "'Don't use your phones in class,' said Ms. Lan.",
+    "options": [
+     "Ms. Lan told us not to use our phones in class.",
+     "Ms. Lan told us to not using our phones in class.",
+     "Ms. Lan told us don't use our phones in class.",
+     "Ms. Lan told not us to use our phones in class."
+    ],
+    "explain": "Phủ định: told + O + not to V; đổi your → our."
+   },
+   {
+    "prompt": "Chọn đáp án đúng",
+    "q": "My brother advised me _____ a free online course to improve my English.",
+    "options": [
+     "to take",
+     "take",
+     "taking",
+     "took"
+    ],
+    "explain": "Advise + O + to V."
+   },
+   {
+    "prompt": "Chọn đáp án đúng",
+    "q": "The company offered _____ me an internship in the summer.",
+    "options": [
+     "to give",
+     "giving",
+     "give",
+     "to giving"
+    ],
+    "explain": "Offer + to V, không có tân ngữ trực tiếp trước to V."
+   },
+   {
+    "prompt": "Chọn câu có nghĩa gần nhất",
+    "q": "'You should enrol in a course,' my mother said to me.",
+    "options": [
+     "My mother advised me to enrol in a course.",
+     "My mother ordered me enrolling in a course.",
+     "My mother offered me to enrol in a course.",
+     "My mother warned me enrol in a course."
+    ],
+    "explain": "Should = lời khuyên, dùng advised + O + to V."
+   },
+   {
+    "prompt": "Chọn đáp án đúng",
+    "q": "Mr. Hung reminded us _____ our assignments before Friday.",
+    "options": [
+     "to submit",
+     "submit",
+     "submitting",
+     "that submit"
+    ],
+    "explain": "Remind + O + to V."
+   }
+  ],
+  "en": {
+   "Tường thuật mệnh lệnh, yêu cầu, lời đề nghị và lời khuyên bằng told, asked, advised, offered, encouraged + to V (Unit 10)": "Reporting commands, requests, offers and advice with told, asked, advised, offered, encouraged + to V (Unit 10)",
+   "Chọn câu tường thuật đúng": "Choose the correct reported sentence",
+   "Chọn đáp án đúng": "Choose the correct answer",
+   "Chọn câu có nghĩa gần nhất": "Choose the sentence closest in meaning"
+  },
+  "course": "Tiếng Anh 12 (Global Success)",
+  "title": "Ngữ pháp: Tường thuật mệnh lệnh, yêu cầu, lời đề nghị và lời khuyên"
+ },
+ {
+  "id": "bc2dd01d-9ed6-45af-aec1-45c4d23272e7",
+  "summary": "Cấu trúc đề thi tốt nghiệp THPT môn Tiếng Anh từ 2025: 40 câu, 50 phút, các dạng câu và cách phân bổ thời gian",
+  "contentMd": "## Mục tiêu bài học\n- Nắm cấu trúc đề thi tốt nghiệp THPT môn Tiếng Anh từ năm 2025.\n- Biết từng nhóm câu kiểm tra điều gì và cần kiến thức nào.\n- Lập kế hoạch phân bổ thời gian và chiến lược làm bài tổng thể.\n\n## Tổng quan đề thi\nĐề thi gồm **40 câu trắc nghiệm**, làm trong **50 phút**, mỗi câu **0,25 điểm** (thang điểm 10). Đề tập trung vào **đọc hiểu và vận dụng ngôn ngữ trong ngữ cảnh**: không còn câu phát âm, trọng âm hay tìm lỗi sai riêng lẻ. Nghĩa là học kiến thức nhưng phải dùng được khi đọc một đoạn văn.\n\n## Các phần của đề\n| Câu | Dạng bài | Kiểm tra gì |\n|---|---|---|\n| 1–6 | Đọc thông báo / quảng cáo, điền từ | Từ loại, cụm cố định, đại từ quan hệ |\n| 7–12 | Đọc tờ rơi, điền từ | Lượng từ, giới từ, liên từ, V-ing |\n| 13–17 | Sắp xếp hội thoại, thư, đoạn văn | Mạch ý, từ nối, đại từ thay thế |\n| 18–22 | Điền cụm từ / mệnh đề vào đoạn văn | Cấu trúc câu, mệnh đề, từ nối |\n| 23–30 | Đọc hiểu bài 1 | Ý chính, chi tiết, từ vựng, suy luận |\n| 31–40 | Đọc hiểu bài 2 | Như bài 1 nhưng dài hơn |\n\nHai bài đọc hiểu chiếm 18 câu, **gần một nửa số điểm**, nên kỹ năng đọc là then chốt.\n\n## Phân bổ thời gian gợi ý\n- Câu 1–12: khoảng **10 phút** (dạng ngữ pháp, từ vựng, làm nhanh).\n- Câu 13–22: khoảng **12 phút**.\n- Hai bài đọc hiểu: khoảng **25 phút**.\n- Còn **3 phút** để soát lại và tô đủ đáp án.\n\n> Nếu một câu mất hơn một phút, hãy đánh dấu, chọn tạm đáp án có khả năng nhất và quay lại sau.\n\n## Chiến lược tổng thể\n1. **Làm theo thứ tự dễ trước, khó sau** trong từng phần, nhưng không nhảy lung tung giữa các phần.\n2. Câu 1–12: xác định **từ loại** trước, rồi mới xét nghĩa.\n3. Câu 13–17: tìm **câu mở đầu** và các cặp câu chắc chắn đi liền (hỏi – đáp, đại từ thay danh từ ở câu trước).\n4. Câu 18–22: xem chỗ trống cần **mệnh đề hay cụm bổ nghĩa**; mỗi câu chỉ có một động từ chính.\n5. Câu 23–40: **đọc câu hỏi trước**, tìm thông tin theo thứ tự đoạn; câu ý chính làm cuối cùng.\n6. **Không bỏ trống câu nào**: bài thi trắc nghiệm không trừ điểm khi sai.\n\n## Bẫy thường gặp\n- Dành quá nhiều thời gian cho vài câu khó ở đầu đề, thiếu thời gian cho bài đọc cuối.\n- Chọn đáp án chỉ vì thấy từ quen trong bài đọc (**bẫy từ trùng**), trong khi nghĩa không khớp câu hỏi.\n- Dịch cả bài đọc: không cần; chỉ cần hiểu đủ để trả lời.\n- Tô nhầm số câu khi nhảy cóc: sau mỗi phần, kiểm tra số thứ tự.\n\n## Áp dụng vào bài thi\nVí dụ tự đánh giá: sau khi làm một đề, hãy ghi lại thời gian và số câu sai theo từng nhóm 1–12, 13–22, 23–40. Nhóm nào sai nhiều nhất là nhóm cần ôn tiếp. Các bài sau trong khóa sẽ lần lượt đi sâu từng nhóm.\n\n## Tóm tắt\n- Đề 40 câu, 50 phút, mỗi câu 0,25 điểm; tập trung đọc hiểu và ngữ cảnh.\n- Thứ tự: đọc điền (1–12), sắp xếp (13–17), điền đoạn (18–22), đọc hiểu (23–40).\n- Phân bổ gợi ý: 10 – 12 – 25 phút, còn 3 phút soát lại.\n- Không bỏ trống câu nào; câu khó thì đánh dấu và quay lại.",
+  "knowledge": {},
+  "exercises": [
+   {
+    "prompt": "Chọn đáp án đúng",
+    "q": "How many multiple-choice questions are there in the national high school English exam from 2025?",
+    "options": [
+     "40",
+     "50",
+     "60",
+     "30"
+    ],
+    "explain": "Đề từ 2025 gồm 40 câu trắc nghiệm."
+   },
+   {
+    "prompt": "Chọn đáp án đúng",
+    "q": "How long do candidates have to finish the exam?",
+    "options": [
+     "50 minutes",
+     "60 minutes",
+     "45 minutes",
+     "90 minutes"
+    ],
+    "explain": "Thời gian làm bài là 50 phút."
+   },
+   {
+    "prompt": "Chọn đáp án đúng nhất",
+    "q": "Which type of question is NOT included in the exam from 2025?",
+    "options": [
+     "Choosing the word with a different stress pattern",
+     "Reading comprehension",
+     "Arranging sentences into a letter",
+     "Filling gaps in an advertisement"
+    ],
+    "explain": "Đề từ 2025 không còn câu trọng âm, phát âm hay tìm lỗi sai riêng lẻ."
+   },
+   {
+    "prompt": "Chọn đáp án đúng nhất",
+    "q": "Which group of questions has the largest number of questions?",
+    "options": [
+     "Reading comprehension (23–40)",
+     "Advertisement gap-fill (1–6)",
+     "Leaflet gap-fill (7–12)",
+     "Sentence ordering (13–17)"
+    ],
+    "explain": "Đọc hiểu có 18 câu, nhiều nhất."
+   },
+   {
+    "prompt": "Chọn đáp án đúng nhất",
+    "q": "What should you do if you cannot decide on an answer after a minute?",
+    "options": [
+     "Mark it, choose the likeliest answer, and come back later",
+     "Leave it blank",
+     "Spend five more minutes on it",
+     "Skip the rest of the section"
+    ],
+    "explain": "Không bỏ trống, đánh dấu và quay lại sau để tiết kiệm thời gian."
+   },
+   {
+    "prompt": "Chọn đáp án đúng nhất",
+    "q": "In which part should you read the questions before reading the passage?",
+    "options": [
+     "Reading comprehension",
+     "Sentence arrangement",
+     "Advertisement gap-fill",
+     "Leaflet gap-fill"
+    ],
+    "explain": "Với bài đọc hiểu, đọc câu hỏi trước giúp biết cần tìm gì."
+   }
+  ],
+  "en": {
+   "Cấu trúc đề thi tốt nghiệp THPT môn Tiếng Anh từ 2025: 40 câu, 50 phút, các dạng câu và cách phân bổ thời gian": "The structure of the national high school English exam from 2025: 40 questions, 50 minutes, question types and time management",
+   "Chọn đáp án đúng": "Choose the correct answer",
+   "Chọn đáp án đúng nhất": "Choose the best answer"
+  },
+  "course": "Ôn thi tốt nghiệp THPT môn Tiếng Anh",
+  "title": "Cấu trúc đề thi tốt nghiệp THPT môn Tiếng Anh"
+ },
+ {
+  "id": "3dec55eb-62ce-4600-92a2-980caedc7164",
+  "summary": "Tổng ôn các thì hiện tại đơn, hiện tại tiếp diễn, quá khứ đơn, quá khứ tiếp diễn và hiện tại hoàn thành, kèm when / while",
+  "contentMd": "## Mục tiêu bài học\n- Hệ thống lại 5 thì thường gặp trong chương trình lớp 10–12: hiện tại đơn, hiện tại tiếp diễn, quá khứ đơn, quá khứ tiếp diễn, hiện tại hoàn thành.\n- Nhận ra thì qua dấu hiệu thời gian và ngữ cảnh.\n- Phân biệt các cặp dễ nhầm và dùng đúng when / while.\n\n## Bảng tổng hợp\n| Thì | Công thức | Cách dùng | Dấu hiệu | Ví dụ |\n|---|---|---|---|---|\n| Hiện tại đơn | S + V / V-s,es | thói quen, sự thật | always, usually, every day | My brother usually **washes** the dishes after dinner. |\n| Hiện tại tiếp diễn | S + am / is / are + V-ing | đang xảy ra, tạm thời | now, at the moment, today | My mother **is cooking** dinner now. |\n| Quá khứ đơn | S + V2/ed | việc đã kết thúc | yesterday, ago, last week, in 2020 | We **cleaned** the beach last Sunday. |\n| Quá khứ tiếp diễn | S + was / were + V-ing | đang xảy ra lúc nào đó trong quá khứ | at 8 a.m. yesterday, while | They **were collecting** rubbish at 8 a.m. |\n| Hiện tại hoàn thành | S + have / has + V3/ed | còn liên quan hiện tại | already, yet, ever, since, for | Scientists **have invented** many useful devices. |\n\n## Cặp thì dễ nhầm\n### Quá khứ đơn và hiện tại hoàn thành\n- **Quá khứ đơn**: thời điểm đã kết thúc, **xác định** (yesterday, ago, in 2015).\n- **Hiện tại hoàn thành**: không nói thời điểm cụ thể, hoặc nói khoảng thời gian kéo đến nay (**for, since, so far**).\n\n> My grandfather started jogging ten years ago. He **has jogged** every morning since 2015.\n> Ông tôi bắt đầu chạy bộ cách đây mười năm. Ông chạy mỗi sáng từ năm 2015.\n\n**for** + khoảng thời gian (for two years); **since** + mốc thời gian (since 2020).\n\n### Hiện tại đơn và hiện tại tiếp diễn\nĐộng từ chỉ trạng thái (know, like, believe, want, belong) thường **không dùng ở dạng tiếp diễn**: *I know the answer.*, không *I am knowing*.\n\n## When và while\nMẫu quen thuộc: một việc **đang diễn ra** (quá khứ tiếp diễn) thì việc khác **xen vào** (quá khứ đơn).\n\n- **While + quá khứ tiếp diễn**, quá khứ đơn: *While I was painting the wall, it started to rain.*\n- Quá khứ tiếp diễn + **when** + quá khứ đơn: *I was painting the wall **when** it started to rain.*\n\n> He **was working** in a lab when he **made** the discovery.\n> Ông đang làm việc trong phòng thí nghiệm thì có phát hiện đó.\n\nHai việc cùng diễn ra song song: *While she was cooking, he was setting the table.*\n\n## Lỗi thường gặp\n- Dùng quá khứ đơn với since: *I lived here since 2019.* → I **have lived** here since 2019.\n- Dùng hiện tại hoàn thành với thời điểm xác định: *I have seen him yesterday.* → I **saw** him yesterday.\n- Quên chia động từ ngôi thứ ba: *My sister play the piano.* → plays.\n- Dùng tiếp diễn với state verb: *I am liking it.* → I **like** it.\n\n## Áp dụng vào bài thi\nCâu 1–12 hay kiểm tra thì. Gạch chân **dấu hiệu thời gian** rồi chọn.\n\n> The city _____ rapidly over the past ten years.\n> (A) grew (B) has grown (C) is growing (D) was growing\n\n*Over the past ten years* chỉ khoảng thời gian kéo đến nay: đáp án **(B) has grown**.\n\n## Tóm tắt\n- Hiện tại đơn: thói quen; tiếp diễn: đang xảy ra; quá khứ đơn: đã xong; quá khứ tiếp diễn: đang xảy ra trong quá khứ.\n- Hiện tại hoàn thành: for / since / already / yet, liên quan hiện tại.\n- Thời điểm xác định (yesterday, ago) → quá khứ đơn.\n- When / while: việc đang diễn ra bị việc khác xen vào.",
+  "knowledge": {},
+  "exercises": [
+   {
+    "prompt": "Chọn dạng đúng của động từ",
+    "q": "My family _____ in Da Nang since 2018.",
+    "options": [
+     "has lived",
+     "lived",
+     "lives",
+     "is living"
+    ],
+    "explain": "Since + mốc thời gian dùng hiện tại hoàn thành."
+   },
+   {
+    "prompt": "Chọn dạng đúng của động từ",
+    "q": "I _____ dinner when the lights went out.",
+    "options": [
+     "was cooking",
+     "cooked",
+     "have cooked",
+     "am cooking"
+    ],
+    "explain": "Việc đang diễn ra (quá khứ tiếp diễn) bị việc khác xen vào (went out)."
+   },
+   {
+    "prompt": "Chọn dạng đúng của động từ",
+    "q": "Our class _____ the park last Sunday.",
+    "options": [
+     "cleaned",
+     "has cleaned",
+     "was cleaning",
+     "cleans"
+    ],
+    "explain": "Last Sunday là thời điểm xác định, dùng quá khứ đơn."
+   },
+   {
+    "prompt": "Chọn dạng đúng của động từ",
+    "q": "Look! The students _____ a new robot in the lab.",
+    "options": [
+     "are testing",
+     "test",
+     "tested",
+     "have tested"
+    ],
+    "explain": "Look! cho thấy hành động đang diễn ra: hiện tại tiếp diễn."
+   },
+   {
+    "prompt": "Chọn dạng đúng của động từ",
+    "q": "She _____ the homework yet, so she can't go out.",
+    "options": [
+     "hasn't finished",
+     "didn't finish",
+     "doesn't finish",
+     "wasn't finishing"
+    ],
+    "explain": "Yet với câu phủ định thường đi với hiện tại hoàn thành."
+   },
+   {
+    "prompt": "Chọn câu đúng",
+    "q": "Which sentence is correct?",
+    "options": [
+     "While I was studying, my phone rang.",
+     "While I studied, my phone was ringing.",
+     "While I was studying, my phone was rung.",
+     "While I study, my phone rang."
+    ],
+    "explain": "Việc đang diễn ra dùng quá khứ tiếp diễn, việc xen vào dùng quá khứ đơn."
+   }
+  ],
+  "en": {
+   "Tổng ôn các thì hiện tại đơn, hiện tại tiếp diễn, quá khứ đơn, quá khứ tiếp diễn và hiện tại hoàn thành, kèm when / while": "Review of present simple, present continuous, past simple, past continuous, present perfect, plus when / while",
+   "Chọn dạng đúng của động từ": "Choose the correct verb form",
+   "Chọn câu đúng": "Choose the correct sentence"
+  },
+  "course": "Ôn thi tốt nghiệp THPT môn Tiếng Anh",
+  "title": "Tổng ôn: Các thì: hiện tại, quá khứ, hiện tại hoàn thành"
+ },
+ {
+  "id": "c8ae9d77-cc3b-4094-a854-12559817a581",
+  "summary": "Tổng ôn câu bị động: be + V3/ed, bị động với modal, so sánh will và be going to",
+  "contentMd": "## Mục tiêu bài học\n- Viết đúng câu bị động ở các thì cơ bản và với động từ khuyết thiếu.\n- Chuyển câu chủ động sang bị động và ngược lại.\n- Phân biệt **will** và **be going to** để chọn đúng trong câu điền từ.\n\n## Câu bị động\nCâu bị động nhấn mạnh **đối tượng chịu tác động** hoặc khi người làm không quan trọng, không biết.\n\n**S + be + V3/ed (+ by O)**\n\n| Thì | Công thức bị động | Ví dụ |\n|---|---|---|\n| Hiện tại đơn | am / is / are + V3 | Plastic bags **are used** every day. |\n| Quá khứ đơn | was / were + V3 | The bridge **was built** in 1990. |\n| Hiện tại hoàn thành | have / has been + V3 | Many trees **have been planted**. |\n| Tương lai đơn | will be + V3 | The report **will be finished** tomorrow. |\n\nCách chuyển: tân ngữ của câu chủ động → chủ ngữ của câu bị động; chia **be** theo thì của câu gốc; động từ chính → V3/ed; chủ ngữ cũ → *by + O* (bỏ nếu không cần).\n\n> Chủ động: People use plastic bags every day.\n> Bị động: Plastic bags **are used** every day.\n> Túi ni lông được dùng mỗi ngày.\n\n## Bị động với động từ khuyết thiếu\n**S + can / should / must / will + be + V3/ed**\n\n> Women **should be given** equal pay.\n> Phụ nữ nên được trả lương công bằng.\n\nPhủ định: đặt **not** sau modal: **S + modal + not + be + V3/ed**.\n\n> Girls **must not be treated** unfairly.\n> Không được đối xử bất công với các bạn nữ.\n\nNhớ: sau modal luôn là **be** (nguyên mẫu), không phải is / are.\n\n## Will và be going to\n| | will | be going to |\n|---|---|---|\n| Dùng khi | quyết định ngay lúc nói, lời hứa, dự đoán không căn cứ | dự định có từ trước, dự đoán có căn cứ |\n| Ví dụ | I **will turn off** the lights to save energy. | We **are going to plant** trees this weekend. |\n\n> Look at those dark clouds! It **is going to rain**.\n> Nhìn những đám mây đen kìa! Trời sắp mưa.\n\n## Lỗi thường gặp\n- Quên be: *The house built in 1990.* → The house **was built** in 1990.\n- Dùng V nguyên mẫu sau be: *It was repair.* → It was **repaired**.\n- Sai sau modal: *Rules should is followed.* → Rules should **be followed**.\n- Dùng by cho người không quan trọng: *Rice is grown by people.* → Rice **is grown** in Viet Nam.\n- Dùng will cho kế hoạch đã sắp xếp: nên dùng **be going to**.\n\n## Áp dụng vào bài thi\nCâu 1–12 hay yêu cầu chọn dạng động từ (V3/ed, be + V3) hoặc bổ nghĩa cho danh từ. Hãy hỏi: chủ ngữ **tự làm** hay **bị tác động**?\n\n> Our old computers will _____ and recycled for free next month.\n> (A) collect (B) be collected (C) collecting (D) collected\n\nChủ ngữ computers bị tác động, sau will cần be + V3: đáp án **(B) be collected**.\n\n## Tóm tắt\n- Bị động: be + V3/ed; chia be theo thì.\n- Modal bị động: modal + be + V3/ed; phủ định: modal + not + be + V3.\n- Will: quyết định tức thì; be going to: dự định hoặc dự đoán có căn cứ.\n- Chủ ngữ bị tác động → dùng bị động.",
+  "knowledge": {},
+  "exercises": [
+   {
+    "prompt": "Chọn dạng đúng của động từ",
+    "q": "The new library _____ by the mayor in 2023.",
+    "options": [
+     "was opened",
+     "opened",
+     "has opened",
+     "is opening"
+    ],
+    "explain": "Thư viện được mở (bị động), mốc thời gian xác định: was opened."
+   },
+   {
+    "prompt": "Chọn dạng đúng của động từ",
+    "q": "Plastic bottles should _____ before they are thrown away.",
+    "options": [
+     "be washed",
+     "wash",
+     "washed",
+     "be washing"
+    ],
+    "explain": "Bị động với modal: should + be + V3/ed."
+   },
+   {
+    "prompt": "Chọn dạng đúng của động từ",
+    "q": "Children must not _____ to work at an early age.",
+    "options": [
+     "be forced",
+     "force",
+     "forced",
+     "be forcing"
+    ],
+    "explain": "Phủ định bị động với modal: must not + be + V3."
+   },
+   {
+    "prompt": "Chọn đáp án đúng",
+    "q": "Look at the sky! It _____ rain soon.",
+    "options": [
+     "is going to",
+     "will",
+     "would",
+     "has to"
+    ],
+    "explain": "Dự đoán có căn cứ (nhìn thấy mây đen): be going to."
+   },
+   {
+    "prompt": "Chọn đáp án đúng",
+    "q": "'The phone is ringing.' - 'I _____ answer it.'",
+    "options": [
+     "will",
+     "am going to",
+     "have to",
+     "would"
+    ],
+    "explain": "Quyết định ngay lúc nói: will."
+   },
+   {
+    "prompt": "Chọn câu đúng",
+    "q": "Which sentence is correct?",
+    "options": [
+     "These houses were built by volunteers last year.",
+     "These houses built by volunteers last year.",
+     "These houses were build by volunteers last year.",
+     "These houses are built by volunteers last year."
+    ],
+    "explain": "Bị động quá khứ đơn: were + V3; có last year nên không dùng hiện tại."
+   }
+  ],
+  "en": {
+   "Tổng ôn câu bị động: be + V3/ed, bị động với modal, so sánh will và be going to": "Review of the passive voice: be + V3/ed, passive with modals, and will versus be going to",
+   "Chọn dạng đúng của động từ": "Choose the correct verb form",
+   "Chọn đáp án đúng": "Choose the correct answer",
+   "Chọn câu đúng": "Choose the correct sentence"
+  },
+  "course": "Ôn thi tốt nghiệp THPT môn Tiếng Anh",
+  "title": "Tổng ôn: Câu bị động"
+ },
+ {
+  "id": "b23e1ddb-3c4f-4e37-9475-b1f9e12bdf9c",
+  "summary": "Tổng ôn câu điều kiện loại 1, 2, 3, câu ước với wish và các liên từ điều kiện unless, as long as, provided that",
+  "contentMd": "## Mục tiêu bài học\n- Phân biệt và viết đúng câu điều kiện loại 1, 2, 3.\n- Dùng đúng **unless, as long as, provided that** và câu ước với **wish**.\n- Nhận diện nhanh loại điều kiện trong câu điền từ ở đề tốt nghiệp THPT.\n\n## Bảng tổng hợp câu điều kiện\n| Loại | Dùng khi | Mệnh đề if | Mệnh đề chính | Ví dụ |\n|---|---|---|---|---|\n| 1 | có thể xảy ra ở hiện tại / tương lai | hiện tại đơn | will + V | If we drop litter, we **will harm** the environment. |\n| 2 | không có thật ở hiện tại | quá khứ đơn (be → were) | would + V | If I **had** more money, I **would travel** to Sa Pa. |\n| 3 | không có thật ở quá khứ | quá khứ hoàn thành | would have + V3 | If I **had studied**, I **would have passed**. |\n\nMẹo nhận biết: nhìn **thì ở mệnh đề if** trước. Hiện tại đơn → loại 1; quá khứ đơn → loại 2; quá khứ hoàn thành → loại 3.\n\n> If it **rains** tomorrow, the match **will be** cancelled.\n> Nếu ngày mai trời mưa, trận đấu sẽ bị hủy.\n\nỞ loại 2, dùng **were** cho mọi ngôi: *If I **were** you, I would apply for that course.* Đây là cách khuyên thường dùng.\n\n## Liên từ điều kiện khác if\n| Liên từ | Nghĩa | Ví dụ |\n|---|---|---|\n| unless | nếu không (= if … not) | Tigers will disappear **unless** we stop poaching. |\n| as long as | miễn là | You can go **as long as** you come back before 9. |\n| provided that | với điều kiện là | I will lend you the book **provided that** you return it. |\n\nSau **unless** không dùng thêm *not*. Các liên từ này đều đi với **hiện tại đơn** trong mệnh đề điều kiện khi nói về tương lai.\n\n## Câu ước với wish\nDùng **wish** để diễn tả mong ước về điều không có thật.\n\n| Tình huống | Công thức | Ví dụ |\n|---|---|---|\n| Ước ở hiện tại | S + wish + S + **V2 / were** | I wish I **had** more free time. |\n| Ước ở quá khứ | S + wish + S + **had V3** | She wishes she **had studied** harder. |\n| Ước ở tương lai | S + wish + S + **would V** | I wish it **would stop** raining. |\n\n> I wish I **were** taller.\n> Ước gì tôi cao hơn.\n\n## Lỗi thường gặp\n- Dùng will trong mệnh đề if: *If it will rain, …* → If it **rains**, …\n- Dùng would trong mệnh đề if: *If I would have time, …* → If I **had** time, …\n- Dùng was thay were trong câu khuyên: *If I was you* (văn nói) → trang trọng: **If I were you**.\n- Dùng unless với not: *Unless you don't study, …* → **Unless** you study, … hoặc **If you don't study**, …\n- Chia động từ sau wish ở hiện tại: *I wish I have a car.* → I wish I **had** a car.\n\n## Áp dụng vào bài thi\nTrong câu điền từ và câu 18–22 (điền mệnh đề), hãy đối chiếu **hai vế** của câu điều kiện.\n\n> If students _____ enough sleep, they will concentrate better in class.\n> (A) get (B) got (C) will get (D) would get\n\nVế chính có will nên là loại 1, mệnh đề if dùng hiện tại đơn: đáp án **(A) get**.\n\n## Tóm tắt\n- Loại 1: if + hiện tại, will + V; loại 2: if + quá khứ, would + V; loại 3: if + had V3, would have V3.\n- unless = if … not; as long as, provided that = miễn là, với điều kiện.\n- Ước hiện tại: wish + V2 / were; ước quá khứ: wish + had V3; ước tương lai: wish + would V.\n- Không dùng will / would trong mệnh đề if.",
+  "knowledge": {},
+  "exercises": [
+   {
+    "prompt": "Chọn đáp án đúng",
+    "q": "If I _____ a bird, I would fly over the sea.",
+    "options": [
+     "were",
+     "am",
+     "will be",
+     "would be"
+    ],
+    "explain": "Điều kiện loại 2: mệnh đề if dùng quá khứ, be → were."
+   },
+   {
+    "prompt": "Chọn đáp án đúng",
+    "q": "If you don't water the plants, they _____.",
+    "options": [
+     "will die",
+     "would die",
+     "died",
+     "have died"
+    ],
+    "explain": "Mệnh đề if hiện tại đơn, vế chính dùng will + V (loại 1)."
+   },
+   {
+    "prompt": "Chọn đáp án đúng",
+    "q": "I wish I _____ more time to travel around Viet Nam.",
+    "options": [
+     "had",
+     "have",
+     "would have",
+     "will have"
+    ],
+    "explain": "Ước điều không có thật ở hiện tại: wish + quá khứ đơn."
+   },
+   {
+    "prompt": "Chọn câu có nghĩa gần nhất",
+    "q": "Unless you study harder, you won't pass the exam.",
+    "options": [
+     "If you don't study harder, you won't pass the exam.",
+     "If you study harder, you won't pass the exam.",
+     "If you didn't study harder, you wouldn't pass the exam.",
+     "Because you study harder, you won't pass the exam."
+    ],
+    "explain": "Unless = if … not."
+   },
+   {
+    "prompt": "Chọn đáp án đúng",
+    "q": "If she had left earlier, she _____ the train.",
+    "options": [
+     "would have caught",
+     "would catch",
+     "will catch",
+     "caught"
+    ],
+    "explain": "Điều kiện loại 3: if + had V3, would have + V3."
+   },
+   {
+    "prompt": "Chọn liên từ phù hợp",
+    "q": "You can borrow my bike _____ you take care of it.",
+    "options": [
+     "as long as",
+     "unless",
+     "although",
+     "in case of"
+    ],
+    "explain": "As long as = miễn là; unless sẽ làm câu sai nghĩa."
+   }
+  ],
+  "en": {
+   "Tổng ôn câu điều kiện loại 1, 2, 3, câu ước với wish và các liên từ điều kiện unless, as long as, provided that": "Review of first, second and third conditionals, wishes with wish, and the conditional conjunctions unless, as long as, provided that",
+   "Chọn đáp án đúng": "Choose the correct answer",
+   "Chọn câu có nghĩa gần nhất": "Choose the sentence closest in meaning",
+   "Chọn liên từ phù hợp": "Choose the suitable conjunction"
+  },
+  "course": "Ôn thi tốt nghiệp THPT môn Tiếng Anh",
+  "title": "Tổng ôn: Câu điều kiện và câu ước"
+ },
+ {
+  "id": "a7cfb98a-7186-4700-af69-8eda5251aaf5",
+  "summary": "Tổng ôn câu tường thuật: said, told với lùi thì, đổi đại từ và trạng từ; tường thuật mệnh lệnh, lời khuyên",
+  "contentMd": "## Mục tiêu bài học\n- Tường thuật câu kể với **said (that)** và **told + O (that)**, lùi thì đúng.\n- Đổi đại từ, trạng từ chỉ thời gian và nơi chốn cho hợp ngữ cảnh.\n- Tường thuật mệnh lệnh, yêu cầu, lời khuyên bằng **to V**.\n\n## Câu kể: said và told\n**S + said (that) + S + V (lùi thì)**\n**S + told + O + (that) + S + V (lùi thì)**\n\n> \"The river is polluted,\" she said.\n> → She **said that** the river **was** polluted.\n\n> \"I will recycle more,\" he said to me.\n> → He **told me that** he **would** recycle more.\n\nKhác biệt: **told** luôn có tân ngữ chỉ người nghe (*told me*), còn **said** không (*said to me* là được, nhưng *said me* là sai).\n\n## Quy tắc lùi thì\n| Câu trực tiếp | Câu tường thuật |\n|---|---|\n| hiện tại đơn | quá khứ đơn |\n| hiện tại tiếp diễn | quá khứ tiếp diễn |\n| quá khứ đơn / hiện tại hoàn thành | quá khứ hoàn thành |\n| will / can / may | would / could / might |\n\nKhông cần lùi thì khi động từ tường thuật ở hiện tại (*She says that…*) hoặc khi nói sự thật hiển nhiên (*The teacher said the Earth goes round the Sun.*).\n\n## Đổi đại từ và trạng từ\n| Trực tiếp | Tường thuật |\n|---|---|\n| I / my | he, she / his, her (theo người nói) |\n| now | then |\n| today | that day |\n| tomorrow | the next day / the following day |\n| yesterday | the day before / the previous day |\n| here | there |\n| this / these | that / those |\n\n> \"I'm leaving **tomorrow**,\" Nam said.\n> → Nam said that he was leaving **the next day**.\n\n## Mệnh lệnh, yêu cầu, lời khuyên\n**S + told / asked / advised + O + (not) to V** — không lùi thì.\n\n> \"Read more books,\" the teacher said. → The teacher **told us to read** more books.\n> \"You should take an online course,\" my father said. → My father **advised me to take** an online course.\n\n## Lỗi thường gặp\n- Không lùi thì: *She said that she is tired.* → She said that she **was** tired.\n- Dùng told không có tân ngữ: *He told that he was busy.* → He **told me** that he was busy (hoặc He **said** that…).\n- Không đổi đại từ: *He said that I would come.* (khi người nói là he) → he would come.\n- Dùng that với mệnh lệnh: *told me that to leave* → told me **to leave**.\n\n## Áp dụng vào bài thi\nTrong đề từ 2025, tường thuật hay xuất hiện trong **đoạn hội thoại, đoạn văn, bài đọc**; câu điền từ cũng có thể kiểm tra động từ tường thuật hoặc thì lùi.\n\n> The manager told the staff _____ the report by Friday.\n> (A) finish (B) to finish (C) finishing (D) that finish\n\nTold + O + to V: đáp án **(B) to finish**.\n\n## Tóm tắt\n- said (that) + mệnh đề; told + O + (that) + mệnh đề; luôn lùi thì khi động từ tường thuật ở quá khứ.\n- Đổi now → then, today → that day, tomorrow → the next day, here → there.\n- Mệnh lệnh, yêu cầu, lời khuyên: told / asked / advised + O + (not) to V.",
+  "knowledge": {},
+  "exercises": [
+   {
+    "prompt": "Chọn câu tường thuật đúng",
+    "q": "'I am preparing for the exam,' Lan said.",
+    "options": [
+     "Lan said that she was preparing for the exam.",
+     "Lan said that she is preparing for the exam.",
+     "Lan said that I was preparing for the exam.",
+     "Lan said that she has been preparing for the exam."
+    ],
+    "explain": "Hiện tại tiếp diễn lùi thành quá khứ tiếp diễn; đổi I → she."
+   },
+   {
+    "prompt": "Chọn đáp án đúng",
+    "q": "He _____ me that he would visit Ha Long Bay the next day.",
+    "options": [
+     "told",
+     "said",
+     "spoke",
+     "asked"
+    ],
+    "explain": "Told luôn có tân ngữ chỉ người nghe (me)."
+   },
+   {
+    "prompt": "Chọn câu tường thuật đúng",
+    "q": "'I will call you tomorrow,' Nam said to me.",
+    "options": [
+     "Nam told me that he would call me the next day.",
+     "Nam told me that he will call me tomorrow.",
+     "Nam said me that he would call me the next day.",
+     "Nam told me that I would call him the next day."
+    ],
+    "explain": "will → would; tomorrow → the next day; đổi đại từ."
+   },
+   {
+    "prompt": "Chọn đáp án đúng",
+    "q": "The teacher told us _____ the page before class.",
+    "options": [
+     "to read",
+     "read",
+     "reading",
+     "that read"
+    ],
+    "explain": "Told + O + to V (mệnh lệnh)."
+   },
+   {
+    "prompt": "Chọn câu tường thuật đúng",
+    "q": "'You should drink more water,' my doctor said to me.",
+    "options": [
+     "My doctor advised me to drink more water.",
+     "My doctor advised me drinking more water.",
+     "My doctor advised that I to drink more water.",
+     "My doctor advised to me drink more water."
+    ],
+    "explain": "Lời khuyên: advised + O + to V."
+   },
+   {
+    "prompt": "Chọn câu tường thuật đúng",
+    "q": "'We have finished the project,' they said.",
+    "options": [
+     "They said that they had finished the project.",
+     "They said that they have finished the project.",
+     "They said that we had finished the project.",
+     "They said that they would finish the project."
+    ],
+    "explain": "Hiện tại hoàn thành lùi thành quá khứ hoàn thành; we → they."
+   }
+  ],
+  "en": {
+   "Tổng ôn câu tường thuật: said, told với lùi thì, đổi đại từ và trạng từ; tường thuật mệnh lệnh, lời khuyên": "Review of reported speech: said and told with backshift, changes of pronouns and adverbs; reporting commands and advice",
+   "Chọn câu tường thuật đúng": "Choose the correct reported sentence",
+   "Chọn đáp án đúng": "Choose the correct answer"
+  },
+  "course": "Ôn thi tốt nghiệp THPT môn Tiếng Anh",
+  "title": "Tổng ôn: Câu tường thuật"
+ },
+ {
+  "id": "f11bfae6-ef91-4219-9c1a-ec64a5af8ba3",
+  "summary": "Tổng ôn mệnh đề quan hệ xác định, không xác định, mệnh đề phân từ (V-ing, V3/ed, having V3/ed) và which thay cho cả mệnh đề",
+  "contentMd": "## Mục tiêu bài học\n- Phân biệt mệnh đề quan hệ xác định và không xác định.\n- Rút gọn bằng mệnh đề phân từ hiện tại, quá khứ và hoàn thành.\n- Dùng đúng **which** thay cho cả mệnh đề và các động từ + giới từ + V-ing.\n\n## Mệnh đề quan hệ\n| Loại | Công thức | Đặc điểm | Ví dụ |\n|---|---|---|---|\n| Xác định | N + who / which / that + V … | cần thiết để xác định danh từ; **không dấu phẩy** | The app **which** I use helps me learn new words. |\n| Không xác định | N, who / which + V …, | thêm thông tin; **có dấu phẩy**, **không dùng that** | Mr Nam**, who** teaches us English, uses many apps. |\n\nChọn đại từ: **who** (người, chủ ngữ), **whom** (người, tân ngữ), **which** (vật), **whose** (sở hữu), **that** (người / vật, chỉ trong mệnh đề xác định).\n\n### Which thay cho cả mệnh đề\nKhi **which** thay cho cả ý ở trước, ta luôn có **dấu phẩy** trước which.\n\n> We stopped using plastic bags, **which** reduced our waste.\n> Chúng tôi ngừng dùng túi ni lông, điều này làm giảm rác thải.\n\n## Mệnh đề phân từ\nRút gọn khi hai mệnh đề **cùng chủ ngữ**.\n\n| Dạng | Nghĩa | Ví dụ |\n|---|---|---|\n| V-ing | chủ động | **Burning** fossil fuels, factories release greenhouse gases. |\n| V3/ed | bị động | **Destroyed** by the storm, the forest took years to recover. |\n| Having + V3/ed | hoàn tất trước hành động chính | **Having finished** school, she applied for an apprenticeship. |\n\n> **Having finished** school, she applied for an apprenticeship.\n> Sau khi học xong, cô ấy nộp đơn xin học nghề.\n\nDạng rút gọn của mệnh đề quan hệ: *The man **who lives** next door* → *The man **living** next door*; *The books **which were written** by him* → *The books **written** by him*.\n\n## Danh động từ hoàn thành và động từ + giới từ\n- **having + V3/ed** (danh động từ hoàn thành): nhấn mạnh việc xảy ra **trước**. *He was proud of **having passed** the entrance exam.*\n- **Động từ + giới từ + N / V-ing**: *depend on, focus on, believe in, apply for.* *Our future depends on **protecting** the environment.*\n\n## Lỗi thường gặp\n- Dùng that sau dấu phẩy: *Mr Nam, that teaches us…* → Mr Nam**, who** teaches us…\n- Thiếu dấu phẩy trước which chỉ cả mệnh đề: *…bags which reduced our waste* → *bags**, which** reduced…*\n- Dùng V-ing khi nghĩa bị động: *The forest destroying by the storm…* → **Destroyed** by the storm…\n- Khác chủ ngữ: *Walking home, the rain started.* (sai: người đi bộ ≠ the rain) → Walking home, **I** got caught in the rain.\n\n## Áp dụng vào bài thi\nỞ câu 18–22, nhiều đáp án là cụm / mệnh đề: xem chỗ trống đang thiếu **động từ chính** hay chỉ cần **bổ nghĩa**.\n\n> The film, _____ was released last year, won several awards.\n> (A) that (B) which (C) what (D) whose\n\nCó dấu phẩy nên không dùng that; chủ ngữ là vật: đáp án **(B) which**.\n\n## Tóm tắt\n- Xác định: không dấu phẩy, dùng được that; không xác định: có dấu phẩy, không dùng that.\n- Which thay cho cả mệnh đề: , which + V.\n- V-ing = chủ động; V3/ed = bị động; Having V3/ed = hoàn tất trước.\n- Hai mệnh đề phải cùng chủ ngữ mới rút gọn bằng phân từ.",
+  "knowledge": {},
+  "exercises": [
+   {
+    "prompt": "Chọn đáp án đúng",
+    "q": "The students _____ won the English contest are in Class 12A.",
+    "options": [
+     "who",
+     "whom",
+     "whose",
+     "which"
+    ],
+    "explain": "Chủ ngữ chỉ người: who."
+   },
+   {
+    "prompt": "Chọn đáp án đúng",
+    "q": "Hanoi, _____ is the capital of Viet Nam, attracts millions of tourists.",
+    "options": [
+     "which",
+     "that",
+     "what",
+     "who"
+    ],
+    "explain": "Mệnh đề không xác định (có dấu phẩy), chỉ vật: which, không dùng that."
+   },
+   {
+    "prompt": "Chọn đáp án đúng",
+    "q": "_____ his homework, he went out to play football.",
+    "options": [
+     "Having finished",
+     "Finishing",
+     "Finished",
+     "To finish"
+    ],
+    "explain": "Hoàn tất trước hành động chính, cùng chủ ngữ: Having + V3."
+   },
+   {
+    "prompt": "Chọn đáp án đúng",
+    "q": "_____ by heavy rain, many houses in the village were flooded.",
+    "options": [
+     "Hit",
+     "Hitting",
+     "Having hit",
+     "To hit"
+    ],
+    "explain": "Nghĩa bị động (houses bị mưa tác động): V3/ed."
+   },
+   {
+    "prompt": "Chọn đáp án đúng",
+    "q": "We reduced plastic use, _____ helped protect the oceans.",
+    "options": [
+     "which",
+     "who",
+     "whose",
+     "what"
+    ],
+    "explain": "Which thay cho cả mệnh đề trước, có dấu phẩy."
+   },
+   {
+    "prompt": "Chọn đáp án đúng",
+    "q": "The success of the project depends on _____ everyone's ideas.",
+    "options": [
+     "listening to",
+     "listen to",
+     "to listen to",
+     "listened to"
+    ],
+    "explain": "Sau giới từ on dùng V-ing: depends on listening to."
+   }
+  ],
+  "en": {
+   "Tổng ôn mệnh đề quan hệ xác định, không xác định, mệnh đề phân từ (V-ing, V3/ed, having V3/ed) và which thay cho cả mệnh đề": "Review of defining and non-defining relative clauses, participle clauses (V-ing, V3/ed, having V3/ed) and which referring to a whole clause",
+   "Chọn đáp án đúng": "Choose the correct answer"
+  },
+  "course": "Ôn thi tốt nghiệp THPT môn Tiếng Anh",
+  "title": "Tổng ôn: Mệnh đề quan hệ và mệnh đề phân từ"
+ },
+ {
+  "id": "ca8ab5a3-61a3-4ecf-86e9-8c81d7306d06",
+  "summary": "Tổng ôn danh động từ (V-ing) và động từ nguyên mẫu (to V, V không to): sau động từ, sau giới từ, chỉ mục đích",
+  "contentMd": "## Mục tiêu bài học\n- Chọn đúng **V-ing**, **to V** hoặc **V nguyên mẫu không to** sau từng động từ, giới từ.\n- Dùng V-ing làm chủ ngữ, tân ngữ; to V chỉ mục đích.\n- Nhận ra các dạng này trong câu điền từ ở đề thi.\n\n## V-ing (danh động từ)\nV-ing dùng ở các vị trí sau:\n- **Chủ ngữ** (động từ chia số ít): ***Joining** youth programmes helps students develop skills.*\n- **Sau một số động từ**: enjoy, finish, avoid, consider, suggest, practise, mind.\n- **Sau mọi giới từ**: *by, for, about, without, of, in…*\n\n> I enjoy **using** new gadgets.\n> Tôi thích dùng các thiết bị mới.\n\n> They suggested **holding** a cultural festival.\n> Họ đề xuất tổ chức một lễ hội văn hóa.\n\n> She improved her English by **watching** videos.\n> Cô ấy cải thiện tiếng Anh nhờ xem video.\n\n## To V (động từ nguyên mẫu có to)\n- **Sau một số động từ**: want, decide, hope, plan, promise, agree, learn, need.\n- **Chỉ mục đích**: *We use a calculator **to do** sums.* *We raised money **to restore** the old pagoda.*\n- **Sau số thứ tự, so sánh nhất, only**: *Ha Long Bay was the **first** site in Viet Nam **to be recognised** by UNESCO.*\n\n> He decided **to join** the school band.\n> Cậu ấy quyết định tham gia ban nhạc của trường.\n\n## V nguyên mẫu không to\nSau **make, let** (và **help** có thể dùng to V hoặc không to): **make / let / help + O + V**.\n\n> Music makes me **feel** relaxed.\n> Âm nhạc khiến tôi thấy thư giãn.\n\n> My teacher let us **choose** our topic.\n> Cô giáo cho chúng tôi chọn đề tài.\n\n## Bảng so sánh nhanh\n| Nhóm | Ví dụ động từ | Dạng đi sau |\n|---|---|---|\n| Thích / tránh / hoàn thành | enjoy, finish, avoid, suggest | V-ing |\n| Mong muốn / dự định | want, decide, hope, plan | to V |\n| Sai khiến | make, let | O + V |\n| Giới từ | by, for, about, without | V-ing |\n\nNhớ thêm các cụm: *look forward to + V-ing*, *be used to + V-ing*, *It's no use + V-ing*.\n\n### Động từ đổi nghĩa theo dạng đi sau\nMột số động từ có thể đi với cả V-ing và to V nhưng nghĩa khác nhau:\n- **stop + V-ing** = ngừng làm việc đó: *He stopped **smoking**.*; **stop + to V** = dừng lại để làm việc khác: *He stopped **to buy** water.*\n- **remember + V-ing** = nhớ đã làm; **remember + to V** = nhớ phải làm: *Remember **to lock** the door.*\n- **try + V-ing** = thử làm; **try + to V** = cố gắng làm.\n\n## Lỗi thường gặp\n- Dùng to V sau enjoy: *I enjoy to read.* → I enjoy **reading**.\n- Dùng V-ing sau decide: *He decided going.* → He decided **to go**.\n- Dùng to V sau make: *Music makes me to feel good.* → makes me **feel** good.\n- Dùng V nguyên mẫu sau giới từ: *by watch videos* → by **watching** videos.\n- Thiếu to khi chỉ mục đích: *We use it learn words.* → We use it **to learn** words.\n\n## Áp dụng vào bài thi\nỞ câu 1–12 và 18–22, nhìn **động từ hoặc giới từ ngay trước** chỗ trống.\n\n> The club was founded _____ young people develop teamwork skills.\n> (A) to help (B) helping (C) help (D) helps\n\nChỉ mục đích: **to V**, đáp án **(A) to help**.\n\n## Tóm tắt\n- V-ing: chủ ngữ; sau enjoy, finish, avoid, suggest; sau mọi giới từ.\n- To V: sau want, decide, hope, plan; chỉ mục đích; sau số thứ tự, so sánh nhất.\n- make / let + O + V không to.\n- Cụm look forward to cũng đi với V-ing.",
+  "knowledge": {},
+  "exercises": [
+   {
+    "prompt": "Chọn dạng đúng của động từ",
+    "q": "She avoided _____ her opinion in front of the class.",
+    "options": [
+     "giving",
+     "to give",
+     "give",
+     "gave"
+    ],
+    "explain": "Avoid + V-ing."
+   },
+   {
+    "prompt": "Chọn dạng đúng của động từ",
+    "q": "They decided _____ a volunteer club at school.",
+    "options": [
+     "to set up",
+     "setting up",
+     "set up",
+     "sets up"
+    ],
+    "explain": "Decide + to V."
+   },
+   {
+    "prompt": "Chọn dạng đúng của động từ",
+    "q": "Her parents never make her _____ unhappy things.",
+    "options": [
+     "do",
+     "to do",
+     "doing",
+     "did"
+    ],
+    "explain": "Make + O + V nguyên mẫu không to."
+   },
+   {
+    "prompt": "Chọn dạng đúng của động từ",
+    "q": "He improved his vocabulary by _____ English songs.",
+    "options": [
+     "listening to",
+     "listen to",
+     "to listen to",
+     "listened to"
+    ],
+    "explain": "Sau giới từ by dùng V-ing."
+   },
+   {
+    "prompt": "Chọn dạng đúng của động từ",
+    "q": "We use this app _____ new words every day.",
+    "options": [
+     "to learn",
+     "learning",
+     "learn",
+     "learned"
+    ],
+    "explain": "Chỉ mục đích: to V."
+   },
+   {
+    "prompt": "Chọn dạng đúng của động từ",
+    "q": "_____ part in volunteer activities helps students gain experience.",
+    "options": [
+     "Taking",
+     "To taking",
+     "Take",
+     "Taken"
+    ],
+    "explain": "V-ing làm chủ ngữ; động từ chính helps chia số ít."
+   }
+  ],
+  "en": {
+   "Tổng ôn danh động từ (V-ing) và động từ nguyên mẫu (to V, V không to): sau động từ, sau giới từ, chỉ mục đích": "Review of gerunds (V-ing) and infinitives (to V, bare V): after verbs, after prepositions, expressing purpose",
+   "Chọn dạng đúng của động từ": "Choose the correct verb form"
+  },
+  "course": "Ôn thi tốt nghiệp THPT môn Tiếng Anh",
+  "title": "Tổng ôn: Danh động từ (V-ing) và to V"
+ },
+ {
+  "id": "cf857c59-c0a0-4194-bc1a-22cb6374b0d4",
+  "summary": "Tổng ôn so sánh: so sánh bằng, hơn, nhất, so sánh kép (càng … càng …, ngày càng …) và liên hệ với hiện tại hoàn thành",
+  "contentMd": "## Mục tiêu bài học\n- Viết đúng so sánh bằng, so sánh hơn, so sánh nhất với tính từ ngắn và dài.\n- Dùng so sánh kép **the + so sánh hơn …, the + so sánh hơn …** và **adj-er and adj-er**.\n- Nhận diện nhanh dạng so sánh trong câu điền từ ở đề thi.\n\n## Ba mức so sánh cơ bản\n| Mức | Tính từ ngắn (1 âm tiết) | Tính từ dài (2+ âm tiết) | Ví dụ |\n|---|---|---|---|\n| Bằng | as + adj + as | as + adj + as | The park is **as big as** the school. |\n| Hơn | adj-er + than | more + adj + than | Viet Nam's economy is **stronger than** before. |\n| Nhất | the + adj-est | the most + adj | The UN is **the largest** international organisation. |\n\n### Quy tắc thêm -er / -est\n- Tính từ ngắn: *tall → taller → the tallest*; tận cùng -e chỉ thêm r / st: *large → larger → the largest*.\n- Phụ âm + y → ies: *happy → happier → the happiest*.\n- Một nguyên âm + một phụ âm: gấp đôi phụ âm: *big → bigger → the biggest*.\n- Tính từ dài: *more / the most beautiful, more / the most important*.\n- Bất quy tắc: **good – better – best; bad – worse – worst; far – farther / further – farthest / furthest; many / much – more – most; little – less – least**.\n\n> Ha Long Bay is **more beautiful than** many other bays in Asia.\n> Vịnh Hạ Long đẹp hơn nhiều vịnh khác ở châu Á.\n\nDùng **the** trước so sánh nhất và thường có cụm *in + nơi chốn / of + nhóm*: *the tallest student **in** the class*.\n\n## So sánh kép\n| Dạng | Công thức | Ý nghĩa | Ví dụ |\n|---|---|---|---|\n| Càng … càng … | the + so sánh hơn + S + V, the + so sánh hơn + S + V | hai việc thay đổi cùng nhau | **The bigger** the city grows, **the more crowded** it becomes. |\n| Ngày càng … | adj-er and adj-er / more and more + adj | tăng dần | Cities are getting **bigger and bigger**. |\n\n> **The harder** you study, **the better** your results will be.\n> Bạn học càng chăm, kết quả càng tốt.\n\n## Liên hệ với hiện tại hoàn thành\nKhi so sánh sự thay đổi từ quá khứ đến nay, hay dùng **hiện tại hoàn thành** cùng *since, for, over the past ten years*.\n\n> The city **has grown** rapidly over the past ten years.\n> Thành phố đã phát triển nhanh trong mười năm qua.\n\n## Lỗi thường gặp\n- Thêm cả more và -er: *more taller* → **taller**.\n- Quên than: *bigger the school* → bigger **than** the school.\n- Dùng so sánh nhất cho hai đối tượng: *the taller of the three* → **the tallest** of the three (hai đối tượng dùng so sánh hơn: *the taller of the two*).\n- Quên the trong so sánh kép: *Bigger the city grows, more crowded it becomes.* → **The bigger** the city grows, **the more crowded** it becomes.\n- Dùng sai bất quy tắc: *more good* → **better**.\n\n## Áp dụng vào bài thi\nTrong câu điền từ ở đoạn quảng cáo hoặc tờ rơi, hãy nhìn các dấu hiệu: **than** → so sánh hơn; **the … in / of** → so sánh nhất; **the … the …** → so sánh kép.\n\n> The more you practise speaking English, _____ you will become.\n> (A) the more fluent (B) more fluent (C) fluently (D) the most fluent\n\nDấu hiệu *the more …* → vế sau cũng cần the + so sánh hơn: đáp án **(A) the more fluent**.\n\n## Tóm tắt\n- Bằng: as … as; hơn: adj-er / more … than; nhất: the adj-est / the most ….\n- Bất quy tắc: good – better – best; bad – worse – worst.\n- Càng … càng …: the + so sánh hơn, the + so sánh hơn; ngày càng: adj-er and adj-er / more and more + adj.\n- Thay đổi đến nay: hiện tại hoàn thành với since / for / over the past years.",
+  "knowledge": {},
+  "exercises": [
+   {
+    "prompt": "Chọn đáp án đúng",
+    "q": "This exercise is _____ than the one we did yesterday.",
+    "options": [
+     "more difficult",
+     "most difficult",
+     "difficulter",
+     "difficult as"
+    ],
+    "explain": "Than đi sau tính từ dài so sánh hơn: more difficult."
+   },
+   {
+    "prompt": "Chọn đáp án đúng",
+    "q": "Mount Fansipan is _____ mountain in Viet Nam.",
+    "options": [
+     "the highest",
+     "higher",
+     "more high",
+     "highest"
+    ],
+    "explain": "So sánh nhất của tính từ ngắn: the highest."
+   },
+   {
+    "prompt": "Chọn đáp án đúng",
+    "q": "The _____ you sleep, the _____ you feel in the morning.",
+    "options": [
+     "more / better",
+     "most / best",
+     "much / good",
+     "more / good"
+    ],
+    "explain": "So sánh kép: the + so sánh hơn, the + so sánh hơn (better là so sánh hơn của good)."
+   },
+   {
+    "prompt": "Chọn đáp án đúng",
+    "q": "Because of climate change, the weather is getting _____.",
+    "options": [
+     "hotter and hotter",
+     "more hot and more hot",
+     "hot and hot",
+     "the hotter"
+    ],
+    "explain": "Ngày càng …: adj-er and adj-er (hot → hotter, gấp đôi phụ âm)."
+   },
+   {
+    "prompt": "Chọn đáp án đúng",
+    "q": "The city _____ much bigger over the past twenty years.",
+    "options": [
+     "has become",
+     "became",
+     "becomes",
+     "was becoming"
+    ],
+    "explain": "Over the past twenty years chỉ thay đổi kéo đến nay: hiện tại hoàn thành."
+   },
+   {
+    "prompt": "Chọn đáp án đúng",
+    "q": "My new phone is not as _____ as my old one.",
+    "options": [
+     "expensive",
+     "more expensive",
+     "most expensive",
+     "expensively"
+    ],
+    "explain": "Cấu trúc as + adj + as dùng tính từ nguyên mẫu."
+   }
+  ],
+  "en": {
+   "Tổng ôn so sánh: so sánh bằng, hơn, nhất, so sánh kép (càng … càng …, ngày càng …) và liên hệ với hiện tại hoàn thành": "Review of comparisons: equal, comparative, superlative, double comparatives (the more ... the more, more and more) and the link with the present perfect",
+   "Chọn đáp án đúng": "Choose the correct answer"
+  },
+  "course": "Ôn thi tốt nghiệp THPT môn Tiếng Anh",
+  "title": "Tổng ôn: So sánh"
+ },
+ {
+  "id": "a6323b3f-9421-4496-b228-b1459e389dae",
+  "summary": "Tổng ôn liên từ, từ nối và mệnh đề trạng ngữ: although, however, therefore, moreover, câu đơn, ghép, phức, cách thức và kết quả",
+  "contentMd": "## Mục tiêu bài học\n- Phân biệt liên từ (nối trong một câu) và từ nối (nối hai câu).\n- Nhận biết câu đơn, câu ghép, câu phức.\n- Dùng đúng mệnh đề cách thức và kết quả: as if, so … that, such … that.\n\n## Liên từ và từ nối chỉ quan hệ ý\n| Quan hệ | Liên từ (trong câu) | Từ nối (đầu câu, có dấu phẩy) |\n|---|---|---|\n| Tương phản | although, even though, but | However, |\n| Kết quả | so | Therefore, As a result, |\n| Bổ sung | and | Moreover, In addition, |\n\nQuy tắc quan trọng:\n- **although / even though + S + V** (không dùng but trong cùng câu): ***Although** bullying is harmful, many victims stay silent.*\n- **However, Therefore, As a result, Moreover** đứng **đầu câu thứ hai**, sau dấu chấm và theo sau là dấu phẩy.\n\n> He spent all night online. **As a result**, he was tired at school.\n> Cậu ấy thức cả đêm online. Kết quả là hôm sau cậu mệt ở trường.\n\n> Peer pressure causes stress. **Moreover**, it can lead to bad habits.\n> Áp lực bạn bè gây căng thẳng. Hơn nữa, nó còn dẫn đến thói quen xấu.\n\nLưu ý: *Despite / In spite of / Because of* đi với **danh từ hoặc V-ing**, còn *although / because* đi với **mệnh đề**.\n\n## Câu đơn, câu ghép, câu phức\n| Loại | Cấu trúc | Ví dụ |\n|---|---|---|\n| Câu đơn | S + V (+ O) | She works as a nurse. |\n| Câu ghép | Mệnh đề 1, and / but / so + mệnh đề 2 | He applied for the job, **and** he got an interview. |\n| Câu phức | Mệnh đề chính + because / when / although + mệnh đề phụ | **Although** she had little experience, she got the job. |\n\nCâu ghép nối hai mệnh đề **độc lập**, thường có dấu phẩy trước and / but / so. Câu phức có ít nhất một mệnh đề **phụ thuộc**.\n\n## Mệnh đề cách thức và kết quả\n- **as / as if / as though** (cách thức): *He talks **as if** he knew everything about the news.*\n- **so + adj / adv + that** và **such + (a / an) + adj + N + that** (kết quả): *The video was **so popular that** it got a million views in a day.*\n\nNhắc lại: có danh từ thì dùng **such**, không có thì dùng **so**.\n\n## Lỗi thường gặp\n- Dùng cả although và but: *Although it rained, but we went out.* → Although it rained, we went out.\n- Thiếu dấu phẩy sau however: *However the exam was easy.* → **However,** the exam was easy.\n- Nhầm despite với although: *Despite he was tired…* → **Although** he was tired… hoặc **Despite** being tired…\n- Dùng therefore như liên từ: *It rained therefore we stayed.* → It rained, **so** we stayed (hoặc …. **Therefore,** we stayed).\n\n## Áp dụng vào bài thi\nỞ câu 7–12 (tờ rơi) và 18–22 (điền đoạn), hãy đọc **hai vế** để xem quan hệ: ngược nhau → tương phản, vế sau là hệ quả → kết quả, thêm ý cùng chiều → bổ sung.\n\n> The book is expensive. _____, it is worth buying.\n> (A) However (B) Therefore (C) Moreover (D) Because\n\nHai ý ngược nhau (đắt nhưng đáng mua): đáp án **(A) However**.\n\n## Tóm tắt\n- Tương phản: although / even though + mệnh đề; However, + câu.\n- Kết quả: so; Therefore / As a result, + câu. Bổ sung: and; Moreover / In addition, + câu.\n- Câu đơn: một mệnh đề; ghép: hai mệnh đề độc lập; phức: có mệnh đề phụ thuộc.\n- so … that / such … that nêu kết quả; as if nêu cách thức.",
+  "knowledge": {},
+  "exercises": [
+   {
+    "prompt": "Chọn liên từ phù hợp",
+    "q": "_____ she was tired, she finished all her homework.",
+    "options": [
+     "Although",
+     "Because",
+     "Therefore",
+     "However"
+    ],
+    "explain": "Hai ý trái ngược (mệt nhưng vẫn làm xong), dùng although + mệnh đề."
+   },
+   {
+    "prompt": "Chọn liên từ phù hợp",
+    "q": "The internet is useful. _____, it can be dangerous for young children.",
+    "options": [
+     "However",
+     "Therefore",
+     "So",
+     "Because"
+    ],
+    "explain": "Hai câu ý ngược nhau, từ nối đầu câu: However,."
+   },
+   {
+    "prompt": "Chọn liên từ phù hợp",
+    "q": "He studied hard every day. _____, he passed the exam with high marks.",
+    "options": [
+     "As a result",
+     "Although",
+     "However",
+     "Despite"
+    ],
+    "explain": "Câu sau là kết quả của câu trước: As a result,."
+   },
+   {
+    "prompt": "Chọn đáp án đúng",
+    "q": "The film was _____ boring that we left halfway.",
+    "options": [
+     "so",
+     "such",
+     "very",
+     "too"
+    ],
+    "explain": "Sau chỗ trống là tính từ, dùng so + adj + that."
+   },
+   {
+    "prompt": "Chọn câu đúng",
+    "q": "Which sentence is correct?",
+    "options": [
+     "Although it was raining, we played football.",
+     "Although it was raining, but we played football.",
+     "Despite it was raining, we played football.",
+     "It was raining, however we played football."
+    ],
+    "explain": "Although + mệnh đề, không dùng but; despite cần danh từ / V-ing."
+   },
+   {
+    "prompt": "Chọn đáp án đúng",
+    "q": "Which sentence is a complex sentence?",
+    "options": [
+     "Although she was shy, she joined the club.",
+     "She was shy, but she joined the club.",
+     "She joined the club.",
+     "She was shy, so she stayed home, and he stayed too."
+    ],
+    "explain": "Câu phức có mệnh đề phụ thuộc (Although she was shy) và mệnh đề chính."
+   }
+  ],
+  "en": {
+   "Tổng ôn liên từ, từ nối và mệnh đề trạng ngữ: although, however, therefore, moreover, câu đơn, ghép, phức, cách thức và kết quả": "Review of conjunctions, linking words and adverbial clauses: although, however, therefore, moreover, simple, compound and complex sentences, manner and result",
+   "Chọn liên từ phù hợp": "Choose the suitable conjunction",
+   "Chọn đáp án đúng": "Choose the correct answer",
+   "Chọn câu đúng": "Choose the correct sentence"
+  },
+  "course": "Ôn thi tốt nghiệp THPT môn Tiếng Anh",
+  "title": "Tổng ôn: Liên từ, từ nối và mệnh đề trạng ngữ"
+ },
+ {
+  "id": "0be195c5-625a-4f94-9d08-d02a3f451eac",
+  "summary": "Tổng ôn cấu trúc đặc biệt: câu chẻ, thể sai khiến, cụm động từ ba từ, must / have to / should và động từ chỉ trạng thái",
+  "contentMd": "## Mục tiêu bài học\n- Viết câu chẻ nhấn mạnh chủ ngữ, tân ngữ, trạng ngữ.\n- Ôn thể sai khiến, cụm động từ ba từ, must / have to / should và động từ chỉ trạng thái.\n- Nhận diện nhanh các cấu trúc này trong đề thi.\n\n## Câu chẻ (cleft sentence)\nDùng để **nhấn mạnh** một thành phần của câu.\n\n| Nhấn mạnh | Công thức | Ví dụ |\n|---|---|---|\n| Chủ ngữ | It is / was + chủ ngữ + who / that + V | It was my mother **who** taught me to cook. |\n| Tân ngữ, trạng ngữ | It is / was + thành phần + that + S + V | It was at the age of 16 **that** I learnt to manage money. |\n\nChủ ngữ chỉ người dùng **who** hoặc **that**; các thành phần khác dùng **that**.\n\n## Thể sai khiến\n- Chủ động: **have + người + V**; **get + người + to V**. *I had the technician fix my computer.*\n- Bị động: **have / get + vật + V3/ed**. *We had our robot repaired yesterday.*\n\n## Cụm động từ ba từ\n**V + adverb + preposition + O**, tân ngữ đứng sau giới từ: *look forward to, come up with, keep up with, get on with, drop out of*.\n\n> She **came up with** a plan for her future career.\n> Cô ấy nghĩ ra kế hoạch cho sự nghiệp tương lai.\n\n**Look forward to** + N / V-ing vì to là giới từ: *I look forward to **starting** my internship.*\n\n## Must, have to, should\n| Động từ | Ý nghĩa | Ví dụ |\n|---|---|---|\n| must | bắt buộc do người nói thấy cần; **mustn't** = cấm | You **must** respect your grandparents. |\n| have to | bắt buộc do hoàn cảnh, quy định bên ngoài | I **have to** be home before 10 p.m. |\n| should | lời khuyên | You **should** talk to your parents about it. |\n\nPhủ định khác nhau: **mustn't** = cấm; **don't have to** = không cần thiết.\n\n## Động từ chỉ trạng thái\nCác động từ chỉ suy nghĩ, cảm xúc, sở hữu, giác quan (*know, believe, like, own, seem*) thường **không chia tiếp diễn**.\n\n> I **believe** smart cities will be safer.\n> Tôi tin rằng các thành phố thông minh sẽ an toàn hơn.\n\nMột số động từ đổi nghĩa khi mang nghĩa hành động nên dùng được tiếp diễn:\n- **think** (cân nhắc): *We **are thinking** about moving to a new city.*\n- **have** (ăn, trải qua): *She **is having** lunch.*\n- **see** (gặp): *He **is seeing** the doctor today.*\n\n## Lỗi thường gặp\n- Nhầm who và which trong câu chẻ: *It was the teacher which helped me.* → It was the teacher **who** helped me.\n- Quên to với get: *I got him fix it.* → I got him **to fix** it.\n- Dùng nguyên mẫu sau look forward to: *look forward to meet* → look forward to **meeting**.\n- Nhầm mustn't và don't have to: *You mustn't wear a uniform on Saturday* (nghĩa: bị cấm) khác với *You don't have to wear a uniform on Saturday* (không bắt buộc).\n- Chia tiếp diễn với state verb: *I am knowing the answer.* → I **know** the answer.\n\n## Áp dụng vào bài thi\nCác cấu trúc này hay xuất hiện ở câu 1–12 và câu điền đoạn. Quy tắc làm nhanh: có **It is / was … ** → câu chẻ; có **have + vật** → V3/ed; có **look forward to** → V-ing.\n\n> It was last summer _____ we visited Hoi An for the first time.\n> (A) that (B) who (C) what (D) when\n\nNhấn mạnh trạng ngữ thời gian trong câu chẻ: đáp án **(A) that**.\n\n## Tóm tắt\n- Câu chẻ: It is / was + thành phần được nhấn mạnh + who / that + phần còn lại.\n- Sai khiến: have + người + V; get + người + to V; have / get + vật + V3/ed.\n- Look forward to + N / V-ing; must ≠ have to; mustn't ≠ don't have to.\n- State verbs thường không dùng tiếp diễn.",
+  "knowledge": {},
+  "exercises": [
+   {
+    "prompt": "Chọn đáp án đúng",
+    "q": "It was my uncle _____ gave me this useful advice.",
+    "options": [
+     "who",
+     "which",
+     "what",
+     "whom"
+    ],
+    "explain": "Nhấn mạnh chủ ngữ chỉ người: who / that."
+   },
+   {
+    "prompt": "Chọn đáp án đúng",
+    "q": "We had the electrician _____ the broken light.",
+    "options": [
+     "fix",
+     "to fix",
+     "fixed",
+     "fixing"
+    ],
+    "explain": "Have + người + V nguyên mẫu."
+   },
+   {
+    "prompt": "Chọn đáp án đúng",
+    "q": "She is looking forward to _____ her grandparents next week.",
+    "options": [
+     "seeing",
+     "see",
+     "to see",
+     "saw"
+    ],
+    "explain": "To là giới từ nên sau đó dùng V-ing."
+   },
+   {
+    "prompt": "Chọn đáp án đúng",
+    "q": "You _____ wear a helmet when riding a motorbike. It's the law.",
+    "options": [
+     "must",
+     "mustn't",
+     "don't have to",
+     "needn't"
+    ],
+    "explain": "Bắt buộc theo luật: must."
+   },
+   {
+    "prompt": "Chọn đáp án đúng",
+    "q": "Students _____ wear a uniform on Sundays because there is no school.",
+    "options": [
+     "don't have to",
+     "mustn't",
+     "must",
+     "should not have to be"
+    ],
+    "explain": "Không cần thiết: don't have to."
+   },
+   {
+    "prompt": "Chọn dạng đúng của động từ",
+    "q": "I _____ that learning English is important for my future.",
+    "options": [
+     "believe",
+     "am believing",
+     "believing",
+     "have been believing"
+    ],
+    "explain": "Believe là state verb, không chia tiếp diễn."
+   }
+  ],
+  "en": {
+   "Tổng ôn cấu trúc đặc biệt: câu chẻ, thể sai khiến, cụm động từ ba từ, must / have to / should và động từ chỉ trạng thái": "Review of special structures: cleft sentences, causatives, three-word phrasal verbs, must / have to / should and stative verbs",
+   "Chọn đáp án đúng": "Choose the correct answer",
+   "Chọn dạng đúng của động từ": "Choose the correct verb form"
+  },
+  "course": "Ôn thi tốt nghiệp THPT môn Tiếng Anh",
+  "title": "Tổng ôn: Cấu trúc đặc biệt: câu chẻ, sai khiến, cụm động từ"
+ },
+ {
+  "id": "ccae7335-3459-4878-b901-0c43b74dd778",
+  "summary": "Chiến lược làm câu 1–6 đề tốt nghiệp THPT: điền từ vào thông báo, quảng cáo với từ loại, cụm cố định, đại từ quan hệ",
+  "contentMd": "## Mục tiêu bài học\n- Hiểu dạng câu 1–6: đoạn quảng cáo hoặc thông báo ngắn có 6 chỗ trống.\n- Biết quy trình làm từng bước, khoảng 40 giây mỗi câu.\n- Nhận ra các điểm ngữ pháp thường được kiểm tra: từ loại, vị trí tính từ, đại từ quan hệ, help / make / let, cụm cố định.\n\n## Mô tả dạng bài\nĐề cho một đoạn quảng cáo (tour du lịch, khóa học, sản phẩm, sự kiện) hoặc thông báo. Mỗi chỗ trống có 4 phương án. Phần lớn là câu ngữ pháp - từ vựng **trong ngữ cảnh**, không cần dịch cả đoạn.\n\n## Quy trình 4 bước\n1. **Đọc lướt** cả đoạn để biết chủ đề (quảng cáo gì, cho ai).\n2. Với mỗi chỗ trống, **nhìn từ ngay trước và ngay sau** để xác định cần danh từ, tính từ, động từ hay giới từ.\n3. **Loại phương án sai ngữ pháp** trước.\n4. Còn lại nhiều đáp án đúng ngữ pháp thì **chọn theo nghĩa** hợp với quảng cáo.\n\n## Các điểm ngữ pháp thường gặp\n### Vị trí và trật tự tính từ\nTính từ đứng **trước danh từ** hoặc **sau be / become / seem**. Khi có nhiều tính từ, trật tự là: ý kiến → kích cỡ → tuổi → màu → nguồn gốc → chất liệu → loại → danh từ.\n\n> a **beautiful old pine** forest; a **memorable** experience\n> một khu rừng thông cổ đẹp; một trải nghiệm đáng nhớ\n\n### Đại từ quan hệ\n- Vật: **which / that + V**; người: **who + V**.\n- **whose + N** chỉ sở hữu; **whom** làm tân ngữ chỉ người.\n\n> a trip **which** will refresh your mind\n> một chuyến đi sẽ làm tâm trí bạn sảng khoái\n\n### help / make / let + O + V\nSau **help, make, let** dùng động từ nguyên mẫu (help còn dùng được to V).\n\n> Our guides will **help you discover** nature.\n> Hướng dẫn viên sẽ giúp bạn khám phá thiên nhiên.\n\n### Cụm cố định\nHọc theo cụm, không dịch từng từ: **take advantage of** (tận dụng), **take part in** (tham gia), **make use of** (tận dụng).\n\n> **Take advantage of** our discount!\n> Hãy tận dụng ưu đãi của chúng tôi!\n\n## Bẫy thường gặp\n- Chỉ nhìn nghĩa mà bỏ qua từ loại: nhiều đáp án cùng gốc từ (*adventure, adventurous, adventurously*).\n- Chọn which khi danh từ trước là người.\n- Quên rằng **sau mạo từ** cần danh từ hoặc tính từ (+ danh từ).\n- Dịch từng chữ của cụm cố định, chọn sai giới từ (take part **in**, không phải *on*).\n\n## Ví dụ phân tích\n> Our eco-tour is a (1) _____ experience that you will never forget. You (2) _____ walk through ancient forests with local guides. Take (3) _____ of our special price this month!\n\n- (1): Sau mạo từ a và trước danh từ experience cần tính từ: **memorable**, không phải *memory* hay *memorably*.\n- (2): Chủ ngữ you + trợ động từ cần V nguyên mẫu: **will / can walk**.\n- (3): Cụm cố định *take **advantage** of*: chọn **advantage**.\n\n## Tóm tắt\n- Câu 1–6: 6 chỗ trống trong quảng cáo / thông báo, mỗi câu khoảng 40 giây.\n- Quy trình: đọc lướt → xác định từ loại → loại sai ngữ pháp → chọn theo nghĩa.\n- Trọng tâm: vị trí tính từ, đại từ quan hệ, help / make / let + O + V, cụm cố định.\n- Học cụm cố định nguyên khối: take advantage of, take part in, make use of.",
+  "knowledge": {},
+  "exercises": [
+   {
+    "prompt": "Chọn từ loại đúng",
+    "q": "Join our summer camp for a _____ experience in nature.",
+    "options": [
+     "memorable",
+     "memory",
+     "memorably",
+     "memorise"
+    ],
+    "explain": "Sau mạo từ a, trước danh từ experience cần tính từ: memorable."
+   },
+   {
+    "prompt": "Chọn đáp án đúng",
+    "q": "This is a trip _____ will help you relax after exams.",
+    "options": [
+     "which",
+     "who",
+     "whom",
+     "whose"
+    ],
+    "explain": "Danh từ trước là vật (trip) và thiếu chủ ngữ: which."
+   },
+   {
+    "prompt": "Chọn đáp án đúng",
+    "q": "Our teachers will help you _____ your confidence in speaking English.",
+    "options": [
+     "build",
+     "to building",
+     "building up of",
+     "built"
+    ],
+    "explain": "Help + O + V nguyên mẫu (hoặc to V): chọn build."
+   },
+   {
+    "prompt": "Chọn đáp án đúng",
+    "q": "_____ advantage of our special offer before it ends on Friday!",
+    "options": [
+     "Take",
+     "Make",
+     "Do",
+     "Get"
+    ],
+    "explain": "Cụm cố định take advantage of."
+   },
+   {
+    "prompt": "Chọn cụm từ phù hợp",
+    "q": "Which phrase is in the correct order?",
+    "options": [
+     "a beautiful old wooden house",
+     "a wooden old beautiful house",
+     "an old wooden beautiful house",
+     "a beautiful wooden old house"
+    ],
+    "explain": "Trật tự tính từ: ý kiến (beautiful) – tuổi (old) – chất liệu (wooden)."
+   },
+   {
+    "prompt": "Chọn đáp án đúng",
+    "q": "Many tourists take _____ in our cooking class every year.",
+    "options": [
+     "part",
+     "place",
+     "care",
+     "time"
+    ],
+    "explain": "Take part in = tham gia."
+   }
+  ],
+  "en": {
+   "Chiến lược làm câu 1–6 đề tốt nghiệp THPT: điền từ vào thông báo, quảng cáo với từ loại, cụm cố định, đại từ quan hệ": "Strategy for questions 1-6 of the national exam: filling in notices and advertisements with word forms, fixed phrases and relative pronouns",
+   "Chọn từ loại đúng": "Choose the correct word form",
+   "Chọn đáp án đúng": "Choose the correct answer",
+   "Chọn cụm từ phù hợp": "Choose the suitable phrase"
+  },
+  "course": "Ôn thi tốt nghiệp THPT môn Tiếng Anh",
+  "title": "Chiến lược: điền từ vào thông báo, quảng cáo"
+ },
+ {
+  "id": "06a57446-8a69-4700-a9f9-2bd281fc37db",
+  "summary": "Chiến lược làm câu 7–12 đề tốt nghiệp THPT: điền từ vào tờ rơi với lượng từ, giới từ thời gian, liên từ, V-ing và make + O + adj",
+  "contentMd": "## Mục tiêu bài học\n- Hiểu dạng câu 7–12: một tờ rơi (sự kiện, chiến dịch, câu lạc bộ) với 6 chỗ trống.\n- Nắm các điểm ngữ pháp thường gặp: lượng từ, giới từ chỉ thời gian, liên từ, V-ing sau giới từ, make + O + adj.\n- Làm theo quy trình rõ ràng để tiết kiệm thời gian.\n\n## Mô tả dạng bài\nTờ rơi thường kêu gọi tham gia một hoạt động: dọn vệ sinh khu phố, hội chợ sách, câu lạc bộ tiếng Anh... Các chỗ trống kiểm tra **ngữ pháp trong ngữ cảnh** nên phải nhìn cả cụm xung quanh.\n\n## Các điểm ngữ pháp thường gặp\n### Lượng từ\n| Lượng từ | Đi với | Ví dụ |\n|---|---|---|\n| many, a few, several | danh từ **đếm được số nhiều** | **Many** residents have noticed more rubbish. |\n| much, a little | danh từ **không đếm được** | We don't have **much** time. |\n| each, every | danh từ **số ít** | **Each** volunteer will receive a T-shirt. |\n| both | **hai** người / vật | **Both** clubs welcome new members. |\n\nMẹo: **nhìn danh từ đi sau** chỗ trống để biết số ít hay số nhiều, đếm được hay không.\n\n### Giới từ chỉ thời gian\n- **on** + thứ / ngày: *on Saturday, on 15 March*.\n- **in** + tháng / năm / mùa: *in May, in 2026*.\n- **at** + giờ / thời điểm: *at 8 a.m., at the weekend* (Anh – Anh).\n\n> The event is **on** Saturday.\n> Sự kiện diễn ra vào thứ Bảy.\n\n### V-ing sau giới từ\nSau **by, for, about, without, of, in** dùng V-ing: *You can help **by sharing** the event with friends.*\n\n### Liên từ và mệnh đề điều kiện\nĐọc cả hai vế để biết quan hệ: **If** (điều kiện), **Although** (tương phản), **Because** (nguyên nhân), **So that** (mục đích). **Unless** = if … not.\n\n> **If** the weather is bad, the event will be moved indoors.\n> Nếu thời tiết xấu, sự kiện sẽ chuyển vào trong nhà.\n\n### make + O + adj\n**make + O + adj** = làm cho ai / cái gì trở nên …: *Join us to **make** our town **cleaner**.*\n\n## Quy trình 4 bước\n1. Đọc nhanh tờ rơi để biết mục đích.\n2. Xem **từ trước và sau** chỗ trống.\n3. Xác định loại kiến thức: lượng từ, giới từ, liên từ, dạng động từ.\n4. Loại phương án sai, chọn đáp án hợp nghĩa, mỗi câu khoảng 40 giây.\n\n## Bẫy thường gặp\n- Dùng **many** với danh từ không đếm được (*many rubbish*).\n- Dùng **in** với thứ (*in Saturday*).\n- Dùng động từ nguyên mẫu sau giới từ (*by share*).\n- Chọn liên từ chỉ nhìn một vế mà không hiểu quan hệ nghĩa.\n- Chọn *both* khi nói về nhiều hơn hai người.\n\n## Ví dụ phân tích\n> Join our Clean-Up Day! (1) _____ people in our town don't know how to reduce waste. The event will take place (2) _____ Sunday. You can help (3) _____ bringing your own bag.\n\n- (1): *people* số nhiều đếm được, nên chọn **Many** (không phải *Much*).\n- (2): Thứ trong tuần dùng **on**.\n- (3): Sau giới từ **by** dùng V-ing: **by bringing**, không phải *by bring*.\n\n## Tóm tắt\n- Câu 7–12: tờ rơi, 6 chỗ trống, kiểm tra lượng từ, giới từ, liên từ, V-ing, make + O + adj.\n- Nhìn danh từ sau chỗ trống để chọn lượng từ.\n- on + thứ / ngày; in + tháng / năm; at + giờ.\n- Sau giới từ dùng V-ing; if / unless / although cần đọc cả hai vế.",
+  "knowledge": {},
+  "exercises": [
+   {
+    "prompt": "Chọn đáp án đúng",
+    "q": "_____ students in our school have joined the English Club this year.",
+    "options": [
+     "Many",
+     "Much",
+     "Each",
+     "A little"
+    ],
+    "explain": "Students là danh từ đếm được số nhiều: many."
+   },
+   {
+    "prompt": "Chọn đáp án đúng",
+    "q": "The charity run will start _____ Sunday morning.",
+    "options": [
+     "on",
+     "in",
+     "at",
+     "by"
+    ],
+    "explain": "Dùng on với thứ trong tuần."
+   },
+   {
+    "prompt": "Chọn đáp án đúng",
+    "q": "You can help reduce waste by _____ reusable bags.",
+    "options": [
+     "using",
+     "use",
+     "to use",
+     "used"
+    ],
+    "explain": "Sau giới từ by dùng V-ing."
+   },
+   {
+    "prompt": "Chọn đáp án đúng",
+    "q": "_____ the weather is bad, the sports day will be held in the hall.",
+    "options": [
+     "If",
+     "Although",
+     "Because",
+     "So"
+    ],
+    "explain": "Điều kiện: If; các liên từ khác sai nghĩa."
+   },
+   {
+    "prompt": "Chọn đáp án đúng",
+    "q": "Our volunteers hope to make the beach _____ for everyone.",
+    "options": [
+     "cleaner",
+     "clean up",
+     "cleanly",
+     "cleaning"
+    ],
+    "explain": "Make + O + adj: make the beach cleaner."
+   },
+   {
+    "prompt": "Chọn đáp án đúng",
+    "q": "_____ member of the club will receive a free membership card.",
+    "options": [
+     "Each",
+     "Many",
+     "Both",
+     "Several"
+    ],
+    "explain": "Danh từ số ít member đi với each."
+   }
+  ],
+  "en": {
+   "Chiến lược làm câu 7–12 đề tốt nghiệp THPT: điền từ vào tờ rơi với lượng từ, giới từ thời gian, liên từ, V-ing và make + O + adj": "Strategy for questions 7-12 of the national exam: filling in a leaflet with quantifiers, time prepositions, conjunctions, V-ing and make + O + adj",
+   "Chọn đáp án đúng": "Choose the correct answer"
+  },
+  "course": "Ôn thi tốt nghiệp THPT môn Tiếng Anh",
+  "title": "Chiến lược: điền từ vào tờ rơi"
+ },
+ {
+  "id": "73e487e8-1473-4c43-9200-1234868f3147",
+  "summary": "Chiến lược làm câu 13–17: sắp xếp câu thành hội thoại, lá thư và đoạn văn bằng từ nối, đại từ và mạch ý",
+  "contentMd": "## Mục tiêu bài học\n- Hiểu dạng câu 13–17: sắp xếp 5 câu (a, b, c, d, e) thành bài hoàn chỉnh.\n- Tìm câu mở đầu và các cặp câu chắc chắn đi liền.\n- Dùng mẹo loại phương án nhanh trong hội thoại, thư và đoạn văn.\n\n## Mô tả dạng bài\nCâu 13–17 gồm 5 câu sắp xếp: thường có **2 đoạn hội thoại** (3 và 5 lượt lời), **1 lá thư** và **2 đoạn văn** (5 câu). Mỗi câu hỏi cho 4 phương án thứ tự khác nhau, ví dụ *a-c-b-e-d*.\n\n## Quy trình 4 bước\n1. Tìm **câu mở đầu** (lời chào, lời mời, câu chủ đề).\n2. Tìm **cặp câu chắc chắn đi liền**: hỏi – đáp, câu có đại từ *they / it / this* ngay sau câu nhắc danh từ đó, từ nối *First → Then → Finally*.\n3. Dùng cặp chắc chắn để **loại bớt phương án**.\n4. Đọc lại theo thứ tự còn lại xem có tự nhiên không.\n\n## Mẹo theo từng loại\n### Hội thoại: hỏi trước, đáp sau\nLời chào / lời mời / yêu cầu → lời đáp → chi tiết. Lời chào thường mở đầu; lời cảm ơn hoặc tạm biệt thường kết thúc.\n\n> A: Would you like to join our English club? B: Sure, when does it meet?\n> A: Bạn muốn tham gia câu lạc bộ tiếng Anh không? B: Chắc chắn rồi, khi nào sinh hoạt?\n\n### Thư: mục đích → chi tiết → kết thư\nCâu mở thường là **I am writing to…**; câu kết là **I hope… / I look forward to hearing from you**. Thư thường bắt đầu bằng *Dear …,* và kết thúc bằng *Best wishes,*.\n\n### Đoạn văn: câu chủ đề đứng đầu\nCâu khái quát nhất, **không có từ nối hay đại từ thay thế**, thường đứng đầu. Các câu có **However, Moreover, As a result, In addition** không đứng đầu đoạn.\n\n## Từ nối thường gặp\n| Chức năng | Từ nối | Ví dụ |\n|---|---|---|\n| Trình tự | First → Then / Next → Finally | First, make a list. Then, take short breaks. |\n| Bổ sung / kết quả | Moreover, In addition; As a result, Therefore | As a result, many people prefer working from home. |\n| Tương phản | However, | However, a few simple habits can help. |\n\n> **First**, make a study plan. **Then**, follow it every day. **Finally**, review your progress.\n> Đầu tiên hãy lập kế hoạch học. Sau đó làm theo mỗi ngày. Cuối cùng hãy xem lại tiến bộ.\n\n## Bẫy thường gặp\n- Chọn sai câu mở đầu vì thấy câu chứa từ khóa; hãy kiểm tra câu đó có **đại từ chưa có danh từ** không.\n- Đặt câu trả lời trước câu hỏi.\n- Đặt câu có **However** làm câu mở đầu đoạn.\n- Quên rằng *Finally* và lời kết luôn ở cuối.\n\n## Ví dụ phân tích\nSắp xếp: (a) However, a few simple habits can help. (b) Many students feel stressed before exams. (c) For example, sleeping early improves memory.\n\n- (b) là câu chủ đề, mở đầu đoạn.\n- (a) có **However**, nêu giải pháp cho vấn đề ở (b), nên đứng sau (b).\n- (c) có **For example** giải thích thói quen ở (a), nên đứng sau (a).\n\nThứ tự đúng: **b – a – c**.\n\n## Tóm tắt\n- Câu 13–17: sắp xếp hội thoại, thư, đoạn văn gồm 5 câu.\n- Tìm câu mở đầu rồi các cặp đi liền (hỏi – đáp, đại từ – danh từ, từ nối trình tự).\n- Thư: I am writing to… → chi tiết → I look forward to…\n- Câu có từ nối không bao giờ đứng đầu đoạn.",
+  "knowledge": {},
+  "exercises": [
+   {
+    "prompt": "Chọn câu sắp xếp đúng",
+    "q": "Which sentence should come FIRST in a paragraph?",
+    "options": [
+     "Many teenagers spend too much time on social media.",
+     "However, there are ways to use it wisely.",
+     "As a result, they feel tired at school.",
+     "Moreover, it affects their sleep."
+    ],
+    "explain": "Câu chủ đề khái quát, không có từ nối đứng đầu."
+   },
+   {
+    "prompt": "Chọn câu sắp xếp đúng",
+    "q": "Which sentence most likely opens a formal letter?",
+    "options": [
+     "I am writing to ask about your English course.",
+     "I look forward to hearing from you.",
+     "Best wishes, Hoa.",
+     "Thank you for your time."
+    ],
+    "explain": "Thư mở bằng nêu mục đích: I am writing to…"
+   },
+   {
+    "prompt": "Chọn câu sắp xếp đúng",
+    "q": "Which sentence most likely closes a letter?",
+    "options": [
+     "I look forward to hearing from you soon.",
+     "I am writing to apply for the job.",
+     "Dear Mr. Nam,",
+     "First, I want to introduce myself."
+    ],
+    "explain": "Câu kết thư: I look forward to hearing from you."
+   },
+   {
+    "prompt": "Chọn đáp án đúng nhất",
+    "q": "Which order makes a logical conversation? a. Sure, at 7 p.m. b. Would you like to join our movie night? c. Great, see you there!",
+    "options": [
+     "b - a - c",
+     "a - b - c",
+     "c - b - a",
+     "b - c - a"
+    ],
+    "explain": "Lời mời (b) → đồng ý (a) → chốt (c)."
+   },
+   {
+    "prompt": "Chọn đáp án đúng nhất",
+    "q": "Which order makes a logical paragraph? a. Finally, review your notes. b. First, make a study plan. c. Then, study a little every day.",
+    "options": [
+     "b - c - a",
+     "a - b - c",
+     "c - a - b",
+     "b - a - c"
+    ],
+    "explain": "First → Then → Finally."
+   },
+   {
+    "prompt": "Chọn đáp án đúng nhất",
+    "q": "Which sentence is NOT suitable as the first sentence of a paragraph?",
+    "options": [
+     "However, some people disagree.",
+     "Online learning is becoming popular.",
+     "Pollution is a serious problem today.",
+     "Reading is a useful habit."
+    ],
+    "explain": "Câu bắt đầu bằng However thể hiện tương phản với ý trước, không thể mở đầu đoạn."
+   }
+  ],
+  "en": {
+   "Chiến lược làm câu 13–17: sắp xếp câu thành hội thoại, lá thư và đoạn văn bằng từ nối, đại từ và mạch ý": "Strategy for questions 13-17: arranging sentences into a conversation, a letter and a paragraph using linking words, pronouns and logic",
+   "Chọn câu sắp xếp đúng": "Choose the correct order",
+   "Chọn đáp án đúng nhất": "Choose the best answer"
+  },
+  "course": "Ôn thi tốt nghiệp THPT môn Tiếng Anh",
+  "title": "Chiến lược: sắp xếp câu thành hội thoại, thư, đoạn văn"
+ },
+ {
+  "id": "596dc9b1-c4e5-49ff-8cf9-bb06df4a3d1c",
+  "summary": "Chiến lược làm câu 18–22: điền cụm từ, mệnh đề vào đoạn văn với mệnh đề quan hệ, phân từ, to V và từ nối",
+  "contentMd": "## Mục tiêu bài học\n- Hiểu dạng câu 18–22: đoạn văn có 5 chỗ trống, mỗi phương án là cả cụm hoặc mệnh đề.\n- Xác định chỗ trống thiếu thành phần nào của câu.\n- Nhận biết mệnh đề quan hệ, mệnh đề phân từ, to V chỉ mục đích và từ nối giữa hai câu.\n\n## Mô tả dạng bài\nMỗi chỗ trống là một **cụm từ** hoặc **mệnh đề**. Đề kiểm tra **cấu trúc câu** nhiều hơn từ vựng: mệnh đề quan hệ, mệnh đề phân từ (V-ing / V3), to V chỉ mục đích, từ nối giữa các câu và câu điều kiện.\n\n## Quy trình 4 bước\n1. Xem chỗ trống đang thiếu thành phần gì: **cả mệnh đề (chủ ngữ + động từ)** hay chỉ **cụm bổ nghĩa**.\n2. **Mỗi câu chỉ một động từ chính**: loại phương án làm câu có hai động từ chính hoặc thiếu động từ.\n3. Đọc **câu ngay sau chỗ trống**: từ nối và đại từ ở câu sau giúp chọn đúng.\n4. Đọc lại cả câu sau khi điền để chắc chắn tự nhiên.\n\n## Các cấu trúc thường gặp\n| Cấu trúc | Công thức | Ví dụ |\n|---|---|---|\n| Mệnh đề quan hệ | N + that / which / who + S + V | problems **that the world is facing today** |\n| Mệnh đề phân từ | …, V-ing (chủ động) / V3 (bị động) | Plastic ends up in the ocean, **harming sea animals**. |\n| To V chỉ mục đích | N / V + to V | laws **to reduce** single-use plastics |\n| Từ nối giữa hai câu | At the same time / However / Therefore, + S + V | **At the same time**, young people are taking action. |\n\n### Mệnh đề phân từ\nDùng khi **cùng chủ ngữ** với mệnh đề chính; V-ing nếu chủ động, V3/ed nếu bị động. Sau dấu phẩy nối tiếp câu trước, phân từ thường nêu **kết quả hoặc thông tin thêm**.\n\n> Plastic ends up in the ocean, **harming** sea animals.\n> Nhựa trôi ra đại dương, gây hại cho động vật biển.\n\n### Phân biệt từ nối\n**As a result of** và **Despite** phải đi với **danh từ / V-ing**, không đi với mệnh đề đầy đủ; còn **However, Therefore, At the same time** đứng đầu câu và có dấu phẩy.\n\n## Bẫy thường gặp\n- Phương án có thêm một động từ chia thì khiến câu có **hai động từ chính** (sai).\n- Nhầm mệnh đề quan hệ với câu hoàn chỉnh.\n- Dùng *Despite* với mệnh đề (*Despite it rained*).\n- Chọn V-ing khi nghĩa bị động (cần V3).\n\n## Ví dụ phân tích\n> Climate change is one of the biggest (18) _____. Many countries are building solar farms, (19) _____ carbon emissions.\n\n- (18) Trước là *biggest* (tính từ), sau đó là danh từ; cụm **problems that the world is facing today** là danh từ + mệnh đề quan hệ, hợp cả ngữ pháp và nghĩa.\n- (19) Câu đã có động từ chính *are building*; chỗ trống nên là phân từ nêu mục đích / kết quả: **reducing** (không phải *they reduce*, vì thêm động từ chính thứ hai).\n\n## Tóm tắt\n- Câu 18–22: điền cụm / mệnh đề; kiểm tra cấu trúc câu.\n- Mỗi câu chỉ một động từ chính; loại phương án thừa hoặc thiếu động từ.\n- Phân từ: V-ing chủ động, V3 bị động, cùng chủ ngữ với mệnh đề chính.\n- Đọc câu sau chỗ trống để tìm gợi ý từ nối, đại từ.",
+  "knowledge": {},
+  "exercises": [
+   {
+    "prompt": "Chọn cụm từ phù hợp",
+    "q": "Many students join clubs, _____ them develop new skills.",
+    "options": [
+     "helping",
+     "help",
+     "helped",
+     "to helping"
+    ],
+    "explain": "Câu đã có động từ chính join; chỗ trống là phân từ chủ động nêu kết quả: helping."
+   },
+   {
+    "prompt": "Chọn cụm từ phù hợp",
+    "q": "The town built a new recycling centre _____ waste.",
+    "options": [
+     "to reduce",
+     "reduces",
+     "reduced",
+     "reducing of"
+    ],
+    "explain": "To V chỉ mục đích: to reduce waste."
+   },
+   {
+    "prompt": "Chọn cụm từ phù hợp",
+    "q": "There are many problems _____ the city is facing today.",
+    "options": [
+     "that",
+     "what",
+     "who",
+     "whose"
+    ],
+    "explain": "Mệnh đề quan hệ bổ nghĩa cho problems (vật): that."
+   },
+   {
+    "prompt": "Chọn cụm từ phù hợp",
+    "q": "_____ by the storm, the old bridge was closed for repairs.",
+    "options": [
+     "Damaged",
+     "Damaging",
+     "Having damage",
+     "To damage"
+    ],
+    "explain": "Nghĩa bị động (cầu bị bão làm hư), cùng chủ ngữ: Damaged."
+   },
+   {
+    "prompt": "Chọn cụm từ phù hợp",
+    "q": "Pollution is increasing quickly. _____, the government is taking action.",
+    "options": [
+     "As a result",
+     "Despite",
+     "Because of",
+     "Although"
+    ],
+    "explain": "Giữa hai câu cần từ nối đầu câu: As a result,."
+   },
+   {
+    "prompt": "Chọn cụm từ phù hợp",
+    "q": "Which option is correct? Many people use public transport, _____ the air cleaner.",
+    "options": [
+     "making",
+     "make",
+     "they make",
+     "and making of"
+    ],
+    "explain": "Phân từ nêu kết quả, không thêm động từ chính thứ hai: making."
+   }
+  ],
+  "en": {
+   "Chiến lược làm câu 18–22: điền cụm từ, mệnh đề vào đoạn văn với mệnh đề quan hệ, phân từ, to V và từ nối": "Strategy for questions 18-22: completing a paragraph with phrases and clauses using relative clauses, participles, to-infinitives and linking words",
+   "Chọn cụm từ phù hợp": "Choose the suitable phrase"
+  },
+  "course": "Ôn thi tốt nghiệp THPT môn Tiếng Anh",
+  "title": "Chiến lược: điền cụm từ, mệnh đề vào đoạn văn"
+ },
+ {
+  "id": "2e353afe-3ad3-4274-866a-dae77e75a426",
+  "summary": "Chiến lược làm câu 23–40: các dạng câu hỏi đọc hiểu gồm ý chính, chi tiết, từ thay thế, đồng nghĩa, diễn đạt lại, điền câu và suy luận",
+  "contentMd": "## Mục tiêu bài học\n- Hiểu cấu trúc phần đọc hiểu: 2 bài đọc, tổng 18 câu hỏi, chiếm gần một nửa số điểm.\n- Nhận ra các dạng câu hỏi và chiến lược cho từng dạng.\n- Quản lý thời gian khoảng 25 phút cho hai bài đọc.\n\n## Cấu trúc phần đọc hiểu\nCâu 23–40 gồm hai bài đọc: **bài 1 có 8 câu hỏi (23–30)**, **bài 2 dài hơn có 10 câu hỏi (31–40)**. Phần này chiếm gần một nửa điểm bài thi nên cần chiến lược rõ ràng.\n\n## Quy trình chung\n1. **Đọc câu hỏi trước** để biết cần tìm thông tin gì.\n2. Đọc bài, **gạch từ khóa** liên quan đến câu hỏi.\n3. Câu hỏi chi tiết, từ vựng, đại từ thay thế thường **theo thứ tự đoạn văn**.\n4. **Câu ý chính / tóm tắt làm cuối** sau khi đã nắm cả bài.\n\n## Các dạng câu hỏi\n| Dạng | Cách làm |\n|---|---|\n| Ý chính / tóm tắt | Chọn phương án **bao quát tất cả các đoạn**, không chỉ một chi tiết |\n| Từ thay thế (it, they, this) | Tìm danh từ / ý gần nhất phía trước, hợp về số ít – số nhiều và nghĩa |\n| Đồng nghĩa / trái nghĩa | Thay từng phương án vào câu gốc; đề hỏi OPPOSITE thì chọn nghĩa ngược |\n| Diễn đạt lại (paraphrase) | Giữ đúng nghĩa và **mức độ** của câu gốc (many ≠ all) |\n| NOT mentioned / NOT TRUE | Gạch từng phương án có trong bài, phương án còn lại là đáp án |\n| Điền câu vào đoạn [I]–[IV] | Dựa vào từ nối, đại từ trong câu cần điền (In other words, This…) |\n| Suy luận (inferred) | Chọn điều chắc chắn suy ra từ bài, không phải điều quá xa |\n\n### Ví dụ: từ thay thế\n> Many teenagers use social media every day. **This** can affect their sleep.\n\n*This* thay cho cả ý \"dùng mạng xã hội mỗi ngày\", nên phương án đúng là \"spending time on social media\", không phải \"sleep\".\n\n### Ví dụ: paraphrase\nCâu gốc: *Some students prefer online classes.* → đúng: *A few students like learning online.* Sai: *All students prefer online classes* (đổi **some** thành **all**, sai mức độ).\n\n## Bẫy thường gặp\n- **Bẫy từ trùng**: phương án có từ giống bài nhưng nghĩa khác câu hỏi.\n- Chọn phương án quá chi tiết cho câu ý chính.\n- Bỏ qua từ **NOT / EXCEPT / OPPOSITE** trong câu hỏi.\n- Chọn điều **đúng ngoài đời nhưng không có trong bài**.\n- Suy luận quá xa so với thông tin trong bài.\n\n## Quản lý thời gian\nMỗi bài đọc khoảng **12 phút** cho bài 1 và **13 phút** cho bài 2. Nếu một câu mất hơn một phút, chọn tạm rồi quay lại. Dành ít nhất 3 phút cuối đề để soát và tô đủ đáp án.\n\n## Áp dụng vào bài thi\nVí dụ câu từ vựng: *The word \"reliable\" in paragraph 2 is OPPOSITE in meaning to _____.* Chú ý chữ **OPPOSITE**: đáp án là từ có nghĩa ngược lại (ví dụ *unreliable*), không phải từ đồng nghĩa như *dependable*.\n\n## Tóm tắt\n- Câu 23–40: 2 bài đọc, 8 + 10 câu hỏi, gần một nửa điểm.\n- Đọc câu hỏi trước; câu chi tiết theo thứ tự đoạn; câu ý chính làm cuối.\n- Paraphrase phải giữ đúng nghĩa và mức độ; từ thay thế tìm trong ý gần nhất phía trước.\n- Chú ý các từ NOT, EXCEPT, OPPOSITE.",
+  "knowledge": {},
+  "exercises": [
+   {
+    "prompt": "Chọn đáp án đúng nhất",
+    "q": "You should answer the main idea question _____.",
+    "options": [
+     "last, after you understand the whole passage",
+     "first, before reading the passage",
+     "only if you have time",
+     "without reading the passage"
+    ],
+    "explain": "Câu ý chính cần hiểu cả bài, nên làm sau cùng."
+   },
+   {
+    "prompt": "Chọn đáp án đúng nhất",
+    "q": "The question says: 'Which of the following is NOT mentioned in the passage?' What should you do?",
+    "options": [
+     "Cross out the options that appear in the passage",
+     "Choose the option that appears most often",
+     "Choose the longest option",
+     "Choose the first option"
+    ],
+    "explain": "NOT mentioned: gạch các phương án có trong bài, phương án còn lại là đáp án."
+   },
+   {
+    "prompt": "Chọn đáp án đúng nhất",
+    "q": "Original: 'Some students prefer online classes.' Which sentence is the best paraphrase?",
+    "options": [
+     "A few students like learning online.",
+     "All students prefer online classes.",
+     "No students like online classes.",
+     "Students must study online."
+    ],
+    "explain": "Giữ đúng mức độ: some ≈ a few; các câu khác đổi nghĩa."
+   },
+   {
+    "prompt": "Chọn đáp án đúng nhất",
+    "q": "What does 'this' refer to? 'Many teenagers use social media every day. This can affect their sleep.'",
+    "options": [
+     "using social media every day",
+     "sleeping habits",
+     "teenagers",
+     "social media apps"
+    ],
+    "explain": "This thay cho cả ý ở câu trước: việc dùng mạng xã hội mỗi ngày."
+   },
+   {
+    "prompt": "Chọn đáp án đúng nhất",
+    "q": "Which strategy is best for a question about the word in context ('The word X is closest in meaning to…')?",
+    "options": [
+     "Replace X with each option and check the meaning in the sentence",
+     "Choose the option with the same spelling",
+     "Choose the shortest option",
+     "Translate the whole passage first"
+    ],
+    "explain": "Thay từng phương án vào câu gốc để kiểm tra nghĩa."
+   },
+   {
+    "prompt": "Chọn đáp án đúng nhất",
+    "q": "Where should you look first for the answer to a detail question?",
+    "options": [
+     "In the paragraph in the same order as the question",
+     "In the last paragraph only",
+     "In the title only",
+     "In the first sentence only"
+    ],
+    "explain": "Câu hỏi chi tiết thường theo thứ tự đoạn văn."
+   }
+  ],
+  "en": {
+   "Chiến lược làm câu 23–40: các dạng câu hỏi đọc hiểu gồm ý chính, chi tiết, từ thay thế, đồng nghĩa, diễn đạt lại, điền câu và suy luận": "Strategy for questions 23-40: reading comprehension question types including main idea, detail, reference, synonym, paraphrase, sentence insertion and inference",
+   "Chọn đáp án đúng nhất": "Choose the best answer"
+  },
+  "course": "Ôn thi tốt nghiệp THPT môn Tiếng Anh",
+  "title": "Chiến lược: các dạng câu hỏi đọc hiểu"
+ }
+]
