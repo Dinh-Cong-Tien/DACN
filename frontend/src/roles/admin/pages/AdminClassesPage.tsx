@@ -11,7 +11,7 @@ import { Img, PHOTOS } from '@/shared/components/media/Img';
 import { CrudEditor } from '@/engines';
 import { Figures, Status, TPageHead } from '@/roles/teacher/components/TeacherKit';
 import { distinctStudents } from '@/shared/constants/staff';
-import { CLASS_TRACK_OPTIONS, classTrack, classTrackLabel, courseOptions } from '@/shared/constants/staff';
+import { CLASS_LEVEL_OPTIONS, CLASS_TRACK_OPTIONS, classTrack, classTrackLabel, courseOptions } from '@/shared/constants/staff';
 import { useCourses } from '@/shared/api/catalog';
 
 type Row = HeadClass & { locked?: boolean; teacherId: string; trackKey: string; courseKey: string };
@@ -95,12 +95,12 @@ export const AdminClassesPage: React.FC = () => {
         rows={rows}
         loading={classesQ.isLoading}
         onCreate={async (v) => {
-          const c = await headApi.createClass({ courseId: v.courseKey, teacherId: v.teacherId, room: v.room || undefined, scheduleText: v.schedule || undefined });
+          const c = await headApi.createClass({ courseId: v.courseKey, level: v.level, teacherId: v.teacherId, room: v.room || undefined, scheduleText: v.schedule || undefined });
           void refresh();
           return { ...c, trackKey: classTrack(c), courseKey: c.course?.slug ?? '', locked: false } as Row;
         }}
         onUpdate={async (row, v) => {
-          const c = await adminApi.updateClass(row.id, { courseId: v.courseKey || undefined, teacherId: v.teacherId !== row.teacherId ? v.teacherId : undefined, room: v.room ?? null, scheduleText: v.schedule ?? null });
+          const c = await adminApi.updateClass(row.id, { courseId: v.courseKey || undefined, level: v.level || undefined, teacherId: v.teacherId !== row.teacherId ? v.teacherId : undefined, room: v.room ?? null, scheduleText: v.schedule ?? null });
           void refresh();
           return { ...c, trackKey: classTrack(c), courseKey: c.course?.slug ?? '', locked: !!c.isArchived } as Row;
         }}
@@ -120,6 +120,7 @@ export const AdminClassesPage: React.FC = () => {
         defaultValues={{ courseKey: '', teacherId: teacherList.find((t) => t.status === 'ACTIVE')?.id, room: '' }}
         fields={[
                     { key: 'courseKey', label: 'Khoá học', type: 'select', required: true, options: courseOptions(courses) },
+          { key: 'level', label: 'Trình độ lớp (cuối mã lớp, vd T203A1)', type: 'select', required: true, options: CLASS_LEVEL_OPTIONS },
           { key: 'teacherId', label: 'Giáo viên phụ trách', type: 'select', required: true, options: teacherList.filter((t) => t.status === 'ACTIVE').map((t) => ({ value: t.id, label: t.name })) },
           { key: 'schedule', label: 'Lịch học', placeholder: 'T2 – T4 · 19:00' },
           { key: 'room', label: 'Phòng / hình thức', placeholder: 'Phòng 302 hoặc Online · Google Meet' },

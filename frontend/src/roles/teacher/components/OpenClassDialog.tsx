@@ -4,10 +4,10 @@ import { teacherApi, useLibCourses, useTeacherMutation } from '@/shared/api/teac
 import { errorMessage } from '@/shared/api/client';
 import { toast } from '@/shared/stores/uiStore';
 import { Input, Modal, Select } from '@/shared/components/ui';
-import { courseOptions } from '@/shared/constants/staff';
+import { CLASS_LEVEL_OPTIONS, courseOptions } from '@/shared/constants/staff';
 import { TBtn } from './TeacherKit';
 
-const EMPTY = { course: '', schedule: '', room: '' };
+const EMPTY = { course: '', level: '', schedule: '', room: '' };
 
 /** Mở lớp mới trong một khoá học (lớp nằm trong khoá; học viên vào lớp được ghi danh khoá). `course` = slug chọn sẵn. */
 export const OpenClassDialog: React.FC<{ open: boolean; course?: string; onClose: () => void }> = ({ open, course, onClose }) => {
@@ -24,9 +24,10 @@ export const OpenClassDialog: React.FC<{ open: boolean; course?: string; onClose
 
   const save = () => {
     if (!form.course) return setError('Chọn khoá học của lớp');
+    if (!form.level) return setError('Chọn trình độ của lớp');
     if (!form.schedule.trim()) return setError('Nhập lịch học của lớp');
     createClass.mutate(
-      { courseId: form.course, schedule: form.schedule.trim() || null, room: form.room.trim() || null },
+      { courseId: form.course, level: form.level, schedule: form.schedule.trim() || null, room: form.room.trim() || null },
       {
         onSuccess: (c) => {
           onClose();
@@ -42,7 +43,7 @@ export const OpenClassDialog: React.FC<{ open: boolean; course?: string; onClose
       open={open}
       onClose={onClose}
       title="Mở lớp học"
-      description="Các lớp của một khoá cùng nội dung, chỉ khác lịch học. Mã lớp (T201, T202…) tạo tự động theo thứ tự — vừa là tên lớp, vừa là mã học viên nhập để vào lớp."
+      description="Các lớp của một khoá cùng nội dung, chỉ khác lịch học. Mã lớp tạo tự động: chữ đầu khoá + số thứ tự + trình độ, vd T203A1 — vừa là tên lớp, vừa là mã học viên nhập để vào lớp."
       icon={<Users />}
       footer={
         <>
@@ -65,6 +66,7 @@ export const OpenClassDialog: React.FC<{ open: boolean; course?: string; onClose
           onChange={(e) => setForm((f) => ({ ...f, course: e.target.value }))}
           hint="Học viên vào lớp được ghi danh khoá này; giáo viên theo dõi tiến độ khoá trong lớp"
         />
+        <Select label="Trình độ lớp" required placeholder="Chọn trình độ" options={CLASS_LEVEL_OPTIONS} value={form.level} onChange={(e) => setForm((f) => ({ ...f, level: e.target.value }))} hint="Phần cuối mã lớp, vd T203A1" />
         <Input label="Lịch học" required placeholder="VD: T2 – T4 – T6 · 19:00" value={form.schedule} onChange={(e) => setForm((f) => ({ ...f, schedule: e.target.value }))} error={error} />
         <Input label="Phòng học" placeholder="VD: Phòng 302 hoặc Online" value={form.room} onChange={(e) => setForm((f) => ({ ...f, room: e.target.value }))} />
       </div>

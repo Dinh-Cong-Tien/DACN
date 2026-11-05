@@ -51,17 +51,34 @@ export const courseShortName = (c: { title: string; track?: CourseTrack | null }
 const CLASS_PREFIX: Record<string, string> = { 'luyen-thi-toeic': 'T', 'luyen-thi-vstep': 'V', 'tieng-anh-lop-10': 'A', 'tieng-anh-lop-11': 'B', 'tieng-anh-lop-12': 'C', 'on-thi-tot-nghiep-thpt': 'G' };
 export const classPrefix = (c: { slug: string; track?: CourseTrack | null }) => CLASS_PREFIX[c.slug] ?? (c.track === 'VSTEP' ? 'V' : c.track === 'THPT' ? 'H' : 'T');
 
+/** Trình độ của lớp (CEFR) — phần cuối mã lớp */
+export const CLASS_LEVELS = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'] as const;
+export const CLASS_LEVEL = z.enum(CLASS_LEVELS);
+
+/** Mã lớp có sẵn → số thứ tự + trình độ: "T203A1" → { no: "203", level: "A1" } */
+export const splitClassCode = (code: string) => {
+  const m = /^([A-Z])(\d{3})(A1|A2|B1|B2|C1|C2)?$/.exec(code);
+  return m ? { prefix: m[1], no: m[2], level: m[3] ?? null } : null;
+};
+
 /**
- * Lớp của một khoá (cùng nội dung, khác lịch học) đặt mã theo thứ tự: T201, T202… — mã lớp đồng thời là tên lớp
- * và mã mời học viên nhập để vào lớp. Đánh số chung mọi lớp có cùng chữ đầu nên không trùng.
+ * Lớp của một khoá (cùng nội dung, khác lịch học) đặt mã: chữ đầu khoá + số thứ tự + trình độ lớp, vd T203A1, V201B1 —
+ * mã lớp đồng thời là tên lớp và mã mời học viên nhập để vào lớp. Số đánh chung mọi lớp cùng chữ đầu nên không trùng;
+ * trình độ chọn theo từng lớp.
  */
-export async function nextClassCode(tx: Prisma.TransactionClient | typeof prisma, courseId: string) {
+export async function nextClassCode(tx: Prisma.TransactionClient | typeof prisma, courseId: string, level: string) {
   const c = await tx.course.findUniqueOrThrow({ where: { id: courseId }, select: { slug: true, track: true } });
   const prefix = classPrefix(c);
   const codes = (await tx.class.findMany({ where: { code: { startsWith: prefix } }, select: { code: true } })).map((x) => x.code);
-  const used = codes.map((x) => (x.startsWith(prefix) && /^\d{3}$/.test(x.slice(prefix.length)) ? Number(x.slice(prefix.length)) : 0));
-  return `${prefix}${Math.max(200, ...used) + 1}`;
+  const used = codes.map((x) => Number(splitClassCode(x)?.prefix === prefix ? splitClassCode(x)!.no : 0));
+  return `${prefix}${Math.max(200, ...used) + 1}${level}`;
 }
+
+/** Đổi trình độ lớp → mã lớp (= tên lớp) đổi phần trình độ, giữ số thứ tự: T203A1 → T203B1 */
+export const codeWithLevel = (code: string, level: string) => {
+  const p = splitClassCode(code);
+  return p ? `${p.prefix}${p.no}${level}` : code;
+};
 
 /** Học viên vào lớp (mã mời / giáo viên thêm) → ghi danh khoá học của lớp; đã ghi danh thì giữ nguyên tiến độ */
 export async function enrollClassCourse(tx: Prisma.TransactionClient, courseId: string | null | undefined, studentIds: string[]) {

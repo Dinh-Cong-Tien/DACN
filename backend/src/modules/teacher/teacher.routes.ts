@@ -45,7 +45,7 @@ import { completedAttempts } from '../catalog/counts';
 import { gradeLessonAssignments } from '../catalog/lesson-assignments';
 import { toExercises } from '../catalog/lesson-exercises';
 import { byTitleNatural, levelLabel } from '../catalog/mappers';
-import { CLASS_TRACK, classCourseData, classCourseProgress, classCourseSelect, classTrackData, enrollClassCourse, nextClassCode } from '../catalog/class-track';
+import { CLASS_TRACK, classCourseData, classCourseProgress, classCourseSelect, classTrackData, enrollClassCourse, nextClassCode, CLASS_LEVEL, codeWithLevel } from '../catalog/class-track';
 
 export const teacherRouter = Router();
 
@@ -309,8 +309,10 @@ teacherRouter.post(
     const u = me(req);
     const body = parse(classBody, req.body);
     if (!body.courseId) throw badRequest('Chọn khoá học của lớp', 'COURSE_REQUIRED');
+    const level = CLASS_LEVEL.safeParse(body.level);
+    if (!level.success) throw badRequest('Chọn trình độ của lớp (A1, A2, B1, B2, C1, C2)', 'LEVEL_REQUIRED');
     const cc = await classCourseData(body.courseId);
-    const code = await nextClassCode(prisma, cc.courseId);
+    const code = await nextClassCode(prisma, cc.courseId, level.data);
     const teacher = await prisma.user.findUniqueOrThrow({ where: { id: u.id } });
     const c = await prisma.class.create({
       // mã lớp = tên lớp (T201, T202…), cũng là mã mời
@@ -327,8 +329,12 @@ teacherRouter.patch(
     const c = await assertClass(me(req), P(req));
     const body = parse(classBody.partial(), req.body);
     const cc = body.courseId ? await classCourseData(body.courseId) : null;
+    // lớp thuộc khoá: tên = mã lớp; đổi trình độ → đổi phần trình độ của mã (T203A1 → T203B1)
+    if (c.courseId && body.level != null && !CLASS_LEVEL.safeParse(body.level).success) throw badRequest('Trình độ lớp phải là A1, A2, B1, B2, C1 hoặc C2');
+    const code = c.courseId && body.level ? codeWithLevel(c.code, body.level) : c.code;
+    if (code !== c.code && (await prisma.class.findUnique({ where: { code }, select: { id: true } }))) throw badRequest(`Mã lớp ${code} đã có`, 'CODE_TAKEN');
     const updated = await prisma.$transaction(async (tx) => {
-      const row = await tx.class.update({ where: { id: c.id }, data: { ...classData(body), ...(cc ?? {}), ...(c.courseId ? { name: c.code } : {}) }, include: classInclude }); // lớp thuộc khoá: tên = mã lớp, không đổi riêng
+      const row = await tx.class.update({ where: { id: c.id }, data: { ...classData(body), ...(cc ?? {}), ...(c.courseId ? { name: code, code } : {}) }, include: classInclude });
       // đổi khoá → học viên đang trong lớp được ghi danh khoá mới
       if (cc && cc.courseId !== c.courseId) await enrollClassCourse(tx, cc.courseId, (await tx.classMember.findMany({ where: { classId: c.id, status: 'ACTIVE' }, select: { studentId: true } })).map((m) => m.studentId));
       return row;

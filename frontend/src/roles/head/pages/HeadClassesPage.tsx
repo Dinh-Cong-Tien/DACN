@@ -12,7 +12,7 @@ import { Img, PHOTOS } from '@/shared/components/media/Img';
 import { cn, staffPath } from '@/shared/utils';
 import { Figures, Meter, Panel, TBtn, TPageHead, inputCls } from '@/roles/teacher/components/TeacherKit';
 import type { CourseTrack } from '@/shared/types';
-import { CLASS_TRACKS, classTrack, classTrackLabel, courseOptions } from '@/shared/constants/staff';
+import { CLASS_LEVEL_OPTIONS, CLASS_TRACKS, classTrack, classTrackLabel, courseOptions } from '@/shared/constants/staff';
 import { useCourses } from '@/shared/api/catalog';
 
 const COVERS = [PHOTOS.classroom, PHOTOS.discussion, PHOTOS.lecture, PHOTOS.team, PHOTOS.students2];
@@ -44,7 +44,7 @@ export const HeadClassesPage: React.FC = () => {
   const [onlyIssue, setOnlyIssue] = useState(false);
   const [q, setQ] = useState('');
   const [open, setOpen] = useState(false);
-  const [form, setForm] = useState({ name: '', course: '', teacherId: '', schedule: '', room: '' });
+  const [form, setForm] = useState({ name: '', course: '', level: '', teacherId: '', schedule: '', room: '' });
   const courses = useCourses().data ?? [];
   // mở từ Khoá học & Lớp: "Mở lớp" cho một khoá
   const [params, setParams] = useSearchParams();
@@ -69,13 +69,14 @@ export const HeadClassesPage: React.FC = () => {
   const create = async () => {
     if (!form.schedule.trim()) return setError('Nhập lịch học của lớp');
     if (!form.course) return setError('Chọn khoá học của lớp');
+    if (!form.level) return setError('Chọn trình độ của lớp');
     const teacherId = form.teacherId || activeTeachers[0]?.id;
     if (!teacherId) return setError('Bộ môn chưa có giáo viên đang hoạt động');
     setSaving(true);
     try {
-      const c = await headApi.createClass({ courseId: form.course, teacherId, scheduleText: form.schedule || undefined, room: form.room || undefined, coverUrl: COVERS[classes.length % COVERS.length] });
+      const c = await headApi.createClass({ courseId: form.course, level: form.level, teacherId, scheduleText: form.schedule || undefined, room: form.room || undefined, coverUrl: COVERS[classes.length % COVERS.length] });
       setOpen(false);
-      setForm({ name: '', course: '', teacherId: '', schedule: '', room: '' });
+      setForm({ name: '', course: '', level: '', teacherId: '', schedule: '', room: '' });
       setError('');
       toast.success('Đã mở lớp mới', `${c.name} · mã ${c.code} · giáo viên ${c.teacherName} nhận được thông báo phân công.`);
       await refresh();
@@ -255,9 +256,10 @@ export const HeadClassesPage: React.FC = () => {
         }
       >
         <div className="space-y-4">
-          <p className="text-[13px] text-slate-500">Các lớp của một khoá cùng nội dung, chỉ khác lịch học. Mã lớp (T201, T202…) tạo tự động theo thứ tự — vừa là tên lớp, vừa là mã học viên nhập để vào lớp.</p>
+          <p className="text-[13px] text-slate-500">Các lớp của một khoá cùng nội dung, chỉ khác lịch học. Mã lớp tạo tự động: chữ đầu khoá + số thứ tự + trình độ, vd T203A1 — vừa là tên lớp, vừa là mã học viên nhập để vào lớp.</p>
           <div className="grid gap-4 sm:grid-cols-2">
             <Select label="Khoá học" required placeholder="Chọn khoá học của lớp" options={courseOptions(courses)} value={form.course} onChange={(e) => setForm((f) => ({ ...f, course: e.target.value }))} />
+            <Select label="Trình độ lớp" required placeholder="Chọn trình độ" options={CLASS_LEVEL_OPTIONS} value={form.level} onChange={(e) => setForm((f) => ({ ...f, level: e.target.value }))} />
             <Select label="Giáo viên phụ trách" options={activeTeachers.map((t) => ({ value: t.id, label: `${t.name} · ${t.classesCount} lớp` }))} value={form.teacherId || activeTeachers[0]?.id || ''} onChange={(e) => setForm((f) => ({ ...f, teacherId: e.target.value }))} />
           </div>
           <div className="grid gap-4 sm:grid-cols-2">

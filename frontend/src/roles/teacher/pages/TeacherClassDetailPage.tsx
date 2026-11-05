@@ -15,7 +15,7 @@ import { Avatar, ConfirmDialog, Input, Modal, Select, Textarea } from '@/shared/
 import { Figures, IconTile, Meter, Panel, Status, TBtn, TTabs, inputCls, tbl, type StatusTone } from '../components/TeacherKit';
 import { TEmpty, TError, TLoading } from '../components/TeacherState';
 import { ClassLeaderboardPanel } from '../components/ClassLeaderboard';
-import { classTrack, classTrackLabel, courseOptions } from '@/shared/constants/staff';
+import { CLASS_LEVEL_OPTIONS, classTrack, classTrackLabel, courseOptions } from '@/shared/constants/staff';
 import { ClassCourseProgressPanel } from '../components/ClassCourseProgress';
 import { CourseLessonList } from '../components/CourseLessonList';
 
@@ -753,7 +753,11 @@ export const TeacherClassDetailPage: React.FC = () => {
             </div>
             <Input label="Lịch học" placeholder="T2 – T4 – T6 · 19:00" value={classForm.schedule ?? ''} onChange={(e) => setClassForm({ ...classForm, schedule: e.target.value })} />
             <Input label="Phòng" value={classForm.room ?? ''} onChange={(e) => setClassForm({ ...classForm, room: e.target.value })} />
-            <Input label="Trình độ" placeholder="VD: 650+, B1–B2" value={classForm.level ?? ''} onChange={(e) => setClassForm({ ...classForm, level: e.target.value })} />
+            {cls.course ? (
+              <Select label="Trình độ lớp" options={CLASS_LEVEL_OPTIONS} value={classForm.level ?? ''} placeholder="Chọn trình độ" onChange={(e) => setClassForm({ ...classForm, level: e.target.value })} hint={`Mã lớp đổi theo, vd ${cls.code.replace(/(A1|A2|B1|B2|C1|C2)$/, '')}${classForm.level || 'B1'}`} />
+            ) : (
+              <Input label="Trình độ" placeholder="VD: 650+, B1–B2" value={classForm.level ?? ''} onChange={(e) => setClassForm({ ...classForm, level: e.target.value })} />
+            )}
             <Input label="Sĩ số tối đa" type="number" min={1} value={classForm.maxStudents ?? ''} onChange={(e) => setClassForm({ ...classForm, maxStudents: e.target.value ? Number(e.target.value) : null })} />
             <Input label="Ngày bắt đầu" type="date" value={classForm.startDate ?? ''} onChange={(e) => setClassForm({ ...classForm, startDate: e.target.value || null })} />
             <Input label="Ngày kết thúc" type="date" value={classForm.endDate ?? ''} onChange={(e) => setClassForm({ ...classForm, endDate: e.target.value || null })} />

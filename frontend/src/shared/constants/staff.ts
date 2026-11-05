@@ -10,6 +10,16 @@ export const CLASS_TRACKS: { key: CourseTrack; label: string }[] = [
 ];
 export const CLASS_TRACK_OPTIONS = CLASS_TRACKS.map((t) => ({ value: t.key, label: t.label }));
 type TrackOf = { track?: CourseTrack; examType: ExamType; course?: { track?: CourseTrack } };
+/** Trình độ lớp (CEFR) — phần cuối mã lớp, vd T203A1 */
+export const CLASS_LEVEL_OPTIONS = [
+  { value: 'A1', label: 'A1 · Mới bắt đầu' },
+  { value: 'A2', label: 'A2 · Sơ cấp' },
+  { value: 'B1', label: 'B1 · Trung cấp' },
+  { value: 'B2', label: 'B2 · Trung cao cấp' },
+  { value: 'C1', label: 'C1 · Cao cấp' },
+  { value: 'C2', label: 'C2 · Thành thạo' },
+];
+
 /** Mục của lớp: theo khoá học của lớp (lớp cũ chưa gắn khoá → cột mục / kỳ thi) */
 export const classTrack = (c: TrackOf): CourseTrack => c.course?.track ?? c.track ?? c.examType;
 export const classTrackLabel = (c: TrackOf) => CLASS_TRACKS.find((t) => t.key === classTrack(c))?.label ?? c.examType;

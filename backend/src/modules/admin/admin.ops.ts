@@ -8,7 +8,7 @@ import { logger } from '../../lib/logger';
 import { badRequest, handler, me, notFound, pageQuery, paged, parse } from '../../core/http';
 import { audit, notify } from './audit';
 import { classInclude, classStats, lastMonths, ticketInclude, toClassRoom, toSupportTicket } from '../head/shared';
-import { CLASS_TRACK, classCourseData, classTrackData, enrollClassCourse } from '../catalog/class-track';
+import { CLASS_LEVEL, CLASS_TRACK, classCourseData, classTrackData, codeWithLevel, enrollClassCourse } from '../catalog/class-track';
 
 export const opsRouter = Router();
 const uuid = z.string().uuid();
@@ -27,7 +27,7 @@ opsRouter.get(
 opsRouter.patch(
   '/classes/:id',
   handler(async (req) => {
-    const body = parse(z.object({ teacherId: uuid.optional(), isArchived: z.boolean().optional(), name: z.string().min(2).max(160).optional(), track: CLASS_TRACK.optional(), courseId: z.string().trim().min(1).max(140).optional(), room: z.string().max(80).nullish(), scheduleText: z.string().max(120).nullish(), departmentId: uuid.nullish() }), req.body);
+    const body = parse(z.object({ teacherId: uuid.optional(), isArchived: z.boolean().optional(), name: z.string().min(2).max(160).optional(), track: CLASS_TRACK.optional(), level: CLASS_LEVEL.optional(), courseId: z.string().trim().min(1).max(140).optional(), room: z.string().max(80).nullish(), scheduleText: z.string().max(120).nullish(), departmentId: uuid.nullish() }), req.body);
     const cur = await prisma.class.findFirst({ where: { id: idOf(req), deletedAt: null } });
     if (!cur) throw notFound('Lớp học');
     if (body.teacherId) {
@@ -37,7 +37,9 @@ opsRouter.patch(
     const cc = body.courseId ? await classCourseData(body.courseId) : null;
     const { courseId: _cid, ...rest } = body;
     const c = await prisma.$transaction(async (tx) => {
-      const row = await tx.class.update({ where: { id: cur.id }, data: { ...rest, ...classTrackData(rest), ...(cc ?? {}), ...(cur.courseId ? { name: cur.code } : {}) }, include: classInclude }); // lớp thuộc khoá: tên = mã lớp
+      // lớp thuộc khoá: tên = mã lớp; đổi trình độ → đổi phần trình độ của mã
+      const code = cur.courseId && rest.level ? codeWithLevel(cur.code, rest.level) : cur.code;
+      const row = await tx.class.update({ where: { id: cur.id }, data: { ...rest, ...classTrackData(rest), ...(cc ?? {}), ...(cur.courseId ? { name: code, code } : {}) }, include: classInclude });
       if (cc && cc.courseId !== cur.courseId) await enrollClassCourse(tx, cc.courseId, (await tx.classMember.findMany({ where: { classId: cur.id, status: 'ACTIVE' }, select: { studentId: true } })).map((m) => m.studentId));
       return row;
     });

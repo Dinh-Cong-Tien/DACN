@@ -41,17 +41,25 @@ export async function linkClassCourses(): Promise<string[]> {
     });
     out.push(`Lớp ${cl.name} → ${course.title}`);
   }
-  // lớp của khoá (cùng nội dung, khác lịch học) đặt mã theo thứ tự: T201, T202… — mã lớp đồng thời là tên lớp, mã mời
+  // lớp của khoá (cùng nội dung, khác lịch học): mã = chữ đầu khoá + số thứ tự + trình độ lớp, vd T203A1 — đồng thời là tên lớp,
+  // mã mời. Lớp chưa có trình độ lấy theo bảng dưới (trình độ chọn theo từng lớp, không theo thứ tự).
+  const LEVELS = ['B1', 'A2', 'A1', 'B1', 'B2', 'A2', 'B1', 'A2', 'B2', 'B1'];
+  let k = 0;
   for (const course of courses) {
     const list = await prisma.class.findMany({ where: { courseId: course.id }, orderBy: { createdAt: 'asc' } });
     const prefix = classPrefix(course);
-    const want = list.map((cl, i) => ({ cl, code: `${prefix}${201 + i}` })).filter(({ cl, code }) => cl.code !== code || cl.name !== code);
+    const want = list
+      .map((cl, i) => {
+        const level = /^(A1|A2|B1|B2|C1|C2)$/.test(cl.level ?? '') ? cl.level! : LEVELS[k++ % LEVELS.length];
+        return { cl, level, code: `${prefix}${201 + i}${level}` };
+      })
+      .filter(({ cl, code, level }) => cl.code !== code || cl.name !== code || cl.level !== level);
     if (!want.length) continue;
     // 2 bước tránh trùng mã (mã là duy nhất)
     for (const { cl } of want) await prisma.class.update({ where: { id: cl.id }, data: { code: `TMP-${cl.id.slice(0, 8)}` } });
-    for (const { cl, code } of want) {
-      await prisma.class.update({ where: { id: cl.id }, data: { code, name: code } });
-      out.push(`Lớp ${cl.name} (${cl.code}) → ${code}`);
+    for (const { cl, code, level } of want) {
+      await prisma.class.update({ where: { id: cl.id }, data: { code, name: code, level } });
+      out.push(`Lớp ${cl.name} → ${code}`);
     }
   }
   return out;
