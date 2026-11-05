@@ -1,15 +1,37 @@
 import React from 'react';
-import { LayoutDashboard, Users, Tags, FolderTree, FileQuestion, FileText, BarChart3, History, Sliders, Activity, Newspaper, School, LifeBuoy, BookOpen, PenTool, Library, CreditCard, Megaphone, Building2, GraduationCap, UserSquare2, CalendarDays, ClipboardList, Trophy, FolderOpen, CheckSquare, Scale, MessageSquareWarning, PieChart } from 'lucide-react';
+import {
+  LayoutDashboard, Users, Tags, FileQuestion, FileText, BarChart3, History, Sliders, Activity, Newspaper, School, LifeBuoy, BookOpen, Library, CreditCard, Megaphone, Building2,
+  GraduationCap, UserSquare2, CalendarDays, ClipboardList, Trophy, FolderOpen, CheckSquare, Scale, MessageSquareWarning, PieChart, Briefcase, PlayCircle, PenLine, Mic, BookMarked, Headphones,
+} from 'lucide-react';
 import { AppShell, NavGroup } from '@/shared/components/layout/AppShell';
 import { StaffNav, type StaffMenu } from '@/shared/components/layout/StaffNav';
 import { useAdminDashboard, useAdminSystem } from '@/shared/api/admin';
 import { useHeadDashboard } from '@/shared/api/head';
 
 const badge = (n?: number) => (n ? String(n) : undefined);
-type Badges = { degraded?: string; openTickets?: string; pendingPay?: string; pending?: string; toReview?: string; complaints?: string; quality?: string };
+type Badges = { degraded?: string; openTickets?: string; pendingPay?: string; pending?: string; toReview?: string; complaints?: string; quality?: string; ops?: string };
 
-/** Menu header quản trị: người dùng → đào tạo (bộ môn, giáo viên, lớp, học viên) → chất lượng → nội dung → vận hành → hệ thống */
-const buildMenus = ({ degraded, openTickets, pendingPay, pending, toReview, complaints, quality }: Badges): StaffMenu[] => [
+/** Khoá học: 3 mục giống hệt menu học viên — mở cây khoá học đã chọn sẵn mục */
+const COURSE_LINKS = [
+  { to: '/admin/courses?muc=toeic', label: 'Khoá học TOEIC', icon: Briefcase, desc: 'Nền tảng, Listening Part 1–4, Reading Part 5–7' },
+  { to: '/admin/courses?muc=vstep', label: 'Khoá học VSTEP', icon: GraduationCap, desc: 'Nền tảng, Nghe, Đọc, Viết, Nói' },
+  { to: '/admin/courses?muc=thpt', label: 'Tiếng Anh THPT', icon: School, desc: 'Lớp 10, 11, 12 theo SGK Global Success' },
+];
+/** Thi thử & Luyện tập: nội dung đúng các mục học viên đang luyện */
+const PRACTICE_LINKS = [
+  { to: '/admin/tests', label: 'Đề thi thử', icon: FileText, desc: 'Đề TOEIC, VSTEP: cấu trúc, thời gian, câu hỏi', group: 'Đề thi thử' },
+  { to: '/admin/questions', label: 'Ngân hàng câu hỏi', icon: FileQuestion, desc: 'Câu hỏi TOEIC, VSTEP theo Part', group: 'Đề thi thử' },
+  { to: '/admin/skill-tags', label: 'Nhãn kỹ năng', icon: Tags, desc: 'Gắn nhãn câu hỏi để phân tích điểm yếu', group: 'Đề thi thử' },
+  { to: '/admin/learning/writing', label: 'Đề Viết', icon: PenLine, desc: 'Đề Viết học viên nộp cho giáo viên chấm', group: 'Viết & Nói' },
+  { to: '/admin/learning/speaking', label: 'Đề Nói', icon: Mic, desc: 'Đề Nói học viên ghi âm nộp bài', group: 'Viết & Nói' },
+  { to: '/admin/learning/rubrics', label: 'Tiêu chí chấm', icon: Scale, desc: 'Thang chấm Viết, Nói cho giáo viên', group: 'Viết & Nói' },
+  { to: '/admin/learning/grammar', label: 'Chủ điểm ngữ pháp', icon: BookMarked, desc: 'Lý thuyết kèm bài tập chấm tự động', group: 'Luyện tập' },
+  { to: '/admin/learning/vocab', label: 'Từ vựng & Flashcard', icon: BookOpen, desc: 'Bộ từ theo chủ đề, thẻ từ', group: 'Luyện tập', also: ['/admin/learning/words'] },
+  { to: '/admin/learning/dictation', label: 'Nghe chép chính tả', icon: Headphones, desc: 'Bài nghe chép từng câu', group: 'Luyện tập' },
+];
+
+/** Menu header quản trị: người dùng → đào tạo → chất lượng → khoá học / thi thử & luyện tập (bám menu học viên) → vận hành (website, hệ thống) */
+const buildMenus = ({ degraded, openTickets, pendingPay, pending, toReview, complaints, quality, ops }: Badges): StaffMenu[] => [
   { to: '/admin/dashboard', label: 'Tổng quan' },
   {
     label: 'Người dùng',
@@ -43,33 +65,24 @@ const buildMenus = ({ degraded, openTickets, pendingPay, pending, toReview, comp
     ],
   },
   {
-    label: 'Nội dung',
-    children: [
-      { to: '/admin/courses', label: 'Khoá học', icon: FolderTree, desc: 'Cây khoá học, chặng, bài giảng', group: 'Khoá học & đề thi' },
-      { to: '/admin/questions', label: 'Ngân hàng câu hỏi', icon: FileQuestion, desc: 'Câu hỏi TOEIC, VSTEP theo Part' },
-      { to: '/admin/tests', label: 'Cấu hình đề thi', icon: FileText, desc: 'Cấu trúc đề, thời gian, thang điểm' },
-      { to: '/admin/skill-tags', label: 'Nhãn kỹ năng', icon: Tags, desc: 'Gắn nhãn câu hỏi để phân tích điểm yếu' },
-      { to: '/admin/learning/grammar', label: 'Ngữ pháp & Từ vựng', icon: BookOpen, desc: 'Ngữ pháp, flashcard, thẻ từ, chép chính tả', group: 'Luyện tập', also: ['/admin/learning/vocab', '/admin/learning/words'] },
-      { to: '/admin/learning/writing', label: 'Đề Viết & Nói', icon: PenTool, desc: 'Đề Viết, Nói và tiêu chí chấm', also: ['/admin/learning/speaking'] },
-      { to: '/admin/learning/resources', label: 'Tài liệu & FAQ', icon: Library, desc: 'Kho tài liệu mở, câu hỏi thường gặp', group: 'Website', also: ['/admin/learning/faq'] },
-      { to: '/admin/blog', label: 'Tin tức (CMS)', icon: Newspaper, desc: 'Bài viết, giới thiệu kỳ thi, kinh nghiệm' },
-    ],
+    label: 'Khoá học',
+    icon: PlayCircle,
+    to: '/admin/courses',
+    children: COURSE_LINKS,
   },
+  { label: 'Thi thử & Luyện tập', icon: FileText, children: PRACTICE_LINKS },
   {
     label: 'Vận hành',
-    badge: pendingPay,
+    badge: ops,
     children: [
       { to: '/admin/billing', label: 'Gói VIP & thanh toán', icon: CreditCard, desc: 'Doanh thu, giao dịch, giá gói', badge: pendingPay },
       { to: '/admin/broadcasts', label: 'Gửi thông báo', icon: Megaphone, desc: 'Thông báo tới học viên, giáo viên' },
       { to: '/admin/analytics', label: 'Thống kê hệ thống', icon: BarChart3, desc: 'Người dùng, doanh thu, lượt học' },
-    ],
-  },
-  {
-    label: 'Hệ thống',
-    children: [
-      { to: '/admin/system', label: 'Trạng thái dịch vụ', icon: Activity, desc: 'Máy chủ, cơ sở dữ liệu, lưu trữ, email', badge: degraded },
-      { to: '/admin/audit-logs', label: 'Nhật ký hệ thống', icon: History, desc: 'Đăng nhập, thay đổi quyền, thao tác dữ liệu' },
-      { to: '/admin/settings', label: 'Cấu hình tham số', icon: Sliders, desc: 'Giới hạn, gói VIP, chấm điểm, bảo mật' },
+      { to: '/admin/learning/resources', label: 'Tài liệu mở & FAQ', icon: Library, desc: 'Kho tài liệu mở, câu hỏi thường gặp', group: 'Website', also: ['/admin/learning/faq'] },
+      { to: '/admin/blog', label: 'Tin tức (CMS)', icon: Newspaper, desc: 'Bài viết, giới thiệu kỳ thi, kinh nghiệm', group: 'Website' },
+      { to: '/admin/system', label: 'Trạng thái dịch vụ', icon: Activity, desc: 'Máy chủ, cơ sở dữ liệu, lưu trữ, email', badge: degraded, group: 'Hệ thống' },
+      { to: '/admin/audit-logs', label: 'Nhật ký hệ thống', icon: History, desc: 'Đăng nhập, thay đổi quyền, thao tác dữ liệu', group: 'Hệ thống' },
+      { to: '/admin/settings', label: 'Cấu hình tham số', icon: Sliders, desc: 'Giới hạn, gói VIP, tài khoản nhận tiền, bảo mật', group: 'Hệ thống' },
     ],
   },
 ];
@@ -107,24 +120,15 @@ const buildGroups = ({ degraded, openTickets, pendingPay, pending, toReview, com
       { to: '/admin/reports', label: 'Báo cáo đào tạo', icon: PieChart },
     ],
   },
-  {
-    title: 'Nội dung',
-    items: [
-      { to: '/admin/courses', label: 'Khoá học', icon: FolderTree },
-      { to: '/admin/questions', label: 'Ngân hàng câu hỏi', icon: FileQuestion },
-      { to: '/admin/tests', label: 'Cấu hình đề thi', icon: FileText },
-      { to: '/admin/learning/grammar', label: 'Ngữ pháp & Từ vựng', icon: BookOpen },
-      { to: '/admin/learning/writing', label: 'Đề Viết & Nói', icon: PenTool },
-      { to: '/admin/learning/resources', label: 'Tài liệu & FAQ', icon: Library },
-      { to: '/admin/skill-tags', label: 'Nhãn kỹ năng', icon: Tags },
-      { to: '/admin/blog', label: 'Tin tức (CMS)', icon: Newspaper },
-    ],
-  },
+  { title: 'Khoá học', items: COURSE_LINKS.map(({ to, label, icon }) => ({ to, label, icon })) },
+  { title: 'Thi thử & Luyện tập', items: PRACTICE_LINKS.map(({ to, label, icon }) => ({ to, label, icon })) },
   {
     title: 'Vận hành',
     items: [
       { to: '/admin/billing', label: 'Gói VIP & thanh toán', icon: CreditCard, badge: pendingPay },
       { to: '/admin/broadcasts', label: 'Gửi thông báo', icon: Megaphone },
+      { to: '/admin/learning/resources', label: 'Tài liệu mở & FAQ', icon: Library },
+      { to: '/admin/blog', label: 'Tin tức (CMS)', icon: Newspaper },
       { to: '/admin/system', label: 'Trạng thái dịch vụ', icon: Activity, badge: degraded },
       { to: '/admin/audit-logs', label: 'Nhật ký hệ thống', icon: History },
       { to: '/admin/settings', label: 'Cấu hình tham số', icon: Sliders },
@@ -144,6 +148,7 @@ export const AdminLayout: React.FC = () => {
     toReview: badge(head?.pendingReviews),
     complaints: badge(head?.newComplaints),
     quality: badge((head?.pendingApprovals ?? 0) + (head?.pendingReviews ?? 0) + (head?.newComplaints ?? 0)),
+    ops: badge((dash.data?.pendingPayments ?? 0) + (sys.data?.services.filter((x) => x.status !== 'UP').length ?? 0)),
   };
   const MENUS = buildMenus(b);
   const GROUPS = buildGroups(b);

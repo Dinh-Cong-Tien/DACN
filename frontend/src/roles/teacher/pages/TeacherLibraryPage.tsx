@@ -82,7 +82,7 @@ export const TeacherLibraryPage: React.FC<LibraryPageProps> = ({ base = '/teache
   const [params] = useSearchParams();
   // nhãn khớp menu: Khoá học › Khoá học TOEIC; Thi thử & Luyện tập › …
   const eyebrow = eyebrowProp ?? (kind === 'courses' ? 'Khoá học' : 'Thi thử & Luyện tập');
-  const trackTitle = kind === 'courses' && !copyOverride ? ({ toeic: 'Khoá học TOEIC', vstep: 'Khoá học VSTEP', thpt: 'Tiếng Anh THPT' } as Record<string, string>)[params.get('muc') ?? ''] : undefined;
+  const trackTitle = kind === 'courses' ? ({ toeic: 'Khoá học TOEIC', vstep: 'Khoá học VSTEP', thpt: 'Tiếng Anh THPT' } as Record<string, string>)[params.get('muc') ?? ''] : undefined;
   const copy = copyOverride?.[kind as Kind] ?? COPY[kind as Kind];
   useDocumentTitle(copy?.title ?? 'Học liệu');
   const navigate = useNavigate();

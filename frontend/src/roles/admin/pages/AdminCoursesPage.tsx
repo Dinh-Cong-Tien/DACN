@@ -1,4 +1,5 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { FolderTree, BookOpen, Layers, ChevronRight, Plus, Pencil, Trash2, Database, Users, Eye, ListTree, Send, Undo2, PlayCircle, FileText, ClipboardCheck } from 'lucide-react';
 import type { CourseTreeNode } from '@/shared/types';
 import { adminApi, useAdminCourses, useAdminCourseTree, useAdminInvalidate, type AdminTreeNode, type TreeLesson } from '@/shared/api/admin';
@@ -86,6 +87,15 @@ export const AdminCoursesPage: React.FC = () => {
   const [lessonDlg, setLessonDlg] = useState<{ sectionId: string; lesson: TreeLesson | null } | null>(null);
   const [deletingLesson, setDeletingLesson] = useState<TreeLesson | null>(null);
   const [busy, setBusy] = useState(false);
+
+  // mở từ menu "Khoá học TOEIC / VSTEP / Tiếng Anh THPT" (?muc=) → mở sẵn và chọn đúng mục
+  const [params] = useSearchParams();
+  const muc = params.get('muc')?.toUpperCase();
+  useEffect(() => {
+    if (!muc) return;
+    setOpen((o) => new Set(o).add(`track-${muc}`));
+    setSelectedId(`track-${muc}`);
+  }, [muc]);
 
   const counts = useMemo(() => countTree(tree), [tree]);
   const selected = (selectedId ? findNode(tree, selectedId) : null) ?? tree[0] ?? null;
