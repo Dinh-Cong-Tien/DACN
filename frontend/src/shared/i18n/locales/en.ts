@@ -1,4 +1,6 @@
 import type { LocaleDef } from '..';
+import { UI_EN } from './en/ui';
+import { EXTRA_EN } from './en/extra';
 
 /**
  * English — khoá là câu tiếng Việt gốc. Câu có phần động dùng {tên}.
@@ -8,7 +10,10 @@ const en: LocaleDef = {
   code: 'en',
   name: 'English',
   short: 'EN',
+  // bảng dịch toàn bộ giao diện + nội dung ngắn trong CSDL; câu soạn tay bên dưới được ưu tiên
   messages: {
+    ...UI_EN,
+    ...EXTRA_EN,
     // ---------- Website: menu chính ----------
     'Trang chủ': 'Home',
     'Học tập': 'Learning',

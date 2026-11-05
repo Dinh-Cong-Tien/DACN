@@ -15,6 +15,7 @@ import { Figures, Meter, Panel, Status, TBtn, TTabs, tbl, type StatusTone } from
 import { classIssue } from './HeadClassesPage';
 import { ClassLeaderboardPanel } from '@/roles/teacher/components/ClassLeaderboard';
 import { Stars as SharedStars } from '@/shared/components/ui/named-icon';
+import { appLocale } from '@/shared/i18n';
 
 export const STUDENT_STATUS: Record<ClassStudent['status'], { label: string; tone: StatusTone }> = {
   GOOD: { label: 'Ổn định', tone: 'green' },
@@ -320,7 +321,7 @@ export const HeadClassDetailPage: React.FC = () => {
         <div className="grid gap-6 lg:grid-cols-2 [&>*]:min-w-0">
           <Panel title="Điểm thi thử trung bình theo tháng" sub={cls.examType === 'TOEIC' ? 'Thang 990' : 'Thang 10'}>
             {hasTrend ? (
-              <LineChart ariaLabel="Điểm thi thử trung bình theo tháng" labels={trend.labels} series={[{ name: 'Điểm TB', values: trendValues }]} min={0} format={(v) => v.toLocaleString('vi-VN')} />
+              <LineChart ariaLabel="Điểm thi thử trung bình theo tháng" labels={trend.labels} series={[{ name: 'Điểm TB', values: trendValues }]} min={0} format={(v) => v.toLocaleString(appLocale())} />
             ) : (
               <p className="py-14 text-center text-sm text-slate-500">Học viên trong lớp chưa có bài thi thử nào được chấm.</p>
             )}

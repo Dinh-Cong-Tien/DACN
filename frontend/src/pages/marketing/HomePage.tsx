@@ -17,10 +17,27 @@ import { LoopConnector } from './home/LoopConnector';
 import { ExamTrackCard } from './home/ExamTrackCard';
 import { CourseTile } from './home/CourseTile';
 import { TestimonialCard } from './home/TestimonialCard';
+import { appLocale, useLang } from '@/shared/i18n';
 
 const MARQUEE_POINTS = ['TOEIC 450 → 990', 'VSTEP B1 · B2 · C1', 'Đề full test 200 câu', 'Audio phát một lần', 'Sổ tay lỗi sai', 'Ôn tập SM-2', 'Giáo viên chấm bài', 'Lớp học có mã mời'];
 
 const HERO_WORDS = ['BỨT PHÁ', 'CHINH PHỤC', 'LÀM CHỦ'];
+
+/** Dòng dưới chữ chạy: "điểm số TOEIC & VSTEP của bạn" — tiếng Anh đảo trật tự ("your TOEIC & VSTEP score") nên dựng theo ngôn ngữ */
+const HeroScoreLine: React.FC = () => {
+  const { lang } = useLang();
+  const accent = 'text-amber-300 light:text-amber-600';
+  return lang === 'en' ? (
+    <>
+      your TOEIC &amp; VSTEP <span className={accent}>score</span>
+    </>
+  ) : (
+    <>
+      <span className={`${accent} mr-2`}>điểm số</span>
+      TOEIC &amp; VSTEP của bạn
+    </>
+  );
+};
 
 const LOOP = [
   { n: '01', title: 'Thi xếp lớp 15 phút', text: 'Câu Nghe, Ngữ pháp và Đọc chọn ngẫu nhiên từ ngân hàng đề. Kết quả ước lượng trình độ hiện tại và chỉ ra phần đang kéo điểm bạn xuống.', photo: PHOTOS.notes, tag: 'Chẩn đoán' },
@@ -167,13 +184,12 @@ export const HomePage: React.FC = () => {
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-14 md:pt-20 pb-0 grid lg:grid-cols-[1.25fr_1fr] gap-8 items-end min-h-[calc(100vh-72px)]">
           <div className="space-y-6 pb-16 md:pb-24">
             <h1 className="font-display font-extrabold tracking-tight animate-fade-up">
-              <span className="sr-only">{HERO_WORDS.join(', ')} </span>
+              <span className="sr-only">{HERO_WORDS.join(', ')}</span>
               <span className="block text-[3rem] sm:text-[5.1rem] lg:text-[7rem] leading-[1.15] pt-[0.05em] pb-[0.12em] -mb-[0.1em] hero-type-word">
                 <TypeLoop words={HERO_WORDS} />
               </span>
               <span className="block mt-3 text-2xl sm:text-3xl lg:text-4xl text-white light:text-slate-900 font-bold">
-                <span className="text-amber-300 light:text-amber-600 mr-2">điểm số</span>
-                TOEIC &amp; VSTEP của bạn
+                <HeroScoreLine />
               </span>
             </h1>
 
@@ -214,7 +230,7 @@ export const HomePage: React.FC = () => {
                   </div>
                 )}
                 <p className="text-xs text-slate-400 light:text-slate-500 font-semibold">
-                  <b className="text-white light:text-slate-900">{(stats.find((x) => x.key === 'students')?.value ?? 0).toLocaleString('vi-VN')}</b> học viên đang học
+                  <b className="text-white light:text-slate-900">{(stats.find((x) => x.key === 'students')?.value ?? 0).toLocaleString(appLocale())}</b> học viên đang học
                 </p>
               </div>
             </div>
@@ -259,7 +275,7 @@ export const HomePage: React.FC = () => {
               <div className="hero-bob hero-bob--late absolute -left-8 bottom-8">
                 <div className="bg-indigo-600 text-white rounded-2xl px-4 py-3 shadow-card animate-fade-up delay-700 tilt-3">
                   <p className="text-[10px] font-extrabold uppercase tracking-wider text-indigo-100">Câu Part 5 để luyện</p>
-                  <p className="font-display text-2xl font-extrabold">{part5Bank.toLocaleString('vi-VN')}</p>
+                  <p className="font-display text-2xl font-extrabold">{part5Bank.toLocaleString(appLocale())}</p>
                 </div>
               </div>
             )}
@@ -358,7 +374,7 @@ export const HomePage: React.FC = () => {
               <FeatureCard to={gate('/app/mistakes', '/auth/register')} photo={PHOTOS.lecture} icon={<AlertTriangle />} iconClass="bg-amber-300 text-slate-900" title="Sổ tay lỗi sai" text="Câu sai tự lưu, luyện lại đúng chỗ yếu." />
             </Reveal>
             <Reveal delay={200}>
-              <FeatureCard to={gate('/app/review', '/auth/register')} photo={PHOTOS.books} icon={<RotateCcw />} iconClass="bg-violet-500" title="Flashcard SM-2" text={overview ? `${overview.words.toLocaleString('vi-VN')} từ vựng, nhắc ôn đúng ngày.` : 'Nhắc ôn từ vựng đúng ngày.'} />
+              <FeatureCard to={gate('/app/review', '/auth/register')} photo={PHOTOS.books} icon={<RotateCcw />} iconClass="bg-violet-500" title="Flashcard SM-2" text={overview ? `${overview.words.toLocaleString(appLocale())} từ vựng, nhắc ôn đúng ngày.` : 'Nhắc ôn từ vựng đúng ngày.'} />
             </Reveal>
             <Reveal delay={150}>
               <FeatureCard to="/courses" photo={PHOTOS.classroom} icon={<Users />} iconClass="bg-emerald-500" title="Lớp học với giáo viên" text="Mã mời, bài tập, chấm theo rubric." />

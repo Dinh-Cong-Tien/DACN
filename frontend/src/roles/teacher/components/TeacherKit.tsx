@@ -2,6 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { ChevronRight } from 'lucide-react';
 import { cn } from '@/shared/utils';
+import { useT } from '@/shared/i18n';
 
 /**
  * Bộ khung giao diện khu vực giáo viên: tiêu đề lớn font display như trang học viên, khung bo tròn có bóng nhẹ,
@@ -28,7 +29,10 @@ export const IconTile: React.FC<{ icon: React.ElementType; tone?: Tone; size?: '
 );
 
 /** Tiêu đề kiểu trang học viên: từ cuối tô chữ chuyển màu */
-export const GradientTail: React.FC<{ text: string }> = ({ text }) => {
+export const GradientTail: React.FC<{ text: string }> = ({ text: raw }) => {
+  // dịch cả câu trước khi tách từ cuối (tách rồi mới dịch thì từng mảnh không còn nghĩa)
+  const t = useT();
+  const text = t(raw);
   const i = text.lastIndexOf(' ');
   return i < 0 ? <span className="hero-gradient-text">{text}</span> : (
     <>

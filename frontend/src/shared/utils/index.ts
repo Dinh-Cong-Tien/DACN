@@ -1,22 +1,29 @@
 import type { AssignmentTarget, ExamSetup } from '@/shared/types';
+import { appLocale } from '@/shared/i18n';
 
 export function cn(...classes: Array<string | false | null | undefined | 0>): string {
   return classes.filter(Boolean).join(' ');
 }
 
 export function formatNumber(n: number): string {
-  return new Intl.NumberFormat('vi-VN').format(n);
+  return new Intl.NumberFormat(appLocale()).format(n);
+}
+
+/** Số tiền VND gọn: "199.000đ" (Tiếng Việt) / "199,000 VND" (English) */
+export function formatVnd(n: number): string {
+  const v = n.toLocaleString(appLocale());
+  return appLocale() === 'vi-VN' ? `${v}đ` : `${v} VND`;
 }
 
 export function formatCurrency(n: number): string {
   if (n === 0) return 'Miễn phí';
-  return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND', maximumFractionDigits: 0 }).format(n);
+  return new Intl.NumberFormat(appLocale(), { style: 'currency', currency: 'VND', maximumFractionDigits: 0 }).format(n);
 }
 
 export function formatDate(iso: string, opts: Intl.DateTimeFormatOptions = { day: '2-digit', month: '2-digit', year: 'numeric' }): string {
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return iso;
-  return new Intl.DateTimeFormat('vi-VN', opts).format(d);
+  return new Intl.DateTimeFormat(appLocale(), opts).format(d);
 }
 
 export function formatDateTime(iso: string): string {

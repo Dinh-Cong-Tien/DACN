@@ -7,6 +7,7 @@ import { useOverview, useTestimonials } from '@/shared/api/cms';
 import { usePartsInfo } from '@/shared/api/catalog';
 import { cn } from '@/shared/utils';
 import './AuthLayout.css';
+import { appLocale } from '@/shared/i18n';
 
 type AsideVariant = 'login' | 'register';
 const VARIANTS: AsideVariant[] = ['login', 'register'];
@@ -35,7 +36,7 @@ const HEADLINE: Record<AsideVariant, { title: string; sub: string }> = {
 
 const card = 'rounded-2xl bg-white text-slate-900 shadow-[0_18px_40px_-14px_rgba(3,24,19,0.55)] ring-1 ring-black/5';
 
-const fmtN = (n?: number) => (n ?? 0).toLocaleString('vi-VN');
+const fmtN = (n?: number) => (n ?? 0).toLocaleString(appLocale());
 
 /** Thẻ kho đề: số đề, số câu Nghe/Đọc thật trong ngân hàng */
 const ScoreCard: React.FC = () => {

@@ -11,6 +11,7 @@ import { Figures, Panel, TPageHead } from '@/roles/teacher/components/TeacherKit
 import { CrudEditor, CrudField, QuestionRenderer } from '@/engines';
 import { WordImportButton } from '@/shared/components/import/WordImportDialog';
 import { Stars } from '@/shared/components/ui/named-icon';
+import { appLocale } from '@/shared/i18n';
 
 const SKILL_TONE: Record<SkillType, string> = {
   LISTENING: 'bg-sky-50 text-sky-700 ring-sky-200/70',
@@ -107,15 +108,15 @@ export const AdminQuestionsPage: React.FC = () => {
       <TPageHead
         eyebrow="Nội dung · Ngân hàng đề"
         title="Ngân hàng câu hỏi"
-        sub={`Tạo, sửa, xoá và phân loại câu hỏi theo kỳ thi, Part và kỹ năng. Kho hiện có ${total.toLocaleString('vi-VN')} câu; bảng hiển thị tối đa 200 câu theo bộ lọc Kỳ thi / Part.`}
+        sub={`Tạo, sửa, xoá và phân loại câu hỏi theo kỳ thi, Part và kỹ năng. Kho hiện có ${total.toLocaleString(appLocale())} câu; bảng hiển thị tối đa 200 câu theo bộ lọc Kỳ thi / Part.`}
         actions={<WordImportButton canChooseStatus onDone={() => void refresh()} />}
       />
 
       <Figures
         items={[
-          { label: 'Tổng câu hỏi', value: total.toLocaleString('vi-VN'), note: 'trong ngân hàng', icon: Database, tone: 'indigo' },
-          { label: 'TOEIC', value: toeic.toLocaleString('vi-VN'), note: 'Part 1–7', icon: Layers, tone: 'violet' },
-          { label: 'VSTEP', value: (total - toeic).toLocaleString('vi-VN'), note: 'Nghe · Đọc · Viết · Nói', icon: Layers, tone: 'emerald' },
+          { label: 'Tổng câu hỏi', value: total.toLocaleString(appLocale()), note: 'trong ngân hàng', icon: Database, tone: 'indigo' },
+          { label: 'TOEIC', value: toeic.toLocaleString(appLocale()), note: 'Part 1–7', icon: Layers, tone: 'violet' },
+          { label: 'VSTEP', value: (total - toeic).toLocaleString(appLocale()), note: 'Nghe · Đọc · Viết · Nói', icon: Layers, tone: 'emerald' },
           { label: 'Có lời giải', value: rows.filter((q) => q.hasExplanation).length, note: `trong ${rows.length} câu đang xem`, icon: CheckCircle2, tone: 'amber' },
         ]}
       />

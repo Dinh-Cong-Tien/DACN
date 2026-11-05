@@ -4,6 +4,7 @@ import { ArrowRight, ClipboardCheck, PlayCircle, RotateCcw, Target } from 'lucid
 import type { LessonExercise } from '@/shared/types';
 import { PracticeEngine } from '../practice/PracticeEngine';
 import { Button, Card } from '@/shared/components/ui';
+import { useT } from '@/shared/i18n';
 
 const KEYS = 'ABCDEFGH';
 const TYPE_LABEL: Record<LessonExercise['type'], string> = {
@@ -16,15 +17,15 @@ const TYPE_LABEL: Record<LessonExercise['type'], string> = {
   phoneme: 'Phát âm',
 };
 
-/** Câu bài tập → IQuestion để chạy bằng Practice engine (phản hồi tức thì + giải thích) */
-const toQuestion = (e: LessonExercise): IQuestion => ({
+/** Câu bài tập → IQuestion để chạy bằng Practice engine (phản hồi tức thì + giải thích); yêu cầu câu dịch theo ngôn ngữ giao diện */
+const toQuestion = (e: LessonExercise, t: (s: string) => string): IQuestion => ({
   id: e.id,
   examType: 'TOEIC',
   type: 'SINGLE_CHOICE',
   skillType: e.type === 'phoneme' ? 'SPEAKING' : e.type.startsWith('vocab') ? 'VOCABULARY' : 'GRAMMAR',
   partOrSkill: TYPE_LABEL[e.type],
   level: '',
-  stem: e.text ? `${e.prompt}: ${e.text}` : e.prompt,
+  stem: e.text ? `${t(e.prompt)}: ${e.text}` : t(e.prompt),
   options: e.options.map((text, i) => ({ key: KEYS[i], text })),
   correctAnswer: { key: KEYS[e.answer] },
   explanation: e.explain,
@@ -46,7 +47,8 @@ export const LessonExercises: React.FC<{
   onNext?: () => void;
   onBackToVideo?: () => void;
 }> = ({ title, kind, exercises, passPct, done, onPassed, onNext, onBackToVideo }) => {
-  const questions = useMemo(() => exercises.map(toQuestion), [exercises]);
+  const t = useT();
+  const questions = useMemo(() => exercises.map((e) => toQuestion(e, t)), [exercises, t]);
   const [started, setStarted] = useState(false);
   const [round, setRound] = useState(0);
   const need = Math.ceil((passPct / 100) * questions.length);

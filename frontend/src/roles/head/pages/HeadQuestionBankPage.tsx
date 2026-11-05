@@ -15,6 +15,7 @@ import { headApi, useHeadQuestionBank, type QuestionRow } from '@/shared/api/hea
 import { EXAM_PARTS, partLabel, partShort, SKILL_VI, stars, toIQuestion } from '@/shared/constants/staff';
 import type { SkillType } from '@/shared/types';
 import { Stars } from '@/shared/components/ui/named-icon';
+import { appLocale } from '@/shared/i18n';
 
 const chip = 'inline-flex items-center whitespace-nowrap rounded-md px-2 py-0.5 text-[11px] font-semibold';
 const SKILL_OPTS = (Object.keys(SKILL_VI) as SkillType[]).map((s) => ({ value: s, label: SKILL_VI[s] }));
@@ -120,10 +121,10 @@ export const HeadQuestionBankPage: React.FC = () => {
       />
       <Figures
         items={[
-          { label: 'Tổng câu hỏi', value: total.toLocaleString('vi-VN'), note: `${byPart.length} Part / kỹ năng`, icon: Database, tone: 'amber' },
+          { label: 'Tổng câu hỏi', value: total.toLocaleString(appLocale()), note: `${byPart.length} Part / kỹ năng`, icon: Database, tone: 'amber' },
           { label: 'Có lời giải', value: rows.filter((q) => q.hasExplanation).length, note: `trong ${rows.length} câu đang xem`, icon: CheckCircle2, tone: 'emerald' },
-          { label: 'Câu Nghe', value: sum((p) => /TOEIC_P[1-4]|VSTEP_L/.test(p)).toLocaleString('vi-VN'), note: 'có audio', icon: Headphones, tone: 'sky' },
-          { label: 'Câu Đọc', value: sum((p) => /TOEIC_P[5-7]|VSTEP_R/.test(p)).toLocaleString('vi-VN'), note: 'Part 5–7, Reading', icon: BookOpenText, tone: 'violet' },
+          { label: 'Câu Nghe', value: sum((p) => /TOEIC_P[1-4]|VSTEP_L/.test(p)).toLocaleString(appLocale()), note: 'có audio', icon: Headphones, tone: 'sky' },
+          { label: 'Câu Đọc', value: sum((p) => /TOEIC_P[5-7]|VSTEP_R/.test(p)).toLocaleString(appLocale()), note: 'Part 5–7, Reading', icon: BookOpenText, tone: 'violet' },
         ]}
       />
       <Panel title="Phân bố theo Part / kỹ năng" sub="Số câu hỏi đang có trong ngân hàng" icon={BarChart3} tone="indigo">

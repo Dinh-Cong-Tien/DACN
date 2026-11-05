@@ -11,6 +11,7 @@ import { Avatar, Modal, Textarea } from '@/shared/components/ui';
 import { cn, formatDate, staffPath } from '@/shared/utils';
 import { CLASS_BAR, DAY_NAME, Figures, Meter, Panel, PanelLink, Status, TBtn, classTone, tbl } from '@/roles/teacher/components/TeacherKit';
 import { ObservationActions, ObserveDialog, Stars } from './HeadClassDetailPage';
+import { appLocale } from '@/shared/i18n';
 
 const STATUS_LABEL = { ACTIVE: ['green', 'Đang giảng dạy'], LOCKED: ['red', 'Đã khoá tài khoản'], PENDING: ['amber', 'Chờ duyệt hồ sơ'] } as const;
 
@@ -130,7 +131,7 @@ export const HeadTeacherDetailPage: React.FC = () => {
                   <thead className={tbl.thead}>
                     <tr>
                       <th className={tbl.th}>Lớp</th>
-                      <th className={cn(tbl.th, 'text-right')}>HV</th>
+                      <th className={cn(tbl.th, 'text-right')}>Học viên</th>
                       <th className={cn(tbl.th, 'text-right')}>Điểm TB</th>
                       <th className={cn(tbl.th, 'w-40')}>Chuyên cần</th>
                       <th className={cn(tbl.th, 'w-40')}>Hoàn thành</th>
@@ -192,7 +193,7 @@ export const HeadTeacherDetailPage: React.FC = () => {
                           Kiểm định
                         </TBtn>
                       ) : (
-                        <Status tone={gap !== null && Math.abs(gap) >= 1 ? 'red' : 'green'}>{gap !== null && Math.abs(gap) >= 1 ? `Lệch ${gap > 0 ? '+' : ''}${gap.toLocaleString('vi-VN')} điểm` : 'Khớp điểm'}</Status>
+                        <Status tone={gap !== null && Math.abs(gap) >= 1 ? 'red' : 'green'}>{gap !== null && Math.abs(gap) >= 1 ? `Lệch ${gap > 0 ? '+' : ''}${gap.toLocaleString(appLocale())} điểm` : 'Khớp điểm'}</Status>
                       )}
                     </li>
                   );

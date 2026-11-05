@@ -7,12 +7,13 @@ import { adminApi, useAdminBilling, useAdminInvalidate, type AdminPlan, type Adm
 import { errorMessage } from '@/shared/api/client';
 import { Button, Input, Modal, Switch } from '@/shared/components/ui';
 import { LineChart } from '@/shared/components/charts/Charts';
-import { cn, formatCurrency, formatDateTime } from '@/shared/utils';
+import { cn, formatCurrency, formatDateTime, formatVnd } from '@/shared/utils';
 import { Figures, Panel, Status, TBtn, TPageHead, inputCls, tbl, type StatusTone } from '@/roles/teacher/components/TeacherKit';
+import { appLocale } from '@/shared/i18n';
 
 const TXN_STATUS: Record<PaymentTxn['status'], { label: string; tone: StatusTone }> = { PAID: { label: 'Thành công', tone: 'green' }, PENDING: { label: 'Chờ xác nhận', tone: 'amber' }, REFUNDED: { label: 'Đã hoàn tiền', tone: 'gray' }, FAILED: { label: 'Thất bại', tone: 'red' } };
 const METHOD: Record<PaymentTxn['method'], string> = { MOMO: 'MoMo', VNPAY: 'VNPay', CARD: 'Thẻ quốc tế', BANK: 'Chuyển khoản' };
-const vnd = (n: number) => `${n.toLocaleString('vi-VN')}đ`;
+const vnd = formatVnd;
 
 type Plan = AdminPlan & { active: boolean };
 const EMPTY_T: AdminTxn[] = [];
@@ -61,7 +62,7 @@ export const AdminBillingPage: React.FC = () => {
       <TPageHead crumbs={[{ label: 'Vận hành' }, { label: 'Gói VIP & thanh toán' }]} title="Gói VIP & thanh toán" sub="Các gói học viên mua ở trang Bảng giá. Thanh toán chuyển khoản cần xác nhận thủ công trước khi kích hoạt VIP." />
       <Figures
         items={[
-          { label: 'Doanh thu tháng này', value: `${cur.toLocaleString('vi-VN')} tr`, icon: Wallet, tone: 'emerald', note: prev ? `${cur >= prev ? '+' : ''}${Math.round((cur / prev - 1) * 100)}% so với tháng trước` : 'triệu đồng' },
+          { label: 'Doanh thu tháng này', value: `${cur.toLocaleString(appLocale())} tr`, icon: Wallet, tone: 'emerald', note: prev ? `${cur >= prev ? '+' : ''}${Math.round((cur / prev - 1) * 100)}% so với tháng trước` : 'triệu đồng' },
           { label: 'Đã thu tháng này', value: vnd(thisMonth), icon: CreditCard, tone: 'indigo', note: `${paidThisMonth.length} giao dịch thành công` },
           { label: 'Chờ xác nhận', value: data?.summary.pending ?? 0, icon: Clock, tone: 'amber', note: 'cần xác nhận thủ công' },
           { label: 'Hoàn tiền', value: recentRefunds, icon: RotateCcw, tone: 'rose', note: `Trong 30 ngày · ${data?.summary.activeVip ?? 0} gói VIP đang hiệu lực` },
@@ -70,7 +71,7 @@ export const AdminBillingPage: React.FC = () => {
 
       <div className="grid gap-4 xl:grid-cols-2 [&>*]:min-w-0">
         <Panel title="Doanh thu theo tháng" sub="Triệu đồng, 6 tháng gần nhất">
-          {R.revenue.some(Boolean) ? <LineChart ariaLabel="Doanh thu theo tháng" labels={R.labels} series={[{ name: 'Doanh thu', values: R.revenue }]} unit=" tr" format={(v) => v.toLocaleString('vi-VN')} height={240} /> : <p className="py-16 text-center text-sm text-slate-500">Chưa có giao dịch thành công trong 6 tháng gần nhất.</p>}
+          {R.revenue.some(Boolean) ? <LineChart ariaLabel="Doanh thu theo tháng" labels={R.labels} series={[{ name: 'Doanh thu', values: R.revenue }]} unit=" tr" format={(v) => v.toLocaleString(appLocale())} height={240} /> : <p className="py-16 text-center text-sm text-slate-500">Chưa có giao dịch thành công trong 6 tháng gần nhất.</p>}
         </Panel>
         <Panel title="Số gói bán ra" sub="Theo tháng, từng gói">
           {R.byPlan.some((p) => p.counts.some(Boolean)) ? (

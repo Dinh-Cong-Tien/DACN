@@ -10,6 +10,7 @@ import { Avatar } from '@/shared/components/ui';
 import { BarChart, HBarChart, LineChart } from '@/shared/components/charts/Charts';
 import { Img, PHOTOS } from '@/shared/components/media/Img';
 import { Figures, GradientTail, IconTile, Meter, Panel, PanelLink, Status, TBtn, type StatusTone, type Tone } from '@/roles/teacher/components/TeacherKit';
+import { appLocale } from '@/shared/i18n';
 
 const WEEKDAY = ['Chủ nhật', 'Thứ Hai', 'Thứ Ba', 'Thứ Tư', 'Thứ Năm', 'Thứ Sáu', 'Thứ Bảy'];
 const ROLE_STATUS: Record<AppRole, StatusTone> = { GUEST: 'gray', STUDENT: 'blue', TEACHER: 'green', HEAD_TEACHER: 'amber', ADMIN: 'red' };
@@ -54,14 +55,14 @@ export const AdminDashboardPage: React.FC = () => {
     ...(dash?.pendingPayments ? [{ icon: CreditCard, tone: 'amber' as Tone, text: `${dash.pendingPayments} thanh toán chờ xác nhận`, note: 'Chuyển khoản ngân hàng · cần kích hoạt VIP', to: '/admin/billing', cta: 'Xác nhận' }] : []),
     ...troubled.map((s) => ({ icon: Server, tone: 'sky' as Tone, text: `${s.name} ${s.status === 'DOWN' ? 'mất kết nối' : 'phản hồi chậm'}`, note: `${s.latencyMs} ms · ${s.uptime}`, to: '/admin/system', cta: 'Kiểm tra' })),
     ...(pendingUsers.length ? [{ icon: UserCheck, tone: 'emerald' as Tone, text: `${pendingUsers.length} tài khoản chờ kích hoạt`, note: pendingUsers.map((u) => u.fullName).join(', '), to: '/admin/users', cta: 'Duyệt' }] : []),
-    ...(dash?.scheduledBroadcasts ?? []).map((b) => ({ icon: Megaphone, tone: 'violet' as Tone, text: `Thông báo hẹn giờ: ${b.title}`, note: b.scheduledAt ? `Gửi lúc ${new Date(b.scheduledAt).toLocaleString('vi-VN', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit' })}` : 'Chưa đặt giờ', to: '/admin/broadcasts', cta: 'Xem' })),
+    ...(dash?.scheduledBroadcasts ?? []).map((b) => ({ icon: Megaphone, tone: 'violet' as Tone, text: `Thông báo hẹn giờ: ${b.title}`, note: b.scheduledAt ? `Gửi lúc ${new Date(b.scheduledAt).toLocaleString(appLocale(), { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit' })}` : 'Chưa đặt giờ', to: '/admin/broadcasts', cta: 'Xem' })),
   ];
 
   return (
     <div className="space-y-6">
       <div>
         <p className="text-[12px] font-bold uppercase tracking-[0.16em] text-amber-600">
-          {WEEKDAY[now.getDay()]}, {now.toLocaleDateString('vi-VN')}{sys.data?.process ? ` · Node ${sys.data.process.node}` : ''}
+          {WEEKDAY[now.getDay()]}, {now.toLocaleDateString(appLocale())}{sys.data?.process ? ` · Node ${sys.data.process.node}` : ''}
         </p>
         <h1 className="mt-1.5 font-display text-[2rem] font-extrabold leading-[1.12] tracking-tight text-slate-900 md:text-[2.6rem]">
           <GradientTail text="Tổng quan hệ thống" />

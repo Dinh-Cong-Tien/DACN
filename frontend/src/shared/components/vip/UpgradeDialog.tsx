@@ -7,10 +7,10 @@ import { useBilling, useCancelOrder, useCreateOrder, type PayTo } from '@/shared
 import { errorMessage } from '@/shared/api/client';
 import { useAuthStore } from '@/shared/stores/authStore';
 import { toast, useUiStore } from '@/shared/stores/uiStore';
-import { cn, formatDate, formatNumber } from '@/shared/utils';
+import { cn, formatDate, formatVnd } from '@/shared/utils';
 import './vip.css';
 
-export const vnd = (n: number) => `${formatNumber(n)}đ`;
+export const vnd = formatVnd;
 /** Số ngày của một chu kỳ, đọc từ chuỗi "/ 30 ngày" */
 export const daysOf = (period: string) => Number(period.match(/\d+/)?.[0] ?? 30);
 /** Giá quy ra mỗi tháng (làm tròn nghìn) */

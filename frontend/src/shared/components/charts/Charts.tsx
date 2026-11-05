@@ -1,6 +1,7 @@
 import React, { useLayoutEffect, useRef, useState } from 'react';
 import { cn } from '@/shared/utils';
 import './charts.css';
+import { appLocale } from '@/shared/i18n';
 
 /**
  * Biểu đồ SVG dùng chung cho các trang thống kê (giáo viên, giáo viên bậc cao, quản trị):
@@ -10,7 +11,7 @@ import './charts.css';
 
 type Slot = 1 | 2;
 const SERIES_VAR: Record<Slot, string> = { 1: 'var(--viz-series-1)', 2: 'var(--viz-series-2)' };
-const fmtDefault = (v: number) => v.toLocaleString('vi-VN');
+const fmtDefault = (v: number) => v.toLocaleString(appLocale());
 
 /** Đo bề rộng khung để vẽ SVG đúng pixel (không méo chữ khi co giãn) */
 function useWidth<T extends HTMLElement>() {

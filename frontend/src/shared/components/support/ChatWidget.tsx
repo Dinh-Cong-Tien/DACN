@@ -6,9 +6,10 @@ import { SUPPORT_INFO } from '@/shared/constants/public';
 import type { ChatMessage } from '@/shared/types';
 import { agentOf, isOnline, useSupportChat } from './useSupportChat';
 import './ChatWidget.css';
+import { appLocale } from '@/shared/i18n';
 
 const TEASER_KEY = 'orbi-support-teaser-seen';
-const time = (iso: string) => new Date(iso).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+const time = (iso: string) => new Date(iso).toLocaleTimeString(appLocale(), { hour: '2-digit', minute: '2-digit' });
 
 const readFlag = () => {
   try {

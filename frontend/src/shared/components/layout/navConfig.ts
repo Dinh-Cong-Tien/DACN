@@ -130,6 +130,5 @@ export const PUBLIC_NAV: PublicNavItem[] = [
       { to: '/leaderboard', label: 'Bảng vinh danh', icon: Trophy, desc: 'Học viên chuyên cần nhất tuần này', appTo: '/app/leaderboard' },
     ],
   },
-  { to: '/pricing', label: 'Bảng giá', icon: Tag },
   { to: '/blog', label: 'Kinh nghiệm', icon: Newspaper },
 ];

@@ -2,6 +2,7 @@ import React, { Children, isValidElement, cloneElement, useEffect, useState } fr
 import { useLocation } from 'react-router-dom';
 import { useCountUp, useInView } from '@/shared/hooks';
 import { cn } from '@/shared/utils';
+import { appLocale, useT } from '@/shared/i18n';
 
 export { fireConfetti, Confetti } from './confetti';
 
@@ -75,7 +76,7 @@ export const CountUp: React.FC<CountUpProps> = ({ value, duration = 1200, suffix
   return (
     <span ref={ref} className={className}>
       {prefix}
-      {format ? format(n) : n.toLocaleString('vi-VN')}
+      {format ? format(n) : n.toLocaleString(appLocale())}
       {suffix}
     </span>
   );
@@ -115,7 +116,9 @@ export const TypeLoop: React.FC<{
   className?: string;
   caretClassName?: string;
 }> = ({ words, typeSpeed = 120, deleteSpeed = 60, hold = 1800, gap = 380, startDelay = 500, className, caretClassName }) => {
-  const chars = React.useMemo(() => words.map((w) => Array.from(w.normalize('NFC'))), [words]);
+  // dịch cả từ trước khi gõ từng ký tự (tầng dịch toàn trang không nhận ra được chữ đang gõ dở)
+  const t = useT();
+  const chars = React.useMemo(() => words.map((w) => Array.from(t(w).normalize('NFC'))), [words, t]);
   const [wi, setWi] = useState(0);
   const [n, setN] = useState(0);
   const [phase, setPhase] = useState<'start' | 'typing' | 'holding' | 'deleting'>('start');

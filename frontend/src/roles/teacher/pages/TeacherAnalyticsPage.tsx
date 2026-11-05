@@ -10,6 +10,7 @@ import { BarChart, HBarChart, LineChart } from '@/shared/components/charts/Chart
 import { BarChart3, CalendarCheck, Target, TrendingUp } from 'lucide-react';
 import { Figures, Meter, Panel, Status, TBtn, TPageHead, inputCls, tbl } from '../components/TeacherKit';
 import { TEmpty, TError, TLoading } from '../components/TeacherState';
+import { appLocale } from '@/shared/i18n';
 
 /** Thống kê một lớp: cùng chỉ số học viên thấy ở trang Tiến độ (điểm thi thử, % đúng từng Part, lỗi sai), giáo viên giao bài bù ngay từ chỗ yếu */
 export const TeacherAnalyticsPage: React.FC = () => {
@@ -119,7 +120,7 @@ export const TeacherAnalyticsPage: React.FC = () => {
           {trendIdx.length < 2 ? (
             <TEmpty title={trendIdx.length ? 'Mới có dữ liệu một tháng' : 'Chưa có bài thi thử'} sub="Biểu đồ cần điểm của ít nhất hai tháng." />
           ) : (
-            <LineChart ariaLabel="Điểm thi thử trung bình theo tháng" labels={trendIdx.map((i) => data!.scoreTrend.labels[i])} series={[{ name: 'Điểm TB', values: trendIdx.map((i) => data!.scoreTrend.values[i] as number) }]} min={data!.scoreTrend.min} format={(v) => v.toLocaleString('vi-VN')} />
+            <LineChart ariaLabel="Điểm thi thử trung bình theo tháng" labels={trendIdx.map((i) => data!.scoreTrend.labels[i])} series={[{ name: 'Điểm TB', values: trendIdx.map((i) => data!.scoreTrend.values[i] as number) }]} min={data!.scoreTrend.min} format={(v) => v.toLocaleString(appLocale())} />
           )}
         </Panel>
         <Panel title="Tỷ lệ trả lời đúng theo tuần" sub="Trung bình mọi bài làm của học viên trong lớp, 6 tuần gần nhất" icon={CalendarCheck} tone="sky">

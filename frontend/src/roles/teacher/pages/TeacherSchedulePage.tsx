@@ -9,6 +9,7 @@ import type { ClassSession } from '@/shared/types';
 import { cn, sessionState } from '@/shared/utils';
 import { CLASS_BAR, Panel, Status, TBtn, TPageHead, classTone, inputCls } from '../components/TeacherKit';
 import { TError } from '../components/TeacherState';
+import { appLocale } from '@/shared/i18n';
 
 const WEEKDAYS = ['Thứ Hai', 'Thứ Ba', 'Thứ Tư', 'Thứ Năm', 'Thứ Sáu', 'Thứ Bảy', 'Chủ nhật'];
 const iso = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
@@ -71,7 +72,7 @@ export const TeacherSchedulePage: React.FC = () => {
       <TPageHead
         eyebrow="Giảng dạy"
         title="Lịch dạy"
-        sub={`Tuần ${dm(days[0])} – ${dm(days[6])} · ${isLoading ? '…' : `${week.filter((s) => s.status !== 'CANCELLED').length} buổi · ${hours.toLocaleString('vi-VN')} giờ đứng lớp`}`}
+        sub={`Tuần ${dm(days[0])} – ${dm(days[6])} · ${isLoading ? '…' : `${week.filter((s) => s.status !== 'CANCELLED').length} buổi · ${hours.toLocaleString(appLocale())} giờ đứng lớp`}`}
         actions={
           <>
             <div className="flex items-center rounded-xl border border-slate-200 bg-white shadow-sm">

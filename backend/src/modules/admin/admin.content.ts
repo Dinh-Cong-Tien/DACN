@@ -70,7 +70,7 @@ contentRouter.get(
           status: c.status,
           category: c.category,
           trackGroup: c.trackGroup ?? undefined,
-          meta: `${c.trackGroup ? `${c.trackGroup} · ` : ''}${stats.get(c.id)?.lessons ?? 0} bài · ${fmtK(stats.get(c.id)?.students ?? 0)} HV`,
+          meta: `${c.trackGroup ? `${c.trackGroup} · ` : ''}${stats.get(c.id)?.lessons ?? 0} bài · ${fmtK(stats.get(c.id)?.students ?? 0)} học viên`,
           children: c.courseSectionCourses.map((s) => ({
             id: s.id,
             title: s.title,

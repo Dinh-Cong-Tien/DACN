@@ -10,6 +10,7 @@ import { cn } from '@/shared/utils';
 import { Panel, TBtn, TPageHead, tbl } from '../components/TeacherKit';
 import { TEmpty, TError, TLoading } from '../components/TeacherState';
 import { useDictationList } from '@/shared/api/learner';
+import { appLocale } from '@/shared/i18n';
 
 type Kind = 'courses' | 'tests' | 'practice';
 
@@ -348,7 +349,7 @@ const CoursesView: React.FC<{ assign: Assign }> = ({ assign }) => {
                     <td className={cn(tbl.td, 'whitespace-nowrap text-slate-600')}>{trackOf(c)}</td>
                     <td className={cn(tbl.td, 'whitespace-nowrap text-slate-600')}>{c.level ?? '—'}</td>
                     <td className={cn(tbl.td, 'text-right tabular-nums')}>{c.lessonsCount}</td>
-                    <td className={cn(tbl.td, 'text-right tabular-nums')}>{c.studentsCount.toLocaleString('vi-VN')}</td>
+                    <td className={cn(tbl.td, 'text-right tabular-nums')}>{c.studentsCount.toLocaleString(appLocale())}</td>
                     <td className={cn(tbl.td, 'whitespace-nowrap text-slate-600')}>
                       {c.teacherName ?? '—'}
                       {c.teacherName && c.teacherName === me && <span className="ml-1.5 text-[12px] text-indigo-700">(bạn)</span>}
@@ -470,7 +471,7 @@ const TestsView: React.FC<{ assign: Assign }> = ({ assign }) => {
                   <td className={cn(tbl.td, 'whitespace-nowrap text-slate-600')}>{t.level ?? '—'}</td>
                   <td className={cn(tbl.td, 'text-right tabular-nums')}>{t.totalQuestions}</td>
                   <td className={cn(tbl.td, 'text-right tabular-nums')}>{t.durationMin}</td>
-                  <td className={cn(tbl.td, 'text-right tabular-nums text-slate-600')}>{t.attemptsCount.toLocaleString('vi-VN')}</td>
+                  <td className={cn(tbl.td, 'text-right tabular-nums text-slate-600')}>{t.attemptsCount.toLocaleString(appLocale())}</td>
                   <td className={cn(tbl.td, 'whitespace-nowrap text-right')}>
                     <PreviewLink href={`/app/mock-tests/${t.slug}`} />
                     {assign && (

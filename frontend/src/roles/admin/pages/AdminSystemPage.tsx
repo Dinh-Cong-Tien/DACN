@@ -6,6 +6,7 @@ import { useDocumentTitle } from '@/shared/hooks';
 import { toast } from '@/shared/stores/uiStore';
 import { useAdminAuditLogs, useAdminSystem } from '@/shared/api/admin';
 import { IconTile, Meter, Panel, Status, TBtn, TPageHead, type StatusTone, type Tone } from '@/roles/teacher/components/TeacherKit';
+import { appLocale } from '@/shared/i18n';
 
 const STATUS_META: Record<ServiceStatus['status'], { tone: StatusTone; label: string; meter: 'green' | 'amber' | 'red' }> = {
   UP: { tone: 'green', label: 'Hoạt động', meter: 'green' },
@@ -72,7 +73,7 @@ export const AdminSystemPage: React.FC = () => {
               {isError ? 'Không kết nối được máy chủ API' : !data ? 'Đang kiểm tra…' : allUp ? 'Tất cả hệ thống hoạt động bình thường' : `${services.length - up} dịch vụ đang suy giảm hiệu năng`}
             </h2>
             <p className="mt-2 text-sm text-white/60">
-              Kiểm tra lần cuối lúc {data ? new Date(data.checkedAt).toLocaleTimeString('vi-VN') : '—'}
+              Kiểm tra lần cuối lúc {data ? new Date(data.checkedAt).toLocaleTimeString(appLocale()) : '—'}
               {proc ? ` · Node ${proc.node} · PID ${proc.pid}` : ''}
             </p>
             <dl className="mt-6 grid grid-cols-3 gap-3">

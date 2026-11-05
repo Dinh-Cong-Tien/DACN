@@ -7,6 +7,7 @@ import { Column } from '@/shared/components/ui';
 import { IconTile, Meter, Panel, TPageHead, type Tone } from '@/roles/teacher/components/TeacherKit';
 import { BarChart } from '@/shared/components/charts/Charts';
 import { CrudEditor, CrudField } from '@/engines';
+import { appLocale } from '@/shared/i18n';
 
 const SKILL_META: Record<SkillType, { tone: Tone; label: string; vi: string; icon: React.ElementType }> = {
   LISTENING: { tone: 'sky', label: 'Listening', vi: 'Nghe', icon: Headphones },
@@ -52,7 +53,7 @@ const columns: Column<SkillTag>[] = [
       );
     },
   },
-  { key: 'questionsCount', header: 'Số câu hỏi', align: 'right', render: (t) => <span className="font-semibold tabular-nums text-slate-900">{t.questionsCount.toLocaleString('vi-VN')}</span> },
+  { key: 'questionsCount', header: 'Số câu hỏi', align: 'right', render: (t) => <span className="font-semibold tabular-nums text-slate-900">{t.questionsCount.toLocaleString(appLocale())}</span> },
 ];
 
 const fields: CrudField<SkillTag>[] = [
@@ -89,14 +90,14 @@ export const AdminSkillTagsPage: React.FC = () => {
                 <span className="text-xs font-medium text-slate-500">{tagCount} thẻ</span>
               </div>
               <p className="mt-3 text-[13px] text-slate-500">{m.vi}</p>
-              <p className="font-display text-[1.45rem] font-extrabold leading-tight tabular-nums text-slate-900">{q.toLocaleString('vi-VN')}</p>
+              <p className="font-display text-[1.45rem] font-extrabold leading-tight tabular-nums text-slate-900">{q.toLocaleString(appLocale())}</p>
               <Meter value={total ? (q / total) * 100 : 0} className="mt-2" />
             </div>
           );
         })}
       </div>
 
-      <Panel title="Số câu hỏi theo kỹ năng" sub={`${tags.length} thẻ · ${total.toLocaleString('vi-VN')} câu được gắn thẻ`} icon={BarChart3} tone="indigo" action={<Tags className="h-4 w-4 text-slate-400" />}>
+      <Panel title="Số câu hỏi theo kỹ năng" sub={`${tags.length} thẻ · ${total.toLocaleString(appLocale())} câu được gắn thẻ`} icon={BarChart3} tone="indigo" action={<Tags className="h-4 w-4 text-slate-400" />}>
         <BarChart ariaLabel="Số câu hỏi theo kỹ năng" data={bySkill.map(({ label, value }) => ({ label, value }))} height={210} unit=" câu" />
       </Panel>
 

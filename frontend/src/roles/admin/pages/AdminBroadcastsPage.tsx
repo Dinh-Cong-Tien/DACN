@@ -7,6 +7,7 @@ import { errorMessage } from '@/shared/api/client';
 import type { Broadcast } from '@/shared/types';
 import { cn, formatDateTime } from '@/shared/utils';
 import { Panel, Status, TBtn, TPageHead, inputCls, tbl, type StatusTone } from '@/roles/teacher/components/TeacherKit';
+import { appLocale } from '@/shared/i18n';
 
 const AUDIENCE: Record<Broadcast['audience'], string> = { ALL: 'Tất cả người dùng', STUDENT: 'Học viên', VIP: 'Học viên VIP', TEACHER: 'Giáo viên', HEAD_TEACHER: 'Trưởng bộ môn' };
 const STATUS: Record<Broadcast['status'], { label: string; tone: StatusTone }> = { SENT: { label: 'Đã gửi', tone: 'green' }, SCHEDULED: { label: 'Hẹn giờ', tone: 'blue' }, DRAFT: { label: 'Nháp', tone: 'gray' } };
@@ -50,7 +51,7 @@ export const AdminBroadcastsPage: React.FC = () => {
       });
       setTitle('');
       setBody('');
-      toast.success(status === 'SENT' ? 'Đã gửi thông báo' : status === 'SCHEDULED' ? 'Đã hẹn giờ gửi' : 'Đã lưu nháp', status === 'DRAFT' ? b.title : `${AUDIENCE[audience]} · ${(status === 'SENT' ? b.reach : reachOf(audience)).toLocaleString('vi-VN')} người nhận${channels.includes('EMAIL') ? ' (email chưa có dịch vụ gửi, chỉ ghi nhận)' : ''}`);
+      toast.success(status === 'SENT' ? 'Đã gửi thông báo' : status === 'SCHEDULED' ? 'Đã hẹn giờ gửi' : 'Đã lưu nháp', status === 'DRAFT' ? b.title : `${AUDIENCE[audience]} · ${(status === 'SENT' ? b.reach : reachOf(audience)).toLocaleString(appLocale())} người nhận${channels.includes('EMAIL') ? ' (email chưa có dịch vụ gửi, chỉ ghi nhận)' : ''}`);
       await refresh();
     } catch (e) {
       toast.error('Không gửi được', errorMessage(e));
@@ -82,7 +83,7 @@ export const AdminBroadcastsPage: React.FC = () => {
                 {(Object.keys(AUDIENCE) as Broadcast['audience'][]).map((a) => (
                   <button key={a} type="button" onClick={() => setAudience(a)} className={cn('rounded-xl border px-3 py-2 text-left text-[13px] transition-colors', audience === a ? 'border-indigo-500 bg-indigo-500/[0.06] text-indigo-800' : 'border-slate-200 text-slate-700 hover:border-slate-300')}>
                     <span className="block font-semibold">{AUDIENCE[a]}</span>
-                    <span className="text-[11px] text-slate-500">{reachOf(a).toLocaleString('vi-VN')} người</span>
+                    <span className="text-[11px] text-slate-500">{reachOf(a).toLocaleString(appLocale())} người</span>
                   </button>
                 ))}
               </div>
@@ -168,7 +169,7 @@ export const AdminBroadcastsPage: React.FC = () => {
                   <td className={cn(tbl.td, 'whitespace-nowrap text-slate-600')}>{AUDIENCE[b.audience]}</td>
                   <td className={cn(tbl.td, 'whitespace-nowrap text-slate-600')}>{b.channels.map((c) => (c === 'IN_APP' ? 'Chuông' : 'Email')).join(', ')}</td>
                   <td className={cn(tbl.td, 'whitespace-nowrap text-slate-600')}>{formatDateTime(b.at)}</td>
-                  <td className={cn(tbl.td, 'text-right tabular-nums')}>{b.reach ? b.reach.toLocaleString('vi-VN') : '—'}</td>
+                  <td className={cn(tbl.td, 'text-right tabular-nums')}>{b.reach ? b.reach.toLocaleString(appLocale()) : '—'}</td>
                   <td className={cn(tbl.td, 'text-right tabular-nums')}>{b.openRate !== undefined ? `${b.openRate}%` : '—'}</td>
                   <td className={tbl.td}>
                     <div className="flex items-center gap-2">

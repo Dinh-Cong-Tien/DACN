@@ -10,11 +10,12 @@ import { cn, formatDateTime, staffPath } from '@/shared/utils';
 import { Avatar } from '@/shared/components/ui';
 import { Figures, Panel, Status, TBtn, TPageHead, TTabs, inputCls, type StatusTone } from '@/roles/teacher/components/TeacherKit';
 import { criteriaAvg } from './HeadTeacherDetailPage';
+import { appLocale } from '@/shared/i18n';
 
 const SCORE_STEPS = Array.from({ length: 21 }, (_, i) => i / 2);
 const STATUS: Record<GradingReview['status'], [StatusTone, string]> = { PENDING: ['amber', 'Chờ kiểm định'], AGREED: ['green', 'Đồng ý điểm GV'], ADJUSTED: ['red', 'Đã điều chỉnh'] };
 const round = (v: number) => Math.round(v * 2) / 2;
-const fmt = (v: number) => v.toLocaleString('vi-VN', { minimumFractionDigits: 1, maximumFractionDigits: 2 });
+const fmt = (v: number) => v.toLocaleString(appLocale(), { minimumFractionDigits: 1, maximumFractionDigits: 2 });
 const EMPTY: HeadGradingReview[] = [];
 
 /** Kiểm định chấm bài: trưởng bộ môn chấm lại bài Viết/Nói giáo viên đã chấm, cùng đề và bộ tiêu chí học viên thấy, để đảm bảo chấm thống nhất giữa các lớp */

@@ -10,6 +10,7 @@ import type { PartInfo } from '@/shared/api/catalog';
 import { Accent, PageHeader, Section, SectionHead, ActionLink, CtaStrip } from './shared/PageKit';
 import { TestList } from './shared/TestList';
 import { ExamGuideList } from './shared/ExamGuideList';
+import { appLocale } from '@/shared/i18n';
 
 /** Ngân hàng câu hỏi TOEIC theo Part (số câu thật trong CSDL) */
 const BankPreview: React.FC<{ parts: PartInfo[] }> = ({ parts }) => {
@@ -33,7 +34,7 @@ const BankPreview: React.FC<{ parts: PartInfo[] }> = ({ parts }) => {
         ].map(([l, v]) => (
           <div key={l as string} className="px-5 py-4">
             <p className="text-[12px] text-slate-500">{l}</p>
-            <p className="mt-1 text-2xl font-semibold tabular-nums text-slate-900">{(v as number).toLocaleString('vi-VN')}</p>
+            <p className="mt-1 text-2xl font-semibold tabular-nums text-slate-900">{(v as number).toLocaleString(appLocale())}</p>
           </div>
         ))}
       </div>
@@ -45,7 +46,7 @@ const BankPreview: React.FC<{ parts: PartInfo[] }> = ({ parts }) => {
             <span className="h-1.5 rounded-full bg-slate-100">
               <span className="block h-full rounded-full bg-indigo-600" style={{ width: `${((p.bankCount ?? 0) / max) * 100}%` }} />
             </span>
-            <span className="text-right tabular-nums text-slate-700">{(p.bankCount ?? 0).toLocaleString('vi-VN')}</span>
+            <span className="text-right tabular-nums text-slate-700">{(p.bankCount ?? 0).toLocaleString(appLocale())}</span>
           </div>
         ))}
       </div>

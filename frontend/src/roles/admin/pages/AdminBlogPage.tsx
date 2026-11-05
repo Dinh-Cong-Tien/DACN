@@ -8,6 +8,7 @@ import { Avatar, Column } from '@/shared/components/ui';
 import { Figures, TBtn, TPageHead } from '@/roles/teacher/components/TeacherKit';
 import { Img } from '@/shared/components/media/Img';
 import { CrudEditor, CrudField } from '@/engines';
+import { appLocale } from '@/shared/i18n';
 
 const columns: Column<BlogPost>[] = [
   {
@@ -90,7 +91,7 @@ export const AdminBlogPage: React.FC = () => {
           { label: 'Bài viết', value: posts.length, icon: Newspaper, tone: 'indigo', note: `${posts.filter((p) => !('status' in p) || (p as { status?: string }).status === 'PUBLISHED').length} đã xuất bản` },
           { label: 'Chuyên mục', value: categories.length, icon: FolderTree, tone: 'violet' },
           { label: 'Tác giả', value: new Set(posts.map((p) => p.author)).size, icon: PenLine, tone: 'emerald', note: 'người đóng góp' },
-          { label: 'Lượt đọc', value: views.toLocaleString('vi-VN'), icon: Eye, tone: 'amber', note: 'tổng từ khi đăng' },
+          { label: 'Lượt đọc', value: views.toLocaleString(appLocale()), icon: Eye, tone: 'amber', note: 'tổng từ khi đăng' },
         ]}
       />
       <CrudEditor<BlogPost>

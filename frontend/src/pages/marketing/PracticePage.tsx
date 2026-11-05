@@ -7,6 +7,7 @@ import { Img, PHOTOS } from '@/shared/components/media/Img';
 import { usePartsInfo } from '@/shared/api/catalog';
 import { useDocumentTitle, useGate } from '@/shared/hooks';
 import { cn } from '@/shared/utils';
+import { appLocale } from '@/shared/i18n';
 
 const SKILL_ICON: Record<string, React.ElementType> = { Listening: Headphones, Reading: BookOpen, Writing: PenTool, Speaking: Mic };
 const TILES = ['bg-white', 'bg-indigo-100', 'bg-amber-200', 'bg-white', 'bg-violet-100', 'bg-white', 'bg-sky-100'];
@@ -54,7 +55,7 @@ export const PracticePage: React.FC = () => {
                 <p className="text-sm font-bold text-slate-700">{p.nameVi}</p>
                 <p className="text-xs text-slate-600 mt-2 line-clamp-2">{p.description}</p>
                 <div className="flex items-center justify-between mt-4 text-xs font-bold">
-                  <span className="text-slate-500">{count > 0 ? `${count.toLocaleString('vi-VN')} câu luyện tập` : 'Sắp có'}</span>
+                  <span className="text-slate-500">{count > 0 ? `${count.toLocaleString(appLocale())} câu luyện tập` : 'Sắp có'}</span>
                   <span className="flex items-center gap-1 text-violet-600 group-hover:gap-2 transition-all">
                     Luyện <ArrowRight className="w-3.5 h-3.5" />
                   </span>

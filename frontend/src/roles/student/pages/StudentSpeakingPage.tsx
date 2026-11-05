@@ -9,6 +9,7 @@ import { useDocumentTitle } from '@/shared/hooks';
 import { toast } from '@/shared/stores/uiStore';
 import { Alert, Badge, Button, Card, CardHeader, PageHeader, DataTable, Column } from '@/shared/components/ui';
 import { Img, PHOTOS } from '@/shared/components/media/Img';
+import { appLocale } from '@/shared/i18n';
 
 type Phase = 'IDLE' | 'PREP' | 'RECORDING' | 'DONE';
 
@@ -149,7 +150,7 @@ export const StudentSpeakingPage: React.FC = () => {
 
   const cols: Column<HistoryRow>[] = [
     { key: 'part', header: 'Phần thi', render: (r) => <span className="font-bold text-slate-900">{r.part}</span> },
-    { key: 'date', header: 'Ngày', render: (r) => new Date(r.date).toLocaleDateString('vi-VN') },
+    { key: 'date', header: 'Ngày', render: (r) => new Date(r.date).toLocaleDateString(appLocale()) },
     { key: 'durationSec', header: 'Thời lượng', align: 'center', render: (r) => <span className="font-mono">{formatClock(r.durationSec)}</span> },
     { key: 'score', header: 'Điểm', align: 'center', render: (r) => (r.score !== undefined ? <span className="font-display font-extrabold text-indigo-700 text-base">{r.score.toFixed(1)}</span> : <span className="text-slate-400">—</span>) },
     {

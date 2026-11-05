@@ -7,6 +7,7 @@ import { Stagger } from '@/shared/components/motion';
 import { Img, PHOTOS } from '@/shared/components/media/Img';
 import { usePartsInfo, usePracticeOverview, useProgress } from '@/shared/api/learner';
 import { cn } from '@/shared/utils';
+import { appLocale } from '@/shared/i18n';
 
 const VSTEP_CARDS = [
   { id: 'VSTEP_LISTENING', name: 'Listening', nameVi: 'Kỹ năng Nghe', skill: 'Listening', description: '3 phần: thông báo, hội thoại, bài giảng. Nghe một lần duy nhất.', photo: PHOTOS.headphones, tone: 'bg-sky-500' },
@@ -77,7 +78,7 @@ export const StudentPracticePage: React.FC = () => {
                         <span className="text-xs font-extrabold text-slate-700 shrink-0">{acc}% đúng</span>
                       </div>
                       <p className="text-[11px] text-slate-500 font-semibold mt-2">
-                        {count.toLocaleString('vi-VN')} câu trong ngân hàng · {p.questions} câu trong đề thật{p.minutes ? ` · ~${p.minutes} phút` : ''}
+                        {count.toLocaleString(appLocale())} câu trong ngân hàng · {p.questions} câu trong đề thật{p.minutes ? ` · ~${p.minutes} phút` : ''}
                       </p>
                     </Card>
                   </Link>

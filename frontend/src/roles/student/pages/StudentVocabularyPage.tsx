@@ -11,6 +11,7 @@ import { toast } from '@/shared/stores/uiStore';
 import { Badge, Button, Card, Chip, Input, Modal, PageHeader, ProgressBar, SearchInput, StatCard, EmptyState, Textarea } from '@/shared/components/ui';
 import { Img, PHOTOS } from '@/shared/components/media/Img';
 import { NamedIcon } from '@/shared/components/ui/named-icon';
+import { appLocale } from '@/shared/i18n';
 
 const STATUS_META: Record<VocabWord['status'], { label: string; tone: 'amber' | 'sky' | 'emerald' }> = {
   LEARNING: { label: 'Đang học', tone: 'amber' },
@@ -121,7 +122,7 @@ export const StudentVocabularyPage: React.FC = () => {
           <h2 className="font-display font-bold text-slate-900 text-lg flex items-center gap-2">
             <Layers className="w-5 h-5 text-indigo-600" /> Chủ đề từ vựng
           </h2>
-          <span className="text-xs font-bold text-slate-500">{VOCAB_TOPICS.reduce((a, t) => a + t.total, 0).toLocaleString('vi-VN')} từ · {VOCAB_TOPICS.length} chủ đề</span>
+          <span className="text-xs font-bold text-slate-500">{VOCAB_TOPICS.reduce((a, t) => a + t.total, 0).toLocaleString(appLocale())} từ · {VOCAB_TOPICS.length} chủ đề</span>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
           {VOCAB_TOPICS.map((t, i) => {

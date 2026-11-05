@@ -10,6 +10,7 @@ import { Button, ConfirmDialog, EmptyState, Input, Modal, Select, Switch, Textar
 import { Figures, IconTile, Panel, Status, TBtn, TPageHead, type Tone } from '@/roles/teacher/components/TeacherKit';
 import { Img, PHOTOS } from '@/shared/components/media/Img';
 import { toast } from '@/shared/stores/uiStore';
+import { appLocale } from '@/shared/i18n';
 
 const TYPE_META: Record<CourseTreeNode['type'], { icon: React.ElementType; tone: Tone; label: string; child: CourseTreeNode['type'] | null }> = {
   CATEGORY: { icon: FolderTree, tone: 'amber', label: 'Mục chính', child: 'COURSE' },
@@ -306,7 +307,7 @@ export const AdminCoursesPage: React.FC = () => {
                     <div className="flex justify-between gap-4 py-2.5">
                       <dt className="text-slate-500">Học viên</dt>
                       <dd className="inline-flex items-center gap-1 font-semibold tabular-nums text-slate-900">
-                        <Users className="h-3.5 w-3.5 text-slate-400" /> {selectedCourse.studentsCount.toLocaleString('vi-VN')}
+                        <Users className="h-3.5 w-3.5 text-slate-400" /> {selectedCourse.studentsCount.toLocaleString(appLocale())}
                       </dd>
                     </div>
                   )}

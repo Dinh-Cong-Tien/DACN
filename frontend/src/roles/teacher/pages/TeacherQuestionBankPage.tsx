@@ -15,6 +15,7 @@ import { EXAM_PARTS, partLabel, partShort, SKILL_VI, toIQuestion } from '@/share
 import type { SkillType } from '@/shared/types';
 import { WordImportButton } from '@/shared/components/import/WordImportDialog';
 import { Figures, Panel, Status, TPageHead, TTabs, tbl } from '../components/TeacherKit';
+import { appLocale } from '@/shared/i18n';
 
 const PAGE = 20;
 const STATUS_VI: Record<string, { label: string; tone: 'green' | 'amber' | 'red' | 'gray' }> = {
@@ -91,10 +92,10 @@ export const TeacherQuestionBankPage: React.FC = () => {
       />
       <Figures
         items={[
-          { label: 'Câu hỏi trong ngân hàng', value: (totals.bank?.total ?? 0).toLocaleString('vi-VN'), note: 'đã xuất bản + câu của bạn', icon: Database, tone: 'indigo' },
-          { label: 'Câu Nghe (Part 1–4)', value: sum(/TOEIC_P[1-4]|VSTEP_L/).toLocaleString('vi-VN'), icon: Headphones, tone: 'sky' },
-          { label: 'Câu Đọc (Part 5–7)', value: sum(/TOEIC_P[5-7]|VSTEP_R/).toLocaleString('vi-VN'), icon: BookOpenText, tone: 'violet' },
-          { label: 'Câu của tôi', value: (totals.mine?.total ?? 0).toLocaleString('vi-VN'), note: 'soạn tay hoặc nhập từ Word', icon: FileEdit, tone: 'emerald' },
+          { label: 'Câu hỏi trong ngân hàng', value: (totals.bank?.total ?? 0).toLocaleString(appLocale()), note: 'đã xuất bản + câu của bạn', icon: Database, tone: 'indigo' },
+          { label: 'Câu Nghe (Part 1–4)', value: sum(/TOEIC_P[1-4]|VSTEP_L/).toLocaleString(appLocale()), icon: Headphones, tone: 'sky' },
+          { label: 'Câu Đọc (Part 5–7)', value: sum(/TOEIC_P[5-7]|VSTEP_R/).toLocaleString(appLocale()), icon: BookOpenText, tone: 'violet' },
+          { label: 'Câu của tôi', value: (totals.mine?.total ?? 0).toLocaleString(appLocale()), note: 'soạn tay hoặc nhập từ Word', icon: FileEdit, tone: 'emerald' },
         ]}
       />
       <Panel flush>

@@ -10,6 +10,7 @@ import { Modal } from '@/shared/components/ui';
 import { TBtn, inputCls } from '@/roles/teacher/components/TeacherKit';
 import { toast } from '@/shared/stores/uiStore';
 import { cn } from '@/shared/utils';
+import { appLocale } from '@/shared/i18n';
 
 type Picked = Pick<QuestionRow, 'id' | 'part' | 'stem' | 'passageTitle'>;
 
@@ -178,7 +179,7 @@ export const TestQuestionsDialog: React.FC<{ test: { id: string; title: string; 
             )}
           </div>
           <div className="mt-2 flex items-center justify-between text-[13px] text-slate-500">
-            <span>{bank.data ? `${bank.data.total.toLocaleString('vi-VN')} câu` : ''}</span>
+            <span>{bank.data ? `${bank.data.total.toLocaleString(appLocale())} câu` : ''}</span>
             <span className="flex items-center gap-2">
               <TBtn size="sm" variant="ghost" disabled={page <= 1} onClick={() => setPage((p) => p - 1)}>Trước</TBtn>
               {page}/{totalPages}

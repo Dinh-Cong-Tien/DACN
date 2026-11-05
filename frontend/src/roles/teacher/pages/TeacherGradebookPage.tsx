@@ -8,6 +8,7 @@ import { cn } from '@/shared/utils';
 import { Avatar } from '@/shared/components/ui';
 import { Figures, Panel, TBtn, TPageHead, inputCls, tbl } from '../components/TeacherKit';
 import { TEmpty, TError, TLoading } from '../components/TeacherState';
+import { appLocale } from '@/shared/i18n';
 
 /** Ô điểm: số = đã chấm; còn lại hiện theo trạng thái bài nộp */
 const STATE_TEXT: Record<string, [string, string]> = {
@@ -111,7 +112,7 @@ export const TeacherGradebookPage: React.FC = () => {
         <>
           <Figures
             items={[
-              { label: 'Điểm quá trình TB', value: avg === null ? '—' : avg.toLocaleString('vi-VN'), note: 'thang 10', icon: TrendingUp, tone: 'indigo' },
+              { label: 'Điểm quá trình TB', value: avg === null ? '—' : avg.toLocaleString(appLocale()), note: 'thang 10', icon: TrendingUp, tone: 'indigo' },
               { label: 'Đủ điều kiện thi', value: `${rows.filter(eligible).length}/${rows.length}`, note: 'điểm ≥ 5 và chuyên cần ≥ 80%', icon: Award, tone: 'emerald' },
               { label: 'Chuyên cần TB', value: attRows.length ? `${Math.round(attRows.reduce((a, r) => a + (r.att ?? 0), 0) / attRows.length)}%` : '—', note: attRows.length ? 'các buổi đã điểm danh' : 'chưa điểm danh buổi nào', icon: Percent, tone: 'sky' },
               { label: 'Còn thiếu bài', value: rows.filter((r) => r.missing > 0).length, note: 'học viên chưa nộp đủ', icon: UserX, tone: 'rose' },
@@ -155,12 +156,12 @@ export const TeacherGradebookPage: React.FC = () => {
                             const s = STATE_TEXT[stateOf(st.id, a.id) ?? ''];
                             return (
                               <td key={a.id} className={cn(tbl.td, 'whitespace-nowrap text-right tabular-nums', v === null ? s?.[1] ?? 'text-slate-400' : 'text-slate-800')}>
-                                {v !== null ? v.toLocaleString('vi-VN') : s?.[0] ?? '—'}
+                                {v !== null ? v.toLocaleString(appLocale()) : s?.[0] ?? '—'}
                               </td>
                             );
                           })}
                           <td className={cn(tbl.td, 'text-right tabular-nums', att !== null && att < 80 ? 'text-rose-600' : 'text-slate-800')}>{att === null ? '—' : `${att}%`}</td>
-                          <td className={cn(tbl.td, 'text-right font-display text-[15px] font-bold tabular-nums text-slate-900')}>{ps === null ? '—' : ps.toLocaleString('vi-VN', { minimumFractionDigits: 1 })}</td>
+                          <td className={cn(tbl.td, 'text-right font-display text-[15px] font-bold tabular-nums text-slate-900')}>{ps === null ? '—' : ps.toLocaleString(appLocale(), { minimumFractionDigits: 1 })}</td>
                           <td className={tbl.td}>
                             {ps === null ? (
                               <span className="text-[13px] text-slate-400">Chưa có dữ liệu</span>

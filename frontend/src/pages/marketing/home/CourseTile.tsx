@@ -7,6 +7,7 @@ import { RevealPhoto } from '@/shared/components/motion';
 import { cn } from '@/shared/utils';
 import { courseHref } from '@/shared/api/catalog';
 import type { Course } from '@/shared/types';
+import { appLocale } from '@/shared/i18n';
 
 /** Thẻ khoá học kiểu trang LMS: ảnh bìa + thời lượng, tên, giáo viên, đánh giá, số bài, giá */
 export const CourseTile: React.FC<{ course: Course }> = ({ course: c }) => (
@@ -35,7 +36,7 @@ export const CourseTile: React.FC<{ course: Course }> = ({ course: c }) => (
             </span>
           </>
         )}
-        <span className="text-slate-500">{c.studentsCount.toLocaleString('vi-VN')} học viên</span>
+        <span className="text-slate-500">{c.studentsCount.toLocaleString(appLocale())} học viên</span>
       </p>
       <div className="mt-auto pt-3 flex items-center justify-between text-sm">
         <span className="text-slate-400 light:text-slate-500">{c.lessonsCount} bài học</span>

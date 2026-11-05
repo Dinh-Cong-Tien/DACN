@@ -7,6 +7,7 @@ import { Avatar } from '@/shared/components/ui';
 import { useOverview, useTeam } from '@/shared/api/cms';
 import { useDocumentTitle } from '@/shared/hooks';
 import { cn } from '@/shared/utils';
+import { appLocale } from '@/shared/i18n';
 
 const VALUES = [
   { icon: Target, t: 'Đúng chỗ yếu', d: 'Không học lại cái đã biết. Dữ liệu bài làm quyết định bạn học gì tiếp.', bg: 'bg-indigo-100' },
@@ -19,7 +20,7 @@ export const AboutPage: React.FC = () => {
   useDocumentTitle('Giới thiệu');
   const { data: o } = useOverview();
   const { data: team = [] } = useTeam();
-  const n = (v?: number) => (v ?? 0).toLocaleString('vi-VN');
+  const n = (v?: number) => (v ?? 0).toLocaleString(appLocale());
   return (
     <div>
       <section className="relative bg-paper border-b-2 border-slate-900 overflow-hidden">

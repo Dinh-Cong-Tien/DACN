@@ -10,6 +10,7 @@ import { MISTAKE_CAUSE_LABEL } from '@/shared/constants/student';
 import { useAchievements, useAttempts, useLeaderboard, usePath, useProgress, useReviewDue, useTests } from '@/shared/api/learner';
 import { cn, formatNumber } from '@/shared/utils';
 import { VipBadge } from '@/shared/components/vip/VipBadge';
+import { appLocale } from '@/shared/i18n';
 
 const greeting = () => {
   const h = new Date().getHours();
@@ -47,7 +48,7 @@ export const StudentDashboardPage: React.FC = () => {
   const activeDays = Object.values(HEATMAP_DATA).filter((m) => m > 0).length;
   const goalMinutes = progress?.totals.dailyGoalMinutes ?? 20;
   const daysLeft = user?.target?.examDate ? Math.max(0, Math.ceil((new Date(user.target.examDate).getTime() - now) / 86400000)) : null;
-  const today = new Date().toLocaleDateString('vi-VN', { weekday: 'long', day: '2-digit', month: '2-digit' });
+  const today = new Date().toLocaleDateString(appLocale(), { weekday: 'long', day: '2-digit', month: '2-digit' });
   const firstName = (user?.fullName ?? 'bạn').split(' ').slice(-1)[0];
   const peers = (board?.entries ?? []).filter((p) => !p.isMe).slice(0, 5);
   const totalMin = DAILY_ACTIVITY.reduce((a, d) => a + d.minutes, 0);

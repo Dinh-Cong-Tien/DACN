@@ -197,7 +197,7 @@ export const HeadDashboardPage: React.FC = () => {
                     {t.name}
                   </Link>
                   <p className="truncate text-xs text-slate-500">
-                    {t.subject} · {t.classesCount} lớp · {t.studentsCount} HV
+                    {t.subject} · {t.classesCount} lớp · {t.studentsCount} học viên
                   </p>
                 </div>
                 <Status tone={t.status === 'ACTIVE' ? 'green' : t.status === 'PENDING' ? 'amber' : 'red'}>{t.status === 'ACTIVE' ? 'Đang dạy' : t.status === 'PENDING' ? 'Chờ duyệt' : 'Đã khoá'}</Status>
