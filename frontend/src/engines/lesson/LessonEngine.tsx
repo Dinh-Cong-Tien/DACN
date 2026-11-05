@@ -121,7 +121,8 @@ export const LessonEngine: React.FC<LessonEngineProps> = ({ course, lesson, onSe
     void Promise.resolve(onComplete?.(lesson.id, scorePct))
       .then(() => {
         setDone(true);
-        toast.success('Hoàn thành bài học!', next ? 'Bài tiếp theo đã được mở khoá.' : 'Bạn đã học hết khoá học này.');
+        const left = allLessons.filter((l) => l.id !== lesson.id && !l.isCompleted).length;
+        toast.success('Hoàn thành bài học!', left === 0 ? 'Bạn đã học hết khoá học này.' : next && course.isSequential !== false ? 'Bài tiếp theo đã được mở khoá.' : `Còn ${left} bài chưa hoàn thành trong khoá.`);
       })
       .catch(() => undefined);
   };

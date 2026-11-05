@@ -92,6 +92,7 @@ function toCourse(c: CourseRow, i: number, states: Map<string, { completed: bool
     // mục chính (TOEIC / VSTEP / THPT) và nhóm trong mục của menu Khoá học
     track: c.track ?? undefined,
     trackGroup: c.trackGroup ?? undefined,
+    isSequential: c.isSequential,
     level: c.level ?? 'Mọi trình độ',
     description: c.description,
     gradient: c.themeGradient ?? gradientAt(i),

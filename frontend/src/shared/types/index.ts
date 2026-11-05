@@ -85,13 +85,15 @@ export interface LessonKnowledge {
 /** Câu bài tập sau bài học / bài kiểm tra chặng — khớp backend catalog/lesson-exercises.ts */
 export interface LessonExercise {
   id: string;
-  type: 'vocab-meaning' | 'vocab-context' | 'grammar-formula' | 'grammar-name' | 'grammar-gap' | 'article' | 'phoneme';
+  type: 'vocab-meaning' | 'vocab-context' | 'grammar-formula' | 'grammar-name' | 'grammar-gap' | 'article' | 'phoneme' | 'notice-cloze' | 'arrange' | 'text-cloze' | 'reading';
   prompt: string;
   /** Câu / cụm cần xét ("_____" = chỗ trống) */
   text?: string;
   options: string[];
   answer: number;
   explain: string;
+  /** Đoạn văn dùng chung (bài đọc, quảng cáo, các câu cần sắp xếp) */
+  passage?: { title?: string; content: string };
 }
 
 export interface Lesson {
@@ -140,6 +142,8 @@ export interface Course {
   track?: CourseTrack;
   /** Nhóm trong mục chính (vd "Listening · Part 1–4", "Lớp 10") */
   trackGroup?: string;
+  /** Học tuần tự (xong bài trước mới mở bài sau); khoá ôn thi = false */
+  isSequential?: boolean;
   level: string;
   description: string;
   gradient: string; // tailwind gradient classes cho thumbnail

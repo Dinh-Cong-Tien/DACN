@@ -9,7 +9,8 @@
 import { Prisma, type CourseCategory, type CourseTrack, type CefrLevel } from '@prisma/client';
 import { prisma } from './lib';
 import { THPT, THPT_PRACTICE } from './data/thpt';
-import { authoredGap } from '../../src/modules/catalog/lesson-exercises';
+import { EXAM_SETS, GRAMMAR_REVIEW, PART_GUIDES, type ExamSet } from './data/thpt-exam';
+import { authoredChoice, authoredGap, type LessonExercise } from '../../src/modules/catalog/lesson-exercises';
 
 const photo = (id: string) => `https://images.unsplash.com/photo-${id}?w=1000&q=75&auto=format&fit=crop`;
 /** Ảnh bìa (cùng bộ ảnh Unsplash đang dùng trên site), mỗi khoá một ảnh */
@@ -22,7 +23,21 @@ const COVER: Record<string, string> = {
   'tieng-anh-lop-10': photo('1524178232363-1fb2b075b655'),
   'tieng-anh-lop-11': photo('1517486808906-6ca8b3f04846'),
   'tieng-anh-lop-12': photo('1523580494863-6f3031224c94'),
+  'on-thi-tot-nghiep-thpt': photo('1434030216411-0b793f4b4173'),
 };
+
+/** Bộ câu đề thi → câu bài tập (id "sgk…" để giữ khi sinh lại; câu sắp xếp có đoạn riêng) */
+const setExercises = (set: ExamSet, prefix: string): LessonExercise[] =>
+  set.questions.map((q, i) =>
+    authoredChoice(`sgk-${prefix}-${i + 1}`, {
+      type: set.type,
+      prompt: set.prompt,
+      text: q.q,
+      options: q.options,
+      explain: q.explain,
+      passage: q.own ?? set.passage,
+    })
+  );
 
 type CourseSpec = {
   slug: string;
@@ -303,6 +318,124 @@ async function main() {
       }
     }
     log.push(`THPT · Lớp ${g.grade} · ${course.title}`);
+  }
+
+  // 2b) Ôn thi tốt nghiệp THPT — theo cấu trúc đề minh hoạ từ 2025 (40 câu / 50 phút)
+  {
+    const slug = 'on-thi-tot-nghiep-thpt';
+    const data = {
+      slug,
+      title: 'Ôn thi tốt nghiệp THPT môn Tiếng Anh',
+      description: 'Ôn theo đúng cấu trúc đề thi tốt nghiệp THPT từ năm 2025: 40 câu trắc nghiệm trong 50 phút. Tổng ôn ngữ pháp lớp 10–12, chiến lược và luyện đề cho từng dạng câu, đề luyện tổng hợp 40 câu.',
+      track: 'THPT' as const,
+      trackGroup: 'Ôn thi tốt nghiệp',
+      trackOrder: 4,
+      category: 'EXAM_PREP' as const,
+      examType: null,
+      level: 'B1' as const,
+      coverUrl: COVER[slug],
+      // ôn thi: vào thẳng dạng câu còn yếu hoặc làm đề tổng hợp, không bắt học tuần tự
+      isSequential: false,
+    };
+    const existing = await prisma.course.findFirst({ where: { slug, deletedAt: null } });
+    const course = existing ? await prisma.course.update({ where: { id: existing.id }, data }) : await prisma.course.create({ data: { ...data, status: 'PUBLISHED', publishedAt: new Date(), isFree: true, isSequential: true, authorId: admin?.id } });
+    await prisma.courseSection.updateMany({ where: { courseId: course.id }, data: { orderIndex: { increment: 500 } } });
+    let secOrder = 0;
+    const section = async (title: string, part: string) => {
+      const found = await prisma.courseSection.findFirst({ where: { courseId: course.id, title } });
+      const d = { partTitle: part, orderIndex: ++secOrder };
+      return found ? prisma.courseSection.update({ where: { id: found.id }, data: d }) : prisma.courseSection.create({ data: { courseId: course.id, title, ...d } });
+    };
+    const lesson = async (sectionId: string, title: string, order: number, d: Omit<Prisma.LessonUncheckedCreateInput, 'sectionId' | 'title' | 'orderIndex'>) => {
+      const found = await prisma.lesson.findFirst({ where: { sectionId, title, deletedAt: null } });
+      if (found) return prisma.lesson.update({ where: { id: found.id }, data: { ...d, orderIndex: order } });
+      return prisma.lesson.create({ data: { sectionId, title, orderIndex: order, ...d } });
+    };
+    const empty = { grammar: [], pronunciation: [], phrases: [], tips: [], vocab: [], clauses: [], articles: [] };
+    const json = (v: unknown) => v as Prisma.InputJsonValue;
+
+    // Làm quen đề thi
+    const s0 = await section('Làm quen đề thi', 'Tổng quan');
+    await lesson(s0.id, 'Cấu trúc đề thi tốt nghiệp THPT môn Tiếng Anh', 0, {
+      type: 'READING',
+      summary: '40 câu trắc nghiệm, 50 phút, 6 dạng câu theo thứ tự cố định',
+      contentMd:
+        'Từ năm 2025, đề thi tốt nghiệp THPT môn Tiếng Anh gồm 40 câu trắc nghiệm, làm trong 50 phút, mỗi câu 0,25 điểm. Đề tập trung vào đọc hiểu: không còn câu phát âm, trọng âm hay tìm lỗi sai riêng lẻ.\n\nThứ tự đề: Câu 1–6 đọc thông báo / quảng cáo điền từ · Câu 7–12 đọc tờ rơi điền từ · Câu 13–17 sắp xếp hội thoại, lá thư, đoạn văn · Câu 18–22 điền cụm từ, mệnh đề vào đoạn văn · Câu 23–30 đọc hiểu bài 1 · Câu 31–40 đọc hiểu bài 2.\n\nGợi ý phân bổ thời gian: Câu 1–12 khoảng 10 phút, Câu 13–22 khoảng 12 phút, hai bài đọc hiểu khoảng 25 phút, còn 3 phút để soát lại và tô đủ đáp án.',
+      knowledge: json({
+        ...empty,
+        tips: [
+          { title: 'Câu 1–12: đọc điền', note: 'Từ loại, cụm cố định, lượng từ, giới từ, liên từ — làm nhanh để dành thời gian cho đọc hiểu' },
+          { title: 'Câu 13–17: sắp xếp', note: 'Tìm câu mở đầu và các cặp câu chắc chắn đi liền nhau rồi loại phương án' },
+          { title: 'Câu 18–22: điền đoạn văn', note: 'Xem chỗ trống thiếu mệnh đề hay cụm bổ nghĩa; mỗi câu chỉ một động từ chính' },
+          { title: 'Câu 23–40: đọc hiểu', note: 'Đọc câu hỏi trước, câu ý chính làm cuối; chiếm gần một nửa số điểm' },
+          { title: 'Không bỏ trống câu nào', note: 'Thi trắc nghiệm không trừ điểm câu sai' },
+        ],
+      }),
+      durationMin: 10,
+      status: 'PUBLISHED',
+      isFreePreview: true,
+    });
+
+    // Tổng ôn ngữ pháp lớp 10–12: kiến thức + câu luyện đã soạn của các Unit SGK
+    const s1 = await section('Tổng ôn ngữ pháp lớp 10–12', 'Tổng ôn ngữ pháp');
+    const unitOf = (key: string) => {
+      const [g, u] = key.split('-').map(Number);
+      return THPT.find((x) => x.grade === g)?.units.find((x) => x.no === u);
+    };
+    for (const [i, topic] of GRAMMAR_REVIEW.entries()) {
+      const grammar = topic.units.flatMap((k) => unitOf(k)?.grammar ?? []);
+      const gaps = topic.units
+        .flatMap((k) => (THPT_PRACTICE[k] ?? []).map((line, j) => ({ k, line, j })))
+        .map(({ k, line, j }) => authoredGap(`sgk-on-${k}-${j + 1}`, line, `${unitOf(k)?.grammarTitle ?? topic.title}: ${(unitOf(k)?.grammar ?? []).map((x) => x.formula).join('; ')}.`))
+        .filter((x): x is NonNullable<typeof x> => !!x)
+        .slice(0, 8);
+      await lesson(s1.id, `Tổng ôn: ${topic.title}`, i, {
+        type: 'READING',
+        summary: `Ôn ${grammar.length} điểm ngữ pháp trọng tâm từ ${topic.units.length} Unit SGK lớp 10–12`,
+        contentMd: `Tổng ôn chủ điểm ${topic.title.charAt(0).toLowerCase() + topic.title.slice(1)} trong chương trình Tiếng Anh 10–12 (Global Success). Xem công thức, cách dùng và câu ví dụ ở phần Kiến thức trong bài, sau đó làm bài tập ở bước 2.`,
+        knowledge: json({ ...empty, grammar }),
+        exercises: json(gaps),
+        durationMin: 20,
+        status: 'PUBLISHED',
+      });
+    }
+
+    // Từng dạng câu: chiến lược + luyện đề đúng định dạng
+    let setNo = 0;
+    for (const g of PART_GUIDES) {
+      const sec = await section(g.section, g.part);
+      await lesson(sec.id, g.strategyTitle, 0, {
+        type: 'READING',
+        summary: g.summary,
+        contentMd: g.content,
+        knowledge: json({ ...empty, grammar: g.grammar, tips: g.tips }),
+        durationMin: 15,
+        status: 'PUBLISHED',
+      });
+      const qs = g.sets.flatMap((set) => setExercises(set, `de-${EXAM_SETS.indexOf(set) + 1}`));
+      setNo += g.sets.length;
+      await lesson(sec.id, g.practiceTitle, 1, {
+        type: 'QUIZ',
+        summary: `${qs.length} câu đúng định dạng đề thi, có giải thích từng câu`,
+        exercises: json(qs),
+        passScorePct: 60,
+        durationMin: Math.max(5, Math.round(qs.length * 1.25)),
+        status: 'PUBLISHED',
+      });
+    }
+
+    // Đề luyện tổng hợp 40 câu
+    const s9 = await section('Đề luyện tổng hợp', 'Luyện đề');
+    const full = EXAM_SETS.flatMap((set, i) => setExercises(set, `full-${i + 1}`));
+    await lesson(s9.id, 'Đề luyện tổng hợp 40 câu — 50 phút', 0, {
+      type: 'QUIZ',
+      summary: `${full.length} câu theo đúng thứ tự đề thi tốt nghiệp THPT, đạt từ 5 điểm (50%)`,
+      exercises: json(full),
+      passScorePct: 50,
+      durationMin: 50,
+      status: 'PUBLISHED',
+    });
+    log.push(`THPT · Ôn thi tốt nghiệp · ${course.title} (${setNo} bộ luyện đề, đề tổng hợp ${full.length} câu)`);
   }
 
   // 3) cập nhật số bài / thời lượng lưu sẵn

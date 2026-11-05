@@ -13,6 +13,10 @@ const TYPE_LABEL: Record<LessonExercise['type'], string> = {
   'grammar-formula': 'Ngữ pháp',
   'grammar-name': 'Ngữ pháp',
   'grammar-gap': 'Ngữ pháp',
+  'notice-cloze': 'Đọc điền',
+  arrange: 'Sắp xếp',
+  'text-cloze': 'Điền đoạn văn',
+  reading: 'Đọc hiểu',
   article: 'Mạo từ',
   phoneme: 'Phát âm',
 };
@@ -25,12 +29,17 @@ const toQuestion = (e: LessonExercise, t: (s: string) => string): IQuestion => (
   skillType: e.type === 'phoneme' ? 'SPEAKING' : e.type.startsWith('vocab') ? 'VOCABULARY' : 'GRAMMAR',
   partOrSkill: TYPE_LABEL[e.type],
   level: '',
-  stem: e.text ? `${t(e.prompt)}: ${e.text}` : t(e.prompt),
+  // câu có đoạn văn (dạng đề thi): yêu cầu đặt ở đầu đoạn văn như đề thật, câu hỏi chỉ còn "Question n…"
+  stem: e.passage ? (e.text ?? t(e.prompt)) : e.text ? `${t(e.prompt)}${/[.?!]$/.test(e.prompt) ? ' ' : ': '}${e.text}` : t(e.prompt),
   options: e.options.map((text, i) => ({ key: KEYS[i], text })),
   correctAnswer: { key: KEYS[e.answer] },
   explanation: e.explain,
   difficulty: 0,
   tags: [],
+  // câu cùng đoạn văn có cùng id đoạn → Practice engine hiện đoạn văn một lần cho cả nhóm
+  passage: e.passage ? { id: `p-${e.passage.title ?? ''}-${e.passage.content.length}`, examType: 'TOEIC', partOrSkill: TYPE_LABEL[e.type], title: e.passage.title, content: `${e.prompt}
+
+${e.passage.content}` } : null,
 });
 
 /**

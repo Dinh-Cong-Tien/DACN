@@ -25,8 +25,19 @@ async function main() {
   const stat = { video: 0, videoEmpty: 0, questions: 0, quiz: 0, quizEmpty: 0 };
   const byType: Record<string, number> = {};
 
+  // bài học có bài luyện đề soạn sẵn ngay sau trong cùng chương (vd bài chiến lược → luyện đề) không cần bài tập riêng
+  const authored = (v: unknown) => ((v as { id?: string }[] | null) ?? []).some((e) => e.id?.startsWith('sgk'));
+  const beforePractice = new Set(
+    courses.flatMap((c) =>
+      c.courseSectionCourses.flatMap((s) => s.lessonSections.filter((l, i) => learnable(l.type) && !authored(l.exercises) && s.lessonSections[i + 1]?.type === 'QUIZ' && authored(s.lessonSections[i + 1].exercises)).map((l) => l.id))
+    )
+  );
   for (const l of all) {
     if (!learnable(l.type)) continue;
+    if (beforePractice.has(l.id)) {
+      await prisma.lesson.update({ where: { id: l.id }, data: { exercises: Prisma.DbNull } });
+      continue;
+    }
     const k = toKnowledge(l.knowledge);
     if (l.type === 'READING' && !k) continue;
     const qs = withAuthored(l.exercises, k ? buildExercises(l.id, k, pool) : []);
@@ -42,6 +53,11 @@ async function main() {
     const flat = c.courseSectionCourses.flatMap((s) => s.lessonSections.map((l) => ({ l, sectionId: s.id })));
     for (const [i, { l, sectionId }] of flat.entries()) {
       if (l.type !== 'QUIZ' && l.type !== 'CHECKPOINT') continue;
+      // đề soạn tay (luyện đề, đề tổng hợp) → giữ nguyên, không sinh lại
+      if (((l.exercises as { id?: string }[] | null) ?? []).some((e) => e.id?.startsWith('sgk'))) {
+        stat.quiz++;
+        continue;
+      }
       const before = flat.slice(0, i).filter((x) => ex.get(x.l.id)?.length && (l.type === 'CHECKPOINT' || x.sectionId === sectionId));
       // chặng chỉ có bài kiểm tra (Review) → các bài học kể từ bài kiểm tra trước đó
       const lastQuiz = flat.slice(0, i).map((x) => x.l.type).lastIndexOf('QUIZ');

@@ -5,7 +5,9 @@ import type { GrammarPoint, KnowledgeNode, LessonKnowledge, VocabItem } from './
  * nghĩa từ, điền từ vào câu ví dụ của bài, công thức ngữ pháp, a / an, âm trong bài phát âm.
  * Chỉ ra câu khi đáp án duy nhất đúng (phương án nhiễu được lọc trùng nghĩa / trùng âm).
  */
-export type ExerciseType = 'vocab-meaning' | 'vocab-context' | 'grammar-formula' | 'grammar-name' | 'grammar-gap' | 'article' | 'phoneme';
+export type ExerciseType = 'vocab-meaning' | 'vocab-context' | 'grammar-formula' | 'grammar-name' | 'grammar-gap' | 'article' | 'phoneme'
+  // dạng câu đề thi tốt nghiệp THPT
+  | 'notice-cloze' | 'arrange' | 'text-cloze' | 'reading';
 export interface LessonExercise {
   id: string;
   type: ExerciseType;
@@ -18,6 +20,8 @@ export interface LessonExercise {
   answer: number;
   /** Giải thích hiện sau khi trả lời */
   explain: string;
+  /** Đoạn văn dùng chung (bài đọc, quảng cáo, các câu cần sắp xếp) — câu cùng đoạn hiện đoạn văn một lần */
+  passage?: { title?: string; content: string };
 }
 
 /** Kho phương án nhiễu lấy từ các bài khác (để bài ít từ vẫn đủ 4 lựa chọn) */
@@ -199,6 +203,13 @@ export function authoredGap(id: string, line: string, explain: string): LessonEx
   const c = choice(right, wrong, rng(id), wrong.length);
   return c && text.includes('___') ? { id, type: 'grammar-gap', prompt: 'Chọn đáp án đúng điền vào chỗ trống', text: text.replace('___', BLANK), ...c, explain } : null;
 }
+/** Câu trắc nghiệm soạn tay bất kỳ: options[0] là đáp án đúng, thứ tự hiển thị xáo cố định theo id */
+export function authoredChoice(id: string, e: { type: ExerciseType; prompt: string; text?: string; options: string[]; explain: string; passage?: { title?: string; content: string } }): LessonExercise {
+  const r = rng(id);
+  const opts = shuffle(e.options, r);
+  return { id, type: e.type, prompt: e.prompt, ...(e.text ? { text: e.text } : {}), options: opts, answer: opts.indexOf(e.options[0]), explain: e.explain, ...(e.passage ? { passage: e.passage } : {}) };
+}
+
 /** Sinh lại bài tập nhưng giữ câu soạn tay ở đầu */
 export const withAuthored = (prev: unknown, generated: LessonExercise[]) => [...toExercises(prev).filter(isAuthored), ...generated].slice(0, 10);
 
