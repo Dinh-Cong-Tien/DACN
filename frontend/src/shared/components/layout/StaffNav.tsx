@@ -74,6 +74,7 @@ export const StaffNav: React.FC<{ menus: StaffMenu[]; label: string }> = ({ menu
             <button type="button" className={topCls(Boolean(active))} aria-haspopup="true">
               <NavTopIcon icon={m.icon ?? STAFF_TOP_ICON[m.label]} />
               {t(m.label)}
+              {m.badge && <Count n={m.badge} />}
               <ChevronDown className="h-3.5 w-3.5 text-slate-400 transition-transform group-hover/menu:rotate-180" />
             </button>
             <div className={cn('pointer-events-none absolute top-full z-50 pt-2 opacity-0 transition-opacity duration-150 group-focus-within/menu:pointer-events-auto group-focus-within/menu:opacity-100 group-hover/menu:pointer-events-auto group-hover/menu:opacity-100')} style={{ left: -(shift[m.label] ?? 0) }}>

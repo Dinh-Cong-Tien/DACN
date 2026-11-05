@@ -1,11 +1,16 @@
 import React, { useMemo } from 'react';
-import { BarChart3, Briefcase, CalendarDays, ClipboardCheck, ClipboardList, Database, FileEdit, FileText, FolderOpen, GraduationCap, Languages, Plus, Presentation, Sheet, UserRoundX, Users } from 'lucide-react';
+import {
+  BarChart3, BookMarked, BookOpen, Briefcase, CalendarDays, ClipboardCheck, ClipboardList, Database, FileEdit, FileText, FolderOpen, GraduationCap, Headphones, Mic, PenLine,
+  PenTool, PlayCircle, Plus, School, Sheet, UserRoundX, Users,
+} from 'lucide-react';
 import { useGradingQueue, useTeacherAssignments, useTeacherClasses, type TClassRoom } from '@/shared/api/teacher';
 import { StaffNav, type StaffMenu } from '@/shared/components/layout/StaffNav';
 
-
 /**
- * Menu header giáo viên theo quy trình dạy học: lớp → lịch dạy, điểm danh → giao bài → chấm bài → theo dõi học viên, bảng điểm → học liệu.
+ * Menu header giáo viên.
+ *  - Lớp học → Khoá học → Thi thử & Luyện tập → Bài tập → Học viên → Soạn học liệu
+ *  - "Khoá học" và "Thi thử & Luyện tập" bám đúng menu học viên (3 mục khoá TOEIC / VSTEP / THPT; đề thi thử, Viết, Nói,
+ *    ngữ pháp, từ vựng, chép chính tả) để giáo viên tìm đúng thứ học viên đang học rồi giao cho lớp.
  */
 export const buildTeacherMenus = (classes: TClassRoom[], toGrade: number, drafts: number): StaffMenu[] => [
   { to: '/teacher/dashboard', label: 'Tổng quan' },
@@ -13,28 +18,46 @@ export const buildTeacherMenus = (classes: TClassRoom[], toGrade: number, drafts
     label: 'Lớp học',
     to: '/teacher/classes',
     children: [
-      { to: '/teacher/classes', label: 'Tất cả lớp', icon: Users, desc: 'Mã mời, lịch học, sĩ số, tạo lớp mới', exact: true },
+      { to: '/teacher/classes', label: 'Tất cả lớp', icon: Users, desc: 'Mã mời, sĩ số, tạo lớp mới', exact: true },
+      { to: '/teacher/schedule', label: 'Lịch dạy', icon: CalendarDays, desc: 'Buổi dạy trong tuần, phòng học, giáo án' },
+      { to: '/teacher/attendance', label: 'Điểm danh', icon: ClipboardCheck, desc: 'Điểm danh buổi hôm nay, sổ điểm danh cả khoá' },
       ...classes.map((c) => ({ to: `/teacher/classes/${c.id}`, label: c.name, icon: c.examType === 'TOEIC' ? Briefcase : GraduationCap, desc: `${c.schedule || 'Chưa có lịch'} · ${c.studentsCount} học viên`, group: 'Lớp đang dạy' })),
     ],
   },
   {
-    label: 'Lịch dạy',
-    to: '/teacher/schedule',
+    label: 'Khoá học',
+    icon: PlayCircle,
+    to: '/teacher/library/courses',
     children: [
-      { to: '/teacher/schedule', label: 'Lịch dạy tuần', icon: CalendarDays, desc: 'Các buổi dạy, phòng học, giáo án từng buổi' },
-      { to: '/teacher/attendance', label: 'Điểm danh', icon: ClipboardCheck, desc: 'Điểm danh buổi hôm nay, sổ điểm danh cả khoá' },
+      { to: '/teacher/library/courses?muc=toeic', label: 'Khoá học TOEIC', icon: Briefcase, desc: 'Nền tảng, Listening Part 1–4, Reading Part 5–7' },
+      { to: '/teacher/library/courses?muc=vstep', label: 'Khoá học VSTEP', icon: GraduationCap, desc: 'Nền tảng, Nghe, Đọc, Viết, Nói' },
+      { to: '/teacher/library/courses?muc=thpt', label: 'Tiếng Anh THPT', icon: School, desc: 'Lớp 10, 11, 12 theo SGK Global Success' },
+    ],
+  },
+  {
+    label: 'Thi thử & Luyện tập',
+    icon: FileText,
+    children: [
+      { to: '/teacher/library/tests?tab=TOEIC', label: 'Đề thi thử TOEIC', icon: FileText, desc: 'Full đề hoặc từng Part, chấm tự động', group: 'Đề thi thử' },
+      { to: '/teacher/library/tests?tab=VSTEP', label: 'Đề thi thử VSTEP', icon: FileText, desc: 'Nghe, Đọc chấm tự động', group: 'Đề thi thử' },
+      { to: '/teacher/library/tests?tab=writing', label: 'Đề Viết', icon: PenLine, desc: 'Học viên nộp bài, giáo viên chấm theo tiêu chí', group: 'Viết & Nói' },
+      { to: '/teacher/library/tests?tab=speaking', label: 'Đề Nói', icon: Mic, desc: 'Học viên ghi âm, giáo viên nhận xét', group: 'Viết & Nói' },
+      { to: '/teacher/library/practice?tab=grammar', label: 'Chủ điểm ngữ pháp', icon: BookMarked, desc: 'Lý thuyết kèm bài tập chấm tự động', group: 'Luyện tập' },
+      { to: '/teacher/library/practice?tab=vocab', label: 'Từ vựng & Flashcard', icon: BookOpen, desc: 'Bộ từ theo chủ đề TOEIC, VSTEP', group: 'Luyện tập' },
+      { to: '/teacher/library/practice?tab=dictation', label: 'Nghe chép chính tả', icon: Headphones, desc: 'Chấm theo % chép đúng', group: 'Luyện tập' },
     ],
   },
   {
     label: 'Bài tập',
     to: '/teacher/assignments',
+    badge: toGrade ? String(toGrade) : undefined,
     children: [
-      { to: '/teacher/assignments', label: 'Danh sách bài tập', icon: ClipboardList, desc: 'Hạn nộp, số bài đã nộp, điểm trung bình' },
       { to: '/teacher/assignments?new=1', label: 'Giao bài mới', icon: Plus, desc: 'Chọn lớp, nội dung, hạn nộp' },
+      { to: '/teacher/assignments', label: 'Bài đã giao', icon: ClipboardList, desc: 'Hạn nộp, số bài đã nộp, điểm trung bình' },
       { to: '/teacher/assignments?status=DRAFT', label: 'Bản nháp', icon: FileEdit, desc: 'Bài đã soạn, chưa gửi học viên', badge: drafts ? String(drafts) : undefined },
+      { to: '/teacher/grading', label: 'Chấm bài', icon: PenTool, desc: 'Bài Viết, Nói học viên đã nộp', badge: toGrade ? String(toGrade) : undefined, also: ['/teacher/grading'] },
     ],
   },
-  { to: '/teacher/grading', label: 'Chấm bài', badge: toGrade ? String(toGrade) : undefined },
   {
     label: 'Học viên',
     to: '/teacher/students',
@@ -46,20 +69,17 @@ export const buildTeacherMenus = (classes: TClassRoom[], toGrade: number, drafts
     ],
   },
   {
-    label: 'Học liệu',
-    to: '/teacher/library',
+    label: 'Soạn học liệu',
+    icon: FileEdit,
     children: [
-      { to: '/teacher/library/courses', label: 'Khoá học & bài giảng', icon: Presentation, desc: 'Giao từng bài giảng theo lộ trình' },
-      { to: '/teacher/library/tests', label: 'Ngân hàng đề', icon: FileText, desc: 'Thi thử TOEIC, VSTEP · đề Viết, đề Nói' },
-      { to: '/teacher/library/practice', label: 'Ngữ pháp & Từ vựng', icon: Languages, desc: 'Ngữ pháp, flashcard, chép chính tả' },
-      { to: '/teacher/authoring', label: 'Học liệu của tôi', icon: FileEdit, desc: 'Soạn câu hỏi, đề kiểm tra · gửi duyệt' },
-      { to: '/teacher/materials', label: 'Tài liệu lớp', icon: FolderOpen, desc: 'Slide, audio, bài mẫu của riêng lớp' },
+      { to: '/teacher/authoring', label: 'Câu hỏi & đề tự soạn', icon: FileEdit, desc: 'Soạn câu hỏi, đề kiểm tra · gửi duyệt' },
       { to: '/teacher/question-bank', label: 'Ngân hàng câu hỏi', icon: Database, desc: 'Tra cứu theo Part · nhập đề từ file Word' },
+      { to: '/teacher/materials', label: 'Tài liệu lớp', icon: FolderOpen, desc: 'Slide, audio, bài mẫu của riêng lớp' },
     ],
   },
 ];
 
-/** Số bài chờ chấm (badge menu Chấm bài, thanh đáy) */
+/** Số bài chờ chấm (badge menu Bài tập / Chấm bài, thanh đáy) */
 export const usePendingGradingCount = () => useGradingQueue('pending').data?.length ?? 0;
 
 export const TeacherNav: React.FC = () => {
@@ -69,3 +89,4 @@ export const TeacherNav: React.FC = () => {
   const menus = useMemo(() => buildTeacherMenus(classes ?? [], toGrade, drafts), [classes, toGrade, drafts]);
   return <StaffNav menus={menus} label="Menu giáo viên" />;
 };
+

@@ -15,9 +15,9 @@ import { appLocale } from '@/shared/i18n';
 type Kind = 'courses' | 'tests' | 'practice';
 
 const COPY: Record<Kind, { title: string; sub: string }> = {
-  courses: { title: 'Khoá học & bài giảng', sub: 'Các khoá học viên đang học trên hệ thống. Tích chọn bài giảng để giao cho lớp, xem bài như học viên thấy.' },
-  tests: { title: 'Ngân hàng đề', sub: 'Đề trắc nghiệm (thi thử TOEIC, VSTEP) chấm tự động và đề tự luận (Viết, Nói) nộp về bàn chấm của giáo viên.' },
-  practice: { title: 'Ngữ pháp & Từ vựng', sub: 'Chủ điểm ngữ pháp kèm bài tập chấm tự động và bộ flashcard từ vựng ôn theo lịch ngắt quãng.' },
+  courses: { title: 'Khoá học', sub: 'Đúng các khoá học viên đang học, chia 3 mục TOEIC, VSTEP, Tiếng Anh THPT. Tích chọn bài để giao cho lớp, xem bài như học viên thấy.' },
+  tests: { title: 'Đề thi thử, Viết & Nói', sub: 'Đề trắc nghiệm (thi thử TOEIC, VSTEP) chấm tự động và đề tự luận (Viết, Nói) nộp về bàn chấm của giáo viên.' },
+  practice: { title: 'Ngữ pháp, Từ vựng & Chép chính tả', sub: 'Chủ điểm ngữ pháp kèm bài tập chấm tự động, bộ flashcard từ vựng và bài nghe chép chính tả.' },
 };
 
 /** Đường dẫn cũ (trước khi gộp mục) → trang mới */
@@ -77,8 +77,12 @@ export interface LibraryPageProps {
   eyebrow?: string;
 }
 
-export const TeacherLibraryPage: React.FC<LibraryPageProps> = ({ base = '/teacher/library', canAssign = true, copy: copyOverride, eyebrow = 'Học liệu' }) => {
+export const TeacherLibraryPage: React.FC<LibraryPageProps> = ({ base = '/teacher/library', canAssign = true, copy: copyOverride, eyebrow: eyebrowProp }) => {
   const { kind = 'courses' } = useParams();
+  const [params] = useSearchParams();
+  // nhãn khớp menu: Khoá học › Khoá học TOEIC; Thi thử & Luyện tập › …
+  const eyebrow = eyebrowProp ?? (kind === 'courses' ? 'Khoá học' : 'Thi thử & Luyện tập');
+  const trackTitle = kind === 'courses' && !copyOverride ? ({ toeic: 'Khoá học TOEIC', vstep: 'Khoá học VSTEP', thpt: 'Tiếng Anh THPT' } as Record<string, string>)[params.get('muc') ?? ''] : undefined;
   const copy = copyOverride?.[kind as Kind] ?? COPY[kind as Kind];
   useDocumentTitle(copy?.title ?? 'Học liệu');
   const navigate = useNavigate();
@@ -89,7 +93,7 @@ export const TeacherLibraryPage: React.FC<LibraryPageProps> = ({ base = '/teache
 
   return (
     <div className="space-y-6">
-      <TPageHead crumbs={[{ label: eyebrow }, { label: copy.title }]} title={copy.title} sub={copy.sub} />
+      <TPageHead crumbs={[{ label: eyebrow }, { label: trackTitle ?? copy.title }]} title={trackTitle ?? copy.title} sub={copy.sub} />
       {kind === 'courses' && <CoursesView assign={assign} />}
       {kind === 'tests' && <TestsView assign={assign} />}
       {kind === 'practice' && <PracticeView assign={assign} />}

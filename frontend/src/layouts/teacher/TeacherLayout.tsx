@@ -1,19 +1,40 @@
 import React from 'react';
-import { LayoutDashboard, Users, ClipboardList, ClipboardCheck, CalendarDays, PenTool, FolderOpen, BarChart3, Video, FileText, BookOpen, Sheet, UserRound, FilePen } from 'lucide-react';
+import { LayoutDashboard, Users, ClipboardList, ClipboardCheck, CalendarDays, PenTool, FolderOpen, BarChart3, FileText, BookOpen, Sheet, UserRound, FilePen, Briefcase, GraduationCap, School, PenLine, Mic, BookMarked, Headphones, Database } from 'lucide-react';
 import { AppShell, NavGroup } from '@/shared/components/layout/AppShell';
 import { TeacherNav, usePendingGradingCount } from './TeacherNav';
 
 /** Menu ngăn kéo (điện thoại) và thanh đáy; header máy tính dùng TeacherNav */
 const groupsOf = (toGrade: number): NavGroup[] => [
   {
+    // 4 mục đầu cũng là thanh đáy trên điện thoại
     title: 'Giảng dạy',
     items: [
       { to: '/teacher/dashboard', label: 'Tổng quan', icon: LayoutDashboard },
       { to: '/teacher/classes', label: 'Lớp học', icon: Users },
-      { to: '/teacher/schedule', label: 'Lịch dạy', icon: CalendarDays },
-      { to: '/teacher/grading', label: 'Chấm bài', icon: PenTool, badge: toGrade ? String(toGrade) : undefined },
       { to: '/teacher/assignments', label: 'Bài tập', icon: ClipboardList },
+      { to: '/teacher/grading', label: 'Chấm bài', icon: PenTool, badge: toGrade ? String(toGrade) : undefined },
+      { to: '/teacher/schedule', label: 'Lịch dạy', icon: CalendarDays },
       { to: '/teacher/attendance', label: 'Điểm danh', icon: ClipboardCheck },
+    ],
+  },
+  {
+    title: 'Khoá học',
+    items: [
+      { to: '/teacher/library/courses?muc=toeic', label: 'Khoá học TOEIC', icon: Briefcase },
+      { to: '/teacher/library/courses?muc=vstep', label: 'Khoá học VSTEP', icon: GraduationCap },
+      { to: '/teacher/library/courses?muc=thpt', label: 'Tiếng Anh THPT', icon: School },
+    ],
+  },
+  {
+    title: 'Thi thử & Luyện tập',
+    items: [
+      { to: '/teacher/library/tests?tab=TOEIC', label: 'Đề thi thử TOEIC', icon: FileText },
+      { to: '/teacher/library/tests?tab=VSTEP', label: 'Đề thi thử VSTEP', icon: FileText },
+      { to: '/teacher/library/tests?tab=writing', label: 'Đề Viết', icon: PenLine },
+      { to: '/teacher/library/tests?tab=speaking', label: 'Đề Nói', icon: Mic },
+      { to: '/teacher/library/practice?tab=grammar', label: 'Chủ điểm ngữ pháp', icon: BookMarked },
+      { to: '/teacher/library/practice?tab=vocab', label: 'Từ vựng & Flashcard', icon: BookOpen },
+      { to: '/teacher/library/practice?tab=dictation', label: 'Nghe chép chính tả', icon: Headphones },
     ],
   },
   {
@@ -25,12 +46,10 @@ const groupsOf = (toGrade: number): NavGroup[] => [
     ],
   },
   {
-    title: 'Học liệu',
+    title: 'Soạn học liệu',
     items: [
-      { to: '/teacher/library/courses', label: 'Khoá học & bài giảng', icon: Video },
-      { to: '/teacher/library/tests', label: 'Ngân hàng đề', icon: FileText },
-      { to: '/teacher/library/practice', label: 'Ngữ pháp & Từ vựng', icon: BookOpen },
-      { to: '/teacher/authoring', label: 'Học liệu của tôi', icon: FilePen },
+      { to: '/teacher/authoring', label: 'Câu hỏi & đề tự soạn', icon: FilePen },
+      { to: '/teacher/question-bank', label: 'Ngân hàng câu hỏi', icon: Database },
       { to: '/teacher/materials', label: 'Tài liệu lớp', icon: FolderOpen },
     ],
   },
