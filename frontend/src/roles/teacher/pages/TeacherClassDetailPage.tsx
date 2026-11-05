@@ -17,6 +17,7 @@ import { TEmpty, TError, TLoading } from '../components/TeacherState';
 import { ClassLeaderboardPanel } from '../components/ClassLeaderboard';
 import { classTrack, classTrackLabel, courseOptions } from '@/shared/constants/staff';
 import { ClassCourseProgressPanel } from '../components/ClassCourseProgress';
+import { CourseLessonList } from '../components/CourseLessonList';
 
 const STATUS: Record<ClassStudent['status'], { label: string; tone: StatusTone }> = {
   GOOD: { label: 'Ổn định', tone: 'green' },
@@ -39,6 +40,7 @@ export const TeacherClassDetailPage: React.FC = () => {
   const lib = useTeacherLibrary();
   const analytics = useClassAnalytics(id);
   const [tab, setTab] = useState('news');
+  const [picked, setPicked] = useState<string[]>([]);
   const [newsTitle, setNewsTitle] = useState('');
   const [newsBody, setNewsBody] = useState('');
   const [newsPin, setNewsPin] = useState(false);
@@ -74,6 +76,7 @@ export const TeacherClassDetailPage: React.FC = () => {
   const sessions = cls.sessions;
   // Buổi kế tiếp: chưa diễn ra (buổi đã qua mà vẫn UPCOMING là "chưa điểm danh", không phải buổi kế tiếp)
   const nowKey = (() => { const d = new Date(); const p = (n: number) => String(n).padStart(2, '0'); return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}${p(d.getHours())}:${p(d.getMinutes())}`; })();
+  const libCourse = lib.courses.find((x) => x.id === cls.course?.id);
   const nextSession = sessions.filter((s) => s.status === 'UPCOMING' && `${s.date}${s.end}` > nowKey).sort((a, b) => `${a.date}${a.start}`.localeCompare(`${b.date}${b.start}`))[0];
   const news = cls.announcements;
   const materials = cls.materials;
@@ -162,10 +165,10 @@ export const TeacherClassDetailPage: React.FC = () => {
   };
   const saveClass = () => {
     if (!classForm) return;
-    if (classForm.name.trim().length < 2) return toast.error('Tên lớp cần ít nhất 2 ký tự');
+    if ((classForm.name ?? '').trim().length < 2) return toast.error('Tên lớp cần ít nhất 2 ký tự');
     if (classForm.startDate && classForm.endDate && classForm.endDate < classForm.startDate) return toast.error('Ngày kết thúc phải sau ngày bắt đầu');
     updateClass.mutate(
-      { ...classForm, courseId: classForm.courseId || undefined, name: classForm.name.trim(), schedule: classForm.schedule?.trim() || null, room: classForm.room?.trim() || null, level: classForm.level?.trim() || null, description: classForm.description?.trim() || null, startDate: classForm.startDate || null, endDate: classForm.endDate || null },
+      { ...classForm, courseId: classForm.courseId || undefined, name: (classForm.name ?? '').trim(), schedule: classForm.schedule?.trim() || null, room: classForm.room?.trim() || null, level: classForm.level?.trim() || null, description: classForm.description?.trim() || null, startDate: classForm.startDate || null, endDate: classForm.endDate || null },
       { onSuccess: () => (setEditOpen(false), toast.success('Đã lưu thông tin lớp', classForm.name)), onError: fail('Không lưu được thông tin lớp') }
     );
   };
@@ -314,6 +317,7 @@ export const TeacherClassDetailPage: React.FC = () => {
         onChange={setTab}
         items={[
           { key: 'news', label: 'Bảng tin', count: news.length },
+          { key: 'lessons', label: 'Bài giảng', ...(cls.courseProgress ? { count: cls.courseProgress.lessonsTotal } : {}) },
           { key: 'course', label: 'Tiến độ khoá học' },
           { key: 'students', label: 'Học viên', count: students.length },
           { key: 'sessions', label: 'Buổi học & điểm danh', count: sessions.length },
@@ -601,6 +605,23 @@ export const TeacherClassDetailPage: React.FC = () => {
 
       {tab === 'ranking' && <ClassLeaderboardPanel classId={cls.id} />}
 
+      {tab === 'lessons' &&
+        (libCourse ? (
+          <Panel
+            title={libCourse.title}
+            sub={`${libCourse.lessonsCount} bài theo đúng thứ tự học viên học · cột cuối: học viên của lớp đã học xong bài, điểm bài tập trung bình`}
+            action={
+              <TBtn size="sm" variant="primary" disabled={!picked.length} onClick={() => navigate('/teacher/assignments', { state: { assign: { kind: 'LESSON', courseId: libCourse.slug, lessonIds: picked }, classId: cls.id } })}>
+                Giao {picked.length || ''} bài đã chọn
+              </TBtn>
+            }
+          >
+            <CourseLessonList course={libCourse} picked={picked} onToggle={(lid) => setPicked((p) => (p.includes(lid) ? p.filter((x) => x !== lid) : [...p, lid]))} stats={cls.courseProgress?.lessons} classSize={students.length} />
+          </Panel>
+        ) : (
+          <ClassCourseProgressPanel course={undefined} progress={undefined} students={students} />
+        ))}
+
       {tab === 'course' && (
         <ClassCourseProgressPanel
           course={cls.course}
@@ -610,9 +631,9 @@ export const TeacherClassDetailPage: React.FC = () => {
           action={
             cls.course ? (
               <span className="flex items-center gap-3 text-[13px]">
-                <Link to={`/teacher/courses?open=${cls.course.id}`} className="font-medium text-slate-600 hover:underline">
-                  Bài trong khoá
-                </Link>
+                <button type="button" onClick={() => setTab('lessons')} className="font-medium text-slate-600 hover:underline">
+                  Bài giảng
+                </button>
                 <button type="button" onClick={() => navigate('/teacher/assignments', { state: { assign: { kind: 'LESSON', courseId: cls.course!.slug, lessonIds: [] }, classId: cls.id } })} className="font-medium text-indigo-700 hover:underline">
                   Giao bài trong khoá
                 </button>

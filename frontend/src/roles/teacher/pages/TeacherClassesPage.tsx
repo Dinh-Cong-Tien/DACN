@@ -195,7 +195,7 @@ export const TeacherClassesPage: React.FC = () => {
               {g.course ? (
                 <span className="flex items-center gap-3 text-[13px]">
                   <Link to={`/teacher/courses?open=${g.course.id}`} className="font-medium text-slate-600 hover:text-slate-900 hover:underline">
-                    Bài trong khoá
+                    Xem khoá
                   </Link>
                   {view === 'active' && (
                     <button type="button" onClick={() => openCreate(g.course!.slug)} className="font-medium text-indigo-700 hover:underline">

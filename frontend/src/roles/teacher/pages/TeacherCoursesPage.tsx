@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { BookOpen, ChevronDown, ChevronRight, Copy, ExternalLink, Plus, Users } from 'lucide-react';
+import { Copy, ExternalLink, Plus, Users } from 'lucide-react';
 import { useDocumentTitle } from '@/shared/hooks';
 import { toast } from '@/shared/stores/uiStore';
 import { useLibCourses, useSessions, useTeacherClasses, type LibCourse, type TClassRoom } from '@/shared/api/teacher';
@@ -10,14 +10,13 @@ import type { AssignmentTarget, CourseTrack } from '@/shared/types';
 import { cn } from '@/shared/utils';
 import { Meter, TBtn, TPageHead, tbl } from '../components/TeacherKit';
 import { TEmpty, TError, TLoading } from '../components/TeacherState';
-import { CourseLessonList } from '../components/CourseLessonList';
 import { OpenClassDialog } from '../components/OpenClassDialog';
 
 const TITLE: Record<CourseTrack, string> = { TOEIC: 'Khoá học TOEIC', VSTEP: 'Khoá học VSTEP', THPT: 'Tiếng Anh THPT' };
 
 /**
- * Khoá học & Lớp của giáo viên — đúng trình tự: Mục (TOEIC / VSTEP / THPT) → Khoá học → các lớp của khoá → bài giảng của khoá.
- * Một khoá có nhiều lớp: mỗi khoá hiện các lớp trước (lịch, sĩ số, tiến độ khoá, buổi tới, vào lớp), sau đó mới tới bài giảng để giao.
+ * Khoá học & Lớp của giáo viên — đúng trình tự: Mục (TOEIC / VSTEP / THPT) → Khoá học → các lớp của khoá → vào lớp.
+ * Một khoá có nhiều lớp (Lớp 1, Lớp 2… cùng nội dung, khác lịch học); bài giảng, tiến độ, giao bài nằm trong từng lớp.
  * ?muc=toeic|vstep|thpt chọn mục, ?open=<courseId> cuộn tới khoá.
  */
 export const TeacherCoursesPage: React.FC = () => {
@@ -31,8 +30,6 @@ export const TeacherCoursesPage: React.FC = () => {
   const today = isoDate(new Date());
   const upcoming = useSessions({ from: today, to: isoDate(addDays(new Date(), 28)) }).data ?? [];
   const [openFor, setOpenFor] = useState<string | null>(null);
-  const [lessonsOf, setLessonsOf] = useState<string | null>(null);
-  const [picked, setPicked] = useState<string[]>([]);
 
   const all = coursesQ.data ?? [];
   const classes = classesQ.data ?? [];
@@ -64,7 +61,7 @@ export const TeacherCoursesPage: React.FC = () => {
       <TPageHead
         crumbs={[{ label: 'Khoá học & Lớp' }, { label: TITLE[track] }]}
         title={TITLE[track]}
-        sub={`${courses.length} khoá · ${mine.length} lớp bạn đang dạy. Mỗi khoá gồm các lớp học khoá đó và bài giảng theo đúng thứ tự học viên học.`}
+        sub={`${courses.length} khoá · ${mine.length} lớp bạn đang dạy.`}
         actions={
           <>
             <TBtn to="/teacher/classes" icon={<Users />}>
@@ -93,8 +90,6 @@ export const TeacherCoursesPage: React.FC = () => {
       {courses.map((c, i) => {
         const list = classesOf(c);
         const students = list.reduce((t, x) => t + x.studentsCount, 0);
-        const showLessons = lessonsOf === c.id;
-        const lessons = c.sections.flatMap((s) => s.lessons);
         return (
           <section key={c.id} id={`course-${c.id}`} className={cn('scroll-mt-24 overflow-hidden rounded-2xl border bg-white shadow-[0_1px_2px_rgba(16,24,40,0.04),0_8px_24px_-16px_rgba(16,24,40,0.12)]', focus === c.id ? 'border-indigo-300' : 'border-slate-200/80')}>
             {/* 1. Khoá học */}
@@ -119,8 +114,8 @@ export const TeacherCoursesPage: React.FC = () => {
             </header>
 
             {/* 2. Các lớp của khoá */}
-            <div className="px-5 pb-1 pt-4">
-              <p className="mb-2 text-[13px] font-semibold text-slate-900">Lớp của khoá ({list.length})</p>
+            <div className="px-5 pb-2 pt-4">
+              <p className="mb-2 text-[13px] text-slate-500">Các lớp cùng học đủ {c.lessonsCount} bài của khoá, chỉ khác lịch học. Vào lớp để xem bài giảng, tiến độ từng học viên, giao bài, điểm danh.</p>
               {list.length === 0 ? (
                 <div className="mb-3 rounded-lg border border-dashed border-slate-300 px-4 py-5 text-center">
                   <p className="text-sm text-slate-600">Chưa có lớp nào học khoá này.</p>
@@ -149,7 +144,7 @@ export const TeacherCoursesPage: React.FC = () => {
                           <tr key={x.id} className={tbl.tr}>
                             <td className={cn(tbl.td, 'whitespace-nowrap')}>
                               <Link to={`/teacher/classes/${x.id}`} className="font-medium text-slate-900 hover:text-indigo-700">
-                                {x.name}
+                                {x.name.split(' · ').pop()}
                               </Link>
                             </td>
                             <td className={cn(tbl.td, 'whitespace-nowrap text-slate-600')}>
@@ -186,26 +181,6 @@ export const TeacherCoursesPage: React.FC = () => {
               )}
             </div>
 
-            {/* 3. Bài giảng của khoá */}
-            <div className="border-t border-slate-100 px-5 py-3">
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <button type="button" onClick={() => (setLessonsOf(showLessons ? null : c.id), setPicked([]))} className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-slate-900">
-                  {showLessons ? <ChevronDown className="h-4 w-4 text-slate-400" /> : <ChevronRight className="h-4 w-4 text-slate-400" />}
-                  <BookOpen className="h-4 w-4 text-slate-400" /> Bài giảng trong khoá ({lessons.length})
-                </button>
-                {showLessons && (
-                  <TBtn size="sm" variant="primary" disabled={!picked.length} onClick={() => assign({ kind: 'LESSON', courseId: c.slug, lessonIds: lessons.filter((l) => picked.includes(l.id)).map((l) => l.id) }, list[0]?.id)}>
-                    Giao {picked.length || ''} bài đã chọn
-                  </TBtn>
-                )}
-              </div>
-              {showLessons && (
-                <div className="mt-3">
-                  <p className="mb-2 text-[13px] text-slate-500">Tích chọn bài rồi giao cho lớp. Học viên học xong và đạt bài tập sau bài thì bài giao tự chấm điểm.</p>
-                  <CourseLessonList course={c} picked={picked} onToggle={(id) => setPicked((p) => (p.includes(id) ? p.filter((y) => y !== id) : [...p, id]))} />
-                </div>
-              )}
-            </div>
           </section>
         );
       })}

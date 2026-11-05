@@ -7,7 +7,7 @@ import { Input, Modal, Select } from '@/shared/components/ui';
 import { courseOptions } from '@/shared/constants/staff';
 import { TBtn } from './TeacherKit';
 
-const EMPTY = { name: '', course: '', schedule: '', room: '' };
+const EMPTY = { course: '', schedule: '', room: '' };
 
 /** Mở lớp mới trong một khoá học (lớp nằm trong khoá; học viên vào lớp được ghi danh khoá). `course` = slug chọn sẵn. */
 export const OpenClassDialog: React.FC<{ open: boolean; course?: string; onClose: () => void }> = ({ open, course, onClose }) => {
@@ -24,13 +24,13 @@ export const OpenClassDialog: React.FC<{ open: boolean; course?: string; onClose
 
   const save = () => {
     if (!form.course) return setError('Chọn khoá học của lớp');
-    if (form.name.trim().length < 2) return setError('Vui lòng nhập tên lớp');
+    if (!form.schedule.trim()) return setError('Nhập lịch học của lớp');
     createClass.mutate(
-      { name: form.name.trim(), courseId: form.course, schedule: form.schedule.trim() || null, room: form.room.trim() || null },
+      { courseId: form.course, schedule: form.schedule.trim() || null, room: form.room.trim() || null },
       {
         onSuccess: (c) => {
           onClose();
-          toast.success('Đã mở lớp mới', `${c.course?.title ?? ''} · mã mời ${c.code}`);
+          toast.success(`Đã mở ${c.name}`, `${c.schedule} · mã mời ${c.code}`);
         },
         onError: (e) => setError(errorMessage(e)),
       }
@@ -42,7 +42,7 @@ export const OpenClassDialog: React.FC<{ open: boolean; course?: string; onClose
       open={open}
       onClose={onClose}
       title="Mở lớp học"
-      description="Lớp thuộc một khoá học; mã mời được tạo tự động sau khi lưu."
+      description="Các lớp của một khoá học cùng nội dung, chỉ khác lịch học. Tên lớp (Lớp 1, Lớp 2…) và mã mời được tạo tự động."
       icon={<Users />}
       footer={
         <>
@@ -65,8 +65,7 @@ export const OpenClassDialog: React.FC<{ open: boolean; course?: string; onClose
           onChange={(e) => setForm((f) => ({ ...f, course: e.target.value }))}
           hint="Học viên vào lớp được ghi danh khoá này; giáo viên theo dõi tiến độ khoá trong lớp"
         />
-        <Input label="Tên lớp" required placeholder="VD: TOEIC 650+ K13" value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} error={error} />
-        <Input label="Lịch học" placeholder="VD: T2 – T4 – T6 · 19:00" value={form.schedule} onChange={(e) => setForm((f) => ({ ...f, schedule: e.target.value }))} />
+        <Input label="Lịch học" required placeholder="VD: T2 – T4 – T6 · 19:00" value={form.schedule} onChange={(e) => setForm((f) => ({ ...f, schedule: e.target.value }))} error={error} />
         <Input label="Phòng học" placeholder="VD: Phòng 302 hoặc Online" value={form.room} onChange={(e) => setForm((f) => ({ ...f, room: e.target.value }))} />
       </div>
     </Modal>

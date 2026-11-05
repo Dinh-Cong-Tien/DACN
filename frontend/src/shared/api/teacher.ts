@@ -274,7 +274,8 @@ export interface LibPrompt {
 
 // ---- Body ----
 export interface ClassInput {
-  name: string;
+  /** không gửi khi mở lớp → tự đặt "<khoá> · Lớp N" */
+  name?: string;
   /** Khoá học của lớp (slug / id) — mục, kỳ thi quy đổi điểm lấy theo khoá */
   courseId?: string;
   /** Lớp chưa gắn khoá: mục TOEIC / VSTEP / THPT */

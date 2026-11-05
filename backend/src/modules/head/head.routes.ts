@@ -25,7 +25,7 @@ import {
 } from './shared';
 import { oversightRouter } from './head.oversight';
 import { summaryRouter } from './head.summary';
-import { CLASS_TRACK, classCourseData, classCourseProgress, classTrackData, enrollClassCourse } from '../catalog/class-track';
+import { CLASS_TRACK, classCourseData, classCourseProgress, classTrackData, enrollClassCourse, nextClassName } from '../catalog/class-track';
 
 export const headRouter = Router();
 headRouter.use(auth, allow('HEAD_TEACHER'), refreshLiveAfterWrite);
@@ -328,7 +328,8 @@ headRouter.post(
 );
 
 const classBody = z.object({
-  name: z.string().trim().min(2).max(160),
+  /** không gửi khi mở lớp → tự đặt "<khoá> · Lớp N" */
+  name: z.string().trim().min(2).max(160).optional(),
   code: z.string().trim().min(3).max(16).optional(),
   /** Khoá học của lớp (id hoặc slug) */
   courseId: z.string().trim().min(1).max(140).optional(),
@@ -358,7 +359,7 @@ headRouter.post(
     await assertTeacherInScope(body.teacherId, scope);
     if (!body.courseId) throw badRequest('Chọn khoá học của lớp', 'COURSE_REQUIRED');
     const cc = await classCourseData(body.courseId);
-    const c = await prisma.class.create({ data: { ...body, ...cc, departmentId, code: body.code ?? genCode() }, include: classInclude });
+    const c = await prisma.class.create({ data: { ...body, ...cc, name: body.name || (await nextClassName(prisma, cc.courseId)), departmentId, code: body.code ?? genCode() }, include: classInclude });
     await audit(req, 'CLASS_CREATE', 'class', c.id, { after: { name: c.name, teacherId: c.teacherId } });
     await notify([c.teacherId], { type: 'CLASS', title: 'Bạn được phân công lớp mới', message: `${c.name} · mã lớp ${c.code}`, link: `/teacher/classes/${c.id}`, refType: 'CLASS', refId: c.id });
     return toClassRoom(c);

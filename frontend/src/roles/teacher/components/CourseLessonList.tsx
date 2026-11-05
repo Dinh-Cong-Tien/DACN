@@ -9,7 +9,14 @@ const exerciseNote = (l: { exercisesCount?: number; passScorePct?: number }) => 
  * Bài giảng của khoá theo đúng thứ tự học viên học (chương → bài), kèm loại bài, số câu bài tập, thời lượng.
  * Có `onToggle` → tích chọn bài để giao cho lớp.
  */
-export const CourseLessonList: React.FC<{ course: LibCourse; picked?: string[]; onToggle?: (lessonId: string) => void }> = ({ course, picked = [], onToggle }) => {
+export const CourseLessonList: React.FC<{
+  course: LibCourse;
+  picked?: string[];
+  onToggle?: (lessonId: string) => void;
+  /** trong lớp: số học viên đã học xong từng bài / sĩ số lớp */
+  stats?: { lessonId: string; done: number; avgPct: number | null }[];
+  classSize?: number;
+}> = ({ course, picked = [], onToggle, stats, classSize = 0 }) => {
   const lessons = course.sections.flatMap((s) => s.lessons);
   return (
     <div className="overflow-hidden rounded-md border border-slate-200 bg-white">
@@ -31,6 +38,14 @@ export const CourseLessonList: React.FC<{ course: LibCourse; picked?: string[]; 
                   {exerciseNote(l)}
                 </span>
                 <span className="w-14 text-right text-[12px] tabular-nums text-slate-500">{l.durationMin} phút</span>
+                {stats && (() => {
+                  const st = stats.find((x) => x.lessonId === l.id);
+                  return (
+                    <span className="w-32 text-right text-[12px] tabular-nums text-slate-600" title="Học viên trong lớp đã học xong bài · điểm bài tập trung bình">
+                      {st?.done ?? 0}/{classSize} xong{st?.avgPct != null ? ` · ${st.avgPct}%` : ''}
+                    </span>
+                  );
+                })()}
               </label>
             );
           })}

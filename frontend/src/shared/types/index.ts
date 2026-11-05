@@ -387,6 +387,8 @@ export interface ClassCourse {
 /** Tiến độ khoá học của từng học viên trong lớp */
 export interface ClassCourseProgress {
   lessonsTotal: number;
+  /** Từng bài: số học viên trong lớp đã học xong, điểm bài tập trung bình */
+  lessons: { lessonId: string; done: number; avgPct: number | null }[];
   students: {
     studentId: string;
     enrolled: boolean;

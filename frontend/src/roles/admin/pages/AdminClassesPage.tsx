@@ -95,7 +95,7 @@ export const AdminClassesPage: React.FC = () => {
         rows={rows}
         loading={classesQ.isLoading}
         onCreate={async (v) => {
-          const c = await headApi.createClass({ name: v.name, courseId: v.courseKey, teacherId: v.teacherId, room: v.room || undefined, scheduleText: v.schedule || undefined });
+          const c = await headApi.createClass({ name: v.name?.trim() || undefined, courseId: v.courseKey, teacherId: v.teacherId, room: v.room || undefined, scheduleText: v.schedule || undefined });
           void refresh();
           return { ...c, trackKey: classTrack(c), courseKey: c.course?.slug ?? '', locked: false } as Row;
         }}
@@ -119,7 +119,7 @@ export const AdminClassesPage: React.FC = () => {
         ]}
         defaultValues={{ courseKey: '', teacherId: teacherList.find((t) => t.status === 'ACTIVE')?.id, room: '' }}
         fields={[
-          { key: 'name', label: 'Tên lớp', required: true, colSpan: 2 },
+          { key: 'name', label: 'Tên lớp', colSpan: 2, placeholder: 'Để trống khi mở lớp: tự đặt theo thứ tự (TOEIC · Lớp 1, Lớp 2…)' },
           { key: 'courseKey', label: 'Khoá học', type: 'select', required: true, options: courseOptions(courses) },
           { key: 'teacherId', label: 'Giáo viên phụ trách', type: 'select', required: true, options: teacherList.filter((t) => t.status === 'ACTIVE').map((t) => ({ value: t.id, label: t.name })) },
           { key: 'schedule', label: 'Lịch học', placeholder: 'T2 – T4 · 19:00' },

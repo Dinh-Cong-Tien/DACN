@@ -4,7 +4,7 @@
  * Gọi ở cuối course-tracks.ts; chạy riêng: npx tsx prisma/seed/class-courses.ts
  */
 import { prisma } from './lib';
-import { enrollClassCourse } from '../../src/modules/catalog/class-track';
+import { courseShortName, enrollClassCourse } from '../../src/modules/catalog/class-track';
 import { MERGED_SLUG } from './merge-courses';
 
 /** Tên lớp (biểu thức) → slug khoá học */
@@ -40,6 +40,17 @@ export async function linkClassCourses(): Promise<string[]> {
       await enrollClassCourse(tx, course.id, members.map((m) => m.studentId));
     });
     out.push(`Lớp ${cl.name} → ${course.title}`);
+  }
+  // lớp của khoá đặt tên theo thứ tự (cùng nội dung, khác lịch học): "TOEIC · Lớp 1", "TOEIC · Lớp 2"…
+  for (const course of courses) {
+    const list = await prisma.class.findMany({ where: { courseId: course.id }, orderBy: { createdAt: 'asc' } });
+    const short = courseShortName(course);
+    for (const [i, cl] of list.entries()) {
+      const name = `${short} · Lớp ${i + 1}`;
+      if (cl.name === name) continue;
+      await prisma.class.update({ where: { id: cl.id }, data: { name } });
+      out.push(`Đổi tên lớp: ${cl.name} → ${name}`);
+    }
   }
   return out;
 }

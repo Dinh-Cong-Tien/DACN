@@ -45,7 +45,7 @@ import { completedAttempts } from '../catalog/counts';
 import { gradeLessonAssignments } from '../catalog/lesson-assignments';
 import { toExercises } from '../catalog/lesson-exercises';
 import { byTitleNatural, levelLabel } from '../catalog/mappers';
-import { CLASS_TRACK, classCourseData, classCourseProgress, classCourseSelect, classTrackData, enrollClassCourse } from '../catalog/class-track';
+import { CLASS_TRACK, classCourseData, classCourseProgress, classCourseSelect, classTrackData, enrollClassCourse, nextClassName } from '../catalog/class-track';
 
 export const teacherRouter = Router();
 
@@ -265,7 +265,8 @@ teacherRouter.get(
 );
 
 const classBody = z.object({
-  name: z.string().trim().min(2).max(160),
+  /** không gửi khi mở lớp → tự đặt "<khoá> · Lớp N" */
+  name: z.string().trim().min(2).max(160).optional(),
   /** Khoá học của lớp (id hoặc slug) — lớp nằm trong khoá, mục / kỳ thi lấy theo khoá */
   courseId: z.string().trim().min(1).max(140).optional(),
   /** Lớp chưa gắn khoá: mục TOEIC / VSTEP / THPT (gửi track hoặc examType) */
@@ -311,7 +312,7 @@ teacherRouter.post(
     const cc = await classCourseData(body.courseId);
     const teacher = await prisma.user.findUniqueOrThrow({ where: { id: u.id } });
     const c = await prisma.class.create({
-      data: { ...classData(body), ...cc, name: body.name, examType: cc.examType, code: await uniqueClassCode(), teacherId: u.id, departmentId: teacher.departmentId },
+      data: { ...classData(body), ...cc, name: body.name || (await nextClassName(prisma, cc.courseId)), examType: cc.examType, code: await uniqueClassCode(), teacherId: u.id, departmentId: teacher.departmentId },
       include: classInclude,
     });
     return (await toClassRooms([c]))[0];

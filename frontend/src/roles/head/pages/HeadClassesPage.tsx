@@ -59,13 +59,13 @@ export const HeadClassesPage: React.FC = () => {
   const activeTeachers = teacherList.filter((t) => t.status === 'ACTIVE');
 
   const create = async () => {
-    if (!form.name.trim()) return setError('Vui lòng nhập tên lớp');
+    if (!form.schedule.trim()) return setError('Nhập lịch học của lớp');
     if (!form.course) return setError('Chọn khoá học của lớp');
     const teacherId = form.teacherId || activeTeachers[0]?.id;
     if (!teacherId) return setError('Bộ môn chưa có giáo viên đang hoạt động');
     setSaving(true);
     try {
-      const c = await headApi.createClass({ name: form.name.trim(), courseId: form.course, teacherId, scheduleText: form.schedule || undefined, room: form.room || undefined, coverUrl: COVERS[classes.length % COVERS.length] });
+      const c = await headApi.createClass({ courseId: form.course, teacherId, scheduleText: form.schedule || undefined, room: form.room || undefined, coverUrl: COVERS[classes.length % COVERS.length] });
       setOpen(false);
       setForm({ name: '', course: '', teacherId: '', schedule: '', room: '' });
       setError('');
@@ -247,13 +247,13 @@ export const HeadClassesPage: React.FC = () => {
         }
       >
         <div className="space-y-4">
-          <Input label="Tên lớp" required placeholder="VD: TOEIC 650+ K13" value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} error={error} />
+          <p className="text-[13px] text-slate-500">Các lớp của một khoá cùng nội dung, chỉ khác lịch học. Tên lớp (Lớp 1, Lớp 2…) và mã mời được tạo tự động.</p>
           <div className="grid gap-4 sm:grid-cols-2">
             <Select label="Khoá học" required placeholder="Chọn khoá học của lớp" options={courseOptions(courses)} value={form.course} onChange={(e) => setForm((f) => ({ ...f, course: e.target.value }))} />
             <Select label="Giáo viên phụ trách" options={activeTeachers.map((t) => ({ value: t.id, label: `${t.name} · ${t.classesCount} lớp` }))} value={form.teacherId || activeTeachers[0]?.id || ''} onChange={(e) => setForm((f) => ({ ...f, teacherId: e.target.value }))} />
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
-            <Input label="Lịch học" placeholder="VD: T2 – T4 – T6 · 19:00" value={form.schedule} onChange={(e) => setForm((f) => ({ ...f, schedule: e.target.value }))} />
+            <Input label="Lịch học" required error={error} placeholder="VD: T2 – T4 – T6 · 19:00" value={form.schedule} onChange={(e) => setForm((f) => ({ ...f, schedule: e.target.value }))} />
             <Input label="Phòng học" placeholder="VD: Phòng 302 hoặc Online" value={form.room} onChange={(e) => setForm((f) => ({ ...f, room: e.target.value }))} />
           </div>
         </div>

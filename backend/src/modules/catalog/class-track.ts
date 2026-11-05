@@ -38,6 +38,24 @@ export async function classCourseData(idOrSlug: string) {
   return { courseId: c.id, track, examType: (c.examType ?? (track === 'THPT' ? 'VSTEP' : track)) as ExamType };
 }
 
+/** Tên ngắn của khoá dùng đặt tên lớp: "TOEIC", "VSTEP", "Tiếng Anh 10", "Ôn thi tốt nghiệp" */
+export const courseShortName = (c: { title: string; track?: CourseTrack | null }) =>
+  c.track === 'TOEIC' || c.track === 'VSTEP'
+    ? c.track
+    : c.title
+        .replace(/\s*\(Global Success\)\s*/i, '')
+        .replace(/^Ôn thi tốt nghiệp THPT.*$/i, 'Ôn thi tốt nghiệp')
+        .trim();
+
+/** Lớp của một khoá đặt tên theo thứ tự: "TOEIC · Lớp 1", "TOEIC · Lớp 2"… (các lớp cùng nội dung, khác lịch học) */
+export async function nextClassName(tx: Prisma.TransactionClient | typeof prisma, courseId: string) {
+  const c = await tx.course.findUniqueOrThrow({ where: { id: courseId }, select: { title: true, track: true } });
+  const short = courseShortName(c);
+  const names = (await tx.class.findMany({ where: { courseId }, select: { name: true } })).map((x) => x.name);
+  const used = names.map((n) => Number(/Lớp (\d+)$/.exec(n)?.[1] ?? 0));
+  return `${short} · Lớp ${Math.max(0, ...used) + 1}`;
+}
+
 /** Học viên vào lớp (mã mời / giáo viên thêm) → ghi danh khoá học của lớp; đã ghi danh thì giữ nguyên tiến độ */
 export async function enrollClassCourse(tx: Prisma.TransactionClient, courseId: string | null | undefined, studentIds: string[]) {
   if (!courseId || !studentIds.length) return;
@@ -66,6 +84,12 @@ export async function classCourseProgress(courseId: string, studentIds: string[]
   const title = new Map(lessons.map((l) => [l.id, l.title]));
   return {
     lessonsTotal: ids.length,
+    /** từng bài: số học viên trong lớp đã học xong, điểm bài tập trung bình */
+    lessons: ids.map((lessonId) => {
+      const done = progress.filter((p) => p.lessonId === lessonId && p.status === 'COMPLETED');
+      const scored = done.filter((p) => p.bestScorePct !== null);
+      return { lessonId, done: done.length, avgPct: scored.length ? Math.round(scored.reduce((t, p) => t + (p.bestScorePct ?? 0), 0) / scored.length) : null };
+    }),
     students: studentIds.map((sid) => {
       const mine = progress.filter((p) => p.userId === sid);
       const done = mine.filter((p) => p.status === 'COMPLETED');
