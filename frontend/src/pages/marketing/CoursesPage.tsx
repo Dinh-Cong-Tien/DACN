@@ -26,6 +26,8 @@ const TrackRow: React.FC<{ course: Course; isStudent: boolean }> = ({ course: c,
     else acc.push({ part: s.part, items: [{ s, i }] });
     return acc;
   }, []);
+  // phần lớn nhóm chỉ có 1 chặng (vd khoá chia theo phần thi) → bỏ tiêu đề nhóm, hiện danh sách gọn kèm nhãn phần
+  const flat = groups.length >= 3 && groups.filter((g) => g.items.length === 1).length / groups.length > 0.5;
 
   return (
     <article className="grid gap-6 rounded-2xl border border-slate-200 bg-white p-4 md:grid-cols-[minmax(0,380px)_1fr] md:gap-8 md:p-5">
@@ -46,7 +48,19 @@ const TrackRow: React.FC<{ course: Course; isStudent: boolean }> = ({ course: c,
           {all.length} bài · {c.sections.length} chặng · {c.durationHours} giờ · {c.level}
         </p>
 
-        {groups.map((g, gi) => (
+        {flat ? (
+          <ol className="mt-4 grid gap-x-6 gap-y-1.5 text-[14px] text-slate-700 sm:grid-cols-2">
+            {c.sections.map((s, i) => (
+              <li key={s.id} className="flex min-w-0 items-baseline gap-2">
+                <span className="w-16 shrink-0 text-slate-400">Chặng {i + 1}</span>
+                <span className="min-w-0">
+                  {s.title}
+                  {s.part && <span className="ml-1.5 whitespace-nowrap rounded-full bg-slate-900/[0.05] px-2 py-0.5 align-middle text-[11px] font-semibold text-slate-500">{s.part.split(' · ')[0]}</span>}
+                </span>
+              </li>
+            ))}
+          </ol>
+        ) : groups.map((g, gi) => (
           <div key={gi} className="mt-4">
             {g.part && (
               <p className="mb-1.5 text-[12px] font-semibold uppercase tracking-[0.12em] text-slate-500">

@@ -35,6 +35,7 @@ export const THPT_EXAM_EN: Record<string, string> = {
   'Đọc hiểu': 'Reading comprehension',
   'Đề luyện tổng hợp': 'Full practice test',
   'Luyện đề': 'Test practice',
+  'Luyện theo dạng câu': 'Practice by question type',
   'Đề luyện tổng hợp 40 câu — 50 phút': 'Full practice test: 40 questions — 50 minutes',
   'Chiến lược: điền từ vào thông báo, quảng cáo': 'Strategy: filling in notices and advertisements',
   'Chiến lược: điền từ vào tờ rơi': 'Strategy: filling in leaflets',

@@ -355,7 +355,8 @@ async function main() {
     const json = (v: unknown) => v as Prisma.InputJsonValue;
 
     // Làm quen đề thi
-    const s0 = await section('Làm quen đề thi', 'Tổng quan');
+    // 3 phần: Nền tảng (làm quen đề + tổng ôn ngữ pháp) · Luyện theo dạng câu · Luyện đề
+    const s0 = await section('Làm quen đề thi', 'Nền tảng');
     await lesson(s0.id, 'Cấu trúc đề thi tốt nghiệp THPT môn Tiếng Anh', 0, {
       type: 'READING',
       summary: '40 câu trắc nghiệm, 50 phút, 6 dạng câu theo thứ tự cố định',
@@ -377,7 +378,7 @@ async function main() {
     });
 
     // Tổng ôn ngữ pháp lớp 10–12: kiến thức + câu luyện đã soạn của các Unit SGK
-    const s1 = await section('Tổng ôn ngữ pháp lớp 10–12', 'Tổng ôn ngữ pháp');
+    const s1 = await section('Tổng ôn ngữ pháp lớp 10–12', 'Nền tảng');
     const unitOf = (key: string) => {
       const [g, u] = key.split('-').map(Number);
       return THPT.find((x) => x.grade === g)?.units.find((x) => x.no === u);
@@ -403,7 +404,7 @@ async function main() {
     // Từng dạng câu: chiến lược + luyện đề đúng định dạng
     let setNo = 0;
     for (const g of PART_GUIDES) {
-      const sec = await section(g.section, g.part);
+      const sec = await section(g.section, 'Luyện theo dạng câu');
       await lesson(sec.id, g.strategyTitle, 0, {
         type: 'READING',
         summary: g.summary,
