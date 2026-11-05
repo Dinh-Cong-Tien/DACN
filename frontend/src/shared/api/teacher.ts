@@ -219,6 +219,9 @@ export interface LibCourse {
   title: string;
   category: CourseCategory | 'EXAM_PREP';
   examType?: ExamType;
+  /** Mục chính (TOEIC / VSTEP / THPT) và nhóm trong mục */
+  track?: string;
+  trackGroup?: string;
   level?: string;
   coverUrl?: string;
   lessonsCount: number;

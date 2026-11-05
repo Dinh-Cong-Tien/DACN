@@ -1466,7 +1466,7 @@ teacherRouter.get(
         author: { select: { fullName: true } },
         courseSectionCourses: { orderBy: { orderIndex: 'asc' }, include: { lessonSections: { where: { deletedAt: null }, orderBy: { orderIndex: 'asc' }, select: { id: true, title: true, type: true, durationMin: true, orderIndex: true } } } },
       },
-      orderBy: [{ category: 'asc' }, { title: 'asc' }],
+      orderBy: [{ track: 'asc' }, { trackOrder: 'asc' }, { title: 'asc' }],
     });
     const used = await usedCounts();
     const enrolled = courses.length ? await prisma.courseEnrollment.groupBy({ by: ['courseId'], where: { courseId: { in: courses.map((c) => c.id) } }, _count: { _all: true } }) : [];
@@ -1476,6 +1476,8 @@ teacherRouter.get(
       title: c.title,
       category: c.category,
       examType: c.examType ?? undefined,
+      track: c.track ?? undefined,
+      trackGroup: c.trackGroup ?? undefined,
       level: c.level ?? undefined,
       coverUrl: c.coverUrl ?? undefined,
       // đếm thật từ các bài chưa xoá trong khoá

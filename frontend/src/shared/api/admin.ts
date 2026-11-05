@@ -77,6 +77,8 @@ export interface AdminCourseRow {
   title: string;
   category: string;
   examType?: ExamType;
+  track?: string;
+  trackGroup?: string;
   level: string;
   description: string;
   gradient: string;
@@ -91,7 +93,7 @@ export interface AdminCourseRow {
   status: string;
 }
 export type TreeLesson = { id: string; title: string; type: string; durationMin: number; status: string; orderIndex: number; videoUrl?: string | null; isFreePreview: boolean };
-export type AdminTreeNode = CourseTreeNode & { slug?: string; status?: string; category?: string; partTitle?: string; lessons?: TreeLesson[]; children?: AdminTreeNode[] };
+export type AdminTreeNode = CourseTreeNode & { slug?: string; status?: string; category?: string; track?: string; trackGroup?: string; partTitle?: string; lessons?: TreeLesson[]; children?: AdminTreeNode[] };
 export interface AdminTestRow {
   id: string;
   slug: string;

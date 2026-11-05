@@ -11,6 +11,7 @@ const TYPE_LABEL: Record<LessonExercise['type'], string> = {
   'vocab-context': 'Từ vựng',
   'grammar-formula': 'Ngữ pháp',
   'grammar-name': 'Ngữ pháp',
+  'grammar-gap': 'Ngữ pháp',
   article: 'Mạo từ',
   phoneme: 'Phát âm',
 };

@@ -12,13 +12,19 @@ import { Img, PHOTOS } from '@/shared/components/media/Img';
 import { toast } from '@/shared/stores/uiStore';
 
 const TYPE_META: Record<CourseTreeNode['type'], { icon: React.ElementType; tone: Tone; label: string; child: CourseTreeNode['type'] | null }> = {
-  CATEGORY: { icon: FolderTree, tone: 'amber', label: 'Danh mục', child: 'COURSE' },
+  CATEGORY: { icon: FolderTree, tone: 'amber', label: 'Mục chính', child: 'COURSE' },
   COURSE: { icon: BookOpen, tone: 'indigo', label: 'Khoá học', child: 'SECTION' },
   SECTION: { icon: Layers, tone: 'emerald', label: 'Chương', child: null },
 };
 
 type Mode = { kind: 'add' | 'edit'; node: AdminTreeNode } | null;
-/** Danh mục là nhóm cố định của hệ thống (enum course_category) */
+/** Mục chính của menu Khoá học (cấp 1 của cây) */
+const TRACKS = [
+  { value: 'TOEIC', label: 'TOEIC' },
+  { value: 'VSTEP', label: 'VSTEP' },
+  { value: 'THPT', label: 'Tiếng Anh THPT' },
+];
+/** Loại khoá (enum course_category) — dùng cho thống kê, không hiện ở menu */
 const CATEGORIES = [
   { value: 'FOUNDATION', label: 'Kiến thức nền tảng' },
   { value: 'GRAMMAR', label: 'Ngữ pháp' },
@@ -64,15 +70,17 @@ export const AdminCoursesPage: React.FC = () => {
   const coursesQ = useAdminCourses();
   const refresh = useAdminInvalidate();
   const tree = treeQ.data ?? EMPTY;
-  const [open, setOpen] = useState<Set<string>>(new Set(['cat-FOUNDATION']));
+  const [open, setOpen] = useState<Set<string>>(new Set(['track-TOEIC']));
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [mode, setMode] = useState<Mode>(null);
   const [title, setTitle] = useState('');
   const [newType, setNewType] = useState<CourseTreeNode['type']>('COURSE');
   const [category, setCategory] = useState('FOUNDATION');
+  const [track, setTrack] = useState('TOEIC');
+  const [group, setGroup] = useState('');
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState<AdminTreeNode | null>(null);
-  const [info, setInfo] = useState({ description: '', coverUrl: '', isFree: false });
+  const [info, setInfo] = useState({ description: '', coverUrl: '', isFree: false, track: '', trackGroup: '' });
   const [lessonDlg, setLessonDlg] = useState<{ sectionId: string; lesson: TreeLesson | null } | null>(null);
   const [deletingLesson, setDeletingLesson] = useState<TreeLesson | null>(null);
   const [busy, setBusy] = useState(false);
@@ -93,17 +101,19 @@ export const AdminCoursesPage: React.FC = () => {
     setTitle('');
     if (node) {
       setNewType(TYPE_META[node.type].child ?? 'SECTION');
-      if (node.type === 'CATEGORY') setCategory(node.category ?? 'FOUNDATION');
+      if (node.type === 'CATEGORY') setTrack(node.track ?? 'TOEIC');
+      setGroup('');
       setMode({ kind: 'add', node });
     } else {
       setNewType('COURSE');
+      setGroup('');
       setMode({ kind: 'add', node: { id: '__root', title: 'root', type: 'CATEGORY' } });
     }
   };
   const openEdit = (node: AdminTreeNode) => {
     setTitle(node.title);
     const c = coursesQ.data?.find((x) => x.id === node.id);
-    setInfo({ description: c?.description ?? '', coverUrl: c?.coverUrl ?? '', isFree: !!c?.isFree });
+    setInfo({ description: c?.description ?? '', coverUrl: c?.coverUrl ?? '', isFree: !!c?.isFree, track: node.track ?? c?.track ?? '', trackGroup: node.trackGroup ?? c?.trackGroup ?? '' });
     setMode({ kind: 'edit', node });
   };
 
@@ -115,13 +125,14 @@ export const AdminCoursesPage: React.FC = () => {
       if (mode.kind === 'edit') {
         if (mode.node.type === 'COURSE') {
           if (info.coverUrl.trim() && !/^https?:\/\//i.test(info.coverUrl.trim())) throw new Error('Link ảnh bìa phải bắt đầu bằng http(s)://');
-          await adminApi.updateCourse(mode.node.id, { title: name, description: info.description.trim(), coverUrl: info.coverUrl.trim() || null, isFree: info.isFree });
+          await adminApi.updateCourse(mode.node.id, { title: name, description: info.description.trim(), coverUrl: info.coverUrl.trim() || null, isFree: info.isFree, track: info.track || null, trackGroup: info.trackGroup.trim() || null });
         }
         else if (mode.node.type === 'SECTION') await adminApi.updateSection(mode.node.id, { title: name });
         toast.success('Đã cập nhật', `"${name}" đã được lưu.`);
       } else if (newType === 'COURSE') {
-        const c = await adminApi.createCourse({ title: name, category: mode.node.type === 'CATEGORY' && mode.node.id !== '__root' ? mode.node.category : category, status: 'DRAFT' });
-        setOpen((o) => new Set(o).add(`cat-${c.category}`));
+        const t = mode.node.type === 'CATEGORY' && mode.node.id !== '__root' ? mode.node.track : track;
+        const c = await adminApi.createCourse({ title: name, category, track: t ?? null, trackGroup: group.trim() || null, examType: t === 'TOEIC' || t === 'VSTEP' ? t : null, status: 'DRAFT' });
+        setOpen((o) => new Set(o).add(`track-${t ?? 'none'}`));
         setSelectedId(c.id);
         toast.success('Đã thêm khoá học', `"${name}" được tạo ở trạng thái nháp.`);
       } else {
@@ -256,7 +267,7 @@ export const AdminCoursesPage: React.FC = () => {
 
       <Figures
         items={[
-          { label: 'Danh mục', value: counts.CATEGORY, note: 'nhóm khoá học', icon: FolderTree, tone: 'amber' },
+          { label: 'Mục chính', value: counts.CATEGORY, note: 'TOEIC · VSTEP · THPT', icon: FolderTree, tone: 'amber' },
           { label: 'Khoá học', value: counts.COURSE, note: `${coursesQ.data?.filter((c) => c.status === 'PUBLISHED').length ?? 0} khoá đang phát hành`, icon: BookOpen, tone: 'indigo' },
           { label: 'Chương', value: counts.SECTION, note: 'đã chia trong khoá', icon: Layers, tone: 'emerald' },
         ]}
@@ -396,11 +407,21 @@ export const AdminCoursesPage: React.FC = () => {
             <>
               <Textarea label="Mô tả" rows={3} value={info.description} onChange={(e) => setInfo((x) => ({ ...x, description: e.target.value }))} />
               <Input label="Link ảnh bìa" placeholder="https://…" value={info.coverUrl} onChange={(e) => setInfo((x) => ({ ...x, coverUrl: e.target.value }))} />
+              <div className="grid gap-3 sm:grid-cols-2">
+                <Select label="Mục chính" value={info.track} onChange={(e) => setInfo((x) => ({ ...x, track: e.target.value }))} options={[{ value: '', label: 'Chưa xếp mục' }, ...TRACKS]} />
+                <Input label="Nhóm trong mục" placeholder="vd Listening · Part 1–4, Lớp 10" value={info.trackGroup} onChange={(e) => setInfo((x) => ({ ...x, trackGroup: e.target.value }))} />
+              </div>
               <Switch checked={info.isFree} onChange={(v) => setInfo((x) => ({ ...x, isFree: v }))} label="Khoá học miễn phí" description="Tắt để chỉ tài khoản VIP học được" />
             </>
           )}
-          {mode?.kind === 'add' && mode.node.id === '__root' && (
-            <Select label="Danh mục" value={category} onChange={(e) => setCategory(e.target.value)} options={CATEGORIES} />
+          {mode?.kind === 'add' && newType === 'COURSE' && (
+            <>
+              {mode.node.id === '__root' && <Select label="Mục chính" value={track} onChange={(e) => setTrack(e.target.value)} options={TRACKS} />}
+              <div className="grid gap-3 sm:grid-cols-2">
+                <Input label="Nhóm trong mục" placeholder="vd Reading · Part 5–7" value={group} onChange={(e) => setGroup(e.target.value)} />
+                <Select label="Loại khoá" value={category} onChange={(e) => setCategory(e.target.value)} options={CATEGORIES} />
+              </div>
+            </>
           )}
           {mode?.kind === 'add' && mode.node.id !== '__root' && (
             <p className="text-xs text-slate-500">

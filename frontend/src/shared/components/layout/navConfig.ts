@@ -1,4 +1,4 @@
-import { Home, Compass, Layers, FileText, AlertTriangle, RotateCcw, BookOpen, GraduationCap, PlayCircle, Headphones, Target, TrendingUp, Bookmark, Trophy, Award, PenTool, Mic, Calculator, FolderOpen, Newspaper, Tag, Briefcase, Wrench, Database, BookMarked, CalendarClock, NotebookPen, PenLine, PencilLine, Building2, MessagesSquare, AudioLines } from 'lucide-react';
+import { Home, Compass, Layers, FileText, AlertTriangle, RotateCcw, BookOpen, GraduationCap, PlayCircle, Headphones, Target, TrendingUp, Bookmark, Trophy, Award, PenTool, Mic, Calculator, FolderOpen, Newspaper, Tag, Briefcase, Wrench, Database, BookMarked, CalendarClock, NotebookPen, PenLine, PencilLine, School } from 'lucide-react';
 import type React from 'react';
 import type { NavGroup } from './AppShell';
 
@@ -113,14 +113,9 @@ export const PUBLIC_NAV: PublicNavItem[] = [
     label: 'Khoá học',
     icon: PlayCircle,
     children: [
-      { to: '/courses/ngu-phap', label: 'Ngữ pháp', icon: BookOpen, desc: 'Toàn bộ ngữ pháp, từ câu đơn đến nâng cao' },
-      { to: '/courses/tu-vung-phat-am', label: 'Từ vựng và Phát âm', icon: AudioLines, desc: 'Phiên âm IPA, trọng âm, từ vựng theo chủ đề' },
-      { to: '/courses/giao-tiep-hang-ngay', label: 'Giao tiếp hằng ngày', icon: MessagesSquare, desc: 'Nói trong các tình huống đời sống, du lịch', group: 'Kỹ năng tiếng Anh' },
-      { to: '/courses/luyen-nghe', label: 'Luyện nghe hiểu', icon: Headphones, desc: 'Từ nối âm, âm yếu đến phim, tin tức', group: 'Kỹ năng tiếng Anh' },
-      { to: '/courses/viet-tieng-anh', label: 'Viết tiếng Anh', icon: PenLine, desc: 'Câu, đoạn văn, email, bài luận', group: 'Kỹ năng tiếng Anh' },
-      { to: '/courses/tieng-anh-cong-so', label: 'Tiếng Anh công sở', icon: Building2, desc: 'Email, họp, thuyết trình, phỏng vấn', group: 'Kỹ năng tiếng Anh' },
-      { to: '/courses/nen-tang-toeic', label: 'Nền tảng TOEIC', icon: Briefcase, desc: 'Giáo trình tiếng Anh công việc B1 → B2', group: 'Kiến thức nền tảng' },
-      { to: '/courses/nen-tang-vstep', label: 'Nền tảng VSTEP', icon: GraduationCap, desc: 'Giáo trình tiếng Anh đời sống A2 → B1', group: 'Kiến thức nền tảng' },
+      { to: '/courses?muc=toeic', label: 'Khoá học TOEIC', icon: Briefcase, desc: 'Nền tảng, Listening Part 1–4, Reading Part 5–7' },
+      { to: '/courses?muc=vstep', label: 'Khoá học VSTEP', icon: GraduationCap, desc: 'Nền tảng, Nghe, Đọc, Viết, Nói' },
+      { to: '/courses?muc=thpt', label: 'Tiếng Anh THPT', icon: School, desc: 'Lớp 10, 11, 12 theo SGK Global Success' },
     ],
   },
   { to: '/mock-tests', label: 'Thi thử', icon: FileText, appTo: '/app/mock-tests' },

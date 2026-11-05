@@ -158,12 +158,12 @@ export const LessonEngine: React.FC<LessonEngineProps> = ({ course, lesson, onSe
   return (
     <div className="grid grid-cols-1 xl:grid-cols-[1fr_340px] gap-6">
       <div className="space-y-5 min-w-0">
-        {/* Bước học: Video bài giảng → Bài tập */}
-        {lesson.type === 'VIDEO' && exercises.length > 0 && (
+        {/* Bước học: Video bài giảng / Bài đọc → Bài tập */}
+        {lesson.type !== 'QUIZ' && exercises.length > 0 && (
           <div className="lesson-steps" role="tablist" aria-label="Các bước của bài học">
             <button type="button" role="tab" aria-selected={step === 'video'} className={cn('lesson-step', step === 'video' && 'is-current')} onClick={() => setStep('video')}>
               <span className="lesson-step__no">1</span>
-              <Video className="h-4 w-4" /> Video bài giảng
+              {lesson.type === 'VIDEO' ? <Video className="h-4 w-4" /> : <BookOpen className="h-4 w-4" />} {lesson.type === 'VIDEO' ? 'Video bài giảng' : 'Bài học'}
             </button>
             <ChevronRight className="h-4 w-4 shrink-0 text-slate-300" aria-hidden />
             <button type="button" role="tab" aria-selected={step === 'exercise'} className={cn('lesson-step', step === 'exercise' && 'is-current', done && 'is-done')} onClick={() => setStep('exercise')}>
@@ -232,7 +232,7 @@ export const LessonEngine: React.FC<LessonEngineProps> = ({ course, lesson, onSe
             <div>
               <div className="flex items-center gap-2 mb-1">
                 <Badge tone="indigo" size="xs">
-                  {lesson.type}
+                  {{ VIDEO: 'Video', READING: 'Bài đọc', QUIZ: 'Kiểm tra' }[lesson.type] ?? lesson.type}
                 </Badge>
                 <span className="text-[11px] text-slate-400">{lesson.durationMin} phút</span>
                 {done && (

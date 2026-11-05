@@ -85,7 +85,7 @@ export interface LessonKnowledge {
 /** Câu bài tập sau bài học / bài kiểm tra chặng — khớp backend catalog/lesson-exercises.ts */
 export interface LessonExercise {
   id: string;
-  type: 'vocab-meaning' | 'vocab-context' | 'grammar-formula' | 'grammar-name' | 'article' | 'phoneme';
+  type: 'vocab-meaning' | 'vocab-context' | 'grammar-formula' | 'grammar-name' | 'grammar-gap' | 'article' | 'phoneme';
   prompt: string;
   /** Câu / cụm cần xét ("_____" = chỗ trống) */
   text?: string;
@@ -126,6 +126,9 @@ export interface CourseSection {
   lessons: Lesson[];
 }
 
+export type CourseTrack = 'TOEIC' | 'VSTEP' | 'THPT';
+export const TRACK_LABEL: Record<CourseTrack, string> = { TOEIC: 'TOEIC', VSTEP: 'VSTEP', THPT: 'Tiếng Anh THPT' };
+
 export interface Course {
   id: string;
   slug: string;
@@ -133,6 +136,10 @@ export interface Course {
   category: CourseCategory;
   /** Chỉ dùng cho khoá gắn với một kỳ thi (dữ liệu giáo viên / admin) */
   examType?: ExamType;
+  /** Mục chính trong menu Khoá học */
+  track?: CourseTrack;
+  /** Nhóm trong mục chính (vd "Listening · Part 1–4", "Lớp 10") */
+  trackGroup?: string;
   level: string;
   description: string;
   gradient: string; // tailwind gradient classes cho thumbnail

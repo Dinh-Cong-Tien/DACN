@@ -115,6 +115,14 @@ enum QuestionType {
   @@map("question_type")
 }
 
+enum CourseTrack {
+  TOEIC
+  VSTEP
+  THPT
+
+  @@map("course_track")
+}
+
 enum CourseCategory {
   FOUNDATION
   GRAMMAR
@@ -583,6 +591,12 @@ model Course {
   title String @db.VarChar(200)
   category CourseCategory
   examType ExamType? @map("exam_type")
+  /// Mục chính của khoá trong menu Khoá học: TOEIC / VSTEP / Tiếng Anh THPT
+  track CourseTrack?
+  /// Nhóm trong mục chính (vd "Listening · Part 1–4", "Lớp 10")
+  trackGroup String? @db.VarChar(60) @map("track_group")
+  /// Thứ tự khoá trong mục chính
+  trackOrder Int @default(0) @db.SmallInt @map("track_order")
   level CefrLevel?
   description String
   coverUrl String? @map("cover_url")
@@ -611,6 +625,7 @@ model Course {
   certificateCourses Certificate[] @relation("Certificate_course")
 
   @@index([category])
+  @@index([track])
   @@index([status])
   @@map("courses")
 }

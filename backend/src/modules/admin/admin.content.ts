@@ -8,7 +8,7 @@ import { audit } from './audit';
 import { gradientOf } from '../head/shared';
 import { knowledgeToText, parseKnowledgeText, toKnowledge } from '../catalog/lesson-knowledge';
 import { parseSubtitles, subtitlesToText, toCues } from '../catalog/lesson-transcript';
-import { buildExercises, poolOf } from '../catalog/lesson-exercises';
+import { buildExercises, poolOf, withAuthored } from '../catalog/lesson-exercises';
 import { completedAttempts, courseStats, ratingOf } from '../catalog/counts';
 import { byTitleNatural, levelLabel } from '../catalog/mappers';
 import { listQuestions, toQuestionRow } from '../head/head.routes';
@@ -34,27 +34,33 @@ const SKILL = z.enum(['LISTENING', 'READING', 'WRITING', 'SPEAKING', 'VOCABULARY
 const PART = z.enum(['TOEIC_P1', 'TOEIC_P2', 'TOEIC_P3', 'TOEIC_P4', 'TOEIC_P5', 'TOEIC_P6', 'TOEIC_P7', 'VSTEP_L1', 'VSTEP_L2', 'VSTEP_L3', 'VSTEP_R1', 'VSTEP_R2', 'VSTEP_R3', 'VSTEP_R4', 'VSTEP_W1', 'VSTEP_W2', 'VSTEP_S1', 'VSTEP_S2', 'VSTEP_S3']);
 
 // ============================ KHOÁ HỌC ============================
-const CATEGORY_LABEL: Record<string, string> = { FOUNDATION: 'Kiến thức nền tảng', GRAMMAR: 'Ngữ pháp', VOCABULARY: 'Từ vựng', SKILL: 'Kỹ năng', EXAM_PREP: 'Luyện thi' };
 const fmtK = (n: number) => (n >= 1000 ? `${(n / 1000).toFixed(1)}k` : String(n));
 
-/** Cây Danh mục → Khoá học → Chương (CourseTreeNode); bài học trả kèm trong `lessons` của chương */
+/** Mục chính của menu Khoá học */
+const TRACKS = [
+  { key: 'TOEIC', title: 'TOEIC' },
+  { key: 'VSTEP', title: 'VSTEP' },
+  { key: 'THPT', title: 'Tiếng Anh THPT' },
+  { key: null, title: 'Chưa xếp mục' },
+] as const;
+
+/** Cây Mục chính (TOEIC / VSTEP / THPT) → Khoá học → Chương (CourseTreeNode); bài học trả kèm trong `lessons` của chương */
 contentRouter.get(
   '/courses/tree',
   handler(async () => {
     const courses = await prisma.course.findMany({
       where: { deletedAt: null },
       include: { courseSectionCourses: { orderBy: { orderIndex: 'asc' }, include: { lessonSections: { where: { deletedAt: null }, orderBy: { orderIndex: 'asc' }, select: { id: true, title: true, type: true, durationMin: true, status: true, orderIndex: true, videoUrl: true, isFreePreview: true } } } } },
-      orderBy: [{ category: 'asc' }, { createdAt: 'asc' }],
+      orderBy: [{ trackOrder: 'asc' }, { createdAt: 'asc' }],
     });
     const stats = await courseStats(courses.map((c) => c.id));
-    const cats = [...new Set(courses.map((c) => c.category))];
-    return cats.map((cat) => {
-      const list = courses.filter((c) => c.category === cat);
+    return TRACKS.filter((t) => t.key !== null || courses.some((c) => !c.track)).map((t) => {
+      const list = courses.filter((c) => c.track === t.key);
       return {
-        id: `cat-${cat}`,
-        title: CATEGORY_LABEL[cat] ?? cat,
+        id: `track-${t.key ?? 'none'}`,
+        title: t.title,
         type: 'CATEGORY' as const,
-        category: cat,
+        track: t.key ?? undefined,
         meta: `${list.length} khoá`,
         children: list.map((c) => ({
           id: c.id,
@@ -62,7 +68,9 @@ contentRouter.get(
           type: 'COURSE' as const,
           slug: c.slug,
           status: c.status,
-          meta: `${stats.get(c.id)?.lessons ?? 0} bài · ${fmtK(stats.get(c.id)?.students ?? 0)} HV`,
+          category: c.category,
+          trackGroup: c.trackGroup ?? undefined,
+          meta: `${c.trackGroup ? `${c.trackGroup} · ` : ''}${stats.get(c.id)?.lessons ?? 0} bài · ${fmtK(stats.get(c.id)?.students ?? 0)} HV`,
           children: c.courseSectionCourses.map((s) => ({
             id: s.id,
             title: s.title,
@@ -84,6 +92,8 @@ const courseRow = (c: Prisma.CourseGetPayload<{ include: { author: { select: { f
   title: c.title,
   category: c.category,
   examType: c.examType ?? undefined,
+  track: c.track ?? undefined,
+  trackGroup: c.trackGroup ?? undefined,
   level: c.level ?? '',
   description: c.description,
   gradient: c.themeGradient ?? gradientOf(c.slug),
@@ -113,6 +123,10 @@ const courseBody = z.object({
   slug: z.string().trim().max(140).optional(),
   category: z.enum(['FOUNDATION', 'GRAMMAR', 'VOCABULARY', 'SKILL', 'EXAM_PREP']),
   examType: EXAM.nullish(),
+  /** Mục chính trong menu Khoá học + nhóm trong mục */
+  track: z.enum(['TOEIC', 'VSTEP', 'THPT']).nullish(),
+  trackGroup: z.string().trim().max(60).nullish(),
+  trackOrder: z.number().int().min(0).max(999).optional(),
   level: CEFR.nullish(),
   description: z.string().max(5000).default(''),
   coverUrl: z.string().url().nullish(),
@@ -214,11 +228,11 @@ const lessonData = <T extends { knowledgeText?: string | null; transcriptText?: 
 });
 /** Admin sửa kiến thức bài video → sinh lại bài tập sau bài học từ kiến thức mới */
 async function refreshExercises(lessonId: string) {
-  const l = await prisma.lesson.findUnique({ where: { id: lessonId }, select: { type: true, knowledge: true } });
-  if (!l || l.type !== 'VIDEO') return;
+  const l = await prisma.lesson.findUnique({ where: { id: lessonId }, select: { type: true, knowledge: true, exercises: true } });
+  if (!l || (l.type !== 'VIDEO' && l.type !== 'READING')) return;
   const k = toKnowledge(l.knowledge);
   const others = await prisma.lesson.findMany({ where: { type: 'VIDEO', deletedAt: null, NOT: { knowledge: { equals: Prisma.DbNull } } }, select: { knowledge: true } });
-  const qs = k ? buildExercises(lessonId, k, poolOf(others.map((o) => toKnowledge(o.knowledge)).filter((x): x is NonNullable<typeof x> => !!x))) : [];
+  const qs = withAuthored(l.exercises, k ? buildExercises(lessonId, k, poolOf(others.map((o) => toKnowledge(o.knowledge)).filter((x): x is NonNullable<typeof x> => !!x))) : []);
   await prisma.lesson.update({ where: { id: lessonId }, data: { exercises: qs.length ? (qs as unknown as Prisma.InputJsonValue) : Prisma.DbNull } });
 }
 async function refreshCourseCache(courseId: string) {

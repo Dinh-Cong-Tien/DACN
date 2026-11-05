@@ -45,7 +45,9 @@ const GroupTabs: React.FC<{ groups: { label: string; tabs: { key: string; label:
   </div>
 );
 
-const GROUP_LABEL: Record<string, string> = { GRAMMAR: 'Kiến thức chung', VOCABULARY: 'Kiến thức chung', SKILL: 'Kỹ năng tiếng Anh', FOUNDATION: 'Nền tảng theo kỳ thi', EXAM_PREP: 'Luyện thi' };
+/** Mục chính · nhóm của khoá (TOEIC / VSTEP / Tiếng Anh THPT) */
+const TRACK_NAME: Record<string, string> = { TOEIC: 'TOEIC', VSTEP: 'VSTEP', THPT: 'Tiếng Anh THPT' };
+const trackOf = (c: { track?: string; trackGroup?: string }) => [c.track && TRACK_NAME[c.track], c.trackGroup].filter(Boolean).join(' · ') || 'Chưa xếp mục';
 const LESSON_TYPE: Record<string, string> = { VIDEO: 'Video', READING: 'Bài đọc', QUIZ: 'Kiểm tra', CHECKPOINT: 'Kiểm tra giữa khoá' };
 
 /** Trạng thái tải chung cho từng khối dữ liệu thư viện */
@@ -343,7 +345,7 @@ const CoursesView: React.FC<{ assign: Assign }> = ({ assign }) => {
                         <span className="font-medium text-slate-900">{c.title}</span>
                       </span>
                     </td>
-                    <td className={cn(tbl.td, 'whitespace-nowrap text-slate-600')}>{c.examType ? `${GROUP_LABEL[c.category] ?? c.category} · ${c.examType}` : GROUP_LABEL[c.category] ?? c.category}</td>
+                    <td className={cn(tbl.td, 'whitespace-nowrap text-slate-600')}>{trackOf(c)}</td>
                     <td className={cn(tbl.td, 'whitespace-nowrap text-slate-600')}>{c.level ?? '—'}</td>
                     <td className={cn(tbl.td, 'text-right tabular-nums')}>{c.lessonsCount}</td>
                     <td className={cn(tbl.td, 'text-right tabular-nums')}>{c.studentsCount.toLocaleString('vi-VN')}</td>

@@ -89,6 +89,9 @@ function toCourse(c: CourseRow, i: number, states: Map<string, { completed: bool
     title: c.title,
     category: c.category,
     examType: c.examType ?? undefined,
+    // mục chính (TOEIC / VSTEP / THPT) và nhóm trong mục của menu Khoá học
+    track: c.track ?? undefined,
+    trackGroup: c.trackGroup ?? undefined,
     level: c.level ?? 'Mọi trình độ',
     description: c.description,
     gradient: c.themeGradient ?? gradientAt(i),
@@ -111,26 +114,37 @@ function toCourse(c: CourseRow, i: number, states: Map<string, { completed: bool
   };
 }
 
+/** Slug cũ (trước khi chia khoá theo TOEIC / VSTEP / THPT) → slug mới, để link đã chia sẻ vẫn mở được */
+const OLD_SLUG: Record<string, string> = {
+  'ngu-phap': 'vstep-ngu-phap',
+  'luyen-nghe': 'vstep-listening',
+  'viet-tieng-anh': 'vstep-writing',
+  'giao-tiep-hang-ngay': 'vstep-speaking',
+  'tieng-anh-cong-so': 'toeic-part-3-4',
+  'luyen-thi-toeic-video': 'toeic-part-5-6',
+  'tu-vung-phat-am': 'vstep-reading',
+};
+
 async function findCourse(idOrSlug: string) {
   return prisma.course.findFirst({
-    where: { ...PUBLISHED, ...(isUuid(idOrSlug) ? { id: idOrSlug } : { slug: idOrSlug }) },
+    where: { ...PUBLISHED, ...(isUuid(idOrSlug) ? { id: idOrSlug } : { slug: OLD_SLUG[idOrSlug] ?? idOrSlug }) },
     include: courseInclude,
   });
 }
 
-// GET /catalog/courses?category=GRAMMAR&examType=TOEIC → Course[]
+// GET /catalog/courses?track=THPT&category=GRAMMAR&examType=TOEIC → Course[]
 coursesRouter.get(
   '/courses',
   optionalAuth,
   handler(async (req) => {
     const q = parse(
-      z.object({ category: z.enum(['FOUNDATION', 'GRAMMAR', 'VOCABULARY', 'SKILL', 'EXAM_PREP']).optional(), examType: z.enum(['TOEIC', 'VSTEP']).optional() }),
+      z.object({ track: z.enum(['TOEIC', 'VSTEP', 'THPT']).optional(), category: z.enum(['FOUNDATION', 'GRAMMAR', 'VOCABULARY', 'SKILL', 'EXAM_PREP']).optional(), examType: z.enum(['TOEIC', 'VSTEP']).optional() }),
       req.query
     );
     const rows = await prisma.course.findMany({
-      where: { ...PUBLISHED, category: q.category as CourseCategory | undefined, examType: q.examType },
+      where: { ...PUBLISHED, track: q.track, category: q.category as CourseCategory | undefined, examType: q.examType },
       include: courseInclude,
-      orderBy: [{ createdAt: 'asc' }],
+      orderBy: [{ trackOrder: 'asc' }, { createdAt: 'asc' }],
     });
     const progress = await progressMap(req.user?.id, rows.flatMap((c) => c.courseSectionCourses.flatMap((s) => s.lessonSections.map((l) => l.id))));
     return rows.map((c, i) => toCourse(c, i, lessonStates(c, progress, !!req.user)));

@@ -7,22 +7,20 @@ import { SkeletonCard } from '@/shared/components/ui';
 import { useDocumentTitle, useGate } from '@/shared/hooks';
 import { useAuthStore } from '@/shared/stores/authStore';
 import { cn } from '@/shared/utils';
-import type { Course, Lesson } from '@/shared/types';
-import { Accent, ActionLink, PageHeader, Section } from './shared/PageKit';
+import { TRACK_LABEL, type Course, type Lesson } from '@/shared/types';
+import { ActionLink, PageHeader, Section } from './shared/PageKit';
 
-/** Nhãn và tiêu đề đầu trang; Kiến thức nền tảng tách riêng theo kỳ thi (TOEIC / VSTEP) */
-const copyOf = (c: Course): { eyebrow: string; title: React.ReactNode } =>
-  c.category === 'GRAMMAR'
-    ? { eyebrow: 'Ngữ pháp', title: <>Ngữ pháp tiếng Anh <Accent>từ đầu</Accent></> }
-    : c.category === 'VOCABULARY'
-      ? { eyebrow: 'Từ vựng và Phát âm', title: <>Từ vựng và <Accent>Phát âm</Accent></> }
-      : c.category === 'SKILL'
-        ? { eyebrow: 'Kỹ năng tiếng Anh', title: c.title }
-        : { eyebrow: `Kiến thức nền tảng · ${c.examType}`, title: <>Nền tảng <Accent>{c.examType}</Accent></> };
+/** Nhãn đầu trang theo mục chính (TOEIC / VSTEP / THPT) và nhóm trong mục; `muc` = tham số tab ở trang Khoá học */
+const copyOf = (c: Course): { eyebrow: string; title: React.ReactNode; track: string; muc: string } => ({
+  eyebrow: [c.track && TRACK_LABEL[c.track], c.trackGroup].filter(Boolean).join(' · ') || 'Khoá học',
+  title: c.title,
+  track: c.track ? TRACK_LABEL[c.track] : 'Khoá học',
+  muc: (c.track ?? 'TOEIC').toLowerCase(),
+});
 
 const TYPE_LABEL: Record<Lesson['type'], string> = { VIDEO: 'Video', READING: 'Bài đọc', QUIZ: 'Bài kiểm tra' };
 
-const STEPS = ['Xem video bài giảng, có bản ghi chữ song ngữ và tra từ khi bấm vào chữ.', 'Trả lời 5 câu hỏi cuối bài để chắc là đã hiểu.', 'Bài tiếp theo tự mở. Cuối mỗi chặng có một bài kiểm tra ngắn.'];
+const STEPS = ['Học bài: xem video hoặc đọc bài, ôn kiến thức trong bài, bấm vào từ để tra nghĩa.', 'Làm bài tập ngay sau bài, đúng từ 70% để hoàn thành bài.', 'Bài tiếp theo tự mở. Cuối mỗi chặng có bài kiểm tra hoặc Review.'];
 
 /**
  * Trang một mục Khoá học (/courses/:slug): danh sách bài đánh số từ Bài 1, chia theo chặng.
@@ -43,10 +41,9 @@ export const LessonPathPage: React.FC = () => {
 
 const PathView: React.FC<{ course: Course }> = ({ course }) => {
   const copy = copyOf(course);
-  // Học song song: luôn gợi ý 2 khoá kiến thức chung; khoá kỹ năng gợi ý thêm các khoá kỹ năng khác, không gợi ý khoá nền tảng kỳ thi
-  const general = (c: Course) => c.category === 'GRAMMAR' || c.category === 'VOCABULARY';
+  // Gợi ý các khoá khác cùng mục chính (TOEIC / VSTEP / THPT), theo thứ tự học
   const { data: courseList = [] } = useCourses();
-  const others = courseList.filter((c) => c.id !== course.id && (general(c) || (course.category === 'SKILL' ? c.category === 'SKILL' : general(course) && c.category === 'FOUNDATION')));
+  const others = courseList.filter((c) => c.id !== course.id && c.track === course.track);
   useDocumentTitle(course.title);
   const gate = useGate();
   const isStudent = useAuthStore((s) => s.user?.role === 'STUDENT');
@@ -72,7 +69,7 @@ const PathView: React.FC<{ course: Course }> = ({ course }) => {
   return (
     <div className="bg-page">
       <PageHeader
-        crumbs={[{ label: 'Trang chủ', to: '/' }, { label: 'Khoá học', to: '/courses' }, { label: copy.eyebrow }]}
+        crumbs={[{ label: 'Trang chủ', to: '/' }, { label: 'Khoá học', to: '/courses' }, { label: copy.track, to: `/courses?muc=${copy.muc}` }, { label: course.title }]}
         eyebrow={copy.eyebrow}
         title={copy.title}
         lead={course.description}
@@ -176,7 +173,7 @@ const PathView: React.FC<{ course: Course }> = ({ course }) => {
 
           <aside className="space-y-4 lg:sticky lg:top-24">
             <div className="rounded-2xl border border-slate-200 bg-white p-2">
-              <p className="px-3 pb-1 pt-2 text-[12px] text-slate-500">Học song song</p>
+              <p className="px-3 pb-1 pt-2 text-[12px] text-slate-500">Khoá khác trong mục {copy.track}</p>
               {others.map((o) => (
                 <Link key={o.id} to={courseHref(o)} className="group flex items-center gap-3 rounded-xl px-3 py-2.5 transition-colors hover:bg-slate-900/[0.03]">
                   <span className="min-w-0 flex-1">

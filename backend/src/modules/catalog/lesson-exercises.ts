@@ -5,7 +5,7 @@ import type { GrammarPoint, KnowledgeNode, LessonKnowledge, VocabItem } from './
  * nghĩa từ, điền từ vào câu ví dụ của bài, công thức ngữ pháp, a / an, âm trong bài phát âm.
  * Chỉ ra câu khi đáp án duy nhất đúng (phương án nhiễu được lọc trùng nghĩa / trùng âm).
  */
-export type ExerciseType = 'vocab-meaning' | 'vocab-context' | 'grammar-formula' | 'grammar-name' | 'article' | 'phoneme';
+export type ExerciseType = 'vocab-meaning' | 'vocab-context' | 'grammar-formula' | 'grammar-name' | 'grammar-gap' | 'article' | 'phoneme';
 export interface LessonExercise {
   id: string;
   type: ExerciseType;
@@ -95,14 +95,15 @@ const prefer = <T>(xs: T[], same: (x: T) => boolean) => [...xs.filter(same), ...
 function vocabQuestions(k: LessonKnowledge, pool: ExercisePool, r: () => number, id: (t: string) => string) {
   const out: LessonExercise[] = [];
   const others = [...k.vocab, ...pool.vocab].filter(isWord);
-  k.vocab.filter(isWord).slice(0, 4).forEach((v, i) => {
+  // bài chỉ dạy từ vựng → hỏi đủ các từ; bài có cả ngữ pháp → 4 từ
+  k.vocab.filter(isWord).slice(0, k.grammar.length ? 4 : 6).forEach((v, i) => {
     const ctx = v.example ? blankOut(v.example, v.word) : null;
     // xen kẽ: điền từ vào câu của bài / chọn nghĩa
     if (ctx && i % 2 === 0) {
       const samePos = others.filter((o) => norm(o.word) !== norm(v.word) && posOf(o) === posOf(v) && !o.word.includes(' ') === !v.word.includes(' '));
       const c = choice(ctx.form, shuffle(samePos, r).map((o) => o.word), r);
       if (c) {
-        out.push({ id: id('vc'), type: 'vocab-context', prompt: 'Chọn từ phù hợp điền vào chỗ trống', text: ctx.text, ...c, explain: `“${v.word}”${v.ipa ? ` ${v.ipa}` : ''}: ${v.meaningVi}. Câu đầy đủ: ${v.example}` });
+        out.push({ id: id('vc'), type: 'vocab-context', prompt: `Chọn từ có nghĩa “${v.meaningVi}” điền vào chỗ trống`, text: ctx.text, ...c, explain: `“${v.word}”${v.ipa ? ` ${v.ipa}` : ''}: ${v.meaningVi}. Câu đầy đủ: ${v.example}` });
         return;
       }
     }
@@ -189,6 +190,17 @@ function phonemeQuestions(k: LessonKnowledge, pool: ExercisePool, r: () => numbe
       return c ? [{ id: id('ph'), type: 'phoneme' as const, prompt: `Từ nào có chứa âm /${ph.symbol}/?`, ...c, explain: `“${w.word}” đọc là ${w.ipa}, có âm /${ph.symbol}/.` }] : [];
     });
 }
+
+/** Câu soạn tay (id bắt đầu "sgk") — giữ lại khi sinh lại bài tập */
+export const isAuthored = (e: LessonExercise) => e.id.startsWith('sgk');
+/** Câu điền chỗ trống soạn tay: "câu có ___ | đáp án đúng | sai…" → LessonExercise (xáo thứ tự cố định theo id) */
+export function authoredGap(id: string, line: string, explain: string): LessonExercise | null {
+  const [text, right, ...wrong] = line.split('|').map((x) => x.trim());
+  const c = choice(right, wrong, rng(id), wrong.length);
+  return c && text.includes('___') ? { id, type: 'grammar-gap', prompt: 'Chọn đáp án đúng điền vào chỗ trống', text: text.replace('___', BLANK), ...c, explain } : null;
+}
+/** Sinh lại bài tập nhưng giữ câu soạn tay ở đầu */
+export const withAuthored = (prev: unknown, generated: LessonExercise[]) => [...toExercises(prev).filter(isAuthored), ...generated].slice(0, 10);
 
 /** Bài tập của một bài video (tối đa 8 câu, trộn dạng, cố định theo id bài) */
 export function buildExercises(lessonId: string, k: LessonKnowledge, pool: ExercisePool): LessonExercise[] {

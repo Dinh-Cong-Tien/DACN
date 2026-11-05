@@ -147,7 +147,7 @@ export const LessonKnowledge: React.FC<{ knowledge: Knowledge; onWord?: (e: Reac
     <Card padding="none" className="animate-fade-up overflow-hidden">
       <div className="px-5 pt-4">
         <p className="font-bold text-slate-900 text-sm">Kiến thức trong bài</p>
-        <p className="text-[11px] text-slate-500">Vừa xem video vừa ôn lại ngữ pháp, phát âm, từ vựng và mẫu câu được dùng trong bài</p>
+        <p className="text-[11px] text-slate-500">Ôn lại ngữ pháp, phát âm, từ vựng và mẫu câu được dùng trong bài</p>
       </div>
       <Tabs className="px-3 mt-2" value={tab} onChange={(k) => setTab(k as Key)} items={tabs.map((t) => ({ key: t.key, label: t.label, icon: t.icon, count: (knowledge[t.key] ?? []).length }))} />
       <div className="p-5">
