@@ -42,6 +42,8 @@ import { contentRouter } from './teacher.content';
 import { insightsRouter } from './teacher.insights';
 import { MODE_LABEL, mistakeSummaryOf, selfStudyOf } from './insights.service';
 import { completedAttempts } from '../catalog/counts';
+import { gradeLessonAssignments } from '../catalog/lesson-assignments';
+import { toExercises } from '../catalog/lesson-exercises';
 import { byTitleNatural, levelLabel } from '../catalog/mappers';
 
 export const teacherRouter = Router();
@@ -840,9 +842,15 @@ teacherRouter.post(
       return created;
     });
     if (b.status === 'OPEN') await notifyAssigned(a.id, a.title, c.name, a.dueAt, students);
+    if (b.status === 'OPEN' && b.type === 'LESSON') await gradeLearnedLessons(a.id, r.targetId, students);
     return (await toAssignments([a]))[0];
   })
 );
+
+/** Bài giao "Bài giảng": học viên đã học xong các bài này từ trước → có điểm ngay, không phải học lại */
+async function gradeLearnedLessons(assignmentId: string, courseId: string, students: string[]) {
+  for (const id of students) await prisma.$transaction((tx) => gradeLessonAssignments(tx, id, courseId, { assignmentId, notify: false }));
+}
 
 async function notifyAssigned(id: string, title: string, className: string, dueAt: Date | null, students: string[]) {
   const due = dueAt ? ` · hạn ${new Intl.DateTimeFormat('vi-VN', { dateStyle: 'short', timeStyle: 'short', timeZone: 'Asia/Ho_Chi_Minh' }).format(dueAt)}` : '';
@@ -877,6 +885,7 @@ teacherRouter.patch(
       return row;
     });
     if (b.status === 'OPEN' && a.status === 'DRAFT') await notifyAssigned(a.id, updated.title, updated.class.name, updated.dueAt, await activeStudentIds(a.classId));
+    if (b.status === 'OPEN' && a.status !== 'OPEN' && a.type === 'LESSON' && a.targetId) await gradeLearnedLessons(a.id, a.targetId, await activeStudentIds(a.classId));
     if (b.status === 'CLOSED') await recomputeRisk(a.classId);
     return (await toAssignments([updated]))[0];
   })
@@ -1464,7 +1473,7 @@ teacherRouter.get(
       where: { deletedAt: null, status: 'PUBLISHED' },
       include: {
         author: { select: { fullName: true } },
-        courseSectionCourses: { orderBy: { orderIndex: 'asc' }, include: { lessonSections: { where: { deletedAt: null }, orderBy: { orderIndex: 'asc' }, select: { id: true, title: true, type: true, durationMin: true, orderIndex: true } } } },
+        courseSectionCourses: { orderBy: { orderIndex: 'asc' }, include: { lessonSections: { where: { deletedAt: null, status: 'PUBLISHED' }, orderBy: { orderIndex: 'asc' }, select: { id: true, title: true, type: true, durationMin: true, orderIndex: true, exercises: true, passScorePct: true } } } },
       },
       orderBy: [{ track: 'asc' }, { trackOrder: 'asc' }, { title: 'asc' }],
     });
@@ -1486,7 +1495,17 @@ teacherRouter.get(
       teacherName: c.author?.fullName,
       studentsCount: enrolled.find((e) => e.courseId === c.id)?._count._all ?? 0,
       usedCount: used.get(c.id) ?? 0,
-      sections: c.courseSectionCourses.map((s) => ({ id: s.id, title: s.title, partNo: s.partNo, partTitle: s.partTitle ?? undefined, lessons: s.lessonSections })),
+      sections: c.courseSectionCourses.map((s) => ({
+        id: s.id,
+        title: s.title,
+        partNo: s.partNo,
+        partTitle: s.partTitle ?? undefined,
+        // số câu bài tập sau bài + điểm cần đạt — giống học viên thấy
+        lessons: s.lessonSections.map(({ exercises, passScorePct, ...l }) => {
+          const n = toExercises(exercises).length;
+          return { ...l, exercisesCount: n, passScorePct: n ? (passScorePct ?? 70) : undefined };
+        }),
+      })),
     }));
   })
 );

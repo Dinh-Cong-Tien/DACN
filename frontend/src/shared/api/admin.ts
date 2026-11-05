@@ -92,7 +92,7 @@ export interface AdminCourseRow {
   teacherName: string;
   status: string;
 }
-export type TreeLesson = { id: string; title: string; type: string; durationMin: number; status: string; orderIndex: number; videoUrl?: string | null; isFreePreview: boolean };
+export type TreeLesson = { id: string; title: string; type: string; durationMin: number; status: string; orderIndex: number; videoUrl?: string | null; isFreePreview: boolean; exercisesCount?: number };
 export type AdminTreeNode = CourseTreeNode & { slug?: string; status?: string; category?: string; track?: string; trackGroup?: string; partTitle?: string; lessons?: TreeLesson[]; children?: AdminTreeNode[] };
 export interface AdminTestRow {
   id: string;
@@ -170,7 +170,9 @@ export const adminApi = {
   deleteSection: (id: string) => api.delete(`/admin/sections/${id}`),
   createLesson: (b: Record<string, unknown>) => api.post('/admin/lessons', b),
   updateLesson: (id: string, b: Record<string, unknown>) => api.patch(`/admin/lessons/${id}`, b),
-  lessonKnowledge: (id: string) => api.get<{ knowledgeText: string; transcriptText: string }>(`/admin/lessons/${id}/knowledge`),
+  /** Nội dung đầy đủ của bài để sửa: bài giảng, kiến thức, script, bài tập dạng chữ */
+  lessonKnowledge: (id: string) =>
+    api.get<{ knowledgeText: string; transcriptText: string; summary: string; contentMd: string; passScorePct: number | null; exercisesText: string; exercisesFixed: number }>(`/admin/lessons/${id}/knowledge`),
   deleteLesson: (id: string) => api.delete(`/admin/lessons/${id}`),
 
   questions: (q: QuestionQuery) => api.get<QuestionPage>('/admin/questions', q),

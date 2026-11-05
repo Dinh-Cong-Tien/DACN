@@ -8,6 +8,13 @@ import { assignmentHref, cn } from '@/shared/utils';
 import { Modal } from '@/shared/components/ui';
 import { TBtn, TTabs, inputCls } from './TeacherKit';
 
+const TRACKS: [string, string][] = [
+  ['TOEIC', 'TOEIC'],
+  ['VSTEP', 'VSTEP'],
+  ['THPT', 'Tiếng Anh THPT'],
+  ['', 'Khác'],
+];
+
 export type AssignKind = AssignmentTarget['kind'];
 
 const KINDS: { key: AssignKind; label: string }[] = [
@@ -279,15 +286,24 @@ export const AssignDialog: React.FC<{ open: boolean; onClose: () => void; onSave
                   }}
                   className={fieldCls}
                 >
-                  {lib.courses.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.title} · {c.lessonsCount} bài
-                    </option>
-                  ))}
+                  {/* nhóm theo 3 mục chính như trang Khoá học của học viên */}
+                  {TRACKS.map(([t, name]) => {
+                    const list = lib.courses.filter((c) => (c.track ?? '') === t);
+                    return list.length ? (
+                      <optgroup key={t || 'none'} label={name}>
+                        {list.map((c) => (
+                          <option key={c.id} value={c.id}>
+                            {c.title} · {c.lessonsCount} bài
+                          </option>
+                        ))}
+                      </optgroup>
+                    ) : null;
+                  })}
                 </select>
               </label>
               <div>
                 <Label>Chọn bài ({lessonIds.length} đã chọn)</Label>
+                <p className="mb-2 text-[12px] text-slate-500">Học viên học xong và đạt bài tập sau mỗi bài (mặc định 70%) thì bài giao tự chấm: điểm = trung bình % bài tập của các bài.</p>
                 <div className="max-h-64 overflow-y-auto rounded-md border border-slate-200">
                   {course.sections.map((sec) => (
                     <div key={sec.id}>
@@ -299,7 +315,8 @@ export const AssignDialog: React.FC<{ open: boolean; onClose: () => void; onSave
                             <span className={cn('flex h-4 w-4 shrink-0 items-center justify-center rounded border', on ? 'border-indigo-600 bg-indigo-600 text-white' : 'border-slate-300 bg-white')}>{on && <Check className="h-3 w-3" strokeWidth={3} />}</span>
                             <span className="w-12 shrink-0 tabular-nums text-[12px] text-slate-400">Bài {lessons.indexOf(l) + 1}</span>
                             <span className="flex-1 text-slate-800">{l.title}</span>
-                            <span className="text-[12px] text-slate-500">{l.durationMin} phút</span>
+                            {!!l.exercisesCount && <span className="hidden text-[12px] tabular-nums text-slate-500 sm:inline">{l.exercisesCount} câu bài tập</span>}
+                            <span className="w-14 text-right text-[12px] text-slate-500">{l.durationMin} phút</span>
                           </button>
                         );
                       })}

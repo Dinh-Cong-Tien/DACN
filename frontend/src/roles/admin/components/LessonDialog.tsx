@@ -5,17 +5,30 @@ import { errorMessage } from '@/shared/api/client';
 import { Input, Modal, Select, Switch, Textarea } from '@/shared/components/ui';
 import { TBtn } from '@/roles/teacher/components/TeacherKit';
 import { toast } from '@/shared/stores/uiStore';
+import { appLocale } from '@/shared/i18n';
 import { Upload } from 'lucide-react';
 
 const TYPES = [
   { value: 'VIDEO', label: 'Video bài giảng' },
-  { value: 'READING', label: 'Bài đọc' },
-  { value: 'QUIZ', label: 'Bài kiểm tra cuối bài' },
-  { value: 'CHECKPOINT', label: 'Kiểm tra giữa khoá' },
+  { value: 'READING', label: 'Bài giảng viết' },
+  { value: 'QUIZ', label: 'Bài luyện đề' },
+  { value: 'CHECKPOINT', label: 'Kiểm tra chặng' },
 ];
 
-type Form = { title: string; type: string; videoUrl: string; durationMin: string; summary: string; contentMd: string; isFreePreview: boolean; knowledgeText: string; transcriptText: string };
-const EMPTY: Form = { title: '', type: 'VIDEO', videoUrl: '', durationMin: '10', summary: '', contentMd: '', isFreePreview: false, knowledgeText: '', transcriptText: '' };
+type Form = { title: string; type: string; videoUrl: string; durationMin: string; summary: string; contentMd: string; isFreePreview: boolean; knowledgeText: string; transcriptText: string; exercisesText: string; passScorePct: string };
+const EMPTY: Form = { title: '', type: 'VIDEO', videoUrl: '', durationMin: '10', summary: '', contentMd: '', isFreePreview: false, knowledgeText: '', transcriptText: '', exercisesText: '', passScorePct: '70' };
+/** Trường tải từ máy chủ — chỉ gửi lại khi admin có sửa (tránh sinh lại bài tập / ghi đè không cần thiết) */
+type Loaded = Pick<Form, 'summary' | 'contentMd' | 'knowledgeText' | 'transcriptText' | 'exercisesText' | 'passScorePct'>;
+
+const EXERCISE_HINT = [
+  '? Chọn đáp án đúng điền vào chỗ trống',
+  'She _____ to school every day.',
+  '* goes',
+  '- go',
+  '- going',
+  '- gone',
+  '> Chủ ngữ ngôi thứ ba số ít ở thì hiện tại đơn → động từ thêm -s/-es.',
+].join('\n');
 
 const KNOWLEDGE_HINT = [
   '# Ngữ pháp',
@@ -45,19 +58,26 @@ export const LessonDialog: React.FC<{ open: boolean; sectionId: string | null; l
   const set = <K extends keyof Form>(k: K, v: Form[K]) => setF((x) => ({ ...x, [k]: v }));
 
   const [knowledgeLoaded, setKnowledgeLoaded] = useState(false);
+  const [loaded, setLoaded] = useState<Loaded | null>(null);
+  const [fixed, setFixed] = useState(0);
 
   useEffect(() => {
     if (!open) return;
     setF(lesson ? { ...EMPTY, title: lesson.title, type: lesson.type, videoUrl: lesson.videoUrl ?? '', durationMin: String(lesson.durationMin), isFreePreview: lesson.isFreePreview } : EMPTY);
     setKnowledgeLoaded(!lesson);
+    setLoaded(null);
+    setFixed(0);
     if (lesson)
       adminApi
         .lessonKnowledge(lesson.id)
         .then((r) => {
-          setF((x) => ({ ...x, knowledgeText: r.knowledgeText, transcriptText: r.transcriptText ?? '' }));
+          const l: Loaded = { summary: r.summary, contentMd: r.contentMd, knowledgeText: r.knowledgeText, transcriptText: r.transcriptText ?? '', exercisesText: r.exercisesText, passScorePct: r.passScorePct == null ? '70' : String(r.passScorePct) };
+          setF((x) => ({ ...x, ...l }));
+          setLoaded(l);
+          setFixed(r.exercisesFixed);
           setKnowledgeLoaded(true);
         })
-        .catch(() => undefined);
+        .catch((e) => toast.error('Không tải được nội dung bài', errorMessage(e)));
   }, [open, lesson]);
 
   /** Đọc file phụ đề vào ô Script (server kiểm tra định dạng khi lưu) */
@@ -75,16 +95,23 @@ export const LessonDialog: React.FC<{ open: boolean; sectionId: string | null; l
     const duration = Number(f.durationMin);
     if (!Number.isInteger(duration) || duration < 1 || duration > 600) return toast.error('Thời lượng phải từ 1 đến 600 phút');
     if (f.type === 'VIDEO' && f.videoUrl && !/^https?:\/\//i.test(f.videoUrl.trim())) return toast.error('Link video phải bắt đầu bằng http(s)://');
+    const pass = Number(f.passScorePct);
+    if (!Number.isInteger(pass) || pass < 0 || pass > 100) return toast.error('Điểm cần đạt phải từ 0 đến 100%');
+    if (lesson && !knowledgeLoaded) return toast.error('Nội dung bài chưa tải xong');
+    // bài đang sửa: chỉ gửi trường đã đổi; bài mới: gửi trường có nhập
+    const changed = (k: keyof Loaded) => (loaded ? f[k] !== loaded[k] : f[k].trim() !== '' && f[k] !== EMPTY[k]);
     const body: Record<string, unknown> = {
       title: f.title.trim(),
       type: f.type,
       videoUrl: f.type === 'VIDEO' ? f.videoUrl.trim() || null : null,
       durationMin: duration,
       isFreePreview: f.isFreePreview,
-      ...(f.summary.trim() ? { summary: f.summary.trim().slice(0, 300) } : {}),
-      ...(f.contentMd.trim() ? { contentMd: f.contentMd.trim() } : {}),
-      // chỉ gửi khi đã tải xong kiến thức cũ — tránh ghi đè rỗng
-      ...(f.type === 'VIDEO' && knowledgeLoaded ? { knowledgeText: f.knowledgeText, transcriptText: f.transcriptText } : {}),
+      ...(changed('summary') ? { summary: f.summary.trim().slice(0, 300) || null } : {}),
+      ...(changed('contentMd') ? { contentMd: f.contentMd.trim() || null } : {}),
+      ...(changed('passScorePct') ? { passScorePct: pass } : {}),
+      ...(f.type !== 'QUIZ' && changed('knowledgeText') ? { knowledgeText: f.knowledgeText } : {}),
+      ...(f.type === 'VIDEO' && changed('transcriptText') ? { transcriptText: f.transcriptText } : {}),
+      ...(changed('exercisesText') ? { exercisesText: f.exercisesText } : {}),
     };
     setSaving(true);
     try {
@@ -129,22 +156,30 @@ export const LessonDialog: React.FC<{ open: boolean; sectionId: string | null; l
           </div>
         )}
         <div className="md:col-span-2">
-          <Input label="Mô tả ngắn" value={f.summary} onChange={(e) => set('summary', e.target.value)} hint={lesson ? 'Để trống để giữ mô tả hiện tại' : undefined} />
+          <Input label="Mô tả ngắn" maxLength={300} disabled={!knowledgeLoaded} value={f.summary} onChange={(e) => set('summary', e.target.value)} hint="Hiện dưới tên bài trong danh sách bài học" />
         </div>
         <div className="md:col-span-2">
-          <Textarea label="Nội dung bài (Markdown)" rows={5} value={f.contentMd} onChange={(e) => set('contentMd', e.target.value)} hint={lesson ? 'Để trống để giữ nội dung hiện tại' : undefined} />
+          <Textarea
+            label={f.type === 'READING' ? 'Bài giảng (Markdown)' : 'Nội dung bài (Markdown)'}
+            rows={f.type === 'READING' ? 16 : 6}
+            className="font-mono text-xs"
+            disabled={!knowledgeLoaded}
+            value={f.contentMd}
+            onChange={(e) => set('contentMd', e.target.value)}
+            hint={`Học viên thấy ở tab Bài học. Dùng ## tiêu đề mục, ### tiêu đề nhỏ, **in đậm**, *nghiêng*, danh sách "- ", bảng | a | b |, trích dẫn "> ".${f.contentMd.trim() ? ` Hiện ${f.contentMd.trim().split(/\s+/).length.toLocaleString(appLocale())} từ.` : ''}`}
+          />
         </div>
-        {f.type === 'VIDEO' && (
+        {f.type !== 'QUIZ' && (
           <div className="md:col-span-2">
             <Textarea
-              label="Kiến thức trong video"
+              label={f.type === 'VIDEO' ? 'Kiến thức trong video' : 'Kiến thức của bài'}
               rows={8}
               className="font-mono text-xs"
               disabled={!knowledgeLoaded}
               placeholder={KNOWLEDGE_HINT}
               value={f.knowledgeText}
               onChange={(e) => set('knowledgeText', e.target.value)}
-              hint="Hiện dưới video cho học viên. Mục: # Ngữ pháp, # Phát âm, # Mẫu câu, # Kỹ năng, # Từ vựng, # Mệnh đề, # Mạo từ (chỉ ghi ngữ pháp thật vào # Ngữ pháp). Các trường cách nhau dấu |. Mạo từ: thụt 2 dấu cách để thêm từ đi kèm (node con)."
+              hint="Hiện ở tab Kiến thức cho học viên; đổi kiến thức thì câu bài tập tự sinh được tạo lại (câu soạn tay giữ nguyên). Mục: # Ngữ pháp, # Phát âm, # Mẫu câu, # Kỹ năng, # Từ vựng, # Mệnh đề, # Mạo từ (chỉ ghi ngữ pháp thật vào # Ngữ pháp). Các trường cách nhau dấu |. Mạo từ: thụt 2 dấu cách để thêm từ đi kèm (node con)."
             />
           </div>
         )}
@@ -168,6 +203,24 @@ export const LessonDialog: React.FC<{ open: boolean; sectionId: string | null; l
             />
           </div>
         )}
+        <div className="md:col-span-2 space-y-2">
+          <div className="flex flex-wrap items-end justify-between gap-2">
+            <span className="text-sm font-semibold text-slate-700">Bài tập sau bài</span>
+            <label className="flex items-center gap-2 text-xs text-slate-600">
+              Điểm cần đạt để qua bài
+              <input type="number" min={0} max={100} value={f.passScorePct} disabled={!knowledgeLoaded} onChange={(e) => set('passScorePct', e.target.value)} className="w-16 rounded-lg border border-slate-200 px-2 py-1 text-right text-sm tabular-nums" />%
+            </label>
+          </div>
+          <Textarea
+            rows={12}
+            className="font-mono text-xs"
+            disabled={!knowledgeLoaded}
+            placeholder={EXERCISE_HINT}
+            value={f.exercisesText}
+            onChange={(e) => set('exercisesText', e.target.value)}
+            hint={`Mỗi câu: "? yêu cầu", câu hỏi, "* đáp án đúng", "- phương án sai", "> giải thích". Vị trí đáp án đúng được xáo tự động.${fixed ? ` Ngoài ra bài có ${fixed} câu giữ nguyên (câu đề thật có ảnh / audio / đoạn văn hoặc câu tự sinh từ Kiến thức).` : ''}`}
+          />
+        </div>
         <div className="md:col-span-2">
           <Switch checked={f.isFreePreview} onChange={(v) => set('isFreePreview', v)} label="Cho học thử" description="Khách chưa đăng nhập xem được bài này" />
         </div>

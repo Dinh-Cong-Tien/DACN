@@ -9,6 +9,7 @@ import { gradientOf } from '../head/shared';
 import { knowledgeToText, parseKnowledgeText, toKnowledge } from '../catalog/lesson-knowledge';
 import { parseSubtitles, subtitlesToText, toCues } from '../catalog/lesson-transcript';
 import { buildExercises, poolOf, withAuthored } from '../catalog/lesson-exercises';
+import { applyExercisesText, exercisesToText } from '../catalog/lesson-exercise-text';
 import { completedAttempts, courseStats, ratingOf } from '../catalog/counts';
 import { byTitleNatural, levelLabel } from '../catalog/mappers';
 import { listQuestions, toQuestionRow } from '../head/head.routes';
@@ -54,6 +55,10 @@ contentRouter.get(
       orderBy: [{ trackOrder: 'asc' }, { createdAt: 'asc' }],
     });
     const stats = await courseStats(courses.map((c) => c.id));
+    // số câu bài tập sau bài (đếm trong CSDL, không tải cả nội dung câu)
+    const exCount = new Map(
+      (await prisma.$queryRaw<{ id: string; n: number }[]>`SELECT id::text AS id, jsonb_array_length(exercises)::int AS n FROM lessons WHERE deleted_at IS NULL AND jsonb_typeof(exercises) = 'array'`).map((r) => [r.id, r.n])
+    );
     return TRACKS.filter((t) => t.key !== null || courses.some((c) => !c.track)).map((t) => {
       const list = courses.filter((c) => c.track === t.key);
       return {
@@ -77,7 +82,7 @@ contentRouter.get(
             type: 'SECTION' as const,
             partTitle: s.partTitle ?? undefined,
             meta: `${s.lessonSections.length} bài`,
-            lessons: s.lessonSections,
+            lessons: s.lessonSections.map((l) => ({ ...l, exercisesCount: exCount.get(l.id) ?? 0 })),
           })),
         })),
       };
@@ -219,9 +224,11 @@ const lessonBody = z.object({
   knowledgeText: z.string().max(30000).nullish(),
   /** Lời thoại có mốc thời gian (nội dung file .srt / .vtt); chuỗi rỗng = xoá */
   transcriptText: z.string().max(500000).nullish(),
+  /** Bài tập sau bài dạng văn bản (xem lesson-exercise-text.ts); không gửi → giữ nguyên */
+  exercisesText: z.string().max(100000).optional(),
 });
 /** knowledgeText → cột knowledge, transcriptText → cột transcript; không gửi → giữ nguyên */
-const lessonData = <T extends { knowledgeText?: string | null; transcriptText?: string | null }>({ knowledgeText, transcriptText, ...rest }: T) => ({
+const lessonData = <T extends { knowledgeText?: string | null; transcriptText?: string | null; exercisesText?: string }>({ knowledgeText, transcriptText, exercisesText: _ex, ...rest }: T) => ({
   ...rest,
   ...(knowledgeText === undefined ? {} : { knowledge: (parseKnowledgeText(knowledgeText ?? '') as Prisma.InputJsonValue | null) ?? Prisma.DbNull }),
   ...(transcriptText === undefined ? {} : { transcript: (parseSubtitles(transcriptText ?? '') as Prisma.InputJsonValue | null) ?? Prisma.DbNull }),
@@ -235,6 +242,13 @@ async function refreshExercises(lessonId: string) {
   const qs = withAuthored(l.exercises, k ? buildExercises(lessonId, k, poolOf(others.map((o) => toKnowledge(o.knowledge)).filter((x): x is NonNullable<typeof x> => !!x))) : []);
   await prisma.lesson.update({ where: { id: lessonId }, data: { exercises: qs.length ? (qs as unknown as Prisma.InputJsonValue) : Prisma.DbNull } });
 }
+/** Admin sửa bài tập dạng chữ → ghi lại cột exercises (giữ câu đề thật / câu có đoạn văn / câu tự sinh) */
+async function saveExercisesText(lessonId: string, text: string | undefined) {
+  if (text === undefined) return;
+  const l = await prisma.lesson.findUniqueOrThrow({ where: { id: lessonId }, select: { exercises: true } });
+  const qs = applyExercisesText(lessonId, l.exercises, text);
+  await prisma.lesson.update({ where: { id: lessonId }, data: { exercises: qs.length ? (qs as unknown as Prisma.InputJsonValue) : Prisma.DbNull } });
+}
 async function refreshCourseCache(courseId: string) {
   const agg = await prisma.lesson.aggregate({ where: { deletedAt: null, section: { courseId } }, _count: true, _sum: { durationMin: true } });
   await prisma.course.update({ where: { id: courseId }, data: { lessonsCount: agg._count, durationMin: agg._sum.durationMin ?? 0 } });
@@ -246,9 +260,11 @@ contentRouter.post(
     if (!(await prisma.courseSection.findUnique({ where: { id: b.sectionId }, select: { id: true } }))) throw notFound('Chương');
     if (b.quizTestId && !(await prisma.mockTest.findFirst({ where: { id: b.quizTestId, deletedAt: null }, select: { id: true } }))) throw notFound('Đề kiểm tra');
     if ((b.type === 'QUIZ' || b.type === 'CHECKPOINT') && b.passScorePct == null) b.passScorePct = 70;
+    if (b.exercisesText !== undefined) applyExercisesText(b.sectionId, [], b.exercisesText);
     const last = await prisma.lesson.aggregate({ where: { sectionId: b.sectionId }, _max: { orderIndex: true } });
     const l = await prisma.lesson.create({ data: { ...lessonData(b), orderIndex: b.orderIndex ?? (last._max.orderIndex ?? -1) + 1 }, include: { section: { select: { courseId: true } } } });
     if (b.knowledgeText !== undefined) await refreshExercises(l.id);
+    await saveExercisesText(l.id, b.exercisesText);
     await refreshCourseCache(l.section.courseId);
     return l;
   })
@@ -257,8 +273,11 @@ contentRouter.patch(
   '/lessons/:id',
   handler(async (req) => {
     const b = parse(lessonBody.omit({ sectionId: true }).partial(), req.body);
+    // kiểm tra bài tập dạng chữ trước khi ghi gì (sai cú pháp → báo lỗi, không lưu dở)
+    if (b.exercisesText !== undefined) applyExercisesText(idOf(req), [], b.exercisesText);
     const l = await prisma.lesson.update({ where: { id: idOf(req) }, data: lessonData(b), include: { section: { select: { courseId: true } } } });
     if (b.knowledgeText !== undefined) await refreshExercises(l.id);
+    await saveExercisesText(l.id, b.exercisesText);
     await refreshCourseCache(l.section.courseId);
     return l;
   })
@@ -266,9 +285,19 @@ contentRouter.patch(
 contentRouter.get(
   '/lessons/:id/knowledge',
   handler(async (req) => {
-    const l = await prisma.lesson.findFirst({ where: { id: idOf(req), deletedAt: null }, select: { knowledge: true, transcript: true } });
+    const l = await prisma.lesson.findFirst({ where: { id: idOf(req), deletedAt: null }, select: { knowledge: true, transcript: true, summary: true, contentMd: true, passScorePct: true, exercises: true } });
     if (!l) throw notFound('Bài học');
-    return { knowledgeText: knowledgeToText(toKnowledge(l.knowledge)), transcriptText: subtitlesToText(toCues(l.transcript)) };
+    const ex = exercisesToText(l.exercises);
+    return {
+      knowledgeText: knowledgeToText(toKnowledge(l.knowledge)),
+      transcriptText: subtitlesToText(toCues(l.transcript)),
+      summary: l.summary ?? '',
+      contentMd: l.contentMd ?? '',
+      passScorePct: l.passScorePct,
+      exercisesText: ex.text,
+      /** số câu giữ nguyên (đề thật, có đoạn văn / audio, tự sinh từ Kiến thức) */
+      exercisesFixed: ex.fixed,
+    };
   })
 );
 contentRouter.delete(

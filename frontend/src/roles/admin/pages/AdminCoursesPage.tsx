@@ -42,6 +42,7 @@ const STATUS_VI: Record<string, { tone: 'green' | 'amber' | 'red' | 'gray'; labe
 };
 const EMPTY: AdminTreeNode[] = [];
 const LESSON_ICON: Record<string, React.ElementType> = { VIDEO: PlayCircle, READING: FileText, QUIZ: ClipboardCheck, CHECKPOINT: ClipboardCheck };
+const LESSON_TYPE: Record<string, string> = { VIDEO: 'Video', READING: 'Bài giảng', QUIZ: 'Luyện đề', CHECKPOINT: 'Kiểm tra chặng' };
 
 function countTree(nodes: CourseTreeNode[]): Record<CourseTreeNode['type'], number> {
   const out = { CATEGORY: 0, COURSE: 0, SECTION: 0 };
@@ -367,7 +368,11 @@ export const AdminCoursesPage: React.FC = () => {
                               <Icon className="h-4 w-4 shrink-0 text-slate-400" />
                               <div className="min-w-0 flex-1">
                                 <p className="truncate text-[13px] font-medium text-slate-800">{l.title}</p>
-                                <p className="text-[11px] text-slate-500">{l.durationMin} phút{l.isFreePreview ? ' · học thử' : ''}</p>
+                                <p className="text-[11px] text-slate-500">
+                                  {LESSON_TYPE[l.type] ?? l.type} · {l.durationMin} phút{l.exercisesCount ? ` · ${l.exercisesCount} câu bài tập` : ''}
+                                  {l.isFreePreview ? ' · học thử' : ''}
+                                  {l.status !== 'PUBLISHED' && <span className="ml-1 font-semibold text-amber-600">· {STATUS_VI[l.status]?.label ?? l.status}</span>}
+                                </p>
                               </div>
                               <button type="button" title="Sửa bài" onClick={() => setLessonDlg({ sectionId: selected.id, lesson: l })} className="rounded-lg p-1.5 text-slate-400 hover:bg-indigo-50 hover:text-indigo-700"><Pencil className="h-3.5 w-3.5" /></button>
                               <button type="button" title="Xoá bài" onClick={() => setDeletingLesson(l)} className="rounded-lg p-1.5 text-slate-400 hover:bg-rose-50 hover:text-rose-600"><Trash2 className="h-3.5 w-3.5" /></button>

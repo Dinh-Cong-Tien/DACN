@@ -212,6 +212,9 @@ export interface LibLesson {
   type: string;
   durationMin: number;
   orderIndex: number;
+  /** Số câu bài tập sau bài (học viên phải đạt passScorePct % mới qua bài) */
+  exercisesCount?: number;
+  passScorePct?: number;
 }
 export interface LibCourse {
   id: string;

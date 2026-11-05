@@ -10,6 +10,7 @@ import { gradientAt } from './mappers';
 import { toKnowledge } from './lesson-knowledge';
 import { toCues } from './lesson-transcript';
 import { toExercises } from './lesson-exercises';
+import { gradeLessonAssignments } from './lesson-assignments';
 import { ratingOf } from './counts';
 
 export const coursesRouter = Router();
@@ -265,6 +266,8 @@ coursesRouter.post(
         create: { userId, courseId, progressPct: pct, currentLessonId: current, completedAt: pct >= 100 ? new Date() : null },
         update: { progressPct: pct, currentLessonId: current, completedAt: pct >= 100 ? (enrollment?.completedAt ?? new Date()) : null },
       });
+
+      if (body.action === 'complete') await gradeLessonAssignments(tx, userId, courseId, { lessonId: lesson.id, notify: true });
 
       const minutes = Math.round(spent / 60);
       const justCompleted = body.action === 'complete' && !wasDone;

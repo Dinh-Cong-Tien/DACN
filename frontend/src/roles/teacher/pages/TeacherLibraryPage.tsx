@@ -49,7 +49,9 @@ const GroupTabs: React.FC<{ groups: { label: string; tabs: { key: string; label:
 /** Mục chính · nhóm của khoá (TOEIC / VSTEP / Tiếng Anh THPT) */
 const TRACK_NAME: Record<string, string> = { TOEIC: 'TOEIC', VSTEP: 'VSTEP', THPT: 'Tiếng Anh THPT' };
 const trackOf = (c: { track?: string; trackGroup?: string }) => [c.track && TRACK_NAME[c.track], c.trackGroup].filter(Boolean).join(' · ') || 'Chưa xếp mục';
-const LESSON_TYPE: Record<string, string> = { VIDEO: 'Video', READING: 'Bài đọc', QUIZ: 'Kiểm tra', CHECKPOINT: 'Kiểm tra giữa khoá' };
+const LESSON_TYPE: Record<string, string> = { VIDEO: 'Video', READING: 'Bài giảng', QUIZ: 'Luyện đề', CHECKPOINT: 'Kiểm tra chặng' };
+/** Bài tập sau bài: "8 câu · đạt 70%" */
+const exerciseNote = (l: { exercisesCount?: number; passScorePct?: number }) => (l.exercisesCount ? `${l.exercisesCount} câu · đạt ${l.passScorePct ?? 70}%` : '—');
 
 /** Trạng thái tải chung cho từng khối dữ liệu thư viện */
 const QueryGate: React.FC<{ q: { isLoading: boolean; error: unknown; refetch: () => unknown }; children: React.ReactNode }> = ({ q, children }) =>
@@ -305,7 +307,7 @@ const EssayList: React.FC<{ kind: 'writing' | 'speaking'; assign: Assign }> = ({
 
 const CoursesView: React.FC<{ assign: Assign }> = ({ assign }) => {
   const me = useAuthStore((s) => s.user?.fullName);
-  const [params] = useSearchParams();
+  const [params, setParams] = useSearchParams();
   const [openId, setOpenId] = useState<string | null>(params.get('open'));
   useEffect(() => {
     const id = params.get('open');
@@ -314,10 +316,20 @@ const CoursesView: React.FC<{ assign: Assign }> = ({ assign }) => {
   }, [params]);
   const [picked, setPicked] = useState<string[]>([]);
   const coursesQ = useLibCourses();
-  const courses = coursesQ.data ?? [];
+  const all = coursesQ.data ?? [];
+  // lọc theo 3 mục chính giống trang Khoá học của học viên (?muc=)
+  const track = params.get('muc')?.toUpperCase();
+  const courses = all.filter((c) => !track || c.track === track);
+  const count = (t: string) => all.filter((c) => c.track === t).length;
 
   return (
     <QueryGate q={coursesQ}>
+    <div className="space-y-5">
+    <GroupTabs
+      value={track ?? 'all'}
+      onChange={(k) => setParams(k === 'all' ? {} : { muc: k.toLowerCase() }, { replace: true })}
+      groups={[{ label: 'Mục khoá học', tabs: [{ key: 'all', label: 'Tất cả', count: all.length }, ...Object.entries(TRACK_NAME).map(([key, label]) => ({ key, label, count: count(key) }))] }]}
+    />
     <Panel flush>
       {courses.length === 0 && <TEmpty title="Chưa có khoá học nào được xuất bản" />}
       <div className="overflow-x-auto">
@@ -362,7 +374,7 @@ const CoursesView: React.FC<{ assign: Assign }> = ({ assign }) => {
                     <tr>
                       <td colSpan={7} className="border-b border-slate-200 bg-slate-50/60 px-4 pb-4 pt-1">
                         <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
-                          <p className="text-[13px] text-slate-500">{assign ? 'Tích chọn bài rồi giao cho lớp. Học viên thấy bài trong mục Lớp của tôi.' : `${lessons.length} bài giảng theo đúng thứ tự học viên học.`}</p>
+                          <p className="text-[13px] text-slate-500">{assign ? 'Tích chọn bài rồi giao cho lớp. Học viên học xong và đạt bài tập sau bài thì bài giao tự chấm điểm.' : `${lessons.length} bài theo đúng thứ tự học viên học. Mỗi bài có bài tập sau bài, học viên đạt điểm yêu cầu mới mở bài tiếp.`}</p>
                           {assign && (
                             <TBtn size="sm" variant="primary" disabled={!picked.length} onClick={() => assign({ kind: 'LESSON', courseId: c.slug, lessonIds: lessons.filter((l) => picked.includes(l.id)).map((l) => l.id) })}>
                               Giao {picked.length || ''} bài đã chọn
@@ -385,6 +397,7 @@ const CoursesView: React.FC<{ assign: Assign }> = ({ assign }) => {
                                     <span className="w-12 shrink-0 tabular-nums text-[12px] text-slate-400">Bài {n}</span>
                                     <span className="min-w-0 flex-1 truncate text-slate-800">{l.title}</span>
                                     <span className="hidden w-20 text-[12px] text-slate-500 sm:block">{LESSON_TYPE[l.type] ?? l.type}</span>
+                                    <span className="hidden w-28 text-right text-[12px] tabular-nums text-slate-500 md:block" title="Bài tập sau bài — học viên phải đạt mức này mới qua bài">{exerciseNote(l)}</span>
                                     <span className="w-14 text-right text-[12px] tabular-nums text-slate-500">{l.durationMin} phút</span>
                                   </label>
                                 );
@@ -402,6 +415,7 @@ const CoursesView: React.FC<{ assign: Assign }> = ({ assign }) => {
         </table>
       </div>
     </Panel>
+    </div>
     </QueryGate>
   );
 };
