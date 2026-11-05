@@ -41,7 +41,7 @@ export const LanguageSwitcher: React.FC<{ onDark?: boolean; className?: string; 
         <span className="tabular-nums">{locale.short}</span>
       </button>
       {open && (
-        <div role="menu" className={cn('absolute right-0 z-50 w-44 animate-scale-in', placement === 'up' ? 'bottom-full mb-2 origin-bottom-right' : 'top-full mt-2 origin-top-right', 'rounded-xl border border-slate-200 bg-white p-1.5 shadow-[0_12px_32px_-8px_rgba(16,24,40,0.25)]')}>
+        <div role="menu" className={cn('absolute right-0 z-50 w-44 animate-scale-in', placement === 'up' ? 'bottom-full mb-2 origin-bottom-right' : 'top-full mt-2 origin-top-right', 'theme-native rounded-xl border border-slate-200 bg-white p-1.5 shadow-[0_12px_32px_-8px_rgba(16,24,40,0.25)]')}>
           {locales.map((l) => (
             <button
               key={l.code}

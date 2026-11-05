@@ -72,7 +72,7 @@ export const SiteHeader: React.FC = () => {
         <ChevronDown className="hidden xl:block w-3.5 h-3.5 transition-transform group-hover/menu:rotate-180" />
       </button>
       <div className="absolute left-0 top-full pt-2 opacity-0 translate-y-1 pointer-events-none group-hover/menu:opacity-100 group-hover/menu:translate-y-0 group-hover/menu:pointer-events-auto transition-all duration-200 z-50">
-        <div className={cn('bg-white rounded-xl border border-slate-200 shadow-[0_12px_32px_-8px_rgba(16,24,40,0.18)] p-1.5', items.some((i) => i.desc) ? 'w-[340px]' : 'w-64')}>
+        <div className={cn('theme-native bg-white rounded-xl border border-slate-200 shadow-[0_12px_32px_-8px_rgba(16,24,40,0.18)] p-1.5', items.some((i) => i.desc) ? 'w-[340px]' : 'w-64')}>
           {items.map((c, ci) => (
             <React.Fragment key={c.to}>
             {c.group && c.group !== items[ci - 1]?.group && (
@@ -190,7 +190,7 @@ export const SiteHeader: React.FC = () => {
         </div>
 
         {open && (
-          <div className="lg:hidden border-t-2 border-slate-900/10 bg-cream animate-fade-down max-h-[80vh] overflow-y-auto">
+          <div className="theme-native lg:hidden border-t-2 border-slate-900/10 bg-cream animate-fade-down max-h-[80vh] overflow-y-auto">
             <div className="px-4 py-4 space-y-4">
               {mobileGroups.map((g, gi) => (
                 <div key={gi} className="space-y-1">

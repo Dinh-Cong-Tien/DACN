@@ -50,7 +50,7 @@ export const ThemeToggle: React.FC<{ onDark?: boolean; className?: string; place
         <Icon className="w-5 h-5" />
       </button>
       {open && (
-        <div role="menu" className={cn('absolute right-0 z-50 w-48 rounded-xl border border-slate-200 bg-white p-1.5 shadow-[0_12px_32px_-8px_rgba(16,24,40,0.25)] animate-scale-in', placement === 'up' ? 'bottom-full mb-2 origin-bottom-right' : 'top-full mt-2 origin-top-right')}>
+        <div role="menu" className={cn('theme-native absolute right-0 z-50 w-48 rounded-xl border border-slate-200 bg-white p-1.5 shadow-[0_12px_32px_-8px_rgba(16,24,40,0.25)] animate-scale-in', placement === 'up' ? 'bottom-full mb-2 origin-bottom-right' : 'top-full mt-2 origin-top-right')}>
           {OPTIONS.map((o) => (
             <button
               key={o.mode}

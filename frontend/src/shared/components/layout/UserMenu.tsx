@@ -63,7 +63,7 @@ export const UserMenu: React.FC<{ user: AppUser; onLogout: () => void; onDark?: 
       {open && (
         <div
           role="menu"
-          className="absolute right-0 top-full z-50 mt-2 max-h-[calc(100vh-88px)] w-[320px] overflow-y-auto no-scrollbar rounded-2xl border border-slate-200 bg-white shadow-[0_24px_60px_-20px_rgba(16,24,40,0.35)] animate-scale-in origin-top-right"
+          className="theme-native absolute right-0 top-full z-50 mt-2 max-h-[calc(100vh-88px)] w-[320px] overflow-y-auto no-scrollbar rounded-2xl border border-slate-200 bg-white shadow-[0_24px_60px_-20px_rgba(16,24,40,0.35)] animate-scale-in origin-top-right"
         >
           {/* 1. Thông tin */}
           <div className="px-4 pt-4">

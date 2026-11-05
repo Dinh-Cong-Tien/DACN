@@ -57,7 +57,7 @@ export const NotificationBell: React.FC<{ allTo: string }> = ({ allTo }) => {
       </button>
 
       {open && (
-        <div className="absolute right-0 top-full z-50 mt-2 w-[380px] max-w-[calc(100vw-24px)] origin-top-right overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_24px_60px_-20px_rgba(16,24,40,0.4)] animate-scale-in max-sm:fixed max-sm:inset-x-3 max-sm:top-16 max-sm:w-auto" role="dialog" aria-label={t('Thông báo')}>
+        <div className="theme-native absolute right-0 top-full z-50 mt-2 w-[380px] max-w-[calc(100vw-24px)] origin-top-right overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_24px_60px_-20px_rgba(16,24,40,0.4)] animate-scale-in max-sm:fixed max-sm:inset-x-3 max-sm:top-16 max-sm:w-auto" role="dialog" aria-label={t('Thông báo')}>
           <div className="flex items-center justify-between gap-2 px-4 pb-2 pt-3.5">
             <div>
               <p className="font-display text-[16px] font-bold text-slate-900">{t('Thông báo')}</p>
