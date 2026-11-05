@@ -1,6 +1,17 @@
 /** Hằng số & tiện ích giao diện dùng chung cho khu vực Trưởng bộ môn / Quản trị (không chứa dữ liệu). */
-import type { ExamType, IQuestion, SkillType } from '@/shared/types';
+import type { CourseTrack, ExamType, IQuestion, SkillType } from '@/shared/types';
 import type { QuestionRow } from '@/shared/api/head';
+
+/** Mục lớp học — đúng 3 mục khoá học của học viên */
+export const CLASS_TRACKS: { key: CourseTrack; label: string }[] = [
+  { key: 'TOEIC', label: 'TOEIC' },
+  { key: 'VSTEP', label: 'VSTEP' },
+  { key: 'THPT', label: 'Tiếng Anh THPT' },
+];
+export const CLASS_TRACK_OPTIONS = CLASS_TRACKS.map((t) => ({ value: t.key, label: t.label }));
+/** Mục của lớp (lớp cũ chưa có mục → theo kỳ thi) */
+export const classTrack = (c: { track?: CourseTrack; examType: ExamType }): CourseTrack => c.track ?? c.examType;
+export const classTrackLabel = (c: { track?: CourseTrack; examType: ExamType }) => CLASS_TRACKS.find((t) => t.key === classTrack(c))?.label ?? c.examType;
 
 /** Mã Part trong DB (TOEIC_P5, VSTEP_R1…) → nhãn ngắn */
 export const partLabel = (part: string) => {

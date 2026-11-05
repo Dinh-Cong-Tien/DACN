@@ -5,6 +5,11 @@ import {
 } from 'lucide-react';
 import { useGradingQueue, useTeacherAssignments, useTeacherClasses, type TClassRoom } from '@/shared/api/teacher';
 import { StaffNav, type StaffMenu } from '@/shared/components/layout/StaffNav';
+import { CLASS_TRACKS, classTrack } from '@/shared/constants/staff';
+import type { CourseTrack } from '@/shared/types';
+
+/** Icon mục — trùng menu Khoá học của học viên */
+const TRACK_ICON: Record<CourseTrack, typeof Briefcase> = { TOEIC: Briefcase, VSTEP: GraduationCap, THPT: School };
 
 /**
  * Menu header giáo viên.
@@ -18,10 +23,15 @@ export const buildTeacherMenus = (classes: TClassRoom[], toGrade: number, drafts
     label: 'Lớp học',
     to: '/teacher/classes',
     children: [
-      { to: '/teacher/classes', label: 'Tất cả lớp', icon: Users, desc: 'Mã mời, sĩ số, tạo lớp mới', exact: true },
-      { to: '/teacher/schedule', label: 'Lịch dạy', icon: CalendarDays, desc: 'Buổi dạy trong tuần, phòng học, giáo án' },
-      { to: '/teacher/attendance', label: 'Điểm danh', icon: ClipboardCheck, desc: 'Điểm danh buổi hôm nay, sổ điểm danh cả khoá' },
-      ...classes.map((c) => ({ to: `/teacher/classes/${c.id}`, label: c.name, icon: c.examType === 'TOEIC' ? Briefcase : GraduationCap, desc: `${c.schedule || 'Chưa có lịch'} · ${c.studentsCount} học viên`, group: 'Lớp đang dạy' })),
+      { to: '/teacher/classes', label: 'Tất cả lớp', icon: Users, desc: 'Mã mời, sĩ số, tạo lớp mới', exact: true, group: 'Quản lý lớp' },
+      { to: '/teacher/schedule', label: 'Lịch dạy', icon: CalendarDays, desc: 'Buổi dạy trong tuần, phòng học, giáo án', group: 'Quản lý lớp' },
+      { to: '/teacher/attendance', label: 'Điểm danh', icon: ClipboardCheck, desc: 'Điểm danh buổi hôm nay, sổ điểm danh cả khoá', group: 'Quản lý lớp' },
+      // lớp đang dạy chia đúng 3 mục như Khoá học của học viên; mục chưa có lớp thì ẩn
+      ...CLASS_TRACKS.flatMap((t) =>
+        classes
+          .filter((c) => classTrack(c) === t.key)
+          .map((c) => ({ to: `/teacher/classes/${c.id}`, label: c.name, icon: TRACK_ICON[t.key], desc: `${c.schedule || 'Chưa có lịch'} · ${c.studentsCount} học viên`, group: t.key === 'THPT' ? 'Lớp Tiếng Anh THPT' : `Lớp ${t.label}` }))
+      ),
     ],
   },
   {

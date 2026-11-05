@@ -11,6 +11,7 @@ import { BarChart3, CalendarCheck, Target, TrendingUp } from 'lucide-react';
 import { Figures, Meter, Panel, Status, TBtn, TPageHead, inputCls, tbl } from '../components/TeacherKit';
 import { TEmpty, TError, TLoading } from '../components/TeacherState';
 import { appLocale } from '@/shared/i18n';
+import { classTrackLabel } from '@/shared/constants/staff';
 
 /** Thống kê một lớp: cùng chỉ số học viên thấy ở trang Tiến độ (điểm thi thử, % đúng từng Part, lỗi sai), giáo viên giao bài bù ngay từ chỗ yếu */
 export const TeacherAnalyticsPage: React.FC = () => {
@@ -63,7 +64,7 @@ export const TeacherAnalyticsPage: React.FC = () => {
       <TPageHead
         eyebrow="Học viên"
         title="Thống kê lớp học"
-        sub={`${cls.name} · ${cls.examType} · ${cls.studentsCount} học viên`}
+        sub={`${cls.name} · ${classTrackLabel(cls)} · ${cls.studentsCount} học viên`}
         actions={
           <select value={cls.id} onChange={(e) => setClassId(e.target.value)} className={cn(inputCls, 'w-60 max-w-full')} aria-label="Chọn lớp">
             {classes.map((c) => (

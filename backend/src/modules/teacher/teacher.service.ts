@@ -7,6 +7,7 @@ import { prisma } from '../../lib/prisma';
 import { forbidden, notFound, type AuthUser } from '../../core/http';
 import { iso, num, ymd } from '../../core/dto';
 import { aggregateStudents, classGradient, classMetrics, marksOf, rateOf, riskLevel, round1, syncRiskCache } from '../../core/metrics';
+import { trackOfClass } from '../catalog/class-track';
 
 // ---------------- Quyền sở hữu ----------------
 
@@ -113,6 +114,7 @@ export async function toClassRooms(classes: (Class & { teacher: Pick<User, 'full
       name: c.name,
       code: c.code,
       examType: c.examType,
+      track: trackOfClass(c),
       level: c.level ?? undefined,
       description: c.description ?? undefined,
       teacherId: c.teacherId,

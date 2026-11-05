@@ -7,6 +7,7 @@ import { prisma } from '../../lib/prisma';
 import { forbidden } from '../../core/http';
 import { iso, num, planOf, ymd } from '../../core/dto';
 import { classGradient, classMetrics, rateOf, round1, type ClassMetrics } from '../../core/metrics';
+import { trackOfClass } from '../catalog/class-track';
 
 const GRADIENTS = [
   'from-indigo-500 via-violet-500 to-fuchsia-500',
@@ -59,6 +60,7 @@ export function toClassRoom(c: ClassWithTeacher, s?: ClassStats) {
     name: c.name,
     code: c.code,
     examType: c.examType,
+    track: trackOfClass(c),
     teacherName: c.teacher.fullName,
     teacherId: c.teacherId,
     departmentId: c.departmentId,

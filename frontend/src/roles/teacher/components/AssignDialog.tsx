@@ -7,6 +7,7 @@ import type { AssignmentTarget, AssignmentType } from '@/shared/types';
 import { assignmentHref, cn } from '@/shared/utils';
 import { Modal } from '@/shared/components/ui';
 import { TBtn, TTabs, inputCls } from './TeacherKit';
+import { classTrackLabel } from '@/shared/constants/staff';
 
 const TRACKS: [string, string][] = [
   ['TOEIC', 'TOEIC'],
@@ -205,7 +206,7 @@ export const AssignDialog: React.FC<{ open: boolean; onClose: () => void; onSave
             <select value={cls?.id ?? ''} onChange={(e) => setClassId(e.target.value)} className={fieldCls}>
               {classes.map((c) => (
                 <option key={c.id} value={c.id}>
-                  {c.name} · {c.examType} · {c.studentsCount} học viên
+                  {c.name} · {classTrackLabel(c)} · {c.studentsCount} học viên
                 </option>
               ))}
             </select>

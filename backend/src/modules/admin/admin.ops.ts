@@ -8,6 +8,7 @@ import { logger } from '../../lib/logger';
 import { badRequest, handler, me, notFound, pageQuery, paged, parse } from '../../core/http';
 import { audit, notify } from './audit';
 import { classInclude, classStats, lastMonths, ticketInclude, toClassRoom, toSupportTicket } from '../head/shared';
+import { CLASS_TRACK, classTrackData } from '../catalog/class-track';
 
 export const opsRouter = Router();
 const uuid = z.string().uuid();
@@ -26,14 +27,14 @@ opsRouter.get(
 opsRouter.patch(
   '/classes/:id',
   handler(async (req) => {
-    const body = parse(z.object({ teacherId: uuid.optional(), isArchived: z.boolean().optional(), name: z.string().min(2).max(160).optional(), room: z.string().max(80).nullish(), scheduleText: z.string().max(120).nullish(), departmentId: uuid.nullish() }), req.body);
+    const body = parse(z.object({ teacherId: uuid.optional(), isArchived: z.boolean().optional(), name: z.string().min(2).max(160).optional(), track: CLASS_TRACK.optional(), room: z.string().max(80).nullish(), scheduleText: z.string().max(120).nullish(), departmentId: uuid.nullish() }), req.body);
     const cur = await prisma.class.findFirst({ where: { id: idOf(req), deletedAt: null } });
     if (!cur) throw notFound('Lớp học');
     if (body.teacherId) {
       const t = await prisma.user.findFirst({ where: { id: body.teacherId, deletedAt: null, status: 'ACTIVE', role: { in: ['TEACHER', 'HEAD_TEACHER'] } } });
       if (!t) throw badRequest('Giáo viên không hợp lệ hoặc chưa hoạt động', 'INVALID_TEACHER');
     }
-    const c = await prisma.class.update({ where: { id: cur.id }, data: body, include: classInclude });
+    const c = await prisma.class.update({ where: { id: cur.id }, data: { ...body, ...classTrackData(body) }, include: classInclude });
     if (body.teacherId && body.teacherId !== cur.teacherId) {
       await audit(req, 'CLASS_REASSIGN', 'class', c.id, { severity: 'WARN', before: { teacherId: cur.teacherId }, after: { teacherId: body.teacherId, target: c.name } });
       await notify([body.teacherId], { type: 'CLASS', title: 'Bạn được phân công phụ trách lớp', message: c.name, link: `/teacher/classes/${c.id}`, refType: 'CLASS', refId: c.id });

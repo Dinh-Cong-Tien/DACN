@@ -15,6 +15,8 @@ import { Avatar, ConfirmDialog, Input, Modal, Select, Textarea } from '@/shared/
 import { Figures, IconTile, Meter, Panel, Status, TBtn, TTabs, inputCls, tbl, type StatusTone } from '../components/TeacherKit';
 import { TEmpty, TError, TLoading } from '../components/TeacherState';
 import { ClassLeaderboardPanel } from '../components/ClassLeaderboard';
+import { CLASS_TRACK_OPTIONS, classTrack, classTrackLabel } from '@/shared/constants/staff';
+import type { CourseTrack } from '@/shared/types';
 
 const STATUS: Record<ClassStudent['status'], { label: string; tone: StatusTone }> = {
   GOOD: { label: 'Ổn định', tone: 'green' },
@@ -155,7 +157,7 @@ export const TeacherClassDetailPage: React.FC = () => {
   const fail = (what: string) => (e: unknown) => toast.error(what, errorMessage(e));
 
   const openEdit = () => {
-    setClassForm({ name: cls.name, examType: cls.examType, schedule: cls.schedule ?? '', room: cls.room ?? '', level: cls.level ?? '', description: cls.description ?? '', maxStudents: cls.maxStudents ?? null, startDate: cls.startDate ?? null, endDate: cls.endDate ?? null });
+    setClassForm({ name: cls.name, track: classTrack(cls), schedule: cls.schedule ?? '', room: cls.room ?? '', level: cls.level ?? '', description: cls.description ?? '', maxStudents: cls.maxStudents ?? null, startDate: cls.startDate ?? null, endDate: cls.endDate ?? null });
     setEditOpen(true);
   };
   const saveClass = () => {
@@ -237,7 +239,7 @@ export const TeacherClassDetailPage: React.FC = () => {
         <div className="absolute inset-0 bg-gradient-to-r from-indigo-950/95 via-indigo-950/70 to-fuchsia-900/20" />
         <div className="relative flex flex-col gap-6 p-6 md:flex-row md:items-end md:justify-between md:p-8">
           <div className="min-w-0">
-            <span className="rounded-md bg-white/15 px-2 py-0.5 text-[12px] font-semibold backdrop-blur">{cls.examType}</span>
+            <span className="rounded-md bg-white/15 px-2 py-0.5 text-[12px] font-semibold backdrop-blur">{classTrackLabel(cls)}</span>
             {cls.isArchived && <span className="ml-2 rounded-md bg-amber-400/90 px-2 py-0.5 text-[12px] font-semibold text-amber-950">Đã lưu trữ</span>}
             <h1 className="mt-3 font-display text-[2rem] font-extrabold leading-tight md:text-[2.6rem]">{cls.name}</h1>
             <p className="mt-2 flex flex-wrap gap-x-5 gap-y-1 text-sm text-slate-200">
@@ -675,6 +677,7 @@ export const TeacherClassDetailPage: React.FC = () => {
             <div className="md:col-span-2">
               <Input label="Tên lớp" required value={classForm.name} onChange={(e) => setClassForm({ ...classForm, name: e.target.value })} />
             </div>
+            <Select label="Mục lớp học" options={CLASS_TRACK_OPTIONS} value={classForm.track ?? 'TOEIC'} onChange={(e) => setClassForm({ ...classForm, track: e.target.value as CourseTrack })} />
             <Input label="Lịch học" placeholder="T2 – T4 – T6 · 19:00" value={classForm.schedule ?? ''} onChange={(e) => setClassForm({ ...classForm, schedule: e.target.value })} />
             <Input label="Phòng" value={classForm.room ?? ''} onChange={(e) => setClassForm({ ...classForm, room: e.target.value })} />
             <Input label="Trình độ" placeholder="VD: 650+, B1–B2" value={classForm.level ?? ''} onChange={(e) => setClassForm({ ...classForm, level: e.target.value })} />

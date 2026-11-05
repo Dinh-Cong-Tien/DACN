@@ -10,6 +10,7 @@ import { Avatar } from '@/shared/components/ui';
 import { Img, PHOTOS } from '@/shared/components/media/Img';
 import { CLASS_BAR, Figures, GradientTail, IconTile, Meter, Panel, PanelLink, Status, TBtn, classTone, type Tone } from '../components/TeacherKit';
 import { TError, TLoading } from '../components/TeacherState';
+import { classTrackLabel } from '@/shared/constants/staff';
 
 const WEEKDAY = ['Chủ nhật', 'Thứ Hai', 'Thứ Ba', 'Thứ Tư', 'Thứ Năm', 'Thứ Sáu', 'Thứ Bảy'];
 const iso = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
@@ -259,7 +260,7 @@ export const TeacherDashboardPage: React.FC = () => {
             <Link key={c.id} to={`/teacher/classes/${c.id}`} className="group overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-[0_1px_2px_rgba(16,24,40,0.04)] transition-shadow hover:shadow-[0_16px_32px_-20px_rgba(16,24,40,0.35)]">
               <div className="relative">
                 <Img src={c.coverUrl ?? PHOTOS.classroom} alt={c.name} ratio="video" fallbackClass="bg-slate-200" className="transition-transform duration-500 group-hover:scale-[1.04]" />
-                <span className="absolute left-3 top-3 rounded-md bg-white/90 px-2 py-0.5 text-[11px] font-semibold text-slate-800 backdrop-blur">{c.examType}</span>
+                <span className="absolute left-3 top-3 rounded-md bg-white/90 px-2 py-0.5 text-[11px] font-semibold text-slate-800 backdrop-blur">{classTrackLabel(c)}</span>
               </div>
               <div className="p-4">
                 <h3 className="font-display font-bold text-slate-900 group-hover:text-indigo-700">{c.name}</h3>

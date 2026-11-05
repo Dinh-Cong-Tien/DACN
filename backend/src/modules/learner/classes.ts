@@ -8,6 +8,7 @@ import { prisma } from '../../lib/prisma';
 import { badRequest, conflict, forbidden, handler, me, notFound, parse } from '../../core/http';
 import { iso } from '../../core/dto';
 import { classGradient, classMetrics } from '../../core/metrics';
+import { trackOfClass } from '../catalog/class-track';
 
 export const classesRouter = Router();
 
@@ -26,6 +27,7 @@ async function toClassRoom(c: Class & { teacher: { fullName: string } }) {
     name: c.name,
     code: c.code,
     examType: c.examType,
+    track: trackOfClass(c),
     teacherName: c.teacher.fullName,
     studentsCount: m.studentsCount,
     assignmentsCount: m.assignmentsCount,

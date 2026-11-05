@@ -357,6 +357,8 @@ export interface ClassRoom {
   name: string;
   code: string;
   examType: ExamType;
+  /** Mục của lớp — trùng 3 mục khoá học: TOEIC / VSTEP / Tiếng Anh THPT (lớp THPT chấm thang 10 như VSTEP) */
+  track?: CourseTrack;
   teacherName: string;
   studentsCount: number;
   assignmentsCount: number;

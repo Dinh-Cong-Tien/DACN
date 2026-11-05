@@ -11,6 +11,8 @@ import { Avatar, Input, Modal, Select } from '@/shared/components/ui';
 import { Img, PHOTOS } from '@/shared/components/media/Img';
 import { cn, staffPath } from '@/shared/utils';
 import { Figures, Meter, Panel, TBtn, TPageHead, inputCls } from '@/roles/teacher/components/TeacherKit';
+import type { CourseTrack } from '@/shared/types';
+import { CLASS_TRACKS, CLASS_TRACK_OPTIONS, classTrack, classTrackLabel } from '@/shared/constants/staff';
 
 const COVERS = [PHOTOS.classroom, PHOTOS.discussion, PHOTOS.lecture, PHOTOS.team, PHOTOS.students2];
 const EMPTY: HeadClass[] = [];
@@ -36,17 +38,17 @@ export const HeadClassesPage: React.FC = () => {
   /** null = GV không còn trong bộ môn / bị xoá; undefined = đang tải */
   const statusOf = (c: HeadClass) => (teacherList.length ? (teacherList.find((t) => t.id === c.teacherId)?.status ?? null) : undefined);
   const [saving, setSaving] = useState(false);
-  const [exam, setExam] = useState<'ALL' | ExamType>('ALL');
+  const [exam, setExam] = useState<'ALL' | CourseTrack>('ALL');
   const [teacher, setTeacher] = useState('ALL');
   const [onlyIssue, setOnlyIssue] = useState(false);
   const [q, setQ] = useState('');
   const [open, setOpen] = useState(false);
-  const [form, setForm] = useState({ name: '', examType: 'TOEIC' as ExamType, teacherId: '', schedule: '', room: '' });
+  const [form, setForm] = useState({ name: '', track: 'TOEIC' as CourseTrack, teacherId: '', schedule: '', room: '' });
   const [error, setError] = useState('');
 
   const list = classes.filter(
     (c) =>
-      (exam === 'ALL' || c.examType === exam) &&
+      (exam === 'ALL' || classTrack(c) === exam) &&
       (teacher === 'ALL' || c.teacherName === teacher) &&
       (!onlyIssue || classIssue(c, statusOf(c))) &&
       (c.name.toLowerCase().includes(q.toLowerCase()) || c.code.toLowerCase().includes(q.toLowerCase()))
@@ -60,9 +62,9 @@ export const HeadClassesPage: React.FC = () => {
     if (!teacherId) return setError('Bộ môn chưa có giáo viên đang hoạt động');
     setSaving(true);
     try {
-      const c = await headApi.createClass({ name: form.name.trim(), examType: form.examType, teacherId, scheduleText: form.schedule || undefined, room: form.room || undefined, coverUrl: COVERS[classes.length % COVERS.length] });
+      const c = await headApi.createClass({ name: form.name.trim(), track: form.track, teacherId, scheduleText: form.schedule || undefined, room: form.room || undefined, coverUrl: COVERS[classes.length % COVERS.length] });
       setOpen(false);
-      setForm({ name: '', examType: 'TOEIC', teacherId: '', schedule: '', room: '' });
+      setForm({ name: '', track: 'TOEIC', teacherId: '', schedule: '', room: '' });
       setError('');
       toast.success('Đã mở lớp mới', `${c.name} · mã ${c.code} · giáo viên ${c.teacherName} nhận được thông báo phân công.`);
       await refresh();
@@ -112,10 +114,13 @@ export const HeadClassesPage: React.FC = () => {
           <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Tìm theo tên hoặc mã lớp" className={cn(inputCls, 'w-full pl-9')} />
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <select value={exam} onChange={(e) => setExam(e.target.value as typeof exam)} className={inputCls} aria-label="Lọc theo kỳ thi">
-            <option value="ALL">Tất cả kỳ thi</option>
-            <option value="TOEIC">TOEIC</option>
-            <option value="VSTEP">VSTEP</option>
+          <select value={exam} onChange={(e) => setExam(e.target.value as typeof exam)} className={inputCls} aria-label="Lọc theo mục lớp học">
+            <option value="ALL">Tất cả mục</option>
+            {CLASS_TRACKS.map((t) => (
+              <option key={t.key} value={t.key}>
+                {t.label}
+              </option>
+            ))}
           </select>
           <select value={teacher} onChange={(e) => setTeacher(e.target.value)} className={cn(inputCls, 'max-w-[220px]')} aria-label="Lọc theo giáo viên">
             <option value="ALL">Tất cả giáo viên</option>
@@ -149,7 +154,7 @@ export const HeadClassesPage: React.FC = () => {
                 <Link to={staffPath(`/classes/${c.id}`)} className="relative block">
                   <Img src={c.coverUrl ?? PHOTOS.classroom} alt={c.name} ratio="video" fallbackClass="bg-slate-200" className="transition-transform duration-500 group-hover:scale-[1.04]" />
                   <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-slate-950/10 to-transparent" />
-                  <span className="absolute left-3 top-3 rounded-md bg-white/90 px-2 py-0.5 text-[11px] font-semibold text-slate-800 backdrop-blur">{c.examType}</span>
+                  <span className="absolute left-3 top-3 rounded-md bg-white/90 px-2 py-0.5 text-[11px] font-semibold text-slate-800 backdrop-blur">{classTrackLabel(c)}</span>
                   <div className="absolute inset-x-4 bottom-3 text-white">
                     <h3 className="font-display text-xl font-extrabold leading-tight">{c.name}</h3>
                     <p className="mt-0.5 text-[13px] text-slate-200">
@@ -240,7 +245,7 @@ export const HeadClassesPage: React.FC = () => {
         <div className="space-y-4">
           <Input label="Tên lớp" required placeholder="VD: TOEIC 650+ K13" value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} error={error} />
           <div className="grid gap-4 sm:grid-cols-2">
-            <Select label="Kỳ thi" options={[{ value: 'TOEIC', label: 'TOEIC' }, { value: 'VSTEP', label: 'VSTEP' }]} value={form.examType} onChange={(e) => setForm((f) => ({ ...f, examType: e.target.value as ExamType }))} />
+            <Select label="Mục lớp học" options={CLASS_TRACK_OPTIONS} value={form.track} onChange={(e) => setForm((f) => ({ ...f, track: e.target.value as CourseTrack }))} />
             <Select label="Giáo viên phụ trách" options={activeTeachers.map((t) => ({ value: t.id, label: `${t.name} · ${t.classesCount} lớp` }))} value={form.teacherId || activeTeachers[0]?.id || ''} onChange={(e) => setForm((f) => ({ ...f, teacherId: e.target.value }))} />
           </div>
           <div className="grid gap-4 sm:grid-cols-2">

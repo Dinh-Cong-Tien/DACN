@@ -45,6 +45,7 @@ import { completedAttempts } from '../catalog/counts';
 import { gradeLessonAssignments } from '../catalog/lesson-assignments';
 import { toExercises } from '../catalog/lesson-exercises';
 import { byTitleNatural, levelLabel } from '../catalog/mappers';
+import { CLASS_TRACK, classTrackData } from '../catalog/class-track';
 
 export const teacherRouter = Router();
 
@@ -263,7 +264,9 @@ teacherRouter.get(
 
 const classBody = z.object({
   name: z.string().trim().min(2).max(160),
-  examType: z.enum(['TOEIC', 'VSTEP']),
+  /** Mục lớp TOEIC / VSTEP / THPT (gửi track hoặc examType) */
+  track: CLASS_TRACK.optional(),
+  examType: z.enum(['TOEIC', 'VSTEP']).optional(),
   level: z.string().max(20).nullish(),
   description: z.string().max(5000).nullish(),
   room: z.string().max(80).nullish(),
@@ -284,7 +287,7 @@ async function uniqueClassCode() {
 
 const classData = (b: Partial<z.infer<typeof classBody>>) => ({
   name: b.name,
-  examType: b.examType,
+  ...classTrackData(b),
   level: b.level,
   description: b.description,
   room: b.room,
@@ -300,9 +303,11 @@ teacherRouter.post(
   handler(async (req) => {
     const u = me(req);
     const body = parse(classBody, req.body);
+    const tr = classTrackData(body);
+    if (!tr.examType) throw badRequest('Chọn mục của lớp (TOEIC, VSTEP hoặc Tiếng Anh THPT)');
     const teacher = await prisma.user.findUniqueOrThrow({ where: { id: u.id } });
     const c = await prisma.class.create({
-      data: { ...classData(body), name: body.name, examType: body.examType, code: await uniqueClassCode(), teacherId: u.id, departmentId: teacher.departmentId },
+      data: { ...classData(body), name: body.name, examType: tr.examType, code: await uniqueClassCode(), teacherId: u.id, departmentId: teacher.departmentId },
       include: classInclude,
     });
     return (await toClassRooms([c]))[0];

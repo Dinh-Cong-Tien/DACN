@@ -1,18 +1,18 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { Plus, Copy, Search, Users } from 'lucide-react';
 import { useDocumentTitle } from '@/shared/hooks';
 import { toast } from '@/shared/stores/uiStore';
 import { errorMessage } from '@/shared/api/client';
 import { teacherApi, useArchivedClasses, useSessions, useTeacherClasses, useTeacherMutation } from '@/shared/api/teacher';
 import { addDays, isoDate } from '@/shared/constants/teacher';
-import type { ExamType } from '@/shared/types';
+import type { CourseTrack } from '@/shared/types';
 import { Input, Modal, Select } from '@/shared/components/ui';
 import { cn } from '@/shared/utils';
 import { Meter, Panel, TBtn, TPageHead, TTabs, inputCls } from '../components/TeacherKit';
 import { Img, PHOTOS } from '@/shared/components/media/Img';
 import { TError, TLoading } from '../components/TeacherState';
-import { distinctStudents } from '@/shared/constants/staff';
+import { CLASS_TRACKS, CLASS_TRACK_OPTIONS, classTrack, classTrackLabel, distinctStudents } from '@/shared/constants/staff';
 
 export const TeacherClassesPage: React.FC = () => {
   useDocumentTitle('Lớp học của tôi');
@@ -21,7 +21,7 @@ export const TeacherClassesPage: React.FC = () => {
   const upcoming = useSessions({ from: today, to: isoDate(addDays(new Date(), 28)) }).data ?? [];
   const [search, setSearch] = useState('');
   const [open, setOpen] = useState(false);
-  const [form, setForm] = useState({ name: '', examType: 'TOEIC' as ExamType, schedule: '', room: '' });
+  const [form, setForm] = useState({ name: '', track: 'TOEIC' as CourseTrack, schedule: '', room: '' });
   const [error, setError] = useState('');
   const createClass = useTeacherMutation(teacherApi.createClass);
   const [view, setView] = useState<'active' | 'archived'>('active');
@@ -29,7 +29,10 @@ export const TeacherClassesPage: React.FC = () => {
   const reopen = useTeacherMutation((id: string) => teacherApi.archiveClass(id, false));
   const shown = view === 'archived' ? (archivedQ.data ?? []) : classes;
 
-  const list = shown.filter((c) => c.name.toLowerCase().includes(search.toLowerCase()) || c.code.toLowerCase().includes(search.toLowerCase()));
+  // lọc theo mục TOEIC / VSTEP / Tiếng Anh THPT (?muc=, mở từ menu Lớp học)
+  const [params, setParams] = useSearchParams();
+  const muc = params.get('muc')?.toUpperCase() as CourseTrack | undefined;
+  const list = shown.filter((c) => (!muc || classTrack(c) === muc) && (c.name.toLowerCase().includes(search.toLowerCase()) || c.code.toLowerCase().includes(search.toLowerCase())));
 
   const copy = (code: string) => {
     navigator.clipboard?.writeText(code).catch(() => undefined);
@@ -39,11 +42,11 @@ export const TeacherClassesPage: React.FC = () => {
   const create = () => {
     if (form.name.trim().length < 2) return setError('Vui lòng nhập tên lớp');
     createClass.mutate(
-      { name: form.name.trim(), examType: form.examType, schedule: form.schedule.trim() || null, room: form.room.trim() || null },
+      { name: form.name.trim(), track: form.track, schedule: form.schedule.trim() || null, room: form.room.trim() || null },
       {
         onSuccess: (c) => {
           setOpen(false);
-          setForm({ name: '', examType: 'TOEIC', schedule: '', room: '' });
+          setForm({ name: '', track: muc ?? 'TOEIC', schedule: '', room: '' });
           setError('');
           toast.success('Đã tạo lớp mới', `Mã mời: ${c.code}`);
         },
@@ -62,7 +65,7 @@ export const TeacherClassesPage: React.FC = () => {
         title="Lớp học của tôi"
         sub="Tạo lớp, gửi mã mời cho học viên, theo dõi tiến độ từng lớp."
         actions={
-          <TBtn variant="primary" icon={<Plus />} onClick={() => setOpen(true)}>
+          <TBtn variant="primary" icon={<Plus />} onClick={() => (setForm((f) => ({ ...f, track: muc ?? f.track })), setOpen(true))}>
             Tạo lớp
           </TBtn>
         }
@@ -78,9 +81,22 @@ export const TeacherClassesPage: React.FC = () => {
       />
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="relative sm:w-80">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+        <div className="inline-flex w-fit rounded-lg border border-slate-200 bg-white p-0.5" role="tablist" aria-label="Mục lớp học">
+          {[{ key: '', label: 'Tất cả' }, ...CLASS_TRACKS].map((t) => {
+            const on = (muc ?? '') === t.key;
+            const n = t.key ? shown.filter((c) => classTrack(c) === t.key).length : shown.length;
+            return (
+              <button key={t.key || 'all'} type="button" role="tab" aria-selected={on} onClick={() => setParams(t.key ? { muc: t.key.toLowerCase() } : {}, { replace: true })} className={cn('rounded-md px-3 py-1.5 text-[13px] font-medium transition-colors', on ? 'bg-slate-900 text-white' : 'text-slate-600 hover:bg-slate-100')}>
+                {t.label} <span className={cn('ml-0.5 tabular-nums text-[11px]', on ? 'text-white/70' : 'text-slate-400')}>{n}</span>
+              </button>
+            );
+          })}
+        </div>
+        <div className="relative sm:w-72">
           <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
           <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Tìm theo tên hoặc mã lớp" className={cn(inputCls, 'w-full pl-9')} />
+        </div>
         </div>
         <p className="text-[13px] text-slate-500">
           {list.length} lớp · {distinctStudents(list)} học viên
@@ -103,7 +119,7 @@ export const TeacherClassesPage: React.FC = () => {
                 <Link to={`/teacher/classes/${c.id}`} className="relative block">
                   <Img src={c.coverUrl ?? PHOTOS.classroom} alt={c.name} ratio="video" fallbackClass="bg-slate-200" className="transition-transform duration-500 group-hover:scale-[1.04]" />
                   <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-slate-950/10 to-transparent" />
-                  <span className="absolute left-3 top-3 rounded-md bg-white/90 px-2 py-0.5 text-[11px] font-semibold text-slate-800 backdrop-blur">{c.examType}</span>
+                  <span className="absolute left-3 top-3 rounded-md bg-white/90 px-2 py-0.5 text-[11px] font-semibold text-slate-800 backdrop-blur">{classTrackLabel(c)}</span>
                   <div className="absolute inset-x-4 bottom-3 text-white">
                     <h3 className="font-display text-xl font-extrabold leading-tight">{c.name}</h3>
                     <p className="mt-0.5 text-[13px] text-slate-200">
@@ -175,7 +191,7 @@ export const TeacherClassesPage: React.FC = () => {
       >
         <div className="space-y-4">
           <Input label="Tên lớp" required placeholder="VD: TOEIC 650+ K13" value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} error={error} />
-          <Select label="Kỳ thi" options={[{ value: 'TOEIC', label: 'TOEIC' }, { value: 'VSTEP', label: 'VSTEP' }]} value={form.examType} onChange={(e) => setForm((f) => ({ ...f, examType: e.target.value as ExamType }))} />
+          <Select label="Mục lớp học" options={CLASS_TRACK_OPTIONS} value={form.track} onChange={(e) => setForm((f) => ({ ...f, track: e.target.value as CourseTrack }))} hint="Trùng 3 mục khoá học của học viên; lớp Tiếng Anh THPT chấm thang điểm 10" />
           <Input label="Lịch học" placeholder="VD: T2 – T4 – T6 · 19:00" value={form.schedule} onChange={(e) => setForm((f) => ({ ...f, schedule: e.target.value }))} />
           <Input label="Phòng học" placeholder="VD: Phòng 302 hoặc Online" value={form.room} onChange={(e) => setForm((f) => ({ ...f, room: e.target.value }))} />
         </div>

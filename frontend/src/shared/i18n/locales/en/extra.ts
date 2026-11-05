@@ -169,4 +169,13 @@ export const EXTRA_EN: Record<string, string> = {
   "Hệ thống": "System",
   "Giới hạn, gói VIP, tài khoản nhận tiền, bảo mật": "Limits, VIP plans, payout account, security",
   "Báo cáo tổng kết": "Summary reports",
+  // ---------- lớp học chia 3 mục như khoá học (11/2026) ----------
+  "Lớp TOEIC": "TOEIC classes",
+  "Lớp VSTEP": "VSTEP classes",
+  "Lớp Tiếng Anh THPT": "High school English classes",
+  "Mục lớp học": "Class track",
+  "Tất cả mục": "All tracks",
+  "Mục": "Track",
+  "Trùng 3 mục khoá học của học viên; lớp Tiếng Anh THPT chấm thang điểm 10": "Matches the 3 student course tracks; High school English classes are graded on a 10-point scale",
+  "Chọn mục của lớp (TOEIC, VSTEP hoặc Tiếng Anh THPT)": "Choose the class track (TOEIC, VSTEP or High school English)",
 };

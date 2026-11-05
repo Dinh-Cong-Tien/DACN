@@ -25,6 +25,7 @@ import {
 } from './shared';
 import { oversightRouter } from './head.oversight';
 import { summaryRouter } from './head.summary';
+import { CLASS_TRACK, classTrackData } from '../catalog/class-track';
 
 export const headRouter = Router();
 headRouter.use(auth, allow('HEAD_TEACHER'), refreshLiveAfterWrite);
@@ -327,7 +328,8 @@ headRouter.post(
 const classBody = z.object({
   name: z.string().trim().min(2).max(160),
   code: z.string().trim().min(3).max(16).optional(),
-  examType: z.enum(['TOEIC', 'VSTEP']),
+  track: CLASS_TRACK.optional(),
+  examType: z.enum(['TOEIC', 'VSTEP']).optional(),
   teacherId: uuid,
   departmentId: uuid.optional(),
   level: z.string().max(20).nullish(),
@@ -350,7 +352,9 @@ headRouter.post(
     const departmentId = body.departmentId ?? scope?.[0];
     if (scope && departmentId && !scope.includes(departmentId)) throw forbidden();
     await assertTeacherInScope(body.teacherId, scope);
-    const c = await prisma.class.create({ data: { ...body, departmentId, code: body.code ?? genCode() }, include: classInclude });
+    const tr = classTrackData(body);
+    if (!tr.examType) throw badRequest('Chọn mục của lớp (TOEIC, VSTEP hoặc Tiếng Anh THPT)');
+    const c = await prisma.class.create({ data: { ...body, ...tr, examType: tr.examType, departmentId, code: body.code ?? genCode() }, include: classInclude });
     await audit(req, 'CLASS_CREATE', 'class', c.id, { after: { name: c.name, teacherId: c.teacherId } });
     await notify([c.teacherId], { type: 'CLASS', title: 'Bạn được phân công lớp mới', message: `${c.name} · mã lớp ${c.code}`, link: `/teacher/classes/${c.id}`, refType: 'CLASS', refId: c.id });
     return toClassRoom(c);
@@ -365,7 +369,7 @@ headRouter.patch(
     const body = parse(classBody.partial().extend({ isArchived: z.boolean().optional() }), req.body);
     const scope = await scopeOf(req);
     if (body.teacherId) await assertTeacherInScope(body.teacherId, scope);
-    const updated = await prisma.class.update({ where: { id: c.id }, data: body, include: classInclude });
+    const updated = await prisma.class.update({ where: { id: c.id }, data: { ...body, ...classTrackData(body) }, include: classInclude });
     if (body.teacherId && body.teacherId !== c.teacherId) {
       await audit(req, 'CLASS_REASSIGN', 'class', c.id, { severity: 'WARN', before: { teacherId: c.teacherId }, after: { teacherId: body.teacherId } });
       await notify([body.teacherId], { type: 'CLASS', title: 'Bạn được phân công phụ trách lớp', message: updated.name, link: `/teacher/classes/${c.id}`, refType: 'CLASS', refId: c.id });

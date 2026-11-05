@@ -3,7 +3,7 @@
  * Type mở rộng từ hợp đồng `shared/types` (thêm field backend trả về); hook TanStack Query cho từng màn hình.
  */
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import type { Assignment, AssignmentTarget, AssignmentType, AttendanceMark, ClassAnnouncement, ClassRoom, ClassSession, ClassStudent, CourseCategory, ExamType, StudentNote, Submission } from '@/shared/types';
+import type { Assignment, AssignmentTarget, AssignmentType, AttendanceMark, ClassAnnouncement, ClassRoom, ClassSession, ClassStudent, CourseCategory, ExamType, StudentNote, Submission, CourseTrack } from '@/shared/types';
 import { api, http, tokenStore } from './client';
 import type { QuestionPage, QuestionQuery, QuestionRow } from './head';
 
@@ -271,7 +271,9 @@ export interface LibPrompt {
 // ---- Body ----
 export interface ClassInput {
   name: string;
-  examType: ExamType;
+  /** Mục lớp TOEIC / VSTEP / THPT (máy chủ tự đặt kỳ thi quy đổi điểm) */
+  track?: CourseTrack;
+  examType?: ExamType;
   schedule?: string | null;
   room?: string | null;
   level?: string | null;

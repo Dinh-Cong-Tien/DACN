@@ -1239,6 +1239,8 @@ model Class {
   name String @db.VarChar(160)
   code String @unique @db.VarChar(16)
   examType ExamType @map("exam_type")
+  /// Mục của lớp (TOEIC / VSTEP / Tiếng Anh THPT) — trùng 3 mục khoá học; lớp THPT chấm thang 10 như VSTEP
+  track CourseTrack?
   level String? @db.VarChar(20)
   description String?
   room String? @db.VarChar(80)
@@ -1259,6 +1261,7 @@ model Class {
   studentNoteClasss StudentNote[] @relation("StudentNote_class")
 
   @@index([departmentId])
+  @@index([track])
   @@index([teacherId])
   @@map("classes")
 }
