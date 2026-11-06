@@ -19,6 +19,13 @@ export function errorHandler(err: unknown, req: Request, res: Response, _next: N
     if (err.code === 'P2025') return res.status(404).json({ error: { code: 'NOT_FOUND', message: 'Không tìm thấy dữ liệu' } });
     if (err.code === 'P2003') return res.status(409).json({ error: { code: 'IN_USE', message: 'Dữ liệu đang được tham chiếu, không thể xoá' } });
   }
+  // Lỗi có sẵn mã 4xx (express.static không thấy tệp → 404, body quá lớn → 413…)
+  const status = (err as { status?: unknown; statusCode?: unknown })?.status ?? (err as { statusCode?: unknown })?.statusCode;
+  if (typeof status === 'number' && status >= 400 && status < 500) {
+    const code = status === 404 ? 'NOT_FOUND' : status === 413 ? 'PAYLOAD_TOO_LARGE' : 'BAD_REQUEST';
+    const message = status === 404 ? 'Không tìm thấy tệp' : status === 413 ? 'Tệp quá lớn' : 'Yêu cầu không hợp lệ';
+    return res.status(status).json({ error: { code, message } });
+  }
   // Vi phạm CHECK / trigger trong PostgreSQL (mã 23514)
   const msg = err instanceof Error ? err.message : String(err);
   if (/23514|check_violation/.test(msg)) return res.status(400).json({ error: { code: 'CONSTRAINT', message: msg.split('\n').pop() } });
