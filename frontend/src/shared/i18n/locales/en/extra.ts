@@ -340,4 +340,9 @@ export const EXTRA_EN: Record<string, string> = {
   "Chưa thi thử": "No mock test yet",
   "Đủ điểm, thiếu chuyên cần": "Score met, low attendance",
   "Dưới B1": "Below B1",
+  "Bằng dự kiến": "Expected certificate",
+  "B1 · Bậc 3": "B1 · Level 3",
+  "B2 · Bậc 4": "B2 · Level 4",
+  "Chưa đạt B1": "Below B1",
+  "Chưa đạt": "Not achieved",
 };

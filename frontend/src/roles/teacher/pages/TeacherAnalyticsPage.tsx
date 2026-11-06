@@ -83,7 +83,7 @@ export const TeacherAnalyticsPage: React.FC = () => {
       {an.error && <TError error={an.error} onRetry={() => an.refetch()} />}
 
       {hasLevels(track) && (
-        <Panel title={`Phân bố bậc dự kiến · lớp ${cls.name}`} sub={`Theo điểm ${exam.mock.toLowerCase()} trung bình của từng học viên (${exam.scale})`}>
+        <Panel title={`Phân bố bằng dự kiến B1 / B2 · lớp ${cls.name}`} sub={`Theo điểm ${exam.mock.toLowerCase()} trung bình của từng học viên (${exam.scale})`}>
           <LevelDistribution track={track} scores={students.map((s) => s.avgScore || null)} />
         </Panel>
       )}

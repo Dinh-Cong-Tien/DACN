@@ -8,7 +8,7 @@ import { cn } from '@/shared/utils';
 import { Avatar } from '@/shared/components/ui';
 import { Figures, Panel, TBtn, TPageHead, inputCls, tbl } from '../components/TeacherKit';
 import { TEmpty, TError, TLoading } from '../components/TeacherState';
-import { LevelDistribution, TARGET_LEVELS, TrackTabs, hasLevels, levelOf, minScoreOf, useTrackClasses } from '../components/ExamTrack';
+import { LEVEL_NAME, LevelDistribution, TARGET_LEVELS, TrackTabs, hasLevels, levelOf, minScoreOf, useTrackClasses } from '../components/ExamTrack';
 import { appLocale } from '@/shared/i18n';
 
 /** Ô điểm: số = đã chấm; còn lại hiện theo trạng thái bài nộp */
@@ -73,7 +73,7 @@ export const TeacherGradebookPage: React.FC = () => {
     if (leveled) {
       if (mock === null) return { ok: false, muted: true, text: 'Chưa thi thử' };
       if (targetMin !== null && mock < targetMin) return { ok: false, text: `Còn thiếu ${(targetMin - mock).toLocaleString(appLocale(), { maximumFractionDigits: 1 })} điểm` };
-      return lowAtt ? { ok: false, text: 'Đủ điểm, thiếu chuyên cần' } : { ok: true, text: `Đạt ${target}` };
+      return lowAtt ? { ok: false, text: 'Đủ điểm, thiếu chuyên cần' } : { ok: true, text: `Đạt ${LEVEL_NAME[target]}` };
     }
     if (ps === null) return { ok: false, muted: true, text: 'Chưa có dữ liệu' };
     return ps >= 5 && !lowAtt ? { ok: true, text: 'Đủ điều kiện' } : { ok: false, text: lowAtt ? 'Thiếu chuyên cần' : 'Chưa đạt' };
@@ -101,8 +101,8 @@ export const TeacherGradebookPage: React.FC = () => {
   const exportCsv = () => {
     if (!cls) return;
     const esc = (v: unknown) => `"${String(v ?? '').replace(/"/g, '""')}"`;
-    const header = ['Học viên', 'Email', ...cols.map((a) => `${a.title} (/${a.maxScore})`), `${exam.mock} (${exam.scale})`, ...(leveled ? ['Bậc dự kiến'] : []), 'Chuyên cần (%)', 'Điểm quá trình', leveled ? `Mục tiêu ${target}` : 'Xét thi'];
-    const lines = rows.map(({ st, ps, mock, att, level, v }) => [st.name, st.email, ...cols.map((a) => scoreOf(st.id, a.id) ?? STATE_TEXT[stateOf(st.id, a.id) ?? '']?.[0] ?? ''), mock ?? '', ...(leveled ? [level ?? ''] : []), att ?? '', ps ?? '', v.text]);
+    const header = ['Học viên', 'Email', ...cols.map((a) => `${a.title} (/${a.maxScore})`), `${exam.mock} (${exam.scale})`, ...(leveled ? ['Bằng dự kiến'] : []), 'Chuyên cần (%)', 'Điểm quá trình', leveled ? `Mục tiêu ${LEVEL_NAME[target]}` : 'Xét thi'];
+    const lines = rows.map(({ st, ps, mock, att, level, v }) => [st.name, st.email, ...cols.map((a) => scoreOf(st.id, a.id) ?? STATE_TEXT[stateOf(st.id, a.id) ?? '']?.[0] ?? ''), mock ?? '', ...(leveled ? [level ? LEVEL_NAME[level] ?? level : ''] : []), att ?? '', ps ?? '', v.text]);
     const csv = '﻿' + [header, ...lines].map((l) => l.map(esc).join(',')).join('\r\n');
     const a = document.createElement('a');
     a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
@@ -120,7 +120,7 @@ export const TeacherGradebookPage: React.FC = () => {
       <TPageHead
         crumbs={[{ label: 'Kết quả' }, { label: `Bảng điểm ${exam.label}` }]}
         title={`Bảng điểm ${exam.label}`}
-        sub={leveled ? `Tổng kết theo điểm ${exam.mock.toLowerCase()} (${exam.scale}), quy đổi bậc dự kiến để xét đạt mục tiêu của lớp.` : 'Điểm quá trình của lớp: điểm các bài đã chấm và chuyên cần.'}
+        sub={leveled ? `Tổng kết theo điểm ${exam.mock.toLowerCase()} (${exam.scale}), quy đổi bằng dự kiến B1 (bậc 3) hoặc B2 (bậc 4) để xét đạt mục tiêu của lớp.` : 'Điểm quá trình của lớp: điểm các bài đã chấm và chuyên cần.'}
         actions={
           cls && (
             <>
@@ -135,7 +135,7 @@ export const TeacherGradebookPage: React.FC = () => {
                 <select value={target} onChange={(e) => setParam('muctieu', e.target.value)} className={cn(inputCls, 'w-48 max-w-full')} aria-label="Mục tiêu bậc">
                   {TARGET_LEVELS.map((l) => (
                     <option key={l} value={l}>
-                      Mục tiêu {l} (từ {minScoreOf(track, l)})
+                      Mục tiêu {LEVEL_NAME[l]} (từ {minScoreOf(track, l)})
                     </option>
                   ))}
                 </select>
@@ -162,8 +162,8 @@ export const TeacherGradebookPage: React.FC = () => {
             items={
               leveled
                 ? [
-                    { label: `${exam.mock} TB`, value: fmt(mockAvg), note: `${exam.scale}${classLevel ? ` · ≈ bậc ${classLevel}` : ''}`, icon: BarChart3, tone: 'indigo' },
-                    { label: `Đạt mục tiêu ${target}`, value: `${passed}/${rows.length}`, note: `điểm từ ${targetMin} và chuyên cần ≥ ${MIN_ATTENDANCE}%`, icon: Award, tone: 'emerald' },
+                    { label: `${exam.mock} TB`, value: fmt(mockAvg), note: `${exam.scale}${classLevel ? ` · ${classLevel === 'Chưa đạt' ? 'chưa đạt B1' : `≈ ${LEVEL_NAME[classLevel]}`}` : ''}`, icon: BarChart3, tone: 'indigo' },
+                    { label: `Đạt ${LEVEL_NAME[target]}`, value: `${passed}/${rows.length}`, note: `điểm từ ${targetMin} và chuyên cần ≥ ${MIN_ATTENDANCE}%`, icon: Award, tone: 'emerald' },
                     attFigure,
                     missFigure,
                   ]
@@ -177,7 +177,7 @@ export const TeacherGradebookPage: React.FC = () => {
           />
 
           {leveled && (
-            <Panel title={`Phân bố bậc dự kiến · lớp ${cls.name}`} sub={`Theo điểm ${exam.mock.toLowerCase()} trung bình của từng học viên (${exam.scale})`}>
+            <Panel title={`Phân bố bằng dự kiến · lớp ${cls.name}`} sub={`Theo điểm ${exam.mock.toLowerCase()} trung bình của từng học viên (${exam.scale})`}>
               <LevelDistribution track={track} scores={rows.map((r) => r.mock)} target={target} />
             </Panel>
           )}
@@ -201,10 +201,10 @@ export const TeacherGradebookPage: React.FC = () => {
                         <span className="block font-semibold text-slate-700">{exam.mock}</span>
                         <span className="block font-normal text-slate-400">{exam.scale}</span>
                       </th>
-                      {leveled && <th className={tbl.th}>Bậc dự kiến</th>}
+                      {leveled && <th className={tbl.th}>Bằng dự kiến</th>}
                       <th className={cn(tbl.th, 'text-right')}>Chuyên cần</th>
                       <th className={cn(tbl.th, 'text-right')}>Điểm quá trình</th>
-                      <th className={tbl.th}>{leveled ? `Mục tiêu ${target}` : 'Xét thi'}</th>
+                      <th className={tbl.th}>{leveled ? `Mục tiêu ${LEVEL_NAME[target]}` : 'Xét thi'}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -228,7 +228,7 @@ export const TeacherGradebookPage: React.FC = () => {
                         <td className={cn(tbl.td, 'text-right font-semibold tabular-nums', mock === null ? 'text-slate-400' : 'text-slate-900')}>{fmt(mock)}</td>
                         {leveled && (
                           <td className={tbl.td}>
-                            {level ? <span className="inline-flex rounded-md bg-indigo-500/10 px-2 py-0.5 text-[12px] font-bold text-indigo-700">{level}</span> : <span className="text-slate-400">—</span>}
+                            {level ? <span className={cn('inline-flex whitespace-nowrap rounded-md px-2 py-0.5 text-[12px] font-bold', level === 'Chưa đạt' ? 'bg-rose-500/10 text-rose-600' : 'bg-indigo-500/10 text-indigo-700')}>{LEVEL_NAME[level] ?? level}</span> : <span className="text-slate-400">—</span>}
                           </td>
                         )}
                         <td className={cn(tbl.td, 'text-right tabular-nums', att !== null && att < MIN_ATTENDANCE ? 'text-rose-600' : 'text-slate-800')}>{att === null ? '—' : `${att}%`}</td>

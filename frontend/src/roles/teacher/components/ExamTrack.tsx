@@ -6,7 +6,7 @@ import { TTabs } from './TeacherKit';
 
 /**
  * Bảng điểm / thống kê tách theo kỳ thi — không trộn lớp TOEIC, VSTEP, THPT vào nhau.
- * Điểm thi thử quy đổi bậc CEFR: TOEIC theo thang 990, VSTEP theo thang 10 (4.0 B1 · 6.0 B2 · 8.5 C1).
+ * Chỉ xét 2 bằng: B1 (tương đương bậc 3) và B2 (tương đương bậc 4) — TOEIC theo thang 990 (550 / 785), VSTEP thang 10 (4.0 / 6.0).
  */
 export const EXAM_TRACKS = [
   { key: 'TOEIC', label: 'TOEIC', mock: 'Thi thử TOEIC', scale: 'thang 990', unit: 'điểm' },
@@ -15,23 +15,22 @@ export const EXAM_TRACKS = [
 ] as const;
 export type ExamTrack = (typeof EXAM_TRACKS)[number];
 
-/** Ngưỡng điểm từng bậc (từ cao xuống thấp) */
+/** Ngưỡng điểm từng bằng (từ cao xuống thấp); dưới ngưỡng B1 = chưa đạt */
 export const LEVEL_BANDS: Partial<Record<CourseTrack, { level: string; min: number }[]>> = {
   TOEIC: [
-    { level: 'C1', min: 945 },
     { level: 'B2', min: 785 },
     { level: 'B1', min: 550 },
-    { level: 'A2', min: 225 },
-    { level: 'A1', min: 0 },
+    { level: 'Chưa đạt', min: 0 },
   ],
   VSTEP: [
-    { level: 'C1', min: 8.5 },
     { level: 'B2', min: 6 },
     { level: 'B1', min: 4 },
-    { level: 'Dưới B1', min: 0 },
+    { level: 'Chưa đạt', min: 0 },
   ],
 };
-export const TARGET_LEVELS = ['B1', 'B2', 'C1'] as const;
+export const TARGET_LEVELS = ['B1', 'B2'] as const;
+/** Tên bằng hiển thị: B1 = bậc 3, B2 = bậc 4 */
+export const LEVEL_NAME: Record<string, string> = { B1: 'B1 · Bậc 3', B2: 'B2 · Bậc 4', 'Chưa đạt': 'Chưa đạt B1' };
 
 /** Bậc dự kiến từ điểm thi thử; null = chưa thi thử / kỳ thi không quy đổi bậc */
 export const levelOf = (track: CourseTrack, score: number | null) => (score === null ? null : LEVEL_BANDS[track]?.find((b) => score >= b.min)?.level ?? null);
@@ -53,7 +52,7 @@ export function useTrackClasses<C extends ClassLike>(classes: C[], params: URLSe
 export const TrackTabs: React.FC<{ tracks: readonly ExamTrack[]; value: string; classes: ClassLike[]; onChange: (muc: string) => void }> = ({ tracks, value, classes, onChange }) =>
   tracks.length ? <TTabs value={value} onChange={(k) => onChange(k.toLowerCase())} items={tracks.map((t) => ({ key: t.key, label: t.label, count: classes.filter((c) => classTrack(c) === t.key).length }))} /> : null;
 
-const LEVEL_TONE: Record<string, string> = { C1: 'bg-violet-500', B2: 'bg-indigo-500', B1: 'bg-emerald-500', A2: 'bg-amber-500', A1: 'bg-rose-400', 'Dưới B1': 'bg-rose-400' };
+const LEVEL_TONE: Record<string, string> = { B2: 'bg-indigo-500', B1: 'bg-emerald-500', 'Chưa đạt': 'bg-rose-400' };
 
 /** Phân bố bậc dự kiến của lớp (theo điểm thi thử trung bình từng học viên) */
 export const LevelDistribution: React.FC<{ track: CourseTrack; scores: (number | null)[]; target?: string; className?: string }> = ({ track, scores, target, className }) => {
@@ -67,9 +66,9 @@ export const LevelDistribution: React.FC<{ track: CourseTrack; scores: (number |
         const n = tested.filter((s) => levelOf(track, s) === b.level).length;
         return (
           <div key={b.level} className="flex items-center gap-3 text-sm">
-            <span className={cn('w-16 shrink-0 font-semibold', b.level === target ? 'text-indigo-700' : 'text-slate-700')}>{b.level}</span>
+            <span className={cn('w-28 shrink-0 font-semibold', b.level === target ? 'text-indigo-700' : 'text-slate-700')}>{LEVEL_NAME[b.level] ?? b.level}</span>
             <span className="w-24 shrink-0 text-[12px] tabular-nums text-slate-500">
-              {track === 'TOEIC' ? `từ ${b.min}` : `từ ${b.min.toFixed(1)}`}
+              {b.min === 0 ? `dưới ${bands[bands.length - 2]?.min}` : track === 'TOEIC' ? `từ ${b.min}` : `từ ${b.min.toFixed(1)}`}
             </span>
             <span className="h-2.5 flex-1 overflow-hidden rounded-full bg-slate-100">
               <span className={cn('block h-full rounded-full', LEVEL_TONE[b.level] ?? 'bg-slate-400')} style={{ width: `${(n / max) * 100}%` }} />
