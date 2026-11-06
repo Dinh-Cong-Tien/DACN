@@ -6,6 +6,7 @@ import { useDocumentTitle } from '@/shared/hooks';
 import { useAuthStore } from '@/shared/stores/authStore';
 import { useTeacherAssignments, useTeacherDashboard } from '@/shared/api/teacher';
 import { cn, formatDateTime } from '@/shared/utils';
+import { riskReason } from '@/shared/constants/teacher';
 import { Avatar } from '@/shared/components/ui';
 import { Img, PHOTOS } from '@/shared/components/media/Img';
 import { CLASS_BAR, Figures, GradientTail, IconTile, Meter, Panel, PanelLink, Status, TBtn, classTone, type Tone } from '../components/TeacherKit';
@@ -47,7 +48,10 @@ export const TeacherDashboardPage: React.FC = () => {
   const sessions = data.sessions;
   const nextSession = data.nextSession ?? undefined;
   const nextClass = nextSession ? classes.find((c) => c.id === nextSession.classId) : undefined;
-  const todaySessions = sessions.filter((s) => s.date === today && s.status !== 'CANCELLED');
+  // buổi hôm nay chưa điểm danh; chỉ cho điểm danh khi buổi đã bắt đầu
+  const nowHm = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+  const todaySessions = sessions.filter((s) => s.date === today && s.status === 'UPCOMING');
+  const started = (s: { date: string; start: string }) => s.date < today || (s.date === today && s.start <= nowHm);
   const toGrade = data.pendingSubmissions;
   const pendingCount = data.stats.pendingGrading;
   const lateCount = data.stats.lateSubmissions;
@@ -61,7 +65,11 @@ export const TeacherDashboardPage: React.FC = () => {
   const className = (id: string, fallback?: string) => classes.find((c) => c.id === id)?.name ?? fallback ?? '';
 
   const todos: { icon: React.ElementType; tone: Tone; text: string; to: string; cta: string }[] = [
-    ...todaySessions.map((s) => ({ icon: ClipboardCheck, tone: 'emerald' as Tone, text: `Điểm danh ${className(s.classId, s.className)} lúc ${s.start}`, to: `/teacher/attendance/${s.id}`, cta: 'Điểm danh' })),
+    ...todaySessions.map((s) =>
+      started(s)
+        ? { icon: ClipboardCheck, tone: 'emerald' as Tone, text: `Điểm danh ${className(s.classId, s.className)} (buổi ${s.start})`, to: `/teacher/attendance/${s.id}`, cta: 'Điểm danh' }
+        : { icon: CalendarDays, tone: 'sky' as Tone, text: `Dạy ${className(s.classId, s.className)} lúc ${s.start}${s.topic ? ` · ${s.topic}` : ''}`, to: `/teacher/classes/${s.classId}?tab=sessions`, cta: 'Xem lớp' }
+    ),
     ...(data.stats.unmarkedPastSessions && data.latestUnmarkedSessionId
       ? [{ icon: ClipboardCheck, tone: 'rose' as Tone, text: `${data.stats.unmarkedPastSessions} buổi đã dạy chưa điểm danh`, to: `/teacher/attendance/${data.latestUnmarkedSessionId}`, cta: 'Điểm danh bù' }]
       : []),
@@ -116,10 +124,12 @@ export const TeacherDashboardPage: React.FC = () => {
                 </div>
               </div>
               <div className="flex flex-wrap gap-2">
-                <Link to={`/teacher/attendance/${nextSession.id}`} className="inline-flex h-10 items-center gap-1.5 rounded-xl bg-white px-4 text-sm font-semibold text-slate-900 hover:bg-indigo-50">
-                  <ClipboardCheck className="h-4 w-4" /> Điểm danh
-                </Link>
-                <Link to="/teacher/schedule" className="inline-flex h-10 items-center gap-1.5 rounded-xl border border-white/25 px-4 text-sm font-semibold text-white hover:bg-white/10">
+                {started(nextSession) && (
+                  <Link to={`/teacher/attendance/${nextSession.id}`} className="inline-flex h-10 items-center gap-1.5 rounded-xl bg-white px-4 text-sm font-semibold text-slate-900 hover:bg-indigo-50">
+                    <ClipboardCheck className="h-4 w-4" /> Điểm danh
+                  </Link>
+                )}
+                <Link to="/teacher/schedule" className={cn('inline-flex h-10 items-center gap-1.5 rounded-xl px-4 text-sm font-semibold', started(nextSession) ? 'border border-white/25 text-white hover:bg-white/10' : 'bg-white text-slate-900 hover:bg-indigo-50')}>
                   <NotebookPen className="h-4 w-4" /> Xem giáo án
                 </Link>
                 <Link to={`/teacher/classes/${nextSession.classId}`} className="inline-flex h-10 items-center gap-1 px-2 text-sm font-semibold text-slate-200 hover:text-white">
@@ -238,9 +248,9 @@ export const TeacherDashboardPage: React.FC = () => {
                     <Avatar name={s.name} src={s.avatarUrl} size="sm" />
                     <span className="min-w-0 flex-1">
                       <span className="block truncate text-sm font-semibold text-slate-900">{s.name}</span>
-                      <span className="block text-[12px] text-slate-500">Hoàn thành {s.completion}% bài tập</span>
+                      <span className="block truncate text-[12px] text-slate-500">{riskReason(s)}</span>
                     </span>
-                    <Status tone={s.status === 'RISK' ? 'red' : 'amber'}>{s.status === 'RISK' ? 'Nguy cơ' : 'Cần nhắc'}</Status>
+                    <Status tone={s.status === 'RISK' ? 'red' : 'amber'}>{s.status === 'RISK' ? 'Nguy cơ bỏ học' : 'Cần nhắc'}</Status>
                   </Link>
                 </li>
               ))}

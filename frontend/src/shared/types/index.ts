@@ -410,6 +410,8 @@ export interface ClassStudent {
   email: string;
   avgScore: number;
   completion: number;
+  /** % chuyên cần (null = chưa có buổi điểm danh) */
+  attendanceRate?: number | null;
   streak: number;
   lastActive: string | null;
   status: 'GOOD' | 'WARNING' | 'RISK';
