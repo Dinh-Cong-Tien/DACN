@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { BookOpen, CheckCircle2, ChevronRight, ClipboardCheck, History, Lock, RotateCcw, Volume2, X, BookmarkPlus, FileText, HelpCircle, Video, ChevronDown, NotebookText } from 'lucide-react';
+import { CheckCircle2, ChevronRight, ClipboardCheck, History, Lock, RotateCcw, Volume2, X, BookmarkPlus, HelpCircle, Video, NotebookText } from 'lucide-react';
 import type { Course, DictionaryEntry, Lesson } from '@/shared/types';
 import { LessonKnowledge } from './LessonKnowledge';
 import { LessonTranscript } from './LessonTranscript';
@@ -21,7 +21,7 @@ interface LessonEngineProps {
   onComplete?: (lessonId: string, scorePct?: number) => Promise<unknown> | void;
 }
 
-const LESSON_ICON = { VIDEO: Video, READING: FileText, QUIZ: HelpCircle } as const;
+const LESSON_ICON = { VIDEO: Video, READING: Video, QUIZ: HelpCircle } as const;
 
 type WordEntry = DictionaryEntry & { id?: string };
 
@@ -93,6 +93,12 @@ const DictionaryPopover: React.FC<{ entry: WordEntry; x: number; y: number; onCl
   );
 };
 
+/** Lấy mục "## Tóm tắt" của bài (vài gạch đầu dòng) */
+const summaryOf = (md?: string) => {
+  const m = md?.match(/^## Tóm tắt[ \t]*\r?\n([\s\S]*?)(?=^#{1,2} |(?![\s\S]))/m);
+  return m?.[1].trim() || null;
+};
+
 /** Engine bài học: video + script chạy theo video (ẩn/hiện được) + kiến thức trong bài (ngữ pháp, từ vựng, mệnh đề, cây giới từ) + từ điển popover + mục lục khoá học */
 export const LessonEngine: React.FC<LessonEngineProps> = ({ course, lesson, onSelectLesson, onComplete }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -104,13 +110,10 @@ export const LessonEngine: React.FC<LessonEngineProps> = ({ course, lesson, onSe
   // bài video có bài tập: 2 bước Video bài giảng → Bài tập (?buoc=bai-tap mở thẳng bài tập)
   const [step, setStep] = useState<'video' | 'exercise'>(() => (new URLSearchParams(window.location.search).get('buoc') === 'bai-tap' ? 'exercise' : 'video'));
 
-  // bài có video: phần chữ chỉ là ghi chú, thu gọn mặc định để học viên học trên video
-  const [notesOpen, setNotesOpen] = useState(false);
   useEffect(() => {
     setDone(lesson.isCompleted);
     setPopover(null);
   }, [lesson.id, lesson.isCompleted]);
-  useEffect(() => setNotesOpen(false), [lesson.id]);
 
   const onWordClick = (e: React.MouseEvent, word: string) => {
     e.stopPropagation();
@@ -160,6 +163,8 @@ export const LessonEngine: React.FC<LessonEngineProps> = ({ course, lesson, onSe
     if (source.kind === 'vimeo') w?.postMessage(JSON.stringify({ method: 'pause' }), '*');
     if (source.kind === 'youtube') w?.postMessage(JSON.stringify({ event: 'command', func: 'pauseVideo', args: [] }), '*');
   }, [showExercise, source]);
+  // học viên học trên video: dưới video chỉ giữ phần "Tóm tắt" (vài ý chính), không hiện cả bài chữ
+  const keyPoints = useMemo(() => summaryOf(lesson.content), [lesson.content]);
   const completedCount = allLessons.filter((l) => l.isCompleted || l.id === (done ? lesson.id : '')).length;
 
   return (
@@ -170,7 +175,7 @@ export const LessonEngine: React.FC<LessonEngineProps> = ({ course, lesson, onSe
           <div className="lesson-steps" role="tablist" aria-label="Các bước của bài học">
             <button type="button" role="tab" aria-selected={step === 'video'} className={cn('lesson-step', step === 'video' && 'is-current')} onClick={() => setStep('video')}>
               <span className="lesson-step__no">1</span>
-              {source ? <Video className="h-4 w-4" /> : <BookOpen className="h-4 w-4" />} {source ? 'Video bài giảng' : 'Bài học'}
+              <Video className="h-4 w-4" /> Video bài giảng
             </button>
             <ChevronRight className="h-4 w-4 shrink-0 text-slate-300" aria-hidden />
             <button type="button" role="tab" aria-selected={step === 'exercise'} className={cn('lesson-step', step === 'exercise' && 'is-current', done && 'is-done')} onClick={() => setStep('exercise')}>
@@ -224,12 +229,13 @@ export const LessonEngine: React.FC<LessonEngineProps> = ({ course, lesson, onSe
             <div className="relative bg-black aspect-video">
               <video ref={videoRef} src={source.url} controls className="w-full h-full" controlsList="nodownload" {...watch.videoProps} />
             </div>
-          ) : lesson.type !== 'QUIZ' && lesson.content ? (
-            <div className="p-6 md:p-8 space-y-4">
-              <div className="flex items-center gap-2 text-indigo-600 font-bold text-sm">
-                <BookOpen className="w-4 h-4" /> Bài học
-              </div>
-              <LessonArticle markdown={lesson.content ?? ''} />
+          ) : lesson.type !== 'QUIZ' ? (
+            <div className="relative flex aspect-video flex-col items-center justify-center gap-3 bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 px-6 text-center">
+              <span className="flex h-16 w-16 items-center justify-center rounded-full bg-white/10 text-white ring-1 ring-white/20">
+                <Video className="h-7 w-7" />
+              </span>
+              <p className="text-lg font-bold text-white">Video bài giảng đang được cập nhật</p>
+              <p className="max-w-md text-sm text-slate-300">Giáo viên của khoá sẽ sớm đăng video cho bài này. Trong lúc chờ, bạn xem ý chính bên dưới và làm bài tập để qua bài.</p>
             </div>
           ) : (
             <div className="p-8 text-center space-y-3">
@@ -255,7 +261,7 @@ export const LessonEngine: React.FC<LessonEngineProps> = ({ course, lesson, onSe
             <div>
               <div className="flex items-center gap-2 mb-1">
                 <Badge tone="indigo" size="xs">
-                  {source ? 'Video' : ({ VIDEO: 'Video', READING: 'Bài đọc', QUIZ: 'Kiểm tra' }[lesson.type] ?? lesson.type)}
+                  {lesson.type === 'QUIZ' ? 'Kiểm tra' : 'Video'}
                 </Badge>
                 <span className="text-[11px] text-slate-400">{lesson.durationMin} phút</span>
                 {done && (
@@ -282,24 +288,13 @@ export const LessonEngine: React.FC<LessonEngineProps> = ({ course, lesson, onSe
           </div>
         </Card>
 
-        {/* Ghi chú bài giảng dưới video — thu gọn mặc định, mở khi cần xem lại */}
-        {!showExercise && !lesson.isLocked && source && lesson.content ? (
-          <Card padding="none" className="overflow-hidden">
-            <button type="button" aria-expanded={notesOpen} onClick={() => setNotesOpen((v) => !v)} className="flex w-full items-center gap-3 px-5 py-4 text-left hover:bg-slate-50">
-              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600">
-                <NotebookText className="h-5 w-5" />
-              </span>
-              <span className="min-w-0 flex-1">
-                <span className="block text-sm font-bold text-slate-900">Ghi chú bài giảng</span>
-                <span className="block text-xs text-slate-500">Tóm tắt kiến thức trong video — mở khi cần ôn lại</span>
-              </span>
-              <ChevronDown className={cn('h-4 w-4 shrink-0 text-slate-400 transition-transform', notesOpen && 'rotate-180')} />
-            </button>
-            {notesOpen && (
-              <div className="border-t border-slate-100 p-6 md:p-8">
-                <LessonArticle markdown={lesson.content} />
-              </div>
-            )}
+        {/* Ý chính của bài (phần Tóm tắt) — ngắn gọn dưới video */}
+        {!showExercise && !lesson.isLocked && lesson.type !== 'QUIZ' && keyPoints ? (
+          <Card className="space-y-3">
+            <div className="flex items-center gap-2 text-sm font-bold text-indigo-600">
+              <NotebookText className="h-4 w-4" /> Ý chính của bài
+            </div>
+            <LessonArticle markdown={keyPoints} />
           </Card>
         ) : null}
 

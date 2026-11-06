@@ -18,7 +18,7 @@ const copyOf = (c: Course): { eyebrow: string; title: React.ReactNode; track: st
   muc: (c.track ?? 'TOEIC').toLowerCase(),
 });
 
-const TYPE_LABEL: Record<Lesson['type'], string> = { VIDEO: 'Video', READING: 'Bài đọc', QUIZ: 'Bài kiểm tra' };
+const TYPE_LABEL: Record<Lesson['type'], string> = { VIDEO: 'Video', READING: 'Video', QUIZ: 'Bài kiểm tra' };
 
 const STEPS = ['Học bài: xem video hoặc đọc bài, ôn kiến thức trong bài, bấm vào từ để tra nghĩa.', 'Làm bài tập ngay sau bài, đúng từ 70% để hoàn thành bài.', 'Bài tiếp theo tự mở. Cuối mỗi chặng có bài kiểm tra hoặc Review.'];
 

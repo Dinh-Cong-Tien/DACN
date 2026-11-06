@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Video, FileText, HelpCircle } from 'lucide-react';
+import { Video, HelpCircle } from 'lucide-react';
 import { courseHref, useCourse, useLesson, useLessonProgress } from '@/shared/api/catalog';
 import { useQueryClient } from '@tanstack/react-query';
 import { useDocumentTitle } from '@/shared/hooks';
@@ -9,7 +9,7 @@ import { LessonEngine } from '@/engines';
 import { toast } from '@/shared/stores/uiStore';
 import { errorMessage } from '@/shared/api/client';
 
-const TYPE_LABEL = { VIDEO: { label: 'Video bài giảng', Icon: Video }, READING: { label: 'Bài đọc', Icon: FileText }, QUIZ: { label: 'Kiểm tra chặng', Icon: HelpCircle } } as const;
+const TYPE_LABEL = { VIDEO: { label: 'Video bài giảng', Icon: Video }, READING: { label: 'Video bài giảng', Icon: Video }, QUIZ: { label: 'Kiểm tra chặng', Icon: HelpCircle } } as const;
 
 export const StudentLessonPage: React.FC = () => {
   const { id = '', lessonId } = useParams<{ id: string; lessonId: string }>();
