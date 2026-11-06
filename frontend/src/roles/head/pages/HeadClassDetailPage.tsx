@@ -11,7 +11,7 @@ import { Img, PHOTOS } from '@/shared/components/media/Img';
 import { HBarChart, LineChart } from '@/shared/components/charts/Charts';
 import { cn, formatDate, sessionState, timeAgo, staffPath } from '@/shared/utils';
 import { Avatar, Input, Modal, Textarea } from '@/shared/components/ui';
-import { Figures, Meter, Panel, Status, TBtn, TTabs, tbl, type StatusTone } from '@/roles/teacher/components/TeacherKit';
+import { Figures, Meter, Panel, Status, TBtn, TTabs, tbl, type StatusTone, CompletionMeter } from '@/roles/teacher/components/TeacherKit';
 import { classIssue } from './HeadClassesPage';
 import { ClassLeaderboardPanel } from '@/roles/teacher/components/ClassLeaderboard';
 import { Stars as SharedStars } from '@/shared/components/ui/named-icon';
@@ -302,7 +302,7 @@ export const HeadClassDetailPage: React.FC = () => {
         items={[
           { label: 'Sĩ số', value: cls.studentsCount, note: `${students.filter((x) => x.status !== 'GOOD').length} học viên cần theo dõi`, icon: Users, tone: 'indigo' },
           { label: 'Điểm trung bình', value: cls.avgScore || '—', note: 'bài thi thử & bài được chấm', icon: TrendingUp, tone: 'violet' },
-          { label: 'Hoàn thành bài tập', value: cls.assignmentsCount ? `${cls.completionRate}%` : '—', note: `${cls.assignmentsCount} bài đã giao`, icon: ClipboardList, tone: 'amber' },
+          { label: 'Hoàn thành bài tập', value: cls.assignmentsCount ? `${cls.completionRate}%` : '—', note: `trên các bài đã đến hạn · ${cls.assignmentsCount} bài đã giao`, icon: ClipboardList, tone: 'amber' },
           { label: 'Chuyên cần', value: cls.attendanceMarks ? `${cls.attendanceRate}%` : '—', note: `${done.length} buổi đã dạy`, icon: ClipboardCheck, tone: 'emerald' },
         ]}
       />
@@ -364,10 +364,7 @@ export const HeadClassDetailPage: React.FC = () => {
                     </td>
                     <td className={cn(tbl.td, 'text-right tabular-nums')}>{r.avgScore ?? '—'}</td>
                     <td className={tbl.td}>
-                      <span className="flex items-center gap-2">
-                        <Meter value={r.completion} tone={r.completion < 65 ? 'red' : r.completion < 80 ? 'amber' : 'indigo'} className="flex-1" />
-                        <span className="w-10 text-right text-[13px] tabular-nums text-slate-600">{r.completion}%</span>
-                      </span>
+                      <CompletionMeter value={r.completion} />
                     </td>
                     <td className={cn(tbl.td, 'text-right tabular-nums', r.attendance !== null && r.attendance < 75 && 'text-rose-600')}>{r.attendance === null ? '—' : `${r.attendance}%`}</td>
                     <td className={cn(tbl.td, 'whitespace-nowrap text-slate-600')}>{timeAgo(r.lastActive)}</td>

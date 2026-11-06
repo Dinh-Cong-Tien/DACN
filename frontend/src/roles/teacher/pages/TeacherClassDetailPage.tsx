@@ -12,7 +12,7 @@ import { BarChart } from '@/shared/components/charts/Charts';
 import { presentRate } from './TeacherSchedulePage';
 import { cn, formatDate, formatDateTime, sessionState, timeAgo } from '@/shared/utils';
 import { Avatar, ConfirmDialog, Input, Modal, Select, Textarea } from '@/shared/components/ui';
-import { Figures, IconTile, Meter, Panel, Status, TBtn, TTabs, inputCls, tbl, type StatusTone } from '../components/TeacherKit';
+import { Figures, IconTile, Meter, Panel, Status, TBtn, TTabs, inputCls, tbl, type StatusTone, CompletionMeter } from '../components/TeacherKit';
 import { TEmpty, TError, TLoading } from '../components/TeacherState';
 import { ClassLeaderboardPanel } from '../components/ClassLeaderboard';
 import { CLASS_LEVEL_OPTIONS, classTrack, classTrackLabel, courseOptions } from '@/shared/constants/staff';
@@ -330,7 +330,7 @@ export const TeacherClassDetailPage: React.FC = () => {
         items={[
           { label: 'Sĩ số', value: cls.studentsCount, note: `${students.filter((x) => x.status !== 'GOOD').length} học viên cần theo dõi`, icon: Users, tone: 'indigo' },
           { label: 'Điểm trung bình', value: cls.avgScore || '—', note: cls.avgScore ? 'các bài thi thử của học viên' : 'chưa có bài thi thử', icon: TrendingUp, tone: 'violet' },
-          { label: 'Hoàn thành bài tập', value: cls.assignmentsCount ? `${cls.completionRate}%` : '—', note: `${cls.assignmentsCount} bài đã giao`, icon: ClipboardList, tone: 'amber' },
+          { label: 'Hoàn thành bài tập', value: cls.assignmentsCount ? `${cls.completionRate}%` : '—', note: `trên các bài đã đến hạn · ${cls.assignmentsCount} bài đã giao`, icon: ClipboardList, tone: 'amber' },
           { label: 'Chuyên cần', value: cls.attendanceMarks ? `${cls.attendanceRate}%` : '—', note: `${sessionsDone} buổi đã dạy`, icon: ClipboardCheck, tone: 'emerald' },
         ]}
       />
@@ -510,10 +510,7 @@ export const TeacherClassDetailPage: React.FC = () => {
                     </td>
                     <td className={cn(tbl.td, 'text-right tabular-nums')}>{r.avgScore || '—'}</td>
                     <td className={tbl.td}>
-                      <span className="flex items-center gap-2">
-                        <Meter value={r.completion} tone={r.completion < 65 ? 'red' : r.completion < 80 ? 'amber' : 'indigo'} className="flex-1" />
-                        <span className="w-10 text-right text-[13px] tabular-nums text-slate-600">{r.completion}%</span>
-                      </span>
+                      <CompletionMeter value={r.completion} />
                     </td>
                     <td className={cn(tbl.td, 'whitespace-nowrap text-slate-600')}>{timeAgo(r.lastActive)}</td>
                     <td className={tbl.td}>

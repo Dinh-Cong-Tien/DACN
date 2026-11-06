@@ -170,6 +170,19 @@ export const Meter: React.FC<{ value: number; tone?: 'indigo' | 'red' | 'amber' 
   </div>
 );
 
+/** % hoàn thành bài tập đã đến hạn; null = chưa có bài nào đến hạn → "—" */
+export const CompletionMeter: React.FC<{ value: number | null; className?: string }> = ({ value, className }) =>
+  value === null ? (
+    <span className={cn('block text-[13px] text-slate-400', className)} title="Chưa có bài tập nào đến hạn">
+      Chưa đến hạn
+    </span>
+  ) : (
+    <span className={cn('flex items-center gap-2', className)}>
+      <Meter value={value} tone={value < 65 ? 'red' : value < 80 ? 'amber' : 'indigo'} className="flex-1" />
+      <span className="w-10 text-right text-[13px] tabular-nums text-slate-600">{value}%</span>
+    </span>
+  );
+
 /** Class dùng chung cho bảng */
 export const tbl = {
   table: 'w-full text-left text-sm',

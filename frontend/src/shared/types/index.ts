@@ -409,7 +409,8 @@ export interface ClassStudent {
   avatarUrl?: string;
   email: string;
   avgScore: number;
-  completion: number;
+  /** % hoàn thành các bài đã đến hạn (null = chưa có bài nào đến hạn) */
+  completion: number | null;
   /** % chuyên cần (null = chưa có buổi điểm danh) */
   attendanceRate?: number | null;
   streak: number;

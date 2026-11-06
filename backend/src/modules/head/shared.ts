@@ -104,7 +104,7 @@ export async function deptStudents(classes: Pick<Class, 'id' | 'examType'>[]) {
       avatarUrl: m.student.avatarUrl ?? undefined,
       email: m.student.email,
       avgScore: p?.avgScore ?? null, // null = chưa có bài được chấm
-      completion: rateOf(p?.completion) ?? 0,
+      completion: rateOf(p?.completion), // null = chưa có bài nào đến hạn
       streak: m.student.streakCurrent,
       lastActive: m.student.lastActiveAt?.toISOString() ?? null,
       status: p?.risk ?? 'GOOD',

@@ -167,7 +167,7 @@ export async function toClassStudents(classIds: string[], _examType?: 'TOEIC' | 
         avatarUrl: user.avatarUrl ?? undefined,
         email: user.email,
         avgScore: v.avgScore ?? 0,
-        completion: rateOf(v.completion) ?? 0,
+        completion: rateOf(v.completion), // null = chưa có bài nào đến hạn
         attendanceRate: rateOf(v.attendance),
         streak: user.streakCurrent,
         lastActive: user.lastActiveAt?.toISOString() ?? null,
@@ -199,11 +199,16 @@ type AssignmentWithClass = Assignment & { class: Pick<Class, 'name' | 'examType'
 
 export async function toAssignments(rows: AssignmentWithClass[]) {
   if (!rows.length) return [];
-  const stats = await prisma.assignmentSubmission.groupBy({ by: ['assignmentId', 'status'], where: { assignmentId: { in: rows.map((r) => r.id) } }, _count: { _all: true } });
-  const avg = await prisma.assignmentSubmission.groupBy({ by: ['assignmentId'], where: { assignmentId: { in: rows.map((r) => r.id) }, status: 'GRADED', score: { not: null } }, _avg: { score: true } });
+  // Chỉ tính học viên đang học trong lớp (người đã rời lớp không làm sai sĩ số "đã nộp x/y")
+  const classIds = [...new Set(rows.map((r) => r.classId))];
+  const members = await prisma.classMember.findMany({ where: { classId: { in: classIds }, status: 'ACTIVE' }, select: { classId: true, studentId: true } });
+  const active = new Map(classIds.map((id) => [id, new Set(members.filter((m) => m.classId === id).map((m) => m.studentId))]));
+  const subs = await prisma.assignmentSubmission.findMany({ where: { assignmentId: { in: rows.map((r) => r.id) } }, select: { assignmentId: true, studentId: true, status: true, score: true } });
   return rows.map((a) => {
-    const st = stats.filter((s) => s.assignmentId === a.id);
-    const g = avg.find((x) => x.assignmentId === a.id)?._avg.score;
+    const roster = active.get(a.classId) ?? new Set<string>();
+    const mine = subs.filter((s) => s.assignmentId === a.id && roster.has(s.studentId));
+    const graded = mine.filter((s) => s.status === 'GRADED' && s.score !== null).map((s) => Number(s.score));
+    const g = graded.length ? graded.reduce((x, y) => x + y, 0) / graded.length : null;
     return {
       id: a.id,
       classId: a.classId,
@@ -212,8 +217,8 @@ export async function toAssignments(rows: AssignmentWithClass[]) {
       type: a.type,
       dueDate: iso(a.dueAt) ?? '',
       openAt: iso(a.openAt),
-      submitted: st.filter((s) => (DONE_STATUSES as readonly string[]).includes(s.status)).reduce((x, s) => x + s._count._all, 0),
-      total: st.reduce((x, s) => x + s._count._all, 0),
+      submitted: mine.filter((s) => (DONE_STATUSES as readonly string[]).includes(s.status)).length,
+      total: roster.size,
       status: a.status as 'OPEN' | 'CLOSED' | 'DRAFT',
       avgScore: g === null || g === undefined ? undefined : round1(Number(g)),
       maxScore: num(a.maxScore),

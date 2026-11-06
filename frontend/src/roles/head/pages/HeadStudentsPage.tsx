@@ -9,7 +9,7 @@ import { errorMessage } from '@/shared/api/client';
 import { Avatar } from '@/shared/components/ui';
 import { cn, timeAgo, staffPath } from '@/shared/utils';
 import { pooledAttendance } from '@/shared/constants/staff';
-import { Figures, Meter, Panel, Status, TBtn, TPageHead, TTabs, inputCls, tbl } from '@/roles/teacher/components/TeacherKit';
+import { Figures, Panel, Status, TBtn, TPageHead, TTabs, inputCls, tbl, CompletionMeter } from '@/roles/teacher/components/TeacherKit';
 import { STUDENT_STATUS } from './HeadClassDetailPage';
 
 const EMPTY_S: DeptStudent[] = [];
@@ -133,10 +133,7 @@ export const HeadStudentsPage: React.FC = () => {
                     </td>
                     <td className={cn(tbl.td, 'text-right tabular-nums')}>{s.avgScore ?? '—'}</td>
                     <td className={tbl.td}>
-                      <span className="flex items-center gap-2">
-                        <Meter value={s.completion} tone={s.completion < 65 ? 'red' : s.completion < 80 ? 'amber' : 'indigo'} className="flex-1" />
-                        <span className="w-9 text-right text-[13px] tabular-nums text-slate-600">{s.completion}%</span>
-                      </span>
+                      <CompletionMeter value={s.completion} />
                     </td>
                     <td className={cn(tbl.td, 'text-right tabular-nums', s.attendance !== null && s.attendance < 75 && 'font-semibold text-rose-600')}>{s.attendance === null ? '—' : `${s.attendance}%`}</td>
                     <td className={cn(tbl.td, 'whitespace-nowrap text-slate-600')}>{timeAgo(s.lastActive)}</td>

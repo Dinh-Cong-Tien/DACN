@@ -8,7 +8,7 @@ import { cn, timeAgo } from '@/shared/utils';
 import { Avatar } from '@/shared/components/ui';
 import { BarChart, HBarChart, LineChart } from '@/shared/components/charts/Charts';
 import { BarChart3, CalendarCheck, Target, TrendingUp } from 'lucide-react';
-import { Figures, Meter, Panel, Status, TBtn, TPageHead, inputCls, tbl } from '../components/TeacherKit';
+import { Figures, Meter, Panel, Status, TBtn, TPageHead, inputCls, tbl, CompletionMeter } from '../components/TeacherKit';
 import { TEmpty, TError, TLoading } from '../components/TeacherState';
 import { appLocale } from '@/shared/i18n';
 import { classTrackLabel, classTrack } from '@/shared/constants/staff';
@@ -91,7 +91,7 @@ export const TeacherAnalyticsPage: React.FC = () => {
       <Figures
         items={[
           { label: 'Điểm thi thử trung bình', value: cls.avgScore || '—', note: cls.examType === 'TOEIC' ? 'thang 990' : 'thang 10' },
-          { label: 'Hoàn thành bài tập', value: assignments.length ? `${cls.completionRate}%` : '—', note: `${assignments.length} bài đã giao` },
+          { label: 'Hoàn thành bài tập', value: assignments.length ? `${cls.completionRate}%` : '—', note: `trên các bài đã đến hạn · ${assignments.length} bài đã giao` },
           { label: 'Chuyên cần', value: cls.attendanceMarks ? `${cls.attendanceRate}%` : '—', note: 'tỷ lệ có mặt các buổi học' },
           { label: 'Phần yếu nhất', value: weakest ? partName(weakest.partId) : '—', note: weakest ? `đúng ${weakest.value}%` : 'chưa có bài làm' },
         ]}
@@ -169,7 +169,7 @@ export const TeacherAnalyticsPage: React.FC = () => {
                           </span>
                         </span>
                       </td>
-                      <td className={cn(tbl.td, 'text-right tabular-nums')}>{a.avgScore ?? '—'}</td>
+                      <td className={cn(tbl.td, 'text-right tabular-nums')}>{a.avgScore === undefined ? '—' : <>{a.avgScore}<span className="text-slate-400">/{a.maxScore}</span></>}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -226,10 +226,7 @@ export const TeacherAnalyticsPage: React.FC = () => {
                     </td>
                     <td className={cn(tbl.td, 'text-right tabular-nums')}>{s.avgScore || '—'}</td>
                     <td className={tbl.td}>
-                      <span className="flex items-center gap-2">
-                        <Meter value={s.completion} tone={s.completion < 65 ? 'red' : s.completion < 80 ? 'amber' : 'indigo'} className="flex-1" />
-                        <span className="w-10 text-right text-[13px] tabular-nums text-slate-600">{s.completion}%</span>
-                      </span>
+                      <CompletionMeter value={s.completion} />
                     </td>
                     <td className={cn(tbl.td, 'text-right tabular-nums')}>{s.streak}</td>
                     <td className={cn(tbl.td, 'whitespace-nowrap text-slate-600')}>{timeAgo(s.lastActive)}</td>

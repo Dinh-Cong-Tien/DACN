@@ -145,7 +145,7 @@ export const TeacherStudentsPage: React.FC = () => {
             <dl className="grid grid-cols-2 divide-x divide-y divide-slate-100 border-t border-slate-100 sm:grid-cols-4 sm:divide-y-0">
               {[
                 ['Điểm trung bình', selected.avgScore ? String(selected.avgScore) : '—', null],
-                ['Hoàn thành bài tập', `${selected.completion}%`, selected.completion],
+                ['Hoàn thành bài tập', selected.completion === null ? '—' : `${selected.completion}%`, selected.completion],
                 ['Chuyên cần', att === null ? '—' : `${att}%`, att],
                 ['Ngày học liên tục', String(selected.streak), null],
               ].map(([l, v, m]) => (

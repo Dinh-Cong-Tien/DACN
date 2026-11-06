@@ -57,7 +57,7 @@ export const TeacherDashboardPage: React.FC = () => {
   const lateCount = data.stats.lateSubmissions;
   const overdueOpen = openAssignments.filter((a) => a.dueDate && new Date(a.dueDate).getTime() < now.getTime());
   const upcoming = data.upcomingDeadlines.slice(0, 4);
-  const watch = [...data.atRisk].sort((a, b) => a.completion - b.completion);
+  const watch = [...data.atRisk].sort((a, b) => (a.completion ?? 101) - (b.completion ?? 101));
   const totalStudents = data.stats.students;
   const weekCount = data.stats.sessionsThisWeek;
   // Buổi sắp dạy trong tuần chưa ghi giáo án (topic trống)

@@ -8,12 +8,12 @@ import type { TeacherLibrary } from '@/shared/api/teacher';
 export const ASSIGNMENT_TYPE_LABEL: Record<AssignmentType, string> = { MOCK_TEST: 'Đề thi thử', PRACTICE: 'Luyện theo Part', LESSON: 'Bài giảng', GRAMMAR: 'Ngữ pháp', VOCAB: 'Từ vựng', ESSAY: 'Bài viết', SPEAKING: 'Bài nói', DICTATION: 'Chép chính tả' };
 
 /** Lý do học viên cần theo dõi — cùng ngưỡng với core/metrics.riskLevel (chuyên cần < 80%, hoàn thành bài < 70%) */
-export const riskReason = (s: { completion: number; attendanceRate?: number | null }) => {
+export const riskReason = (s: { completion: number | null; attendanceRate?: number | null }) => {
   const why = [
     s.attendanceRate != null && s.attendanceRate < 80 ? `Chuyên cần ${s.attendanceRate}%` : '',
-    s.completion < 70 ? `Bài tập ${s.completion}%` : '',
+    s.completion !== null && s.completion < 70 ? `Bài tập ${s.completion}%` : '',
   ].filter(Boolean);
-  return why.length ? why.join(' · ') : `Hoàn thành ${s.completion}% bài tập`;
+  return why.length ? why.join(' · ') : s.completion !== null ? `Bài tập ${s.completion}%` : 'Chưa có bài đến hạn';
 };
 export const ATTENDANCE_LABEL: Record<AttendanceMark, string> = { PRESENT: 'Có mặt', LATE: 'Đi muộn', ABSENT: 'Vắng', EXCUSED: 'Vắng có phép' };
 
