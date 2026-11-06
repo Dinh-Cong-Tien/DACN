@@ -111,6 +111,6 @@ export const HeadTeacherLayout: React.FC = () => {
   const MENUS = buildMenus(c);
   const GROUPS = buildGroups(c);
   return (
-  <AppShell groups={GROUPS} brandTagline="Trưởng bộ môn" headerLabel="Khu vực Trưởng bộ môn" accent="amber" settingsTo="/head/settings" profileTo="/head/settings" notificationsTo="/head/notifications" workspace headerNav={<StaffNav menus={MENUS} label="Menu trưởng bộ môn" />} />
+  <AppShell groups={GROUPS} brandTagline="Trưởng bộ môn" headerLabel="Khu vực Trưởng bộ môn" accent="amber" settingsTo="/head/settings" profileTo="/head/settings" notificationsTo="/head/notifications" workspace wideNav headerNav={<StaffNav menus={MENUS} label="Menu trưởng bộ môn" />} />
   );
 };

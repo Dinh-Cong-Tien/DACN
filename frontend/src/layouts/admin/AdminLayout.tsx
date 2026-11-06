@@ -154,6 +154,6 @@ export const AdminLayout: React.FC = () => {
   const MENUS = buildMenus(b);
   const GROUPS = buildGroups(b);
   return (
-  <AppShell groups={GROUPS} brandTagline="Quản trị hệ thống" headerLabel="Quản trị viên" accent="rose" settingsTo="/admin/settings" notificationsTo="/admin/notifications" workspace headerNav={<StaffNav menus={MENUS} label="Menu quản trị" />} />
+  <AppShell groups={GROUPS} brandTagline="Quản trị hệ thống" headerLabel="Quản trị viên" accent="rose" settingsTo="/admin/settings" notificationsTo="/admin/notifications" workspace wideNav headerNav={<StaffNav menus={MENUS} label="Menu quản trị" />} />
   );
 };

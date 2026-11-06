@@ -23,4 +23,7 @@ export const NavIconTile: React.FC<{ icon?: IconType; active?: boolean; size?: '
   ) : null;
 
 /** Icon nhỏ cạnh nhãn menu cấp 1 — chỉ hiện khi màn hình đủ rộng */
-export const NavTopIcon: React.FC<{ icon?: IconType }> = ({ icon: Icon }) => (Icon ? <Icon className="hidden h-4 w-4 shrink-0 opacity-75 min-[1440px]:block" strokeWidth={1.75} aria-hidden /> : null);
+const ICON_FROM = { 1440: 'min-[1440px]:block', 1536: 'min-[1536px]:block', 1680: 'min-[1680px]:block' } as const;
+/** from: bề rộng màn hình bắt đầu hiện icon — menu càng nhiều mục càng cần màn rộng hơn để header không tràn ngang */
+export const NavTopIcon: React.FC<{ icon?: IconType; from?: keyof typeof ICON_FROM }> = ({ icon: Icon, from = 1440 }) =>
+  Icon ? <Icon className={`hidden h-4 w-4 shrink-0 opacity-75 ${ICON_FROM[from]}`} strokeWidth={1.75} aria-hidden /> : null;

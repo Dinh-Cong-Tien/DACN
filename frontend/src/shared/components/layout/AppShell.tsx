@@ -39,6 +39,8 @@ export interface AppShellProps {
   workspace?: boolean;
   /** Thay menu chữ mặc định trên header bằng menu riêng của vai trò (giáo viên) */
   headerNav?: React.ReactNode;
+  /** Menu header nhiều mục (TBM, admin): dưới 1280px dùng nút menu + ngăn kéo thay cho menu ngang */
+  wideNav?: boolean;
   /** Mục thêm trong menu tài khoản (avatar), đặt trước Hồ sơ cá nhân — vd Lịch dạy của giáo viên */
   accountLinks?: { to: string; label: string; icon: React.ElementType }[];
 }

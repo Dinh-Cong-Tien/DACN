@@ -41,7 +41,7 @@ const isHere = (link: StaffMenuLink, pathname: string, search: string) => {
   return [...new URLSearchParams(query)].every(([k, v]) => cur.get(k) === v);
 };
 
-const topCls = (active: boolean) => cn('inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-md px-3 py-2 text-sm font-medium transition-colors', active ? 'bg-slate-900/[0.06] text-indigo-700' : 'text-slate-700 hover:bg-slate-900/5 hover:text-slate-900');
+const topCls = (active: boolean) => cn('inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-md px-2.5 py-2 text-sm font-medium transition-colors', active ? 'bg-slate-900/[0.06] text-indigo-700' : 'text-slate-700 hover:bg-slate-900/5 hover:text-slate-900');
 
 const Count: React.FC<{ n: string }> = ({ n }) => <span className="flex h-[18px] min-w-[18px] items-center justify-center rounded px-1 text-[10px] font-semibold text-white bg-rose-500">{n}</span>;
 
@@ -52,6 +52,8 @@ const DROPDOWN_W = 340;
 export const StaffNav: React.FC<{ menus: StaffMenu[]; label: string }> = ({ menus, label }) => {
   const { pathname, search } = useLocation();
   const t = useT();
+  // 6 mục: icon từ 1536px; 7+ mục (TBM, admin): từ 1680px
+  const iconFrom = menus.length > 6 ? 1680 : menus.length > 5 ? 1536 : 1440;
   /** Menu xổ ra từ mép trái nút của nó (không đè lên mục bên cạnh); nếu sẽ tràn mép phải màn hình thì chỉ lùi sang trái đúng phần tràn */
   const [shift, setShift] = React.useState<Record<string, number>>({});
   const measure = (key: string) => (e: React.SyntheticEvent<HTMLDivElement>) => {
@@ -60,12 +62,12 @@ export const StaffNav: React.FC<{ menus: StaffMenu[]; label: string }> = ({ menu
     setShift((s) => (s[key] === over ? s : { ...s, [key]: over }));
   };
   return (
-    <nav className="hidden items-center gap-0.5 md:flex" aria-label={t(label)}>
+    <nav className={cn('hidden items-center gap-0.5', menus.length > 5 ? 'xl:flex' : 'md:flex')} aria-label={t(label)}>
       {menus.map((m) => {
         if (!m.children)
           return (
             <NavLink key={m.label} to={m.to!} className={({ isActive }) => topCls(isActive || !!m.activeOn?.some((p) => pathname.startsWith(p)))}>
-              <NavTopIcon icon={m.icon ?? STAFF_TOP_ICON[m.label]} />
+              <NavTopIcon from={iconFrom} icon={m.icon ?? STAFF_TOP_ICON[m.label]} />
               {t(m.label)}
               {m.badge && <Count n={m.badge} />}
             </NavLink>
@@ -74,7 +76,7 @@ export const StaffNav: React.FC<{ menus: StaffMenu[]; label: string }> = ({ menu
         return (
           <div key={m.label} className="group/menu relative" onMouseEnter={measure(m.label)} onFocus={measure(m.label)}>
             <button type="button" className={topCls(Boolean(active))} aria-haspopup="true">
-              <NavTopIcon icon={m.icon ?? STAFF_TOP_ICON[m.label]} />
+              <NavTopIcon from={iconFrom} icon={m.icon ?? STAFF_TOP_ICON[m.label]} />
               {t(m.label)}
               {m.badge && <Count n={m.badge} />}
               <ChevronDown className="h-3.5 w-3.5 text-slate-400 transition-transform group-hover/menu:rotate-180" />

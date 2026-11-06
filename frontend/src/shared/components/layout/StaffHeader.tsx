@@ -18,7 +18,7 @@ const accentBadge = { indigo: 'indigo', emerald: 'emerald', amber: 'amber', rose
  * Header khu quản lý (giáo viên, trưởng bộ môn, admin): logo · menu của vai trò · tìm kiếm, thông báo, tài khoản.
  * Dưới md: ngăn kéo menu + thanh điều hướng đáy.
  */
-export const StaffHeader: React.FC<Omit<AppShellProps, 'theme'>> = ({ groups, brandTagline, accent = 'indigo', headerLabel, settingsTo, profileTo, notificationsTo, showStreak, topExtra, workspace, headerNav, accountLinks }) => {
+export const StaffHeader: React.FC<Omit<AppShellProps, 'theme'>> = ({ groups, brandTagline, accent = 'indigo', headerLabel, settingsTo, profileTo, notificationsTo, showStreak, topExtra, workspace, headerNav, accountLinks, wideNav }) => {
   const navigate = useNavigate();
   const t = useT();
   const location = useLocation();
@@ -54,7 +54,7 @@ export const StaffHeader: React.FC<Omit<AppShellProps, 'theme'>> = ({ groups, br
       <header className={cn('sticky top-0 z-40 transition-all duration-300', workspace ? cn('border-b', scrolled ? 'bg-cream/85 backdrop-blur-xl border-slate-900/10' : 'bg-transparent border-transparent') : cn('border-b-2', scrolled ? 'bg-cream/80 backdrop-blur-xl border-slate-900/10' : 'bg-transparent border-transparent'))}>
         <div className={cn('max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between gap-4', workspace ? 'h-16' : 'h-[72px]')}>
           <div className="flex items-center gap-3">
-            <button onClick={() => setMobileNav(true)} className="md:hidden p-2 rounded-xl border-2 border-slate-900 bg-white" aria-label={t('Menu')}>
+            <button onClick={() => setMobileNav(true)} className={cn(wideNav ? 'xl:hidden' : 'md:hidden', 'p-2 rounded-xl border-2 border-slate-900 bg-white')} aria-label={t('Menu')}>
               <Menu className="w-5 h-5" />
             </button>
             <Logo size="md" to={home} />
@@ -102,7 +102,7 @@ export const StaffHeader: React.FC<Omit<AppShellProps, 'theme'>> = ({ groups, br
           </nav>
           )}
 
-          <div className="flex items-center gap-1.5 md:gap-2">
+          <div className="flex shrink-0 items-center gap-1.5 md:gap-2">
             {topExtra}
             {showStreak && user && (
               <div className="hidden xl:inline-flex items-center gap-1.5 px-3 h-9 rounded-xl bg-amber-300 text-slate-900 text-xs font-extrabold">
@@ -162,7 +162,7 @@ export const StaffHeader: React.FC<Omit<AppShellProps, 'theme'>> = ({ groups, br
 
       {/* ===== Drawer (dưới lg) ===== */}
       {mobileOpen && (
-        <div className="md:hidden fixed inset-0 z-50 animate-fade-in">
+        <div className={cn(wideNav ? 'xl:hidden' : 'md:hidden', 'fixed inset-0 z-50 animate-fade-in')}>
           <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => setMobileNav(false)} />
           <aside className="absolute left-0 top-0 bottom-0 w-80 max-w-[85vw] flex flex-col animate-slide-in-left shadow-2xl bg-white">
             <div className="h-[72px] flex items-center justify-between px-4 border-b-2 border-slate-900/10">
