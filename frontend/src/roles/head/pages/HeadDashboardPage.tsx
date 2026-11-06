@@ -169,19 +169,32 @@ export const HeadDashboardPage: React.FC = () => {
         </Panel>
 
         <Panel title="Ngân hàng câu hỏi" sub={`${formatNumber(totalQuestions)} câu đã xuất bản`} icon={Database} tone="amber" action={<PanelLink to={staffPath('/question-bank')}>Mở</PanelLink>}>
-          <ul className="space-y-4">
-            {subjectList.map((s) => (
-              <li key={s.id}>
-                <div className="mb-1.5 flex items-center justify-between gap-3 text-sm">
-                  <span className="truncate font-medium text-slate-800">{s.name}</span>
-                  <span className="shrink-0 font-semibold tabular-nums text-slate-900">{formatNumber(s.questionsCount)}</span>
-                </div>
-                <Meter value={(s.questionsCount / Math.max(1, ...subjectList.map((x) => x.questionsCount))) * 100} tone={s.examType === 'TOEIC' ? 'indigo' : 'green'} />
-                <p className="mt-1 text-xs text-slate-500">
-                  {s.code} · {s.classesCount} lớp · {s.teachersCount} giáo viên
-                </p>
-              </li>
-            ))}
+          {/* Câu hỏi thuộc kho chung theo kỳ thi (không gắn riêng bộ môn) → gom theo kỳ thi, liệt kê bộ môn dùng kho đó */}
+          <ul className="space-y-5">
+            {(['TOEIC', 'VSTEP'] as const)
+              .map((ex) => ({ ex, subs: subjectList.filter((s) => s.examType === ex) }))
+              .filter((g) => g.subs.length)
+              .map(({ ex, subs }) => (
+                <li key={ex}>
+                  <div className="mb-1.5 flex items-center justify-between gap-3 text-sm">
+                    <span className="font-medium text-slate-800">Kho câu hỏi {ex}</span>
+                    <span className="shrink-0 font-semibold tabular-nums text-slate-900">{formatNumber(subs[0].questionsCount)} câu</span>
+                  </div>
+                  <Meter value={totalQuestions ? (subs[0].questionsCount / totalQuestions) * 100 : 0} tone={ex === 'TOEIC' ? 'indigo' : 'green'} />
+                  <ul className="mt-2 space-y-1">
+                    {subs.map((s) => (
+                      <li key={s.id} className="flex items-center justify-between gap-3 text-xs text-slate-500">
+                        <span className="truncate">
+                          {s.name} <span className="text-slate-400">· {s.code}</span>
+                        </span>
+                        <span className="shrink-0 tabular-nums">
+                          {s.classesCount} lớp · {s.teachersCount} giáo viên
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                </li>
+              ))}
           </ul>
         </Panel>
       </div>

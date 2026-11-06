@@ -41,7 +41,8 @@ const makeColumns = (maxQ: number, avatarOf: (name: string) => string | undefine
   { key: 'classesCount', header: 'Lớp', align: 'center' },
   {
     key: 'questionsCount',
-    header: 'Câu hỏi',
+    // câu hỏi không gắn bộ môn — đây là kho chung của kỳ thi mà bộ môn dùng
+    header: 'Kho câu hỏi của kỳ thi',
     render: (r) => (
       <div className="flex min-w-[140px] items-center gap-2">
         <Meter value={maxQ ? (r.questionsCount / maxQ) * 100 : 0} tone={r.examType === 'TOEIC' ? 'indigo' : 'green'} className="flex-1" />
