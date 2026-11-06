@@ -6,7 +6,8 @@ import { TTabs } from './TeacherKit';
 
 /**
  * Bảng điểm / thống kê tách theo kỳ thi — không trộn lớp TOEIC, VSTEP, THPT vào nhau.
- * Chỉ xét 2 bằng: B1 (tương đương bậc 3) và B2 (tương đương bậc 4) — TOEIC theo thang 990 (bậc 3 từ 600 / bậc 4 từ 650), VSTEP thang 10 (4.0 / 6.0).
+ * TOEIC xét theo mốc điểm thang 990: 600+ / 650+. VSTEP xét bậc thang 10: Bậc 3 (B1) từ 4,0 / Bậc 4 (B2) từ 6,0.
+ * Mỗi kỳ thi dùng đúng cách xếp loại của nó — lớp TOEIC không hiện bậc VSTEP.
  */
 export const EXAM_TRACKS = [
   { key: 'TOEIC', label: 'TOEIC', mock: 'Thi thử TOEIC', scale: 'thang 990', unit: 'điểm' },
@@ -15,12 +16,12 @@ export const EXAM_TRACKS = [
 ] as const;
 export type ExamTrack = (typeof EXAM_TRACKS)[number];
 
-/** Ngưỡng điểm từng bằng (từ cao xuống thấp); dưới ngưỡng B1 = chưa đạt */
+/** Mức xếp loại từng kỳ thi (từ cao xuống thấp); mức cuối = chưa đạt */
 export const LEVEL_BANDS: Partial<Record<CourseTrack, { level: string; min: number }[]>> = {
   TOEIC: [
-    { level: 'B2', min: 650 },
-    { level: 'B1', min: 600 },
-    { level: 'Chưa đạt', min: 0 },
+    { level: '650+', min: 650 },
+    { level: '600+', min: 600 },
+    { level: 'Dưới 600', min: 0 },
   ],
   VSTEP: [
     { level: 'B2', min: 6 },
@@ -28,9 +29,12 @@ export const LEVEL_BANDS: Partial<Record<CourseTrack, { level: string; min: numb
     { level: 'Chưa đạt', min: 0 },
   ],
 };
-export const TARGET_LEVELS = ['B1', 'B2'] as const;
-/** Tên bằng hiển thị: B1 = bậc 3, B2 = bậc 4 */
-export const LEVEL_NAME: Record<string, string> = { B1: 'B1 · Bậc 3', B2: 'B2 · Bậc 4', 'Chưa đạt': 'Chưa đạt B1' };
+/** Mục tiêu chọn được của từng kỳ thi */
+export const TARGETS: Partial<Record<CourseTrack, string[]>> = { TOEIC: ['600+', '650+'], VSTEP: ['B1', 'B2'] };
+/** Tên hiển thị: TOEIC theo điểm, VSTEP theo bậc */
+export const LEVEL_NAME: Record<string, string> = { '650+': 'TOEIC 650+', '600+': 'TOEIC 600+', 'Dưới 600': 'Dưới 600', B1: 'Bậc 3 (B1)', B2: 'Bậc 4 (B2)', 'Chưa đạt': 'Chưa đạt Bậc 3' };
+/** Mức thấp nhất (chưa đạt) của kỳ thi */
+export const isBelow = (track: CourseTrack, level: string) => LEVEL_BANDS[track]?.slice(-1)[0]?.level === level;
 
 /** Bậc dự kiến từ điểm thi thử; null = chưa thi thử / kỳ thi không quy đổi bậc */
 export const levelOf = (track: CourseTrack, score: number | null) => (score === null ? null : LEVEL_BANDS[track]?.find((b) => score >= b.min)?.level ?? null);
@@ -52,7 +56,7 @@ export function useTrackClasses<C extends ClassLike>(classes: C[], params: URLSe
 export const TrackTabs: React.FC<{ tracks: readonly ExamTrack[]; value: string; classes: ClassLike[]; onChange: (muc: string) => void }> = ({ tracks, value, classes, onChange }) =>
   tracks.length ? <TTabs value={value} onChange={(k) => onChange(k.toLowerCase())} items={tracks.map((t) => ({ key: t.key, label: t.label, count: classes.filter((c) => classTrack(c) === t.key).length }))} /> : null;
 
-const LEVEL_TONE: Record<string, string> = { B2: 'bg-indigo-500', B1: 'bg-emerald-500', 'Chưa đạt': 'bg-rose-400' };
+const LEVEL_TONE: Record<string, string> = { B2: 'bg-indigo-500', B1: 'bg-emerald-500', 'Chưa đạt': 'bg-rose-400', '650+': 'bg-indigo-500', '600+': 'bg-emerald-500', 'Dưới 600': 'bg-rose-400' };
 
 /** Phân bố bậc dự kiến của lớp (theo điểm thi thử trung bình từng học viên) */
 export const LevelDistribution: React.FC<{ track: CourseTrack; scores: (number | null)[]; target?: string; className?: string }> = ({ track, scores, target, className }) => {

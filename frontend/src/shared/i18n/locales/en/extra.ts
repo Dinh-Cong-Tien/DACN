@@ -355,4 +355,9 @@ export const EXTRA_EN: Record<string, string> = {
   "Chưa đủ 4 kỹ năng": "Not all 4 skills scored",
   "TB 4 kỹ năng": "Average of 4 skills",
   "Điểm tổng TB lớp:": "Class average:",
+  "Mốc điểm": "Score band",
+  "Dưới 600": "Below 600",
+  "Bậc 3 (B1)": "Level 3 (B1)",
+  "Bậc 4 (B2)": "Level 4 (B2)",
+  "Chưa đạt Bậc 3": "Below Level 3",
 };

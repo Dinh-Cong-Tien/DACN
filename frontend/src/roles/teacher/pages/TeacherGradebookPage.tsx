@@ -8,7 +8,7 @@ import { cn } from '@/shared/utils';
 import { Avatar } from '@/shared/components/ui';
 import { Figures, Panel, TBtn, TPageHead, inputCls, tbl } from '../components/TeacherKit';
 import { TEmpty, TError, TLoading } from '../components/TeacherState';
-import { LEVEL_NAME, TARGET_LEVELS, TrackTabs, levelOf, minScoreOf, useTrackClasses } from '../components/ExamTrack';
+import { LEVEL_NAME, TARGETS, TrackTabs, isBelow, levelOf, minScoreOf, useTrackClasses } from '../components/ExamTrack';
 import { appLocale } from '@/shared/i18n';
 
 /** Ô điểm: số = đã chấm; còn lại hiện theo trạng thái bài nộp */
@@ -30,7 +30,7 @@ const SHEET: Record<ExamKey, { skills: { key: 'listening' | 'reading' | 'writing
     ],
     total: 'Tổng điểm',
     totalNote: 'thang 990',
-    rule: 'Nghe + Đọc (trung bình các lượt thi thử TOEIC) → tổng 990 → B1 · Bậc 3 từ 600, B2 · Bậc 4 từ 650',
+    rule: 'Nghe + Đọc (trung bình các lượt thi thử TOEIC) → tổng điểm thang 990, xét mốc 600+ / 650+',
   },
   VSTEP: {
     skills: [
@@ -62,7 +62,8 @@ const verdictOf = (type: ExamKey, e: GradebookExam | undefined, overall: number 
   if (overall === null) return { ok: false, muted: true, text: 'Chưa đủ 4 kỹ năng' };
   const min = minScoreOf(type, target);
   if (min !== null && overall < min) return { ok: false, text: `Còn thiếu ${num(Math.round((min - overall) * 10) / 10)} điểm` };
-  return att !== null && att < MIN_ATTENDANCE ? { ok: false, text: 'Đủ điểm, thiếu chuyên cần' } : { ok: true, text: `Đạt ${LEVEL_NAME[target]}` };
+  // TOEIC: "Đạt 600+"; VSTEP: "Đạt Bậc 3 (B1)"
+  return att !== null && att < MIN_ATTENDANCE ? { ok: false, text: 'Đủ điểm, thiếu chuyên cần' } : { ok: true, text: `Đạt ${type === 'TOEIC' ? target : LEVEL_NAME[target]}` };
 };
 
 /** Một bảng điểm thi (TOEIC hoặc VSTEP) của cả lớp — mỗi kỳ thi một bảng riêng */
@@ -85,10 +86,10 @@ const ExamSheet: React.FC<{ type: ExamKey; className: string; students: Gradeboo
       <div className="flex flex-wrap gap-x-8 gap-y-2 border-b border-slate-100 px-5 py-3 text-sm">
         <span className="text-slate-500">
           Điểm tổng TB lớp: <b className="tabular-nums text-slate-900">{type === 'VSTEP' ? num(avg, 1) : num(avg)}</b>
-          {avgLevel && <span className={cn('ml-1.5 font-semibold', avgLevel === 'Chưa đạt' ? 'text-rose-600' : 'text-indigo-700')}>({LEVEL_NAME[avgLevel]})</span>}
+          {avgLevel && <span className={cn('ml-1.5 font-semibold', isBelow(type, avgLevel) ? 'text-rose-600' : 'text-indigo-700')}>({LEVEL_NAME[avgLevel]})</span>}
         </span>
         <span className="text-slate-500">
-          Đạt {LEVEL_NAME[target]}: <b className="tabular-nums text-emerald-600">{passed}</b>/{rows.length}
+          Đạt {type === 'TOEIC' ? target : LEVEL_NAME[target]}: <b className="tabular-nums text-emerald-600">{passed}</b>/{rows.length}
         </span>
         <span className="text-slate-500">
           Đã thi thử {type}: <b className="tabular-nums text-slate-900">{rows.filter((r) => r.e?.attempts).length}</b>/{rows.length}
@@ -113,9 +114,9 @@ const ExamSheet: React.FC<{ type: ExamKey; className: string; students: Gradeboo
                   <span className="block font-normal text-slate-400">{cfg.totalNote}</span>
                 </th>
                 <th className={cn(tbl.th, 'text-right')}>Số lượt thi</th>
-                <th className={tbl.th}>{type === 'VSTEP' ? 'Bậc đạt' : 'Bằng dự kiến'}</th>
+                <th className={tbl.th}>{type === 'VSTEP' ? 'Bậc đạt' : 'Mốc điểm'}</th>
                 <th className={cn(tbl.th, 'text-right')}>Chuyên cần</th>
-                <th className={tbl.th}>Mục tiêu {LEVEL_NAME[target]}</th>
+                <th className={tbl.th}>Mục tiêu {type === 'TOEIC' ? target : LEVEL_NAME[target]}</th>
               </tr>
             </thead>
             <tbody>
@@ -139,7 +140,7 @@ const ExamSheet: React.FC<{ type: ExamKey; className: string; students: Gradeboo
                   <td className={cn(tbl.td, 'text-right font-display text-[15px] font-bold tabular-nums', overall === null ? 'text-slate-400' : 'text-slate-900')}>{type === 'VSTEP' ? num(overall, 1) : num(overall)}</td>
                   <td className={cn(tbl.td, 'text-right tabular-nums text-slate-600')}>{e?.attempts || '—'}</td>
                   <td className={tbl.td}>
-                    {level ? <span className={cn('inline-flex whitespace-nowrap rounded-md px-2 py-0.5 text-[12px] font-bold', level === 'Chưa đạt' ? 'bg-rose-500/10 text-rose-600' : 'bg-indigo-500/10 text-indigo-700')}>{LEVEL_NAME[level] ?? level}</span> : <span className="text-slate-400">—</span>}
+                    {level ? <span className={cn('inline-flex whitespace-nowrap rounded-md px-2 py-0.5 text-[12px] font-bold', isBelow(type, level) ? 'bg-rose-500/10 text-rose-600' : 'bg-indigo-500/10 text-indigo-700')}>{LEVEL_NAME[level] ?? level}</span> : <span className="text-slate-400">—</span>}
                   </td>
                   <td className={cn(tbl.td, 'text-right tabular-nums', att !== null && att < MIN_ATTENDANCE ? 'text-rose-600' : 'text-slate-800')}>{att === null ? '—' : `${att}%`}</td>
                   <td className={tbl.td}>
@@ -156,11 +157,10 @@ const ExamSheet: React.FC<{ type: ExamKey; className: string; students: Gradeboo
 };
 
 /**
- * Bảng điểm của lớp — mỗi kỳ thi một bảng riêng, không gộp chung:
- *  1. Bảng điểm thi TOEIC: Nghe, Đọc (495) → tổng 990 → B1 · Bậc 3 / B2 · Bậc 4.
- *  2. Bảng điểm thi VSTEP: Nghe, Đọc, Viết, Nói (10) → điểm tổng → Bậc 3 / Bậc 4.
- *  3. Điểm bài tập trên lớp (điểm quá trình), tách riêng khỏi điểm thi.
- * Bảng của kỳ thi lớp đang luyện đứng trước.
+ * Bảng điểm của lớp — đúng kỳ thi của lớp, không gộp chung:
+ *  - Lớp TOEIC (T…): bảng điểm thi TOEIC — Nghe, Đọc (495) → tổng 990 → mốc 600+ / 650+.
+ *  - Lớp VSTEP (V…): bảng điểm thi VSTEP — Nghe, Đọc, Viết, Nói (10) → điểm tổng → Bậc 3 (B1) / Bậc 4 (B2).
+ *  - Điểm bài tập trên lớp (điểm quá trình), tách riêng khỏi điểm thi.
  */
 export const TeacherGradebookPage: React.FC = () => {
   useDocumentTitle('Bảng điểm');
@@ -168,7 +168,8 @@ export const TeacherGradebookPage: React.FC = () => {
   const classesQ = useTeacherClasses();
   const classes = classesQ.data ?? [];
   const { tracks, track, trackClasses, cls } = useTrackClasses(classes, params);
-  const target = (TARGET_LEVELS as readonly string[]).includes(params.get('muctieu') ?? '') ? params.get('muctieu')! : 'B1';
+  const targets = TARGETS[track] ?? [];
+  const target = targets.includes(params.get('muctieu') ?? '') ? params.get('muctieu')! : targets[0] ?? '';
   const gb = useGradebook(cls?.id);
   const roster = useTeacherStudents({ classId: cls?.id }).data ?? [];
   const setParam = (k: string, v: string) => setParams((p) => ({ ...Object.fromEntries(p), [k]: v }), { replace: true });
@@ -179,7 +180,8 @@ export const TeacherGradebookPage: React.FC = () => {
   const cols = gb.data?.assignments ?? [];
   const students = gb.data?.students ?? [];
   const exams = gb.data?.exams ?? { TOEIC: {}, VSTEP: {} };
-  const order: ExamKey[] = track === 'VSTEP' ? ['VSTEP', 'TOEIC'] : ['TOEIC', 'VSTEP'];
+  // lớp T… (TOEIC) chỉ có bảng điểm thi TOEIC, lớp V… (VSTEP) chỉ có bảng điểm thi VSTEP; THPT không có bảng thi
+  const order: ExamKey[] = track === 'TOEIC' || track === 'VSTEP' ? [track] : [];
   /** null = chưa có buổi nào điểm danh */
   const attendance = (id: string) => roster.find((r) => r.id === id)?.attendanceRate ?? null;
   const scoreOf = (sid: string, aid: string) => gb.data?.scores[sid]?.[aid] ?? null;
@@ -208,7 +210,7 @@ export const TeacherGradebookPage: React.FC = () => {
   const exportCsv = () => {
     if (!cls) return;
     const esc = (v: unknown) => `"${String(v ?? '').replace(/"/g, '""')}"`;
-    const examCols = order.flatMap((t) => [...SHEET[t].skills.map((k) => `${t} ${k.label} (${k.scale})`), `${t} ${SHEET[t].total}`, `${t} ${t === 'VSTEP' ? 'Bậc' : 'Bằng'}`, `${t} mục tiêu ${LEVEL_NAME[target]}`]);
+    const examCols = order.flatMap((t) => [...SHEET[t].skills.map((k) => `${k.label} (${k.scale})`), `${SHEET[t].total} (${SHEET[t].totalNote})`, `${t === 'VSTEP' ? 'Bậc' : 'Mốc điểm'}`, `Mục tiêu ${t === 'TOEIC' ? target : LEVEL_NAME[target]}`]);
     const header = ['Học viên', 'Email', ...examCols, 'Chuyên cần (%)', ...cols.map((a) => `${a.title} (/${a.maxScore})`), 'Điểm quá trình'];
     const lines = rows.map(({ st, ps, att }) => [
       st.name,
@@ -237,7 +239,7 @@ export const TeacherGradebookPage: React.FC = () => {
       <TPageHead
         crumbs={[{ label: 'Kết quả' }, { label: 'Bảng điểm' }]}
         title={cls ? `Bảng điểm lớp ${cls.name}` : 'Bảng điểm'}
-        sub="Mỗi kỳ thi một bảng điểm riêng: TOEIC (Nghe, Đọc → tổng 990) và VSTEP (Nghe, Đọc, Viết, Nói → điểm tổng), quy ra B1 · Bậc 3 hoặc B2 · Bậc 4. Điểm bài tập trên lớp tách riêng bên dưới."
+        sub={track === 'VSTEP' ? 'Lớp VSTEP: điểm Nghe, Đọc, Viết, Nói → điểm tổng → Bậc 3 (B1) / Bậc 4 (B2). Điểm bài tập trên lớp tách riêng bên dưới.' : track === 'TOEIC' ? 'Lớp TOEIC: điểm Nghe, Đọc → tổng điểm thang 990, xét mốc 600+ / 650+. Điểm bài tập trên lớp tách riêng bên dưới.' : 'Điểm bài tập trên lớp và điểm quá trình.'}
         actions={
           cls && (
             <>
@@ -248,13 +250,15 @@ export const TeacherGradebookPage: React.FC = () => {
                   </option>
                 ))}
               </select>
-              <select value={target} onChange={(e) => setParam('muctieu', e.target.value)} className={cn(inputCls, 'w-48 max-w-full')} aria-label="Mục tiêu">
-                {TARGET_LEVELS.map((l) => (
-                  <option key={l} value={l}>
-                    Mục tiêu {LEVEL_NAME[l]}
-                  </option>
-                ))}
-              </select>
+              {targets.length > 0 && (
+                <select value={target} onChange={(e) => setParam('muctieu', e.target.value)} className={cn(inputCls, 'w-48 max-w-full')} aria-label="Mục tiêu">
+                  {targets.map((l) => (
+                    <option key={l} value={l}>
+                      Mục tiêu {track === 'TOEIC' ? `${l} điểm` : LEVEL_NAME[l]}
+                    </option>
+                  ))}
+                </select>
+              )}
               <TBtn icon={<Download />} onClick={exportCsv} disabled={!rows.length}>
                 Xuất Excel
               </TBtn>
@@ -275,7 +279,7 @@ export const TeacherGradebookPage: React.FC = () => {
         <>
           <Figures
             items={[
-              ...order.map((t) => ({ label: `${t} đạt ${LEVEL_NAME[target]}`, value: `${passedOf(t)}/${students.length}`, note: `từ ${minScoreOf(t, target)} điểm, chuyên cần ≥ ${MIN_ATTENDANCE}%`, icon: Award, tone: (t === 'TOEIC' ? 'indigo' : 'violet') as 'indigo' | 'violet' })),
+              ...order.map((t) => ({ label: `Đạt ${t === 'TOEIC' ? `TOEIC ${target}` : LEVEL_NAME[target]}`, value: `${passedOf(t)}/${students.length}`, note: `từ ${t === 'VSTEP' ? num(minScoreOf(t, target), 1) : minScoreOf(t, target)} điểm, chuyên cần ≥ ${MIN_ATTENDANCE}%`, icon: Award, tone: 'emerald' as const })),
               { label: 'Chuyên cần TB', value: atts.length ? `${Math.round(atts.reduce((a, x) => a + x, 0) / atts.length)}%` : '—', note: 'các buổi đã điểm danh', icon: Percent, tone: 'sky' as const },
               { label: 'Còn thiếu bài', value: rows.filter((r) => r.missing > 0).length, note: 'học viên chưa nộp đủ', icon: UserX, tone: 'rose' as const },
             ]}
@@ -285,7 +289,7 @@ export const TeacherGradebookPage: React.FC = () => {
             <ExamSheet key={t} type={t} className={cls.name} students={students} exam={exams[t]} attendance={attendance} target={target} />
           ))}
 
-          <Panel title={`Điểm bài tập trên lớp · ${cls.name}`} sub="Điểm các bài giáo viên giao, theo thang của từng bài — tách riêng, không tính vào điểm thi TOEIC / VSTEP. Điểm quá trình = 70% trung bình các bài (quy về thang 10) + 30% chuyên cần" flush>
+          <Panel title={`Điểm bài tập trên lớp · ${cls.name}`} sub={`Điểm các bài giáo viên giao, theo thang của từng bài — tách riêng, không tính vào điểm thi${order[0] ? ` ${order[0]}` : ''}. Điểm quá trình = 70% trung bình các bài (quy về thang 10) + 30% chuyên cần`} flush>
             {students.length === 0 ? (
               <TEmpty title="Lớp chưa có học viên" />
             ) : (
