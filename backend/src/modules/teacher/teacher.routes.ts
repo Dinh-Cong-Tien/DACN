@@ -748,12 +748,20 @@ type Target = z.infer<typeof targetSchema>;
 const KIND_OF: Record<string, Target['kind']> = { MOCK_TEST: 'EXAM', PRACTICE: 'EXAM', LESSON: 'LESSON', GRAMMAR: 'GRAMMAR', VOCAB: 'VOCAB', ESSAY: 'WRITING', SPEAKING: 'SPEAKING', DICTATION: 'DICTATION' };
 
 /** Kiểm tra nội dung bài giao có thật trong DB; trả target_id (uuid) và điểm tối đa mặc định. */
-async function resolveTarget(type: string, t: Target, examType: 'TOEIC' | 'VSTEP'): Promise<{ targetId: string; maxScore: number; target: Target }> {
+/**
+ * examType = kỳ thi của lớp (null = lớp THPT, không ràng buộc). Nội dung gắn kỳ thi (đề, bộ từ vựng, đề Viết/Nói, bài chép chính tả)
+ * phải cùng kỳ thi với lớp — lớp VSTEP không giao đề / từ vựng TOEIC và ngược lại.
+ */
+async function resolveTarget(type: string, t: Target, examType: 'TOEIC' | 'VSTEP' | null): Promise<{ targetId: string; maxScore: number; target: Target }> {
   if (KIND_OF[type] !== t.kind) throw badRequest(`Loại bài ${type} không khớp nội dung ${t.kind}`);
+  const sameExam = (ex: string | null | undefined, what: string) => {
+    if (examType && ex && ex !== examType) throw badRequest(`${what} thuộc ${ex}, không giao được cho lớp ${examType}`, 'EXAM_MISMATCH');
+  };
   switch (t.kind) {
     case 'EXAM': {
       const test = await prisma.mockTest.findFirst({ where: { ...byIdOrSlug(t.testId), deletedAt: null, status: 'PUBLISHED' } });
       if (!test) throw badRequest('Đề thi không tồn tại hoặc chưa xuất bản');
+      sameExam(test.examType, 'Đề thi');
       if (type === 'MOCK_TEST') {
         const parts = await prisma.mockTestQuestion.findMany({ where: { testId: test.id }, distinct: ['part'], select: { part: true }, orderBy: { part: 'asc' } });
         const feParts = [...new Set(parts.map((p) => feGroupOfPart(p.part)))];
@@ -783,11 +791,13 @@ async function resolveTarget(type: string, t: Target, examType: 'TOEIC' | 'VSTEP
     case 'VOCAB': {
       const v = await prisma.vocabTopic.findFirst({ where: { ...byIdOrSlug(t.topicId), deletedAt: null } });
       if (!v) throw badRequest('Bộ từ vựng không tồn tại');
+      sameExam(v.examType, 'Bộ từ vựng');
       return { targetId: v.id, maxScore: 10, target: t };
     }
     case 'DICTATION': {
       const p = isUuid(t.passageId) ? await prisma.passage.findFirst({ where: { id: t.passageId, purpose: 'DICTATION', deletedAt: null, status: 'PUBLISHED' } }) : null;
       if (!p) throw badRequest('Bài chép chính tả không tồn tại');
+      sameExam(p.examType, 'Bài chép chính tả');
       // Điểm = % chép đúng (0–100), chấm tự động khi học viên nộp ở trang Chép chính tả
       return { targetId: p.id, maxScore: 100, target: t };
     }
@@ -796,7 +806,7 @@ async function resolveTarget(type: string, t: Target, examType: 'TOEIC' | 'VSTEP
       const qid = t.kind === 'WRITING' ? t.taskId : t.partId;
       const q = isUuid(qid) ? await prisma.question.findFirst({ where: { id: qid, deletedAt: null, status: 'PUBLISHED', type: t.kind === 'WRITING' ? 'ESSAY' : 'SPEAKING_RESPONSE' } }) : null;
       if (!q) throw badRequest(t.kind === 'WRITING' ? 'Đề Viết không tồn tại' : 'Đề Nói không tồn tại');
-      void examType;
+      sameExam(q.examType, t.kind === 'WRITING' ? 'Đề Viết' : 'Đề Nói');
       return { targetId: q.id, maxScore: 10, target: t };
     }
   }
@@ -848,7 +858,7 @@ teacherRouter.post(
     const b = parse(assignBody, req.body);
     const c = await assertClass(u, b.classId);
     if (b.dueDate && new Date(b.dueDate) < new Date() && b.status === 'OPEN') throw badRequest('Hạn nộp phải ở tương lai');
-    const r = await resolveTarget(b.type, b.target, c.examType);
+    const r = await resolveTarget(b.type, b.target, c.track === 'THPT' ? null : c.examType);
     // bài giảng nằm trong khoá của lớp: chỉ giao bài của chính khoá đó (học viên đã được ghi danh khoá khi vào lớp)
     if (r.target.kind === 'LESSON' && c.courseId && r.targetId !== c.courseId) throw badRequest('Chỉ giao được bài giảng thuộc khoá học của lớp', 'COURSE_MISMATCH');
     const students = await activeStudentIds(c.id);

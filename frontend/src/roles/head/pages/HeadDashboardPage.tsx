@@ -256,7 +256,7 @@ export const HeadDashboardPage: React.FC = () => {
                 <tr key={r.classId} className={tbl.tr}>
                   <td className={tbl.td}>
                     <div className="flex items-center gap-3">
-                      <span className={cn('flex h-9 w-9 shrink-0 items-center justify-center rounded-xl font-display text-sm font-extrabold', r.grade ? GRADE_CLS[r.grade] : 'bg-slate-100 text-slate-400')} title={r.grade ? undefined : 'Chưa có điểm thi và điểm danh'}>{r.grade ?? '—'}</span>
+                      <span className={cn('flex h-9 w-9 shrink-0 items-center justify-center rounded-xl font-display text-sm font-extrabold', r.grade ? GRADE_CLS[r.grade] : 'bg-slate-100 text-slate-400')} title={r.grade ? undefined : 'Chưa có điểm thi thử để xếp loại'}>{r.grade ?? '—'}</span>
                       <div className="min-w-0">
                         <Link to={staffPath(`/classes/${r.classId}`)} className="block truncate font-semibold text-slate-900 hover:text-indigo-700">
                           {r.className}

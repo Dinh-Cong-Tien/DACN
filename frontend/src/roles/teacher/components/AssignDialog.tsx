@@ -7,7 +7,7 @@ import type { AssignmentTarget, AssignmentType } from '@/shared/types';
 import { assignmentHref, cn } from '@/shared/utils';
 import { Modal } from '@/shared/components/ui';
 import { TBtn, TTabs, inputCls } from './TeacherKit';
-import { classTrackLabel } from '@/shared/constants/staff';
+import { classTrack, classTrackLabel } from '@/shared/constants/staff';
 
 const TRACKS: [string, string][] = [
   ['TOEIC', 'TOEIC'],
@@ -51,6 +51,8 @@ export const AssignDialog: React.FC<{ open: boolean; onClose: () => void; onSave
   const cls = classes.find((c) => c.id === classId) ?? classes[0];
   const exam = cls?.examType ?? 'TOEIC';
   const tests = lib.tests.filter((t) => t.examType === exam);
+  // nội dung gắn kỳ thi chỉ giao cho lớp cùng kỳ thi (lớp THPT không ràng buộc) — khớp kiểm tra EXAM_MISMATCH ở backend
+  const fitsExam = (ex?: string | null) => !ex || !cls || classTrack(cls) === 'THPT' || ex === exam;
   const [testId, setTestId] = useState('');
   const [parts, setParts] = useState<string[]>([]);
   const [time, setTime] = useState<'auto' | 'none' | number>('auto');
@@ -61,7 +63,7 @@ export const AssignDialog: React.FC<{ open: boolean; onClose: () => void; onSave
   const [taskId, setTaskId] = useState('');
   const [partId, setPartId] = useState('');
   const [passageId, setPassageId] = useState('');
-  const dictations = useDictationList().data ?? [];
+  const dictations = (useDictationList().data ?? []).filter((d) => fitsExam(d.examType));
   const [promptQ, setPromptQ] = useState('');
   const [title, setTitle] = useState('');
   const [titleEdited, setTitleEdited] = useState(false);
@@ -108,7 +110,8 @@ export const AssignDialog: React.FC<{ open: boolean; onClose: () => void; onSave
   const course = (cls?.course && lib.courses.find((c) => c.id === cls.course!.id)) || (lib.courses.find((c) => c.id === courseId) ?? lib.courses[0]);
   const lessons = useMemo(() => course?.sections.flatMap((s) => s.lessons) ?? [], [course]);
   const grammar = lib.grammar.find((g) => g.slug === slug) ?? lib.grammar[0];
-  const vocab = lib.vocab.find((v) => v.id === topicId) ?? lib.vocab.find((v) => !v.examType || v.examType === exam) ?? lib.vocab[0];
+  const vocabList = lib.vocab.filter((v) => fitsExam(v.examType));
+  const vocab = vocabList.find((v) => v.id === topicId) ?? vocabList[0];
   const prompts: LibPrompt[] = (kind === 'WRITING' ? lib.writing : lib.speaking).filter((p) => p.examType === exam);
   const shownPrompts = prompts.filter((p) => !promptQ.trim() || p.prompt.toLowerCase().includes(promptQ.trim().toLowerCase())).slice(0, 60);
   const writing = lib.writing.find((w) => w.id === taskId) ?? lib.writing.find((w) => w.examType === exam);
@@ -367,8 +370,9 @@ export const AssignDialog: React.FC<{ open: boolean; onClose: () => void; onSave
           {kind === 'VOCAB' && (
             <label className="block">
               <Label>Bộ flashcard</Label>
-              <select value={vocab?.id ?? ''} onChange={(e) => setTopicId(e.target.value)} className={fieldCls}>
-                {lib.vocab.map((v) => (
+              {!vocabList.length && <span className="block rounded-lg bg-amber-50 px-3 py-2 text-[13px] text-amber-800">Chưa có bộ flashcard {exam} — kho hiện chỉ có bộ của kỳ thi khác.</span>}
+              <select hidden={!vocabList.length} value={vocab?.id ?? ''} onChange={(e) => setTopicId(e.target.value)} className={fieldCls}>
+                {vocabList.map((v) => (
                   <option key={v.id} value={v.id}>
                     {v.name} · {v.wordsCount} từ
                   </option>
@@ -380,7 +384,8 @@ export const AssignDialog: React.FC<{ open: boolean; onClose: () => void; onSave
           {kind === 'DICTATION' && (
             <label className="block">
               <Label>Bài chép chính tả</Label>
-              <select value={dictation?.id ?? ''} onChange={(e) => setPassageId(e.target.value)} className={fieldCls}>
+              {!dictations.length && <span className="block rounded-lg bg-amber-50 px-3 py-2 text-[13px] text-amber-800">Chưa có bài chép chính tả {exam} — kho hiện chỉ có bài của kỳ thi khác.</span>}
+              <select hidden={!dictations.length} value={dictation?.id ?? ''} onChange={(e) => setPassageId(e.target.value)} className={fieldCls}>
                 {dictations.map((d) => (
                   <option key={d.id} value={d.id}>
                     {d.title}

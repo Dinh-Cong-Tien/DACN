@@ -275,6 +275,7 @@ testsRouter.get(
       id: p.id,
       title: p.title ?? 'Bài nghe',
       level: p.level ?? undefined,
+      examType: p.examType ?? undefined,
       audioUrl: p.audioUrl ?? undefined,
       sentences: Array.isArray(p.segments) ? p.segments.length : 0,
       isFree: p.isFree,

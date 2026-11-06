@@ -215,6 +215,8 @@ export interface DictationPassage {
   id: string;
   title: string;
   level?: string | null;
+  /** kỳ thi của bài (giao bài: chỉ hiện bài cùng kỳ thi với lớp) */
+  examType?: 'TOEIC' | 'VSTEP';
   transcript: string;
   segments?: { text: string; startMs?: number; endMs?: number }[];
   audioUrl?: string | null;

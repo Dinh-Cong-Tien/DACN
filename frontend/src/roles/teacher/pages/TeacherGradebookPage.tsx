@@ -198,9 +198,10 @@ export const TeacherGradebookPage: React.FC = () => {
       })
       .filter((x): x is number => x !== null);
     const att = attendance(sid);
-    if (!parts.length && att === null) return null;
-    const avg = parts.length ? parts.reduce((x, y) => x + y, 0) / parts.length : 0;
-    const total = parts.length && att !== null ? avg * 0.7 + (att / 10) * 0.3 : parts.length ? avg : (att ?? 0) / 10;
+    // chưa có bài nào được chấm / quá hạn → chưa có điểm quá trình (không lấy riêng chuyên cần làm điểm)
+    if (!parts.length) return null;
+    const avg = parts.reduce((x, y) => x + y, 0) / parts.length;
+    const total = att !== null ? avg * 0.7 + (att / 10) * 0.3 : avg;
     return Math.round(total * 10) / 10;
   };
   const rows = students.map((st) => ({ st, ps: processScore(st.id), att: attendance(st.id), missing: cols.filter((a) => ['TODO', 'MISSED'].includes(stateOf(st.id, a.id) ?? '')).length })).sort((a, b) => (b.ps ?? -1) - (a.ps ?? -1));

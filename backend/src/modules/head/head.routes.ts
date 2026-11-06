@@ -1122,7 +1122,7 @@ headRouter.get(
         // Chưa có điểm thi lẫn điểm danh thì chưa xếp loại
         hasAttendance: s.attendanceMarks > 0,
         hasScore: s.hasScore,
-        grade: s.hasScore || s.attendanceMarks > 0 ? gradeOf(c.examType, s.hasScore ? s.avgScore : 0, s.attendanceRate) : null,
+        grade: s.hasScore ? gradeOf(c.examType, s.avgScore, s.attendanceRate) : null, // chưa có điểm thi thử → chưa xếp loại (không xếp chỉ theo chuyên cần)
         trend,
       };
     });

@@ -149,7 +149,7 @@ export async function teacherSummaries(where: Prisma.UserWhereInput) {
 /** Xếp loại lớp theo điểm (quy về %) + chuyên cần */
 export function gradeOf(examType: ExamType, avgScore: number, attendance: number): 'A' | 'B' | 'C' | 'D' {
   const scorePct = examType === 'TOEIC' ? (avgScore / 990) * 100 : avgScore * 10;
-  const v = avgScore ? scorePct * 0.7 + attendance * 0.3 : attendance;
+  const v = scorePct * 0.7 + attendance * 0.3;
   return v >= 75 ? 'A' : v >= 65 ? 'B' : v >= 50 ? 'C' : 'D';
 }
 
