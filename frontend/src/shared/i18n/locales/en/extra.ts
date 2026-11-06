@@ -327,4 +327,8 @@ export const EXTRA_EN: Record<string, string> = {
   "Soạn câu hỏi & đề": "Write questions & tests",
   "Đang mở, đã đóng, bản nháp · số bài nộp, điểm TB": "Open, closed, drafts · submissions, average score",
   "Tự soạn câu hỏi, đề kiểm tra · gửi duyệt": "Write your own questions and tests · send for review",
+  "Mọi lớp bạn dạy, xếp theo khoá học": "All your classes, grouped by course",
+  "Tệp, đường dẫn đã chia sẻ cho học viên": "Files and links shared with students",
+  "Điểm từng bài của cả lớp · xuất Excel": "Scores for every assignment · export to Excel",
+  "Điểm trung bình, theo Part, chuyên cần, xu hướng": "Averages, by Part, attendance, trends",
 };

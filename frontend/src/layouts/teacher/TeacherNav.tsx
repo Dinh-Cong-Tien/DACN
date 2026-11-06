@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { BookMarked, Briefcase, ClipboardList, Database, FileEdit, FileText, GraduationCap, Headphones, PenLine, PenTool, PlayCircle, Plus, School } from 'lucide-react';
+import { BarChart3, FolderOpen, Sheet, Users, BookMarked, Briefcase, ClipboardList, Database, FileEdit, FileText, GraduationCap, Headphones, PenLine, PenTool, PlayCircle, Plus, School } from 'lucide-react';
 import { useGradingQueue, useTeacherAssignments } from '@/shared/api/teacher';
 import { StaffNav, type StaffMenu } from '@/shared/components/layout/StaffNav';
 
@@ -8,6 +8,7 @@ import { StaffNav, type StaffMenu } from '@/shared/components/layout/StaffNav';
  *  - Khoá học & Lớp: 3 mục khoá như học viên → khoá → các lớp của khoá → trang lớp (bảng tin, tiến độ khoá, học viên,
  *    buổi học & điểm danh, bài tập, tài liệu, bảng điểm, thống kê); tab Học viên của lớp gồm Hồ sơ học viên và Cần theo dõi.
  *  - Luyện tập: bám đúng menu học viên (đề thi thử, Viết, Nói, ngữ pháp, từ vựng, chép chính tả) để giao cho lớp.
+ *  - Kết quả: bảng điểm, thống kê của từng lớp.
  *  - Bài tập: giao bài mới, bài đã giao (kể cả bản nháp), chấm bài, soạn câu hỏi & đề, ngân hàng câu hỏi.
  */
 export const buildTeacherMenus = (toGrade: number, drafts: number): StaffMenu[] => [
@@ -16,11 +17,13 @@ export const buildTeacherMenus = (toGrade: number, drafts: number): StaffMenu[] 
     label: 'Khoá học & Lớp',
     icon: PlayCircle,
     to: '/teacher/courses',
-    activeOn: ['/teacher/classes', '/teacher/gradebook', '/teacher/analytics', '/teacher/materials', '/teacher/students'],
+    activeOn: ['/teacher/classes', '/teacher/materials', '/teacher/students'],
     children: [
       { to: '/teacher/courses?muc=toeic', label: 'Khoá học TOEIC', icon: Briefcase, desc: 'Nền tảng, Listening Part 1–4, Reading Part 5–7' },
       { to: '/teacher/courses?muc=vstep', label: 'Khoá học VSTEP', icon: GraduationCap, desc: 'Nền tảng, Nghe, Đọc, Viết, Nói' },
       { to: '/teacher/courses?muc=thpt', label: 'Tiếng Anh THPT', icon: School, desc: 'Lớp 10, 11, 12 theo SGK Global Success' },
+      { to: '/teacher/classes', label: 'Tất cả lớp', icon: Users, desc: 'Mọi lớp bạn dạy, xếp theo khoá học' },
+      { to: '/teacher/materials', label: 'Tài liệu các lớp', icon: FolderOpen, desc: 'Tệp, đường dẫn đã chia sẻ cho học viên' },
     ],
   },
   {
@@ -46,6 +49,17 @@ export const buildTeacherMenus = (toGrade: number, drafts: number): StaffMenu[] 
       { to: '/teacher/grading', label: 'Chấm bài', icon: PenTool, desc: 'Bài Viết, Nói học viên mọi lớp đã nộp', badge: toGrade ? String(toGrade) : undefined, also: ['/teacher/grading'] },
       { to: '/teacher/authoring', label: 'Soạn câu hỏi & đề', icon: FileEdit, desc: 'Tự soạn câu hỏi, đề kiểm tra · gửi duyệt' },
       { to: '/teacher/question-bank', label: 'Ngân hàng câu hỏi', icon: Database, desc: 'Tra cứu theo Part · nhập đề từ file Word' },
+    ],
+  },
+  {
+    // điểm và tình hình học của từng lớp (mở theo lớp, đổi lớp ngay trong trang)
+    label: 'Kết quả',
+    icon: BarChart3,
+    to: '/teacher/gradebook',
+    activeOn: ['/teacher/analytics'],
+    children: [
+      { to: '/teacher/gradebook', label: 'Bảng điểm', icon: Sheet, desc: 'Điểm từng bài của cả lớp · xuất Excel' },
+      { to: '/teacher/analytics', label: 'Thống kê lớp học', icon: BarChart3, desc: 'Điểm trung bình, theo Part, chuyên cần, xu hướng' },
     ],
   },
 ];

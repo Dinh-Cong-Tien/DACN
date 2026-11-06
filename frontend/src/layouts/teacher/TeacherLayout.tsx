@@ -1,5 +1,5 @@
 import React from 'react';
-import { Plus, LayoutDashboard, Users, ClipboardList, CalendarDays, PenTool, FileText, FilePen, Briefcase, GraduationCap, School, PenLine, BookMarked, Headphones, Database } from 'lucide-react';
+import { BarChart3, FolderOpen, Sheet, Plus, LayoutDashboard, Users, ClipboardList, CalendarDays, PenTool, FileText, FilePen, Briefcase, GraduationCap, School, PenLine, BookMarked, Headphones, Database } from 'lucide-react';
 import { AppShell, NavGroup } from '@/shared/components/layout/AppShell';
 import { TeacherNav, usePendingGradingCount } from './TeacherNav';
 
@@ -23,6 +23,7 @@ const groupsOf = (toGrade: number): NavGroup[] => [
       { to: '/teacher/courses?muc=vstep', label: 'Khoá học VSTEP', icon: GraduationCap },
       { to: '/teacher/courses?muc=thpt', label: 'Tiếng Anh THPT', icon: School },
       { to: '/teacher/classes', label: 'Tất cả lớp', icon: Users },
+      { to: '/teacher/materials', label: 'Tài liệu các lớp', icon: FolderOpen },
     ],
   },
   {
@@ -41,6 +42,13 @@ const groupsOf = (toGrade: number): NavGroup[] => [
       { to: '/teacher/assignments?new=1', label: 'Giao bài mới', icon: Plus },
       { to: '/teacher/authoring', label: 'Soạn câu hỏi & đề', icon: FilePen },
       { to: '/teacher/question-bank', label: 'Ngân hàng câu hỏi', icon: Database },
+    ],
+  },
+  {
+    title: 'Kết quả',
+    items: [
+      { to: '/teacher/gradebook', label: 'Bảng điểm', icon: Sheet },
+      { to: '/teacher/analytics', label: 'Thống kê lớp học', icon: BarChart3 },
     ],
   },
 ];

@@ -32,7 +32,7 @@ export const TeacherAnalyticsPage: React.FC = () => {
   if (!cls) {
     return (
       <div className="space-y-6">
-        <TPageHead eyebrow="Khoá học & Lớp" title="Thống kê lớp học" />
+        <TPageHead eyebrow="Kết quả" title="Thống kê lớp học" />
         <Panel>
           <TEmpty title="Bạn chưa có lớp nào" sub="Thống kê hiện theo từng lớp bạn phụ trách." />
         </Panel>
