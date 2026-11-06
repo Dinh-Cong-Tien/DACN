@@ -1,5 +1,5 @@
 import React from 'react';
-import { UserRoundX, LayoutDashboard, Users, ClipboardList, CalendarDays, PenTool, FileText, BookOpen, UserRound, FilePen, Briefcase, GraduationCap, School, PenLine, Mic, BookMarked, Headphones, Database } from 'lucide-react';
+import { LayoutDashboard, Users, ClipboardList, CalendarDays, PenTool, FileText, BookOpen, FilePen, Briefcase, GraduationCap, School, PenLine, Mic, BookMarked, Headphones, Database } from 'lucide-react';
 import { AppShell, NavGroup } from '@/shared/components/layout/AppShell';
 import { TeacherNav, usePendingGradingCount } from './TeacherNav';
 
@@ -23,8 +23,6 @@ const groupsOf = (toGrade: number): NavGroup[] => [
       { to: '/teacher/courses?muc=vstep', label: 'Khoá học VSTEP', icon: GraduationCap },
       { to: '/teacher/courses?muc=thpt', label: 'Tiếng Anh THPT', icon: School },
       { to: '/teacher/classes', label: 'Tất cả lớp', icon: Users },
-      { to: '/teacher/students', label: 'Hồ sơ học viên', icon: UserRound },
-      { to: '/teacher/students?filter=watch', label: 'Cần theo dõi', icon: UserRoundX },
     ],
   },
   {

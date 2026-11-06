@@ -28,15 +28,19 @@ export const TeacherStudentsPage: React.FC = () => {
   const studentsQ = useTeacherStudents();
   const all = studentsQ.data ?? [];
   const classes = useTeacherClasses().data ?? [];
+  // mở từ tab Học viên của một lớp → chỉ học viên lớp đó
+  const lop = classes.find((c) => c.id === params.get('lop'));
+  const keep = (extra: Record<string, string>) => ({ ...(lop ? { lop: lop.id } : {}), ...extra });
+  const crumbs = lop ? [{ label: 'Khoá học & Lớp', to: '/teacher/courses' }, { label: lop.name, to: `/teacher/classes/${lop.id}` }, { label: 'Học viên' }] : undefined;
 
-  const list = all.filter((s) => (filter === 'all' || s.status !== 'GOOD') && s.name.toLowerCase().includes(q.toLowerCase()));
-  const selected = all.find((s) => s.id === params.get('id')) ?? list[0] ?? all[0];
+  const list = all.filter((s) => !lop || s.classIds.includes(lop.id)).filter((s) => (filter === 'all' || s.status !== 'GOOD') && s.name.toLowerCase().includes(q.toLowerCase()));
+  const selected = all.find((s) => s.id === params.get('id')) ?? list[0] ?? (lop ? undefined : all[0]);
   const profile = useStudentProfile(selected?.id);
   const createNote = useTeacherMutation((v: { studentId: string; kind: StudentNote['kind']; text: string }) => teacherApi.addNote(v.studentId, { kind: v.kind, text: v.text }));
   const [deletingNote, setDeletingNote] = useState<{ id: string; text: string } | null>(null);
   const [attemptId, setAttemptId] = useState<string>();
   const removeNote = useTeacherMutation(teacherApi.deleteNote);
-  const select = (id: string) => setParams({ ...(filter === 'watch' ? { filter } : {}), id }, { replace: true });
+  const select = (id: string) => setParams(keep({ ...(filter === 'watch' ? { filter } : {}), id }), { replace: true });
 
   if (studentsQ.isLoading) return <TLoading />;
   if (studentsQ.error) return <TError error={studentsQ.error} onRetry={() => studentsQ.refetch()} />;
@@ -73,7 +77,7 @@ export const TeacherStudentsPage: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <TPageHead eyebrow="Khoá học & Lớp · Học viên" title="Hồ sơ học viên" sub="Theo dõi từng bạn: điểm, chuyên cần, bài đã nộp và nhật ký trao đổi của giáo viên (nhắc nhở, liên hệ)." />
+      <TPageHead crumbs={crumbs} eyebrow={lop ? undefined : 'Khoá học & Lớp · Học viên'} title={lop ? `Học viên lớp ${lop.name}` : 'Hồ sơ học viên'} sub="Theo dõi từng bạn: điểm, chuyên cần, bài đã nộp và nhật ký trao đổi của giáo viên (nhắc nhở, liên hệ)." />
 
       <div className="grid items-start gap-6 lg:grid-cols-[340px_minmax(0,1fr)]">
         <Panel flush className="lg:sticky lg:top-20">
@@ -84,10 +88,10 @@ export const TeacherStudentsPage: React.FC = () => {
             </div>
             <TTabs
               value={filter}
-              onChange={(k) => setParams(k === 'watch' ? { filter: k } : {}, { replace: true })}
+              onChange={(k) => setParams(keep(k === 'watch' ? { filter: k } : {}), { replace: true })}
               items={[
-                { key: 'all', label: 'Tất cả', count: all.length },
-                { key: 'watch', label: 'Cần theo dõi', count: all.filter((s) => s.status !== 'GOOD').length },
+                { key: 'all', label: 'Hồ sơ học viên', count: all.filter((s) => !lop || s.classIds.includes(lop.id)).length },
+                { key: 'watch', label: 'Cần theo dõi', count: all.filter((s) => (!lop || s.classIds.includes(lop.id)) && s.status !== 'GOOD').length },
               ]}
             />
           </div>

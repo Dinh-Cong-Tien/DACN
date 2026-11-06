@@ -307,4 +307,8 @@ export const EXTRA_EN: Record<string, string> = {
   "Chỉ giao được bài giảng thuộc khoá học của lớp": "You can only assign lessons from the class's course",
   "Các lớp của một khoá học cùng nội dung, chỉ khác lịch học. Mã lớp tạo tự động: chữ đầu khoá + số thứ tự + trình độ, vd T203A1 — vừa là tên lớp, vừa là mã học viên nhập để vào lớp.": "All classes of a course share the same content and differ only in schedule. The class code is generated: course letter + number + level, e.g. T203A1 — it is both the class name and the code students enter to join.",
   "Các lớp của một khoá cùng nội dung, chỉ khác lịch học. Mã lớp tạo tự động: chữ đầu khoá + số thứ tự + trình độ, vd T203A1 — vừa là tên lớp, vừa là mã học viên nhập để vào lớp.": "All classes of a course share the same content and differ only in schedule. The class code is generated: course letter + number + level, e.g. T203A1 — it is both the class name and the code students enter to join.",
+  "Học viên của lớp: điểm, hoàn thành bài tập, hoạt động gần nhất. Bấm tên để mở hồ sơ và nhật ký trao đổi.": "Students of this class: scores, assignment completion, last activity. Click a name to open the profile and contact log.",
+  "Vắng nhiều, nộp bài thiếu hoặc điểm giảm — nên nhắc nhở, liên hệ sớm.": "Frequent absences, missing submissions or falling scores — remind or contact them early.",
+  "Không có học viên cần theo dõi": "No students need attention",
+  "Cả lớp đang học ổn định.": "The whole class is on track.",
 };

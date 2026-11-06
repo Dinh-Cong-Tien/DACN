@@ -40,6 +40,8 @@ export const TeacherClassDetailPage: React.FC = () => {
   const lib = useTeacherLibrary();
   const analytics = useClassAnalytics(id);
   const [tab, setTab] = useState('news');
+  // tab Học viên: Hồ sơ học viên (cả lớp) / Cần theo dõi (vắng nhiều, nộp thiếu, điểm giảm)
+  const [stuView, setStuView] = useState<'all' | 'watch'>('all');
   const [picked, setPicked] = useState<string[]>([]);
   const [newsTitle, setNewsTitle] = useState('');
   const [newsBody, setNewsBody] = useState('');
@@ -444,7 +446,21 @@ export const TeacherClassDetailPage: React.FC = () => {
 
       {tab === 'students' && (
         <Panel flush>
+          <div className="px-5 pt-4">
+            <TTabs
+              value={stuView}
+              onChange={(k) => setStuView(k as 'all' | 'watch')}
+              items={[
+                { key: 'all', label: 'Hồ sơ học viên', count: students.length },
+                { key: 'watch', label: 'Cần theo dõi', count: students.filter((x) => x.status !== 'GOOD').length },
+              ]}
+            />
+            <p className="pb-3 pt-2 text-[13px] text-slate-500">
+              {stuView === 'all' ? 'Học viên của lớp: điểm, hoàn thành bài tập, hoạt động gần nhất. Bấm tên để mở hồ sơ và nhật ký trao đổi.' : 'Vắng nhiều, nộp bài thiếu hoặc điểm giảm — nên nhắc nhở, liên hệ sớm.'}
+            </p>
+          </div>
           {students.length === 0 && <TEmpty title="Lớp chưa có học viên" sub={`Gửi mã ${cls.code} cho học viên hoặc bấm “Mời học viên”.`} />}
+          {students.length > 0 && stuView === 'watch' && !students.some((x) => x.status !== 'GOOD') && <TEmpty title="Không có học viên cần theo dõi" sub="Cả lớp đang học ổn định." />}
           <div className="overflow-x-auto">
             <table className={tbl.table}>
               <thead className={tbl.thead}>
@@ -459,14 +475,16 @@ export const TeacherClassDetailPage: React.FC = () => {
                 </tr>
               </thead>
               <tbody>
-                {students.map((r, i) => (
+                {students.filter((x) => stuView === 'all' || x.status !== 'GOOD').map((r, i) => (
                   <tr key={r.id} className={tbl.tr}>
                     <td className={cn(tbl.td, 'text-right tabular-nums text-slate-400')}>{i + 1}</td>
                     <td className={tbl.td}>
                       <span className="flex items-center gap-2.5">
                         <Avatar name={r.name} src={r.avatarUrl} size="sm" />
                         <span className="min-w-0">
-                          <span className="block whitespace-nowrap font-medium text-slate-900">{r.name}</span>
+                          <Link to={`/teacher/students?lop=${cls.id}&id=${r.id}${stuView === 'watch' ? '&filter=watch' : ''}`} className="block whitespace-nowrap font-medium text-slate-900 hover:text-indigo-700 hover:underline">
+                            {r.name}
+                          </Link>
                           <span className="block text-[12px] text-slate-500">{r.email}</span>
                         </span>
                       </span>
