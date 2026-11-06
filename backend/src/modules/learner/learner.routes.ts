@@ -4,7 +4,7 @@ import { attemptsRouter } from './attempts';
 import { classesRouter } from './classes';
 import { miscRouter } from './misc';
 import { pathRouter } from './path';
-import { AVATAR_DIR, practiceRouter, UPLOAD_DIR } from './practice';
+import { AVATAR_DIR, LESSON_VIDEO_DIR, practiceRouter, UPLOAD_DIR } from './practice';
 import { progressRouter } from './progress';
 import { studyRouter } from './study';
 
@@ -17,6 +17,8 @@ export const learnerRouter = Router();
 // File ghi âm phát trong thẻ <audio> (không gửi được header Authorization) → phục vụ công khai theo tên ngẫu nhiên UUID
 learnerRouter.use('/media', express.static(UPLOAD_DIR, { fallthrough: false, maxAge: '7d' }));
 learnerRouter.use('/avatars', express.static(AVATAR_DIR, { fallthrough: false, maxAge: '30d' }));
+// Video bài giảng giáo viên tải lên (hỗ trợ Range để tua)
+learnerRouter.use('/lesson-videos', express.static(LESSON_VIDEO_DIR, { fallthrough: false, maxAge: '7d' }));
 learnerRouter.use(auth);
 learnerRouter.use(pathRouter);
 learnerRouter.use(attemptsRouter);

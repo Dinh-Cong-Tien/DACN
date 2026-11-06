@@ -236,6 +236,8 @@ export interface LibLesson {
   /** Số câu bài tập sau bài (học viên phải đạt passScorePct % mới qua bài) */
   exercisesCount?: number;
   passScorePct?: number;
+  /** Video bài giảng giáo viên đã đăng (Vimeo/YouTube/tệp tải lên) */
+  videoUrl?: string;
 }
 export interface LibCourse {
   id: string;
@@ -362,6 +364,14 @@ export const teacherApi = {
         params: { classId: b.classId, title: b.title, type: b.type },
         headers: { 'Content-Type': b.file.type || 'application/octet-stream', 'X-File-Name': encodeURIComponent(b.file.name) },
         timeout: 120_000,
+      })
+      .then((r) => r.data.data),
+  setLessonVideo: (id: string, videoUrl: string | null) => api.put<{ id: string; type: string; videoUrl?: string }>(`${T}/lessons/${id}/video`, { videoUrl }),
+  uploadLessonVideo: (id: string, file: File) =>
+    http
+      .post<{ data: { id: string; type: string; videoUrl?: string } }>(`${T}/lessons/${id}/video/upload`, file, {
+        headers: { 'Content-Type': file.type || 'application/octet-stream', 'X-File-Name': encodeURIComponent(file.name) },
+        timeout: 600_000,
       })
       .then((r) => r.data.data),
   deleteMaterial: (id: string) => api.delete<{ ok: true }>(`${T}/materials/${id}`),

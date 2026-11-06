@@ -17,6 +17,7 @@ export const practiceRouter = Router();
 /** Thư mục lưu file tải lên (ngoài src, đã bỏ qua trong git) */
 export const UPLOAD_DIR = path.resolve(__dirname, '../../../uploads/recordings');
 export const AVATAR_DIR = path.resolve(__dirname, '../../../uploads/avatars');
+export const LESSON_VIDEO_DIR = path.resolve(__dirname, '../../../uploads/lesson-videos');
 const IMAGE_TYPES: Record<string, string> = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp' };
 const AUDIO_TYPES: Record<string, string> = { 'audio/webm': 'webm', 'audio/ogg': 'ogg', 'audio/mpeg': 'mp3', 'audio/mp4': 'm4a', 'audio/wav': 'wav', 'audio/x-wav': 'wav' };
 

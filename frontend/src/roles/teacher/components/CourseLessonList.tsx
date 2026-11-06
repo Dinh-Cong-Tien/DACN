@@ -1,5 +1,7 @@
 import React from 'react';
-import type { LibCourse } from '@/shared/api/teacher';
+import { Video } from 'lucide-react';
+import { cn } from '@/shared/utils';
+import type { LibCourse, LibLesson } from '@/shared/api/teacher';
 
 export const LESSON_TYPE: Record<string, string> = { VIDEO: 'Video', READING: 'Bài giảng', QUIZ: 'Luyện đề', CHECKPOINT: 'Kiểm tra chặng' };
 /** Bài tập sau bài: "8 câu · đạt 70%" */
@@ -16,7 +18,9 @@ export const CourseLessonList: React.FC<{
   /** trong lớp: số học viên đã học xong từng bài / sĩ số lớp */
   stats?: { lessonId: string; done: number; avgPct: number | null }[];
   classSize?: number;
-}> = ({ course, picked = [], onToggle, stats, classSize = 0 }) => {
+  /** có → cột Video: giáo viên đăng/đổi video bài giảng cho từng bài */
+  onVideo?: (lesson: LibLesson & { no: number }) => void;
+}> = ({ course, picked = [], onToggle, stats, classSize = 0, onVideo }) => {
   const lessons = course.sections.flatMap((s) => s.lessons);
   return (
     <div className="overflow-hidden rounded-md border border-slate-200 bg-white">
@@ -38,6 +42,22 @@ export const CourseLessonList: React.FC<{
                   {exerciseNote(l)}
                 </span>
                 <span className="w-14 text-right text-[12px] tabular-nums text-slate-500">{l.durationMin} phút</span>
+                {onVideo &&
+                  (l.type === 'VIDEO' || l.type === 'READING' ? (
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        onVideo({ ...l, no: lessons.indexOf(l) + 1 });
+                      }}
+                      title={l.videoUrl ? 'Đổi video bài giảng' : 'Đăng video bài giảng'}
+                      className={cn('inline-flex w-24 shrink-0 items-center justify-end gap-1 text-[12px] font-medium hover:underline', l.videoUrl ? 'text-emerald-700' : 'text-indigo-700')}
+                    >
+                      <Video className="h-3.5 w-3.5" /> {l.videoUrl ? 'Có video' : 'Thêm video'}
+                    </button>
+                  ) : (
+                    <span className="w-24 shrink-0" />
+                  ))}
                 {stats && (() => {
                   const st = stats.find((x) => x.lessonId === l.id);
                   return (

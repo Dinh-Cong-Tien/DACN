@@ -18,6 +18,8 @@ import { ClassLeaderboardPanel } from '../components/ClassLeaderboard';
 import { CLASS_LEVEL_OPTIONS, classTrack, classTrackLabel, courseOptions } from '@/shared/constants/staff';
 import { ClassCourseProgressPanel } from '../components/ClassCourseProgress';
 import { CourseLessonList } from '../components/CourseLessonList';
+import { LessonVideoDialog } from '../components/LessonVideoDialog';
+import type { LibLesson } from '@/shared/api/teacher';
 
 const STATUS: Record<ClassStudent['status'], { label: string; tone: StatusTone }> = {
   GOOD: { label: 'Ổn định', tone: 'green' },
@@ -50,6 +52,7 @@ export const TeacherClassDetailPage: React.FC = () => {
   const [uploadOpen, setUploadOpen] = useState(false);
   const [emails, setEmails] = useState('');
   const [matForm, setMatForm] = useState({ title: '', type: 'PDF' as MaterialType, url: '' });
+  const [videoLesson, setVideoLesson] = useState<(LibLesson & { no: number }) | null>(null);
   const [matMode, setMatMode] = useState<'file' | 'link'>('file');
   const [matFile, setMatFile] = useState<File | null>(null);
   const [editOpen, setEditOpen] = useState(false);
@@ -629,14 +632,17 @@ export const TeacherClassDetailPage: React.FC = () => {
         (libCourse ? (
           <Panel
             title={libCourse.title}
-            sub={`${libCourse.lessonsCount} bài theo đúng thứ tự học viên học · cột cuối: học viên của lớp đã học xong bài, điểm bài tập trung bình`}
+            sub={(() => {
+              const ls = libCourse.sections.flatMap((s) => s.lessons).filter((l) => l.type === 'VIDEO' || l.type === 'READING');
+              return `${libCourse.lessonsCount} bài theo đúng lộ trình học viên học · ${ls.filter((l) => l.videoUrl).length}/${ls.length} bài giảng đã có video — bấm "Thêm video" để đăng video cho bài`;
+            })()}
             action={
               <TBtn size="sm" variant="primary" disabled={!picked.length} onClick={() => navigate('/teacher/assignments', { state: { assign: { kind: 'LESSON', courseId: libCourse.slug, lessonIds: picked }, classId: cls.id } })}>
                 Giao {picked.length || ''} bài đã chọn
               </TBtn>
             }
           >
-            <CourseLessonList course={libCourse} picked={picked} onToggle={(lid) => setPicked((p) => (p.includes(lid) ? p.filter((x) => x !== lid) : [...p, lid]))} stats={cls.courseProgress?.lessons} classSize={students.length} />
+            <CourseLessonList course={libCourse} picked={picked} onToggle={(lid) => setPicked((p) => (p.includes(lid) ? p.filter((x) => x !== lid) : [...p, lid]))} stats={cls.courseProgress?.lessons} classSize={students.length} onVideo={setVideoLesson} />
           </Panel>
         ) : (
           <ClassCourseProgressPanel course={undefined} progress={undefined} students={students} />
@@ -692,6 +698,8 @@ export const TeacherClassDetailPage: React.FC = () => {
       >
         <Textarea label="Danh sách email" hint="Mỗi email một dòng hoặc cách nhau bằng dấu phẩy" placeholder="hocvien1@gmail.com&#10;hocvien2@gmail.com" value={emails} onChange={(e) => setEmails(e.target.value)} />
       </Modal>
+
+      <LessonVideoDialog lesson={videoLesson} onClose={() => setVideoLesson(null)} />
 
       <Modal
         open={uploadOpen}

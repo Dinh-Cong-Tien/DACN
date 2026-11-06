@@ -54,6 +54,10 @@ export const teacherRouter = Router();
 // Thẻ <a>/<iframe> không gửi được header nên nhận access token qua ?token= (hoặc header Bearer).
 // =====================================================================
 export const MATERIAL_DIR = path.resolve(__dirname, '../../../uploads/materials');
+/** Video bài giảng giáo viên tải lên — phát công khai theo tên UUID (thẻ <video> không gửi được header Authorization) */
+import { LESSON_VIDEO_DIR } from '../learner/practice';
+const LESSON_VIDEO_URL = '/api/v1/learner/lesson-videos/';
+const VIDEO_EXT: Record<string, string> = { 'video/mp4': 'mp4', 'video/webm': 'webm' };
 const MIME_EXT: Record<string, string> = {
   'application/pdf': 'pdf',
   'application/msword': 'doc',
@@ -1535,7 +1539,7 @@ teacherRouter.get(
       where: { deletedAt: null, status: 'PUBLISHED' },
       include: {
         author: { select: { fullName: true } },
-        courseSectionCourses: { orderBy: { orderIndex: 'asc' }, include: { lessonSections: { where: { deletedAt: null, status: 'PUBLISHED' }, orderBy: { orderIndex: 'asc' }, select: { id: true, title: true, type: true, durationMin: true, orderIndex: true, exercises: true, passScorePct: true } } } },
+        courseSectionCourses: { orderBy: { orderIndex: 'asc' }, include: { lessonSections: { where: { deletedAt: null, status: 'PUBLISHED' }, orderBy: { orderIndex: 'asc' }, select: { id: true, title: true, type: true, durationMin: true, orderIndex: true, exercises: true, passScorePct: true, videoUrl: true } } } },
       },
       orderBy: [{ track: 'asc' }, { trackOrder: 'asc' }, { title: 'asc' }],
     });
@@ -1563,12 +1567,73 @@ teacherRouter.get(
         partNo: s.partNo,
         partTitle: s.partTitle ?? undefined,
         // số câu bài tập sau bài + điểm cần đạt — giống học viên thấy
-        lessons: s.lessonSections.map(({ exercises, passScorePct, ...l }) => {
+        lessons: s.lessonSections.map(({ exercises, passScorePct, videoUrl, ...l }) => {
           const n = toExercises(exercises).length;
-          return { ...l, exercisesCount: n, passScorePct: n ? (passScorePct ?? 70) : undefined };
+          return { ...l, videoUrl: videoUrl ?? undefined, exercisesCount: n, passScorePct: n ? (passScorePct ?? 70) : undefined };
         }),
       })),
     }));
+  })
+);
+
+// ======================= Video bài giảng của khoá =======================
+/** Bài giảng thuộc khoá học của lớp giáo viên đang dạy (TBM/Admin: mọi khoá) */
+async function assertCourseLesson(req: Request, lessonId: string) {
+  const u = me(req);
+  const l = await prisma.lesson.findFirst({ where: { id: lessonId, deletedAt: null }, select: { id: true, title: true, type: true, videoUrl: true, contentMd: true, section: { select: { courseId: true, course: { select: { title: true, slug: true } } } } } });
+  if (!l) throw notFound('Bài giảng');
+  if (l.type === 'QUIZ' || l.type === 'CHECKPOINT') throw badRequest('Bài kiểm tra không gắn video', 'NOT_VIDEO_LESSON');
+  const classes = await prisma.class.findMany({ where: { ...ownClassWhere(u), isArchived: false, courseId: l.section.courseId }, select: { id: true } });
+  if (u.role === 'TEACHER' && !classes.length) throw forbidden('Bạn chỉ đăng video cho khoá học của lớp mình dạy');
+  return { l, classIds: classes.map((c) => c.id) };
+}
+const localVideoFile = (url?: string | null) => (url?.startsWith(LESSON_VIDEO_URL) ? path.join(LESSON_VIDEO_DIR, path.basename(url)) : null);
+
+/** Gắn video vào bài: bài đọc chuyển thành bài video, phần chữ cũ thành ghi chú dưới video. Gỡ video: bài có nội dung chữ trở lại bài đọc. */
+async function setLessonVideo(req: Request, lessonId: string, videoUrl: string | null) {
+  const { l, classIds } = await assertCourseLesson(req, lessonId);
+  const type = videoUrl ? 'VIDEO' : l.type === 'VIDEO' && l.contentMd ? 'READING' : l.type;
+  const row = await prisma.lesson.update({ where: { id: l.id }, data: { videoUrl, type }, select: { id: true, type: true, videoUrl: true } });
+  const old = localVideoFile(l.videoUrl);
+  if (old && l.videoUrl !== videoUrl) fs.rmSync(old, { force: true });
+  if (videoUrl && !l.videoUrl) {
+    const students = [...new Set((await Promise.all(classIds.map((id) => activeStudentIds(id)))).flat())];
+    await notifyUsers(students, { type: 'CLASS', title: `Video bài giảng mới — ${l.section.course.title}`, message: l.title, link: `/app/courses/${l.section.course.slug}/lessons/${l.id}`, refType: 'LESSON', refId: l.id });
+  }
+  return { id: row.id, type: row.type, videoUrl: row.videoUrl ?? undefined };
+}
+
+teacherRouter.put(
+  '/lessons/:id/video',
+  handler(async (req) => {
+    const b = parse(z.object({ videoUrl: z.string().trim().url().max(500).nullable() }), req.body ?? {});
+    if (b.videoUrl && !/vimeo\.com\/(video\/)?\d+|youtube\.com\/(watch\?v=|embed\/)[\w-]{11}|youtu\.be\/[\w-]{11}|\.(mp4|webm)(\?|$)/i.test(b.videoUrl))
+      throw badRequest('Link phải là video Vimeo, YouTube hoặc tệp .mp4/.webm', 'BAD_VIDEO_URL');
+    return setLessonVideo(req, String(req.params.id), b.videoUrl);
+  })
+);
+
+/** Tải tệp video bài giảng lên (MP4/WebM, tối đa 500 MB) — body nhị phân, tên tệp qua header X-File-Name */
+teacherRouter.post(
+  '/lessons/:id/video/upload',
+  express.raw({ type: () => true, limit: '500mb' }),
+  handler(async (req) => {
+    await assertCourseLesson(req, String(req.params.id));
+    const buf = req.body as Buffer;
+    if (!Buffer.isBuffer(buf) || buf.length === 0) throw badRequest('Tệp tải lên trống');
+    const mime = String(req.headers['content-type'] ?? '').split(';')[0].trim().toLowerCase();
+    const name = String(req.headers['x-file-name'] ?? '');
+    const ext = VIDEO_EXT[mime] ?? (/\.(mp4|webm)$/i.exec(name)?.[1].toLowerCase() ?? '');
+    if (!ext) throw badRequest('Chỉ nhận video MP4 hoặc WebM', 'BAD_VIDEO_FILE');
+    fs.mkdirSync(LESSON_VIDEO_DIR, { recursive: true });
+    const key = `${crypto.randomUUID()}.${ext}`;
+    fs.writeFileSync(path.join(LESSON_VIDEO_DIR, key), buf);
+    try {
+      return await setLessonVideo(req, String(req.params.id), `${LESSON_VIDEO_URL}${key}`);
+    } catch (e) {
+      fs.rmSync(path.join(LESSON_VIDEO_DIR, key), { force: true });
+      throw e;
+    }
   })
 );
 
