@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { CheckCircle2, ChevronRight, ClipboardCheck, History, Lock, RotateCcw, Volume2, X, BookmarkPlus, HelpCircle, Video, NotebookText } from 'lucide-react';
+import { CheckCircle2, ChevronRight, ClipboardCheck, History, Lock, RotateCcw, Volume2, X, BookmarkPlus, HelpCircle, Video, NotebookText, ChevronDown } from 'lucide-react';
 import type { Course, DictionaryEntry, Lesson } from '@/shared/types';
 import { LessonKnowledge } from './LessonKnowledge';
 import { LessonTranscript } from './LessonTranscript';
@@ -165,6 +165,29 @@ export const LessonEngine: React.FC<LessonEngineProps> = ({ course, lesson, onSe
   }, [showExercise, source]);
   // học viên học trên video: dưới video chỉ giữ phần "Tóm tắt" (vài ý chính), không hiện cả bài chữ
   const keyPoints = useMemo(() => summaryOf(lesson.content), [lesson.content]);
+  // mục lục: mở sẵn chương chứa bài đang học, cuộn bài đó vào giữa khung (không cuộn cả trang)
+  const outlineRef = useRef<HTMLDivElement>(null);
+  const currentSection = course.sections.find((sec) => sec.lessons.some((l) => l.id === lesson.id))?.id;
+  const [openSections, setOpenSections] = useState<Set<string>>(() => new Set(currentSection ? [currentSection] : []));
+  useEffect(() => {
+    if (currentSection) setOpenSections((prev) => (prev.has(currentSection) ? prev : new Set(prev).add(currentSection)));
+  }, [currentSection]);
+  useEffect(() => {
+    // chờ chương vừa mở được vẽ xong rồi mới cuộn
+    const t = window.setTimeout(() => {
+      const box = outlineRef.current;
+      const el = box?.querySelector<HTMLElement>('[data-active]');
+      if (box && el) box.scrollTop = el.offsetTop - box.clientHeight / 2 + el.clientHeight / 2;
+    }, 0);
+    return () => window.clearTimeout(t);
+  }, [lesson.id]);
+  const toggleSection = (id: string) =>
+    setOpenSections((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
   const completedCount = allLessons.filter((l) => l.isCompleted || l.id === (done ? lesson.id : '')).length;
 
   return (
@@ -305,54 +328,73 @@ export const LessonEngine: React.FC<LessonEngineProps> = ({ course, lesson, onSe
         {!showExercise && lesson.knowledge && <LessonKnowledge knowledge={lesson.knowledge} onWord={onWordClick} />}
       </div>
 
-      {/* Course outline */}
-      <aside className="space-y-4">
-        <Card padding="sm" className="animate-slide-in-right">
-          <div className="flex items-center justify-between mb-2">
-            <p className="font-bold text-slate-900 text-sm">Nội dung khoá học</p>
-            <span className="text-[11px] font-bold text-slate-500">
-              {completedCount}/{allLessons.length}
-            </span>
+      {/* Mục lục khoá: dính theo màn hình, cuộn riêng; chỉ mở chương đang học (bấm tên chương để mở/gập) */}
+      <aside className="xl:sticky xl:top-24 xl:self-start">
+        <Card padding="none" className="overflow-hidden animate-slide-in-right">
+          <div className="border-b border-slate-100 px-4 py-3">
+            <div className="mb-2 flex items-center justify-between">
+              <p className="text-sm font-bold text-slate-900">Nội dung khoá học</p>
+              <span className="text-[11px] font-bold tabular-nums text-slate-500">
+                {completedCount}/{allLessons.length} bài
+              </span>
+            </div>
+            <ProgressBar value={(completedCount / allLessons.length) * 100} size="sm" tone="emerald" />
           </div>
-          <ProgressBar value={(completedCount / allLessons.length) * 100} size="sm" tone="emerald" />
+          <div ref={outlineRef} className="relative max-h-[70vh] overflow-y-auto overscroll-contain xl:max-h-[calc(100vh-13rem)]">
+            {course.sections.map((sec) => {
+              const open = openSections.has(sec.id);
+              const secDone = sec.lessons.filter((l) => l.isCompleted || (done && l.id === lesson.id)).length;
+              return (
+                <div key={sec.id} className="border-b border-slate-100 last:border-0">
+                  <button
+                    type="button"
+                    aria-expanded={open}
+                    onClick={() => toggleSection(sec.id)}
+                    className="sticky top-0 z-[1] flex w-full items-center gap-2 bg-slate-50 px-4 py-2.5 text-left hover:bg-slate-100"
+                  >
+                    <span className="min-w-0 flex-1 truncate text-xs font-extrabold uppercase tracking-wide text-slate-700">{sec.title}</span>
+                    <span className={cn('shrink-0 text-[11px] font-bold tabular-nums', secDone === sec.lessons.length ? 'text-emerald-600' : 'text-slate-400')}>
+                      {secDone}/{sec.lessons.length}
+                    </span>
+                    <ChevronDown className={cn('h-4 w-4 shrink-0 text-slate-400 transition-transform', open && 'rotate-180')} />
+                  </button>
+                  {open && (
+                    <ul>
+                      {sec.lessons.map((l) => {
+                        const Icon = LESSON_ICON[l.type] ?? Video;
+                        const isActive = l.id === lesson.id;
+                        const isDone = l.isCompleted || (done && l.id === lesson.id);
+                        return (
+                          <li key={l.id}>
+                            <button
+                              type="button"
+                              data-active={isActive || undefined}
+                              disabled={l.isLocked}
+                              onClick={() => onSelectLesson(l.id)}
+                              className={cn('flex w-full items-center gap-3 border-l-2 px-4 py-2.5 text-left transition-colors', isActive ? 'border-indigo-600 bg-indigo-50/70' : 'border-transparent hover:bg-slate-50', l.isLocked && 'cursor-not-allowed opacity-50')}
+                            >
+                              <span className={cn('flex h-8 w-8 shrink-0 items-center justify-center rounded-lg', isDone ? 'bg-emerald-100 text-emerald-600' : isActive ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-500')}>
+                                {l.isLocked ? <Lock className="h-3.5 w-3.5" /> : isDone ? <CheckCircle2 className="h-4 w-4" /> : <Icon className="h-4 w-4" />}
+                              </span>
+                              <span className="min-w-0 flex-1">
+                                <span className={cn('block truncate text-sm', isActive ? 'font-bold text-indigo-900' : 'font-medium text-slate-700')}>{l.title}</span>
+                                <span className="block text-[11px] text-slate-400">
+                                  Bài {allLessons.indexOf(l) + 1} · {l.type === 'QUIZ' && l.exerciseCount ? `${l.exerciseCount} câu` : `${l.durationMin} phút`}
+                                  {l.type !== 'QUIZ' && l.exerciseCount ? ` · ${l.exerciseCount} câu bài tập` : ''}
+                                  {!isDone && (isActive ? watch.position : l.lastPositionSec ?? 0) >= 5 && <span className="font-semibold text-amber-700"> · đã học tới {formatClock(isActive ? watch.position : l.lastPositionSec ?? 0)}</span>}
+                                </span>
+                              </span>
+                            </button>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  )}
+                </div>
+              );
+            })}
+          </div>
         </Card>
-        <div className="space-y-3">
-          {course.sections.map((sec, si) => (
-            <Card key={sec.id} padding="none" className="overflow-hidden animate-fade-up" style={{ animationDelay: `${si * 80}ms` }}>
-              <div className="px-4 py-3 bg-slate-50 border-b border-slate-100">
-                <p className="text-xs font-extrabold text-slate-700 uppercase tracking-wide">{sec.title}</p>
-              </div>
-              <ul>
-                {sec.lessons.map((l) => {
-                  const Icon = LESSON_ICON[l.type];
-                  const isActive = l.id === lesson.id;
-                  const isDone = l.isCompleted || (done && l.id === lesson.id);
-                  return (
-                    <li key={l.id}>
-                      <button
-                        disabled={l.isLocked}
-                        onClick={() => onSelectLesson(l.id)}
-                        className={cn('w-full flex items-center gap-3 px-4 py-3 text-left transition-all border-l-2', isActive ? 'bg-indigo-50/70 border-indigo-600' : 'border-transparent hover:bg-slate-50', l.isLocked && 'opacity-50 cursor-not-allowed')}
-                      >
-                        <span className={cn('w-8 h-8 rounded-lg flex items-center justify-center shrink-0', isDone ? 'bg-emerald-100 text-emerald-600' : isActive ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-500')}>
-                          {l.isLocked ? <Lock className="w-3.5 h-3.5" /> : isDone ? <CheckCircle2 className="w-4 h-4" /> : <Icon className="w-4 h-4" />}
-                        </span>
-                        <span className="flex-1 min-w-0">
-                          <span className={cn('block text-sm truncate', isActive ? 'font-bold text-indigo-900' : 'font-medium text-slate-700')}>{l.title}</span>
-                          <span className="block text-[11px] text-slate-400">
-                            Bài {allLessons.indexOf(l) + 1} · {l.type === 'QUIZ' && l.exerciseCount ? `${l.exerciseCount} câu` : `${l.durationMin} phút`}
-                            {l.type === 'VIDEO' && l.exerciseCount ? ` · ${l.exerciseCount} câu bài tập` : ''}
-                            {!isDone && (isActive ? watch.position : l.lastPositionSec ?? 0) >= 5 && <span className="text-amber-700 font-semibold"> · đã học tới {formatClock(isActive ? watch.position : l.lastPositionSec ?? 0)}</span>}
-                          </span>
-                        </span>
-                      </button>
-                    </li>
-                  );
-                })}
-              </ul>
-            </Card>
-          ))}
-        </div>
       </aside>
 
       {popover && (
