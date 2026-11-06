@@ -26,7 +26,7 @@ const groupsOf = (toGrade: number): NavGroup[] => [
     ],
   },
   {
-    title: 'Thi thử & Luyện tập',
+    title: 'Luyện tập',
     items: [
       { to: '/teacher/library/tests?tab=TOEIC', label: 'Đề thi thử TOEIC', icon: FileText },
       { to: '/teacher/library/tests?tab=VSTEP', label: 'Đề thi thử VSTEP', icon: FileText },

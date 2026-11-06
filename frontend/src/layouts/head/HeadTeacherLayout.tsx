@@ -7,7 +7,7 @@ import { useHeadDashboard, useHeadStudents, useHeadSubjects } from '@/shared/api
 const badge = (n?: number) => (n ? String(n) : undefined);
 type Counts = { pending?: string; openComplaints?: string; toReview?: string; quality?: string; riskStudents: number; subjects: number; teachers: number; classes: number };
 
-/** Khoá học và Thi thử & Luyện tập: cùng khung với menu học viên / giáo viên, mở kho học liệu đã lọc */
+/** Khoá học và Luyện tập: cùng khung với menu học viên / giáo viên, mở kho học liệu đã lọc */
 const COURSE_LINKS = [
   { to: '/head/courses?muc=toeic', label: 'Khoá học TOEIC', icon: Briefcase, desc: 'Nền tảng, Listening Part 1–4, Reading Part 5–7' },
   { to: '/head/courses?muc=vstep', label: 'Khoá học VSTEP', icon: GraduationCap, desc: 'Nền tảng, Nghe, Đọc, Viết, Nói' },
@@ -47,7 +47,7 @@ const buildMenus = ({ pending, openComplaints, toReview, quality, riskStudents, 
       { to: '/head/class-content', label: 'Tài liệu & bảng tin lớp', icon: FolderOpen, desc: 'Tài liệu giáo viên tải lên, bài đăng bảng tin' },
     ],
   },
-  { label: 'Thi thử & Luyện tập', icon: FileText, children: PRACTICE_LINKS },
+  { label: 'Luyện tập', icon: FileText, children: PRACTICE_LINKS },
   {
     label: 'Thẩm định',
     icon: ShieldCheck,
@@ -85,7 +85,7 @@ const buildGroups = ({ pending, openComplaints, toReview }: Counts): NavGroup[] 
     ],
   },
   { title: 'Khoá học & Lớp', items: [...COURSE_LINKS.map(({ to, label, icon }) => ({ to, label, icon })), { to: '/head/classes', label: 'Tất cả lớp', icon: School }] },
-  { title: 'Thi thử & Luyện tập', items: PRACTICE_LINKS.map(({ to, label, icon }) => ({ to, label, icon })) },
+  { title: 'Luyện tập', items: PRACTICE_LINKS.map(({ to, label, icon }) => ({ to, label, icon })) },
   {
     title: 'Thẩm định',
     items: [

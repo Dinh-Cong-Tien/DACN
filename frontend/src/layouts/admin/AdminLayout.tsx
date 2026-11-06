@@ -17,7 +17,7 @@ const COURSE_LINKS = [
   { to: '/admin/courses?muc=vstep', label: 'Khoá học VSTEP', icon: GraduationCap, desc: 'Chặng, chương, bài giảng, bài tập của khoá VSTEP' },
   { to: '/admin/courses?muc=thpt', label: 'Tiếng Anh THPT', icon: School, desc: 'Tiếng Anh 10, 11, 12 và Ôn thi tốt nghiệp' },
 ];
-/** Thi thử & Luyện tập: nội dung đúng các mục học viên đang luyện */
+/** Luyện tập: nội dung đúng các mục học viên đang luyện */
 const PRACTICE_LINKS = [
   { to: '/admin/tests', label: 'Đề thi thử', icon: FileText, desc: 'Đề TOEIC, VSTEP: cấu trúc, thời gian, câu hỏi', group: 'Đề thi thử' },
   { to: '/admin/questions', label: 'Ngân hàng câu hỏi', icon: FileQuestion, desc: 'Câu hỏi TOEIC, VSTEP theo Part', group: 'Đề thi thử' },
@@ -71,7 +71,7 @@ const buildMenus = ({ degraded, openTickets, pendingPay, pending, toReview, comp
     to: '/admin/courses',
     children: COURSE_LINKS,
   },
-  { label: 'Thi thử & Luyện tập', icon: FileText, children: PRACTICE_LINKS },
+  { label: 'Luyện tập', icon: FileText, children: PRACTICE_LINKS },
   {
     label: 'Vận hành',
     badge: ops,
@@ -122,7 +122,7 @@ const buildGroups = ({ degraded, openTickets, pendingPay, pending, toReview, com
     ],
   },
   { title: 'Soạn khoá học', items: COURSE_LINKS.map(({ to, label, icon }) => ({ to, label, icon })) },
-  { title: 'Thi thử & Luyện tập', items: PRACTICE_LINKS.map(({ to, label, icon }) => ({ to, label, icon })) },
+  { title: 'Luyện tập', items: PRACTICE_LINKS.map(({ to, label, icon }) => ({ to, label, icon })) },
   {
     title: 'Vận hành',
     items: [

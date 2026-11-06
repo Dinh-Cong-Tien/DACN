@@ -8,7 +8,7 @@ import { StaffNav, type StaffMenu } from '@/shared/components/layout/StaffNav';
  *  - Khoá học & Lớp: 3 mục khoá như học viên → khoá → các lớp của khoá → trang lớp (bảng tin, tiến độ khoá, học viên,
  *    buổi học & điểm danh, bài tập, tài liệu, bảng điểm, thống kê).
  *  - Lịch dạy: lịch tuần của mọi lớp (điểm danh mở từ từng buổi).
- *  - Thi thử & Luyện tập: bám đúng menu học viên (đề thi thử, Viết, Nói, ngữ pháp, từ vựng, chép chính tả) để giao cho lớp.
+ *  - Luyện tập: bám đúng menu học viên (đề thi thử, Viết, Nói, ngữ pháp, từ vựng, chép chính tả) để giao cho lớp.
  *  - Bài tập: giao bài, bài đã giao, bản nháp, chấm bài của mọi lớp.
  *  - Học viên: hồ sơ học viên mọi lớp, học viên cần theo dõi.
  *  - Soạn học liệu: câu hỏi, đề tự soạn gửi duyệt; ngân hàng câu hỏi.
@@ -28,7 +28,7 @@ export const buildTeacherMenus = (toGrade: number, drafts: number): StaffMenu[] 
   },
   { to: '/teacher/schedule', label: 'Lịch dạy', icon: CalendarDays, activeOn: ['/teacher/attendance'] },
   {
-    label: 'Thi thử & Luyện tập',
+    label: 'Luyện tập',
     icon: FileText,
     children: [
       { to: '/teacher/library/tests?tab=TOEIC', label: 'Đề thi thử TOEIC', icon: FileText, desc: 'Full đề hoặc từng Part, chấm tự động', group: 'Đề thi thử' },
