@@ -1178,19 +1178,19 @@ teacherRouter.get(
       scores[s.studentId]![s.assignmentId] = s.status === 'GRADED' && s.score !== null ? Number(s.score) : null;
       states[s.studentId]![s.assignmentId] = s.status;
     }
-    // Bảng điểm thi của từng học viên — chỉ đề full cùng kỳ thi với lớp (lớp TOEIC không lẫn điểm VSTEP và ngược lại)
+    // Bảng điểm thi của từng học viên — tách riêng TOEIC và VSTEP (mỗi bảng chỉ gồm đề full của kỳ thi đó, không gộp chung)
     const attempts = await prisma.examAttempt.findMany({
-      where: { userId: { in: students.map((m) => m.studentId) }, status: 'COMPLETED', mode: 'FULL', scoreTotal: { not: null }, test: { examType: c.examType } },
-      select: { userId: true, scoreTotal: true, scoreListening: true, scoreReading: true, scoreWriting: true, scoreSpeaking: true, submittedAt: true },
+      where: { userId: { in: students.map((m) => m.studentId) }, status: 'COMPLETED', mode: 'FULL', scoreTotal: { not: null }, test: { isNot: null } },
+      select: { userId: true, scoreTotal: true, scoreListening: true, scoreReading: true, scoreWriting: true, scoreSpeaking: true, submittedAt: true, test: { select: { examType: true } } },
       orderBy: { submittedAt: 'asc' },
     });
     const avg = (xs: (Prisma.Decimal | null)[]) => {
       const v = xs.filter((x): x is Prisma.Decimal => x !== null).map(Number);
       return v.length ? Math.round((v.reduce((a, x) => a + x, 0) / v.length) * 10) / 10 : null;
     };
-    const exam = Object.fromEntries(
+    const sheet = (examType: 'TOEIC' | 'VSTEP') => Object.fromEntries(
       students.map((m) => {
-        const mine = attempts.filter((a) => a.userId === m.studentId);
+        const mine = attempts.filter((a) => a.userId === m.studentId && a.test?.examType === examType);
         const last = mine[mine.length - 1];
         return [
           m.studentId,
@@ -1208,10 +1208,12 @@ teacherRouter.get(
         ];
       })
     );
+    const exams = { TOEIC: sheet('TOEIC'), VSTEP: sheet('VSTEP') };
     return {
       classId: c.id,
       examType: c.examType,
-      exam,
+      exam: exams[c.examType],
+      exams,
       assignments: assignments.map((a) => ({ id: a.id, title: a.title, type: a.type, maxScore: Number(a.maxScore), dueDate: iso(a.dueAt), status: a.status })),
       students: students.map((m) => ({ id: m.student.id, name: m.student.fullName, avatarUrl: m.student.avatarUrl ?? undefined, email: m.student.email, status: m.riskLevel })),
       scores,

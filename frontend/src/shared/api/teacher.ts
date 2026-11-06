@@ -117,6 +117,8 @@ export interface Gradebook {
   examType: ExamType;
   /** điểm thi thử từng học viên (trung bình các lượt): TOEIC Nghe / Đọc thang 495, tổng 990; VSTEP 4 kỹ năng thang 10 */
   exam: Record<string, GradebookExam>;
+  /** bảng điểm thi riêng từng kỳ thi (mọi học viên trong lớp) */
+  exams: Record<'TOEIC' | 'VSTEP', Record<string, GradebookExam>>;
 }
 export interface GradebookExam {
   attempts: number;
