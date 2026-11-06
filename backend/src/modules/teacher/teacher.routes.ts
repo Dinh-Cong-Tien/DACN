@@ -845,6 +845,8 @@ teacherRouter.post(
     const c = await assertClass(u, b.classId);
     if (b.dueDate && new Date(b.dueDate) < new Date() && b.status === 'OPEN') throw badRequest('Hạn nộp phải ở tương lai');
     const r = await resolveTarget(b.type, b.target, c.examType);
+    // bài giảng nằm trong khoá của lớp: chỉ giao bài của chính khoá đó (học viên đã được ghi danh khoá khi vào lớp)
+    if (r.target.kind === 'LESSON' && c.courseId && r.targetId !== c.courseId) throw badRequest('Chỉ giao được bài giảng thuộc khoá học của lớp', 'COURSE_MISMATCH');
     const students = await activeStudentIds(c.id);
     const a = await prisma.$transaction(async (tx) => {
       const created = await tx.assignment.create({

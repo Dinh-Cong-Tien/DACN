@@ -23,6 +23,8 @@ const MARK: Record<ClassDetailDto['attendance'][number]['mark'], { label: string
   ABSENT: { label: 'Vắng', cls: 'text-rose-600' },
   EXCUSED: { label: 'Vắng có phép', cls: 'text-slate-600' },
 };
+/** Mã lớp = tên lớp: chữ đầu khoá + số + trình độ (T203A1); lớp cũ dạng ORB-XXXX */
+const CLASS_CODE_RE = /^([A-Z]\d{3}(A1|A2|B1|B2|C1|C2)|ORB-[A-Z0-9]{4})$/;
 const APPEAL_TEXT = { OPEN: 'Đang phúc khảo', RESOLVED: 'Đã phúc khảo', REJECTED: 'Phúc khảo không chấp nhận' } as const;
 
 /** Bài đã nộp đang chờ chấm, bài trắc nghiệm / bài giảng đã làm xong thì không cần giáo viên chấm */
@@ -96,8 +98,8 @@ export const StudentClassesPage: React.FC = () => {
   };
 
   const join = () => {
-    if (!/^ORB-[A-Z0-9]{4}$/.test(code)) return toast.error('Mã lớp chưa đúng', 'Mã có dạng ORB-XXXX, giáo viên gửi khi mở lớp.');
-    joinClass.mutate(code, {
+    if (!CLASS_CODE_RE.test(code.trim())) return toast.error('Mã lớp chưa đúng', 'Mã lớp có dạng T203A1, giáo viên gửi khi mở lớp.');
+    joinClass.mutate(code.trim(), {
       onSuccess: (c) => {
         toast.success('Đã vào lớp', c.name);
         setCode('');
@@ -113,9 +115,7 @@ export const StudentClassesPage: React.FC = () => {
       <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         {classes.map((c) => (
           <article key={c.id} className="rounded-xl border border-slate-200 bg-white p-4">
-            <p className="text-[12px] text-slate-500">
-              {c.examType} · mã lớp {c.code}
-            </p>
+            <p className="text-[12px] text-slate-500">{c.course?.title ?? c.examType}</p>
             <h2 className="mt-0.5 text-[17px] font-semibold text-slate-900">{c.name}</h2>
             <dl className="mt-3 space-y-1 text-[13px]">
               <div className="flex gap-2">
@@ -160,13 +160,18 @@ export const StudentClassesPage: React.FC = () => {
                 );
               })()}
             </dl>
+            {c.course && (
+              <Link to={`/courses/${c.course.slug}`} className="mt-3 inline-flex items-center gap-1 text-[13px] font-medium text-indigo-600 hover:text-indigo-700">
+                Vào bài giảng của khoá <ArrowRight className="h-3.5 w-3.5" />
+              </Link>
+            )}
           </article>
         ))}
         {isStudent && <div className="rounded-xl border border-dashed border-slate-300 p-4">
           <h2 className="text-[15px] font-semibold text-slate-900">Vào lớp mới</h2>
           <p className="mt-1 text-[13px] text-slate-500">Nhập mã mời giáo viên gửi cho bạn.</p>
           <div className="mt-3 flex gap-2">
-            <input value={code} onChange={(e) => setCode(e.target.value.toUpperCase())} maxLength={8} placeholder="ORB-XXXX" className="h-9 min-w-0 flex-1 rounded-md border border-slate-300 bg-white px-3 font-mono text-sm uppercase tracking-wider text-slate-900 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20" />
+            <input value={code} onChange={(e) => setCode(e.target.value.toUpperCase())} maxLength={8} placeholder="T203A1" className="h-9 min-w-0 flex-1 rounded-md border border-slate-300 bg-white px-3 font-mono text-sm uppercase tracking-wider text-slate-900 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20" />
             <button type="button" onClick={join} className="h-9 rounded-md bg-indigo-600 px-3.5 text-sm font-medium text-white hover:bg-indigo-700">
               Vào lớp
             </button>

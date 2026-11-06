@@ -104,7 +104,8 @@ export const AssignDialog: React.FC<{ open: boolean; onClose: () => void; onSave
   const allParts = testParts.length > 0 && parts.length === testParts.length;
   const suggested = testParts.filter((p) => parts.includes(p.id)).reduce((a, p) => a + (PART_FORMAT[p.id]?.minutes ?? Math.ceil(p.questions / 2)), 0);
   const full = allParts && time === 'auto';
-  const course = lib.courses.find((c) => c.id === courseId) ?? lib.courses.find((c) => c.id === cls?.course?.id) ?? lib.courses[0];
+  // lớp thuộc khoá: chỉ giao bài giảng của chính khoá đó
+  const course = (cls?.course && lib.courses.find((c) => c.id === cls.course!.id)) || (lib.courses.find((c) => c.id === courseId) ?? lib.courses[0]);
   const lessons = useMemo(() => course?.sections.flatMap((s) => s.lessons) ?? [], [course]);
   const grammar = lib.grammar.find((g) => g.slug === slug) ?? lib.grammar[0];
   const vocab = lib.vocab.find((v) => v.id === topicId) ?? lib.vocab.find((v) => !v.examType || v.examType === exam) ?? lib.vocab[0];
@@ -292,6 +293,12 @@ export const AssignDialog: React.FC<{ open: boolean; onClose: () => void; onSave
             <div className="space-y-4">
               <label className="block">
                 <Label>Khoá học</Label>
+                {cls?.course ? (
+                  <p className="text-sm text-slate-800">
+                    {course.title} · {course.lessonsCount} bài
+                    <span className="block text-[12px] text-slate-500">Khoá học của lớp — chỉ giao bài giảng trong khoá này</span>
+                  </p>
+                ) : (
                 <select
                   value={course.id}
                   onChange={(e) => {
@@ -314,6 +321,7 @@ export const AssignDialog: React.FC<{ open: boolean; onClose: () => void; onSave
                     ) : null;
                   })}
                 </select>
+                )}
               </label>
               <div>
                 <Label>Chọn bài ({lessonIds.length} đã chọn)</Label>

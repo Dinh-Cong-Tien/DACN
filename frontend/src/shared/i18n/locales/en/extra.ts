@@ -300,6 +300,10 @@ export const EXTRA_EN: Record<string, string> = {
   "B2 · Trung cao cấp": "B2 · Upper-intermediate",
   "C1 · Cao cấp": "C1 · Advanced",
   "C2 · Thành thạo": "C2 · Proficient",
+  "Mã lớp có dạng T203A1, giáo viên gửi khi mở lớp.": "Class codes look like T203A1 and are sent by your teacher when the class opens.",
+  "Vào bài giảng của khoá": "Go to the course lessons",
+  "Khoá học của lớp — chỉ giao bài giảng trong khoá này": "The class's course — only lessons from this course can be assigned",
+  "Chỉ giao được bài giảng thuộc khoá học của lớp": "You can only assign lessons from the class's course",
   "Các lớp của một khoá học cùng nội dung, chỉ khác lịch học. Mã lớp tạo tự động: chữ đầu khoá + số thứ tự + trình độ, vd T203A1 — vừa là tên lớp, vừa là mã học viên nhập để vào lớp.": "All classes of a course share the same content and differ only in schedule. The class code is generated: course letter + number + level, e.g. T203A1 — it is both the class name and the code students enter to join.",
   "Các lớp của một khoá cùng nội dung, chỉ khác lịch học. Mã lớp tạo tự động: chữ đầu khoá + số thứ tự + trình độ, vd T203A1 — vừa là tên lớp, vừa là mã học viên nhập để vào lớp.": "All classes of a course share the same content and differ only in schedule. The class code is generated: course letter + number + level, e.g. T203A1 — it is both the class name and the code students enter to join.",
 };

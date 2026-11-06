@@ -108,7 +108,7 @@ export const StudentSettingsPage: React.FC = () => {
   };
 
   const joinClass = () => {
-    if (code.trim().length < 6) return toast.error('Mã mời không hợp lệ', 'Mã lớp gồm 8 ký tự, ví dụ ORB-7K2P.');
+    if (code.trim().length < 6) return toast.error('Mã mời không hợp lệ', 'Mã lớp có dạng T203A1, giáo viên gửi khi mở lớp.');
     join.mutate(code.trim().toUpperCase(), {
       onSuccess: (c) => {
         toast.success('Đã vào lớp', c.name);
@@ -181,7 +181,7 @@ export const StudentSettingsPage: React.FC = () => {
               <CardHeader title="Tham gia lớp học" subtitle="Nhập mã mời do giáo viên cung cấp" icon={<Users />} />
               <div className="flex flex-col sm:flex-row gap-2">
                 <div className="flex-1">
-                  <Input placeholder="ORB-XXXX" value={code} onChange={(e) => setCode(e.target.value.toUpperCase())} maxLength={8} leftIcon={<KeyRound />} className="font-mono tracking-widest uppercase" />
+                  <Input placeholder="T203A1" value={code} onChange={(e) => setCode(e.target.value.toUpperCase())} maxLength={8} leftIcon={<KeyRound />} className="font-mono tracking-widest uppercase" />
                 </div>
                 <Button variant="secondary" onClick={joinClass}>
                   Tham gia
