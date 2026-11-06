@@ -331,4 +331,9 @@ export const EXTRA_EN: Record<string, string> = {
   "Tệp, đường dẫn đã chia sẻ cho học viên": "Files and links shared with students",
   "Điểm từng bài của cả lớp · xuất Excel": "Scores for every assignment · export to Excel",
   "Điểm trung bình, theo Part, chuyên cần, xu hướng": "Averages, by Part, attendance, trends",
+  "thang 990": "out of 990",
+  "thang 10": "out of 10",
+  "Thi thử TOEIC TB": "Avg TOEIC mock score",
+  "Thi thử VSTEP TB": "Avg VSTEP mock score",
+  "Kiểm tra TB": "Avg test score",
 };

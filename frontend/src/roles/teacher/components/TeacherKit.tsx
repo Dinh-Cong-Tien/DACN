@@ -119,7 +119,7 @@ export const PanelLink: React.FC<{ to: string; children: React.ReactNode }> = ({
 
 /** Ô số liệu: icon màu, số lớn font display, ghi chú nhỏ */
 export const Figures: React.FC<{ items: { label: string; value: React.ReactNode; note?: React.ReactNode; icon?: React.ElementType; tone?: Tone }[]; className?: string }> = ({ items, className }) => (
-  <dl className={cn('grid grid-cols-2 gap-3 md:gap-4', items.length >= 4 ? 'lg:grid-cols-4' : 'sm:grid-cols-3', className)}>
+  <dl className={cn('grid grid-cols-2 gap-3 md:gap-4', items.length >= 5 ? 'sm:grid-cols-3 xl:grid-cols-5' : items.length >= 4 ? 'lg:grid-cols-4' : 'sm:grid-cols-3', className)}>
     {items.map((f) => (
       <div key={f.label} className="flex items-start gap-3 rounded-2xl border border-slate-200/80 bg-white p-4 shadow-[0_1px_2px_rgba(16,24,40,0.04)] md:p-5">
         {f.icon && <IconTile icon={f.icon} tone={f.tone} className="max-sm:hidden" />}

@@ -1,12 +1,12 @@
 import React from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Award, Download, Percent, TrendingUp, UserX } from 'lucide-react';
+import { Award, BarChart3, Download, Percent, TrendingUp, UserX } from 'lucide-react';
 import { useDocumentTitle } from '@/shared/hooks';
 import { toast } from '@/shared/stores/uiStore';
 import { useGradebook, useTeacherClasses, useTeacherStudents } from '@/shared/api/teacher';
 import { cn } from '@/shared/utils';
 import { Avatar } from '@/shared/components/ui';
-import { Figures, Panel, TBtn, TPageHead, inputCls, tbl } from '../components/TeacherKit';
+import { Figures, Panel, TBtn, TPageHead, TTabs, inputCls, tbl } from '../components/TeacherKit';
 import { TEmpty, TError, TLoading } from '../components/TeacherState';
 import { appLocale } from '@/shared/i18n';
 import { classTrack } from '@/shared/constants/staff';
@@ -19,13 +19,26 @@ const STATE_TEXT: Record<string, [string, string]> = {
   MISSED: ['Không nộp', 'text-rose-600'],
 };
 
+/** Mỗi kỳ thi một bảng điểm riêng: điểm thi thử theo thang của kỳ thi đó */
+const TRACKS = [
+  { key: 'TOEIC', label: 'TOEIC', mock: 'Thi thử TOEIC', scale: 'thang 990' },
+  { key: 'VSTEP', label: 'VSTEP', mock: 'Thi thử VSTEP', scale: 'thang 10' },
+  { key: 'THPT', label: 'Tiếng Anh THPT', mock: 'Kiểm tra', scale: 'thang 10' },
+] as const;
+
 /** Bảng điểm quá trình: điểm từng bài đã chấm, chuyên cần, điểm quá trình quy về thang 10 */
 export const TeacherGradebookPage: React.FC = () => {
   useDocumentTitle('Bảng điểm');
   const [params, setParams] = useSearchParams();
   const classesQ = useTeacherClasses();
   const classes = classesQ.data ?? [];
-  const cls = classes.find((c) => c.id === params.get('class')) ?? classes[0];
+  // Bảng điểm tách theo kỳ thi: TOEIC (thang 990), VSTEP (bậc, thang 10), THPT — không trộn lớp các kỳ thi vào nhau
+  const tracks = TRACKS.filter((t) => classes.some((c) => classTrack(c) === t.key));
+  const picked = classes.find((c) => c.id === params.get('class'));
+  const track = (picked ? classTrack(picked) : tracks.find((t) => t.key === params.get('muc')?.toUpperCase())?.key) ?? tracks[0]?.key;
+  const trackClasses = classes.filter((c) => classTrack(c) === track);
+  const cls = picked ?? trackClasses[0];
+  const exam = TRACKS.find((t) => t.key === track) ?? TRACKS[0];
   const gb = useGradebook(cls?.id);
   const roster = useTeacherStudents({ classId: cls?.id }).data ?? [];
 
@@ -56,24 +69,28 @@ export const TeacherGradebookPage: React.FC = () => {
     return Math.round(total * 10) / 10;
   };
 
+  /** Điểm thi thử trung bình (đề full) theo thang của kỳ thi */
+  const mockOf = (id: string) => roster.find((r) => r.id === id)?.avgScore || null;
   const rows = students
-    .map((st) => ({ st, ps: processScore(st.id), att: attendance(st.id), missing: cols.filter((a) => ['TODO', 'MISSED'].includes(stateOf(st.id, a.id) ?? '')).length }))
+    .map((st) => ({ st, ps: processScore(st.id), mock: mockOf(st.id), att: attendance(st.id), missing: cols.filter((a) => ['TODO', 'MISSED'].includes(stateOf(st.id, a.id) ?? '')).length }))
     .sort((a, b) => (b.ps ?? -1) - (a.ps ?? -1));
   const scored = rows.filter((r) => r.ps !== null);
   const avg = scored.length ? Math.round((scored.reduce((a, r) => a + (r.ps ?? 0), 0) / scored.length) * 10) / 10 : null;
   const attRows = rows.filter((r) => r.att !== null);
+  const mocks = rows.filter((r) => r.mock !== null);
+  const mockAvg = mocks.length ? Math.round((mocks.reduce((a, r) => a + (r.mock ?? 0), 0) / mocks.length) * 10) / 10 : null;
   const eligible = (r: (typeof rows)[number]) => r.ps !== null && r.ps >= 5 && (r.att ?? 100) >= 80;
 
   /** Xuất CSV (Excel mở được) từ dữ liệu đang hiển thị */
   const exportCsv = () => {
     if (!cls) return;
     const esc = (v: unknown) => `"${String(v ?? '').replace(/"/g, '""')}"`;
-    const header = ['Học viên', 'Email', ...cols.map((a) => `${a.title} (/${a.maxScore})`), 'Chuyên cần (%)', 'Điểm quá trình', 'Xét thi'];
-    const lines = rows.map(({ st, ps, att }) => [st.name, st.email, ...cols.map((a) => scoreOf(st.id, a.id) ?? STATE_TEXT[stateOf(st.id, a.id) ?? '']?.[0] ?? ''), att ?? '', ps ?? '', eligible({ st, ps, att, missing: 0 }) ? 'Đủ điều kiện' : 'Chưa đạt']);
+    const header = ['Học viên', 'Email', ...cols.map((a) => `${a.title} (/${a.maxScore})`), `${exam.mock} (${exam.scale})`, 'Chuyên cần (%)', 'Điểm quá trình', 'Xét thi'];
+    const lines = rows.map(({ st, ps, mock, att }) => [st.name, st.email, ...cols.map((a) => scoreOf(st.id, a.id) ?? STATE_TEXT[stateOf(st.id, a.id) ?? '']?.[0] ?? ''), mock ?? '', att ?? '', ps ?? '', eligible({ st, ps, mock, att, missing: 0 }) ? 'Đủ điều kiện' : 'Chưa đạt']);
     const csv = '﻿' + [header, ...lines].map((l) => l.map(esc).join(',')).join('\r\n');
     const a = document.createElement('a');
     a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
-    a.download = `bang-diem-${cls.code}.csv`;
+    a.download = `bang-diem-${exam.key.toLowerCase()}-${cls.code}.csv`;
     a.click();
     URL.revokeObjectURL(a.href);
     toast.success('Đã xuất bảng điểm', `${cls.name} · ${rows.length} học viên`);
@@ -89,7 +106,7 @@ export const TeacherGradebookPage: React.FC = () => {
           cls && (
             <>
               <select value={cls.id} onChange={(e) => setParams({ class: e.target.value }, { replace: true })} className={cn(inputCls, 'w-60 max-w-full')} aria-label="Chọn lớp">
-                {classes.map((c) => (
+                {trackClasses.map((c) => (
                   <option key={c.id} value={c.id}>
                     {c.name}
                   </option>
@@ -103,6 +120,14 @@ export const TeacherGradebookPage: React.FC = () => {
         }
       />
 
+      {tracks.length > 0 && (
+        <TTabs
+          value={track ?? ''}
+          onChange={(k) => setParams({ muc: k.toLowerCase() }, { replace: true })}
+          items={tracks.map((t) => ({ key: t.key, label: t.label, count: classes.filter((c) => classTrack(c) === t.key).length }))}
+        />
+      )}
+
       {!cls ? (
         <Panel>
           <TEmpty title="Bạn chưa có lớp nào" sub="Bảng điểm hiện theo từng lớp bạn phụ trách." />
@@ -115,12 +140,13 @@ export const TeacherGradebookPage: React.FC = () => {
             items={[
               { label: 'Điểm quá trình TB', value: avg === null ? '—' : avg.toLocaleString(appLocale()), note: 'thang 10', icon: TrendingUp, tone: 'indigo' },
               { label: 'Đủ điều kiện thi', value: `${rows.filter(eligible).length}/${rows.length}`, note: 'điểm ≥ 5 và chuyên cần ≥ 80%', icon: Award, tone: 'emerald' },
+              { label: `${exam.mock} TB`, value: mockAvg === null ? '—' : mockAvg.toLocaleString(appLocale()), note: exam.scale, icon: BarChart3, tone: 'amber' },
               { label: 'Chuyên cần TB', value: attRows.length ? `${Math.round(attRows.reduce((a, r) => a + (r.att ?? 0), 0) / attRows.length)}%` : '—', note: attRows.length ? 'các buổi đã điểm danh' : 'chưa điểm danh buổi nào', icon: Percent, tone: 'sky' },
               { label: 'Còn thiếu bài', value: rows.filter((r) => r.missing > 0).length, note: 'học viên chưa nộp đủ', icon: UserX, tone: 'rose' },
             ]}
           />
 
-          <Panel title={cls.name} sub="Điểm quá trình = 70% trung bình các bài (quy về thang 10, bài quá hạn chưa nộp tính 0) + 30% chuyên cần" flush>
+          <Panel title={`${cls.name} · ${exam.label}`} sub="Điểm quá trình = 70% trung bình các bài (quy về thang 10, bài quá hạn chưa nộp tính 0) + 30% chuyên cần" flush>
             {students.length === 0 ? (
               <TEmpty title="Lớp chưa có học viên" />
             ) : (
@@ -135,6 +161,10 @@ export const TeacherGradebookPage: React.FC = () => {
                           <span className="block font-normal text-slate-400">/ {a.maxScore}</span>
                         </th>
                       ))}
+                      <th className={cn(tbl.th, 'min-w-[110px] text-right')}>
+                        <span className="block font-semibold text-slate-700">{exam.mock}</span>
+                        <span className="block font-normal text-slate-400">{exam.scale}</span>
+                      </th>
                       <th className={cn(tbl.th, 'text-right')}>Chuyên cần</th>
                       <th className={cn(tbl.th, 'text-right')}>Điểm quá trình</th>
                       <th className={tbl.th}>Xét thi</th>
@@ -142,7 +172,7 @@ export const TeacherGradebookPage: React.FC = () => {
                   </thead>
                   <tbody>
                     {rows.map((r) => {
-                      const { st, ps, att } = r;
+                      const { st, ps, mock, att } = r;
                       const ok = eligible(r);
                       return (
                         <tr key={st.id} className={tbl.tr}>
@@ -161,6 +191,7 @@ export const TeacherGradebookPage: React.FC = () => {
                               </td>
                             );
                           })}
+                          <td className={cn(tbl.td, 'text-right tabular-nums', mock === null ? 'text-slate-400' : 'text-slate-800')}>{mock === null ? '—' : mock.toLocaleString(appLocale())}</td>
                           <td className={cn(tbl.td, 'text-right tabular-nums', att !== null && att < 80 ? 'text-rose-600' : 'text-slate-800')}>{att === null ? '—' : `${att}%`}</td>
                           <td className={cn(tbl.td, 'text-right font-display text-[15px] font-bold tabular-nums text-slate-900')}>{ps === null ? '—' : ps.toLocaleString(appLocale(), { minimumFractionDigits: 1 })}</td>
                           <td className={tbl.td}>
