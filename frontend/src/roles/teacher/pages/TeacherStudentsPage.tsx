@@ -43,7 +43,7 @@ export const TeacherStudentsPage: React.FC = () => {
   if (!selected) {
     return (
       <div className="space-y-6">
-        <TPageHead eyebrow="Học viên" title="Hồ sơ học viên" />
+        <TPageHead eyebrow="Khoá học & Lớp · Học viên" title="Hồ sơ học viên" />
         <Panel>
           <TEmpty title="Chưa có học viên nào" sub="Học viên tham gia lớp của bạn bằng mã mời sẽ hiện ở đây." action={<TBtn to="/teacher/classes">Mở lớp học</TBtn>} />
         </Panel>
@@ -73,7 +73,7 @@ export const TeacherStudentsPage: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <TPageHead eyebrow="Học viên" title="Hồ sơ học viên" sub="Theo dõi từng bạn: điểm, chuyên cần, bài đã nộp và nhật ký trao đổi của giáo viên (nhắc nhở, liên hệ)." />
+      <TPageHead eyebrow="Khoá học & Lớp · Học viên" title="Hồ sơ học viên" sub="Theo dõi từng bạn: điểm, chuyên cần, bài đã nộp và nhật ký trao đổi của giáo viên (nhắc nhở, liên hệ)." />
 
       <div className="grid items-start gap-6 lg:grid-cols-[340px_minmax(0,1fr)]">
         <Panel flush className="lg:sticky lg:top-20">

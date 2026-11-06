@@ -6,11 +6,10 @@ import { StaffNav, type StaffMenu } from '@/shared/components/layout/StaffNav';
 /**
  * Menu header giáo viên — menu chỉ giữ trang xem chung nhiều lớp; việc của một lớp làm trong trang lớp, không tách riêng:
  *  - Khoá học & Lớp: 3 mục khoá như học viên → khoá → các lớp của khoá → trang lớp (bảng tin, tiến độ khoá, học viên,
- *    buổi học & điểm danh, bài tập, tài liệu, bảng điểm, thống kê).
+ *    buổi học & điểm danh, bài tập, tài liệu, bảng điểm, thống kê); nhóm Học viên: hồ sơ học viên mọi lớp, cần theo dõi.
  *  - Lịch dạy: lịch tuần của mọi lớp (điểm danh mở từ từng buổi).
  *  - Luyện tập: bám đúng menu học viên (đề thi thử, Viết, Nói, ngữ pháp, từ vựng, chép chính tả) để giao cho lớp.
  *  - Bài tập: giao bài, bài đã giao, bản nháp, chấm bài của mọi lớp.
- *  - Học viên: hồ sơ học viên mọi lớp, học viên cần theo dõi.
  *  - Soạn học liệu: câu hỏi, đề tự soạn gửi duyệt; ngân hàng câu hỏi.
  */
 export const buildTeacherMenus = (toGrade: number, drafts: number): StaffMenu[] => [
@@ -19,11 +18,13 @@ export const buildTeacherMenus = (toGrade: number, drafts: number): StaffMenu[] 
     label: 'Khoá học & Lớp',
     icon: PlayCircle,
     to: '/teacher/courses',
-    activeOn: ['/teacher/classes', '/teacher/gradebook', '/teacher/analytics', '/teacher/materials'],
+    activeOn: ['/teacher/classes', '/teacher/gradebook', '/teacher/analytics', '/teacher/materials', '/teacher/students'],
     children: [
-      { to: '/teacher/courses?muc=toeic', label: 'Khoá học TOEIC', icon: Briefcase, desc: 'Nền tảng, Listening Part 1–4, Reading Part 5–7' },
-      { to: '/teacher/courses?muc=vstep', label: 'Khoá học VSTEP', icon: GraduationCap, desc: 'Nền tảng, Nghe, Đọc, Viết, Nói' },
-      { to: '/teacher/courses?muc=thpt', label: 'Tiếng Anh THPT', icon: School, desc: 'Lớp 10, 11, 12 theo SGK Global Success' },
+      { to: '/teacher/courses?muc=toeic', label: 'Khoá học TOEIC', icon: Briefcase, desc: 'Nền tảng, Listening Part 1–4, Reading Part 5–7', group: 'Khoá học' },
+      { to: '/teacher/courses?muc=vstep', label: 'Khoá học VSTEP', icon: GraduationCap, desc: 'Nền tảng, Nghe, Đọc, Viết, Nói', group: 'Khoá học' },
+      { to: '/teacher/courses?muc=thpt', label: 'Tiếng Anh THPT', icon: School, desc: 'Lớp 10, 11, 12 theo SGK Global Success', group: 'Khoá học' },
+      { to: '/teacher/students', label: 'Hồ sơ học viên', icon: Users, desc: 'Học viên mọi lớp: điểm, chuyên cần, nhật ký trao đổi', group: 'Học viên' },
+      { to: '/teacher/students?filter=watch', label: 'Cần theo dõi', icon: UserRoundX, desc: 'Vắng nhiều, nộp bài thiếu, điểm giảm', group: 'Học viên' },
     ],
   },
   { to: '/teacher/schedule', label: 'Lịch dạy', icon: CalendarDays, activeOn: ['/teacher/attendance'] },
@@ -50,14 +51,6 @@ export const buildTeacherMenus = (toGrade: number, drafts: number): StaffMenu[] 
       { to: '/teacher/assignments', label: 'Bài đã giao', icon: ClipboardList, desc: 'Hạn nộp, số bài đã nộp, điểm trung bình' },
       { to: '/teacher/assignments?status=DRAFT', label: 'Bản nháp', icon: FileEdit, desc: 'Bài đã soạn, chưa gửi học viên', badge: drafts ? String(drafts) : undefined },
       { to: '/teacher/grading', label: 'Chấm bài', icon: PenTool, desc: 'Bài Viết, Nói học viên mọi lớp đã nộp', badge: toGrade ? String(toGrade) : undefined, also: ['/teacher/grading'] },
-    ],
-  },
-  {
-    label: 'Học viên',
-    to: '/teacher/students',
-    children: [
-      { to: '/teacher/students', label: 'Hồ sơ học viên', icon: Users, desc: 'Học viên mọi lớp: điểm, chuyên cần, nhật ký trao đổi' },
-      { to: '/teacher/students?filter=watch', label: 'Cần theo dõi', icon: UserRoundX, desc: 'Vắng nhiều, nộp bài thiếu, điểm giảm' },
     ],
   },
   {

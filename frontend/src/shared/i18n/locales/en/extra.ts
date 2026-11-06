@@ -180,6 +180,7 @@ export const EXTRA_EN: Record<string, string> = {
   "Chọn mục của lớp (TOEIC, VSTEP hoặc Tiếng Anh THPT)": "Choose the class track (TOEIC, VSTEP or High school English)",
   // ---------- lớp học thuộc khoá học (11/2026) ----------
   "Khoá học & Lớp": "Courses & Classes",
+  "Khoá học & Lớp · Học viên": "Courses & Classes · Students",
   "Lớp đang dạy": "My classes",
   "Trong lớp": "In class",
   "Lớp nhóm theo khoá, mã mời, mở lớp mới": "Classes grouped by course, invite codes, open a class",

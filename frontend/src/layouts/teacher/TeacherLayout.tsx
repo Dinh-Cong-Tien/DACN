@@ -23,6 +23,8 @@ const groupsOf = (toGrade: number): NavGroup[] => [
       { to: '/teacher/courses?muc=vstep', label: 'Khoá học VSTEP', icon: GraduationCap },
       { to: '/teacher/courses?muc=thpt', label: 'Tiếng Anh THPT', icon: School },
       { to: '/teacher/classes', label: 'Tất cả lớp', icon: Users },
+      { to: '/teacher/students', label: 'Hồ sơ học viên', icon: UserRound },
+      { to: '/teacher/students?filter=watch', label: 'Cần theo dõi', icon: UserRoundX },
     ],
   },
   {
@@ -35,13 +37,6 @@ const groupsOf = (toGrade: number): NavGroup[] => [
       { to: '/teacher/library/practice?tab=grammar', label: 'Chủ điểm ngữ pháp', icon: BookMarked },
       { to: '/teacher/library/practice?tab=vocab', label: 'Từ vựng & Flashcard', icon: BookOpen },
       { to: '/teacher/library/practice?tab=dictation', label: 'Nghe chép chính tả', icon: Headphones },
-    ],
-  },
-  {
-    title: 'Học viên',
-    items: [
-      { to: '/teacher/students', label: 'Hồ sơ học viên', icon: UserRound },
-      { to: '/teacher/students?filter=watch', label: 'Cần theo dõi', icon: UserRoundX },
     ],
   },
   {
