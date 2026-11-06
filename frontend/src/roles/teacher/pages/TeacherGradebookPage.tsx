@@ -200,7 +200,7 @@ export const TeacherGradebookPage: React.FC = () => {
           />
 
           {leveled && (
-            <Panel title={`Bảng điểm thi ${exam.label} · lớp ${cls.name}`} sub={track === 'VSTEP' ? 'Điểm từng kỹ năng (trung bình các lượt thi thử VSTEP) → điểm tổng = trung bình 4 kỹ năng làm tròn 0,5 → Bậc 3 (B1) từ 4,0 · Bậc 4 (B2) từ 6,0' : 'Điểm Nghe, Đọc (trung bình các lượt thi thử TOEIC) → tổng 990 → B1 · Bậc 3 từ 550, B2 · Bậc 4 từ 785'} flush>
+            <Panel title={`Bảng điểm thi ${exam.label} · lớp ${cls.name}`} sub={track === 'VSTEP' ? 'Điểm từng kỹ năng (trung bình các lượt thi thử VSTEP) → điểm tổng = trung bình 4 kỹ năng làm tròn 0,5 → Bậc 3 (B1) từ 4,0 · Bậc 4 (B2) từ 6,0' : 'Điểm Nghe, Đọc (trung bình các lượt thi thử TOEIC) → tổng 990 → B1 · Bậc 3 từ 600, B2 · Bậc 4 từ 650'} flush>
               {students.length === 0 ? (
                 <TEmpty title="Lớp chưa có học viên" />
               ) : (

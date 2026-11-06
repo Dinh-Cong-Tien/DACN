@@ -6,7 +6,7 @@ import { TTabs } from './TeacherKit';
 
 /**
  * Bảng điểm / thống kê tách theo kỳ thi — không trộn lớp TOEIC, VSTEP, THPT vào nhau.
- * Chỉ xét 2 bằng: B1 (tương đương bậc 3) và B2 (tương đương bậc 4) — TOEIC theo thang 990 (550 / 785), VSTEP thang 10 (4.0 / 6.0).
+ * Chỉ xét 2 bằng: B1 (tương đương bậc 3) và B2 (tương đương bậc 4) — TOEIC theo thang 990 (bậc 3 từ 600 / bậc 4 từ 650), VSTEP thang 10 (4.0 / 6.0).
  */
 export const EXAM_TRACKS = [
   { key: 'TOEIC', label: 'TOEIC', mock: 'Thi thử TOEIC', scale: 'thang 990', unit: 'điểm' },
@@ -18,8 +18,8 @@ export type ExamTrack = (typeof EXAM_TRACKS)[number];
 /** Ngưỡng điểm từng bằng (từ cao xuống thấp); dưới ngưỡng B1 = chưa đạt */
 export const LEVEL_BANDS: Partial<Record<CourseTrack, { level: string; min: number }[]>> = {
   TOEIC: [
-    { level: 'B2', min: 785 },
-    { level: 'B1', min: 550 },
+    { level: 'B2', min: 650 },
+    { level: 'B1', min: 600 },
     { level: 'Chưa đạt', min: 0 },
   ],
   VSTEP: [
