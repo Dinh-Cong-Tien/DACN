@@ -160,13 +160,13 @@ export const LessonDialog: React.FC<{ open: boolean; sectionId: string | null; l
         </div>
         <div className="md:col-span-2">
           <Textarea
-            label={f.type === 'READING' ? 'Bài giảng (Markdown)' : 'Nội dung bài (Markdown)'}
+            label={f.type === 'READING' ? 'Bài giảng (Markdown)' : f.type === 'VIDEO' ? 'Ghi chú bài giảng (Markdown)' : 'Nội dung bài (Markdown)'}
             rows={f.type === 'READING' ? 16 : 6}
             className="font-mono text-xs"
             disabled={!knowledgeLoaded}
             value={f.contentMd}
             onChange={(e) => set('contentMd', e.target.value)}
-            hint={`Học viên thấy ở tab Bài học. Dùng ## tiêu đề mục, ### tiêu đề nhỏ, **in đậm**, *nghiêng*, danh sách "- ", bảng | a | b |, trích dẫn "> ".${f.contentMd.trim() ? ` Hiện ${f.contentMd.trim().split(/\s+/).length.toLocaleString(appLocale())} từ.` : ''}`}
+            hint={`${f.type === 'VIDEO' ? 'Hiện thu gọn dưới video, học viên mở khi cần ôn lại.' : 'Học viên thấy ở tab Bài học.'} Dùng ## tiêu đề mục, ### tiêu đề nhỏ, **in đậm**, *nghiêng*, danh sách "- ", bảng | a | b |, trích dẫn "> ".${f.contentMd.trim() ? ` Hiện ${f.contentMd.trim().split(/\s+/).length.toLocaleString(appLocale())} từ.` : ''}`}
           />
         </div>
         {f.type !== 'QUIZ' && (

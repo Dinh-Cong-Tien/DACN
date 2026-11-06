@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { BookOpen, CheckCircle2, ChevronRight, ClipboardCheck, History, Lock, RotateCcw, Volume2, X, BookmarkPlus, FileText, HelpCircle, Video } from 'lucide-react';
+import { BookOpen, CheckCircle2, ChevronRight, ClipboardCheck, History, Lock, RotateCcw, Volume2, X, BookmarkPlus, FileText, HelpCircle, Video, ChevronDown, NotebookText } from 'lucide-react';
 import type { Course, DictionaryEntry, Lesson } from '@/shared/types';
 import { LessonKnowledge } from './LessonKnowledge';
 import { LessonTranscript } from './LessonTranscript';
@@ -104,10 +104,13 @@ export const LessonEngine: React.FC<LessonEngineProps> = ({ course, lesson, onSe
   // bài video có bài tập: 2 bước Video bài giảng → Bài tập (?buoc=bai-tap mở thẳng bài tập)
   const [step, setStep] = useState<'video' | 'exercise'>(() => (new URLSearchParams(window.location.search).get('buoc') === 'bai-tap' ? 'exercise' : 'video'));
 
+  // bài có video: phần chữ chỉ là ghi chú, thu gọn mặc định để học viên học trên video
+  const [notesOpen, setNotesOpen] = useState(false);
   useEffect(() => {
     setDone(lesson.isCompleted);
     setPopover(null);
   }, [lesson.id, lesson.isCompleted]);
+  useEffect(() => setNotesOpen(false), [lesson.id]);
 
   const onWordClick = (e: React.MouseEvent, word: string) => {
     e.stopPropagation();
@@ -136,7 +139,7 @@ export const LessonEngine: React.FC<LessonEngineProps> = ({ course, lesson, onSe
     }
   };
   const markDone = () => (exercises.length ? setStep('exercise') : complete());
-  const source = useMemo(() => (lesson.type === 'VIDEO' && lesson.videoUrl ? videoSource(lesson.videoUrl) : null), [lesson.type, lesson.videoUrl]);
+  const source = useMemo(() => (lesson.type !== 'QUIZ' && lesson.videoUrl ? videoSource(lesson.videoUrl) : null), [lesson.type, lesson.videoUrl]);
   // vị trí đã xem lần trước — chốt 1 lần khi có link video để iframe không bị nạp lại
   const resumeAt = useMemo(() => (source ? Math.floor(lesson.lastPositionSec ?? 0) : 0), [source]); // eslint-disable-line react-hooks/exhaustive-deps
   const allLessons = course.sections.flatMap((s) => s.lessons);
@@ -167,7 +170,7 @@ export const LessonEngine: React.FC<LessonEngineProps> = ({ course, lesson, onSe
           <div className="lesson-steps" role="tablist" aria-label="Các bước của bài học">
             <button type="button" role="tab" aria-selected={step === 'video'} className={cn('lesson-step', step === 'video' && 'is-current')} onClick={() => setStep('video')}>
               <span className="lesson-step__no">1</span>
-              {lesson.type === 'VIDEO' ? <Video className="h-4 w-4" /> : <BookOpen className="h-4 w-4" />} {lesson.type === 'VIDEO' ? 'Video bài giảng' : 'Bài học'}
+              {source ? <Video className="h-4 w-4" /> : <BookOpen className="h-4 w-4" />} {source ? 'Video bài giảng' : 'Bài học'}
             </button>
             <ChevronRight className="h-4 w-4 shrink-0 text-slate-300" aria-hidden />
             <button type="button" role="tab" aria-selected={step === 'exercise'} className={cn('lesson-step', step === 'exercise' && 'is-current', done && 'is-done')} onClick={() => setStep('exercise')}>
@@ -221,7 +224,7 @@ export const LessonEngine: React.FC<LessonEngineProps> = ({ course, lesson, onSe
             <div className="relative bg-black aspect-video">
               <video ref={videoRef} src={source.url} controls className="w-full h-full" controlsList="nodownload" {...watch.videoProps} />
             </div>
-          ) : lesson.type === 'READING' ? (
+          ) : lesson.type !== 'QUIZ' && lesson.content ? (
             <div className="p-6 md:p-8 space-y-4">
               <div className="flex items-center gap-2 text-indigo-600 font-bold text-sm">
                 <BookOpen className="w-4 h-4" /> Bài học
@@ -252,7 +255,7 @@ export const LessonEngine: React.FC<LessonEngineProps> = ({ course, lesson, onSe
             <div>
               <div className="flex items-center gap-2 mb-1">
                 <Badge tone="indigo" size="xs">
-                  {{ VIDEO: 'Video', READING: 'Bài đọc', QUIZ: 'Kiểm tra' }[lesson.type] ?? lesson.type}
+                  {source ? 'Video' : ({ VIDEO: 'Video', READING: 'Bài đọc', QUIZ: 'Kiểm tra' }[lesson.type] ?? lesson.type)}
                 </Badge>
                 <span className="text-[11px] text-slate-400">{lesson.durationMin} phút</span>
                 {done && (
@@ -278,6 +281,27 @@ export const LessonEngine: React.FC<LessonEngineProps> = ({ course, lesson, onSe
             </div>
           </div>
         </Card>
+
+        {/* Ghi chú bài giảng dưới video — thu gọn mặc định, mở khi cần xem lại */}
+        {!showExercise && !lesson.isLocked && source && lesson.content ? (
+          <Card padding="none" className="overflow-hidden">
+            <button type="button" aria-expanded={notesOpen} onClick={() => setNotesOpen((v) => !v)} className="flex w-full items-center gap-3 px-5 py-4 text-left hover:bg-slate-50">
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600">
+                <NotebookText className="h-5 w-5" />
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block text-sm font-bold text-slate-900">Ghi chú bài giảng</span>
+                <span className="block text-xs text-slate-500">Tóm tắt kiến thức trong video — mở khi cần ôn lại</span>
+              </span>
+              <ChevronDown className={cn('h-4 w-4 shrink-0 text-slate-400 transition-transform', notesOpen && 'rotate-180')} />
+            </button>
+            {notesOpen && (
+              <div className="border-t border-slate-100 p-6 md:p-8">
+                <LessonArticle markdown={lesson.content} />
+              </div>
+            )}
+          </Card>
+        ) : null}
 
         {/* Script chạy theo thời gian video — chỉ khi bài có lời thoại thật (phụ đề admin tải lên) */}
         {!showExercise && source && lesson.transcript?.length ? <LessonTranscript lines={lesson.transcript} now={watch.now} onSeek={(sec) => watch.seek(sec, true)} onWord={onWordClick} /> : null}
