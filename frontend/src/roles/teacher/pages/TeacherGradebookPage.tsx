@@ -19,6 +19,19 @@ const STATE_TEXT: Record<string, [string, string]> = {
   MISSED: ['Không nộp', 'text-rose-600'],
 };
 const MIN_ATTENDANCE = 80;
+/** Cột điểm thi theo cấu trúc từng kỳ thi */
+const SKILLS = {
+  TOEIC: [
+    { key: 'listening', label: 'Nghe', scale: 'thang 495' },
+    { key: 'reading', label: 'Đọc', scale: 'thang 495' },
+  ],
+  VSTEP: [
+    { key: 'listening', label: 'Nghe', scale: 'thang 10' },
+    { key: 'reading', label: 'Đọc', scale: 'thang 10' },
+    { key: 'writing', label: 'Viết', scale: 'thang 10' },
+    { key: 'speaking', label: 'Nói', scale: 'thang 10' },
+  ],
+} as const;
 
 /**
  * Bảng điểm theo kỳ thi (TOEIC / VSTEP / THPT, không gộp chung):
@@ -46,8 +59,9 @@ export const TeacherGradebookPage: React.FC = () => {
   const students = gb.data?.students ?? [];
   /** null = chưa có buổi nào điểm danh */
   const attendance = (id: string) => roster.find((r) => r.id === id)?.attendanceRate ?? null;
-  /** Điểm thi thử trung bình (đề full) theo thang của kỳ thi */
-  const mockOf = (id: string) => roster.find((r) => r.id === id)?.avgScore || null;
+  /** Điểm thi của học viên: chỉ đề full cùng kỳ thi với lớp (TOEIC thang 990 / VSTEP thang 10) */
+  const examOf = (id: string) => gb.data?.exam?.[id];
+  const mockOf = (id: string) => examOf(id)?.total ?? null;
   const scoreOf = (sid: string, aid: string) => gb.data?.scores[sid]?.[aid] ?? null;
   const stateOf = (sid: string, aid: string) => gb.data?.states[sid]?.[aid];
   const processScore = (sid: string): number | null => {
@@ -84,7 +98,7 @@ export const TeacherGradebookPage: React.FC = () => {
       const ps = processScore(st.id);
       const mock = mockOf(st.id);
       const att = attendance(st.id);
-      return { st, ps, mock, att, level: levelOf(track, mock), v: verdict(mock, ps, att), missing: cols.filter((a) => ['TODO', 'MISSED'].includes(stateOf(st.id, a.id) ?? '')).length };
+      return { st, ps, mock, ex: examOf(st.id), att, level: levelOf(track, mock), v: verdict(mock, ps, att), missing: cols.filter((a) => ['TODO', 'MISSED'].includes(stateOf(st.id, a.id) ?? '')).length };
     })
     .sort((a, b) => (leveled ? (b.mock ?? -1) - (a.mock ?? -1) : (b.ps ?? -1) - (a.ps ?? -1)));
   const avgOf = (xs: (number | null)[]) => {
@@ -101,8 +115,9 @@ export const TeacherGradebookPage: React.FC = () => {
   const exportCsv = () => {
     if (!cls) return;
     const esc = (v: unknown) => `"${String(v ?? '').replace(/"/g, '""')}"`;
-    const header = ['Học viên', 'Email', ...cols.map((a) => `${a.title} (/${a.maxScore})`), `${exam.mock} (${exam.scale})`, ...(leveled ? ['Bằng dự kiến'] : []), 'Chuyên cần (%)', 'Điểm quá trình', leveled ? `Mục tiêu ${LEVEL_NAME[target]}` : 'Xét thi'];
-    const lines = rows.map(({ st, ps, mock, att, level, v }) => [st.name, st.email, ...cols.map((a) => scoreOf(st.id, a.id) ?? STATE_TEXT[stateOf(st.id, a.id) ?? '']?.[0] ?? ''), mock ?? '', ...(leveled ? [level ? LEVEL_NAME[level] ?? level : ''] : []), att ?? '', ps ?? '', v.text]);
+    const sk = leveled ? SKILLS[track as 'TOEIC' | 'VSTEP'] : [];
+    const header = ['Học viên', 'Email', ...sk.map((k) => `${k.label} (${k.scale})`), `${exam.mock} (${exam.scale})`, ...cols.map((a) => `${a.title} (/${a.maxScore})`), ...(leveled ? ['Bằng dự kiến'] : []), 'Chuyên cần (%)', 'Điểm quá trình', leveled ? `Mục tiêu ${LEVEL_NAME[target]}` : 'Xét thi'];
+    const lines = rows.map(({ st, ps, mock, ex, att, level, v }) => [st.name, st.email, ...sk.map((k) => ex?.[k.key] ?? ''), mock ?? '', ...cols.map((a) => scoreOf(st.id, a.id) ?? STATE_TEXT[stateOf(st.id, a.id) ?? '']?.[0] ?? ''), ...(leveled ? [level ? LEVEL_NAME[level] ?? level : ''] : []), att ?? '', ps ?? '', v.text]);
     const csv = '﻿' + [header, ...lines].map((l) => l.map(esc).join(',')).join('\r\n');
     const a = document.createElement('a');
     a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
@@ -182,7 +197,73 @@ export const TeacherGradebookPage: React.FC = () => {
             </Panel>
           )}
 
-          <Panel title={`Lớp ${cls.name} · ${exam.label}`} sub="Điểm quá trình = 70% trung bình các bài (quy về thang 10, bài quá hạn chưa nộp tính 0) + 30% chuyên cần" flush>
+          {leveled && (
+            <Panel title={`Bảng điểm thi ${exam.label} · lớp ${cls.name}`} sub={`Điểm từng học viên theo cấu trúc đề ${exam.label}: trung bình các lượt thi thử full đề ${exam.label}, không lẫn điểm kỳ thi khác`} flush>
+              {students.length === 0 ? (
+                <TEmpty title="Lớp chưa có học viên" />
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className={tbl.table}>
+                    <thead className={tbl.thead}>
+                      <tr>
+                        <th className={cn(tbl.th, 'sticky left-0 bg-slate-50')}>Học viên</th>
+                        {SKILLS[track as 'TOEIC' | 'VSTEP'].map((k) => (
+                          <th key={k.key} className={cn(tbl.th, 'text-right')}>
+                            <span className="block font-semibold text-slate-700">{k.label}</span>
+                            <span className="block font-normal text-slate-400">{k.scale}</span>
+                          </th>
+                        ))}
+                        <th className={cn(tbl.th, 'text-right')}>
+                          <span className="block font-semibold text-slate-700">{track === 'TOEIC' ? 'Tổng điểm' : 'Điểm trung bình'}</span>
+                          <span className="block font-normal text-slate-400">{exam.scale}</span>
+                        </th>
+                        <th className={cn(tbl.th, 'text-right')}>Số lượt thi</th>
+                        <th className={tbl.th}>Bằng dự kiến</th>
+                        <th className={cn(tbl.th, 'text-right')}>Chuyên cần</th>
+                        <th className={tbl.th}>Mục tiêu {LEVEL_NAME[target]}</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {rows.map(({ st, ex, mock, att, level, v }) => (
+                        <tr key={st.id} className={tbl.tr}>
+                          <td className={cn(tbl.td, 'sticky left-0 bg-white')}>
+                            <span className="flex items-center gap-2.5">
+                              <Avatar name={st.name} src={st.avatarUrl} size="xs" />
+                              <span className="whitespace-nowrap font-medium text-slate-900">{st.name}</span>
+                            </span>
+                          </td>
+                          {SKILLS[track as 'TOEIC' | 'VSTEP'].map((k) => {
+                            const val = ex?.[k.key] ?? null;
+                            const ungraded = val === null && !!ex?.attempts && (k.key === 'writing' || k.key === 'speaking');
+                            return (
+                              <td key={k.key} className={cn(tbl.td, 'whitespace-nowrap text-right tabular-nums', val === null ? 'text-slate-400' : 'text-slate-800')}>
+                                {ungraded ? 'Chưa chấm' : fmt(val)}
+                              </td>
+                            );
+                          })}
+                          <td className={cn(tbl.td, 'text-right font-display text-[15px] font-bold tabular-nums', mock === null ? 'text-slate-400' : 'text-slate-900')}>{fmt(mock)}</td>
+                          <td className={cn(tbl.td, 'text-right tabular-nums text-slate-600')}>{ex?.attempts || '—'}</td>
+                          <td className={tbl.td}>
+                            {level ? <span className={cn('inline-flex whitespace-nowrap rounded-md px-2 py-0.5 text-[12px] font-bold', level === 'Chưa đạt' ? 'bg-rose-500/10 text-rose-600' : 'bg-indigo-500/10 text-indigo-700')}>{LEVEL_NAME[level] ?? level}</span> : <span className="text-slate-400">—</span>}
+                          </td>
+                          <td className={cn(tbl.td, 'text-right tabular-nums', att !== null && att < MIN_ATTENDANCE ? 'text-rose-600' : 'text-slate-800')}>{att === null ? '—' : `${att}%`}</td>
+                          <td className={tbl.td}>
+                            <span className={cn('whitespace-nowrap text-[13px] font-semibold', v.ok ? 'text-emerald-600' : v.muted ? 'text-slate-400' : 'text-rose-600')}>{v.text}</span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </Panel>
+          )}
+
+          <Panel
+            title={leveled ? `Điểm bài tập trên lớp · ${cls.name}` : `Lớp ${cls.name} · ${exam.label}`}
+            sub={leveled ? `Điểm các bài giáo viên giao, theo thang của từng bài — tách riêng, không tính vào điểm thi ${exam.label}. Điểm quá trình = 70% trung bình các bài (quy về thang 10) + 30% chuyên cần` : 'Điểm quá trình = 70% trung bình các bài (quy về thang 10, bài quá hạn chưa nộp tính 0) + 30% chuyên cần'}
+            flush
+          >
             {students.length === 0 ? (
               <TEmpty title="Lớp chưa có học viên" />
             ) : (
@@ -197,18 +278,13 @@ export const TeacherGradebookPage: React.FC = () => {
                           <span className="block font-normal text-slate-400">/ {a.maxScore}</span>
                         </th>
                       ))}
-                      <th className={cn(tbl.th, 'min-w-[110px] text-right')}>
-                        <span className="block font-semibold text-slate-700">{exam.mock}</span>
-                        <span className="block font-normal text-slate-400">{exam.scale}</span>
-                      </th>
-                      {leveled && <th className={tbl.th}>Bằng dự kiến</th>}
-                      <th className={cn(tbl.th, 'text-right')}>Chuyên cần</th>
+                      {!leveled && <th className={cn(tbl.th, 'text-right')}>Chuyên cần</th>}
                       <th className={cn(tbl.th, 'text-right')}>Điểm quá trình</th>
-                      <th className={tbl.th}>{leveled ? `Mục tiêu ${LEVEL_NAME[target]}` : 'Xét thi'}</th>
+                      {!leveled && <th className={tbl.th}>Xét thi</th>}
                     </tr>
                   </thead>
                   <tbody>
-                    {rows.map(({ st, ps, mock, att, level, v }) => (
+                    {rows.map(({ st, ps, att, v }) => (
                       <tr key={st.id} className={tbl.tr}>
                         <td className={cn(tbl.td, 'sticky left-0 bg-white')}>
                           <span className="flex items-center gap-2.5">
@@ -225,17 +301,13 @@ export const TeacherGradebookPage: React.FC = () => {
                             </td>
                           );
                         })}
-                        <td className={cn(tbl.td, 'text-right font-semibold tabular-nums', mock === null ? 'text-slate-400' : 'text-slate-900')}>{fmt(mock)}</td>
-                        {leveled && (
+                        {!leveled && <td className={cn(tbl.td, 'text-right tabular-nums', att !== null && att < MIN_ATTENDANCE ? 'text-rose-600' : 'text-slate-800')}>{att === null ? '—' : `${att}%`}</td>}
+                        <td className={cn(tbl.td, 'text-right font-semibold tabular-nums text-slate-900')}>{ps === null ? '—' : ps.toLocaleString(appLocale(), { minimumFractionDigits: 1 })}</td>
+                        {!leveled && (
                           <td className={tbl.td}>
-                            {level ? <span className={cn('inline-flex whitespace-nowrap rounded-md px-2 py-0.5 text-[12px] font-bold', level === 'Chưa đạt' ? 'bg-rose-500/10 text-rose-600' : 'bg-indigo-500/10 text-indigo-700')}>{LEVEL_NAME[level] ?? level}</span> : <span className="text-slate-400">—</span>}
+                            <span className={cn('whitespace-nowrap text-[13px] font-semibold', v.ok ? 'text-emerald-600' : v.muted ? 'text-slate-400' : 'text-rose-600')}>{v.text}</span>
                           </td>
                         )}
-                        <td className={cn(tbl.td, 'text-right tabular-nums', att !== null && att < MIN_ATTENDANCE ? 'text-rose-600' : 'text-slate-800')}>{att === null ? '—' : `${att}%`}</td>
-                        <td className={cn(tbl.td, 'text-right tabular-nums text-slate-800')}>{ps === null ? '—' : ps.toLocaleString(appLocale(), { minimumFractionDigits: 1 })}</td>
-                        <td className={tbl.td}>
-                          <span className={cn('whitespace-nowrap text-[13px] font-semibold', v.ok ? 'text-emerald-600' : v.muted ? 'text-slate-400' : 'text-rose-600')}>{v.text}</span>
-                        </td>
                       </tr>
                     ))}
                   </tbody>

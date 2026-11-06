@@ -113,6 +113,21 @@ export interface Gradebook {
   scores: Record<string, Record<string, number | null>>;
   /** trạng thái bài nộp: TODO | SUBMITTED | LATE | GRADED | MISSED */
   states: Record<string, Record<string, string>>;
+  /** kỳ thi của lớp — bảng điểm thi chỉ gồm đề full của kỳ thi này */
+  examType: ExamType;
+  /** điểm thi thử từng học viên (trung bình các lượt): TOEIC Nghe / Đọc thang 495, tổng 990; VSTEP 4 kỹ năng thang 10 */
+  exam: Record<string, GradebookExam>;
+}
+export interface GradebookExam {
+  attempts: number;
+  listening: number | null;
+  reading: number | null;
+  writing: number | null;
+  speaking: number | null;
+  total: number | null;
+  best: number | null;
+  latest: number | null;
+  latestAt?: string;
 }
 
 export interface TNote extends StudentNote {

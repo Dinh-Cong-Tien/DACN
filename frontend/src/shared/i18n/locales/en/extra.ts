@@ -345,4 +345,8 @@ export const EXTRA_EN: Record<string, string> = {
   "B2 · Bậc 4": "B2 · Level 4",
   "Chưa đạt B1": "Below B1",
   "Chưa đạt": "Not achieved",
+  "thang 495": "out of 495",
+  "Tổng điểm": "Total score",
+  "Số lượt thi": "Attempts",
+  "Nghe": "Listening",
 };
