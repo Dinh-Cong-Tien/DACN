@@ -8,8 +8,7 @@ import { StaffNav, type StaffMenu } from '@/shared/components/layout/StaffNav';
  *  - Khoá học & Lớp: 3 mục khoá như học viên → khoá → các lớp của khoá → trang lớp (bảng tin, tiến độ khoá, học viên,
  *    buổi học & điểm danh, bài tập, tài liệu, bảng điểm, thống kê); tab Học viên của lớp gồm Hồ sơ học viên và Cần theo dõi.
  *  - Luyện tập: bám đúng menu học viên (đề thi thử, Viết, Nói, ngữ pháp, từ vựng, chép chính tả) để giao cho lớp.
- *  - Bài tập: giao bài, bài đã giao, bản nháp, chấm bài của mọi lớp.
- *  - Soạn học liệu: câu hỏi, đề tự soạn gửi duyệt; ngân hàng câu hỏi.
+ *  - Bài tập: giao bài mới, bài đã giao (kể cả bản nháp), chấm bài, soạn câu hỏi & đề, ngân hàng câu hỏi.
  */
 export const buildTeacherMenus = (toGrade: number, drafts: number): StaffMenu[] => [
   { to: '/teacher/dashboard', label: 'Tổng quan' },
@@ -35,22 +34,17 @@ export const buildTeacherMenus = (toGrade: number, drafts: number): StaffMenu[] 
     ],
   },
   {
+    // một menu cho cả vòng bài tập: soạn đề → giao bài → theo dõi bài đã giao → chấm bài
     label: 'Bài tập',
+    icon: ClipboardList,
     to: '/teacher/assignments',
-    activeOn: ['/teacher/grading'],
+    activeOn: ['/teacher/grading', '/teacher/authoring', '/teacher/question-bank'],
     badge: toGrade ? String(toGrade) : undefined,
     children: [
       { to: '/teacher/assignments?new=1', label: 'Giao bài mới', icon: Plus, desc: 'Chọn lớp, nội dung, hạn nộp' },
-      { to: '/teacher/assignments', label: 'Bài đã giao', icon: ClipboardList, desc: 'Hạn nộp, số bài đã nộp, điểm trung bình' },
-      { to: '/teacher/assignments?status=DRAFT', label: 'Bản nháp', icon: FileEdit, desc: 'Bài đã soạn, chưa gửi học viên', badge: drafts ? String(drafts) : undefined },
+      { to: '/teacher/assignments', label: 'Bài đã giao', icon: ClipboardList, desc: 'Đang mở, đã đóng, bản nháp · số bài nộp, điểm TB', badge: drafts ? `${drafts} nháp` : undefined },
       { to: '/teacher/grading', label: 'Chấm bài', icon: PenTool, desc: 'Bài Viết, Nói học viên mọi lớp đã nộp', badge: toGrade ? String(toGrade) : undefined, also: ['/teacher/grading'] },
-    ],
-  },
-  {
-    label: 'Soạn học liệu',
-    icon: FileEdit,
-    children: [
-      { to: '/teacher/authoring', label: 'Câu hỏi & đề tự soạn', icon: FileEdit, desc: 'Soạn câu hỏi, đề kiểm tra · gửi duyệt' },
+      { to: '/teacher/authoring', label: 'Soạn câu hỏi & đề', icon: FileEdit, desc: 'Tự soạn câu hỏi, đề kiểm tra · gửi duyệt' },
       { to: '/teacher/question-bank', label: 'Ngân hàng câu hỏi', icon: Database, desc: 'Tra cứu theo Part · nhập đề từ file Word' },
     ],
   },

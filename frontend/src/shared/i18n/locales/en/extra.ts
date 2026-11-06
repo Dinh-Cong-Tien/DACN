@@ -324,4 +324,7 @@ export const EXTRA_EN: Record<string, string> = {
   "Học viên nộp bài Viết, ghi âm bài Nói; giáo viên chấm theo tiêu chí.": "Students submit Writing and record Speaking; teachers grade by rubric.",
   "Chủ điểm ngữ pháp kèm bài tập chấm tự động, bộ từ vựng & flashcard TOEIC, VSTEP.": "Grammar topics with auto-graded exercises, TOEIC and VSTEP word sets & flashcards.",
   "Học viên nghe và chép từng câu, chấm tự động theo % chép đúng.": "Students listen and transcribe each sentence, auto-graded by % correct.",
+  "Soạn câu hỏi & đề": "Write questions & tests",
+  "Đang mở, đã đóng, bản nháp · số bài nộp, điểm TB": "Open, closed, drafts · submissions, average score",
+  "Tự soạn câu hỏi, đề kiểm tra · gửi duyệt": "Write your own questions and tests · send for review",
 };

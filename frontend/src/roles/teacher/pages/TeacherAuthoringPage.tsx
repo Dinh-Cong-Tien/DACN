@@ -185,7 +185,7 @@ export const TeacherAuthoringPage: React.FC = () => {
   return (
     <div className="space-y-6">
       <TPageHead
-        crumbs={[{ label: 'Soạn học liệu' }, { label: 'Câu hỏi & đề tự soạn' }]}
+        crumbs={[{ label: 'Bài tập', to: '/teacher/assignments' }, { label: 'Soạn câu hỏi & đề' }]}
         title="Học liệu của tôi"
         sub="Soạn câu hỏi và đề kiểm tra cho lớp. Nội dung được trưởng bộ môn duyệt mới xuất bản tới học viên và giao được cho lớp."
       />

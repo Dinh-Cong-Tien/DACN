@@ -1,5 +1,5 @@
 import React from 'react';
-import { LayoutDashboard, Users, ClipboardList, CalendarDays, PenTool, FileText, FilePen, Briefcase, GraduationCap, School, PenLine, BookMarked, Headphones, Database } from 'lucide-react';
+import { Plus, LayoutDashboard, Users, ClipboardList, CalendarDays, PenTool, FileText, FilePen, Briefcase, GraduationCap, School, PenLine, BookMarked, Headphones, Database } from 'lucide-react';
 import { AppShell, NavGroup } from '@/shared/components/layout/AppShell';
 import { TeacherNav, usePendingGradingCount } from './TeacherNav';
 
@@ -35,9 +35,11 @@ const groupsOf = (toGrade: number): NavGroup[] => [
     ],
   },
   {
-    title: 'Soạn học liệu',
+    // Bài đã giao, Chấm bài đã có ở nhóm Giảng dạy (thanh đáy)
+    title: 'Bài tập',
     items: [
-      { to: '/teacher/authoring', label: 'Câu hỏi & đề tự soạn', icon: FilePen },
+      { to: '/teacher/assignments?new=1', label: 'Giao bài mới', icon: Plus },
+      { to: '/teacher/authoring', label: 'Soạn câu hỏi & đề', icon: FilePen },
       { to: '/teacher/question-bank', label: 'Ngân hàng câu hỏi', icon: Database },
     ],
   },
