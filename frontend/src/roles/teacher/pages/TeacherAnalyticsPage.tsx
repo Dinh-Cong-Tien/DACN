@@ -12,6 +12,7 @@ import { Figures, Meter, Panel, Status, TBtn, TPageHead, inputCls, tbl } from '.
 import { TEmpty, TError, TLoading } from '../components/TeacherState';
 import { appLocale } from '@/shared/i18n';
 import { classTrackLabel, classTrack } from '@/shared/constants/staff';
+import { LevelDistribution, TrackTabs, hasLevels, useTrackClasses } from '../components/ExamTrack';
 
 /** Thống kê một lớp: cùng chỉ số học viên thấy ở trang Tiến độ (điểm thi thử, % đúng từng Part, lỗi sai), giáo viên giao bài bù ngay từ chỗ yếu */
 export const TeacherAnalyticsPage: React.FC = () => {
@@ -20,7 +21,8 @@ export const TeacherAnalyticsPage: React.FC = () => {
   const [params, setParams] = useSearchParams();
   const classesQ = useTeacherClasses();
   const classes = classesQ.data ?? [];
-  const cls = classes.find((c) => c.id === params.get('class')) ?? classes[0];
+  // thống kê tách theo kỳ thi: chỉ chọn lớp trong kỳ thi đang xem
+  const { tracks, track, exam, trackClasses, cls } = useTrackClasses(classes, params);
   const setClassId = (id: string) => setParams({ class: id }, { replace: true });
   const an = useClassAnalytics(cls?.id);
   const students = [...(useTeacherStudents({ classId: cls?.id }).data ?? [])].sort((a, b) => b.avgScore - a.avgScore);
@@ -67,16 +69,24 @@ export const TeacherAnalyticsPage: React.FC = () => {
         sub={`${cls.name} · ${classTrackLabel(cls)} · ${cls.studentsCount} học viên`}
         actions={
           <select value={cls.id} onChange={(e) => setClassId(e.target.value)} className={cn(inputCls, 'w-60 max-w-full')} aria-label="Chọn lớp">
-            {classes.map((c) => (
+            {trackClasses.map((c) => (
               <option key={c.id} value={c.id}>
-                {c.name}
+                Lớp {c.name}
               </option>
             ))}
           </select>
         }
       />
 
+      <TrackTabs tracks={tracks} value={track} classes={classes} onChange={(muc) => setParams({ muc }, { replace: true })} />
+
       {an.error && <TError error={an.error} onRetry={() => an.refetch()} />}
+
+      {hasLevels(track) && (
+        <Panel title={`Phân bố bậc dự kiến · lớp ${cls.name}`} sub={`Theo điểm ${exam.mock.toLowerCase()} trung bình của từng học viên (${exam.scale})`}>
+          <LevelDistribution track={track} scores={students.map((s) => s.avgScore || null)} />
+        </Panel>
+      )}
 
       <Figures
         items={[

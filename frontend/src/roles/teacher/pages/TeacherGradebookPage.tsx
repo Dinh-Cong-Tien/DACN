@@ -6,10 +6,10 @@ import { toast } from '@/shared/stores/uiStore';
 import { useGradebook, useTeacherClasses, useTeacherStudents } from '@/shared/api/teacher';
 import { cn } from '@/shared/utils';
 import { Avatar } from '@/shared/components/ui';
-import { Figures, Panel, TBtn, TPageHead, TTabs, inputCls, tbl } from '../components/TeacherKit';
+import { Figures, Panel, TBtn, TPageHead, inputCls, tbl } from '../components/TeacherKit';
 import { TEmpty, TError, TLoading } from '../components/TeacherState';
+import { LevelDistribution, TARGET_LEVELS, TrackTabs, hasLevels, levelOf, minScoreOf, useTrackClasses } from '../components/ExamTrack';
 import { appLocale } from '@/shared/i18n';
-import { classTrack } from '@/shared/constants/staff';
 
 /** Ô điểm: số = đã chấm; còn lại hiện theo trạng thái bài nộp */
 const STATE_TEXT: Record<string, [string, string]> = {
@@ -18,29 +18,26 @@ const STATE_TEXT: Record<string, [string, string]> = {
   TODO: ['Chưa nộp', 'text-rose-500'],
   MISSED: ['Không nộp', 'text-rose-600'],
 };
+const MIN_ATTENDANCE = 80;
 
-/** Mỗi kỳ thi một bảng điểm riêng: điểm thi thử theo thang của kỳ thi đó */
-const TRACKS = [
-  { key: 'TOEIC', label: 'TOEIC', mock: 'Thi thử TOEIC', scale: 'thang 990' },
-  { key: 'VSTEP', label: 'VSTEP', mock: 'Thi thử VSTEP', scale: 'thang 10' },
-  { key: 'THPT', label: 'Tiếng Anh THPT', mock: 'Kiểm tra', scale: 'thang 10' },
-] as const;
-
-/** Bảng điểm quá trình: điểm từng bài đã chấm, chuyên cần, điểm quá trình quy về thang 10 */
+/**
+ * Bảng điểm theo kỳ thi (TOEIC / VSTEP / THPT, không gộp chung):
+ *  - TOEIC, VSTEP: tổng kết theo điểm thi thử → bậc dự kiến (B1, B2, C1…), xét đạt mục tiêu bậc của lớp (kèm chuyên cần).
+ *  - THPT: điểm quá trình thang 10.
+ * Điểm quá trình = 70% trung bình các bài (quy về thang 10) + 30% chuyên cần.
+ */
 export const TeacherGradebookPage: React.FC = () => {
   useDocumentTitle('Bảng điểm');
   const [params, setParams] = useSearchParams();
   const classesQ = useTeacherClasses();
   const classes = classesQ.data ?? [];
-  // Bảng điểm tách theo kỳ thi: TOEIC (thang 990), VSTEP (bậc, thang 10), THPT — không trộn lớp các kỳ thi vào nhau
-  const tracks = TRACKS.filter((t) => classes.some((c) => classTrack(c) === t.key));
-  const picked = classes.find((c) => c.id === params.get('class'));
-  const track = (picked ? classTrack(picked) : tracks.find((t) => t.key === params.get('muc')?.toUpperCase())?.key) ?? tracks[0]?.key;
-  const trackClasses = classes.filter((c) => classTrack(c) === track);
-  const cls = picked ?? trackClasses[0];
-  const exam = TRACKS.find((t) => t.key === track) ?? TRACKS[0];
+  const { tracks, track, exam, trackClasses, cls } = useTrackClasses(classes, params);
+  const leveled = hasLevels(track);
+  const target = (TARGET_LEVELS as readonly string[]).includes(params.get('muctieu') ?? '') ? params.get('muctieu')! : 'B1';
+  const targetMin = minScoreOf(track, target);
   const gb = useGradebook(cls?.id);
   const roster = useTeacherStudents({ classId: cls?.id }).data ?? [];
+  const setParam = (k: string, v: string) => setParams((p) => ({ ...Object.fromEntries(p), [k]: v }), { replace: true });
 
   if (classesQ.isLoading || (cls && gb.isLoading)) return <TLoading />;
   if (classesQ.error) return <TError error={classesQ.error} onRetry={() => classesQ.refetch()} />;
@@ -49,9 +46,10 @@ export const TeacherGradebookPage: React.FC = () => {
   const students = gb.data?.students ?? [];
   /** null = chưa có buổi nào điểm danh */
   const attendance = (id: string) => roster.find((r) => r.id === id)?.attendanceRate ?? null;
+  /** Điểm thi thử trung bình (đề full) theo thang của kỳ thi */
+  const mockOf = (id: string) => roster.find((r) => r.id === id)?.avgScore || null;
   const scoreOf = (sid: string, aid: string) => gb.data?.scores[sid]?.[aid] ?? null;
   const stateOf = (sid: string, aid: string) => gb.data?.states[sid]?.[aid];
-  /** Điểm quá trình = 70% trung bình các bài (quy về thang 10; bài quá hạn chưa nộp tính 0, bài chưa đến hạn / chờ chấm bỏ qua) + 30% chuyên cần */
   const processScore = (sid: string): number | null => {
     const parts = cols
       .map((a) => {
@@ -69,24 +67,42 @@ export const TeacherGradebookPage: React.FC = () => {
     return Math.round(total * 10) / 10;
   };
 
-  /** Điểm thi thử trung bình (đề full) theo thang của kỳ thi */
-  const mockOf = (id: string) => roster.find((r) => r.id === id)?.avgScore || null;
-  const rows = students
-    .map((st) => ({ st, ps: processScore(st.id), mock: mockOf(st.id), att: attendance(st.id), missing: cols.filter((a) => ['TODO', 'MISSED'].includes(stateOf(st.id, a.id) ?? '')).length }))
-    .sort((a, b) => (b.ps ?? -1) - (a.ps ?? -1));
-  const scored = rows.filter((r) => r.ps !== null);
-  const avg = scored.length ? Math.round((scored.reduce((a, r) => a + (r.ps ?? 0), 0) / scored.length) * 10) / 10 : null;
-  const attRows = rows.filter((r) => r.att !== null);
-  const mocks = rows.filter((r) => r.mock !== null);
-  const mockAvg = mocks.length ? Math.round((mocks.reduce((a, r) => a + (r.mock ?? 0), 0) / mocks.length) * 10) / 10 : null;
-  const eligible = (r: (typeof rows)[number]) => r.ps !== null && r.ps >= 5 && (r.att ?? 100) >= 80;
+  /** Kết luận từng học viên: TOEIC / VSTEP xét bậc mục tiêu + chuyên cần; THPT xét điểm quá trình ≥ 5 + chuyên cần */
+  const verdict = (mock: number | null, ps: number | null, att: number | null): { ok: boolean; muted?: boolean; text: string } => {
+    const lowAtt = att !== null && att < MIN_ATTENDANCE;
+    if (leveled) {
+      if (mock === null) return { ok: false, muted: true, text: 'Chưa thi thử' };
+      if (targetMin !== null && mock < targetMin) return { ok: false, text: `Còn thiếu ${(targetMin - mock).toLocaleString(appLocale(), { maximumFractionDigits: 1 })} điểm` };
+      return lowAtt ? { ok: false, text: 'Đủ điểm, thiếu chuyên cần' } : { ok: true, text: `Đạt ${target}` };
+    }
+    if (ps === null) return { ok: false, muted: true, text: 'Chưa có dữ liệu' };
+    return ps >= 5 && !lowAtt ? { ok: true, text: 'Đủ điều kiện' } : { ok: false, text: lowAtt ? 'Thiếu chuyên cần' : 'Chưa đạt' };
+  };
 
-  /** Xuất CSV (Excel mở được) từ dữ liệu đang hiển thị */
+  const rows = students
+    .map((st) => {
+      const ps = processScore(st.id);
+      const mock = mockOf(st.id);
+      const att = attendance(st.id);
+      return { st, ps, mock, att, level: levelOf(track, mock), v: verdict(mock, ps, att), missing: cols.filter((a) => ['TODO', 'MISSED'].includes(stateOf(st.id, a.id) ?? '')).length };
+    })
+    .sort((a, b) => (leveled ? (b.mock ?? -1) - (a.mock ?? -1) : (b.ps ?? -1) - (a.ps ?? -1)));
+  const avgOf = (xs: (number | null)[]) => {
+    const v = xs.filter((x): x is number => x !== null);
+    return v.length ? Math.round((v.reduce((a, x) => a + x, 0) / v.length) * 10) / 10 : null;
+  };
+  const mockAvg = avgOf(rows.map((r) => r.mock));
+  const psAvg = avgOf(rows.map((r) => r.ps));
+  const attAvg = avgOf(rows.map((r) => r.att));
+  const passed = rows.filter((r) => r.v.ok).length;
+  const fmt = (n: number | null) => (n === null ? '—' : n.toLocaleString(appLocale()));
+  const classLevel = levelOf(track, mockAvg);
+
   const exportCsv = () => {
     if (!cls) return;
     const esc = (v: unknown) => `"${String(v ?? '').replace(/"/g, '""')}"`;
-    const header = ['Học viên', 'Email', ...cols.map((a) => `${a.title} (/${a.maxScore})`), `${exam.mock} (${exam.scale})`, 'Chuyên cần (%)', 'Điểm quá trình', 'Xét thi'];
-    const lines = rows.map(({ st, ps, mock, att }) => [st.name, st.email, ...cols.map((a) => scoreOf(st.id, a.id) ?? STATE_TEXT[stateOf(st.id, a.id) ?? '']?.[0] ?? ''), mock ?? '', att ?? '', ps ?? '', eligible({ st, ps, mock, att, missing: 0 }) ? 'Đủ điều kiện' : 'Chưa đạt']);
+    const header = ['Học viên', 'Email', ...cols.map((a) => `${a.title} (/${a.maxScore})`), `${exam.mock} (${exam.scale})`, ...(leveled ? ['Bậc dự kiến'] : []), 'Chuyên cần (%)', 'Điểm quá trình', leveled ? `Mục tiêu ${target}` : 'Xét thi'];
+    const lines = rows.map(({ st, ps, mock, att, level, v }) => [st.name, st.email, ...cols.map((a) => scoreOf(st.id, a.id) ?? STATE_TEXT[stateOf(st.id, a.id) ?? '']?.[0] ?? ''), mock ?? '', ...(leveled ? [level ?? ''] : []), att ?? '', ps ?? '', v.text]);
     const csv = '﻿' + [header, ...lines].map((l) => l.map(esc).join(',')).join('\r\n');
     const a = document.createElement('a');
     a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
@@ -96,22 +112,34 @@ export const TeacherGradebookPage: React.FC = () => {
     toast.success('Đã xuất bảng điểm', `${cls.name} · ${rows.length} học viên`);
   };
 
+  const attFigure = { label: 'Chuyên cần TB', value: attAvg === null ? '—' : `${Math.round(attAvg)}%`, note: 'các buổi đã điểm danh', icon: Percent, tone: 'sky' as const };
+  const missFigure = { label: 'Còn thiếu bài', value: rows.filter((r) => r.missing > 0).length, note: 'học viên chưa nộp đủ', icon: UserX, tone: 'rose' as const };
+
   return (
     <div className="space-y-6">
       <TPageHead
-        crumbs={cls ? [{ label: ({ TOEIC: 'Khoá học TOEIC', VSTEP: 'Khoá học VSTEP', THPT: 'Tiếng Anh THPT' } as Record<string, string>)[classTrack(cls)] ?? 'Khoá học & Lớp', to: `/teacher/courses?muc=${classTrack(cls).toLowerCase()}` }, { label: cls.name, to: `/teacher/classes/${cls.id}` }, { label: 'Bảng điểm' }] : undefined}
-        title="Bảng điểm"
-        sub="Điểm quá trình của lớp: điểm các bài đã chấm và chuyên cần. Dùng để xét điều kiện thi cuối khoá và gửi báo cáo cho trung tâm."
+        crumbs={[{ label: 'Kết quả' }, { label: `Bảng điểm ${exam.label}` }]}
+        title={`Bảng điểm ${exam.label}`}
+        sub={leveled ? `Tổng kết theo điểm ${exam.mock.toLowerCase()} (${exam.scale}), quy đổi bậc dự kiến để xét đạt mục tiêu của lớp.` : 'Điểm quá trình của lớp: điểm các bài đã chấm và chuyên cần.'}
         actions={
           cls && (
             <>
-              <select value={cls.id} onChange={(e) => setParams({ class: e.target.value }, { replace: true })} className={cn(inputCls, 'w-60 max-w-full')} aria-label="Chọn lớp">
+              <select value={cls.id} onChange={(e) => setParam('class', e.target.value)} className={cn(inputCls, 'w-40 max-w-full')} aria-label="Chọn lớp">
                 {trackClasses.map((c) => (
                   <option key={c.id} value={c.id}>
-                    {c.name}
+                    Lớp {c.name}
                   </option>
                 ))}
               </select>
+              {leveled && (
+                <select value={target} onChange={(e) => setParam('muctieu', e.target.value)} className={cn(inputCls, 'w-48 max-w-full')} aria-label="Mục tiêu bậc">
+                  {TARGET_LEVELS.map((l) => (
+                    <option key={l} value={l}>
+                      Mục tiêu {l} (từ {minScoreOf(track, l)})
+                    </option>
+                  ))}
+                </select>
+              )}
               <TBtn icon={<Download />} onClick={exportCsv} disabled={!rows.length}>
                 Xuất Excel
               </TBtn>
@@ -120,13 +148,7 @@ export const TeacherGradebookPage: React.FC = () => {
         }
       />
 
-      {tracks.length > 0 && (
-        <TTabs
-          value={track ?? ''}
-          onChange={(k) => setParams({ muc: k.toLowerCase() }, { replace: true })}
-          items={tracks.map((t) => ({ key: t.key, label: t.label, count: classes.filter((c) => classTrack(c) === t.key).length }))}
-        />
-      )}
+      <TrackTabs tracks={tracks} value={track} classes={classes} onChange={(muc) => setParams({ muc }, { replace: true })} />
 
       {!cls ? (
         <Panel>
@@ -137,16 +159,30 @@ export const TeacherGradebookPage: React.FC = () => {
       ) : (
         <>
           <Figures
-            items={[
-              { label: 'Điểm quá trình TB', value: avg === null ? '—' : avg.toLocaleString(appLocale()), note: 'thang 10', icon: TrendingUp, tone: 'indigo' },
-              { label: 'Đủ điều kiện thi', value: `${rows.filter(eligible).length}/${rows.length}`, note: 'điểm ≥ 5 và chuyên cần ≥ 80%', icon: Award, tone: 'emerald' },
-              { label: `${exam.mock} TB`, value: mockAvg === null ? '—' : mockAvg.toLocaleString(appLocale()), note: exam.scale, icon: BarChart3, tone: 'amber' },
-              { label: 'Chuyên cần TB', value: attRows.length ? `${Math.round(attRows.reduce((a, r) => a + (r.att ?? 0), 0) / attRows.length)}%` : '—', note: attRows.length ? 'các buổi đã điểm danh' : 'chưa điểm danh buổi nào', icon: Percent, tone: 'sky' },
-              { label: 'Còn thiếu bài', value: rows.filter((r) => r.missing > 0).length, note: 'học viên chưa nộp đủ', icon: UserX, tone: 'rose' },
-            ]}
+            items={
+              leveled
+                ? [
+                    { label: `${exam.mock} TB`, value: fmt(mockAvg), note: `${exam.scale}${classLevel ? ` · ≈ bậc ${classLevel}` : ''}`, icon: BarChart3, tone: 'indigo' },
+                    { label: `Đạt mục tiêu ${target}`, value: `${passed}/${rows.length}`, note: `điểm từ ${targetMin} và chuyên cần ≥ ${MIN_ATTENDANCE}%`, icon: Award, tone: 'emerald' },
+                    attFigure,
+                    missFigure,
+                  ]
+                : [
+                    { label: 'Điểm quá trình TB', value: fmt(psAvg), note: 'thang 10', icon: TrendingUp, tone: 'indigo' },
+                    { label: 'Đủ điều kiện', value: `${passed}/${rows.length}`, note: `điểm ≥ 5 và chuyên cần ≥ ${MIN_ATTENDANCE}%`, icon: Award, tone: 'emerald' },
+                    attFigure,
+                    missFigure,
+                  ]
+            }
           />
 
-          <Panel title={`${cls.name} · ${exam.label}`} sub="Điểm quá trình = 70% trung bình các bài (quy về thang 10, bài quá hạn chưa nộp tính 0) + 30% chuyên cần" flush>
+          {leveled && (
+            <Panel title={`Phân bố bậc dự kiến · lớp ${cls.name}`} sub={`Theo điểm ${exam.mock.toLowerCase()} trung bình của từng học viên (${exam.scale})`}>
+              <LevelDistribution track={track} scores={rows.map((r) => r.mock)} target={target} />
+            </Panel>
+          )}
+
+          <Panel title={`Lớp ${cls.name} · ${exam.label}`} sub="Điểm quá trình = 70% trung bình các bài (quy về thang 10, bài quá hạn chưa nộp tính 0) + 30% chuyên cần" flush>
             {students.length === 0 ? (
               <TEmpty title="Lớp chưa có học viên" />
             ) : (
@@ -165,45 +201,43 @@ export const TeacherGradebookPage: React.FC = () => {
                         <span className="block font-semibold text-slate-700">{exam.mock}</span>
                         <span className="block font-normal text-slate-400">{exam.scale}</span>
                       </th>
+                      {leveled && <th className={tbl.th}>Bậc dự kiến</th>}
                       <th className={cn(tbl.th, 'text-right')}>Chuyên cần</th>
                       <th className={cn(tbl.th, 'text-right')}>Điểm quá trình</th>
-                      <th className={tbl.th}>Xét thi</th>
+                      <th className={tbl.th}>{leveled ? `Mục tiêu ${target}` : 'Xét thi'}</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {rows.map((r) => {
-                      const { st, ps, mock, att } = r;
-                      const ok = eligible(r);
-                      return (
-                        <tr key={st.id} className={tbl.tr}>
-                          <td className={cn(tbl.td, 'sticky left-0 bg-white')}>
-                            <span className="flex items-center gap-2.5">
-                              <Avatar name={st.name} src={st.avatarUrl} size="xs" />
-                              <span className="whitespace-nowrap font-medium text-slate-900">{st.name}</span>
-                            </span>
-                          </td>
-                          {cols.map((a) => {
-                            const v = scoreOf(st.id, a.id);
-                            const s = STATE_TEXT[stateOf(st.id, a.id) ?? ''];
-                            return (
-                              <td key={a.id} className={cn(tbl.td, 'whitespace-nowrap text-right tabular-nums', v === null ? s?.[1] ?? 'text-slate-400' : 'text-slate-800')}>
-                                {v !== null ? v.toLocaleString(appLocale()) : s?.[0] ?? '—'}
-                              </td>
-                            );
-                          })}
-                          <td className={cn(tbl.td, 'text-right tabular-nums', mock === null ? 'text-slate-400' : 'text-slate-800')}>{mock === null ? '—' : mock.toLocaleString(appLocale())}</td>
-                          <td className={cn(tbl.td, 'text-right tabular-nums', att !== null && att < 80 ? 'text-rose-600' : 'text-slate-800')}>{att === null ? '—' : `${att}%`}</td>
-                          <td className={cn(tbl.td, 'text-right font-display text-[15px] font-bold tabular-nums text-slate-900')}>{ps === null ? '—' : ps.toLocaleString(appLocale(), { minimumFractionDigits: 1 })}</td>
+                    {rows.map(({ st, ps, mock, att, level, v }) => (
+                      <tr key={st.id} className={tbl.tr}>
+                        <td className={cn(tbl.td, 'sticky left-0 bg-white')}>
+                          <span className="flex items-center gap-2.5">
+                            <Avatar name={st.name} src={st.avatarUrl} size="xs" />
+                            <span className="whitespace-nowrap font-medium text-slate-900">{st.name}</span>
+                          </span>
+                        </td>
+                        {cols.map((a) => {
+                          const val = scoreOf(st.id, a.id);
+                          const s = STATE_TEXT[stateOf(st.id, a.id) ?? ''];
+                          return (
+                            <td key={a.id} className={cn(tbl.td, 'whitespace-nowrap text-right tabular-nums', val === null ? s?.[1] ?? 'text-slate-400' : 'text-slate-800')}>
+                              {val !== null ? val.toLocaleString(appLocale()) : s?.[0] ?? '—'}
+                            </td>
+                          );
+                        })}
+                        <td className={cn(tbl.td, 'text-right font-semibold tabular-nums', mock === null ? 'text-slate-400' : 'text-slate-900')}>{fmt(mock)}</td>
+                        {leveled && (
                           <td className={tbl.td}>
-                            {ps === null ? (
-                              <span className="text-[13px] text-slate-400">Chưa có dữ liệu</span>
-                            ) : (
-                              <span className={cn('text-[13px] font-semibold', ok ? 'text-emerald-600' : 'text-rose-600')}>{ok ? 'Đủ điều kiện' : att !== null && att < 80 ? 'Thiếu chuyên cần' : 'Chưa đạt'}</span>
-                            )}
+                            {level ? <span className="inline-flex rounded-md bg-indigo-500/10 px-2 py-0.5 text-[12px] font-bold text-indigo-700">{level}</span> : <span className="text-slate-400">—</span>}
                           </td>
-                        </tr>
-                      );
-                    })}
+                        )}
+                        <td className={cn(tbl.td, 'text-right tabular-nums', att !== null && att < MIN_ATTENDANCE ? 'text-rose-600' : 'text-slate-800')}>{att === null ? '—' : `${att}%`}</td>
+                        <td className={cn(tbl.td, 'text-right tabular-nums text-slate-800')}>{ps === null ? '—' : ps.toLocaleString(appLocale(), { minimumFractionDigits: 1 })}</td>
+                        <td className={tbl.td}>
+                          <span className={cn('whitespace-nowrap text-[13px] font-semibold', v.ok ? 'text-emerald-600' : v.muted ? 'text-slate-400' : 'text-rose-600')}>{v.text}</span>
+                        </td>
+                      </tr>
+                    ))}
                   </tbody>
                 </table>
               </div>

@@ -336,4 +336,8 @@ export const EXTRA_EN: Record<string, string> = {
   "Thi thử TOEIC TB": "Avg TOEIC mock score",
   "Thi thử VSTEP TB": "Avg VSTEP mock score",
   "Kiểm tra TB": "Avg test score",
+  "Bậc dự kiến": "Predicted level",
+  "Chưa thi thử": "No mock test yet",
+  "Đủ điểm, thiếu chuyên cần": "Score met, low attendance",
+  "Dưới B1": "Below B1",
 };
