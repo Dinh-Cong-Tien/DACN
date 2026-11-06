@@ -46,10 +46,13 @@ const groupsOf = (toGrade: number): NavGroup[] => [
   },
 ];
 
+/** Lịch dạy nằm trong menu tài khoản (avatar) trên header */
+const ACCOUNT_LINKS = [{ to: '/teacher/schedule', label: 'Lịch dạy', icon: CalendarDays }];
+
 export const TeacherLayout: React.FC = () => {
   const toGrade = usePendingGradingCount();
   const groups = React.useMemo(() => groupsOf(toGrade), [toGrade]);
   return (
-  <AppShell groups={groups} brandTagline="Khu vực giáo viên" headerLabel="Khu vực giáo viên" accent="emerald" settingsTo="/teacher/settings" profileTo="/teacher/settings" notificationsTo="/teacher/notifications" workspace headerNav={<TeacherNav />} />
+  <AppShell groups={groups} brandTagline="Khu vực giáo viên" headerLabel="Khu vực giáo viên" accent="emerald" settingsTo="/teacher/settings" profileTo="/teacher/settings" accountLinks={ACCOUNT_LINKS} notificationsTo="/teacher/notifications" workspace headerNav={<TeacherNav />} />
   );
 };

@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { BookMarked, BookOpen, Briefcase, CalendarDays, ClipboardList, Database, FileEdit, FileText, GraduationCap, Headphones, Mic, PenLine, PenTool, PlayCircle, Plus, School } from 'lucide-react';
+import { BookMarked, BookOpen, Briefcase, ClipboardList, Database, FileEdit, FileText, GraduationCap, Headphones, Mic, PenLine, PenTool, PlayCircle, Plus, School } from 'lucide-react';
 import { useGradingQueue, useTeacherAssignments } from '@/shared/api/teacher';
 import { StaffNav, type StaffMenu } from '@/shared/components/layout/StaffNav';
 
@@ -7,7 +7,6 @@ import { StaffNav, type StaffMenu } from '@/shared/components/layout/StaffNav';
  * Menu header giáo viên — menu chỉ giữ trang xem chung nhiều lớp; việc của một lớp làm trong trang lớp, không tách riêng:
  *  - Khoá học & Lớp: 3 mục khoá như học viên → khoá → các lớp của khoá → trang lớp (bảng tin, tiến độ khoá, học viên,
  *    buổi học & điểm danh, bài tập, tài liệu, bảng điểm, thống kê); tab Học viên của lớp gồm Hồ sơ học viên và Cần theo dõi.
- *  - Lịch dạy: lịch tuần của mọi lớp (điểm danh mở từ từng buổi).
  *  - Luyện tập: bám đúng menu học viên (đề thi thử, Viết, Nói, ngữ pháp, từ vựng, chép chính tả) để giao cho lớp.
  *  - Bài tập: giao bài, bài đã giao, bản nháp, chấm bài của mọi lớp.
  *  - Soạn học liệu: câu hỏi, đề tự soạn gửi duyệt; ngân hàng câu hỏi.
@@ -25,7 +24,6 @@ export const buildTeacherMenus = (toGrade: number, drafts: number): StaffMenu[] 
       { to: '/teacher/courses?muc=thpt', label: 'Tiếng Anh THPT', icon: School, desc: 'Lớp 10, 11, 12 theo SGK Global Success' },
     ],
   },
-  { to: '/teacher/schedule', label: 'Lịch dạy', icon: CalendarDays, activeOn: ['/teacher/attendance'] },
   {
     label: 'Luyện tập',
     icon: FileText,

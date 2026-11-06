@@ -39,6 +39,8 @@ export interface AppShellProps {
   workspace?: boolean;
   /** Thay menu chữ mặc định trên header bằng menu riêng của vai trò (giáo viên) */
   headerNav?: React.ReactNode;
+  /** Mục thêm trong menu tài khoản (avatar), đặt trước Hồ sơ cá nhân — vd Lịch dạy của giáo viên */
+  accountLinks?: { to: string; label: string; icon: React.ElementType }[];
 }
 
 /** Khung khu quản lý: StaffHeader · nội dung · StaffFooter (footer chuẩn như website học viên) */

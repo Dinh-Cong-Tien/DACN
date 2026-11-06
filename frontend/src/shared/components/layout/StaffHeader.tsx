@@ -18,7 +18,7 @@ const accentBadge = { indigo: 'indigo', emerald: 'emerald', amber: 'amber', rose
  * Header khu quản lý (giáo viên, trưởng bộ môn, admin): logo · menu của vai trò · tìm kiếm, thông báo, tài khoản.
  * Dưới md: ngăn kéo menu + thanh điều hướng đáy.
  */
-export const StaffHeader: React.FC<Omit<AppShellProps, 'theme'>> = ({ groups, brandTagline, accent = 'indigo', headerLabel, settingsTo, profileTo, notificationsTo, showStreak, topExtra, workspace, headerNav }) => {
+export const StaffHeader: React.FC<Omit<AppShellProps, 'theme'>> = ({ groups, brandTagline, accent = 'indigo', headerLabel, settingsTo, profileTo, notificationsTo, showStreak, topExtra, workspace, headerNav, accountLinks }) => {
   const navigate = useNavigate();
   const t = useT();
   const location = useLocation();
@@ -141,6 +141,7 @@ export const StaffHeader: React.FC<Omit<AppShellProps, 'theme'>> = ({ groups, br
                   </div>
                 }
                 items={[
+                  ...(accountLinks ?? []).map((a) => ({ label: t(a.label), icon: <a.icon />, onClick: () => navigate(a.to) })),
                   ...(profileTo ? [{ label: t('Hồ sơ cá nhân'), icon: <User />, onClick: () => navigate(profileTo) }] : []),
                   ...(settingsTo ? [{ label: t('Cài đặt'), icon: <Settings />, onClick: () => navigate(settingsTo) }] : []),
                   ...(user.plan === 'FREE' && user.role === 'STUDENT' ? [{ label: t('Nâng cấp VIP'), icon: <Crown />, onClick: () => openUpgrade() }] : []),
