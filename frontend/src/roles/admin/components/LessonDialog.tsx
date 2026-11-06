@@ -166,7 +166,7 @@ export const LessonDialog: React.FC<{ open: boolean; sectionId: string | null; l
             disabled={!knowledgeLoaded}
             value={f.contentMd}
             onChange={(e) => set('contentMd', e.target.value)}
-            hint={`${f.type === 'VIDEO' ? 'Hiện thu gọn dưới video, học viên mở khi cần ôn lại.' : 'Học viên thấy ở tab Bài học.'} Dùng ## tiêu đề mục, ### tiêu đề nhỏ, **in đậm**, *nghiêng*, danh sách "- ", bảng | a | b |, trích dẫn "> ".${f.contentMd.trim() ? ` Hiện ${f.contentMd.trim().split(/\s+/).length.toLocaleString(appLocale())} từ.` : ''}`}
+            hint={`${f.type === 'VIDEO' ? 'Học viên chỉ thấy mục "## Tóm tắt" (ý chính) dưới video — giữ mục này ngắn gọn.' : 'Học viên chỉ thấy mục "## Tóm tắt" (ý chính) dưới khung video.'} Dùng ## tiêu đề mục, ### tiêu đề nhỏ, **in đậm**, *nghiêng*, danh sách "- ", bảng | a | b |, trích dẫn "> ".${f.contentMd.trim() ? ` Hiện ${f.contentMd.trim().split(/\s+/).length.toLocaleString(appLocale())} từ.` : ''}`}
           />
         </div>
         {f.type !== 'QUIZ' && (

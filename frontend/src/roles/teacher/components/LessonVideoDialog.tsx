@@ -9,7 +9,7 @@ import { TBtn, TTabs } from './TeacherKit';
 
 const MAX_VIDEO_MB = 500;
 
-/** Giáo viên đăng video bài giảng cho 1 bài trong khoá: dán link Vimeo/YouTube hoặc tải tệp MP4/WebM. Học viên học trên video, phần chữ thành ghi chú. */
+/** Giáo viên đăng video bài giảng cho 1 bài trong khoá: dán link Vimeo/YouTube hoặc tải tệp MP4/WebM. Học viên học trên video, bên dưới chỉ hiện ý chính (mục Tóm tắt). */
 export const LessonVideoDialog: React.FC<{ lesson: (LibLesson & { no?: number }) | null; onClose: () => void }> = ({ lesson, onClose }) => {
   const [mode, setMode] = useState<'link' | 'file'>('link');
   const [url, setUrl] = useState('');
@@ -47,7 +47,7 @@ export const LessonVideoDialog: React.FC<{ lesson: (LibLesson & { no?: number })
       open
       onClose={onClose}
       title={lesson.videoUrl ? 'Đổi video bài giảng' : 'Đăng video bài giảng'}
-      description={`${lesson.no ? `Bài ${lesson.no} · ` : ''}${lesson.title}. Học viên học trên video, nội dung chữ của bài thu gọn thành ghi chú bên dưới.`}
+      description={`${lesson.no ? `Bài ${lesson.no} · ` : ''}${lesson.title}. Học viên học trên video, bên dưới chỉ hiện ý chính của bài.`}
       icon={<Video />}
       footer={
         <>

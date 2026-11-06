@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { Archive, Ban, CalendarDays, CalendarPlus, ChevronRight, ClipboardCheck, Copy, ClipboardList, ExternalLink, Link2, MapPin, Megaphone, Pencil, Pin, PinOff, RefreshCw, RotateCcw, Trash2, TrendingUp, UserMinus, UserPlus, Upload, FileText, Users, Video, Music, File, Sheet, BarChart3 } from 'lucide-react';
 import { useDocumentTitle } from '@/shared/hooks';
 import { toast } from '@/shared/stores/uiStore';
@@ -41,7 +41,19 @@ export const TeacherClassDetailPage: React.FC = () => {
   const navigate = useNavigate();
   const lib = useTeacherLibrary();
   const analytics = useClassAnalytics(id);
-  const [tab, setTab] = useState('news');
+  // tab lưu trên URL (?tab=) — tải lại trang / quay lại vẫn đúng tab, link mở thẳng tab được
+  const [params, setParams] = useSearchParams();
+  const tab = params.get('tab') ?? 'news';
+  const setTab = (k: string) =>
+    setParams(
+      (p) => {
+        const n = new URLSearchParams(p);
+        if (k === 'news') n.delete('tab');
+        else n.set('tab', k);
+        return n;
+      },
+      { replace: true }
+    );
   // tab Học viên: Hồ sơ học viên (cả lớp) / Cần theo dõi (vắng nhiều, nộp thiếu, điểm giảm)
   const [stuView, setStuView] = useState<'all' | 'watch'>('all');
   const [picked, setPicked] = useState<string[]>([]);
@@ -53,6 +65,8 @@ export const TeacherClassDetailPage: React.FC = () => {
   const [emails, setEmails] = useState('');
   const [matForm, setMatForm] = useState({ title: '', type: 'PDF' as MaterialType, url: '' });
   const [videoLesson, setVideoLesson] = useState<(LibLesson & { no: number }) | null>(null);
+  const [lessonFilter, setLessonFilter] = useState<'all' | 'novideo' | 'video'>('all');
+  const [lessonQ, setLessonQ] = useState('');
   const [matMode, setMatMode] = useState<'file' | 'link'>('file');
   const [matFile, setMatFile] = useState<File | null>(null);
   const [editOpen, setEditOpen] = useState(false);
@@ -82,6 +96,8 @@ export const TeacherClassDetailPage: React.FC = () => {
   // Buổi kế tiếp: chưa diễn ra (buổi đã qua mà vẫn UPCOMING là "chưa điểm danh", không phải buổi kế tiếp)
   const nowKey = (() => { const d = new Date(); const p = (n: number) => String(n).padStart(2, '0'); return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}${p(d.getHours())}:${p(d.getMinutes())}`; })();
   const libCourse = lib.courses.find((x) => x.id === cls.course?.id);
+  // bài giảng gắn được video (không tính bài luyện đề / kiểm tra chặng)
+  const videoLessons = libCourse ? libCourse.sections.flatMap((s) => s.lessons).filter((l) => l.type === 'VIDEO' || l.type === 'READING') : [];
   const nextSession = sessions.filter((s) => s.status === 'UPCOMING' && `${s.date}${s.end}` > nowKey).sort((a, b) => `${a.date}${a.start}`.localeCompare(`${b.date}${b.start}`))[0];
   const news = cls.announcements;
   const materials = cls.materials;
@@ -632,17 +648,30 @@ export const TeacherClassDetailPage: React.FC = () => {
         (libCourse ? (
           <Panel
             title={libCourse.title}
-            sub={(() => {
-              const ls = libCourse.sections.flatMap((s) => s.lessons).filter((l) => l.type === 'VIDEO' || l.type === 'READING');
-              return `${libCourse.lessonsCount} bài theo đúng lộ trình học viên học · ${ls.filter((l) => l.videoUrl).length}/${ls.length} bài giảng đã có video — bấm "Thêm video" để đăng video cho bài`;
-            })()}
+            sub={`${libCourse.lessonsCount} bài theo đúng lộ trình học viên học · ${videoLessons.filter((l) => l.videoUrl).length}/${videoLessons.length} bài giảng đã có video`}
             action={
               <TBtn size="sm" variant="primary" disabled={!picked.length} onClick={() => navigate('/teacher/assignments', { state: { assign: { kind: 'LESSON', courseId: libCourse.slug, lessonIds: picked }, classId: cls.id } })}>
                 Giao {picked.length || ''} bài đã chọn
               </TBtn>
             }
           >
-            <CourseLessonList course={libCourse} picked={picked} onToggle={(lid) => setPicked((p) => (p.includes(lid) ? p.filter((x) => x !== lid) : [...p, lid]))} stats={cls.courseProgress?.lessons} classSize={students.length} onVideo={setVideoLesson} />
+            <div className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <TTabs
+                value={lessonFilter}
+                onChange={(k) => setLessonFilter(k as 'all' | 'novideo' | 'video')}
+                items={[
+                  { key: 'all', label: 'Tất cả bài', count: libCourse.lessonsCount },
+                  { key: 'novideo', label: 'Chưa có video', count: videoLessons.filter((l) => !l.videoUrl).length },
+                  { key: 'video', label: 'Đã có video', count: videoLessons.filter((l) => l.videoUrl).length },
+                ]}
+              />
+              <input value={lessonQ} onChange={(e) => setLessonQ(e.target.value)} placeholder="Tìm bài theo tên…" aria-label="Tìm bài theo tên" className={cn(inputCls, 'w-full sm:w-64')} />
+            </div>
+            <CourseLessonList course={libCourse} picked={picked} onToggle={(lid) => setPicked((p) => (p.includes(lid) ? p.filter((x) => x !== lid) : [...p, lid]))} stats={cls.courseProgress?.lessons}
+              classSize={students.length}
+              onVideo={setVideoLesson}
+              only={lessonFilter === 'all' && !lessonQ.trim() ? undefined : (l) => (lessonFilter === 'all' || (lessonFilter === 'video') === !!l.videoUrl) && (lessonFilter === 'all' || l.type === 'VIDEO' || l.type === 'READING') && l.title.toLowerCase().includes(lessonQ.trim().toLowerCase())}
+            />
           </Panel>
         ) : (
           <ClassCourseProgressPanel course={undefined} progress={undefined} students={students} />

@@ -20,11 +20,15 @@ export const CourseLessonList: React.FC<{
   classSize?: number;
   /** có → cột Video: giáo viên đăng/đổi video bài giảng cho từng bài */
   onVideo?: (lesson: LibLesson & { no: number }) => void;
-}> = ({ course, picked = [], onToggle, stats, classSize = 0, onVideo }) => {
+  /** chỉ hiện bài thoả điều kiện (số thứ tự bài vẫn theo cả khoá) */
+  only?: (lesson: LibLesson) => boolean;
+}> = ({ course, picked = [], onToggle, stats, classSize = 0, onVideo, only }) => {
   const lessons = course.sections.flatMap((s) => s.lessons);
+  const sections = only ? course.sections.map((s) => ({ ...s, lessons: s.lessons.filter(only) })).filter((s) => s.lessons.length) : course.sections;
+  if (!sections.length) return <p className="rounded-md border border-dashed border-slate-200 px-4 py-8 text-center text-sm text-slate-500">Không có bài nào khớp bộ lọc.</p>;
   return (
     <div className="overflow-hidden rounded-md border border-slate-200 bg-white">
-      {course.sections.map((sec) => (
+      {sections.map((sec) => (
         <div key={sec.id}>
           <p className="border-b border-slate-100 bg-slate-50 px-3 py-1.5 text-[12px] font-medium text-slate-500">
             {sec.partTitle ? `${sec.partTitle} · ` : ''}
