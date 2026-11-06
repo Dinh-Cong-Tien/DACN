@@ -73,12 +73,15 @@ export const StudentLearningPathPage: React.FC = () => {
         </Card>
       )}
 
+      {/* chưa có lộ trình → không hiện số liệu 0 vô nghĩa */}
+      {path && (
       <Stagger className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8" step={70}>
         <StatCard label="Tiến độ tổng" value={Math.round((done / Math.max(1, allItems.length)) * 100)} suffix="%" icon={<Target />} tone="indigo" />
         <StatCard label="Mục đã hoàn thành" value={done} suffix={`/${allItems.length}`} icon={<CheckCircle2 />} tone="emerald" />
         <StatCard label="Thời lượng còn lại" value={Math.round((totalMin - allItems.filter((i) => i.status === 'DONE').reduce((a, i) => a + i.durationMin, 0)) / 60)} suffix="giờ" icon={<Clock />} tone="amber" />
         <StatCard label="Chặng hiện tại" value={`${LEARNING_PATH.find((m) => m.status === 'CURRENT')?.phase ?? 1}/3`} icon={<Compass />} tone="violet" />
       </Stagger>
+      )}
 
       <div className="space-y-8">
         {LEARNING_PATH.map((m, mi) => {

@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, Navigate, useParams } from 'react-router-dom';
-import { ArrowRight, Check, ChevronRight, Lock } from 'lucide-react';
+import { ArrowRight, Check, ChevronDown, ChevronRight, Lock } from 'lucide-react';
 import { courseHref, useCourse, useCourses } from '@/shared/api/catalog';
 import { COURSE_PART_NOTE } from '@/shared/constants/public';
 import { SkeletonCard } from '@/shared/components/ui';
@@ -20,7 +20,7 @@ const copyOf = (c: Course): { eyebrow: string; title: React.ReactNode; track: st
 
 const TYPE_LABEL: Record<Lesson['type'], string> = { VIDEO: 'Video', READING: 'Video', QUIZ: 'Bài kiểm tra' };
 
-const STEPS = ['Học bài: xem video hoặc đọc bài, ôn kiến thức trong bài, bấm vào từ để tra nghĩa.', 'Làm bài tập ngay sau bài, đúng từ 70% để hoàn thành bài.', 'Bài tiếp theo tự mở. Cuối mỗi chặng có bài kiểm tra hoặc Review.'];
+const STEPS = ['Học bài: xem video bài giảng, ôn ý chính và kiến thức trong bài, bấm vào từ để tra nghĩa.', 'Làm bài tập ngay sau bài, đúng từ 70% để hoàn thành bài.', 'Bài tiếp theo tự mở. Cuối mỗi chặng có bài kiểm tra hoặc Review.'];
 
 /**
  * Trang một mục Khoá học (/courses/:slug): danh sách bài đánh số từ Bài 1, chia theo chặng.
@@ -57,6 +57,17 @@ const PathView: React.FC<{ course: Course }> = ({ course }) => {
   const parts = [...new Set(course.sections.map((s) => s.part).filter(Boolean))];
   // khoá trọn gói: Chặng (phần lớn) → Chương → Bài
   const staged = parts.length > 0 && course.sections.every((s) => stageOf(s.part));
+  // chỉ mở sẵn chương đang học (khách: chương đầu) — khoá dài không bung hết hàng trăm bài
+  const currentSec = course.sections.find((s) => s.lessons.some((l) => l.id === current?.id))?.id ?? course.sections[0]?.id;
+  const [open, setOpen] = React.useState<Set<string>>(() => new Set(currentSec ? [currentSec] : []));
+  const allOpen = open.size === course.sections.length;
+  const toggle = (id: string) =>
+    setOpen((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
 
   const primary = isStudent ? (
     <ActionLink to={lessonUrl(current)} size="lg" icon={<ArrowRight className="w-4 h-4" />}>
@@ -129,8 +140,17 @@ const PathView: React.FC<{ course: Course }> = ({ course }) => {
 
       <Section innerClassName="py-12 md:py-16">
         <div className="grid items-start gap-12 lg:grid-cols-[1fr_300px]">
-          <div className="space-y-12">
+          <div className="space-y-6">
+            <div className="flex items-center justify-between gap-3">
+              <p className="text-[13px] text-slate-500">
+                {course.sections.length} {staged ? 'chương' : 'chặng'} · bấm tên chương để xem bài
+              </p>
+              <button type="button" onClick={() => setOpen(allOpen ? new Set(currentSec ? [currentSec] : []) : new Set(course.sections.map((s) => s.id)))} className="text-[13px] font-semibold text-indigo-700 hover:underline underline-offset-2">
+                {allOpen ? 'Thu gọn' : 'Mở tất cả chương'}
+              </button>
+            </div>
             {course.sections.map((sec, si) => {
+              const isOpen = open.has(sec.id);
               const secDone = sec.lessons.filter((l) => l.isCompleted).length;
               const partStart = sec.part && sec.part !== course.sections[si - 1]?.part;
               return (
@@ -143,18 +163,20 @@ const PathView: React.FC<{ course: Course }> = ({ course }) => {
                   </div>
                 )}
                 <section aria-labelledby={sec.id}>
-                  <div className="flex flex-col gap-1 border-b border-slate-200 pb-3 sm:flex-row sm:items-end sm:justify-between">
+                  <button type="button" aria-expanded={isOpen} onClick={() => toggle(sec.id)} className="group flex w-full flex-col gap-1 border-b border-slate-200 pb-3 text-left sm:flex-row sm:items-end sm:justify-between">
                     <div>
                       <p className="text-[12px] font-semibold uppercase tracking-[0.14em] text-slate-500">{staged ? `Chương ${si + 1}` : `Chặng ${si + 1}`}</p>
                       <h2 id={sec.id} className="mt-1 font-display text-xl font-bold text-slate-900 md:text-2xl">
                         {sec.title}
                       </h2>
                     </div>
-                    <p className="shrink-0 text-[13px] tabular-nums text-slate-500">
+                    <p className="flex shrink-0 items-center gap-2 text-[13px] tabular-nums text-slate-500">
                       {sec.lessons.length} bài · {sec.lessons.reduce((a, l) => a + l.durationMin, 0)} phút
                       {isStudent && ` · đã học ${secDone}/${sec.lessons.length}`}
+                      <ChevronDown className={cn('h-4 w-4 text-slate-400 transition-transform group-hover:text-slate-700', isOpen && 'rotate-180')} />
                     </p>
-                  </div>
+                  </button>
+                  {isOpen && (
                   <ol className="mt-2">
                     {sec.lessons.map((l, li) => (
                       <LessonRow
@@ -167,6 +189,7 @@ const PathView: React.FC<{ course: Course }> = ({ course }) => {
                       />
                     ))}
                   </ol>
+                  )}
                 </section>
                 </React.Fragment>
               );
@@ -174,6 +197,7 @@ const PathView: React.FC<{ course: Course }> = ({ course }) => {
           </div>
 
           <aside className="space-y-4 lg:sticky lg:top-24">
+            {others.length > 0 && (
             <div className="rounded-2xl border border-slate-200 bg-white p-2">
               <p className="px-3 pb-1 pt-2 text-[12px] text-slate-500">Khoá khác trong mục {copy.track}</p>
               {others.map((o) => (
@@ -188,6 +212,7 @@ const PathView: React.FC<{ course: Course }> = ({ course }) => {
                 </Link>
               ))}
             </div>
+            )}
             <div className="rounded-2xl border border-slate-200 bg-white p-5">
               <p className="text-[12px] text-slate-500">Khi đã vững kiến thức chung</p>
               <p className="mt-1 text-[14px] leading-relaxed text-slate-600">Chuyển sang luyện đề theo kỳ thi bạn chọn.</p>
