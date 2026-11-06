@@ -253,11 +253,11 @@ export const LessonEngine: React.FC<LessonEngineProps> = ({ course, lesson, onSe
               <video ref={videoRef} src={source.url} controls className="w-full h-full" controlsList="nodownload" {...watch.videoProps} />
             </div>
           ) : lesson.type !== 'QUIZ' ? (
-            <div className="relative flex aspect-video flex-col items-center justify-center gap-3 bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 px-6 text-center">
+            <div className="relative flex flex-col items-center justify-center gap-3 bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 px-6 py-10 text-center sm:aspect-video sm:py-0">
               <span className="flex h-16 w-16 items-center justify-center rounded-full bg-white/10 text-white ring-1 ring-white/20">
                 <Video className="h-7 w-7" />
               </span>
-              <p className="text-lg font-bold text-white">Video bài giảng đang được cập nhật</p>
+              <p className="text-base font-bold text-white sm:text-lg">Video bài giảng đang được cập nhật</p>
               <p className="max-w-md text-sm text-slate-300">Giáo viên của khoá sẽ sớm đăng video cho bài này. Trong lúc chờ, bạn xem ý chính bên dưới và làm bài tập để qua bài.</p>
             </div>
           ) : (
