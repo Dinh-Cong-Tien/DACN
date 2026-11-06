@@ -1,5 +1,5 @@
 import React from 'react';
-import { LayoutDashboard, Library, Database, Users, School, CheckSquare, BarChart3, MessageSquareWarning, GraduationCap, CalendarDays, Scale, FileText, BookOpen, ClipboardList, Trophy, FolderOpen, Briefcase, PenLine, Mic, BookMarked, Headphones, PlayCircle, ShieldCheck } from 'lucide-react';
+import { LayoutDashboard, Library, Database, Users, School, CheckSquare, BarChart3, MessageSquareWarning, GraduationCap, CalendarDays, Scale, FileText, ClipboardList, Trophy, FolderOpen, Briefcase, PenLine, BookMarked, Headphones, PlayCircle, ShieldCheck } from 'lucide-react';
 import { AppShell, NavGroup } from '@/shared/components/layout/AppShell';
 import { StaffNav, type StaffMenu } from '@/shared/components/layout/StaffNav';
 import { useHeadDashboard, useHeadStudents, useHeadSubjects } from '@/shared/api/head';
@@ -14,13 +14,10 @@ const COURSE_LINKS = [
   { to: '/head/courses?muc=thpt', label: 'Tiếng Anh THPT', icon: School, desc: 'Lớp 10, 11, 12 theo SGK Global Success' },
 ];
 const PRACTICE_LINKS = [
-  { to: '/head/library/tests?tab=TOEIC', label: 'Đề thi thử TOEIC', icon: FileText, desc: 'Đề đang dùng, số lần các lớp đã giao', group: 'Đề thi thử' },
-  { to: '/head/library/tests?tab=VSTEP', label: 'Đề thi thử VSTEP', icon: FileText, desc: 'Nghe, Đọc chấm tự động', group: 'Đề thi thử' },
-  { to: '/head/library/tests?tab=writing', label: 'Đề Viết', icon: PenLine, desc: 'Đề Viết học viên nộp cho giáo viên chấm', group: 'Viết & Nói' },
-  { to: '/head/library/tests?tab=speaking', label: 'Đề Nói', icon: Mic, desc: 'Đề Nói học viên ghi âm nộp bài', group: 'Viết & Nói' },
-  { to: '/head/library/practice?tab=grammar', label: 'Chủ điểm ngữ pháp', icon: BookMarked, desc: 'Lý thuyết kèm bài tập chấm tự động', group: 'Luyện tập' },
-  { to: '/head/library/practice?tab=vocab', label: 'Từ vựng & Flashcard', icon: BookOpen, desc: 'Bộ từ theo chủ đề TOEIC, VSTEP', group: 'Luyện tập' },
-  { to: '/head/library/practice?tab=dictation', label: 'Nghe chép chính tả', icon: Headphones, desc: 'Bài nghe chép từng câu', group: 'Luyện tập' },
+  { to: '/head/library/tests?tab=TOEIC', label: 'Đề thi thử', icon: FileText, desc: 'TOEIC, VSTEP · số lần các lớp đã giao' },
+  { to: '/head/library/tests?tab=writing', label: 'Đề Viết & Nói', icon: PenLine, desc: 'Đề học viên nộp cho giáo viên chấm' },
+  { to: '/head/library/practice?tab=grammar', label: 'Ngữ pháp & Từ vựng', icon: BookMarked, desc: 'Chủ điểm ngữ pháp, bộ từ & flashcard' },
+  { to: '/head/library/practice?tab=dictation', label: 'Nghe chép chính tả', icon: Headphones, desc: 'Bài nghe chép từng câu' },
 ];
 
 /**

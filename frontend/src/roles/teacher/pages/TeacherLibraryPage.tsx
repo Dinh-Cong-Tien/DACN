@@ -21,6 +21,20 @@ const COPY: Record<Kind, { title: string; sub: string }> = {
   practice: { title: 'Ngữ pháp, Từ vựng & Chép chính tả', sub: 'Chủ điểm ngữ pháp kèm bài tập chấm tự động, bộ flashcard từ vựng và bài nghe chép chính tả.' },
 };
 
+/**
+ * Mục Luyện tập (khớp 4 mục menu): mỗi mục một trang, chỉ hiện các tab của mục đó.
+ *  Đề thi thử (TOEIC / VSTEP) · Đề Viết & Nói · Ngữ pháp & Từ vựng · Nghe chép chính tả
+ */
+type Section = 'exam' | 'essay' | 'words' | 'dictation';
+const SECTION: Record<Section, { title: string; sub: string }> = {
+  exam: { title: 'Đề thi thử', sub: 'Đề TOEIC, VSTEP chấm tự động: giao full đề hoặc chọn Part và đặt thời gian.' },
+  essay: { title: 'Đề Viết & Nói', sub: 'Học viên nộp bài Viết, ghi âm bài Nói; giáo viên chấm theo tiêu chí.' },
+  words: { title: 'Ngữ pháp & Từ vựng', sub: 'Chủ điểm ngữ pháp kèm bài tập chấm tự động, bộ từ vựng & flashcard TOEIC, VSTEP.' },
+  dictation: { title: 'Nghe chép chính tả', sub: 'Học viên nghe và chép từng câu, chấm tự động theo % chép đúng.' },
+};
+const sectionOf = (kind: string, tab: string | null): Section | null =>
+  kind === 'tests' ? (tab === 'writing' || tab === 'speaking' ? 'essay' : 'exam') : kind === 'practice' ? (tab === 'dictation' ? 'dictation' : 'words') : null;
+
 /** Đường dẫn cũ (trước khi gộp mục) → trang mới */
 const LEGACY: Record<string, string> = {
   grammar: '/teacher/library/practice?tab=grammar',
@@ -81,7 +95,8 @@ export const TeacherLibraryPage: React.FC<LibraryPageProps> = ({ base = '/teache
   // nhãn khớp menu: Khoá học › Khoá học TOEIC; Luyện tập › …
   const eyebrow = eyebrowProp ?? (kind === 'courses' ? 'Khoá học' : 'Luyện tập');
   const trackTitle = kind === 'courses' ? ({ toeic: 'Khoá học TOEIC', vstep: 'Khoá học VSTEP', thpt: 'Tiếng Anh THPT' } as Record<string, string>)[params.get('muc') ?? ''] : undefined;
-  const copy = copyOverride?.[kind as Kind] ?? COPY[kind as Kind];
+  const section = sectionOf(kind, params.get('tab') ?? params.get('exam'));
+  const copy = (section && SECTION[section]) || (copyOverride?.[kind as Kind] ?? COPY[kind as Kind]);
   useDocumentTitle(copy?.title ?? 'Học liệu');
   const navigate = useNavigate();
   if (LEGACY[kind]) return <Navigate to={LEGACY[kind].replace('/teacher/library', base)} replace />;
@@ -114,7 +129,7 @@ const PracticeView: React.FC<{ assign: Assign }> = ({ assign }) => {
   const vocab = allVocab.filter((v) => !vocabExam || (v.examType ?? 'TOEIC') === vocabExam);
   return (
     <div className="space-y-5">
-      <GroupTabs
+      {tab !== 'dictation' && <GroupTabs
         value={tab === 'vocab' ? `vocab-${vocabExam ?? 'all'}` : tab}
         onChange={(k) => setParams(k === 'grammar' || k === 'dictation' ? { tab: k } : k === 'vocab-all' ? { tab: 'vocab' } : { tab: 'vocab', exam: k.slice(6) }, { replace: true })}
         groups={[
@@ -127,9 +142,8 @@ const PracticeView: React.FC<{ assign: Assign }> = ({ assign }) => {
               { key: 'vocab-VSTEP', label: 'VSTEP' },
             ],
           },
-          { label: 'Nghe', tabs: [{ key: 'dictation', label: 'Chép chính tả', count: dictationQ.data?.length }] },
         ]}
-      />
+      />}
       {tab === 'dictation' ? (
         <QueryGate q={dictationQ}>
           <Panel title="Bài chép chính tả" sub="Học viên nghe và chép từng câu; điểm là % chép đúng, chấm tự động" flush>
@@ -416,7 +430,7 @@ const TestsView: React.FC<{ assign: Assign }> = ({ assign }) => {
       <GroupTabs
         value={tab}
         onChange={(k) => setParams({ tab: k }, { replace: true })}
-        groups={[
+        groups={([] as { label: string; tabs: { key: string; label: string; count?: number }[] }[]).concat(tab === 'writing' || tab === 'speaking' ? [] : [
           {
             label: 'Đề trắc nghiệm · chấm tự động',
             tabs: [
@@ -424,6 +438,7 @@ const TestsView: React.FC<{ assign: Assign }> = ({ assign }) => {
               { key: 'VSTEP', label: 'Thi thử VSTEP', count: all.filter((t) => t.examType === 'VSTEP').length },
             ],
           },
+        ]).concat(tab === 'writing' || tab === 'speaking' ? [
           {
             label: 'Đề tự luận · giáo viên chấm',
             tabs: [
@@ -431,7 +446,7 @@ const TestsView: React.FC<{ assign: Assign }> = ({ assign }) => {
               { key: 'speaking', label: 'Đề Nói', count: speakingQ.data?.length },
             ],
           },
-        ]}
+        ] : [])}
       />
       {tab === 'writing' || tab === 'speaking' ? (
         <EssayList kind={tab} assign={assign} />

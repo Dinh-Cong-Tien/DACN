@@ -25,9 +25,9 @@ const PRACTICE_LINKS = [
   { to: '/admin/learning/writing', label: 'Đề Viết', icon: PenLine, desc: 'Đề Viết học viên nộp cho giáo viên chấm', group: 'Viết & Nói' },
   { to: '/admin/learning/speaking', label: 'Đề Nói', icon: Mic, desc: 'Đề Nói học viên ghi âm nộp bài', group: 'Viết & Nói' },
   { to: '/admin/learning/rubrics', label: 'Tiêu chí chấm', icon: Scale, desc: 'Thang chấm Viết, Nói cho giáo viên', group: 'Viết & Nói' },
-  { to: '/admin/learning/grammar', label: 'Chủ điểm ngữ pháp', icon: BookMarked, desc: 'Lý thuyết kèm bài tập chấm tự động', group: 'Luyện tập' },
-  { to: '/admin/learning/vocab', label: 'Từ vựng & Flashcard', icon: BookOpen, desc: 'Bộ từ theo chủ đề, thẻ từ', group: 'Luyện tập', also: ['/admin/learning/words'] },
-  { to: '/admin/learning/dictation', label: 'Nghe chép chính tả', icon: Headphones, desc: 'Bài nghe chép từng câu', group: 'Luyện tập' },
+  { to: '/admin/learning/grammar', label: 'Chủ điểm ngữ pháp', icon: BookMarked, desc: 'Lý thuyết kèm bài tập chấm tự động', group: 'Ngữ pháp, Từ vựng & Nghe' },
+  { to: '/admin/learning/vocab', label: 'Từ vựng & Flashcard', icon: BookOpen, desc: 'Bộ từ theo chủ đề, thẻ từ', group: 'Ngữ pháp, Từ vựng & Nghe', also: ['/admin/learning/words'] },
+  { to: '/admin/learning/dictation', label: 'Nghe chép chính tả', icon: Headphones, desc: 'Bài nghe chép từng câu', group: 'Ngữ pháp, Từ vựng & Nghe' },
 ];
 
 /** Menu header quản trị: người dùng → đào tạo → chất lượng → khoá học / thi thử & luyện tập (bám menu học viên) → vận hành (website, hệ thống) */

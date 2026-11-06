@@ -1,5 +1,5 @@
 import React from 'react';
-import { LayoutDashboard, Users, ClipboardList, CalendarDays, PenTool, FileText, BookOpen, FilePen, Briefcase, GraduationCap, School, PenLine, Mic, BookMarked, Headphones, Database } from 'lucide-react';
+import { LayoutDashboard, Users, ClipboardList, CalendarDays, PenTool, FileText, FilePen, Briefcase, GraduationCap, School, PenLine, BookMarked, Headphones, Database } from 'lucide-react';
 import { AppShell, NavGroup } from '@/shared/components/layout/AppShell';
 import { TeacherNav, usePendingGradingCount } from './TeacherNav';
 
@@ -28,12 +28,9 @@ const groupsOf = (toGrade: number): NavGroup[] => [
   {
     title: 'Luyện tập',
     items: [
-      { to: '/teacher/library/tests?tab=TOEIC', label: 'Đề thi thử TOEIC', icon: FileText },
-      { to: '/teacher/library/tests?tab=VSTEP', label: 'Đề thi thử VSTEP', icon: FileText },
-      { to: '/teacher/library/tests?tab=writing', label: 'Đề Viết', icon: PenLine },
-      { to: '/teacher/library/tests?tab=speaking', label: 'Đề Nói', icon: Mic },
-      { to: '/teacher/library/practice?tab=grammar', label: 'Chủ điểm ngữ pháp', icon: BookMarked },
-      { to: '/teacher/library/practice?tab=vocab', label: 'Từ vựng & Flashcard', icon: BookOpen },
+      { to: '/teacher/library/tests?tab=TOEIC', label: 'Đề thi thử', icon: FileText },
+      { to: '/teacher/library/tests?tab=writing', label: 'Đề Viết & Nói', icon: PenLine },
+      { to: '/teacher/library/practice?tab=grammar', label: 'Ngữ pháp & Từ vựng', icon: BookMarked },
       { to: '/teacher/library/practice?tab=dictation', label: 'Nghe chép chính tả', icon: Headphones },
     ],
   },

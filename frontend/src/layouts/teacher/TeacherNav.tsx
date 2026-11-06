@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { BookMarked, BookOpen, Briefcase, ClipboardList, Database, FileEdit, FileText, GraduationCap, Headphones, Mic, PenLine, PenTool, PlayCircle, Plus, School } from 'lucide-react';
+import { BookMarked, Briefcase, ClipboardList, Database, FileEdit, FileText, GraduationCap, Headphones, PenLine, PenTool, PlayCircle, Plus, School } from 'lucide-react';
 import { useGradingQueue, useTeacherAssignments } from '@/shared/api/teacher';
 import { StaffNav, type StaffMenu } from '@/shared/components/layout/StaffNav';
 
@@ -28,13 +28,10 @@ export const buildTeacherMenus = (toGrade: number, drafts: number): StaffMenu[] 
     label: 'Luyện tập',
     icon: FileText,
     children: [
-      { to: '/teacher/library/tests?tab=TOEIC', label: 'Đề thi thử TOEIC', icon: FileText, desc: 'Full đề hoặc từng Part, chấm tự động', group: 'Đề thi thử' },
-      { to: '/teacher/library/tests?tab=VSTEP', label: 'Đề thi thử VSTEP', icon: FileText, desc: 'Nghe, Đọc chấm tự động', group: 'Đề thi thử' },
-      { to: '/teacher/library/tests?tab=writing', label: 'Đề Viết', icon: PenLine, desc: 'Học viên nộp bài, giáo viên chấm theo tiêu chí', group: 'Viết & Nói' },
-      { to: '/teacher/library/tests?tab=speaking', label: 'Đề Nói', icon: Mic, desc: 'Học viên ghi âm, giáo viên nhận xét', group: 'Viết & Nói' },
-      { to: '/teacher/library/practice?tab=grammar', label: 'Chủ điểm ngữ pháp', icon: BookMarked, desc: 'Lý thuyết kèm bài tập chấm tự động', group: 'Luyện tập' },
-      { to: '/teacher/library/practice?tab=vocab', label: 'Từ vựng & Flashcard', icon: BookOpen, desc: 'Bộ từ theo chủ đề TOEIC, VSTEP', group: 'Luyện tập' },
-      { to: '/teacher/library/practice?tab=dictation', label: 'Nghe chép chính tả', icon: Headphones, desc: 'Chấm theo % chép đúng', group: 'Luyện tập' },
+      { to: '/teacher/library/tests?tab=TOEIC', label: 'Đề thi thử', icon: FileText, desc: 'TOEIC, VSTEP · full đề hoặc từng Part, chấm tự động' },
+      { to: '/teacher/library/tests?tab=writing', label: 'Đề Viết & Nói', icon: PenLine, desc: 'Học viên nộp bài, giáo viên chấm theo tiêu chí' },
+      { to: '/teacher/library/practice?tab=grammar', label: 'Ngữ pháp & Từ vựng', icon: BookMarked, desc: 'Chủ điểm ngữ pháp, bộ từ & flashcard' },
+      { to: '/teacher/library/practice?tab=dictation', label: 'Nghe chép chính tả', icon: Headphones, desc: 'Chấm tự động theo % chép đúng' },
     ],
   },
   {
