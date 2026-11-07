@@ -44,7 +44,7 @@ const KNOWLEDGE_HINT = [
   '# Mệnh đề',
   'Mệnh đề quan hệ | who, which, that, whose | Bổ nghĩa cho danh từ đứng trước | The man who called you is my boss.',
   '# Mạo từ',
-  'a | trước danh từ đếm được số ít bắt đầu bằng âm phụ âm',
+  'a | trước danh từ đếm được số ít bắt đầu bằng phụ âm',
   '  a deadline | một hạn chót | We have a deadline on Friday.',
 ].join('\n');
 

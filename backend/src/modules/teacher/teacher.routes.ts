@@ -44,6 +44,7 @@ import { MODE_LABEL, mistakeSummaryOf, selfStudyOf } from './insights.service';
 import { completedAttempts } from '../catalog/counts';
 import { gradeLessonAssignments } from '../catalog/lesson-assignments';
 import { toExercises } from '../catalog/lesson-exercises';
+import { parseSubtitles } from '../catalog/lesson-transcript';
 import { byTitleNatural, levelLabel } from '../catalog/mappers';
 import { CLASS_TRACK, classCourseData, classCourseProgress, classCourseSelect, classTrackData, enrollClassCourse, nextClassCode, CLASS_LEVEL, codeWithLevel } from '../catalog/class-track';
 
@@ -1549,7 +1550,7 @@ teacherRouter.get(
       where: { deletedAt: null, status: 'PUBLISHED' },
       include: {
         author: { select: { fullName: true } },
-        courseSectionCourses: { orderBy: { orderIndex: 'asc' }, include: { lessonSections: { where: { deletedAt: null, status: 'PUBLISHED' }, orderBy: { orderIndex: 'asc' }, select: { id: true, title: true, type: true, durationMin: true, orderIndex: true, exercises: true, passScorePct: true, videoUrl: true } } } },
+        courseSectionCourses: { orderBy: { orderIndex: 'asc' }, include: { lessonSections: { where: { deletedAt: null, status: 'PUBLISHED' }, orderBy: { orderIndex: 'asc' }, select: { id: true, title: true, type: true, durationMin: true, orderIndex: true, exercises: true, passScorePct: true, videoUrl: true, transcript: true } } } },
       },
       orderBy: [{ track: 'asc' }, { trackOrder: 'asc' }, { title: 'asc' }],
     });
@@ -1577,9 +1578,9 @@ teacherRouter.get(
         partNo: s.partNo,
         partTitle: s.partTitle ?? undefined,
         // số câu bài tập sau bài + điểm cần đạt — giống học viên thấy
-        lessons: s.lessonSections.map(({ exercises, passScorePct, videoUrl, ...l }) => {
+        lessons: s.lessonSections.map(({ exercises, passScorePct, videoUrl, transcript, ...l }) => {
           const n = toExercises(exercises).length;
-          return { ...l, videoUrl: videoUrl ?? undefined, exercisesCount: n, passScorePct: n ? (passScorePct ?? 70) : undefined };
+          return { ...l, videoUrl: videoUrl ?? undefined, hasTranscript: Array.isArray(transcript) && transcript.length > 0, exercisesCount: n, passScorePct: n ? (passScorePct ?? 70) : undefined };
         }),
       })),
     }));
@@ -1644,6 +1645,18 @@ teacherRouter.post(
       fs.rmSync(path.join(LESSON_VIDEO_DIR, key), { force: true });
       throw e;
     }
+  })
+);
+
+/** Phụ đề video (.srt / .vtt) — lời thoại hiện dưới video và là nguồn kiến thức mạo từ của bài. text rỗng / null → gỡ phụ đề */
+teacherRouter.put(
+  '/lessons/:id/transcript',
+  handler(async (req) => {
+    const b = parse(z.object({ text: z.string().max(500000).nullable() }), req.body ?? {});
+    const { l } = await assertCourseLesson(req, String(req.params.id));
+    const cues = parseSubtitles(b.text ?? '');
+    await prisma.lesson.update({ where: { id: l.id }, data: { transcript: (cues as Prisma.InputJsonValue | null) ?? Prisma.DbNull } });
+    return { id: l.id, cues: cues?.length ?? 0 };
   })
 );
 

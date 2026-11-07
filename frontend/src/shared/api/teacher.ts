@@ -238,6 +238,8 @@ export interface LibLesson {
   passScorePct?: number;
   /** Video bài giảng giáo viên đã đăng (Vimeo/YouTube/tệp tải lên) */
   videoUrl?: string;
+  /** Có phụ đề video (nguồn lời thoại + kiến thức mạo từ của bài) */
+  hasTranscript?: boolean;
 }
 export interface LibCourse {
   id: string;
@@ -366,6 +368,7 @@ export const teacherApi = {
         timeout: 120_000,
       })
       .then((r) => r.data.data),
+  setLessonTranscript: (id: string, text: string | null) => api.put<{ id: string; cues: number }>(`${T}/lessons/${id}/transcript`, { text }),
   setLessonVideo: (id: string, videoUrl: string | null) => api.put<{ id: string; type: string; videoUrl?: string }>(`${T}/lessons/${id}/video`, { videoUrl }),
   uploadLessonVideo: (id: string, file: File) =>
     http

@@ -2,7 +2,7 @@
 // FRONTEND DOMAIN CONTRACT (UI-level types)
 // Mở rộng từ @toeic-vstep/shared, dùng chung cho mock data & pages
 // ==========================================
-import type { ExamType, IQuestion, ReviewStatus, SkillType } from '@toeic-vstep/shared';
+import type { ArticleGraphIndex, ExamType, IQuestion, ReviewStatus, SkillType } from '@toeic-vstep/shared';
 
 export type { ExamType, IQuestion, ReviewStatus, SkillType };
 
@@ -78,7 +78,7 @@ export interface LessonKnowledge {
   tips: KnowledgePoint[];
   vocab: { word: string; ipa?: string; pos?: string; meaningVi: string; example?: string }[];
   clauses: { title: string; markers: string[]; note?: string; example?: string }[];
-  /** Cây mạo từ: a / an / the → các từ trong bài đi kèm (bấm để mở / thu gọn) */
+  /** Cây mạo từ admin soạn (dùng cho bài tập a / an); giao diện học viên dùng articleGraph */
   articles: KnowledgeNode[];
 }
 
@@ -104,6 +104,8 @@ export interface Lesson {
   videoUrl?: string;
   transcript?: TranscriptLine[];
   knowledge?: LessonKnowledge;
+  /** Đồ thị GraphRAG mạo từ của bài (index do backend dựng) — khớp packages/shared/src/logic/article-graphrag.ts */
+  articleGraph?: ArticleGraphIndex;
   /** Bài tập sau bài học (video) hoặc đề của bài kiểm tra chặng */
   exercises?: LessonExercise[];
   /** Số câu bài tập (có ở danh sách bài, không cần tải chi tiết) */

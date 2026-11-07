@@ -1,0 +1,472 @@
+/* Mạo từ theo GraphRAG (ArticleGraph): tổng quan + sơ đồ 3 cột (mạo từ → quy tắc → cụm) + khung giải thích */
+
+/* ---- Tổng quan (global search) ---- */
+.ag-overview {
+  padding: 0.75rem 1rem;
+  border: 1px solid rgb(var(--slate-200));
+  border-radius: 0.75rem;
+  background: rgb(var(--slate-50));
+}
+.ag-overview__lead {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: rgb(var(--slate-800));
+}
+.ag-overview__lead svg {
+  flex-shrink: 0;
+  margin-top: 0.125rem;
+  color: #1DA483;
+}
+.ag-overview__list {
+  margin-top: 0.5rem;
+  display: grid;
+  gap: 0.25rem;
+}
+.ag-point {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.25rem 0.5rem;
+  width: 100%;
+  padding: 0.375rem 0.5rem;
+  border-radius: 0.5rem;
+  text-align: left;
+  font-size: 0.8125rem;
+  transition: background-color 0.15s ease;
+}
+.ag-point:hover {
+  background: rgb(var(--surface));
+}
+.ag-point:focus-visible {
+  outline: 2px solid #1DA483;
+  outline-offset: 1px;
+}
+.ag-point__title {
+  font-weight: 600;
+  color: rgb(var(--slate-800));
+}
+.ag-point__count {
+  padding: 0 0.375rem;
+  border-radius: 999px;
+  background: rgb(var(--slate-200));
+  color: rgb(var(--slate-600));
+  font-size: 0.6875rem;
+  font-weight: 700;
+}
+.ag-point__phrases {
+  font-style: italic;
+  color: rgb(var(--slate-500));
+}
+
+/* ---- Sơ đồ ---- */
+.ag-scroll {
+  overflow-x: auto;
+}
+.ag-map {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto auto minmax(11rem, 1fr);
+  align-items: start; /* ghim mép trên — cột con tự căn theo node cha bằng margin-top */
+  column-gap: 3rem;
+  padding: 0.25rem 0.125rem;
+}
+.ag-lines {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+}
+.ag-lines path {
+  fill: none;
+}
+/* đường nối cũng nhạt dần theo cấp */
+.ag-lines path.ag-line--1 {
+  stroke: #118A72;
+  stroke-width: 2;
+}
+.ag-lines path.ag-line--2 {
+  stroke: #73D6B9;
+  stroke-width: 1.5;
+}
+.ag-col {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.ag-col--rules,
+.ag-col--leaves {
+  align-self: start;
+}
+
+.ag-node {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.55rem 0.75rem;
+  border: 1px solid rgb(var(--slate-200));
+  border-radius: 0.5rem;
+  background: rgb(var(--surface));
+  color: rgb(var(--slate-800));
+  font-size: 0.875rem;
+  font-weight: 600;
+  line-height: 1.25;
+  text-align: left;
+  transition: border-color 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease;
+}
+button.ag-node:hover {
+  border-color: rgb(var(--slate-400));
+}
+.ag-node:focus-visible {
+  outline: 2px solid #1DA483;
+  outline-offset: 2px;
+}
+.ag-node__label {
+  flex: 1;
+}
+.ag-node--art {
+  min-width: 6.5rem;
+}
+.ag-node--rule {
+  min-width: 12rem;
+  max-width: 15rem;
+  font-size: 0.8125rem;
+}
+.ag-node__count {
+  min-width: 1.375rem;
+  padding: 0.0625rem 0.375rem;
+  border-radius: 999px;
+  background: rgb(var(--slate-100));
+  color: rgb(var(--slate-600));
+  font-size: 0.6875rem;
+  font-weight: 700;
+  text-align: center;
+}
+.ag-node__chev {
+  width: 0.875rem;
+  height: 0.875rem;
+  flex-shrink: 0;
+  color: rgb(var(--slate-400));
+  transition: transform 0.15s ease;
+}
+.ag-node--open .ag-node__chev {
+  transform: rotate(90deg);
+}
+
+/*
+ * Phân cấp bằng độ đậm của cùng màu chính của hệ thống (indigo = Ocean teal trong tailwind.config.js): cha đậm nhất, con nhạt dần
+ *   cấp 1 mạo từ  → nền indigo đậm, chữ trắng
+ *   cấp 2 quy tắc → nền indigo nhạt
+ *   cấp 3 cụm từ  → nền gần trắng, viền indigo rất nhạt
+ */
+.ag-node--art {
+  border-color: #118A72;
+  background: #118A72;
+  color: #fff;
+}
+button.ag-node--art:hover {
+  border-color: #0E6F5D;
+  background: #0E6F5D;
+}
+.ag-node--art .ag-node__count {
+  background: rgb(255 255 255 / 0.22);
+  color: #fff;
+}
+.ag-node--art .ag-node__chev {
+  color: rgb(255 255 255 / 0.8);
+}
+.ag-node--art.ag-node--open,
+button.ag-node--art.ag-node--open:hover {
+  border-color: #0E483E;
+  background: #0F584B;
+  box-shadow: 0 0 0 2px rgb(17 138 114 / 0.3);
+}
+
+.ag-node--rule {
+  border-color: #A9E8D4;
+  background: #D3F4E9;
+  color: #0F584B;
+}
+button.ag-node--rule:hover {
+  border-color: #3CBE9B;
+}
+.ag-node--rule .ag-node__count {
+  background: #1DA483;
+  color: #fff;
+}
+.ag-node--rule .ag-node__chev {
+  color: #1DA483;
+}
+.ag-node--rule.ag-node--open,
+button.ag-node--rule.ag-node--open:hover {
+  border-color: #1DA483;
+  background: #A9E8D4;
+  color: #0E483E;
+}
+
+.ag-node--leaf {
+  border-color: #D3F4E9;
+  background: #F6FDFA;
+}
+button.ag-node--leaf:hover {
+  border-color: #73D6B9;
+}
+.ag-node--leaf {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.125rem;
+  min-width: 10rem;
+  max-width: 16rem;
+  padding: 0.45rem 0.75rem;
+}
+.ag-node--inferred {
+  border-style: dashed;
+}
+.ag-node__sub {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: rgb(var(--slate-500));
+}
+.ag-node--leaf.ag-node--selected,
+button.ag-node--leaf.ag-node--selected:hover {
+  border-color: #3CBE9B;
+  background: #EDFBF6;
+  box-shadow: 0 0 0 1px #3CBE9B;
+}
+.ag-node--rule.ag-node--selected:not(.ag-node--open) {
+  box-shadow: 0 0 0 1px #1DA483;
+}
+.ag-empty {
+  max-width: 13rem;
+  font-size: 0.75rem;
+  color: rgb(var(--slate-400));
+}
+
+/* ---- Giải thích (local search) ---- */
+.ag-detail {
+  display: grid;
+  gap: 0.75rem;
+  padding: 0.875rem 1rem;
+  border: 1px solid rgb(var(--slate-200));
+  border-left: 3px solid #1DA483;
+  border-radius: 0.5rem;
+  background: rgb(var(--surface));
+}
+.ag-detail__title {
+  font-weight: 800;
+  color: rgb(var(--slate-900));
+}
+.ag-detail__answer {
+  display: grid;
+  gap: 0.25rem;
+  padding-left: 1.1rem;
+  list-style: disc;
+  font-size: 0.875rem;
+  color: rgb(var(--slate-700));
+}
+.ag-detail__rule {
+  font-size: 0.8125rem;
+  color: rgb(var(--slate-500));
+}
+.ag-section-label {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  margin-bottom: 0.375rem;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: rgb(var(--slate-500));
+}
+.ag-evidence ul {
+  display: grid;
+  gap: 0.375rem;
+}
+.ag-evidence li {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+}
+.ag-src {
+  flex-shrink: 0;
+  padding: 0.0625rem 0.375rem;
+  border-radius: 0.25rem;
+  background: rgb(var(--slate-100));
+  color: rgb(var(--slate-600));
+  font-size: 0.6875rem;
+  font-weight: 700;
+}
+.ag-evidence__text {
+  font-style: italic;
+  color: rgb(var(--slate-700));
+}
+.ag-mark {
+  padding: 0 0.125rem;
+  border-radius: 0.2rem;
+  background: rgb(29 164 131 / 0.15);
+  color: inherit;
+  font-style: normal;
+  font-weight: 700;
+}
+.ag-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem;
+}
+.ag-chip {
+  padding: 0.25rem 0.625rem;
+  border: 1px solid rgb(var(--slate-200));
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: rgb(var(--slate-700));
+  transition: border-color 0.15s ease;
+}
+.ag-chip:hover {
+  border-color: #1DA483;
+}
+/* chip liên quan theo cùng thang màu với sơ đồ */
+.ag-chip--article {
+  border-color: #118A72;
+  background: #118A72;
+  color: #fff;
+}
+.ag-chip--rule {
+  border-color: #A9E8D4;
+  background: #D3F4E9;
+  color: #0F584B;
+}
+.ag-chip--noun {
+  border-color: #D3F4E9;
+  background: #F6FDFA;
+}
+.ag-report {
+  padding-top: 0.5rem;
+  border-top: 1px dashed rgb(var(--slate-200));
+  font-size: 0.75rem;
+  color: rgb(var(--slate-500));
+}
+
+/* ---- chế độ tối ---- */
+.dark .ag-overview__lead svg {
+  color: #3CBE9B;
+}
+.dark .ag-node--art,
+.dark .ag-chip--article {
+  border-color: #1DA483;
+  background: #1DA483;
+  color: #fff;
+}
+.dark button.ag-node--art:hover {
+  background: #118A72;
+}
+.dark .ag-node--art.ag-node--open,
+.dark button.ag-node--art.ag-node--open:hover {
+  border-color: #73D6B9;
+  background: #118A72;
+}
+.dark .ag-node--rule,
+.dark .ag-chip--rule {
+  border-color: rgb(60 190 155 / 0.45);
+  background: rgb(29 164 131 / 0.28);
+  color: #D3F4E9;
+}
+.dark .ag-node--rule .ag-node__chev {
+  color: #A9E8D4;
+}
+.dark .ag-node--rule.ag-node--open,
+.dark button.ag-node--rule.ag-node--open:hover {
+  border-color: #73D6B9;
+  background: rgb(29 164 131 / 0.42);
+  color: #fff;
+}
+.dark .ag-node--leaf,
+.dark .ag-chip--noun {
+  border-color: rgb(60 190 155 / 0.22);
+  background: rgb(29 164 131 / 0.08);
+}
+.dark .ag-node--leaf.ag-node--selected,
+.dark button.ag-node--leaf.ag-node--selected:hover {
+  border-color: #3CBE9B;
+  background: rgb(29 164 131 / 0.18);
+  box-shadow: 0 0 0 1px #3CBE9B;
+}
+.dark .ag-lines path.ag-line--1 {
+  stroke: #3CBE9B;
+}
+.dark .ag-lines path.ag-line--2 {
+  stroke: rgb(115 214 185 / 0.45);
+}
+.dark .ag-mark {
+  background: rgb(60 190 155 / 0.25);
+}
+.dark .ag-chip--article {
+  color: #A9E8D4;
+}
+
+/* ---- màn hình hẹp: xếp dọc (mạo từ → quy tắc → cụm), bỏ đường nối ---- */
+@media (max-width: 639px) {
+  .ag-map {
+    grid-template-columns: minmax(0, 1fr);
+    row-gap: 0.75rem;
+  }
+  .ag-lines {
+    display: none;
+  }
+  .ag-col--arts {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+  .ag-col--rules,
+  .ag-col--leaves {
+    margin-top: 0 !important; /* JS căn giữa theo node cha chỉ dùng cho bố cục ngang */
+    padding-left: 0.75rem;
+    border-left: 2px solid #118A72;
+  }
+  .ag-col--leaves {
+    border-left-color: #73D6B9;
+  }
+  .ag-col--leaves {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .ag-node--art {
+    flex: 1;
+    min-width: 0;
+  }
+  .ag-node--rule,
+  .ag-node--leaf {
+    min-width: 0;
+    max-width: none;
+  }
+  .ag-empty {
+    max-width: none;
+  }
+}
+
+/* node mới sinh: chỉ đổi độ mờ để đường nối đo đúng vị trí cuối */
+.ag-col--rules .ag-node,
+.ag-col--leaves .ag-node {
+  animation: ag-in 0.18s ease-out both;
+}
+@keyframes ag-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ag-col--rules .ag-node,
+  .ag-col--leaves .ag-node {
+    animation: none;
+  }
+}

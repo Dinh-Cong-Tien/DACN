@@ -171,7 +171,7 @@ function articleQuestions(k: LessonKnowledge, r: () => number, id: (t: string) =
         text: `${BLANK} ${m[2]}${vi ? ` (${vi})` : ''}`,
         options,
         answer: options.indexOf(art),
-        explain: art === 'an' ? `Dùng “an” vì “${m[2]}” bắt đầu bằng âm nguyên âm.` : `Dùng “a” vì “${m[2]}” bắt đầu bằng âm phụ âm.`,
+        explain: art === 'an' ? `Dùng “an” vì “${m[2]}” bắt đầu bằng nguyên âm.` : `Dùng “a” vì “${m[2]}” bắt đầu bằng phụ âm.`,
       },
     ];
   });

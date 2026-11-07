@@ -325,7 +325,7 @@ export const LessonEngine: React.FC<LessonEngineProps> = ({ course, lesson, onSe
         {!showExercise && source && lesson.transcript?.length ? <LessonTranscript lines={lesson.transcript} now={watch.now} onSeek={(sec) => watch.seek(sec, true)} onWord={onWordClick} /> : null}
 
         {/* Kiến thức trong bài */}
-        {!showExercise && lesson.knowledge && <LessonKnowledge knowledge={lesson.knowledge} onWord={onWordClick} />}
+        {!showExercise && (lesson.knowledge || lesson.articleGraph) && <LessonKnowledge knowledge={lesson.knowledge} articleGraph={lesson.articleGraph} onWord={onWordClick} />}
       </div>
 
       {/* Mục lục khoá: dính theo màn hình, cuộn riêng; chỉ mở chương đang học (bấm tên chương để mở/gập) */}

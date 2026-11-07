@@ -8,6 +8,7 @@ import { num } from '../../core/dto';
 import { recordActivity } from './activity';
 import { gradientAt } from './mappers';
 import { toKnowledge } from './lesson-knowledge';
+import { lessonArticleGraph } from './lesson-article-graph';
 import { toCues } from './lesson-transcript';
 import { toExercises } from './lesson-exercises';
 import { gradeLessonAssignments } from './lesson-assignments';
@@ -53,7 +54,7 @@ function toLesson(l: DbLesson, state: { completed: boolean; locked: boolean; pos
     // vị trí video đã xem tới (bài đang học dở) — hiện "đã học tới mm:ss" trong mục lục
     ...(l.type === 'VIDEO' && !state.completed && state.positionSec ? { lastPositionSec: state.positionSec } : {}),
     ...(full && !state.locked
-      ? { videoUrl: l.videoUrl ?? undefined, audioUrl: l.audioUrl ?? undefined, content: l.contentMd ?? undefined, knowledge: toKnowledge(l.knowledge), transcript: toTranscript(l.transcript), exercises: toExercises(l.exercises), quizTestId: l.quizTestId ?? undefined, passScorePct: l.passScorePct ?? undefined }
+      ? { videoUrl: l.videoUrl ?? undefined, audioUrl: l.audioUrl ?? undefined, content: l.contentMd ?? undefined, knowledge: toKnowledge(l.knowledge), articleGraph: lessonArticleGraph(l), transcript: toTranscript(l.transcript), exercises: toExercises(l.exercises), quizTestId: l.quizTestId ?? undefined, passScorePct: l.passScorePct ?? undefined }
       : {}),
   };
 }

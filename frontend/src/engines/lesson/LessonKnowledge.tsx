@@ -1,9 +1,10 @@
-import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { AudioLines, BookText, ChevronRight, Languages, Lightbulb, ListTree, MessageSquareQuote, Quote, Volume2 } from 'lucide-react';
-import type { KnowledgeNode, KnowledgePoint, LessonKnowledge as Knowledge } from '@/shared/types';
+import React, { useEffect, useState } from 'react';
+import { AudioLines, BookText, Languages, Lightbulb, ListTree, MessageSquareQuote, Quote, Volume2 } from 'lucide-react';
+import type { ArticleGraphIndex } from '@toeic-vstep/shared';
+import type { KnowledgePoint, LessonKnowledge as Knowledge } from '@/shared/types';
 import { Card, Tabs } from '@/shared/components/ui';
 import { cn } from '@/shared/utils';
-import './lesson-knowledge.css';
+import { ArticleGraph } from './ArticleGraph';
 
 type Key = keyof Knowledge;
 const TABS: { key: Key; label: string; icon: React.ReactNode }[] = [
@@ -27,120 +28,15 @@ const speak = (text: string) => {
   }
 };
 
-type Path = { d: string; active: boolean };
+/** Số mục của từng tab — tab Mạo từ lấy từ đồ thị GraphRAG (số cụm khác nhau trong bài) */
+const sizeOf = (k: Knowledge | undefined, graph: ArticleGraphIndex | undefined, key: Key) =>
+  key === 'articles' ? new Set(graph?.claims.map((c) => c.phrase.toLowerCase())).size : (k?.[key] ?? []).length;
 
-/**
- * Sơ đồ mạo từ dạng mind map ngang: a / an / the → các từ trong bài.
- * Bấm một mạo từ để sinh các node từ ở cột bên phải (căn theo nhánh cha), bấm lại để thu gọn.
- * Đường nối là đường cong SVG đo theo vị trí thật của node.
- */
-const ARTICLES = ['a', 'an', 'the'];
-const ArticleTree: React.FC<{ roots: KnowledgeNode[] }> = ({ roots: all }) => {
-  const roots = useMemo(() => all.filter((r) => ARTICLES.includes(r.label)), [all]);
-  const [openIdx, setOpenIdx] = useState<number | null>(null);
-  const [sel, setSel] = useState<KnowledgeNode | null>(null);
-  const [paths, setPaths] = useState<Path[]>([]);
-  const wrap = useRef<HTMLDivElement>(null);
-  const leavesRef = useRef<HTMLDivElement>(null);
-  const l1 = useRef<(HTMLButtonElement | null)[]>([]);
-  const l2 = useRef<(HTMLButtonElement | null)[]>([]);
-  const kids = openIdx !== null ? (roots[openIdx]?.children ?? []) : [];
-
-  useLayoutEffect(() => {
-    const draw = () => {
-      const w = wrap.current;
-      if (!w) return;
-      const parent = openIdx !== null ? l1.current[openIdx] : null;
-      // cột từ: căn giữa theo nhánh đang mở (không vượt lên trên mép sơ đồ)
-      const lv = leavesRef.current;
-      if (lv && parent) {
-        lv.style.marginTop = '0px';
-        const p = parent.getBoundingClientRect();
-        const l = lv.getBoundingClientRect();
-        lv.style.marginTop = `${Math.max(0, p.top + p.height / 2 - l.height / 2 - l.top)}px`;
-      }
-      const o = w.getBoundingClientRect();
-      const box = (el: Element) => {
-        const r = el.getBoundingClientRect();
-        return { l: r.left - o.left, r: r.right - o.left, y: r.top - o.top + r.height / 2 };
-      };
-      const curve = (a: ReturnType<typeof box>, b: ReturnType<typeof box>) => {
-        const mx = (a.r + b.l) / 2;
-        return `M${a.r},${a.y}C${mx},${a.y} ${mx},${b.y} ${b.l},${b.y}`;
-      };
-      const out: Path[] = [];
-      if (parent) l2.current.slice(0, kids.length).forEach((el) => el && out.push({ d: curve(box(parent), box(el)), active: true }));
-      setPaths(out);
-    };
-    draw();
-    const ro = new ResizeObserver(draw);
-    if (wrap.current) ro.observe(wrap.current);
-    return () => ro.disconnect();
-  }, [openIdx, roots, kids.length]);
-
-  const toggle = (i: number) => {
-    const closing = openIdx === i;
-    setOpenIdx(closing ? null : i);
-    setSel(closing ? null : roots[i]);
-  };
-
-  return (
-    <div className="space-y-4">
-      <div className="kt-scroll">
-        <div ref={wrap} className="kt-map">
-          <svg className="kt-lines" aria-hidden>
-            {paths.map((p, i) => (
-              <path key={i} d={p.d} className={p.active ? 'is-active' : undefined} />
-            ))}
-          </svg>
-          <div className="kt-col">
-            {roots.map((r, i) => (
-              <button
-                key={i}
-                ref={(el) => (l1.current[i] = el)}
-                type="button"
-                className={cn('kt-node kt-node--branch', openIdx === i && 'kt-node--open')}
-                aria-expanded={openIdx === i}
-                onClick={() => toggle(i)}
-              >
-                <span className="kt-node__label">{r.label}</span>
-                <span className="kt-node__count">{r.children?.length ?? 0}</span>
-                <ChevronRight className="kt-node__chev" aria-hidden />
-              </button>
-            ))}
-          </div>
-          {kids.length > 0 ? (
-            <div ref={leavesRef} className="kt-col kt-col--leaves">
-              {kids.map((c, i) => (
-                <button key={`${openIdx}-${i}`} ref={(el) => (l2.current[i] = el)} type="button" className={cn('kt-node kt-node--leaf', sel === c && 'kt-node--selected')} onClick={() => setSel(c)}>
-                  <span className="kt-node__label">{c.label}</span>
-                  {c.meaningVi && <span className="kt-node__sub">{c.meaningVi}</span>}
-                </button>
-              ))}
-            </div>
-          ) : (
-            <p className="kt-empty">Chọn a, an hoặc the để xem các từ trong bài đi kèm</p>
-          )}
-        </div>
-      </div>
-      {sel && (
-        <div className="kt-detail" aria-live="polite">
-          <p className="text-sm">
-            <span className="font-bold text-slate-900">{sel.label}</span>
-            {sel.meaningVi && <span className="text-slate-600"> · {sel.meaningVi}</span>}
-          </p>
-          {sel.example && <p className="kt-detail__ex">{sel.example}</p>}
-        </div>
-      )}
-    </div>
-  );
-};
-
-/** Kiến thức trong video: ngữ pháp, từ vựng, mệnh đề, cây mạo từ — hiện ngay dưới player */
-export const LessonKnowledge: React.FC<{ knowledge: Knowledge; onWord?: (e: React.MouseEvent, word: string) => void }> = ({ knowledge, onWord }) => {
-  const tabs = TABS.filter((t) => (knowledge[t.key] ?? []).length > 0);
+/** Kiến thức trong bài: ngữ pháp, từ vựng, mệnh đề, mạo từ (GraphRAG) — hiện ngay dưới player / bài giảng */
+export const LessonKnowledge: React.FC<{ knowledge?: Knowledge; articleGraph?: ArticleGraphIndex; onWord?: (e: React.MouseEvent, word: string) => void }> = ({ knowledge, articleGraph, onWord }) => {
+  const tabs = TABS.filter((t) => sizeOf(knowledge, articleGraph, t.key) > 0);
   const [tab, setTab] = useState<Key>(tabs[0]?.key ?? 'grammar');
-  useEffect(() => setTab(tabs[0]?.key ?? 'grammar'), [knowledge]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => setTab(tabs[0]?.key ?? 'grammar'), [knowledge, articleGraph]); // eslint-disable-line react-hooks/exhaustive-deps
   if (!tabs.length) return null;
 
   return (
@@ -149,11 +45,11 @@ export const LessonKnowledge: React.FC<{ knowledge: Knowledge; onWord?: (e: Reac
         <p className="font-bold text-slate-900 text-sm">Kiến thức trong bài</p>
         <p className="text-[11px] text-slate-500">Ôn lại ngữ pháp, phát âm, từ vựng và mẫu câu được dùng trong bài</p>
       </div>
-      <Tabs className="px-3 mt-2" value={tab} onChange={(k) => setTab(k as Key)} items={tabs.map((t) => ({ key: t.key, label: t.label, icon: t.icon, count: (knowledge[t.key] ?? []).length }))} />
+      <Tabs className="px-3 mt-2" value={tab} onChange={(k) => setTab(k as Key)} items={tabs.map((t) => ({ key: t.key, label: t.label, icon: t.icon, count: sizeOf(knowledge, articleGraph, t.key) }))} />
       <div className="p-5">
         {POINT_TABS.includes(tab) && (
           <ul className="space-y-3">
-            {(knowledge[tab] as KnowledgePoint[]).map((g, i) => (
+            {((knowledge?.[tab] ?? []) as KnowledgePoint[]).map((g, i) => (
               <li key={i} className="rounded-xl border border-slate-200 p-4">
                 <p className="font-bold text-slate-900">{g.title}</p>
                 {g.formula && <p className="mt-2 inline-block rounded-lg bg-slate-900 px-3 py-1.5 font-mono text-xs text-white">{g.formula}</p>}
@@ -174,7 +70,7 @@ export const LessonKnowledge: React.FC<{ knowledge: Knowledge; onWord?: (e: Reac
         )}
         {tab === 'vocab' && (
           <ul className="grid gap-3 sm:grid-cols-2">
-            {knowledge.vocab.map((v, i) => (
+            {(knowledge?.vocab ?? []).map((v, i) => (
               <li key={i} className="rounded-xl border border-slate-200 p-4">
                 <div className="flex items-start justify-between gap-2">
                   <button type="button" className="text-left" onClick={(e) => onWord?.(e, v.word)} title="Tra từ điển / lưu vào sổ từ">
@@ -197,7 +93,7 @@ export const LessonKnowledge: React.FC<{ knowledge: Knowledge; onWord?: (e: Reac
         )}
         {tab === 'clauses' && (
           <ul className="space-y-3">
-            {knowledge.clauses.map((c, i) => (
+            {(knowledge?.clauses ?? []).map((c, i) => (
               <li key={i} className="rounded-xl border border-slate-200 p-4">
                 <p className="font-bold text-slate-900">{c.title}</p>
                 <div className="mt-2 flex flex-wrap gap-1.5">
@@ -213,7 +109,7 @@ export const LessonKnowledge: React.FC<{ knowledge: Knowledge; onWord?: (e: Reac
             ))}
           </ul>
         )}
-        {tab === 'articles' && <ArticleTree roots={knowledge.articles} />}
+        {tab === 'articles' && articleGraph && <ArticleGraph graph={articleGraph} />}
       </div>
     </Card>
   );

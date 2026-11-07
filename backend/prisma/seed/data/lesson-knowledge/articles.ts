@@ -94,8 +94,8 @@ export function articleTree(k: LessonKnowledge): KnowledgeNode[] {
   };
 
   return [
-    { label: 'a', meaningVi: 'trước danh từ đếm được số ít bắt đầu bằng âm phụ âm (nhắc lần đầu)', example: note(NOTE.a), children: pick(aList, 'a', FALLBACK.a) },
-    { label: 'an', meaningVi: 'trước danh từ đếm được số ít bắt đầu bằng âm nguyên âm', example: note(NOTE.an), children: pick(anList, 'an', FALLBACK.an) },
+    { label: 'a', meaningVi: 'trước danh từ đếm được số ít bắt đầu bằng phụ âm', example: note(NOTE.a), children: pick(aList, 'a', FALLBACK.a) },
+    { label: 'an', meaningVi: 'trước danh từ đếm được số ít bắt đầu bằng nguyên âm', example: note(NOTE.an), children: pick(anList, 'an', FALLBACK.an) },
     { label: 'the', meaningVi: 'khi người nghe đã biết là người / vật nào', example: note(NOTE.the), children: pick(theList, 'the', FALLBACK.the) },
   ];
 }
