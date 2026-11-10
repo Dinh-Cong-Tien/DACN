@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Headphones, Play, Check, ArrowRight, RotateCcw, Trophy, Eye, EyeOff, Volume2 } from 'lucide-react';
+import { Headphones, Play, Square, Check, ArrowRight, RotateCcw, Trophy, Eye, EyeOff, Volume2 } from 'lucide-react';
 import { useDocumentTitle } from '@/shared/hooks';
 import { Badge, Button, Card, CardHeader, PageHeader, ProgressBar, RingProgress, StatCard, Textarea } from '@/shared/components/ui';
 import { Stagger } from '@/shared/components/motion';
@@ -30,7 +30,8 @@ export const StudentDictationPage: React.FC = () => {
   const [showVi, setShowVi] = useState(false);
   const [results, setResults] = useState<number[]>([]);
   const [plays, setPlays] = useState(0);
-  const [rate, setRate] = useState(0.9);
+  const [rate, setRate] = useState(1);
+  const [playing, setPlaying] = useState(false);
   const [finished, setFinished] = useState(false);
   const qc = useQueryClient();
   const typedAll = useRef<string[]>([]);
@@ -79,12 +80,21 @@ export const StudentDictationPage: React.FC = () => {
       const u = new SpeechSynthesisUtterance(item.text);
       u.lang = 'en-US';
       u.rate = rate;
+      u.onend = u.onerror = () => setPlaying(false);
+      setPlaying(true);
       window.speechSynthesis.speak(u);
       setPlays((p) => p + 1);
     } catch {
       toast.error('Trình duyệt không hỗ trợ phát âm');
     }
   };
+
+  const stop = () => {
+    window.speechSynthesis.cancel();
+    setPlaying(false);
+  };
+  // dừng đọc khi đổi câu / rời trang
+  useEffect(() => stop, [index, passageId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const check = () => {
     if (!input.trim()) return toast.warning('Hãy nhập câu bạn nghe được');
@@ -189,56 +199,72 @@ export const StudentDictationPage: React.FC = () => {
 
       <div className="max-w-3xl mx-auto space-y-4">
         <ProgressBar value={(index / Math.max(1, ITEMS.length)) * 100} size="sm" />
-        <Card key={item.id} hard className="animate-slide-in-right">
+        <Card key={item.id}>
           <CardHeader
             title={`Câu ${index + 1}`}
             subtitle={`Chủ đề ${item.topic} · ${target.length} từ`}
             action={
-              <Badge tone={item.level === 'Dễ' ? 'emerald' : item.level === 'Vừa' ? 'amber' : 'violet'} solid>
+              <Badge tone={item.level === 'Dễ' ? 'emerald' : item.level === 'Vừa' ? 'amber' : 'violet'}>
                 {item.level}
               </Badge>
             }
           />
-          <div className="flex flex-col sm:flex-row items-center gap-4 p-5 rounded-2xl bg-indigo-600 border-2 border-slate-900 text-white">
-            <button onClick={speak} className="w-16 h-16 rounded-full bg-amber-300 border-2 border-slate-900 text-slate-900 flex items-center justify-center shadow-hard hover:-translate-y-0.5 active:translate-y-0 active:shadow-none transition relative shrink-0">
-              <Play className="w-7 h-7 ml-1" />
-              <span className="absolute inset-0 rounded-full bg-amber-300/40 animate-pulse-ring" />
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-3 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
+            <button
+              type="button"
+              onClick={playing ? stop : speak}
+              aria-label={playing ? 'Dừng' : plays ? 'Nghe lại' : 'Nghe câu'}
+              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-indigo-600 text-white transition-colors hover:bg-indigo-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+            >
+              {playing ? <Square className="h-4 w-4 fill-current" /> : <Play className="ml-0.5 h-5 w-5 fill-current" />}
             </button>
-            <div className="flex-1 text-center sm:text-left">
-              <p className="font-display font-extrabold">Nhấn để nghe câu</p>
-              <p className="text-xs text-indigo-100 mt-0.5">Nghe tối đa 3 lần rồi gõ lại. Bạn có thể giảm tốc độ nếu cần.</p>
-              <div className="flex items-center gap-2 mt-2 justify-center sm:justify-start">
-                {[0.7, 0.9, 1.1].map((r) => (
-                  <button key={r} onClick={() => setRate(r)} className={cn('px-2.5 py-1 rounded-lg text-[11px] font-extrabold border-2 transition', rate === r ? 'bg-white text-slate-900 border-slate-900' : 'bg-transparent border-white/40 text-white hover:border-white')}>
-                    {r === 0.7 ? 'Chậm' : r === 0.9 ? 'Chuẩn' : 'Nhanh'}
-                  </button>
-                ))}
-              </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-semibold text-slate-900">{playing ? 'Đang phát…' : plays ? 'Nghe lại' : 'Nghe câu'}</p>
+              <p className="text-xs text-slate-500">{plays ? `Đã nghe ${plays} lần` : 'Chưa nghe lần nào'} · Ctrl + Space để nghe lại</p>
+            </div>
+            <div role="radiogroup" aria-label="Tốc độ đọc" className="inline-flex rounded-lg border border-slate-200 bg-white p-0.5">
+              {[0.75, 1, 1.25].map((r) => (
+                <button
+                  key={r}
+                  type="button"
+                  role="radio"
+                  aria-checked={rate === r}
+                  onClick={() => setRate(r)}
+                  className={cn('rounded-md px-2.5 py-1 text-xs font-semibold tabular-nums transition-colors', rate === r ? 'bg-indigo-600 text-white' : 'text-slate-600 hover:text-slate-900')}
+                >
+                  {r}×
+                </button>
+              ))}
             </div>
           </div>
 
           <div className="mt-4">
-            <Textarea label="Bạn nghe được gì?" placeholder="Gõ lại câu vừa nghe..." value={input} onChange={(e) => setInput(e.target.value)} disabled={checked} className={cn(checked && (accuracy === 100 ? 'border-emerald-500 bg-emerald-50' : 'border-amber-400 bg-amber-50'))} />
+            <Textarea label="Bạn nghe được gì?" placeholder="Gõ lại câu vừa nghe…" hint="Ctrl + Enter để kiểm tra" value={input} onChange={(e) => setInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (!e.ctrlKey && !e.metaKey) return;
+                if (e.key === ' ') { e.preventDefault(); speak(); }
+                else if (e.key === 'Enter' && !checked) { e.preventDefault(); check(); }
+              }} disabled={checked} className={cn(checked && (accuracy === 100 ? 'border-emerald-500' : 'border-amber-400'))} />
           </div>
 
           {checked && (
             <div className="mt-4 space-y-3 animate-fade-up">
               <div className="flex items-center justify-between">
-                <p className="text-sm font-bold text-slate-900">Kết quả so khớp</p>
+                <p className="text-sm font-semibold text-slate-900">Kết quả so khớp <span className="font-normal text-slate-500">· từ tô đỏ là chỗ nghe sót hoặc sai</span></p>
                 <Badge tone={accuracy >= 80 ? 'emerald' : accuracy >= 50 ? 'amber' : 'violet'} solid size="md">
                   {accuracy}% chính xác
                 </Badge>
               </div>
-              <div className="p-4 rounded-2xl bg-slate-50 border-2 border-slate-900 flex flex-wrap gap-1.5 text-base leading-relaxed">
+              <div className="flex flex-wrap gap-1 rounded-xl border border-slate-200 bg-slate-50 p-4 text-base leading-relaxed">
                 {diff.map((d, i) => (
-                  <span key={i} className={cn('px-1.5 py-0.5 rounded-md font-bold animate-pop', d.ok ? 'bg-emerald-200 text-emerald-900' : 'bg-violet-200 text-violet-900 underline decoration-wavy')} style={{ animationDelay: `${i * 30}ms` }}>
+                  <span key={i} className={cn('rounded px-1 font-medium', d.ok ? 'text-slate-800' : 'bg-rose-500/15 text-rose-600 underline decoration-rose-400 underline-offset-4')}>
                     {d.word}
                   </span>
                 ))}
               </div>
               {item.textVi && (
                 <>
-                  <button onClick={() => setShowVi((v) => !v)} className="inline-flex items-center gap-1.5 text-xs font-extrabold text-indigo-700 hover:underline">
+                  <button onClick={() => setShowVi((v) => !v)} className="inline-flex items-center gap-1.5 text-xs font-semibold text-indigo-700 hover:underline">
                     {showVi ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />} {showVi ? 'Ẩn nghĩa' : 'Xem nghĩa tiếng Việt'}
                   </button>
                   {showVi && <p className="text-sm text-slate-600 italic animate-fade-in">"{item.textVi}"</p>}
@@ -247,12 +273,12 @@ export const StudentDictationPage: React.FC = () => {
             </div>
           )}
 
-          <div className="flex items-center justify-between mt-5 pt-4 border-t-2 border-slate-900/10">
+          <div className="flex items-center justify-between mt-5 pt-4 border-t border-slate-200">
             <Button variant="ghost" size="sm" leftIcon={<RotateCcw className="w-4 h-4" />} onClick={() => { setInput(''); setChecked(false); }}>
               Nhập lại
             </Button>
             {checked ? (
-              <Button variant={index + 1 < ITEMS.length ? 'primary' : 'success'} rightIcon={<ArrowRight className="w-4 h-4" />} onClick={next} className="animate-pop">
+              <Button variant={index + 1 < ITEMS.length ? 'primary' : 'success'} rightIcon={<ArrowRight className="w-4 h-4" />} onClick={next}>
                 {index + 1 < ITEMS.length ? 'Câu tiếp theo' : 'Xem tổng kết'}
               </Button>
             ) : (
