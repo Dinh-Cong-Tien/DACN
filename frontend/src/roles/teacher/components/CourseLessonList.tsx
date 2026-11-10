@@ -1,5 +1,5 @@
 import React from 'react';
-import { Video } from 'lucide-react';
+import { ClipboardPen, Video } from 'lucide-react';
 import { cn } from '@/shared/utils';
 import type { LibCourse, LibLesson } from '@/shared/api/teacher';
 
@@ -20,9 +20,11 @@ export const CourseLessonList: React.FC<{
   classSize?: number;
   /** có → cột Video: giáo viên đăng/đổi video bài giảng cho từng bài */
   onVideo?: (lesson: LibLesson & { no: number }) => void;
+  /** có → bài kiểm tra (QUIZ / CHECKPOINT) có nút "Sửa đề" */
+  onTest?: (lesson: LibLesson & { no: number }) => void;
   /** chỉ hiện bài thoả điều kiện (số thứ tự bài vẫn theo cả khoá) */
   only?: (lesson: LibLesson) => boolean;
-}> = ({ course, picked = [], onToggle, stats, classSize = 0, onVideo, only }) => {
+}> = ({ course, picked = [], onToggle, stats, classSize = 0, onVideo, onTest, only }) => {
   const lessons = course.sections.flatMap((s) => s.lessons);
   const sections = only ? course.sections.map((s) => ({ ...s, lessons: s.lessons.filter(only) })).filter((s) => s.lessons.length) : course.sections;
   if (!sections.length) return <p className="rounded-md border border-dashed border-slate-200 px-4 py-8 text-center text-sm text-slate-500">Không có bài nào khớp bộ lọc.</p>;
@@ -58,6 +60,18 @@ export const CourseLessonList: React.FC<{
                       className={cn('inline-flex w-24 shrink-0 items-center justify-end gap-1 text-[12px] font-medium hover:underline', l.videoUrl ? 'text-emerald-700' : 'text-indigo-700')}
                     >
                       <Video className="h-3.5 w-3.5" /> {l.videoUrl ? 'Có video' : 'Thêm video'}
+                    </button>
+                  ) : onTest && (l.type === 'QUIZ' || l.type === 'CHECKPOINT') ? (
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        onTest({ ...l, no: lessons.indexOf(l) + 1 });
+                      }}
+                      title="Xem và sửa đề kiểm tra của bài"
+                      className="inline-flex w-24 shrink-0 items-center justify-end gap-1 text-[12px] font-medium text-indigo-700 hover:underline"
+                    >
+                      <ClipboardPen className="h-3.5 w-3.5" /> Sửa đề
                     </button>
                   ) : (
                     <span className="w-24 shrink-0" />

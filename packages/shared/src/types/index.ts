@@ -90,6 +90,8 @@ export interface IPassage {
   content: string;
   audioUrl?: string | null;
   imageUrl?: string | null;
+  /** Câu nghe không có tệp audio: lời máy đọc (text-to-speech) */
+  speakText?: string | null;
 }
 
 // ==========================================

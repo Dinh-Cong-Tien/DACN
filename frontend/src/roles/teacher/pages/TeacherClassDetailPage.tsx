@@ -19,6 +19,7 @@ import { CLASS_LEVEL_OPTIONS, classTrack, classTrackLabel, courseOptions } from 
 import { ClassCourseProgressPanel } from '../components/ClassCourseProgress';
 import { CourseLessonList } from '../components/CourseLessonList';
 import { LessonVideoDialog } from '../components/LessonVideoDialog';
+import { LessonTestDialog } from '../components/LessonTestDialog';
 import type { LibLesson } from '@/shared/api/teacher';
 
 const STATUS: Record<ClassStudent['status'], { label: string; tone: StatusTone }> = {
@@ -65,7 +66,8 @@ export const TeacherClassDetailPage: React.FC = () => {
   const [emails, setEmails] = useState('');
   const [matForm, setMatForm] = useState({ title: '', type: 'PDF' as MaterialType, url: '' });
   const [videoLesson, setVideoLesson] = useState<(LibLesson & { no: number }) | null>(null);
-  const [lessonFilter, setLessonFilter] = useState<'all' | 'novideo' | 'video'>('all');
+  const [testLesson, setTestLesson] = useState<(LibLesson & { no: number }) | null>(null);
+  const [lessonFilter, setLessonFilter] = useState<'all' | 'novideo' | 'video' | 'test'>('all');
   const [lessonQ, setLessonQ] = useState('');
   const [matMode, setMatMode] = useState<'file' | 'link'>('file');
   const [matFile, setMatFile] = useState<File | null>(null);
@@ -655,11 +657,12 @@ export const TeacherClassDetailPage: React.FC = () => {
             <div className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <TTabs
                 value={lessonFilter}
-                onChange={(k) => setLessonFilter(k as 'all' | 'novideo' | 'video')}
+                onChange={(k) => setLessonFilter(k as 'all' | 'novideo' | 'video' | 'test')}
                 items={[
                   { key: 'all', label: 'Tất cả bài', count: libCourse.lessonsCount },
                   { key: 'novideo', label: 'Chưa có video', count: videoLessons.filter((l) => !l.videoUrl).length },
                   { key: 'video', label: 'Đã có video', count: videoLessons.filter((l) => l.videoUrl).length },
+                  { key: 'test', label: 'Bài kiểm tra', count: libCourse.sections.flatMap((s) => s.lessons).filter((l) => l.type === 'QUIZ' || l.type === 'CHECKPOINT').length },
                 ]}
               />
               <input value={lessonQ} onChange={(e) => setLessonQ(e.target.value)} placeholder="Tìm bài theo tên…" aria-label="Tìm bài theo tên" className={cn(inputCls, 'w-full sm:w-64')} />
@@ -667,7 +670,14 @@ export const TeacherClassDetailPage: React.FC = () => {
             <CourseLessonList course={libCourse} picked={picked} onToggle={(lid) => setPicked((p) => (p.includes(lid) ? p.filter((x) => x !== lid) : [...p, lid]))} stats={cls.courseProgress?.lessons}
               classSize={students.length}
               onVideo={setVideoLesson}
-              only={lessonFilter === 'all' && !lessonQ.trim() ? undefined : (l) => (lessonFilter === 'all' || (lessonFilter === 'video') === !!l.videoUrl) && (lessonFilter === 'all' || l.type === 'VIDEO' || l.type === 'READING') && l.title.toLowerCase().includes(lessonQ.trim().toLowerCase())}
+              onTest={setTestLesson}
+              only={
+                lessonFilter === 'all' && !lessonQ.trim()
+                  ? undefined
+                  : (l) =>
+                      (lessonFilter === 'all' || (lessonFilter === 'test' ? l.type === 'QUIZ' || l.type === 'CHECKPOINT' : (l.type === 'VIDEO' || l.type === 'READING') && (lessonFilter === 'video') === !!l.videoUrl)) &&
+                      l.title.toLowerCase().includes(lessonQ.trim().toLowerCase())
+              }
             />
           </Panel>
         ) : (
@@ -726,6 +736,7 @@ export const TeacherClassDetailPage: React.FC = () => {
       </Modal>
 
       <LessonVideoDialog lesson={videoLesson} onClose={() => setVideoLesson(null)} />
+      <LessonTestDialog lesson={testLesson} onClose={() => setTestLesson(null)} />
 
       <Modal
         open={uploadOpen}

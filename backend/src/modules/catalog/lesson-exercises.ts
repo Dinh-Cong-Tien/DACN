@@ -12,12 +12,16 @@ export interface ExercisePassage {
   content: string;
   imageUrl?: string;
   audioUrl?: string;
+  /** Câu nghe không có tệp audio: lời máy đọc (text-to-speech của trình duyệt) */
+  speak?: string;
 }
 export type ExerciseType = 'vocab-meaning' | 'vocab-context' | 'grammar-formula' | 'grammar-name' | 'grammar-gap' | 'article' | 'phoneme'
   // dạng câu đề thi tốt nghiệp THPT
   | 'notice-cloze' | 'arrange' | 'text-cloze' | 'reading'
   // câu thật trong ngân hàng đề TOEIC
-  | 'toeic-p1' | 'toeic-p2' | 'toeic-p5' | 'toeic-p6';
+  | 'toeic-p1' | 'toeic-p2' | 'toeic-p5' | 'toeic-p6'
+  // đề kiểm tra soạn riêng: nghe (máy đọc), nói, viết
+  | 'listening' | 'speaking' | 'writing';
 export interface LessonExercise {
   id: string;
   type: ExerciseType;

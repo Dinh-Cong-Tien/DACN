@@ -368,6 +368,8 @@ export const teacherApi = {
         timeout: 120_000,
       })
       .then((r) => r.data.data),
+  getLessonTest: (id: string) => api.get<{ id: string; title: string; exercisesText: string; fixed: number; total: number; passScorePct: number }>(`${T}/lessons/${id}/test`),
+  saveLessonTest: (id: string, body: { exercisesText: string; passScorePct?: number }) => api.put<{ id: string; total: number }>(`${T}/lessons/${id}/test`, body),
   setLessonTranscript: (id: string, text: string | null) => api.put<{ id: string; cues: number }>(`${T}/lessons/${id}/transcript`, { text }),
   setLessonVideo: (id: string, videoUrl: string | null) => api.put<{ id: string; type: string; videoUrl?: string }>(`${T}/lessons/${id}/video`, { videoUrl }),
   uploadLessonVideo: (id: string, file: File) =>

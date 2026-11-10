@@ -45,6 +45,7 @@ import { completedAttempts } from '../catalog/counts';
 import { gradeLessonAssignments } from '../catalog/lesson-assignments';
 import { toExercises } from '../catalog/lesson-exercises';
 import { parseSubtitles } from '../catalog/lesson-transcript';
+import { applyExercisesText, exercisesToText } from '../catalog/lesson-exercise-text';
 import { byTitleNatural, levelLabel } from '../catalog/mappers';
 import { CLASS_TRACK, classCourseData, classCourseProgress, classCourseSelect, classTrackData, enrollClassCourse, nextClassCode, CLASS_LEVEL, codeWithLevel } from '../catalog/class-track';
 
@@ -1645,6 +1646,39 @@ teacherRouter.post(
       fs.rmSync(path.join(LESSON_VIDEO_DIR, key), { force: true });
       throw e;
     }
+  })
+);
+
+// ======================= Đề kiểm tra riêng của khoá (QUIZ / CHECKPOINT) =======================
+async function assertCourseTest(req: Request, lessonId: string) {
+  const u = me(req);
+  const l = await prisma.lesson.findFirst({ where: { id: lessonId, deletedAt: null }, select: { id: true, title: true, type: true, exercises: true, passScorePct: true, section: { select: { courseId: true } } } });
+  if (!l) throw notFound('Bài kiểm tra');
+  if (l.type !== 'QUIZ' && l.type !== 'CHECKPOINT') throw badRequest('Chỉ sửa đề ở bài kiểm tra', 'NOT_TEST_LESSON');
+  if (u.role === 'TEACHER' && !(await prisma.class.count({ where: { ...ownClassWhere(u), isArchived: false, courseId: l.section.courseId } })))
+    throw forbidden('Bạn chỉ sửa đề kiểm tra của khoá học lớp mình dạy');
+  return l;
+}
+
+teacherRouter.get(
+  '/lessons/:id/test',
+  handler(async (req) => {
+    const l = await assertCourseTest(req, String(req.params.id));
+    const ex = exercisesToText(l.exercises);
+    return { id: l.id, title: l.title, exercisesText: ex.text, fixed: ex.fixed, total: toExercises(l.exercises).length, passScorePct: l.passScorePct ?? 70 };
+  })
+);
+
+/** Sửa đề: câu dạng chữ thay toàn bộ phần soạn tay; câu đề thật có ảnh / audio / đoạn văn giữ nguyên */
+teacherRouter.put(
+  '/lessons/:id/test',
+  handler(async (req) => {
+    const b = parse(z.object({ exercisesText: z.string().max(100000), passScorePct: z.number().int().min(10).max(100).optional() }), req.body ?? {});
+    const l = await assertCourseTest(req, String(req.params.id));
+    const qs = applyExercisesText(l.id, l.exercises, b.exercisesText);
+    if (!qs.length) throw badRequest('Đề phải có ít nhất 1 câu', 'EMPTY_TEST');
+    await prisma.lesson.update({ where: { id: l.id }, data: { exercises: qs as unknown as Prisma.InputJsonValue, ...(b.passScorePct ? { passScorePct: b.passScorePct } : {}) } });
+    return { id: l.id, total: qs.length };
   })
 );
 

@@ -218,7 +218,7 @@ export const LessonDialog: React.FC<{ open: boolean; sectionId: string | null; l
             placeholder={EXERCISE_HINT}
             value={f.exercisesText}
             onChange={(e) => set('exercisesText', e.target.value)}
-            hint={`Mỗi câu: "? yêu cầu", câu hỏi, "* đáp án đúng", "- phương án sai", "> giải thích". Vị trí đáp án đúng được xáo tự động.${fixed ? ` Ngoài ra bài có ${fixed} câu giữ nguyên (câu đề thật có ảnh / audio / đoạn văn hoặc câu tự sinh từ Kiến thức).` : ''}`}
+            hint={`Mỗi câu: "? yêu cầu", câu hỏi, "* đáp án đúng", "- phương án sai", "> giải thích"; câu nghe thêm dòng "@ lời máy đọc". Vị trí đáp án đúng được xáo tự động.${fixed ? ` Ngoài ra bài có ${fixed} câu giữ nguyên (câu đề thật có ảnh / audio / đoạn văn hoặc câu tự sinh từ Kiến thức).` : ''}`}
           />
         </div>
         <div className="md:col-span-2">

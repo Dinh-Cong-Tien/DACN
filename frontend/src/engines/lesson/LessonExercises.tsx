@@ -23,6 +23,9 @@ const TYPE_LABEL: Record<LessonExercise['type'], string> = {
   'toeic-p6': 'Part 6',
   article: 'Mạo từ',
   phoneme: 'Phát âm',
+  listening: 'Nghe',
+  speaking: 'Nói',
+  writing: 'Viết',
 };
 
 /** Câu bài tập → IQuestion để chạy bằng Practice engine (phản hồi tức thì + giải thích); yêu cầu câu dịch theo ngôn ngữ giao diện */
@@ -30,7 +33,7 @@ const toQuestion = (e: LessonExercise, t: (s: string) => string): IQuestion => (
   id: e.id,
   examType: 'TOEIC',
   type: 'SINGLE_CHOICE',
-  skillType: e.type === 'phoneme' ? 'SPEAKING' : e.type.startsWith('vocab') ? 'VOCABULARY' : 'GRAMMAR',
+  skillType: e.type === 'listening' || e.type === 'toeic-p1' || e.type === 'toeic-p2' ? 'LISTENING' : e.type === 'phoneme' || e.type === 'speaking' ? 'SPEAKING' : e.type === 'writing' ? 'WRITING' : e.type.startsWith('vocab') ? 'VOCABULARY' : 'GRAMMAR',
   partOrSkill: TYPE_LABEL[e.type],
   level: '',
   // câu có đoạn văn (dạng đề thi): yêu cầu đặt ở đầu đoạn văn như đề thật, câu hỏi chỉ còn "Question n…"
@@ -49,9 +52,10 @@ const toQuestion = (e: LessonExercise, t: (s: string) => string): IQuestion => (
         title: e.passage.title,
         content: e.passage.content ? `${e.prompt}
 
-${e.passage.content}` : e.prompt,
+${e.passage.content}` : e.passage.speak && !e.text ? '' : e.prompt,
         imageUrl: e.passage.imageUrl,
         audioUrl: e.passage.audioUrl,
+        speakText: e.passage.speak,
       }
     : null,
 });

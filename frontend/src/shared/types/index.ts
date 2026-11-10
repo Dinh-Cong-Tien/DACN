@@ -85,7 +85,7 @@ export interface LessonKnowledge {
 /** Câu bài tập sau bài học / bài kiểm tra chặng — khớp backend catalog/lesson-exercises.ts */
 export interface LessonExercise {
   id: string;
-  type: 'vocab-meaning' | 'vocab-context' | 'grammar-formula' | 'grammar-name' | 'grammar-gap' | 'article' | 'phoneme' | 'notice-cloze' | 'arrange' | 'text-cloze' | 'reading' | 'toeic-p1' | 'toeic-p2' | 'toeic-p5' | 'toeic-p6';
+  type: 'vocab-meaning' | 'vocab-context' | 'grammar-formula' | 'grammar-name' | 'grammar-gap' | 'article' | 'phoneme' | 'notice-cloze' | 'arrange' | 'text-cloze' | 'reading' | 'toeic-p1' | 'toeic-p2' | 'toeic-p5' | 'toeic-p6' | 'listening' | 'speaking' | 'writing';
   prompt: string;
   /** Câu / cụm cần xét ("_____" = chỗ trống) */
   text?: string;
@@ -93,7 +93,7 @@ export interface LessonExercise {
   answer: number;
   explain: string;
   /** Đoạn văn dùng chung (bài đọc, quảng cáo, các câu cần sắp xếp; câu nghe: ảnh + audio) */
-  passage?: { id?: string; title?: string; content: string; imageUrl?: string; audioUrl?: string };
+  passage?: { id?: string; title?: string; content: string; imageUrl?: string; audioUrl?: string; speak?: string };
 }
 
 export interface Lesson {

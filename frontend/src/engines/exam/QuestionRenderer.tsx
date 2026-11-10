@@ -3,6 +3,7 @@ import { IQuestion } from '@toeic-vstep/shared';
 import { CheckCircle2, XCircle, FileText, Flag, Lightbulb, Image as ImageIcon } from 'lucide-react';
 import { cn, getCorrectKey } from '@/shared/utils';
 import { AudioPlayer } from '@/shared/components/media/AudioPlayer';
+import { SpeakPlayer } from '@/shared/components/media/SpeakPlayer';
 import { Badge } from '@/shared/components/ui';
 import { toast } from '@/shared/stores/uiStore';
 import { useAuthStore } from '@/shared/stores/authStore';
@@ -55,7 +56,7 @@ export const PassageBlock: React.FC<{ passage: NonNullable<IQuestion['passage']>
         </span>
       </div>
     )}
-    {passage.audioUrl && <AudioPlayer src={passage.audioUrl} examMode={examMode} />}
+    {passage.audioUrl ? <AudioPlayer src={passage.audioUrl} examMode={examMode} /> : passage.speakText ? <SpeakPlayer text={passage.speakText} /> : null}
     {passage.content && <div className="text-sm text-slate-700 leading-relaxed whitespace-pre-line max-h-72 overflow-y-auto pr-2 font-medium">{passage.content}</div>}
   </div>
 );
