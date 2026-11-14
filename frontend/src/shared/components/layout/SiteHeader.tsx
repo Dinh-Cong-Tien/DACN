@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
-import { Menu, X, LogIn, ArrowRight, ChevronDown, Search, Bell } from 'lucide-react';
+import { Menu, X, LogIn, ArrowRight, ChevronDown, Search } from 'lucide-react';
 import { cn, ROLE_HOME, ROLE_LABEL } from '@/shared/utils';
 import { useScrolled } from '@/shared/hooks';
 import { useAuthStore } from '@/shared/stores/authStore';
@@ -13,7 +13,7 @@ import { NavIconTile, NavTopIcon } from './NavIcon';
 import { useT } from '@/shared/i18n';
 import { UserMenu } from './UserMenu';
 import { useResolvedTheme } from '@/shared/stores/themeStore';
-import { useNotifications } from '@/shared/api/learner';
+import { NotificationBell } from './NotificationBell';
 
 /**
  * Header chung của toàn website (khách và học viên): logo · menu chính có icon 3D · tìm kiếm, thông báo, tài khoản.
@@ -31,8 +31,6 @@ export const SiteHeader: React.FC = () => {
   const setPalette = useUiStore((s) => s.setPalette);
   const isStudent = isAuth && user?.role === 'STUDENT';
   // Số thông báo chưa đọc (tự làm mới mỗi phút; khách chưa đăng nhập không gọi API)
-  const { data: notifs } = useNotifications();
-  const unread = notifs?.unread ?? 0;
 
   useEffect(() => {
     setOpen(false);
@@ -164,12 +162,7 @@ export const SiteHeader: React.FC = () => {
                 <button onClick={() => setPalette(true)} className={cn('hidden sm:inline-flex p-2 rounded-xl transition', onDarkHero ? 'text-slate-200 hover:bg-white/10' : 'text-slate-700 hover:bg-slate-900/5')} aria-label={t('Tìm kiếm (⌘K)')} title={t('Tìm kiếm (⌘K)')}>
                   <Search className="w-5 h-5" />
                 </button>
-                {isStudent && (
-                  <NavLink to="/app/notifications" className={cn('relative p-2 rounded-xl transition', onDarkHero ? 'text-slate-200 hover:bg-white/10' : 'text-slate-700 hover:bg-slate-900/5')} aria-label={t('Thông báo')}>
-                    <Bell className={cn('w-5 h-5', unread > 0 && 'animate-ring-bell')} />
-                    {unread > 0 && <span className="absolute top-1 right-1 min-w-[16px] h-4 px-1 rounded-full bg-violet-500 text-white text-[9px] font-black flex items-center justify-center ring-2 ring-cream">{unread}</span>}
-                  </NavLink>
-                )}
+                {isStudent && <NotificationBell allTo="/app/notifications" onDark={onDarkHero} />}
                 <UserMenu user={user} onLogout={handleLogout} onDark={onDarkHero} />
                 {/* Cùng vị trí nút cam "Học thử miễn phí" của khách */}
                 <Button to={isStudent ? '/#goc-hoc-tap' : ROLE_HOME[user.role]} variant="gradient" size="sm" rightIcon={<ArrowRight className="w-4 h-4" />} className="hidden xl:inline-flex">

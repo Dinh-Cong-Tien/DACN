@@ -1,7 +1,7 @@
 import React, { useRef, useState } from 'react';
 import { User, Target, Bell, Lock, Save, Camera, Trash2, Users, KeyRound } from 'lucide-react';
 import type { ExamType } from '@/shared/types';
-import { useDocumentTitle } from '@/shared/hooks';
+import { useDocumentTitle, useParamState } from '@/shared/hooks';
 import { useAuthStore } from '@/shared/stores/authStore';
 import { toast } from '@/shared/stores/uiStore';
 import { authApi } from '@/shared/api/auth';
@@ -20,7 +20,7 @@ export const StudentSettingsPage: React.FC = () => {
   const user = useAuthStore((s) => s.user);
   const updateUser = useAuthStore((s) => s.updateUser);
   const logout = useAuthStore((s) => s.logout);
-  const [tab, setTab] = useState('profile');
+  const [tab, setTab] = useParamState('tab', ['profile', 'target', 'notifications', 'security'] as const, 'profile');
   const [fullName, setFullName] = useState(user?.fullName ?? '');
   const settings = ((user as (typeof user & { settings?: Record<string, unknown>; phone?: string }) | null)?.settings ?? {}) as { notifyTypes?: Record<string, boolean>; dailyGoalMinutes?: number };
   const [phone, setPhone] = useState((user as (typeof user & { phone?: string }) | null)?.phone ?? '');
