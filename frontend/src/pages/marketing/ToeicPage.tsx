@@ -78,7 +78,7 @@ export const ToeicPage: React.FC = () => {
             <ActionLink to={gate('/onboarding/goal', '/try')} size="lg">
               Làm bài xếp lớp miễn phí
             </ActionLink>
-            <ActionLink to="/mock-tests" variant="secondary" size="lg">
+            <ActionLink to="/mock-tests?exam=TOEIC" variant="secondary" size="lg">
               Xem đề thi thử
             </ActionLink>
           </>
@@ -196,7 +196,7 @@ export const ToeicPage: React.FC = () => {
 
       {/* Đề thi thử */}
       <Section muted>
-        <SectionHead title="Đề TOEIC trên OrbiLingo" desc="Đề full test 200 câu, có audio, đáp án và lời giải. Đề miễn phí làm được ngay sau khi đăng ký." action={{ label: 'Tất cả đề thi', to: '/mock-tests' }} />
+        <SectionHead title="Đề TOEIC trên OrbiLingo" desc="Đề full test 200 câu, có audio, đáp án và lời giải. Đề miễn phí làm được ngay sau khi đăng ký." action={{ label: 'Tất cả đề TOEIC', to: '/mock-tests?exam=TOEIC' }} />
         <TestList tests={tests} />
         <div className="mt-12">
           <CtaStrip title="Chưa biết mình đang ở mức nào?" text="Bài xếp lớp ngắn khoảng 15 phút, có điểm ước lượng và lộ trình tới ngày thi." action={{ label: 'Làm bài xếp lớp', to: gate('/onboarding/goal', '/try') }} />

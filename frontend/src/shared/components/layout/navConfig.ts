@@ -11,7 +11,6 @@ export const STUDENT_NAV: NavGroup[] = [
       { to: '/app/learning-path', label: 'Lộ trình', icon: Compass },
       { to: '/courses', label: 'Khoá học', icon: PlayCircle },
       { to: '/app/practice', label: 'Luyện tập', icon: Layers },
-      { to: '/app/mock-tests', label: 'Thi thử', icon: FileText },
     ],
   },
   {
@@ -118,7 +117,6 @@ export const PUBLIC_NAV: PublicNavItem[] = [
       { to: '/courses?muc=thpt', label: 'Tiếng Anh THPT', icon: School, desc: 'Lớp 10, 11, 12 theo SGK Global Success' },
     ],
   },
-  { to: '/mock-tests', label: 'Thi thử', icon: FileText, appTo: '/app/mock-tests' },
   {
     label: 'Công cụ',
     icon: Wrench,

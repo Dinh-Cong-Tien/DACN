@@ -5,7 +5,7 @@ import { limitText, usePlans } from '@/shared/api/cms';
 import type { MockTestSummary } from '@/shared/types';
 import { useDocumentTitle, useGate, useParamState } from '@/shared/hooks';
 import { cn } from '@/shared/utils';
-import { Accent, PageHeader, Section, SectionHead, UnderlineTabs, CtaStrip } from './shared/PageKit';
+import { Accent, PageHeader, Section, SectionHead, CtaStrip } from './shared/PageKit';
 import { TestList } from './shared/TestList';
 
 type Exam = 'TOEIC' | 'VSTEP';
@@ -20,10 +20,16 @@ const ROOM = [
   { icon: ClipboardCheck, title: 'Chấm ngay khi nộp', text: 'Có điểm quy đổi, giải thích từng câu; câu sai tự vào sổ tay lỗi sai.' },
 ];
 
+/** Nội dung riêng của từng kỳ thi — đề thi thử nằm trong mục TOEIC / VSTEP trên menu */
+const EXAM_INFO: Record<Exam, { home: string; lead: string }> = {
+  TOEIC: { home: '/toeic', lead: 'Đề TOEIC full 200 câu theo format Listening & Reading và đề luyện theo từng Part. Làm trên máy như thi thật, nộp bài là có điểm quy đổi và giải thích.' },
+  VSTEP: { home: '/vstep', lead: 'Đề VSTEP theo định dạng của Bộ GD&ĐT: Nghe, Đọc, Viết, Nói. Phần Nghe và Đọc chấm ngay khi nộp, Viết và Nói do giáo viên chấm.' },
+};
+
 export const MockTestsPage: React.FC = () => {
-  useDocumentTitle('Đề thi thử');
   const gate = useGate();
-  const [exam, setExam] = useParamState<Exam>('exam', ['TOEIC', 'VSTEP'], 'TOEIC');
+  const [exam] = useParamState<Exam>('exam', ['TOEIC', 'VSTEP'], 'TOEIC');
+  useDocumentTitle(`Đề thi thử ${exam}`);
   const [kind, setKind] = useState<Kind>('ALL');
   const { data: testList = [], isLoading } = useTests();
   const { data: plans = [] } = usePlans();
@@ -32,37 +38,31 @@ export const MockTestsPage: React.FC = () => {
     () => testList.filter((t) => t.examType === exam).filter((t) => (kind === 'ALL' ? true : kind === 'FREE' ? t.isFree : kind === 'FULL' ? isFull(t) : !isFull(t))),
     [exam, kind, testList]
   );
+  const mine = testList.filter((t) => t.examType === exam);
+  // đổi kỳ thi qua menu → bỏ bộ lọc loại đề cũ
+  React.useEffect(() => setKind('ALL'), [exam]);
 
   return (
     <div className="bg-page">
       <PageHeader
-        crumbs={[{ label: 'Trang chủ', to: '/' }, { label: 'Đề thi thử' }]}
-        eyebrow="Thi thử"
-        title={<>Đề thi thử <Accent>TOEIC và VSTEP</Accent></>}
-        lead="Đề TOEIC full 200 câu theo format Listening & Reading và đề VSTEP theo định dạng của Bộ GD&ĐT. Làm trên máy như thi thật, nộp bài là có điểm và giải thích."
+        crumbs={[{ label: 'Trang chủ', to: '/' }, { label: exam, to: EXAM_INFO[exam].home }, { label: 'Đề thi thử' }]}
+        eyebrow={exam}
+        title={<>Đề thi thử <Accent>{exam}</Accent></>}
+        lead={EXAM_INFO[exam].lead}
         facts={[
-          { value: isLoading ? '…' : String(testList.filter((t) => t.examType === 'TOEIC').length), label: 'Đề TOEIC' },
-          { value: isLoading ? '…' : String(testList.filter((t) => t.examType === 'VSTEP').length), label: 'Đề VSTEP' },
+          { value: isLoading ? '…' : String(mine.length), label: `Đề ${exam}` },
+          { value: isLoading ? '…' : String(mine.filter(isFull).length), label: 'Đề full test' },
           { value: freeMock ?? '…', label: 'Thi thử với tài khoản Free' },
         ]}
       />
 
       <Section innerClassName="pt-8 md:pt-10">
-        <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-          <UnderlineTabs
-            className="md:flex-1"
-            value={exam}
-            onChange={(v) => {
-              setExam(v);
-              setKind('ALL');
-            }}
-            items={[
-              { value: 'TOEIC', label: 'TOEIC', count: testList.filter((t) => t.examType === 'TOEIC').length },
-              { value: 'VSTEP', label: 'VSTEP', count: testList.filter((t) => t.examType === 'VSTEP').length },
-            ]}
-          />
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-[13px] text-slate-500">
+            Hiển thị {list.length} đề {exam} · sắp theo năm phát hành
+          </p>
           {/* Lọc loại đề: nhóm nút liền (segmented) */}
-          <div role="radiogroup" aria-label="Loại đề" className="inline-flex self-start rounded-lg border border-slate-300 p-0.5 md:mb-1">
+          <div role="radiogroup" aria-label="Loại đề" className="inline-flex self-start rounded-lg border border-slate-300 p-0.5">
             {(
               [
                 ['ALL', 'Tất cả'],
@@ -84,9 +84,7 @@ export const MockTestsPage: React.FC = () => {
           </div>
         </div>
 
-        <p className="mt-6 mb-3 text-[13px] text-slate-500">
-          Hiển thị {list.length} đề · sắp theo năm phát hành
-        </p>
+        <div className="mt-5" />
         {list.length === 0 ? (
           <div className="rounded-xl border border-dashed border-slate-300 px-6 py-14 text-center text-sm text-slate-500">Chưa có đề thuộc loại này.</div>
         ) : (
@@ -106,7 +104,7 @@ export const MockTestsPage: React.FC = () => {
           ))}
         </div>
         <div className="mt-12">
-          <CtaStrip title="Lưu lại kết quả và câu sai" text="Tài khoản miễn phí giữ lịch sử điểm và tự lên lịch ôn lại các câu làm sai." action={{ label: 'Tạo tài khoản miễn phí', to: gate('/app/mock-tests', '/auth/register') }} />
+          <CtaStrip title="Lưu lại kết quả và câu sai" text="Tài khoản miễn phí giữ lịch sử điểm và tự lên lịch ôn lại các câu làm sai." action={{ label: 'Tạo tài khoản miễn phí', to: gate(`/app/mock-tests?exam=${exam}`, '/auth/register') }} />
         </div>
       </Section>
     </div>

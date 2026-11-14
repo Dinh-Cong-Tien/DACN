@@ -2,7 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { FileText, Clock, Users, Lock, ArrowRight, History, Trophy } from 'lucide-react';
 import { useDocumentTitle, useParamState } from '@/shared/hooks';
-import { Badge, Button, Card, CardHeader, Chip, Column, DataTable, PageHeader, Tabs } from '@/shared/components/ui';
+import { Badge, Button, Card, CardHeader, Chip, Column, DataTable, PageHeader } from '@/shared/components/ui';
 import { TestCover } from '@/shared/components/media/TestCover';
 import { Img } from '@/shared/components/media/Img';
 import { useAttempts, useTests } from '@/shared/api/learner';
@@ -13,15 +13,17 @@ import { VipBadge, useIsVip } from '@/shared/components/vip/VipBadge';
 type Filter = 'ALL' | 'FULL' | 'MINI' | 'FREE';
 
 export const StudentMockTestsPage: React.FC = () => {
-  useDocumentTitle('Thi thử');
   const isVip = useIsVip();
   const navigate = useNavigate();
-  const [tab, setTab] = useParamState('exam', ['TOEIC', 'VSTEP'], 'TOEIC');
+  // kỳ thi chọn từ menu TOEIC / VSTEP → trang chỉ hiện đề và lịch sử của kỳ thi đó
+  const [tab] = useParamState('exam', ['TOEIC', 'VSTEP'], 'TOEIC');
+  useDocumentTitle(`Đề thi thử ${tab}`);
   const [filter, setFilter] = useState<Filter>('ALL');
+  React.useEffect(() => setFilter('ALL'), [tab]);
   const { data: testList = [], isLoading } = useTests();
   const { data: history } = useAttempts();
-  const attemptList = history?.items ?? [];
-  const best = attemptList.filter((a) => a.examType === 'TOEIC' && a.maxScore >= 900).reduce((m, a) => Math.max(m, a.score), 0);
+  const attemptList = (history?.items ?? []).filter((a) => a.examType === tab);
+  const best = attemptList.filter((a) => a.maxScore >= 900).reduce((m, a) => Math.max(m, a.score), 0);
 
   const tests = useMemo(
     () =>
@@ -60,11 +62,10 @@ export const StudentMockTestsPage: React.FC = () => {
         icon={<FileText />}
         title={
           <>
-            Kho đề <span className="mark">thi thử</span>
+            Đề thi thử <span className="mark">{tab}</span>
           </>
         }
-        description="Đề chuẩn format ETS / Bộ GD&ĐT, bấm giờ thật, audio phát một lần. Kết quả tự động phân tích và lưu lỗi sai."
-        actions={<Tabs variant="pill" value={tab} onChange={setTab} items={[{ key: 'TOEIC', label: 'TOEIC', count: testList.filter((t) => t.examType === 'TOEIC').length }, { key: 'VSTEP', label: 'VSTEP', count: testList.filter((t) => t.examType === 'VSTEP').length }]} />}
+        description={tab === 'TOEIC' ? 'Đề chuẩn format ETS: full 200 câu hoặc luyện theo Part, bấm giờ thật, audio phát một lần. Nộp bài là có điểm quy đổi và câu sai tự vào sổ tay.' : 'Đề theo định dạng Bộ GD&ĐT đủ 4 kỹ năng. Nghe, Đọc chấm ngay khi nộp; Viết, Nói do giáo viên chấm.'}
       />
 
       <div className="flex gap-2 flex-wrap mb-5 animate-fade-down">

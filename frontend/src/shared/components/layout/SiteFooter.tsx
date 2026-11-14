@@ -35,7 +35,8 @@ const PUBLIC_COLUMNS: FooterColumn[] = [
       { to: '/toeic', label: 'Luyện thi TOEIC 450–990' },
       { to: '/vstep', label: 'Luyện thi VSTEP B1–C1' },
       { to: '/courses', label: 'Khoá học kỹ năng' },
-      { to: '/mock-tests', label: 'Đề thi thử chuẩn format' },
+      { to: '/mock-tests?exam=TOEIC', label: 'Đề thi thử TOEIC' },
+      { to: '/mock-tests?exam=VSTEP', label: 'Đề thi thử VSTEP' },
     ],
   },
   {

@@ -64,7 +64,7 @@ export const VstepPage: React.FC = () => {
             <ActionLink to={gate('/onboarding/goal', '/try')} size="lg">
               Làm bài xếp lớp miễn phí
             </ActionLink>
-            <ActionLink to="/mock-tests" variant="secondary" size="lg">
+            <ActionLink to="/mock-tests?exam=VSTEP" variant="secondary" size="lg">
               Xem đề mẫu
             </ActionLink>
           </>
@@ -149,7 +149,7 @@ export const VstepPage: React.FC = () => {
 
       {/* Đề mẫu */}
       <Section muted>
-        <SectionHead title="Đề VSTEP trên OrbiLingo" desc="Đề mẫu theo định dạng chính thức và đề luyện tập theo từng bậc." action={{ label: 'Tất cả đề thi', to: '/mock-tests' }} />
+        <SectionHead title="Đề VSTEP trên OrbiLingo" desc="Đề mẫu theo định dạng chính thức và đề luyện tập theo từng bậc." action={{ label: 'Tất cả đề VSTEP', to: '/mock-tests?exam=VSTEP' }} />
         <TestList tests={tests} />
         <div className="mt-12">
           <CtaStrip title="Không chắc nên thi B1 hay B2?" text="Bài xếp lớp khoảng 15 phút cho biết bậc hiện tại và số tuần cần để lên bậc mục tiêu." action={{ label: 'Làm bài xếp lớp', to: gate('/onboarding/goal', '/try') }} />

@@ -59,7 +59,7 @@ export const StudentExamResultPage: React.FC = () => {
     const loading = isLoading || latest.isLoading;
     return (
       <div>
-        <PageHeader crumbs={[{ label: 'Thi thử', to: '/app/mock-tests' }, { label: 'Kết quả' }]} title={<>Kết quả <span className="mark">bài thi</span></>} />
+        <PageHeader crumbs={[{ label: 'Đề thi thử', to: '/app/mock-tests' }, { label: 'Kết quả' }]} title={<>Kết quả <span className="mark">bài thi</span></>} />
         {loading ? (
           <p className="text-sm text-slate-500">Đang tải kết quả…</p>
         ) : (
@@ -86,7 +86,7 @@ export const StudentExamResultPage: React.FC = () => {
   return (
     <div>
       <PageHeader
-        crumbs={[{ label: 'Thi thử', to: '/app/mock-tests' }, { label: test.title, to: `/app/mock-tests/${id}` }, { label: 'Kết quả' }]}
+        crumbs={[{ label: `Đề thi thử ${test.examType}`, to: `/app/mock-tests?exam=${test.examType}` }, { label: test.title, to: `/app/mock-tests/${id}` }, { label: 'Kết quả' }]}
         title={
           <>
             Kết quả <span className="mark">bài thi</span>

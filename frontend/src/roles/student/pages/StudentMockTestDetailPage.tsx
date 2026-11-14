@@ -36,7 +36,7 @@ export const StudentMockTestDetailPage: React.FC = () => {
   if (!test)
     return (
       <div className="space-y-6">
-        <Breadcrumb items={[{ label: 'Thi thử', to: '/app/mock-tests' }, { label: 'Đề thi' }]} />
+        <Breadcrumb items={[{ label: 'Đề thi thử', to: '/app/mock-tests' }, { label: 'Đề thi' }]} />
         <p className="text-sm text-slate-500">{isLoading ? 'Đang tải đề thi…' : error ? 'Không tìm thấy đề thi.' : ''}</p>
       </div>
     );
@@ -86,7 +86,7 @@ const TestDetail: React.FC<{ test: MockTestSummary }> = ({ test }) => {
 
   return (
     <div className="space-y-6">
-      <Breadcrumb items={[{ label: 'Thi thử', to: `/app/mock-tests?exam=${test.examType}` }, { label: test.title }]} />
+      <Breadcrumb items={[{ label: `Đề thi thử ${test.examType}`, to: `/app/mock-tests?exam=${test.examType}` }, { label: test.title }]} />
 
       {/* Đầu trang */}
       <div className="grid gap-6 rounded-2xl border border-slate-200 bg-white p-4 md:grid-cols-[280px_1fr] md:p-5">
