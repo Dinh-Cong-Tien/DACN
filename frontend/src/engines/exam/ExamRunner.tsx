@@ -26,10 +26,12 @@ interface ExamRunnerProps {
   initialAnswers?: Record<string, string>;
   initialFlagged?: string[];
   initialElapsedSec?: number;
+  /** Báo số giây đã làm mỗi giây (để tự lưu — vào lại làm tiếp đúng thời gian còn lại) */
+  onTick?: (elapsedSec: number) => void;
 }
 
 /** Engine thi thử: focus mode, đếm ngược, auto-submit, bảng câu hỏi, cờ đánh dấu */
-export const ExamRunner: React.FC<ExamRunnerProps> = ({ test, onSubmitExam, onExit, onSaveAnswer, onToggleFlag, initialAnswers, initialFlagged, initialElapsedSec = 0 }) => {
+export const ExamRunner: React.FC<ExamRunnerProps> = ({ test, onSubmitExam, onExit, onSaveAnswer, onToggleFlag, initialAnswers, initialFlagged, initialElapsedSec = 0, onTick }) => {
   const sections = test.sections;
   const allQuestions: IQuestion[] = useMemo(() => sections.flatMap((s) => s.questions), [sections]);
   // durationMinutes <= 0: luyện tập không giới hạn thời gian — đồng hồ đếm lên, không tự nộp
@@ -77,6 +79,11 @@ export const ExamRunner: React.FC<ExamRunnerProps> = ({ test, onSubmitExam, onEx
     const id = setInterval(() => (timed ? setRemaining((r) => r - 1) : setElapsed((e) => e + 1)), 1000);
     return () => clearInterval(id);
   }, [remaining, submitted, finalize, timed]);
+
+  useEffect(() => {
+    onTick?.(timed ? totalSec - Math.max(0, remaining) : elapsed);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [remaining, elapsed]);
 
   // Cảnh báo khi còn 5 phút
   useEffect(() => {
@@ -460,12 +467,12 @@ export const ExamRunner: React.FC<ExamRunnerProps> = ({ test, onSubmitExam, onEx
               Ở lại
             </Button>
             <Button variant="danger" onClick={onExit}>
-              Thoát, không lưu
+              Thoát
             </Button>
           </>
         }
       >
-        <p className="text-sm text-slate-600">Toàn bộ câu trả lời hiện tại sẽ không được lưu. Bạn chắc chứ?</p>
+        <p className="text-sm text-slate-600">Các câu đã làm và thời gian được lưu lại. Lần sau mở đề này, bạn chọn làm tiếp hoặc làm lại từ đầu.</p>
       </Modal>
     </div>
   );

@@ -88,6 +88,8 @@ export interface AttemptPayload {
   test: IMockTest;
   result?: AttemptResult;
   xpGained?: number;
+  /** true: máy chủ trả lại lượt đang làm dở cùng đề (chưa nộp) */
+  resumed?: boolean;
 }
 export interface StartAttemptInput {
   testId?: string;

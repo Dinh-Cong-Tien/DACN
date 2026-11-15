@@ -229,7 +229,8 @@ attemptsRouter.post(
         const wantParts = wantMode === 'PRACTICE' && body.parts?.length ? [...new Set(body.parts.flatMap(feToParts))].sort().join(',') : null;
         const sameSetup =
           open.mode === wantMode && (wantParts === null || [...open.selectedParts].sort().join(',') === wantParts) && (open.assignmentId ?? null) === (body.assignmentId ?? null);
-        if (!body.restart && sameSetup) return attemptPayload(open.id, user.id);
+        // resumed: trình duyệt hỏi học viên "Tiếp tục" hay "Làm lại từ đầu" (restart = true)
+        if (!body.restart && sameSetup) return { ...(await attemptPayload(open.id, user.id)), resumed: true };
         await prisma.examAttempt.update({ where: { id: open.id }, data: { status: 'ABANDONED' } });
       }
     }
