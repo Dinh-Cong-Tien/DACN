@@ -28,6 +28,8 @@ export const StudentExamPage: React.FC = () => {
   const [restarting, setRestarting] = useState(false);
   const started = useRef(false);
   const elapsedRef = useRef(0);
+  // Đã bấm nộp → không tự lưu nữa (lượt đã đóng; lần vào sau mở lượt mới, không hỏi làm tiếp)
+  const submittedRef = useRef(false);
   const pending = useRef(new Map<string, SaveAnswerItem>());
   const submit = useSubmitAttempt();
 
@@ -64,7 +66,7 @@ export const StudentExamPage: React.FC = () => {
     if (!attemptId) return;
     // Lưu cả thời gian đã làm để lần sau vào lại làm tiếp đúng thời gian còn lại
     const flush = () => {
-      if (askResume || !elapsedRef.current) return;
+      if (askResume || submittedRef.current || !elapsedRef.current) return;
       const batch = [...pending.current.values()];
       pending.current.clear();
       saveAnswers(attemptId, batch, elapsedRef.current).catch(() => batch.forEach((b) => pending.current.set(b.questionId, b)));
@@ -156,6 +158,7 @@ export const StudentExamPage: React.FC = () => {
         onToggleFlag={(questionId, isFlagged, key) => pending.current.set(questionId, { ...pending.current.get(questionId), questionId, selectedKey: key ?? pending.current.get(questionId)?.selectedKey ?? null, isFlagged })}
         onSubmitExam={(r) => {
           pending.current.clear();
+          submittedRef.current = true;
           const answers: SaveAnswerItem[] = Object.entries(r.answers).map(([questionId, selectedKey]) => ({ questionId, selectedKey, isFlagged: r.flagged.includes(questionId) || undefined }));
           submit.mutate(
             { id: payload.attempt.id, answers, timeSpentSec: r.timeSpentSec },
@@ -164,7 +167,10 @@ export const StudentExamPage: React.FC = () => {
                 if (res.xpGained) toast.success('Đã nộp bài', `+${res.xpGained} điểm nỗ lực.`);
                 navigate(`/app/mock-tests/${id}/result?attempt=${payload.attempt.id}`);
               },
-              onError: (e) => toast.error('Nộp bài chưa thành công', errorMessage(e)),
+              onError: (e) => {
+                submittedRef.current = false;
+                toast.error('Nộp bài chưa thành công', errorMessage(e));
+              },
             }
           );
         }}
