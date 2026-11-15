@@ -90,7 +90,7 @@ const TestDetail: React.FC<{ test: MockTestSummary }> = ({ test }) => {
 
       {/* Đầu trang */}
       <div className="grid gap-6 rounded-2xl border border-slate-200 bg-white p-4 md:grid-cols-[280px_1fr] md:p-5">
-        <Img src={test.coverUrl} alt={test.title} ratio="video" wrapperClass="rounded-xl" fallbackClass="bg-slate-200" fallback={<TestCover examType={test.examType} title={test.title} totalQuestions={test.totalQuestions} durationMinutes={test.durationMinutes} />} />
+        <Img src={test.coverUrl} alt={test.title} ratio="video" wrapperClass="rounded-xl" fallbackClass="bg-slate-900" fallback={<TestCover examType={test.examType} title={test.title} totalQuestions={test.totalQuestions} durationMinutes={test.durationMinutes} year={test.year} />} />
         <div className="flex flex-col justify-center">
           <p className="text-[13px] font-medium text-slate-500">
             {test.examType} · {test.level} · Năm {test.year}

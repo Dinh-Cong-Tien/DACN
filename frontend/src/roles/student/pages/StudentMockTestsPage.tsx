@@ -89,7 +89,7 @@ export const StudentMockTestsPage: React.FC = () => {
           <Link key={t.id} to={`/app/mock-tests/${t.id}`} className="group block animate-fade-up" style={{ animationDelay: `${i * 50}ms` }}>
             <Card hard hover padding="none" className="h-full flex flex-col overflow-hidden">
               <div className="relative">
-                <Img src={t.coverUrl} ratio="video" alt={t.title} fallbackClass={t.examType === 'TOEIC' ? 'bg-indigo-50' : 'bg-emerald-50'} className="group-hover:scale-105 transition-transform duration-700" fallback={<TestCover examType={t.examType} title={t.title} totalQuestions={t.totalQuestions} durationMinutes={t.durationMinutes} className="pt-12" />} />
+                <Img src={t.coverUrl} ratio="video" alt={t.title} fallbackClass="bg-slate-900" className="group-hover:scale-105 transition-transform duration-700" fallback={<TestCover examType={t.examType} title={t.title} totalQuestions={t.totalQuestions} durationMinutes={t.durationMinutes} year={t.year} className="transition-transform duration-700 group-hover:scale-[1.03]" />} />
                 <div className="absolute top-3 left-3 flex gap-1.5 flex-wrap">
                   <Badge tone={t.examType === 'TOEIC' ? 'indigo' : 'emerald'} solid size="xs">
                     {t.examType}
@@ -101,7 +101,6 @@ export const StudentMockTestsPage: React.FC = () => {
                   ))}
                 </div>
                 {!t.isFree && <VipBadge locked={!isVip} className="absolute top-3 right-3 shadow-sm" />}
-                <span className="absolute bottom-3 right-3 sticker tilt-2 !text-[10px]">{t.year}</span>
               </div>
               <div className="p-4 flex flex-col flex-1">
                 <p className="font-display font-extrabold text-slate-900 leading-snug group-hover:text-indigo-700 transition">{t.title}</p>
