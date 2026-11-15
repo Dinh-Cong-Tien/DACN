@@ -26,8 +26,20 @@ import {
   type Tx,
 } from './learner.shared';
 import { evaluateAchievements } from './progress';
+import { completedAttempts } from '../catalog/counts';
+import { broadcast } from '../../lib/realtime';
 
 export const attemptsRouter = Router();
+
+/** Đẩy số lượt làm mới của đề qua WebSocket → thẻ đề / trang chi tiết đề cập nhật ngay, không cần F5 */
+export async function pushTestAttempts(testId: string, slug: string) {
+  try {
+    const n = (await completedAttempts([testId])).get(testId) ?? 0;
+    broadcast({ type: 'test.attempts', testId, slug, attempts: n });
+  } catch {
+    /* không chặn luồng nộp bài */
+  }
+}
 
 const vstepSkill = (p: ExamPart) => (p.startsWith('VSTEP_L') ? 'L' : p.startsWith('VSTEP_R') ? 'R' : p.startsWith('VSTEP_W') ? 'W' : p.startsWith('VSTEP_S') ? 'S' : null);
 const half = (x: number) => Math.round(x * 2) / 2;
@@ -510,6 +522,7 @@ attemptsRouter.post(
     );
 
     await evaluateAchievements(user.id).catch(() => undefined);
+    if (test) void pushTestAttempts(test.id, test.slug);
     return { ...(await attemptPayload(at.id, user.id)), result: await resultOf(at.id), xpGained };
   })
 );

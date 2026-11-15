@@ -18,6 +18,7 @@ export default defineConfig({
       '/api': {
         target: 'http://localhost:5000',
         changeOrigin: true,
+        ws: true, // WebSocket /api/ws (số liệu thời gian thực)
         xfwd: true,
         // Backend (cổng 5000) chưa chạy: trả 503 kèm thông báo rõ ràng thay cho 500 trống của proxy
         configure: (proxy) => {

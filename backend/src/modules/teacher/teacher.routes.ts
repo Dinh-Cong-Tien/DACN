@@ -15,7 +15,7 @@ import { prisma } from '../../lib/prisma';
 import { allow, auth, liveUser } from '../../core/auth';
 import { badRequest, forbidden, handler, me, notFound, parse, unauthorized } from '../../core/http';
 import { iso, num, ymd } from '../../core/dto';
-import { recomputeVstep } from '../learner/attempts';
+import { pushTestAttempts, recomputeVstep } from '../learner/attempts';
 import {
   DONE_STATUSES,
   activeStudentIds,
@@ -1140,6 +1140,11 @@ teacherRouter.post(
         if (b.release) await tx.attemptAnswer.update({ where: { id: answerId }, data: { score: total } });
         if (b.release) await recomputeVstep(tx, ans.attemptId); // cập nhật điểm tổng VSTEP 4 kỹ năng
       });
+      // VSTEP chấm xong Viết/Nói → lượt chuyển sang COMPLETED, số lượt làm của đề đổi
+      if (b.release && ans.attempt.testId) {
+        const t = await prisma.mockTest.findUnique({ where: { id: ans.attempt.testId }, select: { id: true, slug: true } });
+        if (t) void pushTestAttempts(t.id, t.slug);
+      }
       if (b.release)
         await notifyUsers([ans.attempt.userId], { type: 'ASSIGNMENT', title: 'Bài luyện đã được chấm', message: `Điểm ${total}/10${b.feedback ? ` — ${b.feedback.slice(0, 160)}` : ''}`, link: ans.question.type === 'ESSAY' ? '/app/writing' : '/app/speaking', refType: 'ATTEMPT', refId: ans.attemptId });
       return { id, score: total, released: b.release, reviewSampled: review === 'PENDING' };

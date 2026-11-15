@@ -1,7 +1,9 @@
 import { app } from './app';
 import { env } from '../config/env';
 import { logger } from '../lib/logger';
+import { attachRealtime } from '../lib/realtime';
 
-app.listen(env.PORT, () => {
+const server = app.listen(env.PORT, () => {
   logger.info(`Server is running on http://localhost:${env.PORT}`);
 });
+attachRealtime(server);
