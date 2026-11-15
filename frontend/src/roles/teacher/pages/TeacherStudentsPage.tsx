@@ -6,7 +6,7 @@ import { toast } from '@/shared/stores/uiStore';
 import { errorMessage } from '@/shared/api/client';
 import { teacherApi, useStudentProfile, useTeacherClasses, useTeacherMutation, useTeacherStudents } from '@/shared/api/teacher';
 import type { StudentNote } from '@/shared/types';
-import { cn, formatDate, formatDateTime, timeAgo } from '@/shared/utils';
+import { cn, formatDate, formatDateTime, timeAgo, formatNumber } from '@/shared/utils';
 import { Avatar, ConfirmDialog } from '@/shared/components/ui';
 import { Meter, Panel, Status, TBtn, TPageHead, TTabs, inputCls } from '../components/TeacherKit';
 import { TEmpty, TError, TLoading } from '../components/TeacherState';
@@ -104,7 +104,7 @@ export const TeacherStudentsPage: React.FC = () => {
                   <span className="min-w-0 flex-1">
                     <span className="block truncate text-sm font-semibold text-slate-900">{s.name}</span>
                     <span className="block text-[12px] text-slate-500">
-                      Điểm {s.avgScore || '—'} · chuyên cần {s.attendanceRate === null ? '—' : `${s.attendanceRate}%`}
+                      Điểm {s.avgScore ? formatNumber(s.avgScore) : '—'} · chuyên cần {s.attendanceRate === null ? '—' : `${s.attendanceRate}%`}
                     </span>
                   </span>
                   <Status tone={STATUS[s.status][0]}>{''}</Status>
@@ -144,7 +144,7 @@ export const TeacherStudentsPage: React.FC = () => {
             </div>
             <dl className="grid grid-cols-2 divide-x divide-y divide-slate-100 border-t border-slate-100 sm:grid-cols-4 sm:divide-y-0">
               {[
-                ['Điểm trung bình', selected.avgScore ? String(selected.avgScore) : '—', null],
+                ['Điểm trung bình', selected.avgScore ? formatNumber(selected.avgScore) : '—', null],
                 ['Hoàn thành bài tập', selected.completion === null ? '—' : `${selected.completion}%`, selected.completion],
                 ['Chuyên cần', att === null ? '—' : `${att}%`, att],
                 ['Ngày học liên tục', String(selected.streak), null],

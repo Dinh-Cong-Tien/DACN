@@ -7,7 +7,7 @@ import { toast } from '@/shared/stores/uiStore';
 import { useHeadReports, useHeadSubjects, useHeadTeachers } from '@/shared/api/head';
 import { BarChart, HBarChart, LineChart } from '@/shared/components/charts/Charts';
 import type { ClassReport } from '@/shared/types';
-import { cn, staffPath } from '@/shared/utils';
+import { cn, staffPath, formatNumber } from '@/shared/utils';
 import { Avatar } from '@/shared/components/ui';
 import { Figures, Meter, Panel, TBtn, TPageHead, TTabs, inputCls, tbl } from '@/roles/teacher/components/TeacherKit';
 import { HeadReportSummary } from './HeadReportSummary';
@@ -177,7 +177,7 @@ export const HeadReportsPage: React.FC = () => {
                     </div>
                   </td>
                   <td className={cn(tbl.td, 'text-center tabular-nums')}>{r.students}</td>
-                  <td className={cn(tbl.td, 'text-right font-semibold tabular-nums text-slate-900')}>{r.avgScore > 0 ? r.avgScore : <span className="font-normal text-slate-400">—</span>}</td>
+                  <td className={cn(tbl.td, 'text-right font-semibold tabular-nums text-slate-900')}>{r.avgScore > 0 ? formatNumber(r.avgScore) : <span className="font-normal text-slate-400">—</span>}</td>
                   <td className={tbl.td}>
                     <div className="flex min-w-[120px] items-center gap-2">
                       {r.hasAttendance === false ? (

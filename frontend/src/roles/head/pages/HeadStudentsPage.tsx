@@ -7,7 +7,7 @@ import type { ClassStudent, DeptStudent } from '@/shared/types';
 import { headApi, useHeadClasses, useHeadStudents, type HeadClass } from '@/shared/api/head';
 import { errorMessage } from '@/shared/api/client';
 import { Avatar } from '@/shared/components/ui';
-import { cn, timeAgo, staffPath } from '@/shared/utils';
+import { cn, timeAgo, staffPath, formatNumber } from '@/shared/utils';
 import { pooledAttendance } from '@/shared/constants/staff';
 import { Figures, Panel, Status, TBtn, TPageHead, TTabs, inputCls, tbl, CompletionMeter } from '@/roles/teacher/components/TeacherKit';
 import { STUDENT_STATUS } from './HeadClassDetailPage';
@@ -131,7 +131,7 @@ export const HeadStudentsPage: React.FC = () => {
                       </Link>
                       <p className="text-[12px] text-slate-500">{c.teacherName}</p>
                     </td>
-                    <td className={cn(tbl.td, 'text-right tabular-nums')}>{s.avgScore ?? '—'}</td>
+                    <td className={cn(tbl.td, 'text-right tabular-nums')}>{s.avgScore == null ? '—' : formatNumber(s.avgScore)}</td>
                     <td className={tbl.td}>
                       <CompletionMeter value={s.completion} />
                     </td>

@@ -4,7 +4,7 @@ import { useDocumentTitle } from '@/shared/hooks';
 import { useClassAnalytics, useTeacherAssignments, useTeacherClasses, useTeacherLibrary, useTeacherStudents } from '@/shared/api/teacher';
 import { MISTAKE_CAUSE_TEXT, PART_FORMAT, partLabel, partName } from '@/shared/constants/teacher';
 import type { AssignmentTarget } from '@/shared/types';
-import { cn, timeAgo } from '@/shared/utils';
+import { cn, timeAgo, formatNumber } from '@/shared/utils';
 import { Avatar } from '@/shared/components/ui';
 import { BarChart, HBarChart, LineChart } from '@/shared/components/charts/Charts';
 import { BarChart3, CalendarCheck, Target, TrendingUp } from 'lucide-react';
@@ -224,7 +224,7 @@ export const TeacherAnalyticsPage: React.FC = () => {
                         <span className="whitespace-nowrap font-medium text-slate-900">{s.name}</span>
                       </span>
                     </td>
-                    <td className={cn(tbl.td, 'text-right tabular-nums')}>{s.avgScore || '—'}</td>
+                    <td className={cn(tbl.td, 'text-right tabular-nums')}>{s.avgScore ? formatNumber(s.avgScore) : '—'}</td>
                     <td className={tbl.td}>
                       <CompletionMeter value={s.completion} />
                     </td>

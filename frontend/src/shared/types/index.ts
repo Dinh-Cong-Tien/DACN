@@ -562,6 +562,8 @@ export interface TeacherSummary {
   classesCount: number;
   studentsCount: number;
   avgClassScore: number;
+  /** Thang của avgClassScore: 990 (lớp TOEIC) hoặc 10 (lớp VSTEP); null = chưa có điểm */
+  avgClassScale?: 990 | 10 | null;
   status: UserStatus;
 }
 

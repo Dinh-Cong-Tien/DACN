@@ -151,7 +151,7 @@ export const StudentGrammarPage: React.FC = () => {
       ) : (
         cats.map((cat, ci) => (
           <section key={cat} className="grid grid-cols-1 lg:grid-cols-[220px_1fr] gap-4">
-            <div className="relative rounded-2xl overflow-hidden border-2 border-slate-900 shadow-hard min-h-[140px] animate-fade-up" style={{ animationDelay: `${ci * 100}ms` }}>
+            <div className="relative rounded-2xl overflow-hidden border-2 border-slate-900 shadow-hard h-[160px] lg:sticky lg:top-24 lg:self-start animate-fade-up" style={{ animationDelay: `${ci * 100}ms` }}>
               <Img src={CAT_PHOTO[cat] ?? PHOTOS.books} alt={cat} wrapperClass="absolute inset-0" fallbackClass="bg-indigo-200" />
               <div className="absolute inset-0 bg-slate-900/40" />
               <div className="absolute inset-0 p-4 flex flex-col justify-end">
@@ -180,7 +180,7 @@ export const StudentGrammarPage: React.FC = () => {
                     </div>
                     <div className="flex items-center gap-3 mt-4">
                       <ProgressBar value={t.progress} size="sm" tone={t.progress === 100 ? 'emerald' : t.progress > 0 ? 'indigo' : 'slate'} className="flex-1" />
-                      <span className="text-[11px] font-bold text-slate-600 w-20 text-right">{t.questionsCount} câu</span>
+                      <span className="text-[11px] font-bold text-slate-600 whitespace-nowrap text-right">{t.questionsCount ? `${t.questionsCount} câu` : 'Chưa có câu luyện'}</span>
                     </div>
                   </Card>
                 </Link>

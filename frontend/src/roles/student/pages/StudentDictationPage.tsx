@@ -191,7 +191,7 @@ export const StudentDictationPage: React.FC = () => {
       />
       {!ITEMS.length && <p className="text-sm text-slate-500 mb-4">{isLoading || !list.length ? 'Đang tải bài nghe…' : 'Bài nghe chưa có câu nào.'}</p>}
 
-      <Stagger className="grid grid-cols-3 gap-4 mb-6" step={70}>
+      <Stagger className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-6" step={70}>
         <StatCard label="Tiến độ" value={`${index + 1}/${ITEMS.length}`} icon={<Headphones />} tone="indigo" />
         <StatCard label="Độ chính xác TB" value={results.length ? Math.round(results.reduce((a, b) => a + b, 0) / results.length) : 0} suffix="%" icon={<Check />} tone="emerald" />
         <StatCard label="Lượt nghe câu này" value={plays} icon={<Volume2 />} tone="amber" hint="Thi thật chỉ nghe 1 lần" />
@@ -218,7 +218,7 @@ export const StudentDictationPage: React.FC = () => {
             >
               {playing ? <Square className="h-4 w-4 fill-current" /> : <Play className="ml-0.5 h-5 w-5 fill-current" />}
             </button>
-            <div className="min-w-0 flex-1">
+            <div className="min-w-0 flex-1 basis-[11rem]">
               <p className="text-sm font-semibold text-slate-900">{playing ? 'Đang phát…' : plays ? 'Nghe lại' : 'Nghe câu'}</p>
               <p className="text-xs text-slate-500">{plays ? `Đã nghe ${plays} lần` : 'Chưa nghe lần nào'} · Ctrl + Space để nghe lại</p>
             </div>

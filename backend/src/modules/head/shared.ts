@@ -124,7 +124,11 @@ export async function teacherSummaries(where: Prisma.UserWhereInput) {
   const stats = await classStats(teachers.flatMap((t) => t.classTeachers));
   return teachers.map((t) => {
     const ss = t.classTeachers.map((c) => stats.get(c.id)!).filter(Boolean);
-    const scored = ss.filter((s) => s.hasScore);
+    // Không trộn thang 990 (TOEIC) với thang 10 (VSTEP): ưu tiên lớp TOEIC, không có thì lấy lớp VSTEP
+    const scoredOf = (type: string) => t.classTeachers.filter((c) => c.examType === type).map((c) => stats.get(c.id)).filter((s): s is NonNullable<typeof s> => !!s && s.hasScore);
+    const toeic = scoredOf('TOEIC');
+    const scored = toeic.length ? toeic : scoredOf('VSTEP');
+    const avgScale = toeic.length ? 990 : scored.length ? 10 : null;
     return {
       id: t.id,
       name: t.fullName,
@@ -136,6 +140,7 @@ export async function teacherSummaries(where: Prisma.UserWhereInput) {
       // Số học viên KHÁC NHAU qua các lớp (khớp tổng quan của giáo viên và trang đội ngũ)
       studentsCount: new Set(ss.flatMap((s) => s.studentIds)).size,
       avgClassScore: scored.length ? round1(scored.reduce((a, s) => a + s.avgScore, 0) / scored.length) : 0,
+      avgClassScale: avgScale,
       status: t.status,
       role: t.role,
       departmentId: t.departmentId,

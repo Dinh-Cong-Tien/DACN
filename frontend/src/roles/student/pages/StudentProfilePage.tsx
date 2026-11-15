@@ -1,3 +1,4 @@
+import { NamedIcon } from '@/shared/components/ui/named-icon';
 import React from 'react';
 import { User, Flame, Zap, Award, Target, Calendar, Pencil, FileText, Trophy } from 'lucide-react';
 import { useAchievements, useAttempts, useProgress } from '@/shared/api/learner';
@@ -58,11 +59,12 @@ export const StudentProfilePage: React.FC = () => {
           <div className="absolute inset-0 bg-slate-900/20" />
           <span className="absolute top-4 right-4 sticker tilt-2 !bg-amber-300">Học viên từ {formatDate(user.joinedAt, { month: '2-digit', year: 'numeric' })}</span>
         </div>
-        <div className="px-6 pb-6 -mt-12 flex flex-col md:flex-row md:items-end gap-4">
-          <div className="rounded-full border-[3px] border-slate-900 bg-white p-1 shadow-hard w-fit">
+        <div className="px-6 pb-6 flex flex-col md:flex-row md:items-end gap-4">
+          {/* Chỉ ảnh đại diện đè lên ảnh bìa; tên + email nằm dưới ảnh bìa để không bị che */}
+          <div className="relative z-10 -mt-12 rounded-full border-[3px] border-slate-900 bg-white p-1 shadow-hard w-fit">
             <Avatar name={user.fullName} src={user.avatarUrl} size="xl" />
           </div>
-          <div className="flex-1 md:pb-1">
+          <div className="flex-1 pt-1 md:pb-1">
             <h2 className="font-display text-2xl md:text-3xl font-extrabold text-slate-900">{user.fullName}</h2>
             <p className="text-sm text-slate-600 font-semibold">{user.email}</p>
             <div className="flex flex-wrap gap-1.5 mt-2">
@@ -114,7 +116,7 @@ export const StudentProfilePage: React.FC = () => {
             {earned.length === 0 && <p className="col-span-2 text-sm text-slate-500">Chưa có huy hiệu nào.</p>}
             {earned.map((a, i) => (
               <div key={a.id} className="flex items-center gap-3 p-3 rounded-2xl border-2 border-slate-900 bg-amber-50 animate-pop" style={{ animationDelay: `${i * 80}ms` }}>
-                <span className={cn('w-11 h-11 rounded-full bg-white border-2 border-slate-900 flex items-center justify-center text-2xl shrink-0', TILTS[i % 3])}>{a.icon}</span>
+                <span className={cn('w-11 h-11 rounded-full bg-white border-2 border-slate-900 flex items-center justify-center shrink-0', TILTS[i % 3])}><NamedIcon name={a.icon} fallback="Award" className="h-5 w-5 text-slate-900" /></span>
                 <div className="min-w-0">
                   <p className="font-display text-sm font-bold text-slate-900 truncate">{a.title}</p>
                   <p className="text-[11px] text-slate-500">{a.earnedAt ? formatDate(a.earnedAt) : ''}</p>

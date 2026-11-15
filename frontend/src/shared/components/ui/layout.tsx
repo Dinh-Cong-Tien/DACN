@@ -123,10 +123,11 @@ export const PageHeader: React.FC<{
   // Header trang tối giản: breadcrumb + tiêu đề + hành động; khu vực quản lý hiện thêm mô tả (icon/eyebrow bỏ qua có chủ ý)
   const staff = React.useContext(StaffUiContext);
   return (
-    <div className={cn('flex justify-between gap-4 mb-6 md:mb-8 animate-fade-down', staff ? 'flex-col sm:flex-row sm:items-end' : 'items-center', className)}>
+    // Tiêu đề không cắt "…": hẹp quá thì nút hành động xuống dòng dưới (điện thoại)
+    <div className={cn('flex justify-between gap-4 mb-6 md:mb-8 animate-fade-down', staff ? 'flex-col sm:flex-row sm:items-end' : 'flex-wrap items-center gap-y-3', className)}>
       <div className="min-w-0">
         {crumbs && <Breadcrumb items={crumbs} className="mb-1.5" />}
-        <h1 className="page-title font-display text-xl md:text-2xl font-bold text-slate-900 tracking-tight truncate">{title}</h1>
+        <h1 className="page-title font-display text-xl md:text-2xl font-bold text-slate-900 tracking-tight text-balance">{title}</h1>
         {staff && description && <p className="mt-2 max-w-3xl text-[15px] leading-relaxed text-slate-500">{description}</p>}
       </div>
       {actions && <div className="flex items-center gap-2 shrink-0 flex-wrap sm:justify-end">{actions}</div>}

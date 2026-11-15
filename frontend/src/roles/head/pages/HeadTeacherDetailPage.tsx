@@ -113,7 +113,7 @@ export const HeadTeacherDetailPage: React.FC = () => {
         items={[
           { label: 'Lớp phụ trách', value: classes.length, icon: School, tone: 'indigo' },
           { label: 'Học viên', value: students, icon: Users, tone: 'violet' },
-          { label: 'Điểm TB lớp', value: t.avgClassScore || '—', icon: TrendingUp, tone: 'sky' },
+          { label: 'Điểm TB lớp', value: t.avgClassScore ? `${t.avgClassScore}/${t.avgClassScale ?? 990}` : '—', icon: TrendingUp, tone: 'sky' },
           { label: 'Chuyên cần TB', value: attendance ? `${attendance}%` : '—', icon: ClipboardCheck, tone: 'emerald' },
           { label: 'Chờ kiểm định', value: reviews.filter((r) => r.status === 'PENDING').length, note: `${reviews.length} bài đã chọn kiểm tra`, icon: PenTool, tone: 'amber' },
           { label: 'Điểm dự giờ TB', value: avgRating ? `${avgRating}/5` : '—', note: `${rated.length} buổi đã dự`, icon: Star, tone: 'rose' },

@@ -35,7 +35,7 @@ const makeColumns = (obs: ClassObservation[]): Column<TeacherSummary>[] => [
   { key: 'subject', header: 'Môn phụ trách', render: (r) => <span className="text-[13px] text-slate-700">{r.subject}</span> },
   { key: 'classesCount', header: 'Lớp', align: 'center', render: (r) => <span className="tabular-nums">{r.classesCount}</span> },
   { key: 'studentsCount', header: 'Học viên', align: 'center', render: (r) => <span className="tabular-nums">{r.studentsCount}</span> },
-  { key: 'avgClassScore', header: 'Điểm TB lớp', align: 'center', render: (r) => <span className="font-display font-bold tabular-nums">{r.avgClassScore || '—'}</span> },
+  { key: 'avgClassScore', header: 'Điểm TB lớp', align: 'center', render: (r) => (r.avgClassScore ? <span className="font-display font-bold tabular-nums">{r.avgClassScore}<span className="text-[11px] font-medium text-slate-400">/{r.avgClassScale ?? 990}</span></span> : <span className="text-slate-400">—</span>) },
   {
     key: 'id',
     header: 'Dự giờ',

@@ -284,7 +284,7 @@ export const HeadDashboardPage: React.FC = () => {
                       <span className="text-slate-700">{r.teacher}</span>
                     </div>
                   </td>
-                  <td className={cn(tbl.td, 'text-right font-semibold tabular-nums text-slate-900')}>{r.avgScore > 0 ? r.avgScore : <span className="font-normal text-slate-400">—</span>}</td>
+                  <td className={cn(tbl.td, 'text-right font-semibold tabular-nums text-slate-900')}>{r.avgScore > 0 ? formatNumber(r.avgScore) : <span className="font-normal text-slate-400">—</span>}</td>
                   <td className={cn(tbl.td, 'max-sm:hidden')}>
                     <div className="flex items-center gap-2">
                       {r.hasAttendance === false ? (

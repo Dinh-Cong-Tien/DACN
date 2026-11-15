@@ -130,13 +130,10 @@ export const StudentWritingPage: React.FC = () => {
 
           <div className="rounded-2xl border-2 border-slate-900 shadow-hard bg-paper overflow-hidden animate-fade-up" style={{ animationDelay: '80ms' }}>
             <div className="flex items-center justify-between px-4 h-10 border-b-2 border-slate-900 bg-white">
-              <div className="flex items-center gap-1.5">
-                {['bg-violet-500', 'bg-amber-300', 'bg-emerald-400'].map((c) => (
-                  <span key={c} className={cn('w-3 h-3 rounded-full border border-slate-900', c)} />
-                ))}
-              </div>
-              <span className="text-[11px] font-bold text-slate-500 font-mono">bai-viet-{task.id}.txt</span>
-              <span className="text-[11px] font-bold text-slate-600">{wordCount} từ</span>
+              <span className="text-[12px] font-bold text-slate-700">Bài làm</span>
+              <span className={cn('text-[12px] font-bold tabular-nums', wordCount >= task.minWords ? 'text-emerald-700' : 'text-slate-500')}>
+                {wordCount} / {task.minWords} từ
+              </span>
             </div>
             <div className="p-3 md:p-4">
               <Textarea

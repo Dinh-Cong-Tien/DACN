@@ -9,7 +9,7 @@ import { errorMessage } from '@/shared/api/client';
 import { ASSIGNMENT_TYPE_LABEL, partLabel } from '@/shared/constants/staff';
 import { Img, PHOTOS } from '@/shared/components/media/Img';
 import { HBarChart, LineChart } from '@/shared/components/charts/Charts';
-import { cn, formatDate, sessionState, timeAgo, staffPath } from '@/shared/utils';
+import { cn, formatDate, sessionState, timeAgo, staffPath, formatNumber } from '@/shared/utils';
 import { Avatar, Input, Modal, Textarea } from '@/shared/components/ui';
 import { Figures, Meter, Panel, Status, TBtn, TTabs, tbl, type StatusTone, CompletionMeter } from '@/roles/teacher/components/TeacherKit';
 import { classIssue } from './HeadClassesPage';
@@ -362,7 +362,7 @@ export const HeadClassDetailPage: React.FC = () => {
                         </span>
                       </span>
                     </td>
-                    <td className={cn(tbl.td, 'text-right tabular-nums')}>{r.avgScore ?? '—'}</td>
+                    <td className={cn(tbl.td, 'text-right tabular-nums')}>{r.avgScore == null ? '—' : formatNumber(r.avgScore)}</td>
                     <td className={tbl.td}>
                       <CompletionMeter value={r.completion} />
                     </td>
@@ -460,7 +460,7 @@ export const HeadClassDetailPage: React.FC = () => {
                           </span>
                         </span>
                       </td>
-                      <td className={cn(tbl.td, 'text-right tabular-nums')}>{a.avgScore ?? '—'}</td>
+                      <td className={cn(tbl.td, 'text-right tabular-nums')}>{a.avgScore == null ? '—' : formatNumber(a.avgScore)}</td>
                       <td className={tbl.td}>
                         <Status tone={(A_STATUS[a.status] ?? A_STATUS.DRAFT)[0]}>{(A_STATUS[a.status] ?? A_STATUS.DRAFT)[1]}</Status>
                       </td>

@@ -272,8 +272,9 @@ export const RadarChart: React.FC<{ data: { label: string; value: number }[]; si
       .join(' ');
   const dataPoly = data.map((d, i) => point(i, inView ? d.value / 100 : 0)).map(([x, y]) => `${x},${y}`).join(' ');
   return (
-    <div ref={ref} className={cn('inline-block', className)}>
-      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+    <div ref={ref} className={cn('inline-block px-10', className)}>
+      {/* overflow visible + px-10: nhãn ở hai bên (vd. "Tốc độ") không bị cắt */}
+      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} overflow="visible">
         {[0.25, 0.5, 0.75, 1].map((v) => (
           <polygon key={v} points={poly(v)} className="fill-none stroke-slate-200" strokeWidth="1" />
         ))}
@@ -287,9 +288,10 @@ export const RadarChart: React.FC<{ data: { label: string; value: number }[]; si
           return <circle key={i} cx={x} cy={y} r="4" fill="#fff" stroke={colors[tone]} strokeWidth="2.5" style={{ transition: 'all 1s cubic-bezier(0.16,1,0.3,1)' }} />;
         })}
         {data.map((d, i) => {
-          const [x, y] = point(i, 1.22);
+          const [x, y] = point(i, 1.12);
+          const cos = Math.cos(angle(i));
           return (
-            <text key={i} x={x} y={y} textAnchor="middle" dominantBaseline="middle" className="fill-slate-600 text-[10px] font-bold">
+            <text key={i} x={x} y={y} textAnchor={cos > 0.3 ? 'start' : cos < -0.3 ? 'end' : 'middle'} dominantBaseline="middle" className="fill-slate-600 text-[10px] font-bold">
               {d.label}
             </text>
           );
