@@ -76,19 +76,38 @@ export const StudentExamResultPage: React.FC = () => {
 
   const isVstep = test.examType === 'VSTEP';
   // Điểm do server quy đổi (TOEIC theo bảng quy đổi, VSTEP thang 10); luyện tập = số câu đúng
-  const score = payload.result!.summary.score;
+  const summary = payload.result!.summary;
+  const pending = summary.status === 'GRADING';
+  const score = summary.score;
   const maxScore = practice ? result.total : payload.result!.summary.maxScore || (isVstep ? 10 : 990);
   const wrong = questions.filter((q) => result.answers[q.id] !== getCorrectKey(q));
   const flaggedQ = questions.filter((q) => result.flagged.includes(q.id));
   const list = tab === 'all' ? questions : tab === 'wrong' ? wrong : flaggedQ;
+  // Điểm từng kỹ năng (đề full): TOEIC Nghe/Đọc thang 495; VSTEP 4 kỹ năng thang 10
+  const skillScores: { label: string; value?: number; max: number }[] = practice
+    ? []
+    : isVstep
+      ? [
+          { label: 'Nghe', value: summary.listening, max: 10 },
+          { label: 'Đọc', value: summary.reading, max: 10 },
+          { label: 'Viết', value: summary.writing, max: 10 },
+          { label: 'Nói', value: summary.speaking, max: 10 },
+        ].filter((k) => k.value !== undefined || pending)
+      : [
+          { label: 'Nghe (Listening)', value: summary.listening, max: 495 },
+          { label: 'Đọc (Reading)', value: summary.reading, max: 495 },
+        ].filter((k) => k.value !== undefined);
   const wrongAnswered = wrong.filter((q) => result.answers[q.id]).length;
   const blank = wrong.length - wrongAnswered;
   const ringPct = practice ? pct : Math.round((score / Math.max(1, maxScore)) * 100);
-  const tone = pct >= 75 ? 'emerald' : pct >= 50 ? 'amber' : 'rose';
-  const level =
-    pct >= 75
+  // Đề full: xếp mức theo điểm quy đổi (thang 990 / 10); luyện tập: theo tỉ lệ câu đúng
+  const lv = practice ? pct : ringPct;
+  const tone = lv >= 75 ? 'emerald' : lv >= 50 ? 'amber' : 'rose';
+  const level = pending
+    ? { label: 'Đang chờ chấm', badge: 'bg-slate-100 text-slate-600', dot: 'bg-slate-400', message: 'Giáo viên đang chấm bài Viết / Nói. Điểm tổng sẽ có khi chấm xong.' }
+    : lv >= 75
       ? { label: 'Tốt', badge: 'bg-emerald-500/10 text-emerald-600', dot: 'bg-emerald-500', message: 'Bạn đã vượt mục tiêu chặng. Giữ nhịp luyện đề đều đặn.' }
-      : pct >= 50
+      : lv >= 50
         ? { label: 'Khá', badge: 'bg-amber-500/15 text-amber-600', dot: 'bg-amber-500', message: 'Còn vài phần cần cải thiện — xem lại các câu sai bên dưới.' }
         : { label: 'Cần cải thiện', badge: 'bg-rose-500/10 text-rose-600', dot: 'bg-rose-500', message: 'Xem lại lỗi sai và luyện thêm các phần có tỉ lệ đúng thấp.' };
 
@@ -120,10 +139,16 @@ export const StudentExamResultPage: React.FC = () => {
           <div className="flex flex-col items-center justify-center gap-3 border-b border-slate-200 px-6 py-7 text-center md:border-b-0 md:border-r">
             <RingProgress value={ringPct} size={152} stroke={10} tone={tone}>
               <div>
-                <p className="font-display text-[40px] font-bold leading-none tabular-nums text-slate-900">{score}</p>
-                <p className="mt-1 text-[12px] font-medium text-slate-500">
-                  / {maxScore} {practice ? 'câu đúng' : 'điểm'}
-                </p>
+                {pending ? (
+                  <p className="font-display text-xl font-bold text-slate-500">Chờ chấm</p>
+                ) : (
+                  <>
+                    <p className="font-display text-[40px] font-bold leading-none tabular-nums text-slate-900">{score}</p>
+                    <p className="mt-1 text-[12px] font-medium text-slate-500">
+                      / {maxScore} {practice ? 'câu đúng' : 'điểm'}
+                    </p>
+                  </>
+                )}
               </div>
             </RingProgress>
             <span className={cn('inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[12px] font-semibold', level.badge)}>
@@ -131,6 +156,22 @@ export const StudentExamResultPage: React.FC = () => {
               {level.label}
             </span>
             <p className="max-w-[220px] text-[13px] leading-snug text-slate-500">{level.message}</p>
+            {skillScores.length > 0 && (
+              <dl className="mt-1 w-full max-w-[220px] divide-y divide-slate-100 border-t border-slate-200 text-[13px]">
+                {skillScores.map((k) => (
+                  <div key={k.label} className="flex items-center justify-between py-1.5">
+                    <dt className="text-slate-500">{k.label}</dt>
+                    <dd className="tabular-nums text-slate-900">{k.value === undefined ? <span className="text-slate-400">Chờ chấm</span> : <><b className="font-semibold">{k.value}</b><span className="text-slate-400">/{k.max}</span></>}</dd>
+                  </div>
+                ))}
+                {isVstep && summary.cefr && !pending && (
+                  <div className="flex items-center justify-between py-1.5">
+                    <dt className="text-slate-500">Bậc CEFR</dt>
+                    <dd className="font-semibold text-slate-900">{summary.cefr}</dd>
+                  </div>
+                )}
+              </dl>
+            )}
           </div>
 
           <div className="min-w-0 p-5 sm:p-6">
@@ -215,7 +256,7 @@ export const StudentExamResultPage: React.FC = () => {
                     </Badge>
                   )}
                 </div>
-                <QuestionRenderer question={q} index={questions.indexOf(q)} selectedAnswer={result.answers[q.id]} onSelectAnswer={() => undefined} showExplanation isReadOnly />
+                <QuestionRenderer question={q} index={questions.indexOf(q)} selectedAnswer={result.answers[q.id]} onSelectAnswer={() => undefined} showExplanation isReadOnly hideAudio />
               </div>
             ))
           )}

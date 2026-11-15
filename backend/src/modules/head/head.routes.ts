@@ -24,6 +24,7 @@ import {
   toComplaint,
 } from './shared';
 import { oversightRouter } from './head.oversight';
+import { recomputeVstep } from '../learner/attempts';
 import { summaryRouter } from './head.summary';
 import { CLASS_TRACK, classCourseData, classCourseProgress, classTrackData, enrollClassCourse, nextClassCode, CLASS_LEVEL, codeWithLevel } from '../catalog/class-track';
 
@@ -871,7 +872,10 @@ headRouter.post(
         const scale = Number(g.rubric.scaleMax) || 10;
         await tx.assignmentSubmission.update({ where: { id: g.submissionId }, data: { score: Math.round((reviewTotal / scale) * max * 10) / 10 } });
       }
-      if (body.decision === 'ADJUSTED' && g.answerId && reviewTotal !== null) await tx.attemptAnswer.update({ where: { id: g.answerId }, data: { score: reviewTotal } });
+      if (body.decision === 'ADJUSTED' && g.answerId && reviewTotal !== null) {
+        const upd = await tx.attemptAnswer.update({ where: { id: g.answerId }, data: { score: reviewTotal } });
+        await recomputeVstep(tx, upd.attemptId);
+      }
       await audit(req, body.decision === 'ADJUSTED' ? 'SCORE_ADJUST' : 'GRADING_REVIEW_AGREE', 'grading', g.id, {
         tx,
         severity: body.decision === 'ADJUSTED' ? 'WARN' : 'INFO',

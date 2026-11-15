@@ -26,6 +26,8 @@ export interface QuestionRendererProps {
   variant?: 'default' | 'plain';
   /** Ẩn nhãn Part/level (khi tiêu đề Part đã hiện ở ngoài) */
   hideMeta?: boolean;
+  /** Ẩn thanh phát audio (đề thi thật không cho nghe lại — cả khi xem lại bài) */
+  hideAudio?: boolean;
   className?: string;
 }
 
@@ -84,6 +86,7 @@ export const QuestionRenderer: React.FC<QuestionRendererProps> = ({
   allowFlagReport = true,
   variant = 'default',
   hideMeta = false,
+  hideAudio = false,
   className,
 }) => {
   const plain = variant === 'plain';
@@ -107,7 +110,7 @@ export const QuestionRenderer: React.FC<QuestionRendererProps> = ({
 
   return (
     <div className={cn(plain ? 'bg-white rounded-xl border border-slate-200 p-5 md:p-6 space-y-5' : 'bg-white rounded-3xl border-2 border-slate-900 p-5 md:p-7 shadow-hard space-y-5', className)} key={question.id}>
-      {!hidePassage && question.passage && <PassageBlock passage={question.passage} examMode={examMode} />}
+      {!hidePassage && question.passage && <PassageBlock passage={question.passage} examMode={examMode} hideAudio={hideAudio} />}
 
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-start gap-3 min-w-0">

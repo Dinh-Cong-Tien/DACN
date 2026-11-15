@@ -15,6 +15,7 @@ import { prisma } from '../../lib/prisma';
 import { allow, auth, liveUser } from '../../core/auth';
 import { badRequest, forbidden, handler, me, notFound, parse, unauthorized } from '../../core/http';
 import { iso, num, ymd } from '../../core/dto';
+import { recomputeVstep } from '../learner/attempts';
 import {
   DONE_STATUSES,
   activeStudentIds,
@@ -1137,6 +1138,7 @@ teacherRouter.post(
         await tx.grading.updateMany({ where: { answerId, graderType: 'TEACHER' }, data: { isFinal: false } });
         await tx.grading.create({ data: { answerId, graderType: 'TEACHER', graderId: u.id, rubricId: rubric.id, criteriaScores: b.criteria, totalScore: total, feedback: b.feedback, isFinal: b.release, reviewStatus: review } });
         if (b.release) await tx.attemptAnswer.update({ where: { id: answerId }, data: { score: total } });
+        if (b.release) await recomputeVstep(tx, ans.attemptId); // cập nhật điểm tổng VSTEP 4 kỹ năng
       });
       if (b.release)
         await notifyUsers([ans.attempt.userId], { type: 'ASSIGNMENT', title: 'Bài luyện đã được chấm', message: `Điểm ${total}/10${b.feedback ? ` — ${b.feedback.slice(0, 160)}` : ''}`, link: ans.question.type === 'ESSAY' ? '/app/writing' : '/app/speaking', refType: 'ATTEMPT', refId: ans.attemptId });

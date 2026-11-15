@@ -29,6 +29,60 @@ import { evaluateAchievements } from './progress';
 
 export const attemptsRouter = Router();
 
+const vstepSkill = (p: ExamPart) => (p.startsWith('VSTEP_L') ? 'L' : p.startsWith('VSTEP_R') ? 'R' : p.startsWith('VSTEP_W') ? 'W' : p.startsWith('VSTEP_S') ? 'S' : null);
+const half = (x: number) => Math.round(x * 2) / 2;
+
+/**
+ * Điểm VSTEP đề full theo quy chế: điểm tổng = trung bình 4 kỹ năng (thang 10), làm tròn 0,5.
+ * - Nghe, Đọc: tự chấm theo tỉ lệ câu đúng.
+ * - Viết: Task 1 hệ số 1, Task 2 hệ số 2. Nói: trung bình các phần. Điểm do giáo viên chấm (attempt_answers.score).
+ * - Câu Viết/Nói bỏ trống = 0. Còn bài đã nộp mà chưa chấm → trạng thái GRADING, chưa có điểm tổng/CEFR.
+ * Gọi khi nộp bài, khi giáo viên công bố điểm, khi trưởng bộ môn điều chỉnh điểm.
+ */
+export async function recomputeVstep(tx: Tx, attemptId: string) {
+  const at = await tx.examAttempt.findUnique({ where: { id: attemptId }, include: { test: { select: { examType: true } } } });
+  if (!at || at.mode !== 'FULL' || at.test?.examType !== 'VSTEP' || !at.submittedAt) return;
+  const rows = await tx.attemptAnswer.findMany({ where: { attemptId }, include: { question: { select: { part: true, type: true } } } });
+  const obj = { L: { c: 0, t: 0 }, R: { c: 0, t: 0 } };
+  const manual: Record<'W' | 'S', { w: number; v: number }[]> = { W: [], S: [] };
+  const waiting = { W: false, S: false };
+  for (const r of rows) {
+    const k = vstepSkill(r.question.part);
+    if (!k) continue;
+    if (k === 'L' || k === 'R') {
+      if (!isObjective(r.question)) continue;
+      obj[k].t += 1;
+      if (r.isCorrect) obj[k].c += 1;
+      continue;
+    }
+    const answered = !!(r.textAnswer?.trim() || r.audioUrl);
+    if (answered && r.score === null) waiting[k] = true;
+    manual[k].push({ w: r.question.part === 'VSTEP_W2' ? 2 : 1, v: answered && r.score !== null ? Number(r.score) : 0 });
+  }
+  const wavg = (xs: { w: number; v: number }[]) => (xs.length ? half(xs.reduce((a, x) => a + x.w * x.v, 0) / xs.reduce((a, x) => a + x.w, 0)) : null);
+  const L = obj.L.t ? vstepScaled(obj.L.c, obj.L.t) : null;
+  const R = obj.R.t ? vstepScaled(obj.R.c, obj.R.t) : null;
+  // Kỹ năng còn bài chưa chấm → chưa có điểm kỹ năng đó
+  const W = waiting.W ? null : wavg(manual.W);
+  const S = waiting.S ? null : wavg(manual.S);
+  const pending = waiting.W || waiting.S;
+  const skills = [L, R, W, S].filter((x): x is number => x !== null);
+  const total = pending || !skills.length ? null : half(skills.reduce((a, b) => a + b, 0) / skills.length);
+  await tx.examAttempt.update({
+    where: { id: attemptId },
+    data: {
+      scoreListening: L,
+      scoreReading: R,
+      scoreWriting: W,
+      scoreSpeaking: S,
+      scoreTotal: total,
+      cefrResult: (total === null ? null : vstepCefr(total)) as never,
+      status: pending ? 'GRADING' : 'COMPLETED',
+    },
+  });
+}
+
+
 type OrderItem = { questionId: string; version: number };
 
 const startBody = z.object({
@@ -356,11 +410,8 @@ attemptsRouter.post(
           if (rAgg.t) scoreReading = await toeicScaled('READING', rAgg.c, rAgg.t);
           scoreTotal = (scoreListening ?? 0) + (scoreReading ?? 0);
         } else if (examType === 'VSTEP' && at.mode === 'FULL') {
-          if (lAgg.t) scoreListening = vstepScaled(lAgg.c, lAgg.t);
-          if (rAgg.t) scoreReading = vstepScaled(rAgg.c, rAgg.t);
-          const parts = [scoreListening, scoreReading].filter((x): x is number => x !== null);
-          scoreTotal = parts.length ? Math.round((parts.reduce((a, b) => a + b, 0) / parts.length) * 2) / 2 : 0;
-          cefr = vstepCefr(scoreTotal);
+          // Tạm thời; recomputeVstep() bên dưới tính lại đủ 4 kỹ năng sau khi lưu
+          scoreTotal = 0;
         } else {
           scoreTotal = correct; // luyện tập: điểm = số câu đúng, max = tổng câu
         }
@@ -393,6 +444,8 @@ attemptsRouter.post(
             clientInfo: body.clientInfo ? ({ ...(at.clientInfo as object), ...body.clientInfo } as Prisma.InputJsonValue) : undefined,
           },
         });
+
+        if (examType === 'VSTEP' && at.mode === 'FULL') await recomputeVstep(tx, at.id);
 
         // Sổ tay lỗi sai + thẻ SRS
         for (const w of wrong) {
@@ -480,6 +533,9 @@ export function toAttemptSummary(a: {
   scoreTotal: Prisma.Decimal | null;
   scoreListening: Prisma.Decimal | null;
   scoreReading: Prisma.Decimal | null;
+  scoreWriting?: Prisma.Decimal | null;
+  scoreSpeaking?: Prisma.Decimal | null;
+  cefrResult?: string | null;
   correctCount: number | null;
   totalCount: number;
   submittedAt: Date | null;
@@ -505,6 +561,9 @@ export function toAttemptSummary(a: {
     durationSec: a.timeSpentSec,
     listening: a.scoreListening === null ? undefined : Number(a.scoreListening),
     reading: a.scoreReading === null ? undefined : Number(a.scoreReading),
+    writing: a.scoreWriting == null ? undefined : Number(a.scoreWriting),
+    speaking: a.scoreSpeaking == null ? undefined : Number(a.scoreSpeaking),
+    cefr: a.cefrResult ?? undefined,
     mode: a.mode,
     status: a.status,
   };

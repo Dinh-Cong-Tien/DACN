@@ -212,6 +212,13 @@ export interface AttemptSummary {
   durationSec: number;
   listening?: number;
   reading?: number;
+  /** VSTEP: điểm Viết/Nói do giáo viên chấm (chưa chấm → không có) */
+  writing?: number;
+  speaking?: number;
+  cefr?: string;
+  /** GRADING: còn bài Viết/Nói chờ chấm, chưa có điểm tổng */
+  status?: string;
+  mode?: string;
 }
 
 export interface SkillScore {
