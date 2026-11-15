@@ -1,6 +1,6 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { IMockTest, IQuestion } from '@toeic-vstep/shared';
-import { Clock, Flag, Send, ChevronLeft, ChevronRight, AlertTriangle, Maximize2, Minimize2, Grid3X3, X, ArrowLeft, ArrowRight } from 'lucide-react';
+import { Clock, Flag, Send, ChevronLeft, ChevronRight, AlertTriangle, Maximize2, Minimize2, Grid3X3, X, ArrowLeft, ArrowRight, Volume2, Play } from 'lucide-react';
 import { QuestionRenderer, PassageBlock } from './QuestionRenderer';
 import { cn, formatClock } from '@/shared/utils';
 import { Button, Modal, Logo, Badge } from '@/shared/components/ui';
@@ -143,6 +143,81 @@ export const ExamRunner: React.FC<ExamRunnerProps> = ({ test, onSubmitExam, onEx
     if (current && group.length > 1) document.getElementById(`exam-q-${current.id}`)?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
   }, [current, group.length]);
 
+  // Audio phát ẩn như đề thi thật: vào câu có audio → tự phát 1 lần (không hiện thanh phát, không tua/nghe lại);
+  // phát xong chờ thời gian trả lời rồi tự sang nhóm câu nghe tiếp theo.
+  const [audio, setAudio] = useState<{ state: 'idle' | 'playing' | 'blocked' | 'waiting' | 'done'; left?: number }>({ state: 'idle' });
+  const playedRef = useRef<Set<string>>(new Set());
+  const audioEl = useRef<HTMLAudioElement | null>(null);
+  const startAudio = useRef<() => void>(() => undefined);
+  const groupRef = useRef(group);
+  groupRef.current = group;
+  const passageId = passage?.id;
+  useEffect(() => {
+    const p = passage;
+    if (submitted || !p?.id || (!p.audioUrl && !p.speakText)) {
+      setAudio({ state: 'idle' });
+      return;
+    }
+    if (playedRef.current.has(p.id)) {
+      setAudio({ state: 'done' });
+      return;
+    }
+    let alive = true;
+    let timer: ReturnType<typeof setInterval> | undefined;
+    // Chỉ tính "đã phát" khi audio thực sự chạy (tránh StrictMode mount 2 lần đánh dấu nhầm)
+    let startedAt = 0;
+    const markStart = () => (startedAt = Date.now());
+    const onEnd = () => {
+      if (!alive) return;
+      playedRef.current.add(p.id!);
+      // Thời gian trả lời sau khi nghe: 5 giây/câu lẻ, 8 giây/câu với nhóm câu (giống đề TOEIC)
+      const g = groupRef.current;
+      let left = g.length > 1 ? 8 * g.length : 5;
+      const lastIdx = allQuestions.indexOf(g[g.length - 1]);
+      const next = allQuestions[lastIdx + 1];
+      if (!next?.passage?.audioUrl && !next?.passage?.speakText) return setAudio({ state: 'done' });
+      setAudio({ state: 'waiting', left });
+      timer = setInterval(() => {
+        left -= 1;
+        if (left <= 0) {
+          clearInterval(timer);
+          setCurrentIndex(lastIdx + 1);
+        } else setAudio({ state: 'waiting', left });
+      }, 1000);
+    };
+    const play = () => {
+      setAudio({ state: 'playing' });
+      if (p.audioUrl) {
+        const a = new Audio(p.audioUrl);
+        audioEl.current = a;
+        a.onended = onEnd;
+        a.onplaying = markStart;
+        a.play().catch(() => {
+          // Trình duyệt chặn tự phát (vd. tải lại trang) → cần một lần bấm để bắt đầu
+          if (alive) setAudio({ state: 'blocked' });
+        });
+      } else if ('speechSynthesis' in window) {
+        const u = new SpeechSynthesisUtterance(p.speakText!);
+        u.lang = 'en-US';
+        u.onend = onEnd;
+        u.onstart = markStart;
+        window.speechSynthesis.cancel();
+        window.speechSynthesis.speak(u);
+      }
+    };
+    startAudio.current = play;
+    play();
+    return () => {
+      alive = false;
+      if (startedAt && Date.now() - startedAt > 500) playedRef.current.add(p.id!);
+      if (timer) clearInterval(timer);
+      audioEl.current?.pause();
+      audioEl.current = null;
+      if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [passageId, submitted]);
+
   const palette = (
     <div className="space-y-4">
       {sections.map((s) => {
@@ -212,6 +287,16 @@ export const ExamRunner: React.FC<ExamRunnerProps> = ({ test, onSubmitExam, onEx
           </div>
 
           <div className="flex items-center gap-2 md:gap-3">
+            {audio.state === 'blocked' ? (
+              <button type="button" onClick={() => startAudio.current()} className="inline-flex h-10 items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 hover:border-slate-400">
+                <Play className="h-4 w-4" /> <span className="max-sm:hidden">Bấm để bắt đầu nghe</span>
+              </button>
+            ) : audio.state === 'playing' || audio.state === 'waiting' ? (
+              <span className="inline-flex h-10 items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 text-xs font-medium tabular-nums text-slate-600" role="status">
+                <Volume2 className={cn('h-4 w-4', audio.state === 'playing' && 'text-emerald-600')} />
+                <span className="max-sm:hidden">{audio.state === 'playing' ? 'Đang phát audio' : `Câu tiếp sau ${audio.left}s`}</span>
+              </span>
+            ) : null}
             <div className={cn('flex items-center gap-2 px-3 md:px-4 h-10 rounded-xl font-mono font-black text-base md:text-lg transition-colors', danger ? 'bg-rose-100 text-rose-700 border-2 border-rose-500 animate-pulse' : 'bg-slate-900 text-amber-300 border-2 border-slate-900')}>
               <Clock className="w-4 h-4" />
               <span>{formatClock(timed ? Math.max(0, remaining) : elapsed)}</span>
@@ -256,7 +341,7 @@ export const ExamRunner: React.FC<ExamRunnerProps> = ({ test, onSubmitExam, onEx
             // Bố cục chia đôi: trái = ảnh/audio/đoạn văn (cuộn riêng), phải = các câu hỏi dùng chung đề đó
             <div key={passage.id} className="grid grid-cols-1 gap-4 lg:grid-cols-2 animate-fade-in">
               <div className="min-w-0 lg:sticky lg:top-24 lg:max-h-[calc(100vh-13rem)] lg:self-start lg:overflow-y-auto lg:pr-1">
-                <PassageBlock passage={passage} examMode full className="bg-white" />
+                <PassageBlock passage={passage} examMode full hideAudio className="bg-white" />
               </div>
               <div className="min-w-0 space-y-3">
                 {group.map((q) => {

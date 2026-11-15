@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { IQuestion } from '@toeic-vstep/shared';
-import { CheckCircle2, XCircle, FileText, Flag, Lightbulb, Image as ImageIcon } from 'lucide-react';
+import { CheckCircle2, XCircle, FileText, Flag, Lightbulb, Image as ImageIcon, Volume2 } from 'lucide-react';
 import { cn, getCorrectKey } from '@/shared/utils';
 import { AudioPlayer } from '@/shared/components/media/AudioPlayer';
 import { SpeakPlayer } from '@/shared/components/media/SpeakPlayer';
@@ -42,8 +42,9 @@ const PART_LABEL: Record<string, string> = {
   LISTENING_PART_2: 'VSTEP Listening 2',
 };
 
-/** full: dùng ở cột trái của bố cục chia đôi — ảnh lớn hơn, đoạn văn không giới hạn chiều cao (cột tự cuộn) */
-export const PassageBlock: React.FC<{ passage: NonNullable<IQuestion['passage']>; examMode?: boolean; className?: string; full?: boolean }> = ({ passage, examMode, className, full }) => (
+/** hideAudio: phòng thi tự phát audio ẩn (ExamRunner), không hiện thanh phát.
+ *  full: dùng ở cột trái của bố cục chia đôi — ảnh lớn hơn, đoạn văn không giới hạn chiều cao (cột tự cuộn) */
+export const PassageBlock: React.FC<{ passage: NonNullable<IQuestion['passage']>; examMode?: boolean; className?: string; full?: boolean; hideAudio?: boolean }> = ({ passage, examMode, className, full, hideAudio }) => (
   <div className={cn('rounded-2xl border border-slate-200 bg-slate-50/70 p-4 md:p-5 space-y-3 animate-fade-in', className)}>
     {passage.title && (
       <h4 className="font-bold text-slate-800 text-sm flex items-center gap-2">
@@ -52,7 +53,12 @@ export const PassageBlock: React.FC<{ passage: NonNullable<IQuestion['passage']>
       </h4>
     )}
     {/* Audio đặt trên ảnh — nghe trước, nhìn ảnh để chọn đáp án */}
-    {passage.audioUrl ? <AudioPlayer src={passage.audioUrl} examMode={examMode} /> : passage.speakText ? <SpeakPlayer text={passage.speakText} /> : null}
+    {hideAudio && (passage.audioUrl || passage.speakText) && !passage.imageUrl && !passage.content && (
+      <p className="flex items-center gap-2 text-sm text-slate-500">
+        <Volume2 className="h-4 w-4 shrink-0" /> Nghe audio và chọn đáp án cho các câu hỏi.
+      </p>
+    )}
+    {hideAudio ? null : passage.audioUrl ? <AudioPlayer src={passage.audioUrl} examMode={examMode} /> : passage.speakText ? <SpeakPlayer text={passage.speakText} /> : null}
     {passage.imageUrl && (
       <div className="relative flex justify-center rounded-xl overflow-hidden border border-slate-200 bg-slate-100">
         {/* Hiện trọn ảnh (không cắt) — Part 1 cần nhìn đủ chi tiết để chọn đáp án */}
