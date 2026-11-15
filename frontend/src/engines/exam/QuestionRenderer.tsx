@@ -51,6 +51,8 @@ export const PassageBlock: React.FC<{ passage: NonNullable<IQuestion['passage']>
         {passage.title}
       </h4>
     )}
+    {/* Audio đặt trên ảnh — nghe trước, nhìn ảnh để chọn đáp án */}
+    {passage.audioUrl ? <AudioPlayer src={passage.audioUrl} examMode={examMode} /> : passage.speakText ? <SpeakPlayer text={passage.speakText} /> : null}
     {passage.imageUrl && (
       <div className="relative flex justify-center rounded-xl overflow-hidden border border-slate-200 bg-slate-100">
         {/* Hiện trọn ảnh (không cắt) — Part 1 cần nhìn đủ chi tiết để chọn đáp án */}
@@ -60,7 +62,6 @@ export const PassageBlock: React.FC<{ passage: NonNullable<IQuestion['passage']>
         </span>
       </div>
     )}
-    {passage.audioUrl ? <AudioPlayer src={passage.audioUrl} examMode={examMode} /> : passage.speakText ? <SpeakPlayer text={passage.speakText} /> : null}
     {passage.content && <div className={cn('text-sm text-slate-700 leading-relaxed whitespace-pre-line font-medium', !full && 'max-h-72 overflow-y-auto pr-2')}>{passage.content}</div>}
   </div>
 );
