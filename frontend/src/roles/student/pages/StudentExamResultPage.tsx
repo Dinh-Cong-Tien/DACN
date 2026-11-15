@@ -1,15 +1,16 @@
 import React, { useMemo, useState } from 'react';
 import { fireConfetti } from '@/shared/components/motion/confetti';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
-import { Trophy, Clock, Target, AlertTriangle, RotateCcw, BookmarkPlus, Share2, Flag, CheckCircle2 } from 'lucide-react';
+import { Clock, RotateCcw, BookmarkPlus, Share2, Flag, CheckCircle2, XCircle } from 'lucide-react';
 import { useDocumentTitle } from '@/shared/hooks';
-import { Badge, Button, Card, CardHeader, PageHeader, ProgressBar, RingProgress, StatCard, Tabs, EmptyState } from '@/shared/components/ui';
-import { Stagger } from '@/shared/components/motion';
+import { Badge, Button, Card, CardHeader, PageHeader, RingProgress, Tabs, EmptyState } from '@/shared/components/ui';
 import { QuestionRenderer } from '@/engines';
 import { useAttempt, useAttempts } from '@/shared/api/learner';
 import { errorMessage } from '@/shared/api/client';
 import { toast } from '@/shared/stores/uiStore';
 import { cn, examSetupQuery, formatDuration, getCorrectKey } from '@/shared/utils';
+
+const barTone = (p: number) => (p >= 70 ? 'bg-emerald-500' : p >= 40 ? 'bg-amber-500' : 'bg-rose-500');
 
 interface ViewResult {
   answers: Record<string, string>;
@@ -80,8 +81,16 @@ export const StudentExamResultPage: React.FC = () => {
   const wrong = questions.filter((q) => result.answers[q.id] !== getCorrectKey(q));
   const flaggedQ = questions.filter((q) => result.flagged.includes(q.id));
   const list = tab === 'all' ? questions : tab === 'wrong' ? wrong : flaggedQ;
-  const tone = pct >= 75 ? 'emerald' : pct >= 50 ? 'amber' : 'violet';
-  const cardTone = pct >= 75 ? 'teal' : pct >= 50 ? 'yellow' : 'coral';
+  const wrongAnswered = wrong.filter((q) => result.answers[q.id]).length;
+  const blank = wrong.length - wrongAnswered;
+  const ringPct = practice ? pct : Math.round((score / Math.max(1, maxScore)) * 100);
+  const tone = pct >= 75 ? 'emerald' : pct >= 50 ? 'amber' : 'rose';
+  const level =
+    pct >= 75
+      ? { label: 'Tốt', badge: 'bg-emerald-500/10 text-emerald-600', dot: 'bg-emerald-500', message: 'Bạn đã vượt mục tiêu chặng. Giữ nhịp luyện đề đều đặn.' }
+      : pct >= 50
+        ? { label: 'Khá', badge: 'bg-amber-500/15 text-amber-600', dot: 'bg-amber-500', message: 'Còn vài phần cần cải thiện — xem lại các câu sai bên dưới.' }
+        : { label: 'Cần cải thiện', badge: 'bg-rose-500/10 text-rose-600', dot: 'bg-rose-500', message: 'Xem lại lỗi sai và luyện thêm các phần có tỉ lệ đúng thấp.' };
 
   return (
     <div>
@@ -105,47 +114,71 @@ export const StudentExamResultPage: React.FC = () => {
         }
       />
 
-      <Card hard tone={cardTone} className="mb-6 animate-scale-in" padding="lg">
-        <div className="grid grid-cols-1 md:grid-cols-[auto_1fr] gap-8 items-center">
-          <div className="relative flex justify-center">
-            <div className="rounded-full bg-white border-2 border-slate-900 p-2 shadow-hard">
-              <RingProgress value={pct} size={176} stroke={14} tone={tone}>
-                <div className="text-center">
-                  <p className="font-display text-4xl font-extrabold text-slate-900">{score}</p>
-                  <p className="text-[11px] font-extrabold uppercase text-slate-500">/{maxScore} {practice ? 'câu đúng' : 'điểm'}</p>
-                </div>
-              </RingProgress>
-            </div>
-            <span className={cn('absolute -top-2 -right-2 w-12 h-12 rounded-2xl border-2 border-slate-900 bg-amber-300 flex items-center justify-center shadow-hard-sm animate-bounce-soft', pct < 50 && 'bg-white')}>
-              <Trophy className={cn('w-6 h-6', pct >= 50 ? 'text-slate-900' : 'text-slate-300')} />
+      {/* Tổng quan kết quả: điểm + chỉ số chính + kết quả theo phần */}
+      <section className="mb-6 overflow-hidden rounded-xl border border-slate-200 bg-white animate-fade-in">
+        <div className="grid grid-cols-1 md:grid-cols-[260px_1fr]">
+          <div className="flex flex-col items-center justify-center gap-3 border-b border-slate-200 px-6 py-7 text-center md:border-b-0 md:border-r">
+            <RingProgress value={ringPct} size={152} stroke={10} tone={tone}>
+              <div>
+                <p className="font-display text-[40px] font-bold leading-none tabular-nums text-slate-900">{score}</p>
+                <p className="mt-1 text-[12px] font-medium text-slate-500">
+                  / {maxScore} {practice ? 'câu đúng' : 'điểm'}
+                </p>
+              </div>
+            </RingProgress>
+            <span className={cn('inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[12px] font-semibold', level.badge)}>
+              <span className={cn('h-1.5 w-1.5 rounded-full', level.dot)} />
+              {level.label}
             </span>
+            <p className="max-w-[220px] text-[13px] leading-snug text-slate-500">{level.message}</p>
           </div>
-          <div className="space-y-4">
-            <div>
-              <h2 className="font-display text-2xl md:text-3xl font-extrabold leading-tight">{pct >= 75 ? 'Tuyệt vời! Bạn đã vượt mục tiêu chặng.' : pct >= 50 ? 'Khá tốt — còn vài điểm cần cải thiện.' : 'Đừng nản, hãy xem lại lỗi sai và luyện thêm.'}</h2>
-              <p className="text-sm mt-1 opacity-90 font-semibold">
-                Đúng <b>{result.correctCount}</b>/{result.total} câu · Sai {wrong.length} câu · {flaggedQ.length} câu đánh dấu · {formatDuration(result.timeSpentSec)}
-              </p>
-            </div>
-            <div className="space-y-3 rounded-2xl bg-white/85 border-2 border-slate-900 p-4 text-slate-900">
-              {result.bySection.map((s, i) => (
-                <div key={s.name} className="animate-fade-in" style={{ animationDelay: `${i * 80}ms` }}>
-                  <ProgressBar value={(s.correct / Math.max(1, s.total)) * 100} label={s.name} showValue size="md" tone={s.correct / s.total >= 0.7 ? 'emerald' : 'amber'} />
-                  <p className="text-[11px] text-slate-500 font-semibold mt-1">
-                    {s.correct}/{s.total} câu đúng
-                  </p>
+
+          <div className="min-w-0 p-5 sm:p-6">
+            <dl className="grid grid-cols-2 gap-px overflow-hidden rounded-lg border border-slate-200 bg-slate-200 sm:grid-cols-4">
+              {[
+                { icon: CheckCircle2, label: 'Câu đúng', value: `${result.correctCount}/${result.total}`, hint: `${pct}% chính xác` },
+                { icon: XCircle, label: 'Câu sai', value: String(wrongAnswered), hint: `${blank} câu bỏ trống` },
+                { icon: Clock, label: 'Thời gian', value: formatDuration(result.timeSpentSec), hint: `${Math.round(result.timeSpentSec / Math.max(1, result.total))}s / câu` },
+                { icon: Flag, label: 'Đánh dấu', value: String(flaggedQ.length), hint: 'câu cần xem lại' },
+              ].map((s) => (
+                <div key={s.label} className="bg-white px-4 py-3">
+                  <dt className="flex items-center gap-1.5 text-[12px] font-medium text-slate-500">
+                    <s.icon className="h-3.5 w-3.5" /> {s.label}
+                  </dt>
+                  <dd className="mt-1 text-lg font-semibold tabular-nums text-slate-900">{s.value}</dd>
+                  <dd className="text-[12px] text-slate-400">{s.hint}</dd>
                 </div>
               ))}
+            </dl>
+
+            <div className="mt-5">
+              <div className="mb-2 flex items-baseline justify-between">
+                <h2 className="text-sm font-semibold text-slate-900">Kết quả theo phần</h2>
+                <span className="text-[12px] text-slate-400">Số câu đúng / tổng</span>
+              </div>
+              <ul className="divide-y divide-slate-100">
+                {result.bySection.map((s) => {
+                  const p = Math.round((s.correct / Math.max(1, s.total)) * 100);
+                  return (
+                    <li key={s.name} className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-1.5 py-2.5 sm:grid-cols-[minmax(0,220px)_1fr_auto]">
+                      <span className="truncate text-[13px] font-medium text-slate-700" title={s.name}>
+                        {s.name}
+                      </span>
+                      <span className="col-span-2 row-start-2 h-1.5 overflow-hidden rounded-full bg-slate-100 sm:col-span-1 sm:row-start-auto">
+                        <span className={cn('block h-full rounded-full transition-[width] duration-700', barTone(p))} style={{ width: `${Math.max(p, p > 0 ? 2 : 0)}%` }} />
+                      </span>
+                      <span className="col-start-2 row-start-1 text-right text-[13px] tabular-nums text-slate-500 sm:col-start-auto sm:row-start-auto">
+                        <b className="font-semibold text-slate-900">{s.correct}</b>/{s.total}
+                        <span className="ml-2 inline-block w-9 text-slate-400">{p}%</span>
+                      </span>
+                    </li>
+                  );
+                })}
+              </ul>
             </div>
           </div>
         </div>
-      </Card>
-
-      <Stagger className="grid grid-cols-3 gap-4 mb-6" step={70}>
-        <StatCard label="Độ chính xác" value={pct} suffix="%" icon={<Target />} tone={tone} />
-        <StatCard label="Thời gian làm" value={formatDuration(result.timeSpentSec)} icon={<Clock />} tone="sky" hint={`Trung bình ${Math.round(result.timeSpentSec / Math.max(1, result.total))}s / câu`} />
-        <StatCard label="Lỗi sai đã lưu" value={wrong.filter((q) => result.answers[q.id]).length} suffix="câu" icon={<AlertTriangle />} tone="violet" hint="Sổ tay lỗi sai" />
-      </Stagger>
+      </section>
 
       <Card hard className="animate-fade-up" padding="none">
         <div className="p-5 border-b-2 border-slate-900/10 flex flex-col md:flex-row md:items-center justify-between gap-3">
