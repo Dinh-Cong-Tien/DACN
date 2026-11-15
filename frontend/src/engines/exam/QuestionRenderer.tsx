@@ -49,8 +49,9 @@ export const PassageBlock: React.FC<{ passage: NonNullable<IQuestion['passage']>
       </h4>
     )}
     {passage.imageUrl && (
-      <div className="relative rounded-xl overflow-hidden border border-slate-200 bg-white">
-        <img src={passage.imageUrl} alt="Question stimulus" className="w-full max-h-80 object-cover" loading="lazy" />
+      <div className="relative flex justify-center rounded-xl overflow-hidden border border-slate-200 bg-slate-100">
+        {/* Hiện trọn ảnh (không cắt) — Part 1 cần nhìn đủ chi tiết để chọn đáp án */}
+        <img src={passage.imageUrl} alt="Question stimulus" className="block h-auto max-h-[520px] w-auto max-w-full object-contain" loading="lazy" />
         <span className="absolute top-2 left-2 inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-black/50 text-white text-[10px] font-bold">
           <ImageIcon className="w-3 h-3" /> Hình minh hoạ
         </span>
