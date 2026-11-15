@@ -98,11 +98,11 @@ export const ExamRunner: React.FC<ExamRunnerProps> = ({ test, onSubmitExam, onEx
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [current, confirmOpen, exitOpen, allQuestions.length]);
 
-  const select = (key: string) => {
-    if (!current) return;
-    setAnswers((a) => ({ ...a, [current.id]: key }));
-    onSaveAnswer?.(current.id, key);
+  const selectFor = (q: IQuestion, key: string) => {
+    setAnswers((a) => ({ ...a, [q.id]: key }));
+    onSaveAnswer?.(q.id, key);
   };
+  const select = (key: string) => current && selectFor(current, key);
 
   const toggleFlag = () => {
     if (!current) return;
@@ -134,8 +134,14 @@ export const ExamRunner: React.FC<ExamRunnerProps> = ({ test, onSubmitExam, onEx
   const pct = Math.round((answered / allQuestions.length) * 100);
   const danger = timed && remaining < 300;
 
-  // Nhóm câu theo passage: hiển thị passage 1 lần cho cả nhóm
-  const groupedPassage = current?.passage && allQuestions.filter((q) => q.passageId === current.passage?.id || q.passage?.id === current.passage?.id).length > 1 ? current.passage : null;
+  // Câu có đề kèm theo (ảnh/audio/đoạn văn) → chia đôi; các câu dùng chung đề hiện cùng nhau bên phải
+  const passage = current?.passage ?? null;
+  const group = useMemo(() => (passage?.id ? allQuestions.filter((q) => q.passage?.id === passage.id || q.passageId === passage.id) : current ? [current] : []), [passage, allQuestions, current]);
+
+  // Chuyển câu trong nhóm → cuộn tới câu đó ở cột phải
+  useEffect(() => {
+    if (current && group.length > 1) document.getElementById(`exam-q-${current.id}`)?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  }, [current, group.length]);
 
   const palette = (
     <div className="space-y-4">
@@ -194,7 +200,7 @@ export const ExamRunner: React.FC<ExamRunnerProps> = ({ test, onSubmitExam, onEx
     <div className="min-h-screen bg-paper flex flex-col">
       {/* Top bar */}
       <header className="bg-cream/90 backdrop-blur-xl border-b-2 border-slate-900 sticky top-0 z-40">
-        <div className="max-w-7xl mx-auto px-4 md:px-6 h-16 flex items-center justify-between gap-4">
+        <div className="max-w-[1440px] mx-auto px-4 md:px-6 h-16 flex items-center justify-between gap-4">
           <div className="flex items-center gap-3 min-w-0">
             <Logo size="sm" to="#" />
             <div className="hidden md:block min-w-0">
@@ -233,7 +239,7 @@ export const ExamRunner: React.FC<ExamRunnerProps> = ({ test, onSubmitExam, onEx
       </header>
 
       {/* Body */}
-      <div className="flex-1 max-w-7xl w-full mx-auto p-4 md:p-6 grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-6">
+      <div className="flex-1 max-w-[1440px] w-full mx-auto p-4 md:p-6 grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-6">
         <div className="space-y-4 min-w-0">
           {currentSection && (
             <div className="flex items-center justify-between animate-fade-down">
@@ -246,15 +252,43 @@ export const ExamRunner: React.FC<ExamRunnerProps> = ({ test, onSubmitExam, onEx
             </div>
           )}
 
-          {groupedPassage && <PassageBlock passage={groupedPassage} examMode />}
-
-          {current && (
-            <div key={current.id} className="animate-slide-in-right">
-              <QuestionRenderer question={current} index={currentIndex} selectedAnswer={answers[current.id]} onSelectAnswer={select} examMode hidePassage={!!groupedPassage} allowFlagReport={false} />
+          {current && passage ? (
+            // Bố cục chia đôi: trái = ảnh/audio/đoạn văn (cuộn riêng), phải = các câu hỏi dùng chung đề đó
+            <div key={passage.id} className="grid grid-cols-1 gap-4 lg:grid-cols-2 animate-fade-in">
+              <div className="min-w-0 lg:sticky lg:top-24 lg:max-h-[calc(100vh-13rem)] lg:self-start lg:overflow-y-auto lg:pr-1">
+                <PassageBlock passage={passage} examMode full className="bg-white" />
+              </div>
+              <div className="min-w-0 space-y-3">
+                {group.map((q) => {
+                  const idx = allQuestions.indexOf(q);
+                  return (
+                    <div key={q.id} id={`exam-q-${q.id}`} className="scroll-mt-28" onClickCapture={() => idx !== currentIndex && setCurrentIndex(idx)}>
+                      <QuestionRenderer
+                        question={q}
+                        index={idx}
+                        selectedAnswer={answers[q.id]}
+                        onSelectAnswer={(k) => selectFor(q, k)}
+                        examMode
+                        hidePassage
+                        hideMeta
+                        variant="plain"
+                        allowFlagReport={false}
+                        className={cn('transition-colors', group.length > 1 && q.id === current.id && 'border-slate-400 ring-1 ring-slate-300')}
+                      />
+                    </div>
+                  );
+                })}
+              </div>
             </div>
+          ) : (
+            current && (
+              <div key={current.id} className="animate-fade-in">
+                <QuestionRenderer question={current} index={currentIndex} selectedAnswer={answers[current.id]} onSelectAnswer={select} examMode hideMeta variant="plain" allowFlagReport={false} />
+              </div>
+            )
           )}
 
-          <div className="flex items-center justify-between gap-3 bg-white p-3 md:p-4 rounded-2xl border-2 border-slate-900 shadow-hard sticky bottom-4">
+          <div className="flex items-center justify-between gap-3 bg-white p-3 rounded-xl border border-slate-200 shadow-[0_8px_24px_-12px_rgba(16,24,40,0.25)] sticky bottom-4 z-10">
             <Button variant="outline" size="sm" disabled={currentIndex === 0} onClick={() => setCurrentIndex((i) => i - 1)} leftIcon={<ChevronLeft className="w-4 h-4" />}>
               <span className="hidden sm:inline">Câu trước</span>
             </Button>
@@ -284,14 +318,14 @@ export const ExamRunner: React.FC<ExamRunnerProps> = ({ test, onSubmitExam, onEx
         </div>
 
         <aside className="hidden lg:block">
-          <div className="sticky top-24 bg-white rounded-3xl border-2 border-slate-900 shadow-hard p-5 space-y-4 animate-slide-in-right">
+          <div className="sticky top-24 bg-white rounded-xl border border-slate-200 p-4 space-y-4">
             <div className="flex items-center justify-between">
               <span className="font-bold text-slate-900 text-sm">Bảng câu hỏi</span>
               <Badge tone="indigo">
                 {answered}/{allQuestions.length}
               </Badge>
             </div>
-            <div className="max-h-[55vh] overflow-y-auto pr-1">{palette}</div>
+            <div className="max-h-[calc(100vh-12rem)] overflow-y-auto pr-1">{palette}</div>
           </div>
         </aside>
       </div>

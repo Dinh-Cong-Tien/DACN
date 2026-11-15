@@ -24,6 +24,8 @@ export interface QuestionRendererProps {
   allowFlagReport?: boolean;
   /** plain: viền mảnh, không bóng cứng (trang marketing); mặc định giữ kiểu của khu luyện tập */
   variant?: 'default' | 'plain';
+  /** Ẩn nhãn Part/level (khi tiêu đề Part đã hiện ở ngoài) */
+  hideMeta?: boolean;
   className?: string;
 }
 
@@ -40,7 +42,8 @@ const PART_LABEL: Record<string, string> = {
   LISTENING_PART_2: 'VSTEP Listening 2',
 };
 
-export const PassageBlock: React.FC<{ passage: NonNullable<IQuestion['passage']>; examMode?: boolean; className?: string }> = ({ passage, examMode, className }) => (
+/** full: dùng ở cột trái của bố cục chia đôi — ảnh lớn hơn, đoạn văn không giới hạn chiều cao (cột tự cuộn) */
+export const PassageBlock: React.FC<{ passage: NonNullable<IQuestion['passage']>; examMode?: boolean; className?: string; full?: boolean }> = ({ passage, examMode, className, full }) => (
   <div className={cn('rounded-2xl border border-slate-200 bg-slate-50/70 p-4 md:p-5 space-y-3 animate-fade-in', className)}>
     {passage.title && (
       <h4 className="font-bold text-slate-800 text-sm flex items-center gap-2">
@@ -51,14 +54,14 @@ export const PassageBlock: React.FC<{ passage: NonNullable<IQuestion['passage']>
     {passage.imageUrl && (
       <div className="relative flex justify-center rounded-xl overflow-hidden border border-slate-200 bg-slate-100">
         {/* Hiện trọn ảnh (không cắt) — Part 1 cần nhìn đủ chi tiết để chọn đáp án */}
-        <img src={passage.imageUrl} alt="Question stimulus" className="block h-auto max-h-[520px] w-auto max-w-full object-contain" loading="lazy" />
+        <img src={passage.imageUrl} alt="Question stimulus" className={cn('block h-auto w-auto', full ? 'max-h-[68vh]' : 'max-h-[520px]', 'max-w-full object-contain')} loading="lazy" />
         <span className="absolute top-2 left-2 inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-black/50 text-white text-[10px] font-bold">
           <ImageIcon className="w-3 h-3" /> Hình minh hoạ
         </span>
       </div>
     )}
     {passage.audioUrl ? <AudioPlayer src={passage.audioUrl} examMode={examMode} /> : passage.speakText ? <SpeakPlayer text={passage.speakText} /> : null}
-    {passage.content && <div className="text-sm text-slate-700 leading-relaxed whitespace-pre-line max-h-72 overflow-y-auto pr-2 font-medium">{passage.content}</div>}
+    {passage.content && <div className={cn('text-sm text-slate-700 leading-relaxed whitespace-pre-line font-medium', !full && 'max-h-72 overflow-y-auto pr-2')}>{passage.content}</div>}
   </div>
 );
 
@@ -73,6 +76,7 @@ export const QuestionRenderer: React.FC<QuestionRendererProps> = ({
   hidePassage = false,
   allowFlagReport = true,
   variant = 'default',
+  hideMeta = false,
   className,
 }) => {
   const plain = variant === 'plain';
@@ -103,7 +107,7 @@ export const QuestionRenderer: React.FC<QuestionRendererProps> = ({
           {index !== undefined && (plain ? <span className="pt-1.5 text-base md:text-lg font-semibold tabular-nums text-slate-400 shrink-0">{index + 1}.</span> : <span className="w-9 h-9 rounded-xl bg-slate-900 text-amber-300 font-black text-sm flex items-center justify-center shrink-0 border-2 border-slate-900">{index + 1}</span>)}
           <h3 className="text-base md:text-lg font-bold text-slate-900 leading-snug pt-1.5">{question.stem}</h3>
         </div>
-        <div className="flex flex-col items-end gap-1.5 shrink-0">
+        {!hideMeta && <div className="flex flex-col items-end gap-1.5 shrink-0">
           <Badge tone="indigo" size="xs">
             {PART_LABEL[question.partOrSkill] ?? question.partOrSkill}
           </Badge>
@@ -112,7 +116,7 @@ export const QuestionRenderer: React.FC<QuestionRendererProps> = ({
               {question.level}
             </Badge>
           )}
-        </div>
+        </div>}
       </div>
 
       <div className="space-y-2.5">
