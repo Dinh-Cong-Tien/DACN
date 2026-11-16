@@ -183,3 +183,4 @@ npm run dev
 
 ## 📄 Bản quyền & Tác quyền
 Dự án được thực hiện phục vụ học phần **Đồ án chuyên ngành (DACN)**. Toàn bộ mã nguồn, cấu trúc dữ liệu và tài liệu đã được hoàn thiện 100%.
+"# DACN" 
