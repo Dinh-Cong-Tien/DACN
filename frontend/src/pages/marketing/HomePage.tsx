@@ -1,5 +1,5 @@
 import { ThreeBackground } from '@/shared/components/three/ThreeBackground';
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { ArrowRight, Star, CheckCircle2, Play, Flame, Target, BookOpen, Users, FileText, AlertTriangle, RotateCcw, Compass, Headphones } from 'lucide-react';
 import { Button, Card, SectionTitle } from '@/shared/components/ui';
@@ -94,7 +94,7 @@ const FeatureCard: React.FC<{
  * Một hàng trong 5 bước: ẩn khi ở ngoài khung nhìn, cuộn tới thì mờ dần hiện ra và trượt nhẹ lên.
  * Hiệu ứng tiết chế: chỉ opacity + dịch chuyển dọc nhỏ, các phần lệch nhau vài chục ms.
  */
-const StepRow: React.FC<{ index: number; step: (typeof LOOP)[number]; photoRef: (el: HTMLDivElement | null) => void; onToggle?: (index: number, on: boolean) => void; last?: boolean }> = ({ index: i, step, photoRef, onToggle, last }) => {
+const StepRow: React.FC<{ index: number; step: (typeof LOOP)[number]; rowRef: (el: HTMLDivElement | null) => void; onToggle?: (index: number, on: boolean) => void }> = ({ index: i, step, rowRef, onToggle }) => {
   const { ref, inView: on } = useInView<HTMLDivElement>({ once: false, threshold: 0.2, rootMargin: '0px 0px -10% 0px' });
   useEffect(() => onToggle?.(i, on), [i, on, onToggle]);
   const textLeft = i % 2 === 0;
@@ -102,22 +102,12 @@ const StepRow: React.FC<{ index: number; step: (typeof LOOP)[number]; photoRef: 
   const show = (delay: number) => ({ transitionDelay: on ? `${delay}ms` : '0ms' });
   const state = on ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6';
   return (
-    <div ref={ref} className={cn('relative grid md:grid-cols-2 gap-8 md:gap-16 items-center max-md:pl-11', !textLeft && 'md:[&>*:first-child]:order-2')}>
-      {/* Điện thoại: dây nối dọc kiểu timeline từ số bước này xuống số bước kế tiếp (máy tính dùng LoopConnector nối giữa các ảnh) */}
-      {!last && (
-        <span aria-hidden className="md:hidden pointer-events-none absolute left-[13px] top-[46px] bottom-[calc(-3.5rem-34px)] w-[14px]">
-          <span className="absolute inset-y-0 left-1/2 w-[10px] -translate-x-1/2 rounded-full bg-white/[0.08] light:bg-slate-900/[0.07]" />
-          <span
-            className="loop-rail absolute inset-y-0 left-1/2 w-[5px] -translate-x-1/2 origin-top rounded-full"
-            style={{ transform: `translateX(-50%) scaleY(${on ? 1 : 0})`, transition: `transform ${on ? '0.9s' : '0.4s'} cubic-bezier(0.65, 0, 0.35, 1) ${on ? '0.2s' : '0s'}` }}
-          />
-        </span>
-      )}
-      <span
-        aria-hidden
-        className="md:hidden pointer-events-none absolute left-[6px] top-[22px] h-7 w-7 rounded-full border-4 border-[#141A2B] bg-[#FA5330] after:absolute after:inset-[5px] after:rounded-full after:bg-white"
-        style={{ transform: `scale(${on ? 1 : 0})`, transition: 'transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)' }}
-      />
+    <div
+      ref={(el) => {
+        ref.current = el;
+        rowRef(el);
+      }}
+      className={cn('relative grid md:grid-cols-2 gap-8 md:gap-16 items-center max-md:pl-11', !textLeft && 'md:[&>*:first-child]:order-2')}>
       <div className="space-y-4">
         <div className={cn('flex items-center gap-4', base, state)} style={show(0)}>
           <span className="font-display text-6xl md:text-7xl font-extrabold leading-[1.1] bg-gradient-to-br from-amber-200 via-amber-300 to-orange-500 bg-clip-text text-transparent">{step.n}</span>
@@ -130,7 +120,7 @@ const StepRow: React.FC<{ index: number; step: (typeof LOOP)[number]; photoRef: 
           {step.text}
         </p>
       </div>
-      <div ref={photoRef} className={cn('night-photo relative z-10 md:w-[82%]', textLeft && 'md:ml-auto', base, on ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10')} style={show(120)}>
+      <div className={cn('night-photo relative z-10 md:w-[82%]', textLeft && 'md:ml-auto', base, on ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10')} style={show(120)}>
         <RevealPhoto show={on} direction={textLeft ? 'left' : 'right'} delay={150} parallax>
           <Img src={step.photo} alt={step.title} ratio="4/3" fallbackClass="bg-slate-800" />
         </RevealPhoto>
@@ -142,15 +132,6 @@ const StepRow: React.FC<{ index: number; step: (typeof LOOP)[number]; photoRef: 
 export const HomePage: React.FC = () => {
   const loopBoxRef = useRef<HTMLDivElement>(null);
   const loopPhotoRefs = useRef<(HTMLDivElement | null)[]>([]);
-  const [rowsOn, setRowsOn] = useState<boolean[]>([]);
-  const toggleRow = useCallback((idx: number, on: boolean) => {
-    setRowsOn((prev) => {
-      if (Boolean(prev[idx]) === on) return prev;
-      const next = [...prev];
-      next[idx] = on;
-      return next;
-    });
-  }, []);
   useDocumentTitle('Trang chủ');
   const gate = useGate();
   const isDark = useResolvedTheme() === 'dark';
@@ -366,9 +347,9 @@ export const HomePage: React.FC = () => {
           <SectionTitle dark={isDark} eyebrow="Cách OrbiLingo hoạt động" title={<>Không làm đề vô định. <span className="hero-gradient-text">Làm đúng</span> việc cần làm.</>} description="Năm bước lặp lại mỗi tuần. Dữ liệu từ bài làm của bạn quyết định bước tiếp theo." />
         </Reveal>
         <div ref={loopBoxRef} className="relative space-y-14 md:space-y-28">
-          <LoopConnector containerRef={loopBoxRef} photoRefs={loopPhotoRefs} rowsOn={rowsOn} dark={isDark} />
+          <LoopConnector containerRef={loopBoxRef} rowRefs={loopPhotoRefs} dark={isDark} />
           {LOOP.map((step, i) => (
-            <StepRow key={step.n} index={i} step={step} last={i === LOOP.length - 1} photoRef={(el) => (loopPhotoRefs.current[i] = el)} onToggle={toggleRow} />
+            <StepRow key={step.n} index={i} step={step} rowRef={(el) => (loopPhotoRefs.current[i] = el)} />
           ))}
         </div>
       </section>

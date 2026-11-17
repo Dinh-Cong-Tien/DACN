@@ -1,86 +1,76 @@
-import React, { useLayoutEffect, useState } from 'react';
+import React, { useEffect, useLayoutEffect, useState } from 'react';
 import './LoopConnector.css';
 
 /**
- * Đường cong nét đứt ngắn nối mép dưới ảnh bước i với mép trên ảnh bước i+1 (chỉ desktop).
- * Đồng bộ với hiệu ứng từng mục: khi hàng bước i+1 hiện ra thì đoạn nối tự vẽ từ ảnh trên xuống ảnh dưới,
- * chấm đến bật lên ở cuối; khi hàng đó ẩn thì đoạn nối thu lại.
+ * Trục thời gian cho 5 bước: một đường thẳng mảnh chạy dọc (giữa 2 cột trên máy tính, mép trái trên điện thoại),
+ * mỗi bước một nút tròn nhỏ. Bước đã cuộn tới (nút qua giữa màn hình) thì nút và đoạn đường phía trên được tô màu nhấn.
  */
-export const LoopConnector: React.FC<{ containerRef: React.RefObject<HTMLDivElement>; photoRefs: React.MutableRefObject<(HTMLDivElement | null)[]>; rowsOn: boolean[]; dark?: boolean }> = ({ containerRef, photoRefs, rowsOn, dark }) => {
-  const [size, setSize] = useState({ w: 0, h: 0 });
-  const [paths, setPaths] = useState<{ d: string; a: [number, number]; b: [number, number] }[]>([]);
+export const LoopConnector: React.FC<{ containerRef: React.RefObject<HTMLDivElement>; rowRefs: React.MutableRefObject<(HTMLDivElement | null)[]>; dark?: boolean }> = ({ containerRef, rowRefs, dark }) => {
+  const [geo, setGeo] = useState<{ w: number; h: number; x: number; ys: number[] }>({ w: 0, h: 0, x: 0, ys: [] });
+  const [reached, setReached] = useState(-1);
+
   useLayoutEffect(() => {
     const box = containerRef.current;
     if (!box) return;
-    // offsetLeft/Top bỏ qua transform của hiệu ứng xuất hiện nên vị trí ổn định
-    const pos = (el: HTMLElement) => {
-      let x = 0;
-      let y = 0;
-      let n: HTMLElement | null = el;
-      while (n && n !== box) {
-        x += n.offsetLeft;
-        y += n.offsetTop;
-        n = n.offsetParent as HTMLElement | null;
-      }
-      return { x, y, w: el.offsetWidth, h: el.offsetHeight };
-    };
     const calc = () => {
-      setSize({ w: box.offsetWidth, h: box.offsetHeight });
-      const els = photoRefs.current.filter(Boolean) as HTMLDivElement[];
-      const out: { d: string; a: [number, number]; b: [number, number] }[] = [];
-      for (let i = 0; i < els.length - 1; i++) {
-        const p = pos(els[i]);
-        const q = pos(els[i + 1]);
-        const a: [number, number] = [p.x + p.w / 2, p.y + p.h + 26];
-        const b: [number, number] = [q.x + q.w / 2, q.y - 26];
-        const dy = b[1] - a[1];
-        out.push({ d: `M ${a[0]} ${a[1]} C ${a[0]} ${a[1] + dy * 0.75}, ${b[0]} ${b[1] - dy * 0.75}, ${b[0]} ${b[1]}`, a, b });
-      }
-      setPaths(out);
+      const desktop = window.matchMedia('(min-width: 768px)').matches;
+      const top = box.getBoundingClientRect().top;
+      const ys = (rowRefs.current.filter(Boolean) as HTMLDivElement[]).map((el) => {
+        const r = el.getBoundingClientRect();
+        // máy tính: giữa hàng (2 cột căn giữa) · điện thoại: ngang số bước ở đầu hàng
+        return desktop ? r.top - top + r.height / 2 : r.top - top + 34;
+      });
+      setGeo({ w: box.offsetWidth, h: box.offsetHeight, x: desktop ? box.offsetWidth / 2 : 14, ys });
     };
     calc();
     const ro = new ResizeObserver(calc);
     ro.observe(box);
     return () => ro.disconnect();
-  }, [containerRef, photoRefs]);
+  }, [containerRef, rowRefs]);
 
-  const ink = dark ? '#0B0F1C' : '#141A2B';
-  const pop = 'cubic-bezier(0.34, 1.56, 0.64, 1)';
+  // Bước đã tới = nút cuối cùng nằm trên 60% chiều cao màn hình (gộp theo khung hình)
+  useEffect(() => {
+    const box = containerRef.current;
+    if (!box || !geo.ys.length) return;
+    let raf = 0;
+    const update = () => {
+      raf = 0;
+      const top = box.getBoundingClientRect().top;
+      const line = window.innerHeight * 0.6;
+      let r = -1;
+      geo.ys.forEach((y, i) => top + y <= line && (r = i));
+      setReached(r);
+    };
+    const onScroll = () => {
+      if (!raf) raf = requestAnimationFrame(update);
+    };
+    update();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => {
+      window.removeEventListener('scroll', onScroll);
+      cancelAnimationFrame(raf);
+    };
+  }, [containerRef, geo.ys]);
+
+  const { w, h, x, ys } = geo;
+  if (ys.length < 2) return null;
+  const first = ys[0];
+  const last = ys[ys.length - 1];
+  const ratio = reached >= 0 ? (ys[reached] - first) / (last - first || 1) : 0;
+  const track = dark ? 'rgba(255,255,255,0.12)' : 'rgba(20,26,43,0.12)';
+  const accent = '#F97316';
+  const bg = dark ? '#0f1424' : '#faf7f1';
+
   return (
-    <svg aria-hidden className="hidden md:block absolute inset-0 pointer-events-none" width={size.w} height={size.h} viewBox={`0 0 ${size.w || 1} ${size.h || 1}`}>
-      {paths.map((p, i) => {
-        const on = Boolean(rowsOn[i + 1]); // hiện cùng lúc với hàng bước kế tiếp
-        const mid = `loop-mask-${i}`;
-        const gid = `loop-grad-${i}`;
+    <svg aria-hidden className="loop-axis pointer-events-none absolute inset-0" width={w} height={h} viewBox={`0 0 ${w || 1} ${h || 1}`}>
+      <line x1={x} y1={first} x2={x} y2={last} stroke={track} strokeWidth="2" />
+      <rect x={x - 1} y={first} width="2" height={last - first} fill={accent} className="loop-axis__fill" style={{ transform: `scaleY(${ratio})`, transformOrigin: `${x}px ${first}px` }} />
+      {ys.map((y, i) => {
+        const on = i <= reached;
         return (
           <g key={i}>
-            <defs>
-              <linearGradient id={gid} gradientUnits="userSpaceOnUse" x1={p.a[0]} y1={p.a[1]} x2={p.b[0]} y2={p.b[1]}>
-                <stop offset="0%" stopColor="#FA5330" />
-                <stop offset="100%" stopColor="#FFD24D" />
-              </linearGradient>
-              {/* Mặt nạ vẽ dần: nét đứt giữ nguyên nhịp, chỉ phần đã "mở" mới thấy */}
-              <mask id={mid} maskUnits="userSpaceOnUse" x={0} y={0} width={size.w} height={size.h}>
-                <path d={p.d} fill="none" stroke="#fff" strokeWidth="24" pathLength={1} strokeDasharray="1" strokeDashoffset={on ? 0 : 1} style={{ transition: `stroke-dashoffset ${on ? '0.9s' : '0.5s'} cubic-bezier(0.65, 0, 0.35, 1) ${on ? '0.15s' : '0s'}` }} />
-              </mask>
-            </defs>
-            <g mask={`url(#${mid})`}>
-              {/* rãnh mờ liền bên dưới: đường đọc liền mạch, nét đứt nổi lên trên */}
-              <path d={p.d} fill="none" stroke={dark ? '#ffffff' : '#141A2B'} strokeOpacity={dark ? 0.07 : 0.06} strokeWidth="14" strokeLinecap="round" />
-              {/* nét đứt chính: gradient cam → vàng, trôi theo chiều đi */}
-              <path d={p.d} fill="none" stroke={`url(#${gid})`} strokeWidth="7" strokeLinecap="round" strokeDasharray="10 18" className="loop-dash" />
-            </g>
-            {/* nút đi: vòng cam viền tối, tâm sáng */}
-            <g className="loop-dot" style={{ transform: `scale(${on ? 1 : 0})`, transition: `transform 0.4s ${pop}` }}>
-              <circle cx={p.a[0]} cy={p.a[1]} r="12" fill="#FA5330" stroke={ink} strokeWidth="4" />
-              <circle cx={p.a[0]} cy={p.a[1]} r="4" fill="#ffffff" />
-            </g>
-            {/* nút đến: bật lên khi nét vừa vẽ tới, vành sáng nhịp nhẹ */}
-            <g className="loop-dot" style={{ transform: `scale(${on ? 1 : 0})`, transition: `transform 0.45s ${pop} ${on ? '0.95s' : '0s'}` }}>
-              <circle cx={p.b[0]} cy={p.b[1]} r="24" fill="#FFD24D" fillOpacity="0.16" className={on ? 'loop-pin' : undefined} />
-              <circle cx={p.b[0]} cy={p.b[1]} r="12" fill="#FFD24D" stroke={ink} strokeWidth="4" />
-              <circle cx={p.b[0]} cy={p.b[1]} r="4" fill={ink} />
-            </g>
+            <circle cx={x} cy={y} r="9" fill={bg} stroke={on ? accent : track} strokeWidth="2" className="loop-axis__node" />
+            <circle cx={x} cy={y} r="3.5" fill={accent} className="loop-axis__dot" style={{ opacity: on ? 1 : 0 }} />
           </g>
         );
       })}
