@@ -6,3 +6,10 @@
 @keyframes loop-pin { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.35); opacity: 0.4; } }
 .loop-pin { transform-box: fill-box; transform-origin: center; animation: loop-pin 2.4s ease-in-out infinite; }
 @media (prefers-reduced-motion: reduce) { .loop-dash, .loop-pin { animation: none; } }
+
+/* Dây nối dọc trên điện thoại: nét đứt cam → vàng (màu bằng gradient, nét đứt bằng mặt nạ) */
+.loop-rail {
+  background: linear-gradient(to bottom, #fa5330, #ffd24d);
+  -webkit-mask-image: repeating-linear-gradient(to bottom, #000 0 10px, transparent 10px 20px);
+  mask-image: repeating-linear-gradient(to bottom, #000 0 10px, transparent 10px 20px);
+}
