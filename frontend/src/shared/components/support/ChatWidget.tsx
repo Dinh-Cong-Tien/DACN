@@ -82,7 +82,8 @@ export const ChatWidget: React.FC<{ raised?: 'md' | 'lg'; preferChat?: boolean }
 
   // Lời mời bật lên sau vài giây nếu phiên này chưa mở chat
   useEffect(() => {
-    if (readFlag()) return;
+    // màn hình nhỏ (điện thoại / máy tính bảng) không tự bật lời mời — tránh che nội dung, chỉ còn nút chat
+    if (readFlag() || window.matchMedia('(max-width: 1023px)').matches) return;
     const t = window.setTimeout(() => setTeaser(true), 6000);
     // hiện "đang soạn tin" một lúc rồi mới ra nội dung lời mời
     const t2 = window.setTimeout(() => setTeaserReady(true), 7400);

@@ -175,20 +175,20 @@ export const HomePage: React.FC = () => {
       </div>
       {/* ================= HERO (nền tối, chữ khổng lồ gradient, ảnh người bên phải) ================= */}
       <section className="hero-dark relative text-white light:text-slate-900 overflow-hidden pt-[72px]">
-        <ThreeBackground variant="particles" dark={isDark} className="opacity-50" />
+        <ThreeBackground variant="particles" dark={isDark} className="opacity-50 max-lg:hidden" />
         {/* Quầng sáng gradient hồng-cam phía sau chữ và ảnh */}
         <div aria-hidden className="absolute -top-40 -left-40 w-[640px] h-[640px] rounded-full bg-violet-500/30 blur-[140px] animate-float-slow" />
         <div aria-hidden className="absolute top-1/3 -right-32 w-[560px] h-[560px] rounded-full bg-fuchsia-500/25 blur-[140px] animate-float" />
         <div aria-hidden className="absolute bottom-0 left-1/3 w-[420px] h-[420px] rounded-full bg-amber-400/15 blur-[120px]" />
 
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-14 md:pt-20 pb-0 grid lg:grid-cols-[1.25fr_1fr] gap-8 items-end min-h-[calc(100vh-72px)]">
-          <div className="space-y-6 pb-16 md:pb-24">
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-10 md:pt-16 lg:pt-20 pb-0 grid md:grid-cols-[1.2fr_1fr] lg:grid-cols-[1.25fr_1fr] gap-6 lg:gap-8 items-end lg:min-h-[calc(100vh-72px)]">
+          <div className="space-y-6 pb-12 md:pb-16 lg:pb-24">
             <h1 className="font-display font-extrabold tracking-tight animate-fade-up">
               <span className="sr-only">{HERO_WORDS.join(', ')}</span>
-              <span className="block text-[3rem] sm:text-[5.1rem] lg:text-[7rem] leading-[1.15] pt-[0.05em] pb-[0.12em] -mb-[0.1em] hero-type-word">
+              <span className="block text-[2.75rem] sm:text-[4rem] md:text-[4.25rem] lg:text-[7rem] leading-[1.15] pt-[0.05em] pb-[0.12em] -mb-[0.1em] hero-type-word">
                 <TypeLoop words={HERO_WORDS} />
               </span>
-              <span className="block mt-3 text-2xl sm:text-3xl lg:text-4xl text-white light:text-slate-900 font-bold">
+              <span className="block mt-3 text-[1.35rem] leading-snug sm:text-3xl lg:text-4xl text-white light:text-slate-900 font-bold">
                 <HeroScoreLine />
               </span>
             </h1>
@@ -237,10 +237,10 @@ export const HomePage: React.FC = () => {
           </div>
 
           {/* Ảnh người: cắt nền tối, đứng sát mép dưới, kèm thẻ nổi */}
-          <div className="relative self-end hidden lg:flex justify-center h-[min(680px,calc(100vh-120px))]">
+          <div className="relative self-end hidden md:flex justify-center h-[400px] lg:h-[min(680px,calc(100vh-120px))]">
             {/* Hệ quỹ đạo phía sau người: vòng ngoài nét đứt quay chậm, cung vàng quay, 2 vệ tinh chạy ngược chiều, đĩa gradient xoay màu + thở nhẹ */}
             <div aria-hidden className="absolute inset-x-0 bottom-0 flex items-end justify-center pointer-events-none">
-              <div className="hero-orbits relative w-[640px] h-[640px] -mb-[120px] flex items-center justify-center">
+              <div className="hero-orbits relative w-[640px] h-[640px] -mb-[120px] flex shrink-0 items-center justify-center max-lg:origin-bottom max-lg:scale-[0.6]">
                 <div className="hero-orbit hero-orbit--outer absolute w-[640px] h-[640px] rounded-full" />
                 <div className="hero-orbit hero-orbit--sat absolute w-[640px] h-[640px]">
                   <span className="hero-orbit__dot" />
@@ -261,7 +261,7 @@ export const HomePage: React.FC = () => {
             />
             {/* Thẻ nổi: lớp ngoài bồng bềnh lên xuống, lớp trong giữ hiệu ứng hiện ra + độ nghiêng */}
             {overview?.topStreak && (
-              <div className="hero-bob absolute -right-10 top-10">
+              <div className="hero-bob absolute -right-10 top-10 max-lg:hidden">
                 <div className="bg-amber-300 text-slate-900 rounded-2xl px-4 py-3 shadow-card animate-fade-up delay-700 tilt-2 flex items-center gap-2">
                   <Flame className="hero-flame w-6 h-6 text-violet-600 fill-violet-500" />
                   <div>
@@ -272,7 +272,7 @@ export const HomePage: React.FC = () => {
               </div>
             )}
             {part5Bank > 0 && (
-              <div className="hero-bob hero-bob--late absolute -left-8 bottom-8">
+              <div className="hero-bob hero-bob--late absolute -left-8 bottom-8 max-lg:hidden">
                 <div className="bg-indigo-600 text-white rounded-2xl px-4 py-3 shadow-card animate-fade-up delay-700 tilt-3">
                   <p className="text-[10px] font-extrabold uppercase tracking-wider text-indigo-100">Câu Part 5 để luyện</p>
                   <p className="font-display text-2xl font-extrabold">{part5Bank.toLocaleString(appLocale())}</p>
