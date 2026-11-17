@@ -9,6 +9,7 @@ import { useAuthStore } from '@/shared/stores/authStore';
 import { cn, stageOf } from '@/shared/utils';
 import { TRACK_LABEL, type Course, type Lesson } from '@/shared/types';
 import { ActionLink, PageHeader, Section } from './shared/PageKit';
+import { Books3DIcon, OwlMascotIcon, VideoBadgeIcon, BlueCirclePlayIcon } from '@/shared/components/media/EdmicroIcons';
 
 /** Nhãn đầu trang theo mục chính (TOEIC / VSTEP / THPT) và nhóm trong mục; `muc` = tham số tab ở trang Khoá học */
 const copyOf = (c: Course): { eyebrow: string; title: React.ReactNode; track: string; muc: string } => ({
@@ -18,7 +19,16 @@ const copyOf = (c: Course): { eyebrow: string; title: React.ReactNode; track: st
   muc: (c.track ?? 'TOEIC').toLowerCase(),
 });
 
-const TYPE_LABEL: Record<Lesson['type'], string> = { VIDEO: 'Video', READING: 'Video', QUIZ: 'Bài kiểm tra' };
+const TYPE_LABEL: Record<Lesson['type'], string> = { VIDEO: 'Video', READING: 'Tài liệu', QUIZ: 'Bài kiểm tra' };
+
+const getLessonSubLabel = (l: Lesson) => {
+  if (l.type === 'QUIZ') return 'Quiz';
+  if (l.title.toLowerCase().includes('tổng hợp') || l.title.toLowerCase().includes('document') || l.title.toLowerCase().includes('lý thuyết')) return 'Document';
+  if (l.title.toLowerCase().includes('tự luyện') || l.title.toLowerCase().includes('dictation') || l.title.toLowerCase().includes('chính tả')) return 'Dictation';
+  if (l.type === 'READING') return 'Document';
+  if (l.exerciseCount && l.exerciseCount > 0 && !l.videoUrl) return 'Practice';
+  return 'Video';
+};
 
 const STEPS = ['Học bài: xem video bài giảng, ôn ý chính và kiến thức trong bài, bấm vào từ để tra nghĩa.', 'Làm bài tập ngay sau bài, đúng từ 70% để hoàn thành bài.', 'Bài tiếp theo tự mở. Cuối mỗi chặng có bài kiểm tra hoặc Review.'];
 
@@ -152,6 +162,7 @@ const PathView: React.FC<{ course: Course }> = ({ course }) => {
             {course.sections.map((sec, si) => {
               const isOpen = open.has(sec.id);
               const secDone = sec.lessons.filter((l) => l.isCompleted).length;
+              const secPercent = sec.lessons.length > 0 ? Math.round((secDone / sec.lessons.length) * 100) : 0;
               const partStart = sec.part && sec.part !== course.sections[si - 1]?.part;
               return (
                 <React.Fragment key={sec.id}>
@@ -162,33 +173,56 @@ const PathView: React.FC<{ course: Course }> = ({ course }) => {
                     {COURSE_PART_NOTE[sec.part!] && <p className="mt-1 text-[14px] text-slate-600">{COURSE_PART_NOTE[sec.part!]}</p>}
                   </div>
                 )}
-                <section aria-labelledby={sec.id}>
-                  <button type="button" aria-expanded={isOpen} onClick={() => toggle(sec.id)} className="group flex w-full flex-col gap-1 border-b border-slate-200 pb-3 text-left sm:flex-row sm:items-end sm:justify-between">
-                    <div>
-                      <p className="text-[12px] font-semibold uppercase tracking-[0.14em] text-slate-500">{staged ? `Chương ${si + 1}` : `Chặng ${si + 1}`}</p>
-                      <h2 id={sec.id} className="mt-1 font-display text-xl font-bold text-slate-900 md:text-2xl">
-                        {sec.title}
-                      </h2>
+                <section aria-labelledby={sec.id} className="rounded-2xl border border-slate-200/80 bg-white p-4 sm:p-5 shadow-sm transition-all hover:shadow-md">
+                  <button
+                    type="button"
+                    aria-expanded={isOpen}
+                    onClick={() => toggle(sec.id)}
+                    className="group flex w-full flex-col gap-4 text-left sm:flex-row sm:items-center sm:justify-between"
+                  >
+                    <div className="flex items-center gap-4">
+                      <Books3DIcon size={56} className="transition-transform group-hover:scale-105" />
+                      <div>
+                        <h2 id={sec.id} className="font-display text-lg font-bold text-[#1b6e7e] transition-colors group-hover:text-[#13535f] sm:text-xl">
+                          {sec.title}
+                        </h2>
+                        <p className="mt-0.5 text-xs font-medium text-slate-400 sm:text-sm">
+                          {sec.lessons.length} {sec.lessons.length === 1 ? 'lesson' : 'lessons'}
+                        </p>
+                      </div>
                     </div>
-                    <p className="flex shrink-0 items-center gap-2 text-[13px] tabular-nums text-slate-500">
-                      {sec.lessons.length} bài · {sec.lessons.reduce((a, l) => a + l.durationMin, 0)} phút
-                      {isStudent && ` · đã học ${secDone}/${sec.lessons.length}`}
-                      <ChevronDown className={cn('h-4 w-4 text-slate-400 transition-transform group-hover:text-slate-700', isOpen && 'rotate-180')} />
-                    </p>
+
+                    <div className="flex items-center gap-3 self-end sm:self-center">
+                      <div className="h-3 w-32 overflow-hidden rounded-full bg-slate-100 sm:w-56">
+                        <div
+                          className="h-full rounded-full bg-[#00d284] transition-all duration-500"
+                          style={{ width: `${secPercent}%` }}
+                        />
+                      </div>
+                      <span className="w-10 text-right font-display text-xs font-bold text-slate-500 tabular-nums sm:text-sm">
+                        {secPercent}%
+                      </span>
+                      <ChevronDown className={cn('h-5 w-5 text-slate-400 transition-transform duration-200 group-hover:text-slate-700', isOpen && 'rotate-180')} />
+                    </div>
                   </button>
+
                   {isOpen && (
-                  <ol className="mt-2">
-                    {sec.lessons.map((l, li) => (
-                      <LessonRow
-                        key={l.id}
-                        lesson={l}
-                        n={numberOf(l)}
-                        last={li === sec.lessons.length - 1}
-                        state={!isStudent ? 'guest' : l.isCompleted ? 'done' : l.id === current.id ? 'current' : l.isLocked ? 'locked' : 'open'}
-                        to={isStudent ? lessonUrl(l) : gate(lessonUrl(l), l.isFree ? '/auth/register' : '/auth/login')}
-                      />
-                    ))}
-                  </ol>
+                    <div className="relative mt-4 border-t border-slate-100 pl-2 pt-4 sm:pl-4">
+                      {/* Vertical timeline line connecting nodes */}
+                      <div className="absolute bottom-6 left-[28px] top-7 w-[2px] bg-sky-100 sm:left-[36px]" />
+                      <ol className="relative space-y-3">
+                        {sec.lessons.map((l, li) => (
+                          <LessonRow
+                            key={l.id}
+                            lesson={l}
+                            n={numberOf(l)}
+                            last={li === sec.lessons.length - 1}
+                            state={!isStudent ? 'guest' : l.isCompleted ? 'done' : l.id === current.id ? 'current' : l.isLocked ? 'locked' : 'open'}
+                            to={isStudent ? lessonUrl(l) : gate(lessonUrl(l), l.isFree ? '/auth/register' : '/auth/login')}
+                          />
+                        ))}
+                      </ol>
+                    </div>
                   )}
                 </section>
                 </React.Fragment>
@@ -233,50 +267,68 @@ const PathView: React.FC<{ course: Course }> = ({ course }) => {
 
 type RowState = 'done' | 'current' | 'open' | 'locked' | 'guest';
 
-/** Một dòng bài học: số thứ tự trên đường nối dọc, tên bài, mô tả, trạng thái bên phải */
+/** Dòng bài học theo style Edmicro TOEIC với mascot/video badge tròn và timeline nối dọc */
 const LessonRow: React.FC<{ lesson: Lesson; n: number; last: boolean; state: RowState; to: string }> = ({ lesson, n, last, state, to }) => {
   const locked = state === 'locked';
+  const isDone = state === 'done';
+  const isCurrent = state === 'current';
+  const subLabel = getLessonSubLabel(lesson);
+
   const body = (
     <>
-      <span
-        className={cn(
-          'relative z-10 flex h-9 w-9 items-center justify-center rounded-full text-[13px] font-bold tabular-nums',
-          state === 'done' && 'bg-emerald-500 text-white',
-          state === 'current' && 'bg-indigo-600 text-white',
-          (state === 'open' || state === 'guest') && 'border border-slate-300 bg-white text-slate-700',
-          locked && 'border border-slate-200 bg-white text-slate-400'
+      {/* Mascot / Video Icon Node */}
+      <div className="relative shrink-0">
+        {subLabel === 'Video' ? <VideoBadgeIcon size={44} /> : <OwlMascotIcon size={44} />}
+        {isDone && (
+          <span className="absolute -bottom-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full border-2 border-white bg-[#00d284] text-white shadow-sm">
+            <Check className="h-3 w-3 stroke-[3]" />
+          </span>
         )}
-      >
-        {state === 'done' ? <Check className="h-4 w-4" strokeWidth={3} /> : n}
-      </span>
-      <div className="min-w-0">
-        <p className="text-[12px] text-slate-500">
-          Bài {n} · {TYPE_LABEL[lesson.type]} · {lesson.durationMin} phút
-        </p>
-        <p className={cn('mt-0.5 font-semibold leading-snug', locked ? 'text-slate-500' : 'text-slate-900 group-hover:text-indigo-700')}>{lesson.title}</p>
-        {lesson.summary && <p className={cn('mt-1 text-[13px] leading-relaxed', locked ? 'text-slate-400' : 'text-slate-600')}>{lesson.summary}</p>}
       </div>
-      <div className="flex items-center self-center text-[13px]">
-        {state === 'done' && <span className="hidden font-medium text-emerald-700 sm:inline">Đã học</span>}
-        {state === 'current' && <span className="btn-3d inline-flex h-9 items-center gap-1.5 rounded-lg border-violet-700 bg-violet-500 px-3.5 font-bold text-white">Học tiếp</span>}
-        {state === 'guest' && lesson.isFree && <span className="hidden font-semibold text-indigo-700 sm:inline">Học thử</span>}
+
+      {/* Thông tin bài học */}
+      <div className="min-w-0 flex-1">
+        <h3 className={cn('text-[15px] font-semibold leading-snug transition-colors', isCurrent ? 'font-bold text-sky-950' : locked ? 'text-slate-400' : 'text-slate-800 group-hover:text-sky-700')}>
+          {lesson.title}
+        </h3>
+        <div className="mt-1 flex items-center gap-1.5 text-xs font-semibold text-sky-700">
+          <BlueCirclePlayIcon size={14} />
+          <span>{subLabel}</span>
+          {lesson.durationMin > 0 && <span className="text-[11px] font-normal text-slate-400">· {lesson.durationMin} phút</span>}
+        </div>
+      </div>
+
+      {/* Trạng thái / Hành động */}
+      <div className="flex items-center gap-2 self-center shrink-0">
+        {isDone && <span className="hidden text-xs font-bold text-emerald-600 sm:inline">Hoàn thành</span>}
+        {isCurrent && (
+          <span className="inline-flex h-8 items-center gap-1 rounded-full bg-sky-600 px-3.5 text-xs font-bold text-white shadow-sm transition hover:bg-sky-700">
+            Học tiếp
+          </span>
+        )}
+        {state === 'guest' && lesson.isFree && (
+          <span className="inline-flex h-8 items-center rounded-full bg-emerald-50 px-3 text-xs font-bold text-emerald-700">
+            Học thử
+          </span>
+        )}
         {locked ? (
-          <span className="flex items-center gap-1.5 text-slate-400" title={`Mở sau khi học xong Bài ${n - 1}`}>
+          <span className="flex items-center gap-1 text-xs text-slate-400" title={`Mở sau Bài ${n - 1}`}>
             <Lock className="h-4 w-4" />
-            <span className="hidden md:inline">Mở sau Bài {n - 1}</span>
           </span>
         ) : (
-          state !== 'current' && <ChevronRight className="ml-1 h-4 w-4 text-slate-400 transition-transform group-hover:translate-x-0.5" />
+          !isCurrent && <ChevronRight className="h-4 w-4 text-slate-300 transition-transform group-hover:translate-x-0.5 group-hover:text-sky-600" />
         )}
       </div>
     </>
   );
-  const cls = cn('group relative grid grid-cols-[36px_1fr_auto] items-start gap-4 rounded-xl px-3 py-4 transition-colors', state === 'current' ? 'bg-indigo-500/[0.07] ring-1 ring-inset ring-indigo-500/25' : !locked && 'hover:bg-slate-900/[0.03]');
+
+  const cls = cn(
+    'group relative flex items-center gap-3.5 sm:gap-4 rounded-xl p-2.5 sm:p-3 transition-all',
+    isCurrent ? 'bg-sky-50/70 ring-1 ring-inset ring-sky-200' : !locked && 'hover:bg-sky-50/40'
+  );
 
   return (
-    <li className="relative">
-      {/* Đường nối giữa các số thứ tự trong cùng chặng */}
-      {!last && <span aria-hidden className={cn('absolute left-[29.5px] top-[52px] -bottom-4 w-px', state === 'done' ? 'bg-emerald-500/60' : 'bg-slate-200')} />}
+    <li className="relative z-10">
       {locked ? (
         <div className={cls} aria-disabled>
           {body}

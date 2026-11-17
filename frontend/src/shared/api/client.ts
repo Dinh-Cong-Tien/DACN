@@ -51,7 +51,16 @@ export const setUserRefreshedHandler = (fn: (user: AppUser) => void) => {
   onUserRefreshed = fn;
 };
 
-export const http = axios.create({ baseURL: '/api/v1', timeout: 30_000 });
+const getBaseUrl = () => {
+  const envApi = import.meta.env.VITE_API_BASE_URL;
+  if (!envApi) return '/api/v1';
+  const clean = envApi.replace(/\/+$/, '');
+  return clean.endsWith('/v1') ? clean : `${clean}/v1`;
+};
+
+export const API_BASE_URL = getBaseUrl();
+
+export const http = axios.create({ baseURL: API_BASE_URL, timeout: 30_000 });
 
 http.interceptors.request.use((cfg) => {
   const t = tokenStore.get();
@@ -67,7 +76,7 @@ async function refreshAccessToken(): Promise<string | null> {
   const t = tokenStore.get();
   if (!t?.refreshToken) return null;
   try {
-    const res = await axios.post<{ data: Tokens & { user: AppUser } }>('/api/v1/auth/refresh', { refreshToken: t.refreshToken });
+    const res = await axios.post<{ data: Tokens & { user: AppUser } }>(`${API_BASE_URL}/auth/refresh`, { refreshToken: t.refreshToken });
     tokenStore.set({ accessToken: res.data.data.accessToken, refreshToken: res.data.data.refreshToken });
     onUserRefreshed?.(res.data.data.user);
     return res.data.data.accessToken;

@@ -24,9 +24,10 @@ yarn-debug.log*
 pnpm-debug.log*
 *.log
 
-# OS
+# OS & Binaries
 .DS_Store
 Thumbs.db
+*.apk
 
 # File người dùng tải lên (ghi âm…)
 backend/uploads/

@@ -26,7 +26,16 @@ export function useRealtime() {
 
     const connect = () => {
       if (stopped) return;
-      ws = new WebSocket(`${location.protocol === 'https:' ? 'wss' : 'ws'}://${location.host}/api/ws`);
+      const envApi = import.meta.env.VITE_API_BASE_URL;
+      let wsUrl: string;
+      if (envApi && envApi.startsWith('http')) {
+        const u = new URL(envApi);
+        const wsProto = u.protocol === 'https:' ? 'wss:' : 'ws:';
+        wsUrl = `${wsProto}//${u.host}/api/ws`;
+      } else {
+        wsUrl = `${location.protocol === 'https:' ? 'wss:' : 'ws'}://${location.host}/api/ws`;
+      }
+      ws = new WebSocket(wsUrl);
       ws.onopen = () => (retry = 0);
       ws.onmessage = (m) => {
         try {

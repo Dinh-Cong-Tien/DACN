@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Compass, CheckCircle2, Lock, Play, Clock, PlayCircle, Layers, FileText, RotateCcw, BookOpen, Target, CalendarDays } from 'lucide-react';
+import { Compass, CheckCircle2, Lock, Play, Clock, PlayCircle, Layers, FileText, RotateCcw, BookOpen, Target, CalendarDays, Check } from 'lucide-react';
 import { useDocumentTitle } from '@/shared/hooks';
 import { useAuthStore } from '@/shared/stores/authStore';
 import { Badge, Button, Card, PageHeader, ProgressBar, StatCard } from '@/shared/components/ui';
@@ -9,13 +9,14 @@ import { Img, PHOTOS } from '@/shared/components/media/Img';
 import { usePath } from '@/shared/api/learner';
 import type { PathItemType, PathStatus } from '@/shared/types';
 import { cn } from '@/shared/utils';
+import { Books3DIcon, OwlMascotIcon, VideoBadgeIcon, BlueCirclePlayIcon } from '@/shared/components/media/EdmicroIcons';
 
-const TYPE_META: Record<PathItemType, { icon: React.ElementType; label: string; cls: string }> = {
-  LESSON: { icon: PlayCircle, label: 'Bài giảng', cls: 'bg-indigo-100 text-indigo-800' },
-  PRACTICE: { icon: Layers, label: 'Luyện tập', cls: 'bg-sky-100 text-sky-800' },
-  MOCK_TEST: { icon: FileText, label: 'Thi thử', cls: 'bg-violet-100 text-violet-800' },
-  REVIEW: { icon: RotateCcw, label: 'Ôn tập', cls: 'bg-amber-100 text-amber-800' },
-  VOCAB: { icon: BookOpen, label: 'Từ vựng', cls: 'bg-emerald-100 text-emerald-800' },
+const TYPE_META: Record<PathItemType, { icon: React.ElementType; label: string; subLabel: string; cls: string }> = {
+  LESSON: { icon: PlayCircle, label: 'Bài giảng', subLabel: 'Video', cls: 'bg-indigo-100 text-indigo-800' },
+  PRACTICE: { icon: Layers, label: 'Luyện tập', subLabel: 'Practice', cls: 'bg-sky-100 text-sky-800' },
+  MOCK_TEST: { icon: FileText, label: 'Thi thử', subLabel: 'Quiz', cls: 'bg-violet-100 text-violet-800' },
+  REVIEW: { icon: RotateCcw, label: 'Ôn tập', subLabel: 'Dictation', cls: 'bg-amber-100 text-amber-800' },
+  VOCAB: { icon: BookOpen, label: 'Từ vựng', subLabel: 'Document', cls: 'bg-emerald-100 text-emerald-800' },
 };
 
 const STATUS_META: Record<PathStatus, { tone: 'emerald' | 'indigo' | 'slate'; label: string }> = {
@@ -117,45 +118,64 @@ export const StudentLearningPathPage: React.FC = () => {
                         </div>
                       </div>
                     </div>
-                    <ul className="divide-y divide-slate-200">
-                      {m.items.map((it, ii) => {
-                        const meta = TYPE_META[it.type];
-                        const Icon = meta.icon;
-                        const itemLocked = it.status === 'LOCKED';
-                        const inner = (
-                          <div className={cn('flex items-center gap-4 px-5 md:px-6 py-3.5 transition-all', !itemLocked && 'hover:bg-slate-50 hover:translate-x-0.5', it.status === 'CURRENT' && 'bg-indigo-50')}>
-                            <span className="font-display text-lg font-extrabold text-slate-300 w-7 shrink-0">{String(ii + 1).padStart(2, '0')}</span>
-                            <span className={cn('w-10 h-10 rounded-xl border-2 flex items-center justify-center shrink-0', it.status === 'DONE' ? 'bg-emerald-100 text-emerald-700 border-emerald-300' : itemLocked ? 'bg-slate-100 text-slate-400 border-slate-200' : cn(meta.cls, 'border-slate-900'))}>
-                              {it.status === 'DONE' ? <CheckCircle2 className="w-5 h-5" /> : itemLocked ? <Lock className="w-4 h-4" /> : <Icon className="w-5 h-5" />}
-                            </span>
-                            <div className="flex-1 min-w-0">
-                              <p className={cn('text-sm font-bold truncate', itemLocked ? 'text-slate-400' : 'text-slate-900')}>{it.title}</p>
-                              <p className="text-[11px] text-slate-500 font-semibold flex items-center gap-2 mt-0.5">
-                                <span>{meta.label}</span>·<span>{it.skill}</span>·
-                                <span className="flex items-center gap-0.5">
-                                  <Clock className="w-3 h-3" /> {it.durationMin} phút
+                    <div className="relative pl-3 sm:pl-6 pr-4 py-4">
+                      {/* Đường nối timeline giữa các bài */}
+                      <div className="absolute left-[33px] sm:left-[45px] top-6 bottom-6 w-[2px] bg-sky-100 -z-0" />
+                      <ul className="relative space-y-3">
+                        {m.items.map((it, ii) => {
+                          const meta = TYPE_META[it.type];
+                          const itemLocked = it.status === 'LOCKED';
+                          const isDone = it.status === 'DONE';
+                          const isCurrent = it.status === 'CURRENT';
+                          const inner = (
+                            <div className={cn('flex items-center gap-3.5 sm:gap-4 px-3 sm:px-4 py-3 rounded-2xl transition-all', !itemLocked && 'hover:bg-sky-50/50 hover:translate-x-0.5', isCurrent && 'bg-sky-50/80 ring-1 ring-inset ring-sky-200')}>
+                              {/* Mascot / Video Node */}
+                              <div className="relative shrink-0">
+                                {meta.subLabel === 'Video' ? <VideoBadgeIcon size={44} /> : <OwlMascotIcon size={44} />}
+                                {isDone && (
+                                  <span className="absolute -bottom-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full border-2 border-white bg-[#00d284] text-white shadow-sm">
+                                    <Check className="h-3 w-3 stroke-[3]" />
+                                  </span>
+                                )}
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className={cn('text-sm font-semibold truncate', isCurrent ? 'font-bold text-sky-950' : itemLocked ? 'text-slate-400' : 'text-slate-900')}>{it.title}</p>
+                                <div className="flex items-center gap-2 mt-1 text-xs font-semibold text-sky-700 flex-wrap">
+                                  <span className="inline-flex items-center gap-1">
+                                    <BlueCirclePlayIcon size={13} />
+                                    {meta.subLabel}
+                                  </span>
+                                  <span className="text-slate-300">·</span>
+                                  <span className="text-slate-500 font-normal">{it.skill}</span>
+                                  <span className="text-slate-300">·</span>
+                                  <span className="flex items-center gap-0.5 text-slate-400 font-normal">
+                                    <Clock className="w-3 h-3" /> {it.durationMin} phút
+                                  </span>
+                                </div>
+                              </div>
+                              {isCurrent && (
+                                <span className="inline-flex h-8 items-center gap-1 rounded-full bg-sky-600 px-3 text-xs font-bold text-white shadow-sm shrink-0">
+                                  <Play className="w-3 h-3 fill-current" /> Học ngay
                                 </span>
-                              </p>
+                              )}
+                              {isDone && (
+                                <span className="text-xs font-bold text-emerald-600 shrink-0">
+                                  Xong
+                                </span>
+                              )}
+                              {itemLocked && (
+                                <Lock className="w-4 h-4 text-slate-300 shrink-0" />
+                              )}
                             </div>
-                            {it.status === 'CURRENT' && (
-                              <Button size="xs" variant="gradient" leftIcon={<Play className="w-3 h-3" />} className="animate-pop">
-                                Học ngay
-                              </Button>
-                            )}
-                            {it.status === 'DONE' && (
-                              <Badge tone="emerald" size="xs">
-                                Xong
-                              </Badge>
-                            )}
-                          </div>
-                        );
-                        return (
-                          <li key={it.id} className="animate-fade-in" style={{ animationDelay: `${mi * 120 + ii * 40}ms` }}>
-                            {itemLocked ? <div className="cursor-not-allowed">{inner}</div> : <Link to={it.link}>{inner}</Link>}
-                          </li>
-                        );
-                      })}
-                    </ul>
+                          );
+                          return (
+                            <li key={it.id} className="animate-fade-in relative z-10" style={{ animationDelay: `${mi * 120 + ii * 40}ms` }}>
+                              {itemLocked ? <div className="cursor-not-allowed">{inner}</div> : <Link to={it.link}>{inner}</Link>}
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    </div>
                   </div>
                 </div>
               </Card>

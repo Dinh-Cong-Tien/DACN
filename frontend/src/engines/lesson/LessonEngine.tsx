@@ -12,6 +12,7 @@ import { embedSrc, useWatchPosition, videoSource } from './useWatchPosition';
 import './lesson-engine.css';
 import { Badge, Button, Card, ProgressBar } from '@/shared/components/ui';
 import { toast } from '@/shared/stores/uiStore';
+import { BlueCirclePlayIcon } from '@/shared/components/media/EdmicroIcons';
 
 interface LessonEngineProps {
   course: Course;
@@ -378,10 +379,10 @@ export const LessonEngine: React.FC<LessonEngineProps> = ({ course, lesson, onSe
                               </span>
                               <span className="min-w-0 flex-1">
                                 <span className={cn('block truncate text-sm', isActive ? 'font-bold text-indigo-900' : 'font-medium text-slate-700')}>{l.title}</span>
-                                <span className="block text-[11px] text-slate-400">
-                                  Bài {allLessons.indexOf(l) + 1} · {l.type === 'QUIZ' && l.exerciseCount ? `${l.exerciseCount} câu` : `${l.durationMin} phút`}
-                                  {l.type !== 'QUIZ' && l.exerciseCount ? ` · ${l.exerciseCount} câu bài tập` : ''}
-                                  {!isDone && (isActive ? watch.position : l.lastPositionSec ?? 0) >= 5 && <span className="font-semibold text-amber-700"> · đã học tới {formatClock(isActive ? watch.position : l.lastPositionSec ?? 0)}</span>}
+                                <span className="flex items-center gap-1 text-[11px] font-semibold text-sky-700 mt-0.5">
+                                  <BlueCirclePlayIcon size={12} />
+                                  <span>{l.type === 'QUIZ' ? 'Quiz' : l.type === 'READING' ? 'Document' : l.exerciseCount && !l.videoUrl ? 'Practice' : 'Video'}</span>
+                                  <span className="font-normal text-slate-400">· {l.type === 'QUIZ' && l.exerciseCount ? `${l.exerciseCount} câu` : `${l.durationMin} phút`}</span>
                                 </span>
                               </span>
                             </button>
