@@ -7,17 +7,26 @@ import { cn } from '@/shared/utils';
 export const ScrollProgress: React.FC<{ className?: string }> = ({ className }) => {
   const [p, setP] = useState(0);
   useEffect(() => {
-    const onScroll = () => {
+    let raf = 0;
+    const update = () => {
+      raf = 0;
       const h = document.documentElement.scrollHeight - window.innerHeight;
       setP(h > 0 ? Math.min(100, (window.scrollY / h) * 100) : 0);
     };
-    onScroll();
+    // gộp các sự kiện cuộn vào 1 lần cập nhật mỗi khung hình
+    const onScroll = () => {
+      if (!raf) raf = requestAnimationFrame(update);
+    };
+    update();
     window.addEventListener('scroll', onScroll, { passive: true });
-    return () => window.removeEventListener('scroll', onScroll);
+    return () => {
+      window.removeEventListener('scroll', onScroll);
+      cancelAnimationFrame(raf);
+    };
   }, []);
   return (
     <div aria-hidden className={cn('fixed top-0 left-0 right-0 h-[3px] z-[60] pointer-events-none', className)}>
-      <div className="h-full bg-violet-500 transition-[width] duration-150" style={{ width: `${p}%` }} />
+      <div className="h-full origin-left bg-violet-500 will-change-transform" style={{ transform: `scaleX(${p / 100})` }} />
     </div>
   );
 };

@@ -1,7 +1,7 @@
 import React, { Children, isValidElement, cloneElement, useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useCountUp, useInView } from '@/shared/hooks';
-import { cn } from '@/shared/utils';
+import { cn, isLowPowerDevice } from '@/shared/utils';
 import { appLocale, useT } from '@/shared/i18n';
 
 export { fireConfetti, Confetti } from './confetti';
@@ -197,7 +197,7 @@ export const Doodles: React.FC<{ className?: string; tone?: 'dark' | 'light'; pa
   const stroke = tone === 'dark' ? '#141A2B' : '#ffffff';
   const [y, setY] = useState(0);
   useEffect(() => {
-    if (!parallax) return;
+    if (!parallax || isLowPowerDevice()) return;
     let raf = 0;
     const onScroll = () => {
       cancelAnimationFrame(raf);

@@ -169,3 +169,14 @@ export const stageOf = (part?: string | null) => {
   const m = /^Chặng (\d+) · (.+)$/.exec(part ?? '');
   return m ? { no: Number(m[1]), name: m[2] } : null;
 };
+
+/** Máy nên giảm hiệu ứng: màn nhỏ / cảm ứng, bật tiết kiệm dữ liệu, hoặc cấu hình yếu (≤ 4 nhân, ≤ 4 GB RAM) */
+export function isLowPowerDevice(): boolean {
+  if (typeof window === 'undefined') return true;
+  const nav = navigator as Navigator & { deviceMemory?: number; connection?: { saveData?: boolean } };
+  if (window.matchMedia?.('(max-width: 1023px), (pointer: coarse)').matches) return true;
+  if (nav.connection?.saveData) return true;
+  if ((nav.hardwareConcurrency ?? 8) <= 4) return true;
+  if ((nav.deviceMemory ?? 8) <= 4) return true;
+  return false;
+}

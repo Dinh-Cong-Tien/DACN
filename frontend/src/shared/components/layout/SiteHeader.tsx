@@ -137,10 +137,10 @@ export const SiteHeader: React.FC = () => {
           onDarkHero && 'keep-palette',
           overHero
             ? scrolled
-              ? cn('fixed inset-x-0 backdrop-blur-xl', isDark ? 'bg-slate-950/75 border-white/10' : 'bg-cream/90 border-slate-900/10')
+              ? cn('fixed inset-x-0 backdrop-blur-xl', isDark ? 'bg-slate-950/75 max-lg:bg-slate-950 border-white/10' : 'bg-cream/90 max-lg:bg-cream border-slate-900/10')
               : 'absolute inset-x-0 bg-transparent border-transparent'
             : scrolled
-              ? 'sticky bg-cream/80 backdrop-blur-xl border-slate-900/10'
+              ? 'sticky bg-cream/80 max-lg:bg-cream backdrop-blur-xl border-slate-900/10'
               : 'sticky bg-transparent border-transparent'
         )}
       >

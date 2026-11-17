@@ -1,0 +1,37 @@
+/*
+ * Hiệu năng trên điện thoại / máy tính bảng / màn cảm ứng.
+ * Quầng sáng filter: blur(100–160px) trên khối 500–600px và kính mờ backdrop-filter là phần GPU điện thoại tầm trung
+ * xử lý chậm nhất (vẽ lại mỗi khung hình khi cuộn) → thay bằng mặt nạ gradient tĩnh, cùng màu, gần như cùng hình,
+ * và dừng các animation trang trí lặp vô hạn. Máy tính giữ nguyên.
+ */
+@media (max-width: 1023px), (pointer: coarse) {
+  [class*='blur-[1'],
+  .blur-3xl,
+  .blur-2xl {
+    filter: none !important;
+    -webkit-mask-image: radial-gradient(closest-side, #000 0%, rgba(0, 0, 0, 0.45) 45%, transparent 100%);
+    mask-image: radial-gradient(closest-side, #000 0%, rgba(0, 0, 0, 0.45) 45%, transparent 100%);
+    animation: none !important;
+  }
+  .aurora {
+    filter: none !important;
+    -webkit-mask-image: radial-gradient(closest-side, #000, transparent);
+    mask-image: radial-gradient(closest-side, #000, transparent);
+    animation: none !important;
+  }
+  /* trang trí lặp vô hạn: đứng yên trên màn nhỏ */
+  .animate-twinkle,
+  .animate-float,
+  .animate-float-slow,
+  .hero-bob,
+  .hero-disc,
+  .hero-disc__fill,
+  .hero-orbit {
+    animation: none !important;
+  }
+  /* kính mờ: bỏ trên màn nhỏ (nền các thanh đã gần đặc) */
+  [class*='backdrop-blur'] {
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+  }
+}

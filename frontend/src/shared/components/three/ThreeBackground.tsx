@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { cn } from '@/shared/utils';
+import { cn, isLowPowerDevice } from '@/shared/utils';
 
 export interface ThreeBackgroundProps {
   /** globe: quả cầu điểm + vành quỹ đạo + vệ tinh (tinh thần "Orbi"); particles: hạt lơ lửng + khối đa diện wireframe */
@@ -27,7 +27,8 @@ export const ThreeBackground: React.FC<ThreeBackgroundProps> = ({ variant = 'glo
 
   useEffect(() => {
     const host = ref.current;
-    if (!host) return;
+    // Điện thoại / máy yếu: không tải Three.js, không chạy WebGL (nguyên nhân giật chính trên mobile)
+    if (!host || isLowPowerDevice()) return;
     let disposed = false;
     let cleanup: (() => void) | undefined;
 
@@ -144,17 +145,26 @@ export const ThreeBackground: React.FC<ThreeBackgroundProps> = ({ variant = 'glo
       };
       if (interactive && !reduced) window.addEventListener('mousemove', onMove, { passive: true });
 
-      let visible = true;
+      // Chỉ chạy vòng vẽ khi nền đang hiện trên màn hình và tab đang mở; khuất thì dừng hẳn requestAnimationFrame
+      let raf = 0;
+      let inView = true;
+      const clock = new THREE.Clock();
+      const run = () => {
+        const on = inView && !document.hidden && host.clientWidth > 0;
+        if (on && !raf) raf = requestAnimationFrame(tick);
+        if (!on && raf) {
+          cancelAnimationFrame(raf);
+          raf = 0;
+        }
+      };
       const io = new IntersectionObserver(([en]) => {
-        visible = en.isIntersecting;
+        inView = en.isIntersecting;
+        run();
       });
       io.observe(host);
-
-      let raf = 0;
-      const clock = new THREE.Clock();
+      document.addEventListener('visibilitychange', run);
       const tick = () => {
         raf = requestAnimationFrame(tick);
-        if (!visible) return;
         const t = clock.getElapsedTime() * speed;
         root.rotation.y += 0.0022 * speed;
         root.rotation.x += (target.y * 0.25 - root.rotation.x) * 0.03;
@@ -184,12 +194,13 @@ export const ThreeBackground: React.FC<ThreeBackgroundProps> = ({ variant = 'glo
         });
         renderer.render(scene, camera);
       };
-      tick();
+      run();
 
       cleanup = () => {
         cancelAnimationFrame(raf);
         ro.disconnect();
         io.disconnect();
+        document.removeEventListener('visibilitychange', run);
         window.removeEventListener('mousemove', onMove);
         disposables.forEach((d) => d.dispose());
         renderer.dispose();
