@@ -115,7 +115,9 @@ export const TypeLoop: React.FC<{
   startDelay?: number;
   className?: string;
   caretClassName?: string;
-}> = ({ words, typeSpeed = 120, deleteSpeed = 60, hold = 1800, gap = 380, startDelay = 500, className, caretClassName }) => {
+  /** class cho span chứa chữ (vd chữ gradient background-clip:text phải đặt ở đây để Safari vẽ được) */
+  textClassName?: string;
+}> = ({ words, typeSpeed = 120, deleteSpeed = 60, hold = 1800, gap = 380, startDelay = 500, className, caretClassName, textClassName }) => {
   // dịch cả từ trước khi gõ từng ký tự (tầng dịch toàn trang không nhận ra được chữ đang gõ dở)
   const t = useT();
   const chars = React.useMemo(() => words.map((w) => Array.from(t(w).normalize('NFC'))), [words, t]);
@@ -150,7 +152,7 @@ export const TypeLoop: React.FC<{
         {caret}
       </span>
       <span aria-hidden className="col-start-1 row-start-1 whitespace-nowrap">
-        {chars[wi]?.slice(0, n).join('')}
+        <span className={textClassName}>{chars[wi]?.slice(0, n).join('')}</span>
         {caret}
       </span>
     </span>

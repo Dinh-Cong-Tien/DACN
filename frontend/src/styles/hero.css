@@ -23,14 +23,25 @@
 .hero-type-word {
   font-weight: 900;
   letter-spacing: -0.035em;
+  filter: drop-shadow(0 0.06em 0.22em rgba(255, 84, 128, 0.32));
+}
+/* Dải màu đặt trên chính span chứa chữ (không phải khối cha):
+   Safari/iOS không vẽ background-clip:text khi chữ nằm trong phần tử con (inline-grid)
+   hoặc khi cùng phần tử có filter → chữ trong suốt, chỉ còn con trỏ. */
+.hero-type-text {
   background-image: linear-gradient(100deg, #ffc65c 0%, #ff7a4d 20%, #ff4f8b 45%, #b86bff 70%, #ff7a4d 85%, #ffc65c 100%);
   background-size: 200% 100%;
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
   -webkit-text-fill-color: transparent;
-  filter: drop-shadow(0 0.06em 0.22em rgba(255, 84, 128, 0.32));
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
   animation: hero-type-shine 7s linear infinite;
+}
+/* iOS: bỏ quầng drop-shadow (filter trên tổ tiên chữ clip vẫn có thể làm Safari bỏ vẽ chữ) */
+@supports (-webkit-touch-callout: none) {
+  .hero-type-word { filter: none; }
 }
 @keyframes hero-type-shine {
   from { background-position: 0% 50%; }

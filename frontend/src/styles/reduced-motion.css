@@ -11,7 +11,7 @@
     animation-iteration-count: infinite !important;
   }
   /* Dải màu chữ gõ ở hero vẫn trôi chậm */
-  .hero-type-word {
+  .hero-type-text {
     animation-duration: 7s !important;
     animation-iteration-count: infinite !important;
   }
