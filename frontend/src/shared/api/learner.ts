@@ -485,10 +485,25 @@ export const useRevokeSession = () => {
 
 // ---------- Ảnh đại diện ----------
 const AVATAR_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
-/** Tải ảnh đại diện (≤ 2 MB) → backend lưu file, ghi media_files, cập nhật users.avatar_url; trả url mới */
+/** Thu nhỏ + cắt vuông giữa ảnh còn 256×256 JPEG (≈20 KB) trước khi gửi — ảnh lưu thẳng trong CSDL */
+async function shrinkAvatar(file: File, size = 256): Promise<Blob> {
+  const bmp = await createImageBitmap(file);
+  const side = Math.min(bmp.width, bmp.height);
+  const canvas = document.createElement('canvas');
+  canvas.width = canvas.height = size;
+  const ctx = canvas.getContext('2d')!;
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0, 0, size, size);
+  ctx.drawImage(bmp, (bmp.width - side) / 2, (bmp.height - side) / 2, side, side, 0, 0, size, size);
+  bmp.close();
+  return new Promise((resolve, reject) => canvas.toBlob((b) => (b ? resolve(b) : reject(new Error('Không xử lý được ảnh'))), 'image/jpeg', 0.86));
+}
+
+/** Tải ảnh đại diện (≤ 10 MB, tự thu nhỏ) → backend lưu vào users.avatar_url; trả url mới */
 export async function uploadAvatar(file: File): Promise<string> {
   if (!AVATAR_TYPES.includes(file.type)) throw new Error('Chỉ hỗ trợ ảnh JPG, PNG hoặc WebP');
-  if (file.size > 2 * 1024 * 1024) throw new Error('Ảnh tối đa 2 MB');
-  const res = await http.post<{ data: { url: string } }>('/learner/uploads/avatar', file, { headers: { 'Content-Type': file.type } });
+  if (file.size > 10 * 1024 * 1024) throw new Error('Ảnh tối đa 10 MB');
+  const blob = await shrinkAvatar(file);
+  const res = await http.post<{ data: { url: string } }>('/learner/uploads/avatar', blob, { headers: { 'Content-Type': 'image/jpeg' } });
   return res.data.data.url;
 }

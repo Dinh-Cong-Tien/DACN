@@ -60,7 +60,7 @@ practiceRouter.post(
   })
 );
 
-/** Ảnh đại diện (body nhị phân image/jpeg|png|webp, tối đa 2 MB) → lưu file, ghi media_files (AVATAR), cập nhật users.avatar_url */
+/** Ảnh đại diện (body nhị phân image/jpeg|png|webp) → lưu data URL trong users.avatar_url, ghi media_files (AVATAR) */
 practiceRouter.post(
   '/uploads/avatar',
   express.raw({ type: 'image/*', limit: '2mb' }),
@@ -77,14 +77,15 @@ practiceRouter.post(
       : ext === 'png' ? buf.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]))
       : buf.subarray(0, 4).toString('latin1') === 'RIFF' && buf.subarray(8, 12).toString('latin1') === 'WEBP';
     if (!sig) throw badRequest('Tệp không phải ảnh hợp lệ');
-    fs.mkdirSync(AVATAR_DIR, { recursive: true });
+    // Lưu thẳng trong CSDL dạng data URL: ổ đĩa máy chủ (Render) bị xoá mỗi lần deploy/khởi động lại,
+    // và đường dẫn tương đối /api/... trỏ nhầm sang tên miền frontend. Trình duyệt đã thu nhỏ ảnh còn ~256px (vài chục KB).
+    if (buf.length > 300 * 1024) throw badRequest('Ảnh quá lớn sau khi thu nhỏ, vui lòng chọn ảnh khác');
     const name = `${crypto.randomUUID()}.${ext}`;
-    fs.writeFileSync(path.join(AVATAR_DIR, name), buf);
-    const url = `/api/v1/learner/avatars/${name}`;
+    const url = `data:${mime};base64,${buf.toString('base64')}`;
     const old = await prisma.user.findUniqueOrThrow({ where: { id: userId }, select: { avatarUrl: true } });
     await prisma.$transaction([
       prisma.mediaFile.create({
-        data: { ownerId: userId, storageKey: `avatars/${name}`, url, mimeType: mime, sizeBytes: BigInt(buf.length), checksumSha256: crypto.createHash('sha256').update(buf).digest('hex'), purpose: 'AVATAR', isPrivate: false },
+        data: { ownerId: userId, storageKey: `inline/avatars/${name}`, url, mimeType: mime, sizeBytes: BigInt(buf.length), checksumSha256: crypto.createHash('sha256').update(buf).digest('hex'), purpose: 'AVATAR', isPrivate: false },
       }),
       prisma.user.update({ where: { id: userId }, data: { avatarUrl: url } }),
       // Ảnh cũ do người dùng tải lên → đánh dấu xoá mềm (file vẫn giữ để không gãy link đang cache)
