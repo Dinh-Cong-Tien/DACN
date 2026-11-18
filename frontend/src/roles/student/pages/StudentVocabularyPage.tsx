@@ -34,6 +34,18 @@ const TOPIC_PHOTO: Record<string, string> = {
   'toeic-topic-health': unsplash('1576091160399-112ba8d25d1d', 700),
   'toeic-topic-tech': unsplash('1518770660439-4636190af475', 700),
   'toeic-topic-general': unsplash('1497633762265-9d179a990aa6', 700),
+  'vstep-topic-education': unsplash('1541339907198-e08756dedf3f', 700),
+  'vstep-topic-environment': unsplash('1441974231531-c6227db76b6e', 700),
+  'vstep-topic-health': unsplash('1571019613454-1cb2f99b2d8b', 700),
+  'vstep-topic-technology': unsplash('1488590528505-98d2b5aba04b', 700),
+  'vstep-topic-work': unsplash('1497366811353-6870744d04b2', 700),
+  'vstep-topic-family': unsplash('1511895426328-dc8714191300', 700),
+  'vstep-topic-travel': unsplash('1488646953014-85cb44e25828', 700),
+  'vstep-topic-culture': unsplash('1528181304800-259b08848526', 700),
+  'vstep-topic-media': unsplash('1504711434969-e33886168f5c', 700),
+  'vstep-topic-economy': unsplash('1611974789855-9c2a0a7236a3', 700),
+  'vstep-topic-city': unsplash('1477959858617-67f85cf4f1df', 700),
+  'vstep-topic-leisure': unsplash('1461896836934-ffe607ba8211', 700),
 };
 
 /** Ảnh minh hoạ xoay vòng cho bộ từ không có ảnh riêng */
@@ -42,6 +54,7 @@ const TOPIC_PHOTOS = [PHOTOS.office, PHOTOS.team, PHOTOS.laptop, PHOTOS.desk, PH
 /** Nhóm bộ từ trên trang: chủ đề TOEIC · từ đề thi theo Part · bộ khác (VSTEP, giáo viên tạo…) */
 const GROUPS: { key: string; title: string; hint: string; match: (slug: string) => boolean }[] = [
   { key: 'topic', title: 'Từ vựng TOEIC theo chủ đề', hint: 'Từ vựng cốt lõi chia theo ngữ cảnh hay gặp trong đề', match: (s) => s.startsWith('toeic-topic-') },
+  { key: 'vstep', title: 'Từ vựng VSTEP theo chủ đề', hint: 'Từ B1–C1 cho bài Viết và Nói VSTEP, chia theo đề tài hay gặp', match: (s) => s.startsWith('vstep-topic-') },
   { key: 'part', title: 'Từ vựng trong đề thi theo Part', hint: 'Từ xuất hiện trong các đề TOEIC, gom theo Part 1–7', match: (s) => s.startsWith('toeic-exam-vocab-part-') },
   { key: 'other', title: 'Bộ từ khác', hint: '', match: () => true },
 ];

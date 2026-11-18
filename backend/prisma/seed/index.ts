@@ -10,6 +10,7 @@ import { importDictation, importGrammarExercises, importVocabQuiz, importReading
 import { DATA_DIR, exists, log, prisma } from './lib';
 import { importExamEnglish } from './import-examenglish';
 import { applyToeicVocabTopics } from './toeic-vocab-topics';
+import { applyVstepVocabTopics } from './vstep-vocab-topics';
 
 async function truncateAll() {
   const rows = await prisma.$queryRaw<{ tablename: string }[]>`SELECT tablename FROM pg_tables WHERE schemaname = 'public' AND tablename <> '_prisma_migrations'`;
@@ -37,6 +38,7 @@ async function main() {
   const { examVocab } = await importToeicTests(ctx);
   await importVocabulary(ctx, examVocab);
   await applyToeicVocabTopics();
+  await applyVstepVocabTopics();
   await importVideoCourse(ctx);
   await importGrammarExercises(ctx, topicTag);
   await importVocabQuiz(ctx);
