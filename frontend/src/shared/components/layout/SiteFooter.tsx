@@ -85,11 +85,11 @@ export const SiteFooter: React.FC<SiteFooterProps> = ({
   // Footer theo chế độ sáng/tối: tối = nền đêm, sáng = nền kem với chữ đậm
   const dark = useResolvedTheme() === 'dark';
   const heading = dark ? 'text-white' : 'text-slate-900';
-  const muted = dark ? 'text-slate-400' : 'text-slate-500';
+  const muted = dark ? 'text-slate-400' : 'text-slate-700';
   const accent = dark ? 'text-amber-300' : 'text-amber-600';
   const line = dark ? 'border-white/10' : 'border-slate-900/10';
   return (
-  <footer className={cn('relative overflow-hidden border-t', line, dark ? 'bg-slate-950 text-slate-300' : 'bg-[#f3efe6] text-slate-600', className)}>
+  <footer className={cn('relative overflow-hidden border-t', line, dark ? 'bg-slate-950 text-slate-300' : 'bg-[#f3efe6] text-slate-800', className)}>
     <div aria-hidden className={cn('absolute inset-0 bg-dots', dark ? 'opacity-10' : 'opacity-[0.04]')} />
     <div className="relative mx-auto grid max-w-7xl grid-cols-1 gap-10 px-4 py-14 sm:px-6 md:grid-cols-2 lg:grid-cols-5 lg:px-8">
       <div className="space-y-4 lg:col-span-2">
@@ -97,7 +97,7 @@ export const SiteFooter: React.FC<SiteFooterProps> = ({
         <p className={cn('max-w-sm text-sm leading-relaxed', muted)}>{t(description)}</p>
         <div className="flex items-center gap-2">
           {[Facebook, Youtube, Instagram, Mail].map((Icon, i) => (
-            <a key={i} href="#" className={cn('flex h-10 w-10 items-center justify-center rounded-xl border-2 transition-all hover:-translate-y-0.5 hover:border-amber-300 hover:bg-amber-300 hover:text-slate-900', dark ? 'border-white/10 bg-white/5' : 'border-slate-900/10 bg-white text-slate-700')}>
+            <a key={i} href="#" className={cn('flex h-10 w-10 items-center justify-center rounded-xl border-2 transition-all hover:-translate-y-0.5 hover:border-amber-300 hover:bg-amber-300 hover:text-slate-900', dark ? 'border-white/10 bg-white/5' : 'border-slate-900/15 bg-white text-slate-800')}>
               <Icon className="h-4 w-4" />
             </a>
           ))}
