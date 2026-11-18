@@ -1,3 +1,4 @@
+import { AchievementMedal } from '@/shared/components/ui/achievement-medal';
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Flame, ArrowRight, Play, Clock, BookOpen, AlertTriangle, RotateCcw, Trophy, ChevronRight, CalendarDays, Target } from 'lucide-react';
@@ -290,7 +291,7 @@ export const StudentDashboardPage: React.FC = () => {
               {earned.length === 0 && <p className="col-span-4 text-sm text-slate-500">Chưa có huy hiệu. Hoàn thành bài thi đầu tiên để nhận huy hiệu đầu tiên.</p>}
               {earned.map((a, i) => (
                 <div key={a.id} className="text-center animate-pop" style={{ animationDelay: `${i * 90}ms` }} title={a.description}>
-                  <div className="w-14 h-14 mx-auto rounded-full bg-amber-100 flex items-center justify-center text-2xl shadow-inner">{a.icon}</div>
+                  <AchievementMedal icon={a.icon} rarity={a.rarity} size={52} className="mx-auto" />
                   <p className="text-[11px] font-semibold text-slate-700 mt-2 leading-tight">{a.title}</p>
                 </div>
               ))}
