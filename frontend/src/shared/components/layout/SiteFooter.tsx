@@ -4,6 +4,7 @@ import { Facebook, Youtube, Mail, MapPin, Phone, Instagram } from 'lucide-react'
 import { Logo } from '@/shared/components/ui';
 import { cn } from '@/shared/utils';
 import { useT } from '@/shared/i18n';
+import { useResolvedTheme } from '@/shared/stores/themeStore';
 
 export interface FooterLink {
   to: string;
@@ -81,16 +82,22 @@ export const SiteFooter: React.FC<SiteFooterProps> = ({
   className,
 }) => {
   const t = useT();
+  // Footer theo chế độ sáng/tối: tối = nền đêm, sáng = nền kem với chữ đậm
+  const dark = useResolvedTheme() === 'dark';
+  const heading = dark ? 'text-white' : 'text-slate-900';
+  const muted = dark ? 'text-slate-400' : 'text-slate-500';
+  const accent = dark ? 'text-amber-300' : 'text-amber-600';
+  const line = dark ? 'border-white/10' : 'border-slate-900/10';
   return (
-  <footer className={cn('relative overflow-hidden border-t border-white/10 bg-slate-950 text-slate-300', className)}>
-    <div aria-hidden className="absolute inset-0 bg-dots opacity-10" />
+  <footer className={cn('relative overflow-hidden border-t', line, dark ? 'bg-slate-950 text-slate-300' : 'bg-[#f3efe6] text-slate-600', className)}>
+    <div aria-hidden className={cn('absolute inset-0 bg-dots', dark ? 'opacity-10' : 'opacity-[0.04]')} />
     <div className="relative mx-auto grid max-w-7xl grid-cols-1 gap-10 px-4 py-14 sm:px-6 md:grid-cols-2 lg:grid-cols-5 lg:px-8">
       <div className="space-y-4 lg:col-span-2">
-        <Logo size="md" dark tagline={tagline && t(tagline)} />
-        <p className="max-w-sm text-sm leading-relaxed text-slate-400">{t(description)}</p>
+        <Logo size="md" dark={dark} tagline={tagline && t(tagline)} />
+        <p className={cn('max-w-sm text-sm leading-relaxed', muted)}>{t(description)}</p>
         <div className="flex items-center gap-2">
           {[Facebook, Youtube, Instagram, Mail].map((Icon, i) => (
-            <a key={i} href="#" className="flex h-10 w-10 items-center justify-center rounded-xl border-2 border-white/10 bg-white/5 transition-all hover:-translate-y-0.5 hover:border-amber-300 hover:bg-amber-300 hover:text-slate-900">
+            <a key={i} href="#" className={cn('flex h-10 w-10 items-center justify-center rounded-xl border-2 transition-all hover:-translate-y-0.5 hover:border-amber-300 hover:bg-amber-300 hover:text-slate-900', dark ? 'border-white/10 bg-white/5' : 'border-slate-900/10 bg-white text-slate-700')}>
               <Icon className="h-4 w-4" />
             </a>
           ))}
@@ -98,11 +105,11 @@ export const SiteFooter: React.FC<SiteFooterProps> = ({
       </div>
       {columns.map((c) => (
         <div key={c.title}>
-          <h4 className="font-display mb-4 text-sm font-bold text-white">{t(c.title)}</h4>
+          <h4 className={cn('font-display mb-4 text-sm font-bold', heading)}>{t(c.title)}</h4>
           <ul className="space-y-2.5 text-sm">
             {c.links.map((l) => (
               <li key={l.to}>
-                <Link to={l.to} className="inline-block transition hover:translate-x-0.5 hover:text-amber-300">
+                <Link to={l.to} className={cn('inline-block transition hover:translate-x-0.5', dark ? 'hover:text-amber-300' : 'hover:text-amber-700')}>
                   {t(l.label)}
                 </Link>
               </li>
@@ -111,29 +118,29 @@ export const SiteFooter: React.FC<SiteFooterProps> = ({
         </div>
       ))}
       <div>
-        <h4 className="font-display mb-4 text-sm font-bold text-white">{t('Liên hệ')}</h4>
+        <h4 className={cn('font-display mb-4 text-sm font-bold', heading)}>{t('Liên hệ')}</h4>
         <ul className="space-y-3 text-sm">
           <li className="flex items-start gap-2.5">
-            <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-amber-300" /> {t('54 Nguyễn Lương Bằng, Liên Chiểu, Đà Nẵng')}
+            <MapPin className={cn('mt-0.5 h-4 w-4 shrink-0', accent)} /> {t('54 Nguyễn Lương Bằng, Liên Chiểu, Đà Nẵng')}
           </li>
           <li className="flex items-center gap-2.5">
-            <Phone className="h-4 w-4 text-amber-300" /> 0236 555 0199
+            <Phone className={cn('h-4 w-4', accent)} /> 0236 555 0199
           </li>
           <li className="flex items-center gap-2.5">
-            <Mail className="h-4 w-4 text-amber-300" /> {email}
+            <Mail className={cn('h-4 w-4', accent)} /> {email}
           </li>
         </ul>
-        <div className="mt-4 flex gap-3 text-xs text-slate-400">
+        <div className={cn('mt-4 flex gap-3 text-xs', muted)}>
           {contactLinks.map((l) => (
-            <Link key={l.to} to={l.to} className="hover:text-white">
+            <Link key={l.to} to={l.to} className={dark ? 'hover:text-white' : 'hover:text-slate-900'}>
               {t(l.label)}
             </Link>
           ))}
         </div>
       </div>
     </div>
-    <div className="relative border-t border-white/10">
-      <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-2 px-4 py-6 text-xs text-slate-500 md:flex-row">
+    <div className={cn('relative border-t', line)}>
+      <div className={cn("mx-auto flex max-w-7xl flex-col items-center justify-between gap-2 px-4 py-6 text-xs md:flex-row", muted)}>
         <span>{t('© 2026 OrbiLingo · Đồ án chuyên ngành, Khoa CNTT. Bảo lưu mọi quyền.')}</span>
         <span className="flex gap-4">
           <Link to="/terms" className="hover:underline">{t('Điều khoản sử dụng')}</Link>

@@ -22,6 +22,24 @@ const LEVEL_OF = (cefr?: string | null): DictationItem['level'] => (!cefr || cef
 
 const normalize = (s: string) => s.toLowerCase().replace(/[^a-z0-9\s']/g, '').split(/\s+/).filter(Boolean);
 
+/** Đánh dấu từng từ của câu gốc có được gõ đúng hay không, theo LCS giữa câu gốc và câu gõ (giữ thứ tự, bỏ qua từ thiếu/thừa) */
+function matchWords(target: string[], typed: string[]): boolean[] {
+  const n = target.length;
+  const m = typed.length;
+  const dp = Array.from({ length: n + 1 }, () => new Array<number>(m + 1).fill(0));
+  for (let i = n - 1; i >= 0; i--) for (let j = m - 1; j >= 0; j--) dp[i][j] = target[i] === typed[j] ? dp[i + 1][j + 1] + 1 : Math.max(dp[i + 1][j], dp[i][j + 1]);
+  const hit = new Array<boolean>(n).fill(false);
+  for (let i = 0, j = 0; i < n && j < m; ) {
+    if (target[i] === typed[j]) {
+      hit[i] = true;
+      i++;
+      j++;
+    } else if (dp[i + 1][j] >= dp[i][j + 1]) i++;
+    else j++;
+  }
+  return hit;
+}
+
 export const StudentDictationPage: React.FC = () => {
   useDocumentTitle('Nghe chép chính tả');
   const [index, setIndex] = useState(0);
@@ -71,7 +89,12 @@ export const StudentDictationPage: React.FC = () => {
   const target = useMemo(() => normalize(item.text), [item]);
   const typed = useMemo(() => normalize(input), [input]);
 
-  const diff = useMemo(() => target.map((w, i) => ({ word: item.text.split(/\s+/)[i] ?? w, ok: typed[i] === w })), [target, typed, item]);
+  // So khớp theo dãy con chung dài nhất (LCS): từ gõ đúng được tính dù thiếu/thừa từ phía trước (không bắt đúng vị trí)
+  const diff = useMemo(() => {
+    const hit = matchWords(target, typed);
+    const shown = item.text.split(/\s+/);
+    return target.map((w, i) => ({ word: shown[i] ?? w, ok: hit[i] }));
+  }, [target, typed, item]);
   const accuracy = target.length ? Math.round((diff.filter((d) => d.ok).length / target.length) * 100) : 0;
 
   const speak = () => {

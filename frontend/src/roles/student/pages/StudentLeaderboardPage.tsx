@@ -5,7 +5,6 @@ import type { LeaderboardEntry } from '@/shared/types';
 import { cn, formatNumber } from '@/shared/utils';
 import { useDocumentTitle } from '@/shared/hooks';
 import { Avatar, Badge, Card, PageHeader, Segmented } from '@/shared/components/ui';
-import { Doodles } from '@/shared/components/motion';
 
 const Delta: React.FC<{ d: number }> = ({ d }) =>
   d === 0 ? (
@@ -22,10 +21,11 @@ const Delta: React.FC<{ d: number }> = ({ d }) =>
     </span>
   );
 
-const PODIUM: { rank: number; h: string; color: string; label: string }[] = [
-  { rank: 2, h: 'h-28', color: 'bg-sky-200', label: 'Hạng nhì' },
-  { rank: 1, h: 'h-40', color: 'bg-amber-300', label: 'Quán quân' },
-  { rank: 3, h: 'h-24', color: 'bg-violet-200', label: 'Hạng ba' },
+/** Bục trao giải: mỗi bậc một chất liệu kim loại (vàng/bạc/đồng), mặt trên sáng, mặt trước tối dần như khối thật */
+const PODIUM: { rank: number; h: number; label: string; metal: { top: string; front: [string, string]; ring: string; text: string } }[] = [
+  { rank: 2, h: 112, label: 'Hạng nhì', metal: { top: '#eef2f7', front: ['#cfd6e0', '#8a95a6'], ring: '#c3ccd8', text: '#3f4a5c' } },
+  { rank: 1, h: 152, label: 'Quán quân', metal: { top: '#ffe9a8', front: ['#f2c14e', '#b07a12'], ring: '#f2c14e', text: '#5c3d00' } },
+  { rank: 3, h: 88, label: 'Hạng ba', metal: { top: '#f8d2b4', front: ['#dc9a68', '#94532a'], ring: '#d9925f', text: '#4d2810' } },
 ];
 
 export const StudentLeaderboardPage: React.FC = () => {
@@ -52,31 +52,55 @@ export const StudentLeaderboardPage: React.FC = () => {
 
       <div className="grid grid-cols-1 xl:grid-cols-[1fr_300px] gap-6">
         <div className="space-y-6">
-          <Card hard tone="cream" className="relative overflow-hidden" padding="lg">
-            <Doodles className="opacity-40" />
-            <div className="relative flex items-end justify-center gap-3 sm:gap-6">
-              {leaderboard.length === 0 && <p className="py-10 text-sm text-slate-600">{isLoading ? 'Đang tải…' : 'Chưa có ai ghi điểm trong khoảng thời gian này. Học và làm bài để lên bảng!'}</p>}
-              {PODIUM.map((p, i) => {
-                const e = byRank(p.rank);
-                if (!e) return null;
-                return (
-                  <div key={p.rank} className="flex flex-col items-center animate-fade-up w-28 sm:w-36" style={{ animationDelay: `${i * 150 + 100}ms` }}>
-                    <div className="relative mb-2">
-                      {p.rank === 1 && <Crown className="absolute -top-7 left-1/2 -translate-x-1/2 w-7 h-7 text-amber-500 fill-amber-300 animate-bounce-soft" />}
-                      <div className={cn('rounded-full border-[3px] border-slate-900 shadow-hard-sm', p.rank === 1 ? 'p-1 bg-amber-300' : 'p-0.5 bg-white')}>
-                        <Avatar name={e.name} src={e.avatarUrl} size={p.rank === 1 ? 'xl' : 'lg'} />
+          <Card hard className="relative overflow-hidden" padding="lg">
+            {leaderboard.length === 0 && <p className="py-10 text-center text-sm text-slate-600">{isLoading ? 'Đang tải…' : 'Chưa có ai ghi điểm trong khoảng thời gian này. Học và làm bài để lên bảng!'}</p>}
+            {leaderboard.length > 0 && (
+              <div className="relative mx-auto max-w-xl pt-8">
+                <div className="flex items-end justify-center gap-2 sm:gap-3">
+                  {PODIUM.map((p, i) => {
+                    const e = byRank(p.rank);
+                    return (
+                      <div key={p.rank} className="flex w-[30%] max-w-[150px] flex-col items-center animate-fade-up" style={{ animationDelay: `${i * 120 + 80}ms` }}>
+                        {e ? (
+                          <>
+                            <div className="relative mb-3">
+                              {p.rank === 1 && <Crown className="absolute -top-7 left-1/2 h-6 w-6 -translate-x-1/2 text-amber-500 fill-amber-300" />}
+                              <div className="rounded-full p-[3px]" style={{ background: `linear-gradient(135deg, ${p.metal.top}, ${p.metal.front[1]})` }}>
+                                <div className="rounded-full bg-white p-0.5">
+                                  <Avatar name={e.name} src={e.avatarUrl} size={p.rank === 1 ? 'xl' : 'lg'} />
+                                </div>
+                              </div>
+                              {/* Huy chương số hạng gắn ở chân ảnh */}
+                              <span className="absolute -bottom-2 left-1/2 flex h-6 w-6 -translate-x-1/2 items-center justify-center rounded-full text-[11px] font-extrabold shadow" style={{ background: `linear-gradient(135deg, ${p.metal.top}, ${p.metal.front[0]})`, color: p.metal.text, boxShadow: '0 1px 2px rgba(0,0,0,.35)' }}>
+                                {p.rank}
+                              </span>
+                            </div>
+                            <p className="w-full truncate text-center font-display text-sm font-bold leading-tight text-slate-900">{e.name}</p>
+                            <p className="mb-2 text-[12px] font-semibold tabular-nums text-slate-500">{formatNumber(e.points)} điểm</p>
+                          </>
+                        ) : (
+                          <p className="mb-2 text-[12px] text-slate-400">Còn trống</p>
+                        )}
+                        {/* Khối bục: mặt trên (nghiêng) + mặt trước */}
+                        <div className="w-full">
+                          <div className="mx-[6px] h-2.5 rounded-t-[3px]" style={{ background: p.metal.top, transform: 'perspective(60px) rotateX(35deg)', transformOrigin: 'bottom' }} />
+                          <div className="flex w-full flex-col items-center justify-start pt-3" style={{ height: p.h, background: `linear-gradient(180deg, ${p.metal.front[0]}, ${p.metal.front[1]})`, boxShadow: 'inset 0 1px 0 rgba(255,255,255,.45), inset 0 -12px 18px rgba(0,0,0,.12)' }}>
+                            <span className="font-display text-4xl font-extrabold leading-none" style={{ color: p.metal.text, textShadow: '0 1px 0 rgba(255,255,255,.45)' }}>
+                              {p.rank}
+                            </span>
+                            <span className="mt-1.5 text-[10px] font-bold uppercase tracking-[0.14em]" style={{ color: p.metal.text, opacity: 0.75 }}>
+                              {p.label}
+                            </span>
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                    <p className="font-display text-sm font-bold text-slate-900 text-center leading-tight truncate w-full">{e.name}</p>
-                    <p className="text-[11px] text-slate-600 font-semibold">{formatNumber(e.points)} điểm</p>
-                    <div className={cn('mt-2 w-full rounded-t-2xl border-2 border-b-0 border-slate-900 flex flex-col items-center justify-start pt-3 font-display font-extrabold shadow-hard', p.h, p.color)}>
-                      <span className="text-3xl leading-none">{p.rank}</span>
-                      <span className="text-[10px] uppercase tracking-wide mt-1 opacity-70">{p.label}</span>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
+                    );
+                  })}
+                </div>
+                {/* Sàn đặt bục */}
+                <div className="h-2 rounded-b-md" style={{ background: 'linear-gradient(180deg, rgba(100,116,139,.55), rgba(100,116,139,.25))' }} />
+              </div>
+            )}
           </Card>
 
           {rest.length > 0 && <Card hard padding="none" className="overflow-hidden">
