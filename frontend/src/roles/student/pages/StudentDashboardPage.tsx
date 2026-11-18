@@ -49,7 +49,6 @@ export const StudentDashboardPage: React.FC = () => {
   const goalMinutes = progress?.totals.dailyGoalMinutes ?? 20;
   const daysLeft = user?.target?.examDate ? Math.max(0, Math.ceil((new Date(user.target.examDate).getTime() - now) / 86400000)) : null;
   const today = new Date().toLocaleDateString(appLocale(), { weekday: 'long', day: '2-digit', month: '2-digit' });
-  const firstName = (user?.fullName ?? 'bạn').split(' ').slice(-1)[0];
   const peers = (board?.entries ?? []).filter((p) => !p.isMe).slice(0, 5);
   const totalMin = DAILY_ACTIVITY.reduce((a, d) => a + d.minutes, 0);
   const suggested = allTests.filter((t) => t.examType === (user?.target?.examType ?? 'TOEIC')).slice(0, 3);
@@ -59,11 +58,13 @@ export const StudentDashboardPage: React.FC = () => {
       {/* ===== Chào + số liệu hôm nay (một dải, không hộp màu) ===== */}
       <section className="grid lg:grid-cols-[1.2fr_1fr] gap-8 items-end animate-fade-up">
         <div className="space-y-4">
-          <p className="text-sm font-bold text-indigo-700 capitalize">
-            {greeting()} · {today}
+          {/* Lời chào dùng họ tên đầy đủ: gọi trống tên cuối ("Anh ơi") dễ hiểu nhầm thành đại từ, nghe suồng sã */}
+          <p className="text-sm font-bold text-indigo-700">
+            {greeting()}
+            {user?.fullName && <>, {user.fullName}</>} · {today.charAt(0).toUpperCase() + today.slice(1)}
           </p>
           <h1 className="font-display text-4xl md:text-5xl font-extrabold text-slate-900 tracking-tight leading-[1.05]">
-            {firstName} ơi, hôm nay học <span className="mark">{goalMinutes} phút</span> nhé.
+            Mục tiêu hôm nay: <span className="mark">{goalMinutes} phút</span> luyện tập.
           </h1>
           <p className="text-base text-slate-500 max-w-xl">
             {user?.target ? (

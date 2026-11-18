@@ -95,6 +95,8 @@ const en: LocaleDef = {
     'Trang quản lý': 'Dashboard',
     'Tìm kiếm': 'Search',
     'Tìm kiếm (⌘K)': 'Search (⌘K)',
+    'Tìm kiếm (Ctrl K)': 'Search (Ctrl K)',
+    'Tìm kiếm...': 'Search...',
     'Thông báo': 'Notifications',
     'Thêm': 'More',
     'Menu': 'Menu',

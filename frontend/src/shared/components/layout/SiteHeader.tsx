@@ -159,7 +159,21 @@ export const SiteHeader: React.FC = () => {
             <ThemeToggle onDark={onDarkHero} className={cn(isAuth && 'hidden sm:block')} />
             {isAuth && user ? (
               <>
-                <button onClick={() => setPalette(true)} className={cn('hidden sm:inline-flex p-2 rounded-xl transition', onDarkHero ? 'text-slate-200 hover:bg-white/10' : 'text-slate-700 hover:bg-slate-900/5')} aria-label={t('Tìm kiếm (⌘K)')} title={t('Tìm kiếm (⌘K)')}>
+                {/* Màn rộng: ô tìm kiếm có chữ gợi ý + phím tắt (nhìn ra ngay là ô tìm kiếm); màn hẹp hơn: nút kính lúp gọn */}
+                <button
+                  type="button"
+                  onClick={() => setPalette(true)}
+                  className={cn(
+                    'hidden 2xl:inline-flex h-9 w-44 items-center gap-2 rounded-lg border px-3 text-left text-[13px] transition',
+                    onDarkHero ? 'border-white/15 bg-white/[0.06] text-slate-300 hover:border-white/30 hover:bg-white/10' : 'border-slate-900/10 bg-white/70 text-slate-500 hover:border-slate-900/25 hover:bg-white',
+                  )}
+                  aria-label={t('Tìm kiếm')}
+                >
+                  <Search className="h-4 w-4 shrink-0" />
+                  <span className="flex-1 truncate">{t('Tìm kiếm...')}</span>
+                  <kbd className={cn('rounded border px-1.5 py-px font-sans text-[10px] font-semibold', onDarkHero ? 'border-white/15 text-slate-400' : 'border-slate-900/10 text-slate-400')}>Ctrl K</kbd>
+                </button>
+                <button onClick={() => setPalette(true)} className={cn('hidden sm:inline-flex 2xl:hidden p-2 rounded-xl transition', onDarkHero ? 'text-slate-200 hover:bg-white/10' : 'text-slate-700 hover:bg-slate-900/5')} aria-label={t('Tìm kiếm (Ctrl K)')} title={t('Tìm kiếm (Ctrl K)')}>
                   <Search className="w-5 h-5" />
                 </button>
                 {isStudent && <NotificationBell allTo="/app/notifications" onDark={onDarkHero} />}
