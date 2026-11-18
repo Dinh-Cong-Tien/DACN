@@ -7,6 +7,8 @@ import { auth, issueRefreshToken, revokeRefreshToken, rotateRefreshToken, signAc
 import { badRequest, conflict, forbidden, handler, me, parse, unauthorized } from '../../core/http';
 import { toAppUser } from '../../core/dto';
 import { limits, loginGuard, rateLimit, recordLoginFailure, resetLoginFailures } from '../../middleware/rate-limit';
+import { env } from '../../config/env';
+import { upsertOAuthUser, verifyFacebook, verifyGoogle } from './oauth';
 
 export const authRouter = Router();
 
@@ -56,6 +58,26 @@ authRouter.post(
     resetLoginFailures(req);
     if (user.status === 'LOCKED') throw forbidden(user.lockedReason ? `Tài khoản đã bị khoá: ${user.lockedReason}` : 'Tài khoản đã bị khoá');
     return session(user.id, req);
+  })
+);
+
+/** Cấu hình công khai cho nút đăng nhập một chạm (client ID không phải bí mật) */
+authRouter.get(
+  '/oauth/config',
+  handler(async () => ({ googleClientId: env.GOOGLE_CLIENT_ID || null, facebookAppId: env.FACEBOOK_APP_ID || null }))
+);
+
+/** Đăng nhập / đăng ký một chạm: body { accessToken } nhận từ cửa sổ Google/Facebook */
+authRouter.post(
+  '/oauth/:provider',
+  rateLimit('oauth', limits.loginIp, { message: 'Bạn thử đăng nhập quá nhiều lần. Vui lòng thử lại sau.' }),
+  handler(async (req) => {
+    const provider = req.params.provider;
+    if (provider !== 'google' && provider !== 'facebook') throw badRequest('Nhà cung cấp đăng nhập không hỗ trợ');
+    const { accessToken } = parse(z.object({ accessToken: z.string().min(10).max(4096) }), req.body);
+    const profile = provider === 'google' ? await verifyGoogle(accessToken) : await verifyFacebook(accessToken);
+    const { userId, isNew } = await upsertOAuthUser(profile);
+    return { ...(await session(userId, req)), isNew };
   })
 );
 
@@ -115,9 +137,10 @@ authRouter.post(
   '/change-password',
   auth,
   handler(async (req) => {
-    const body = parse(z.object({ currentPassword: z.string(), newPassword: z.string().min(8, 'Mật khẩu mới cần ít nhất 8 ký tự').max(100) }), req.body);
+    const body = parse(z.object({ currentPassword: z.string().default(''), newPassword: z.string().min(8, 'Mật khẩu mới cần ít nhất 8 ký tự').max(100) }), req.body);
     const user = await prisma.user.findUniqueOrThrow({ where: { id: me(req).id } });
-    if (!user.passwordHash || !(await comparePassword(body.currentPassword, user.passwordHash))) throw badRequest('Mật khẩu hiện tại không đúng', 'WRONG_PASSWORD');
+    // Tài khoản tạo bằng Google/Facebook chưa có mật khẩu → được đặt mật khẩu lần đầu, không cần mật khẩu cũ
+    if (user.passwordHash && !(await comparePassword(body.currentPassword, user.passwordHash))) throw badRequest('Mật khẩu hiện tại không đúng', 'WRONG_PASSWORD');
     await prisma.$transaction([
       prisma.user.update({ where: { id: user.id }, data: { passwordHash: await hashPassword(body.newPassword) } }),
       prisma.userToken.updateMany({ where: { userId: user.id, type: 'REFRESH', revokedAt: null }, data: { revokedAt: new Date() } }),

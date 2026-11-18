@@ -40,7 +40,7 @@ export const LoginPage: React.FC = () => {
   return (
     <>
       <AuthHeading title="Đăng nhập" sub="Tiếp tục lộ trình bạn đang học." />
-      <SocialButtons onDone={() => afterLogin('STUDENT')} />
+      <SocialButtons />
       <OrDivider label="hoặc đăng nhập bằng email" />
       {error && <FormError>{error}</FormError>}
       <form onSubmit={submit} className="space-y-4" noValidate>

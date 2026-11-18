@@ -1,9 +1,13 @@
-import React, { useId, useState } from 'react';
+import React, { useEffect, useId, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Eye, EyeOff, Loader2 } from 'lucide-react';
 import { toast } from '@/shared/stores/uiStore';
 import { cn, ROLE_HOME } from '@/shared/utils';
 import type { AppRole } from '@/shared/types';
+import { authApi } from '@/shared/api/auth';
+import { errorMessage } from '@/shared/api/client';
+import { useAuthStore } from '@/shared/stores/authStore';
+import { OAuthCancelled, facebookAccessToken, googleAccessToken, preloadOAuth } from './oauth';
 
 /** Điều hướng sau khi đăng nhập: ưu tiên ?next= hoặc state.from (AuthGuard), không có thì về trang chủ của role */
 export function useAfterLogin() {
@@ -111,16 +115,50 @@ const FacebookMark = () => (
   </svg>
 );
 
-/** Nút Google / Facebook (OAuth chưa cấu hình → báo chưa hỗ trợ) */
-export const SocialButtons: React.FC<{ onDone?: () => void }> = () => {
+/** Cấu hình OAuth lấy một lần từ backend (client ID công khai), dùng chung cho trang đăng nhập/đăng ký */
+let oauthCfg: Promise<{ googleClientId: string | null; facebookAppId: string | null }> | null = null;
+const getOAuthCfg = () => (oauthCfg ??= authApi.oauthConfig().catch(() => ((oauthCfg = null), { googleClientId: null, facebookAppId: null })));
+
+/** Nút Google / Facebook — đăng nhập một chạm; tài khoản mới tạo đi tiếp tới bước đặt mục tiêu */
+export const SocialButtons: React.FC = () => {
   const [busy, setBusy] = useState<'google' | 'facebook' | null>(null);
-  const go = (p: 'google' | 'facebook') => {
+  const [cfg, setCfg] = useState<{ googleClientId: string | null; facebookAppId: string | null } | null>(null);
+  const login = useAuthStore((s) => s.login);
+  const afterLogin = useAfterLogin();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    let alive = true;
+    getOAuthCfg().then((c) => {
+      if (!alive) return;
+      setCfg(c);
+      preloadOAuth(c);
+    });
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  const go = async (p: 'google' | 'facebook') => {
+    const name = p === 'google' ? 'Google' : 'Facebook';
+    const id = p === 'google' ? cfg?.googleClientId : cfg?.facebookAppId;
+    if (!id) {
+      toast.info(`Đăng nhập ${name} chưa được bật`, 'Vui lòng đăng nhập bằng email và mật khẩu.');
+      return;
+    }
     setBusy(p);
-    // Đăng nhập mạng xã hội cần đăng ký ứng dụng OAuth với Google/Facebook — chưa cấu hình
-    setTimeout(() => {
+    try {
+      const token = p === 'google' ? await googleAccessToken(id) : await facebookAccessToken(id);
+      const { user, isNew } = await authApi.oauth(p, token);
+      login(user);
+      toast.success(`Xin chào, ${user.fullName}!`, isNew ? 'Đã tạo tài khoản. Đặt mục tiêu để nhận lộ trình nhé.' : `Đăng nhập bằng ${name} thành công.`);
+      if (isNew) navigate('/onboarding/goal');
+      else afterLogin(user.role);
+    } catch (e) {
+      if (!(e instanceof OAuthCancelled)) toast.error(`Không đăng nhập được bằng ${name}`, errorMessage(e));
+    } finally {
       setBusy(null);
-      toast.info(`Chưa hỗ trợ đăng nhập ${p === 'google' ? 'Google' : 'Facebook'}`, 'Vui lòng đăng nhập bằng email và mật khẩu.');
-    }, 300);
+    }
   };
   const btn = 'inline-flex h-12 items-center justify-center gap-2.5 rounded-lg border border-slate-300 bg-white text-sm font-medium text-slate-800 transition-colors hover:bg-slate-50 disabled:opacity-60';
   return (

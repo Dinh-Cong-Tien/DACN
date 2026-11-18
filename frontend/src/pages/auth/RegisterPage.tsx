@@ -50,7 +50,7 @@ export const RegisterPage: React.FC = () => {
   return (
     <>
       <AuthHeading title="Tạo tài khoản" sub="Miễn phí, không cần thẻ thanh toán." />
-      <SocialButtons onDone={() => navigate('/onboarding/goal')} />
+      <SocialButtons />
       <OrDivider label="hoặc đăng ký bằng email" />
       <form onSubmit={submit} className="space-y-4" noValidate>
         <TextField label="Họ và tên" value={form.name} onChange={set('name')} error={errors.name} placeholder="Nguyễn Minh Anh" autoComplete="name" autoFocus />
