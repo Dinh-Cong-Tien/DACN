@@ -135,6 +135,10 @@ export const SiteFooter: React.FC<SiteFooterProps> = ({
     <div className="relative border-t border-white/10">
       <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-2 px-4 py-6 text-xs text-slate-500 md:flex-row">
         <span>{t('© 2026 OrbiLingo · Đồ án chuyên ngành, Khoa CNTT. Bảo lưu mọi quyền.')}</span>
+        <span className="flex gap-4">
+          <Link to="/terms" className="hover:underline">{t('Điều khoản sử dụng')}</Link>
+          <Link to="/privacy" className="hover:underline">{t('Chính sách bảo mật')}</Link>
+        </span>
         {status ?? <FooterStatus>{t('Hệ thống hoạt động ổn định')}</FooterStatus>}
       </div>
     </div>

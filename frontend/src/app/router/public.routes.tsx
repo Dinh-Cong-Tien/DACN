@@ -17,6 +17,7 @@ import { FAQPage } from '@/pages/marketing/FAQPage';
 import { AboutPage } from '@/pages/marketing/AboutPage';
 import { ContactPage } from '@/pages/marketing/ContactPage';
 import { HelpPage } from '@/pages/marketing/HelpPage';
+import { LegalPage } from '@/pages/marketing/LegalPage';
 import { ScoreConverterPage } from '@/pages/marketing/ScoreConverterPage';
 import { ResourcesPage } from '@/pages/marketing/ResourcesPage';
 import { NotFoundPage } from '@/pages/marketing/NotFoundPage';
@@ -48,6 +49,8 @@ export const publicRoutes: RouteObject[] = [
       { path: 'about', element: <AboutPage /> },
       { path: 'contact', element: <ContactPage /> },
       { path: 'help', element: <HelpPage /> },
+      { path: 'privacy', element: <LegalPage kind="privacy" /> },
+      { path: 'terms', element: <LegalPage kind="terms" /> },
       { path: '*', element: <NotFoundPage /> },
     ],
   },

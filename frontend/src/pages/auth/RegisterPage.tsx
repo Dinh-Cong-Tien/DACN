@@ -74,11 +74,11 @@ export const RegisterPage: React.FC = () => {
       </form>
       <p className="mt-5 text-[13px] leading-relaxed text-slate-500">
         Khi đăng ký, bạn đồng ý với{' '}
-        <Link to="/help" className="text-slate-700 underline underline-offset-2 hover:text-slate-900">
+        <Link to="/terms" className="text-slate-700 underline underline-offset-2 hover:text-slate-900">
           Điều khoản sử dụng
         </Link>{' '}
         và{' '}
-        <Link to="/help" className="text-slate-700 underline underline-offset-2 hover:text-slate-900">
+        <Link to="/privacy" className="text-slate-700 underline underline-offset-2 hover:text-slate-900">
           Chính sách bảo mật
         </Link>{' '}
         của OrbiLingo.

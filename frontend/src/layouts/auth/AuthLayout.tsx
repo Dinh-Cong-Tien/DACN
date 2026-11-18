@@ -276,10 +276,10 @@ export const AuthLayout: React.FC = () => {
 
         <footer className="flex shrink-0 flex-wrap items-center gap-x-4 gap-y-1 px-5 py-6 [@media(max-height:800px)]:py-4 text-[12px] text-slate-500 sm:px-10 xl:px-14">
           <span>© 2026 OrbiLingo</span>
-          <Link to="/help" className="hover:text-slate-800">
+          <Link to="/terms" className="hover:text-slate-800">
             Điều khoản
           </Link>
-          <Link to="/help" className="hover:text-slate-800">
+          <Link to="/privacy" className="hover:text-slate-800">
             Bảo mật
           </Link>
           <span>
