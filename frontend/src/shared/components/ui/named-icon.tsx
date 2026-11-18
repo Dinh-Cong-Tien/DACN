@@ -1,7 +1,7 @@
 import React from 'react';
 import {
-  Award, BookMarked, BookOpen, Briefcase, Flame, Gem, GraduationCap, Headphones, Languages, Library, Lightbulb, Medal, Mic, Moon, NotebookPen,
-  PenTool, Plane, Rocket, ShoppingBag, Star, Target, Trophy, Utensils, Wrench, Zap, type LucideIcon,
+  Award, BookMarked, BookOpen, Briefcase, Building2, Factory, Flame, Gem, GraduationCap, Headphones, HeartPulse, Landmark, Languages, Laptop, Library, Lightbulb, Medal, Megaphone, Mic, Moon, NotebookPen,
+  PenTool, Plane, Presentation, Rocket, ShoppingBag, Star, Target, Trophy, Users, Utensils, Wrench, Zap, type LucideIcon,
 } from 'lucide-react';
 
 /**
@@ -9,8 +9,8 @@ import {
  * Dùng cho huy hiệu, chủ đề từ vựng… Thêm icon mới: thêm vào bảng dưới đây.
  */
 export const ICONS: Record<string, LucideIcon> = {
-  Award, BookMarked, BookOpen, Briefcase, Flame, Gem, GraduationCap, Headphones, Languages, Library, Lightbulb, Medal, Mic, Moon, NotebookPen,
-  PenTool, Plane, Rocket, ShoppingBag, Star, Target, Trophy, Utensils, Wrench, Zap,
+  Award, BookMarked, BookOpen, Briefcase, Building2, Factory, Flame, Gem, GraduationCap, Headphones, HeartPulse, Landmark, Languages, Laptop, Library, Lightbulb, Medal, Megaphone, Mic, Moon, NotebookPen,
+  PenTool, Plane, Presentation, Rocket, ShoppingBag, Star, Target, Trophy, Users, Utensils, Wrench, Zap,
 };
 
 /** Danh sách lựa chọn cho form quản trị (chọn icon chủ đề) */

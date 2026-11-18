@@ -604,7 +604,7 @@ const docPage = (title: string, body: string) =>
 const RESOURCE_BUILDERS: Record<string, () => Promise<{ title: string; html: string }>> = {
   'tu-vung-toeic': async () => {
     const topics = await prisma.vocabTopic.findMany({
-      where: { deletedAt: null, slug: { startsWith: 'toeic-vocab-set' } },
+      where: { deletedAt: null, slug: { startsWith: 'toeic-topic-' } },
       orderBy: { orderIndex: 'asc' },
       include: { wordTopics: { orderBy: { orderInTopic: 'asc' } } },
     });

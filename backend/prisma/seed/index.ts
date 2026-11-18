@@ -9,6 +9,7 @@ import { seedCourses, seedGrammar, seedVstep } from './content';
 import { importDictation, importGrammarExercises, importVocabQuiz, importReading, importSpeaking, importToeicTests, importVideoCourse, importVocabulary, importWriting } from './import-data';
 import { DATA_DIR, exists, log, prisma } from './lib';
 import { importExamEnglish } from './import-examenglish';
+import { applyToeicVocabTopics } from './toeic-vocab-topics';
 
 async function truncateAll() {
   const rows = await prisma.$queryRaw<{ tablename: string }[]>`SELECT tablename FROM pg_tables WHERE schemaname = 'public' AND tablename <> '_prisma_migrations'`;
@@ -35,6 +36,7 @@ async function main() {
   const topicTag = await seedGrammar(ctx);
   const { examVocab } = await importToeicTests(ctx);
   await importVocabulary(ctx, examVocab);
+  await applyToeicVocabTopics();
   await importVideoCourse(ctx);
   await importGrammarExercises(ctx, topicTag);
   await importVocabQuiz(ctx);

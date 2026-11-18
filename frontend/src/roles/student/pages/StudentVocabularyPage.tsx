@@ -9,7 +9,7 @@ import { useDocumentTitle } from '@/shared/hooks';
 import { useAuthStore } from '@/shared/stores/authStore';
 import { toast } from '@/shared/stores/uiStore';
 import { Badge, Button, Card, Chip, Input, Modal, PageHeader, ProgressBar, SearchInput, StatCard, EmptyState, Textarea } from '@/shared/components/ui';
-import { Img, PHOTOS } from '@/shared/components/media/Img';
+import { Img, PHOTOS, unsplash } from '@/shared/components/media/Img';
 import { NamedIcon } from '@/shared/components/ui/named-icon';
 import { appLocale } from '@/shared/i18n';
 
@@ -19,17 +19,32 @@ const STATUS_META: Record<VocabWord['status'], { label: string; tone: 'amber' | 
   MASTERED: { label: 'Đã thuộc', tone: 'emerald' },
 };
 
+/** Ảnh bìa đúng ngữ cảnh cho từng bộ chủ đề TOEIC (theo slug) */
 const TOPIC_PHOTO: Record<string, string> = {
-  'vt-office': PHOTOS.office,
-  'vt-hr': PHOTOS.team,
-  'vt-marketing': PHOTOS.laptop,
-  'vt-finance': PHOTOS.desk,
-  'vt-travel': PHOTOS.campus,
-  'vt-academic': PHOTOS.library,
+  'toeic-topic-office': unsplash('1497366216548-37526070297c', 700),
+  'toeic-topic-hr': unsplash('1521737711867-e3b97375f902', 700),
+  'toeic-topic-meetings': unsplash('1552664730-d307ca884978', 700),
+  'toeic-topic-marketing': unsplash('1460925895917-afdab827c52f', 700),
+  'toeic-topic-finance': unsplash('1554224155-6726b3ff858f', 700),
+  'toeic-topic-shopping': unsplash('1441986300917-64674bd600d8', 700),
+  'toeic-topic-travel': unsplash('1436491865332-7a61a109cc05', 700),
+  'toeic-topic-dining': unsplash('1517248135467-4c7edcad34c4', 700),
+  'toeic-topic-manufacturing': unsplash('1586528116311-ad8dd3c8310d', 700),
+  'toeic-topic-property': unsplash('1503387762-592deb58ef4e', 700),
+  'toeic-topic-health': unsplash('1576091160399-112ba8d25d1d', 700),
+  'toeic-topic-tech': unsplash('1518770660439-4636190af475', 700),
+  'toeic-topic-general': unsplash('1497633762265-9d179a990aa6', 700),
 };
 
-/** Ảnh minh hoạ xoay vòng cho bộ từ (dữ liệu bộ từ không có ảnh bìa) */
+/** Ảnh minh hoạ xoay vòng cho bộ từ không có ảnh riêng */
 const TOPIC_PHOTOS = [PHOTOS.office, PHOTOS.team, PHOTOS.laptop, PHOTOS.desk, PHOTOS.campus, PHOTOS.library, PHOTOS.books];
+
+/** Nhóm bộ từ trên trang: chủ đề TOEIC · từ đề thi theo Part · bộ khác (VSTEP, giáo viên tạo…) */
+const GROUPS: { key: string; title: string; hint: string; match: (slug: string) => boolean }[] = [
+  { key: 'topic', title: 'Từ vựng TOEIC theo chủ đề', hint: 'Từ vựng cốt lõi chia theo ngữ cảnh hay gặp trong đề', match: (s) => s.startsWith('toeic-topic-') },
+  { key: 'part', title: 'Từ vựng trong đề thi theo Part', hint: 'Từ xuất hiện trong các đề TOEIC, gom theo Part 1–7', match: (s) => s.startsWith('toeic-exam-vocab-part-') },
+  { key: 'other', title: 'Bộ từ khác', hint: '', match: () => true },
+];
 
 const speak = (word: string) => {
   try {
@@ -117,20 +132,28 @@ export const StudentVocabularyPage: React.FC = () => {
         <StatCard label="Chuỗi ngày" value={user?.streak ?? 0} suffix="ngày" icon={<Flame />} tone="violet" />
       </div>
 
-      <section className="space-y-3">
-        <div className="flex items-center justify-between">
-          <h2 className="font-display font-bold text-slate-900 text-lg flex items-center gap-2">
-            <Layers className="w-5 h-5 text-indigo-600" /> Chủ đề từ vựng
-          </h2>
-          <span className="text-xs font-bold text-slate-500">{VOCAB_TOPICS.reduce((a, t) => a + t.total, 0).toLocaleString(appLocale())} từ · {VOCAB_TOPICS.length} chủ đề</span>
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
-          {VOCAB_TOPICS.map((t, i) => {
+      {GROUPS.map((g) => {
+        const slugOf = (t: (typeof VOCAB_TOPICS)[number]) => (t as typeof t & { slug?: string }).slug ?? '';
+        const topics = VOCAB_TOPICS.filter((t) => g.match(slugOf(t)) && !GROUPS.slice(0, GROUPS.indexOf(g)).some((x) => x.match(slugOf(t))));
+        if (!topics.length) return null;
+        return (
+          <section key={g.key} className="space-y-3">
+            <div className="flex flex-wrap items-end justify-between gap-2">
+              <div>
+                <h2 className="font-display font-bold text-slate-900 text-lg flex items-center gap-2">
+                  <Layers className="w-5 h-5 text-indigo-600" /> {g.title}
+                </h2>
+                {g.hint && <p className="mt-0.5 text-sm text-slate-500">{g.hint}</p>}
+              </div>
+              <span className="text-xs font-bold text-slate-500">{topics.reduce((a, t) => a + t.total, 0).toLocaleString(appLocale())} từ · {topics.length} bộ</span>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+              {topics.map((t, i) => {
             const pct = Math.round((t.learned / Math.max(1, t.total)) * 100);
             return (
               <Card key={t.id} hard hover padding="none" className="overflow-hidden animate-fade-up flex flex-col" style={{ animationDelay: `${i * 60}ms` }}>
                 <div className="relative h-32">
-                  <Img src={TOPIC_PHOTO[t.id] ?? TOPIC_PHOTOS[i % TOPIC_PHOTOS.length]} alt={t.name} wrapperClass="absolute inset-0" fallbackClass="bg-indigo-200" />
+                  <Img src={TOPIC_PHOTO[slugOf(t)] ?? TOPIC_PHOTOS[i % TOPIC_PHOTOS.length]} alt={t.name} wrapperClass="absolute inset-0" fallbackClass="bg-indigo-200" />
                   <div className="absolute inset-0 bg-slate-900/25" />
                   <span className="absolute top-3 left-3 sticker tilt-1 !py-1 !text-[10px]">
                     <NamedIcon name={t.icon} className="mr-1 inline h-3 w-3 align-[-2px]" />
@@ -155,9 +178,11 @@ export const StudentVocabularyPage: React.FC = () => {
                 </div>
               </Card>
             );
-          })}
-        </div>
-      </section>
+              })}
+            </div>
+          </section>
+        );
+      })}
 
       <section className="space-y-4">
         <h2 className="font-display font-bold text-slate-900 text-lg">Sổ từ của tôi</h2>
