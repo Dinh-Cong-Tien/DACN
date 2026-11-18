@@ -165,7 +165,7 @@ export const SiteHeader: React.FC = () => {
                   onClick={() => setPalette(true)}
                   className={cn(
                     'hidden 2xl:inline-flex h-9 w-44 items-center gap-2 rounded-lg border px-3 text-left text-[13px] transition',
-                    onDarkHero ? 'border-white/15 bg-white/[0.06] text-slate-300 hover:border-white/30 hover:bg-white/10' : 'border-slate-900/10 bg-white/70 text-slate-500 hover:border-slate-900/25 hover:bg-white',
+                    onDarkHero ? 'border-white/15 bg-transparent text-slate-300 hover:border-white/30 hover:bg-white/10 hover:text-white' : 'border-slate-900/15 bg-transparent text-slate-500 hover:border-slate-900/30 hover:bg-slate-900/5 hover:text-slate-700',
                   )}
                   aria-label={t('Tìm kiếm')}
                 >
