@@ -2,7 +2,7 @@ import React, { useEffect, useLayoutEffect, useState } from 'react';
 import './LoopConnector.css';
 
 /**
- * Trục thời gian cho 5 bước: một đường thẳng mảnh chạy dọc (giữa 2 cột trên máy tính, mép trái trên điện thoại),
+ * Trục thời gian cho 5 bước: một đường thẳng mảnh chạy dọc giữa 2 cột (chỉ máy tính; điện thoại ẩn để nội dung căn đều 2 mép),
  * mỗi bước một nút tròn nhỏ. Bước đã cuộn tới (nút qua giữa màn hình) thì nút và đoạn đường phía trên được tô màu nhấn.
  */
 export const LoopConnector: React.FC<{ containerRef: React.RefObject<HTMLDivElement>; rowRefs: React.MutableRefObject<(HTMLDivElement | null)[]>; dark?: boolean }> = ({ containerRef, rowRefs, dark }) => {
@@ -62,7 +62,7 @@ export const LoopConnector: React.FC<{ containerRef: React.RefObject<HTMLDivElem
   const bg = dark ? '#0f1424' : '#faf7f1';
 
   return (
-    <svg aria-hidden className="loop-axis pointer-events-none absolute inset-0" width={w} height={h} viewBox={`0 0 ${w || 1} ${h || 1}`}>
+    <svg aria-hidden className="loop-axis pointer-events-none absolute inset-0 max-md:hidden" width={w} height={h} viewBox={`0 0 ${w || 1} ${h || 1}`}>
       <line x1={x} y1={first} x2={x} y2={last} stroke={track} strokeWidth="2" />
       <rect x={x - 1} y={first} width="2" height={last - first} fill={accent} className="loop-axis__fill" style={{ transform: `scaleY(${ratio})`, transformOrigin: `${x}px ${first}px` }} />
       {ys.map((y, i) => {

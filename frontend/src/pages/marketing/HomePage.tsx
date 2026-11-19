@@ -107,7 +107,7 @@ const StepRow: React.FC<{ index: number; step: (typeof LOOP)[number]; rowRef: (e
         ref.current = el;
         rowRef(el);
       }}
-      className={cn('relative grid md:grid-cols-2 gap-8 md:gap-16 items-center max-md:pl-11', !textLeft && 'md:[&>*:first-child]:order-2')}>
+      className={cn('relative grid md:grid-cols-2 gap-6 md:gap-16 items-center', !textLeft && 'md:[&>*:first-child]:order-2')}>
       <div className="space-y-4">
         <div className={cn('flex items-center gap-4', base, state)} style={show(0)}>
           <span className="font-display text-6xl md:text-7xl font-extrabold leading-[1.1] bg-gradient-to-br from-amber-200 via-amber-300 to-orange-500 bg-clip-text text-transparent">{step.n}</span>
